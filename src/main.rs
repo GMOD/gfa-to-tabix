@@ -16,7 +16,7 @@ const USAGE: &str = "usage: gfa-to-tabix [-h] [--version] [--reference REFERENCE
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
 as two bgzip-compressed, Tabix-indexed BED files, which a JBrowse graph track
-reads by region. https://github.com/cmdcolin/gfa-to-tabix
+reads by region. https://github.com/GMOD/gfa-to-tabix
 
 An rGFA (minigraph, or the minigraph stage of Minigraph-Cactus) gives every
 node a coordinate in its SN/SO/SR tags. A plain GFA (pggb, odgi, vg, base-level

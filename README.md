@@ -11,10 +11,10 @@ One binary does the whole conversion. It needs no gfatools, awk, bgzip or tabix.
 ## Install
 
 A static binary for Linux x86_64 or macOS on Apple silicon, from the
-[releases](https://github.com/cmdcolin/gfa-to-tabix/releases):
+[releases](https://github.com/GMOD/gfa-to-tabix/releases):
 
 ```bash
-curl -fL https://github.com/cmdcolin/gfa-to-tabix/releases/latest/download/gfa-to-tabix-x86_64-unknown-linux-musl.tar.gz | tar xz
+curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-tabix-x86_64-unknown-linux-musl.tar.gz | tar xz
 ```
 
 or build it from crates.io with Rust 1.91 or later:
