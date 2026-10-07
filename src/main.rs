@@ -1,3 +1,4 @@
+mod anchor;
 mod bed;
 mod gfa;
 mod place;
@@ -9,9 +10,10 @@ use std::process;
 
 use flate2::read::MultiGzDecoder;
 
+use bed::Layout;
 use gfa::Graph;
 
-const USAGE: &str = "usage: gfa-to-tabix [-h] [--version] [--reference REFERENCE] [-o PREFIX] gfa";
+const USAGE: &str = "usage: gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [-o PREFIX] gfa";
 
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
@@ -34,6 +36,10 @@ options:
                         an assembly (HG002#1) or a path name. Default: the
                         first path in the file. Given with an rGFA, coordinates
                         come from the paths, not the tags
+  --layout LAYOUT       anchored (default) files every node under the reference
+                        interval its bubble hangs from, so one query per file
+                        returns the whole graph under a region. contig files
+                        every node under its own coordinate, as 0.1.0 did
   -o, --out PREFIX      write PREFIX.segs.bed.gz and PREFIX.links.bed.gz, each
                         with a .tbi; default the input name without .gfa[.gz]";
 
@@ -41,6 +47,7 @@ struct Args {
     gfa: String,
     reference: Option<String>,
     prefix: Option<String>,
+    layout: Layout,
 }
 
 fn fail(message: &str) -> ! {
@@ -52,6 +59,7 @@ fn parse_args() -> Args {
     let mut gfa = None;
     let mut reference = None;
     let mut prefix = None;
+    let mut layout = Layout::Anchored;
     let mut args = env::args().skip(1);
     while let Some(arg) = args.next() {
         let (flag, inline) = match arg.split_once('=') {
@@ -67,6 +75,9 @@ fn parse_args() -> Args {
                 .unwrap_or_else(|| fail(&format!("argument {name}: expected one argument")))
         };
         match flag.as_str() {
+            "-h" | "--help" | "--version" if inline.is_some() => {
+                fail(&format!("argument {flag}: takes no value"))
+            }
             "-h" | "--help" => {
                 println!("{USAGE}\n{HELP}");
                 process::exit(0);
@@ -76,6 +87,15 @@ fn parse_args() -> Args {
                 process::exit(0);
             }
             "--reference" => reference = Some(value("--reference")),
+            "--layout" => {
+                layout = match value("--layout").as_str() {
+                    "anchored" => Layout::Anchored,
+                    "contig" => Layout::Contig,
+                    other => fail(&format!(
+                        "argument --layout: {other} is not anchored or contig"
+                    )),
+                }
+            }
             "-o" | "--out" => prefix = Some(value("-o/--out")),
             "-" => gfa = Some(arg),
             _ if flag.starts_with('-') => fail(&format!("unrecognized argument: {arg}")),
@@ -90,6 +110,7 @@ fn parse_args() -> Args {
         gfa,
         reference,
         prefix,
+        layout,
     }
 }
 
@@ -147,25 +168,29 @@ fn run(args: &Args) -> Result<(), String> {
         eprintln!("{note}");
     }
 
-    let mut nodes = bed::node_rows(&graph, &placed.nodes);
-    let (mut links, skipped) = bed::link_rows(&graph, &placed.nodes);
-    bed::sort(&mut nodes);
-    bed::sort(&mut links);
+    let spans = match args.layout {
+        Layout::Anchored => anchor::anchored(&graph, &placed.nodes),
+        Layout::Contig => anchor::by_contig(&placed.nodes),
+    };
+    let mut nodes = bed::node_rows(&graph, &placed.nodes, &spans, args.layout);
+    let (mut links, skipped) = bed::link_rows(&graph, &placed.nodes, &spans, args.layout);
+    bed::sort(&mut nodes, &spans);
+    bed::sort(&mut links, &spans);
     let nodes_path = format!("{prefix}.segs.bed.gz");
     let links_path = format!("{prefix}.links.bed.gz");
-    bed::write(&nodes_path, &nodes)?;
-    bed::write(&links_path, &links)?;
+    bed::write(&nodes_path, &nodes, &spans)?;
+    bed::write(&links_path, &links, &spans)?;
 
+    let placed_nodes = placed.nodes.iter().flatten().count();
     eprintln!("{}", placed.summary);
     eprintln!(
-        "{} nodes, {} links -> {nodes_path}, {links_path} (+ .tbi)",
-        nodes.len(),
+        "{placed_nodes} nodes, {} links -> {nodes_path}, {links_path} (+ .tbi)",
         graph.links.len() - skipped
     );
     if skipped > 0 {
         eprintln!("{skipped} links left out: a node with no coordinate");
     }
-    let unplaced = graph.segment_count() - nodes.len();
+    let unplaced = graph.segment_count() - placed_nodes;
     if unplaced > 0 {
         eprintln!("{unplaced} nodes left out: no path visits them, or no SN tag");
     }

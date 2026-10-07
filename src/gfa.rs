@@ -71,19 +71,20 @@ fn split_range_suffix(name: &[u8]) -> (&[u8], u64) {
 impl Graph {
     pub fn read(input: impl BufRead) -> Result<Graph, String> {
         let mut graph = Graph::default();
-        for line in input.split(b'\n') {
+        for (number, line) in input.split(b'\n').enumerate() {
             let mut line = line.map_err(|e| e.to_string())?;
             if line.last() == Some(&b'\r') {
                 line.pop();
             }
             let cols: Vec<&[u8]> = line.split(|&b| b == b'\t').collect();
             match cols[0] {
-                b"S" => graph.segment(&cols)?,
-                b"L" => graph.link(&cols)?,
-                b"P" => graph.p_line(&cols)?,
-                b"W" => graph.w_line(&cols)?,
-                _ => {}
+                b"S" => graph.segment(&cols),
+                b"L" => graph.link(&cols),
+                b"P" => graph.p_line(&cols),
+                b"W" => graph.w_line(&cols),
+                _ => Ok(()),
             }
+            .map_err(|e| format!("line {}: {e}", number + 1))?;
         }
         Ok(graph)
     }

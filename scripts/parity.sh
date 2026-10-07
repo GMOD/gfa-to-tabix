@@ -20,7 +20,7 @@ case "$route" in
   paths) bash "$scripts/build_pggb_tabix.sh" "$gfa" "$work/old" ${reference:+"$reference"} >/dev/null 2>&1 ;;
   *) echo "route is rgfa or paths" >&2; exit 2 ;;
 esac
-"$binary" "$gfa" -o "$work/new" ${reference:+--reference "$reference"} 2>/dev/null
+"$binary" "$gfa" --layout contig -o "$work/new" ${reference:+--reference "$reference"} 2>/dev/null
 
 status=0
 for kind in segs links; do

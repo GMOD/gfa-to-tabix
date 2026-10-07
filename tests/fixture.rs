@@ -2,6 +2,7 @@
 //
 // rgfa.gfa: s1 (8 bp) and s2 (5 bp, length from LN) lie on chr1 at rank 0, and
 // s3 (3 bp) on b#1#c at 100, rank 1.
+// island.gfa adds s4 and s5 on d#1#x, linked to each other and to nothing else.
 // paths.gfa: ref#1#chr walks 1 2 4 and alt#1#ctg walks 1 3 4; node lengths are
 // 4, 2, 1, 3. walks.gfa says the same in W lines, alt first, starting at 10.
 
@@ -29,6 +30,11 @@ fn run(fixture: &str, args: &[&str]) -> (Output, String, String) {
         .arg("-o")
         .arg(&prefix)
         .args(args)
+        .args(if args.contains(&"--layout") {
+            vec![]
+        } else {
+            vec!["--layout", "contig"]
+        })
         .output()
         .unwrap();
     let read = |kind: &str| {
@@ -135,4 +141,58 @@ fn an_unknown_reference_lists_the_paths() {
         stderr.contains("matches no path; have: ref#1#chr, alt#1#ctg"),
         "{stderr}"
     );
+}
+
+#[test]
+fn anchored_files_an_allele_under_the_reference_it_hangs_from() {
+    let (output, nodes, links) = run("rgfa.gfa", &["--layout", "anchored"]);
+    assert!(output.status.success());
+    assert_eq!(
+        nodes,
+        tsv(&[
+            "chr1 0 13 s3 1 b#1#c 100 103",
+            "chr1 0 8 s1 0 chr1 0 8",
+            "chr1 8 13 s2 0 chr1 8 13",
+        ])
+    );
+    assert_eq!(
+        links,
+        tsv(&[
+            "chr1 0 13 s1+ s2+ chr1 0 8 0 chr1 8 13 0",
+            "chr1 0 13 s1+ s3- chr1 0 8 0 b#1#c 100 103 1",
+            "chr1 0 13 s3- s2+ b#1#c 100 103 1 chr1 8 13 0",
+        ])
+    );
+}
+
+#[test]
+fn anchored_leaves_a_component_off_the_reference_on_its_own_coordinates() {
+    let (_, nodes, links) = run("island.gfa", &["--layout", "anchored"]);
+    assert!(nodes.contains(&tsv(&[
+        "d#1#x 5 7 s4 2 d#1#x 5 7",
+        "d#1#x 7 8 s5 2 d#1#x 7 8"
+    ])));
+    assert!(links.contains(&tsv(&["d#1#x 5 8 s4+ s5+ d#1#x 5 7 2 d#1#x 7 8 2"])));
+    assert_eq!(links.lines().count(), 4);
+}
+
+#[test]
+fn anchored_keeps_the_carriers_column_last() {
+    let (_, nodes, _) = run("paths.gfa", &["--layout", "anchored"]);
+    assert_eq!(
+        nodes,
+        tsv(&[
+            "ref#1#chr 0 4 1 0 ref#1#chr 0 4 SM:Z:ref.1,alt.1",
+            "ref#1#chr 0 9 3 1 alt#1#ctg 4 5 SM:Z:alt.1",
+            "ref#1#chr 4 6 2 0 ref#1#chr 4 6 SM:Z:ref.1",
+            "ref#1#chr 6 9 4 0 ref#1#chr 6 9 SM:Z:ref.1,alt.1",
+        ])
+    );
+}
+
+#[test]
+fn a_failed_run_leaves_no_partial_file() {
+    let (output, nodes, _) = run("paths.gfa", &["--reference", "nope"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(nodes.is_empty());
 }
