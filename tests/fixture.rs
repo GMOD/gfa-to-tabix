@@ -196,3 +196,13 @@ fn a_failed_run_leaves_no_partial_file() {
     assert_eq!(output.status.code(), Some(1));
     assert!(nodes.is_empty());
 }
+
+#[test]
+fn anchored_files_a_zero_length_node_under_one_base() {
+    let (_, nodes, links) = run("zero.gfa", &["--layout", "anchored"]);
+    assert_eq!(
+        nodes,
+        tsv(&["chr1 10 11 y 1 alt 0 4", "chr1 10 11 z 0 chr1 10 10"])
+    );
+    assert_eq!(links, tsv(&["chr1 10 11 z+ y+ chr1 10 10 0 alt 0 4 1"]));
+}

@@ -88,8 +88,15 @@ under the region and every link between the nodes those lead to. It also
 returns links of neither kind, so a reader keeps a link when one of its nodes
 came back from the node file, or when both are far ends of links it kept.
 
+A link between two reference nodes on opposite sides of the region, such as a
+deletion that spans it, touches no node under the region. The query returns
+it all the same, and a reader that wants it drawn keeps it too.
+
 A component that links to two reference sequences gets a row under each. A
 component that links to none keeps its own coordinates.
+
+A zero-length node is filed under one base, since a region query skips a row
+whose interval is empty; its own coordinate in the later columns stays exact.
 
 **`contig`**. Every node is filed under its own coordinate, as version 0.1.0
 did. A reader has to follow links from the reference onto other contigs, one
@@ -166,7 +173,8 @@ prefix alone is enough:
 
 The tool holds the whole graph in memory. On HPRC release 2's
 `hprc-v2.1-mc-grch38.sv.gfa.gz` (759,223 nodes, 1,107,199 links, 841 MB
-gzipped) it runs in about 12 s and peaks at 0.9 GB on a laptop. The two anchored
+gzipped) it runs in about 12 s and peaks at 0.9 GB on a laptop; `--layout contig` takes
+about 20 s and 2.1 GB. The two anchored
 indexes total 0.5 MB; the `contig` layout's total 9 MB and inflate to 635 MB
 each, because a Tabix index spends 8 bytes per 16 kb of every contig.
 

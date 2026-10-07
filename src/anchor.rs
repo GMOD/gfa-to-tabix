@@ -95,6 +95,12 @@ fn widen(spans: &mut Vec<Span>, span: Span) {
 // kept.
 pub fn anchored(graph: &Graph, nodes: &[Option<Node>]) -> Spans {
     let (own, sequences) = own_spans(nodes);
+    // A reader's region query skips a row whose interval is empty, so a
+    // zero-length node is filed under one base.
+    let own: Vec<Option<Span>> = own
+        .into_iter()
+        .map(|span| span.map(|(sequence, start, end)| (sequence, start, end.max(start + 1))))
+        .collect();
     let reference = |n: u32| {
         nodes[n as usize]
             .as_ref()
