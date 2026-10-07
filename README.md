@@ -91,7 +91,7 @@ Rows are sorted by sequence name in byte order, then by start.
 
 With the
 [graph genome viewer plugin](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer),
-point a graph track at the prefix:
+a graph track names the node file, the link file and the index of each:
 
 ```json
 {
@@ -101,9 +101,30 @@ point a graph track at the prefix:
   "assemblyNames": ["hg38"],
   "adapter": {
     "type": "RgfaTabixAdapter",
-    "uri": "https://example.org/hprc",
+    "segmentsLocation": { "uri": "https://example.org/hprc.segs.bed.gz" },
+    "segmentsIndex": {
+      "location": { "uri": "https://example.org/hprc.segs.bed.gz.tbi" }
+    },
+    "linksLocation": { "uri": "https://example.org/hprc.links.bed.gz" },
+    "linksIndex": {
+      "location": { "uri": "https://example.org/hprc.links.bed.gz.tbi" }
+    },
     "assemblyNameToPanSN": { "hg38": "GRCh38" }
   }
+}
+```
+
+`assemblyNameToPanSN` maps the JBrowse assembly name to the sample name the
+graph uses, when the two differ.
+
+When the four files sit side by side under the names the tool gave them, the
+prefix alone is enough:
+
+```json
+"adapter": {
+  "type": "RgfaTabixAdapter",
+  "uri": "https://example.org/hprc",
+  "assemblyNameToPanSN": { "hg38": "GRCh38" }
 }
 ```
 
