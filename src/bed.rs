@@ -114,7 +114,7 @@ pub fn link_rows(
         if let (Some(a), Some(b)) = (&a.carriers, &b.carriers) {
             push_fields(&mut rest, &[b"", a, b]);
         }
-        let ends = spans.nodes[source].iter().chain(&spans.nodes[target]);
+        let ends = spans.links[source].iter().chain(&spans.links[target]);
         match layout {
             Layout::Contig => rows.extend(ends.map(|&span| row(spans, span, &rest))),
             Layout::Anchored => {

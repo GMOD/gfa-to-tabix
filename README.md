@@ -80,6 +80,14 @@ reference node it links to. One query on each file then returns the whole graph
 under a region, however deeply alleles nest. A window inside a large bubble
 returns all of that bubble.
 
+A link is filed under the interval that covers what both of its nodes reach: a
+component's interval for a node in one, and for a reference node its own
+coordinate, the components hanging from it and the reference nodes it links
+to. A region query on the link file therefore returns every link with a node
+under the region and every link between the nodes those lead to. It also
+returns links of neither kind, so a reader keeps a link when one of its nodes
+came back from the node file, or when both are far ends of links it kept.
+
 A component that links to two reference sequences gets a row under each. A
 component that links to none keeps its own coordinates.
 
@@ -108,8 +116,8 @@ the row is filed under:
 seq start end  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtStart tgtEnd tgtRank  [srcSM tgtSM]
 ```
 
-Anchored, a link has one row, under the interval that covers both nodes'
-anchors. By contig, it has two rows, one under each node's coordinate.
+Anchored, a link has one row per reference sequence. By contig, it has two rows,
+one under each node's coordinate.
 
 Rows are sorted by sequence name in byte order, then by start.
 
@@ -158,7 +166,7 @@ prefix alone is enough:
 
 The tool holds the whole graph in memory. On HPRC release 2's
 `hprc-v2.1-mc-grch38.sv.gfa.gz` (759,223 nodes, 1,107,199 links, 841 MB
-gzipped) it runs in about 11 s and peaks at 0.9 GB on a laptop. The two anchored
+gzipped) it runs in about 12 s and peaks at 0.9 GB on a laptop. The two anchored
 indexes total 0.5 MB; the `contig` layout's total 9 MB and inflate to 635 MB
 each, because a Tabix index spends 8 bytes per 16 kb of every contig.
 
