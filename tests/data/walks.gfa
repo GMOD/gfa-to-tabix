@@ -1,0 +1,9 @@
+H	VN:Z:1.1
+S	1	AAAA
+S	2	CC
+S	3	G
+S	4	TTT
+W	alt	1	ctg	10	18	>1>3>4
+W	ref	1	chr	0	9	>1>2>4
+L	1	+	2	+	0M
+L	1	+	3	+	0M

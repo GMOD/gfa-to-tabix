@@ -1,0 +1,7 @@
+H	VN:Z:1.0
+S	s1	ACGTACGT	SN:Z:chr1	SO:i:0	SR:i:0
+S	s2	*	LN:i:5	SN:Z:chr1	SO:i:8	SR:i:0
+S	s3	ACG	SN:Z:b#1#c	SO:i:100	SR:i:1
+L	s1	+	s2	+	0M
+L	s1	+	s3	-	0M
+L	s3	-	s2	+	0M

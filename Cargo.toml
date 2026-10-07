@@ -1,0 +1,24 @@
+[package]
+name = "gfa-to-tabix"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.91"
+description = "Indexes a pangenome graph's GFA by genome coordinate, as two Tabix-indexed BED files"
+license = "Apache-2.0"
+repository = "https://github.com/cmdcolin/gfa-to-tabix"
+readme = "README.md"
+keywords = ["pangenome", "gfa", "tabix", "bioinformatics"]
+categories = ["science", "command-line-utilities"]
+exclude = ["tests", ".github", "scripts"]
+
+[dependencies]
+flate2 = { version = "1.1.10", default-features = false, features = ["zlib-rs"] }
+noodles-bgzf = "0.52.0"
+noodles-core = "0.21.0"
+noodles-csi = "0.62.0"
+noodles-tabix = "0.68.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
