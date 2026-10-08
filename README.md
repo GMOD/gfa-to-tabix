@@ -258,6 +258,12 @@ each, because a Tabix index spends 8 bytes per 16 kb of every contig.
 A base-level graph of a human chromosome has millions of nodes and one path
 step per node per haplotype; expect memory to grow with the total path length.
 
+`--walks` holds only per-node and per-link arrays, and streams the paths. On a
+Minigraph-Cactus chr22 (3.1 M nodes, 4.7 M links, 1,131 paths, 630 M steps,
+a 5.0 GB GFA) with `--refs GRCh38,CHM13`, it runs in 1 min 45 s and peaks at
+1.4 GB on a 16-core laptop; from the gzipped GFA it takes 2 min 48 s. The six
+files total 443 MB.
+
 ## Matching the JBrowse scripts
 
 The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`
