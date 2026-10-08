@@ -592,13 +592,14 @@ impl Chunks {
         sequences.sort_unstable();
         let mut first = vec![NONE; names.names.len()];
         let mut starts = Vec::new();
+        let count: u64 = sequences.iter().map(|&(_, _, end)| end / size + 1).sum();
+        if count >= u64::from(NONE) {
+            return Err("more than 2^32 chunks; use a larger --chunk".into());
+        }
         for (_, name, end) in sequences {
             first[name as usize] = starts.len() as u32;
             for c in 0..=end / size {
                 starts.push((name, c * size));
-            }
-            if starts.len() >= NONE as usize {
-                return Err("more than 2^32 chunks; use a larger --chunk".into());
             }
         }
         Ok(Chunks {
