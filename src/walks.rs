@@ -7,8 +7,9 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::io::BufRead;
+use std::io::Read;
 use std::path::PathBuf;
+use std::sync::mpsc::{Receiver, sync_channel};
 use std::thread;
 use std::time::Instant;
 
@@ -325,24 +326,84 @@ struct RefWalk {
     ids: Vec<u32>,
 }
 
+// Reads (and decompresses) the input on its own thread, so parsing never
+// waits on inflate.
+struct Prefetched {
+    chunks: Receiver<Result<Vec<u8>, String>>,
+    chunk: Vec<u8>,
+    at: usize,
+}
+
+impl Prefetched {
+    fn open(path: &str) -> Prefetched {
+        let (sender, chunks) = sync_channel(4);
+        let path = path.to_string();
+        thread::spawn(move || {
+            let mut input = match crate::open_input(&path) {
+                Ok(input) => input,
+                Err(e) => return drop(sender.send(Err(e))),
+            };
+            loop {
+                let mut chunk = Vec::with_capacity(4 << 20);
+                let read = (&mut input)
+                    .take(4 << 20)
+                    .read_to_end(&mut chunk)
+                    .map_err(|e| format!("{path}: {e}"));
+                let done = matches!(read, Ok(0) | Err(_));
+                if sender.send(read.map(|_| chunk)).is_err() || done {
+                    return;
+                }
+            }
+        });
+        Prefetched {
+            chunks,
+            chunk: Vec::new(),
+            at: 0,
+        }
+    }
+
+    // Appends through the next newline, which it drops; false at the end.
+    fn line(&mut self, line: &mut Vec<u8>) -> Result<bool, String> {
+        line.clear();
+        loop {
+            if self.at == self.chunk.len() {
+                match self.chunks.recv() {
+                    Ok(Ok(chunk)) if !chunk.is_empty() => {
+                        self.chunk = chunk;
+                        self.at = 0;
+                    }
+                    Ok(Err(e)) => return Err(e),
+                    _ => return Ok(!line.is_empty()),
+                }
+            }
+            let rest = &self.chunk[self.at..];
+            match rest.iter().position(|&b| b == b'\n') {
+                Some(end) => {
+                    line.extend_from_slice(&rest[..end]);
+                    self.at += end + 1;
+                    return Ok(true);
+                }
+                None => {
+                    line.extend_from_slice(rest);
+                    self.at = self.chunk.len();
+                }
+            }
+        }
+    }
+}
+
 fn read_lines(path: &str, mut each: impl FnMut(&[u8]) -> Result<(), String>) -> Result<(), String> {
-    let mut input = crate::open_input(path)?;
+    let mut input = Prefetched::open(path);
     let mut line = Vec::new();
     let mut number = 0u64;
-    loop {
-        line.clear();
-        let read = input
-            .read_until(b'\n', &mut line)
-            .map_err(|e| format!("{path}: {e}"))?;
-        if read == 0 {
-            return Ok(());
-        }
+    while input.line(&mut line)? {
         number += 1;
-        while matches!(line.last(), Some(b'\n' | b'\r')) {
+        if line.last() == Some(&b'\r') {
             line.pop();
         }
         each(&line).map_err(|e| format!("{path}: line {number}: {e}"))?;
     }
+    Ok(())
 }
 
 // Pass 1: node lengths (and sequences), links, and every reference sample's

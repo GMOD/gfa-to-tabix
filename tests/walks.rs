@@ -7,11 +7,13 @@
 // walks-two-refs-p.gfa says the same in P lines.
 
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use flate2::Compression;
 use flate2::read::MultiGzDecoder;
+use flate2::write::GzEncoder;
 
 struct Built {
     output: Output,
@@ -28,7 +30,7 @@ fn build(fixture: &str, args: &[&str]) -> Built {
         RUNS.fetch_add(1, Ordering::Relaxed)
     ));
     fs::create_dir_all(&dir).unwrap();
-    let input = if fixture == "-" {
+    let input = if fixture == "-" || fixture.starts_with('/') {
         fixture.to_string()
     } else {
         format!("{}/tests/data/{fixture}", env!("CARGO_MANIFEST_DIR"))
@@ -226,6 +228,26 @@ fn p_lines_give_the_rows_w_lines_do() {
     assert_eq!(p.walks, w.walks);
     assert_eq!(p.nodes, w.nodes);
     assert_eq!(p.links, w.links);
+}
+
+#[test]
+fn gzipped_input_gives_the_same_rows() {
+    let gfa = fs::read(format!(
+        "{}/tests/data/walks-two-refs.gfa",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap();
+    let path = std::env::temp_dir().join(format!("walks-two-refs-{}.gfa.gz", std::process::id()));
+    let mut encoder = GzEncoder::new(fs::File::create(&path).unwrap(), Compression::default());
+    encoder.write_all(&gfa).unwrap();
+    encoder.finish().unwrap();
+    let gzipped = build(path.to_str().unwrap(), &[]);
+    fs::remove_file(&path).unwrap();
+    let plain = build("walks-two-refs.gfa", &[]);
+    assert!(gzipped.output.status.success());
+    assert_eq!(gzipped.walks, plain.walks);
+    assert_eq!(gzipped.nodes, plain.nodes);
+    assert_eq!(gzipped.links, plain.links);
 }
 
 #[test]
