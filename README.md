@@ -2,9 +2,9 @@
 
 `gfa-to-tabix` indexes a pangenome graph's GFA by genome coordinate. It writes
 the graph's nodes and links as two bgzip-compressed, Tabix-indexed BED files,
-and with [`--walks`](#walks) a third holding every haplotype's path, so a
-genome browser can fetch the part of the graph under a region with HTTP range
-requests. The [JBrowse 2](https://jbrowse.org) graph track reads these files.
+and with [`--walks`](#walks) a third holding every haplotype's path, one set
+per reference, so a genome browser can fetch the part of the graph under a
+region with HTTP range requests. The [JBrowse 2](https://jbrowse.org) graph track reads these files.
 
 One binary does the whole conversion. It needs no gfatools, awk, bgzip or tabix.
 
@@ -141,20 +141,24 @@ vg convert -f chr22.gbz > chr22.gfa
 gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
 ```
 
-It writes six files:
+It writes three files and their indexes for each sample in `--refs`,
+`<prefix>.<sample>.<kind>.bed.gz`:
 
 ```
-chr22.walks.bed.gz  chr22.walks.bed.gz.tbi
-chr22.nodes.bed.gz  chr22.nodes.bed.gz.tbi
-chr22.links.bed.gz  chr22.links.bed.gz.tbi
+chr22.GRCh38.walks.bed.gz  chr22.GRCh38.walks.bed.gz.tbi
+chr22.GRCh38.nodes.bed.gz  chr22.GRCh38.nodes.bed.gz.tbi
+chr22.GRCh38.links.bed.gz  chr22.GRCh38.links.bed.gz.tbi
+chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
+chr22.CHM13.nodes.bed.gz   chr22.CHM13.nodes.bed.gz.tbi
+chr22.CHM13.links.bed.gz   chr22.CHM13.links.bed.gz.tbi
 ```
 
 The tool cuts each path into pieces, one for each stretch the path spends in a
 64 kb chunk of a reference, and files each piece under its chunk. A region
 query on the walk file returns every path's steps through the region, and the
 same query on the node and link files returns the nodes and links those steps
-visit. Each sample named in `--refs` gets its own rows, in the same three
-files, so one set answers queries on GRCh38 and on CHM13.
+visit. A sample's three files hold only the rows filed under its own chunks,
+so a reader on GRCh38 downloads an index that covers GRCh38 alone.
 
 A step on a reference node takes that node's chunk; a step on any other node
 takes the chunk of the last reference step before it. A query over a window
@@ -164,7 +168,7 @@ of a reference has no rows under it, and the tool counts these on stderr.
 
 | Option            | Effect                                                                |
 | ----------------- | --------------------------------------------------------------------- |
-| `--refs <names>`  | Comma-separated PanSN samples to file rows under. Required.           |
+| `--refs <names>`  | Comma-separated PanSN samples, each with its own files. Required.     |
 | `--chunk <bp>`    | Chunk size. Default 65536.                                            |
 | `--cap <steps>`   | Most steps in one row. Default 8192.                                  |
 | `--settle <bp>`   | Shortest run that moves a path to another chunk. Default 0, off.      |
@@ -182,7 +186,7 @@ drew it without some of those nodes in 89, mostly at 18.74 Mb in the 22q11
 repeats; without it, the cut left none out. Against gbz-base with 8
 haplotypes, 41 of the windows matched without it and 39 with it. Without it, a
 path that passes over nodes placed on another repeat copy, as at 20.3 Mb, is
-drawn in more fragments. The six files are 408 MB without it and 443 MB with
+drawn in more fragments. The files are 408 MB without it and 443 MB with
 it, and a window of 10 to 260 kb reads the same bytes within 3%.
 
 Every row is filed under the first base of its chunk, `anchorSeq chunkStart
@@ -208,14 +212,15 @@ decodes on its own.
 Each file opens with header lines, which start with `#`: `tabix -H` prints them
 and region queries skip them. The first gives the chunk size: `#walks`, a tab
 and `chunk:i:65536` (`#nodes` and `#links` in the other two files, which have
-only this line). The walk file then names each sample in `--refs`, in that
-order, and each other haplotype with rows, as its PanSN `sample#haplotype` (a
-path name up to its second `#`), once each in byte order:
+only this line). The walk file then names its reference sample and each other
+haplotype with rows in the file, the other `--refs` samples included, as its
+PanSN `sample#haplotype` (a path name up to its second `#`), once each in byte
+order:
 
 ```
 #walks	chunk:i:65536
 #reference	GRCh38
-#reference	CHM13
+#haplotype	CHM13#0
 #haplotype	HG00097#1
 #haplotype	HG00097#2
 ...
@@ -281,6 +286,20 @@ prefix alone is enough:
 }
 ```
 
+For files written with `--walks`, `walksUri` takes the prefix up to the
+reference sample, so a track on hg38 reads the GRCh38 set and a track on hs1
+would name the CHM13 one. `defaultHaplotypes` names the haplotypes the track
+draws until the user picks others:
+
+```json
+"adapter": {
+  "type": "RgfaTabixAdapter",
+  "walksUri": "https://example.org/hprc-v2.1-mc-grch38.GRCh38",
+  "assemblyNameToPanSN": { "hg38": "GRCh38" },
+  "defaultHaplotypes": ["HG002", "HG00733"]
+}
+```
+
 ## Scale
 
 The tool holds the whole graph in memory. On HPRC release 2's
@@ -296,8 +315,8 @@ step per node per haplotype; expect memory to grow with the total path length.
 `--walks` holds only per-node and per-link arrays, and streams the paths. On a
 Minigraph-Cactus chr22 (3.1 M nodes, 4.7 M links, 1,131 paths, 630 M steps,
 a 5.0 GB GFA) with `--refs GRCh38,CHM13`, it runs in about 2 min and peaks at
-1.4 GB on a 16-core laptop, and in about 3 min from the gzipped GFA. The six
-files total 408 MB.
+1.4 GB on a 16-core laptop, and in about 3 min from the gzipped GFA. The
+files, three for each reference, total 408 MB.
 
 ## Matching the JBrowse scripts
 

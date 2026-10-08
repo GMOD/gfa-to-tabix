@@ -6,6 +6,7 @@
 // I#1#i inverts 2-3, D#1#d repeats 1-4, and U#1#u visits only 8 and 9.
 // walks-two-refs-p.gfa says the same in P lines.
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::io::{Read, Write};
 use std::process::{Command, Output};
@@ -17,9 +18,20 @@ use flate2::write::GzEncoder;
 
 struct Built {
     output: Output,
+    // by `sample.kind`, from out.<sample>.<kind>.bed.gz
+    files: BTreeMap<String, String>,
+    // every sample's file of the kind, one after another
     walks: String,
     nodes: String,
     links: String,
+}
+
+impl Built {
+    fn file(&self, sample: &str, kind: &str) -> &str {
+        self.files
+            .get(&format!("{sample}.{kind}"))
+            .map_or("", String::as_str)
+    }
 }
 
 fn build(fixture: &str, args: &[&str]) -> Built {
@@ -43,26 +55,40 @@ fn build(fixture: &str, args: &[&str]) -> Built {
         .args(args)
         .output()
         .unwrap();
-    let read = |kind: &str| {
-        let mut text = String::new();
-        if let Ok(file) = fs::File::open(dir.join(format!("out.{kind}.bed.gz"))) {
-            MultiGzDecoder::new(file).read_to_string(&mut text).unwrap();
-            assert!(dir.join(format!("out.{kind}.bed.gz.tbi")).exists());
+    let mut files = BTreeMap::new();
+    for entry in fs::read_dir(&dir).unwrap().flatten() {
+        let name = entry.file_name().into_string().unwrap();
+        if name.ends_with(".bed.gz.tbi") {
+            continue;
         }
-        text
+        let key = name
+            .strip_prefix("out.")
+            .and_then(|n| n.strip_suffix(".bed.gz"))
+            .unwrap_or_else(|| panic!("left behind: {name}"));
+        assert!(
+            dir.join(format!("{name}.tbi")).exists(),
+            "{name} has no index"
+        );
+        let mut text = String::new();
+        MultiGzDecoder::new(fs::File::open(entry.path()).unwrap())
+            .read_to_string(&mut text)
+            .unwrap();
+        files.insert(key.to_string(), text);
+    }
+    let all = |kind: &str| -> String {
+        files
+            .iter()
+            .filter(|(key, _)| key.ends_with(&format!(".{kind}")))
+            .map(|(_, text)| text.as_str())
+            .collect()
     };
     let built = Built {
-        walks: read("walks"),
-        nodes: read("nodes"),
-        links: read("links"),
+        walks: all("walks"),
+        nodes: all("nodes"),
+        links: all("links"),
+        files,
         output,
     };
-    let left: Vec<_> = fs::read_dir(&dir)
-        .unwrap()
-        .flatten()
-        .map(|e| e.file_name())
-        .collect();
-    assert!(left.len() <= 6, "temporary files left behind: {left:?}");
     fs::remove_dir_all(&dir).unwrap();
     built
 }
@@ -92,9 +118,9 @@ fn under(text: &str, anchor: &str) -> String {
 fn each_reference_files_every_path_under_its_own_chunks() {
     let built = build("walks-two-refs.gfa", &[]);
     assert!(built.output.status.success());
-    for anchor in ["R#0#chr", "Q#0#chr"] {
+    for (sample, anchor) in [("R", "R#0#chr"), ("Q", "Q#0#chr")] {
         assert_eq!(
-            rows_of(&built.walks, anchor, "R#0#chr"),
+            rows_of(built.file(sample, "walks"), anchor, "R#0#chr"),
             tsv(&[
                 &format!("{anchor} 0 1 R#0#chr 0 0 0 2 2,2"),
                 &format!("{anchor} 10 11 R#0#chr 0 12 1 2 6,2"),
@@ -105,11 +131,20 @@ fn each_reference_files_every_path_under_its_own_chunks() {
 }
 
 #[test]
-fn each_file_starts_with_the_chunk_size() {
+fn each_reference_has_its_own_three_files_holding_only_its_rows() {
     let built = build("walks-two-refs.gfa", &[]);
-    assert!(built.walks.starts_with("#walks\tchunk:i:10\n"));
-    assert!(built.nodes.starts_with("#nodes\tchunk:i:10\n"));
-    assert!(built.links.starts_with("#links\tchunk:i:10\n"));
+    assert_eq!(
+        built.files.keys().collect::<Vec<_>>(),
+        [
+            "Q.links", "Q.nodes", "Q.walks", "R.links", "R.nodes", "R.walks"
+        ]
+    );
+    for (key, text) in &built.files {
+        let anchor = format!("{}#0#chr\t", &key[..1]);
+        let rows: Vec<&str> = text.lines().filter(|l| !l.starts_with('#')).collect();
+        assert!(!rows.is_empty(), "{key}");
+        assert!(rows.iter().all(|row| row.starts_with(&anchor)), "{key}");
+    }
 }
 
 fn header(text: &str) -> String {
@@ -119,23 +154,31 @@ fn header(text: &str) -> String {
         .collect()
 }
 
-// U#1#u visits no reference node, so it has no rows and no line.
+// U#1#u visits no reference node, so it has no rows and no line. Each walk
+// file lists the other reference among its haplotypes, since its walk has
+// rows there.
 #[test]
-fn the_walk_file_names_the_references_and_each_haplotype_with_rows() {
+fn a_walk_file_names_its_reference_and_each_haplotype_with_rows() {
     let built = build("walks-two-refs.gfa", &[]);
-    assert_eq!(
-        header(&built.walks),
-        tsv(&[
-            "#walks chunk:i:10",
-            "#reference R",
-            "#reference Q",
-            "#haplotype D#1",
-            "#haplotype H#1",
-            "#haplotype I#1",
-        ])
-    );
-    assert_eq!(header(&built.nodes), tsv(&["#nodes chunk:i:10"]));
-    assert_eq!(header(&built.links), tsv(&["#links chunk:i:10"]));
+    for (sample, other) in [("R", "Q"), ("Q", "R")] {
+        assert_eq!(
+            header(built.file(sample, "walks")),
+            tsv(&[
+                "#walks chunk:i:10",
+                &format!("#reference {sample}"),
+                "#haplotype D#1",
+                "#haplotype H#1",
+                "#haplotype I#1",
+                &format!("#haplotype {other}#0"),
+            ])
+        );
+        for kind in ["nodes", "links"] {
+            assert_eq!(
+                header(built.file(sample, kind)),
+                tsv(&[&format!("#{kind} chunk:i:10")])
+            );
+        }
+    }
 }
 
 #[test]
@@ -154,11 +197,12 @@ fn a_haplotype_with_two_contigs_is_listed_once() {
     let built = build(path.to_str().unwrap(), &[]);
     fs::remove_file(&path).unwrap();
     assert!(built.output.status.success());
-    assert!(header(&built.walks).ends_with(&tsv(&[
+    assert!(header(built.file("R", "walks")).ends_with(&tsv(&[
         "#haplotype D#1",
         "#haplotype H#1",
         "#haplotype H#2",
         "#haplotype I#1",
+        "#haplotype Q#0",
     ])));
 }
 

@@ -1,9 +1,9 @@
 // The --walks mode: every path of a base-level GFA cut into pieces filed under
 // fixed chunks of each reference's coordinate, with the nodes and links those
-// pieces touch, as three Tabix-indexed BED files. A row's interval is the
-// first base of its chunk: a full-chunk interval would share a Tabix bin with
-// the next chunk, and a query would pull both. Header lines give the chunk
-// size and, in the walk file, the references and haplotypes.
+// pieces touch, as three Tabix-indexed BED files per reference. A row's
+// interval is the first base of its chunk: a full-chunk interval would share a
+// Tabix bin with the next chunk, and a query would pull both. Header lines give
+// the chunk size and, in the walk file, the reference and the haplotypes.
 
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
@@ -311,6 +311,7 @@ struct Reference {
     pieces: u64,
     settled_steps: u64,
     unplaced: u64,
+    haplotypes: BTreeSet<Vec<u8>>,
 }
 
 impl Reference {
@@ -633,6 +634,7 @@ fn first_pass(
             pieces: 0,
             settled_steps: 0,
             unplaced: 0,
+            haplotypes: BTreeSet::new(),
         })
         .collect();
     let mut on_reference: Vec<Stable> = options.refs.iter().map(|_| Stable::default()).collect();
@@ -684,27 +686,32 @@ fn first_pass(
 // files are sorted: by sequence name in byte order, then by start.
 struct Chunks {
     size: u64,
-    // by name id: the number of a reference sequence's first chunk
+    // by name id: the number of a reference sequence's first chunk, and the
+    // reference it belongs to
     first: Vec<u32>,
+    owner: Vec<u32>,
     // by chunk number: (name id, start)
     starts: Vec<(u32, u64)>,
 }
 
 impl Chunks {
-    fn new(size: u64, ends: &HashMap<u32, u64>, names: &Names) -> Result<Chunks, String> {
-        let mut sequences: Vec<(&[u8], u32, u64)> = ends
+    // `ends` maps a reference sequence's name id to (its reference, its end).
+    fn new(size: u64, ends: &HashMap<u32, (u32, u64)>, names: &Names) -> Result<Chunks, String> {
+        let mut sequences: Vec<(&[u8], u32, u32, u64)> = ends
             .iter()
-            .map(|(&name, &end)| (names.names[name as usize].as_slice(), name, end))
+            .map(|(&name, &(owner, end))| (names.names[name as usize].as_slice(), name, owner, end))
             .collect();
         sequences.sort_unstable();
         let mut first = vec![NONE; names.names.len()];
+        let mut owner = vec![NONE; names.names.len()];
         let mut starts = Vec::new();
-        let count: u64 = sequences.iter().map(|&(_, _, end)| end / size + 1).sum();
+        let count: u64 = sequences.iter().map(|&(_, _, _, end)| end / size + 1).sum();
         if count >= u64::from(NONE) {
             return Err("more than 2^32 chunks; use a larger --chunk".into());
         }
-        for (_, name, end) in sequences {
+        for (_, name, reference, end) in sequences {
             first[name as usize] = starts.len() as u32;
+            owner[name as usize] = reference;
             for c in 0..=end / size {
                 starts.push((name, c * size));
             }
@@ -712,6 +719,7 @@ impl Chunks {
         Ok(Chunks {
             size,
             first,
+            owner,
             starts,
         })
     }
@@ -746,7 +754,6 @@ struct Builder<'a> {
     chunk_of: Vec<u32>,
     runs: Vec<Run>,
     pieces: Vec<(usize, usize)>,
-    haplotypes: BTreeSet<Vec<u8>>,
 }
 
 // A path's PanSN haplotype, `sample#haplotype`: its name up to the second `#`.
@@ -875,13 +882,12 @@ impl Builder<'_> {
                 self.references[r].unplaced += 1;
                 continue;
             }
-            if !self
-                .options
-                .refs
-                .iter()
-                .any(|s| s.as_bytes() == path.sample)
-            {
-                self.haplotypes.insert(haplotype(&path.name).to_vec());
+            if self.references[r].sample != path.sample {
+                let haplotypes = &mut self.references[r].haplotypes;
+                let name = haplotype(&path.name);
+                if !haplotypes.contains(name) {
+                    haplotypes.insert(name.to_vec());
+                }
             }
             self.cut_pieces();
             self.references[r].pieces += self.pieces.len() as u64;
@@ -1051,15 +1057,20 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let elapsed = || format!("[{:6.1} s]", clock.elapsed().as_secs_f64());
     let mut names = Names::default();
     let (graph, references) = first_pass(gfa, options, &mut names)?;
-    let mut ends: HashMap<u32, u64> = HashMap::new();
-    for reference in &references {
+    let mut ends: HashMap<u32, (u32, u64)> = HashMap::new();
+    for (r, reference) in references.iter().enumerate() {
+        let mut extend = |name: u32, end: u64| {
+            let held = ends.entry(name).or_insert((r as u32, 0));
+            held.1 = held.1.max(end);
+        };
         let mut on = 0;
         for (id, &placement) in reference.placement.iter().enumerate() {
             if reference.on_reference(id) {
                 on += 1;
-                let end = reference.offset[id] + u64::from(graph.lengths[id]);
-                let held = ends.entry(placement).or_default();
-                *held = (*held).max(end);
+                extend(
+                    placement,
+                    reference.offset[id] + u64::from(graph.lengths[id]),
+                );
             }
         }
         eprintln!(
@@ -1094,7 +1105,6 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         chunk_of: Vec::new(),
         runs: Vec::new(),
         pieces: Vec::new(),
-        haplotypes: BTreeSet::new(),
     };
     read_lines(gfa, |_, line| match line.first() {
         Some(b'W' | b'P') if line.get(1) == Some(&b'\t') => match path_line(line)? {
@@ -1123,35 +1133,43 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let Builder {
         names,
         chunks,
+        references,
         walks,
         nodes,
         links,
-        haplotypes,
         ..
     } = builder;
-    let mut walks_header = Vec::new();
-    for sample in &options.refs {
-        walks_header.extend_from_slice(b"#reference\t");
-        walks_header.extend_from_slice(sample.as_bytes());
-        walks_header.push(b'\n');
-    }
-    for name in &haplotypes {
-        walks_header.extend_from_slice(b"#haplotype\t");
-        walks_header.extend_from_slice(name);
-        walks_header.push(b'\n');
-    }
-    let (names, chunks, walks_header) = (&names, &chunks, &walks_header);
+    let walks_headers: Vec<Vec<u8>> = references
+        .iter()
+        .map(|reference| {
+            let mut header = b"#reference\t".to_vec();
+            header.extend_from_slice(&reference.sample);
+            header.push(b'\n');
+            for name in &reference.haplotypes {
+                header.extend_from_slice(b"#haplotype\t");
+                header.extend_from_slice(name);
+                header.push(b'\n');
+            }
+            header
+        })
+        .collect();
+    let (names, chunks, walks_headers) = (&names, &chunks, &walks_headers);
     let threads = thread::available_parallelism().map_or(4, |n| n.get());
-    let write = |kind: &str, sorter: Sorter| -> Result<(String, u64), String> {
-        let path = format!("{prefix}.{kind}.bed.gz");
-        let mut writer = bed::Writer::create_parallel(&path, threads)?;
-        writer.header(format!("#{kind}\tchunk:i:{}\n", chunks.size).as_bytes())?;
-        if kind == "walks" {
-            writer.header(walks_header)?;
+    let write = |kind: &str, sorter: Sorter| -> Result<Vec<(String, u64)>, String> {
+        let mut writers = Vec::with_capacity(options.refs.len());
+        for (sample, walks_header) in options.refs.iter().zip(walks_headers) {
+            let mut writer =
+                bed::Writer::create_parallel(&format!("{prefix}.{sample}.{kind}.bed.gz"), threads)?;
+            writer.header(format!("#{kind}\tchunk:i:{}\n", chunks.size).as_bytes())?;
+            if kind == "walks" {
+                writer.header(walks_header)?;
+            }
+            writers.push((writer, 0u64));
         }
         let mut line = Vec::new();
-        let rows = sorter.merge(|chunk, rest| {
+        sorter.merge(|chunk, rest| {
             let (name, start) = chunks.starts[chunk as usize];
+            let (writer, rows) = &mut writers[chunks.owner[name as usize] as usize];
             let name = &names.names[name as usize];
             let end = start + 1;
             line.clear();
@@ -1163,12 +1181,19 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             line.push(b'\t');
             line.extend_from_slice(rest);
             line.push(b'\n');
+            *rows += 1;
             writer.push(name, start, end, &line)
         })?;
-        writer.finish()?;
-        Ok((path, rows))
+        writers
+            .into_iter()
+            .zip(&options.refs)
+            .map(|((writer, rows), sample)| {
+                writer.finish()?;
+                Ok((format!("{prefix}.{sample}.{kind}.bed.gz"), rows))
+            })
+            .collect()
     };
-    let written: Vec<Result<(String, u64), String>> = thread::scope(|scope| {
+    let written: Vec<Result<Vec<(String, u64)>, String>> = thread::scope(|scope| {
         let handles = [("walks", walks), ("nodes", nodes), ("links", links)]
             .map(|(kind, sorter)| scope.spawn(move || write(kind, sorter)));
         handles
@@ -1176,11 +1201,13 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             .map(|h| h.join().unwrap_or_else(|_| Err("writing panicked".into())))
             .collect()
     });
-    let mut summary = Vec::new();
-    for result in written {
-        let (path, rows) = result?;
-        summary.push(format!("{rows} rows -> {path}"));
+    let written = written.into_iter().collect::<Result<Vec<_>, _>>()?;
+    for (r, sample) in options.refs.iter().enumerate() {
+        let files: Vec<String> = written
+            .iter()
+            .map(|kind| format!("{} rows -> {}", kind[r].1, kind[r].0))
+            .collect();
+        eprintln!("{} {sample}: {} (+ .tbi)", elapsed(), files.join(", "));
     }
-    eprintln!("{} {} (+ .tbi)", elapsed(), summary.join(", "));
     Ok(())
 }

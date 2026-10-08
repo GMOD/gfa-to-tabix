@@ -47,10 +47,12 @@ options:
                         with a .tbi; default the input name without .gfa[.gz]
 
 walks (a base-level GFA with integer node ids and W or P lines):
-  --walks               instead write PREFIX.walks.bed.gz, PREFIX.nodes.bed.gz
-                        and PREFIX.links.bed.gz: every path cut into pieces
-                        filed under fixed chunks of each reference, with the
-                        nodes and links the pieces touch. Reads the GFA twice
+  --walks               instead write PREFIX.SAMPLE.walks.bed.gz,
+                        PREFIX.SAMPLE.nodes.bed.gz and
+                        PREFIX.SAMPLE.links.bed.gz for each SAMPLE in --refs:
+                        every path cut into pieces filed under fixed chunks of
+                        that reference, with the nodes and links the pieces
+                        touch. Reads the GFA twice
   --refs REFS           comma-separated reference samples, e.g. GRCh38,CHM13
   --chunk BP            chunk size on the reference (default 65536)
   --cap STEPS           most steps in one row (default 8192)
