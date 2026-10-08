@@ -164,7 +164,7 @@ fn a_walk_file_names_its_reference_and_each_haplotype_with_rows() {
         assert_eq!(
             header(built.file(sample, "walks")),
             tsv(&[
-                "#walks chunk:i:10",
+                "#walks chunk:i:10 maxnode:i:6 cap:i:8192",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",
@@ -175,9 +175,26 @@ fn a_walk_file_names_its_reference_and_each_haplotype_with_rows() {
         for kind in ["nodes", "links"] {
             assert_eq!(
                 header(built.file(sample, kind)),
-                tsv(&[&format!("#{kind} chunk:i:10")])
+                tsv(&[&format!("#{kind} chunk:i:10 maxnode:i:6 cap:i:8192")])
             );
         }
+    }
+}
+
+// walks-repeat.gfa: R#0#chr walks 1 2 3 2 3 4, a two-node repeat collapsed
+// into one copy. Nodes 1-3 are 6 bp and node 4 is 15 bp, so R reaches them at
+// 0, 6, 12, 18, 24 and 30 and ends at 45. H#1#h takes the same steps.
+#[test]
+fn the_first_header_line_gives_the_chunk_the_longest_node_and_the_cap() {
+    let built = build("walks-repeat.gfa", &["--refs", "R", "--cap", "3"]);
+    assert!(built.output.status.success());
+    for kind in ["walks", "nodes", "links"] {
+        assert!(
+            built
+                .file("R", kind)
+                .starts_with(&format!("#{kind}\tchunk:i:10\tmaxnode:i:15\tcap:i:3\n")),
+            "{kind}"
+        );
     }
 }
 

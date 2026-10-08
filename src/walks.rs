@@ -3,7 +3,8 @@
 // pieces touch, as three Tabix-indexed BED files per reference. A row's
 // interval is the first base of its chunk: a full-chunk interval would share a
 // Tabix bin with the next chunk, and a query would pull both. Header lines give
-// the chunk size and, in the walk file, the reference and the haplotypes.
+// the chunk size, the longest node and the cap, and in the walk file the
+// reference and the haplotypes.
 
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
@@ -1130,6 +1131,14 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         );
     }
 
+    let longest = builder
+        .graph
+        .lengths
+        .iter()
+        .filter(|&&l| l != NONE)
+        .max()
+        .copied()
+        .unwrap_or(0);
     let Builder {
         names,
         chunks,
@@ -1160,7 +1169,13 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         for (sample, walks_header) in options.refs.iter().zip(walks_headers) {
             let mut writer =
                 bed::Writer::create_parallel(&format!("{prefix}.{sample}.{kind}.bed.gz"), threads)?;
-            writer.header(format!("#{kind}\tchunk:i:{}\n", chunks.size).as_bytes())?;
+            writer.header(
+                format!(
+                    "#{kind}\tchunk:i:{}\tmaxnode:i:{longest}\tcap:i:{}\n",
+                    chunks.size, options.cap
+                )
+                .as_bytes(),
+            )?;
             if kind == "walks" {
                 writer.header(walks_header)?;
             }

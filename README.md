@@ -210,21 +210,28 @@ is `2 × (id − previous id) + r`. Every row starts from an absolute id, so a r
 decodes on its own.
 
 Each file opens with header lines, which start with `#`: `tabix -H` prints them
-and region queries skip them. The first gives the chunk size: `#walks`, a tab
-and `chunk:i:65536` (`#nodes` and `#links` in the other two files, which have
-only this line). The walk file then names its reference sample and each other
-haplotype with rows in the file, the other `--refs` samples included, as its
-PanSN `sample#haplotype` (a path name up to its second `#`), once each in byte
-order:
+and region queries skip them. The first is `#walks` (`#nodes` and `#links` in
+the other two files, which have only this line) and three tab-separated
+fields: `chunk:i:` the chunk size, `maxnode:i:` the longest node in bp, and
+`cap:i:` the most steps in one row, as `--cap` set it. The walk file then
+names its reference sample and each other haplotype with rows in the file, the
+other `--refs` samples included, as its PanSN `sample#haplotype` (a path name
+up to its second `#`), once each in byte order:
 
 ```
-#walks	chunk:i:65536
+#walks	chunk:i:65536	maxnode:i:1024	cap:i:8192
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
 #haplotype	HG00097#2
 ...
 ```
+
+A node that overlaps a window starts at most `maxnode` bp before it, so the
+chunk holding its row is at most that far back: a reader queries from
+`max(chunk, maxnode)` bp before the window, rounded down to a chunk start. vg
+chops nodes at 1,024 bp, so for its graphs that is the one chunk back described
+above; a graph with longer nodes needs more.
 
 A reader can list the haplotypes from the header without reading any rows. On
 the chr22 graph under [Scale](#scale) the header is 465 lines and 9,750 bytes,
