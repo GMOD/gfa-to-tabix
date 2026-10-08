@@ -952,9 +952,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         ..
     } = builder;
     let (names, chunks) = (&names, &chunks);
+    let threads = thread::available_parallelism().map_or(4, |n| n.get());
     let write = |kind: &str, sorter: Sorter| -> Result<(String, u64), String> {
         let path = format!("{prefix}.{kind}.bed.gz");
-        let mut writer = bed::Writer::create(&path)?;
+        let mut writer = bed::Writer::create_parallel(&path, threads)?;
         writer.header(format!("#{kind}\tchunk:i:{}\n", chunks.size).as_bytes())?;
         let mut line = Vec::new();
         let rows = sorter.merge(|chunk, rest| {

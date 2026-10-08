@@ -1,6 +1,8 @@
+use std::collections::VecDeque;
 use std::fs::{self, File};
 use std::io::{self, Write};
 use std::mem;
+use std::rc::Rc;
 
 use flate2::read::MultiGzDecoder;
 
@@ -12,6 +14,7 @@ use noodles_tabix as tabix;
 
 use crate::anchor::{Span, Spans};
 use crate::gfa::Graph;
+use crate::parallel_bgzf;
 use crate::place::Node;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -170,16 +173,82 @@ pub struct Writer {
     path: String,
     partial: String,
     partial_index: String,
-    writer: Option<bgzf::io::Writer<File>>,
+    sink: Option<Sink>,
     indexer: tabix::index::Indexer,
-    before: bgzf::VirtualPosition,
+    before: StreamPos,
+    // rows written whose virtual positions are not known yet
+    pending: VecDeque<Pending>,
+}
+
+// (block, offset): where a row starts or ends in the uncompressed stream
+type StreamPos = (u64, u16);
+
+struct Pending {
+    sequence: Rc<str>,
+    start: u64,
+    end: u64,
+    from: StreamPos,
+    to: StreamPos,
+}
+
+enum Sink {
+    Serial(bgzf::io::Writer<File>),
+    Parallel(parallel_bgzf::Writer),
+}
+
+impl Sink {
+    fn position(&self) -> StreamPos {
+        match self {
+            Sink::Serial(writer) => {
+                let position = writer.virtual_position();
+                (position.compressed(), position.uncompressed())
+            }
+            Sink::Parallel(writer) => writer.position(),
+        }
+    }
+
+    fn resolve(&self, position: StreamPos) -> Option<bgzf::VirtualPosition> {
+        match self {
+            Sink::Serial(_) => bgzf::VirtualPosition::try_from(position).ok(),
+            Sink::Parallel(writer) => writer.resolve(position),
+        }
+    }
+
+    fn write(&mut self, data: &[u8]) -> io::Result<()> {
+        match self {
+            Sink::Serial(writer) => writer.write_all(data),
+            Sink::Parallel(writer) => writer.write(data).map(drop),
+        }
+    }
+
+    fn finish(self) -> io::Result<()> {
+        match self {
+            Sink::Serial(writer) => writer.finish().map(drop),
+            Sink::Parallel(writer) => writer.finish(),
+        }
+    }
 }
 
 impl Writer {
     pub fn create(path: &str) -> Result<Writer, String> {
+        Writer::open(path, |file| Sink::Serial(bgzf::io::Writer::new(file)))
+    }
+
+    // Compresses with `threads` threads, at the level `create` uses.
+    pub fn create_parallel(path: &str, threads: usize) -> Result<Writer, String> {
+        Writer::open(path, |file| {
+            Sink::Parallel(parallel_bgzf::Writer::new(
+                file,
+                flate2::Compression::new(6),
+                threads,
+            ))
+        })
+    }
+
+    fn open(path: &str, sink: impl FnOnce(File) -> Sink) -> Result<Writer, String> {
         let partial = format!("{path}.partial");
-        let writer = File::create(&partial)
-            .map(bgzf::io::Writer::new)
+        let sink = File::create(&partial)
+            .map(sink)
             .map_err(|e| format!("{path}: {e}"))?;
         let mut indexer = tabix::index::Indexer::default();
         indexer.set_header(Builder::bed().build());
@@ -187,20 +256,24 @@ impl Writer {
             path: path.to_string(),
             partial_index: format!("{path}.tbi.partial"),
             partial,
-            before: writer.virtual_position(),
-            writer: Some(writer),
+            before: sink.position(),
+            sink: Some(sink),
             indexer,
+            pending: VecDeque::new(),
         })
+    }
+
+    fn sink(&mut self) -> &mut Sink {
+        self.sink.as_mut().expect("writer is open until finish")
     }
 
     // A line before the rows. It starts with `#`, the index's comment prefix,
     // so Tabix readers return it as the header.
     pub fn header(&mut self, line: &[u8]) -> Result<(), String> {
-        let writer = self.writer.as_mut().expect("writer is open until finish");
-        writer
-            .write_all(line)
-            .map_err(|e| format!("{}: {e}", self.path))?;
-        self.before = writer.virtual_position();
+        let path = self.path.clone();
+        let sink = self.sink();
+        sink.write(line).map_err(|e| format!("{path}: {e}"))?;
+        self.before = sink.position();
         Ok(())
     }
 
@@ -212,30 +285,64 @@ impl Writer {
         end: u64,
         line: &[u8],
     ) -> Result<(), String> {
-        let path = &self.path;
-        let writer = self.writer.as_mut().expect("writer is open until finish");
-        writer.write_all(line).map_err(|e| format!("{path}: {e}"))?;
-        let after = writer.virtual_position();
-        let sequence = String::from_utf8_lossy(sequence);
-        let position = |n: u64| {
-            Position::try_from(n as usize).map_err(|e| format!("{path}: coordinate {n}: {e}"))
+        let path = self.path.clone();
+        let sink = self.sink();
+        sink.write(line).map_err(|e| format!("{path}: {e}"))?;
+        let after = sink.position();
+        let sequence = match self.pending.back() {
+            Some(last) if last.sequence.as_bytes() == sequence => last.sequence.clone(),
+            _ => Rc::from(String::from_utf8_lossy(sequence)),
         };
-        self.indexer
-            .add_record(&sequence, position(start + 1)?, position(end.max(start + 1))?, Chunk::new(self.before, after))
-            .map_err(|e| {
-                format!(
-                    "{path}: cannot index {sequence}:{start}-{end}: {e}. A Tabix index holds coordinates up to 512 Mb"
-                )
-            })?;
+        self.pending.push_back(Pending {
+            sequence,
+            start,
+            end,
+            from: self.before,
+            to: after,
+        });
         self.before = after;
+        self.index_written()
+    }
+
+    // Indexes the pending rows whose blocks are written.
+    fn index_written(&mut self) -> Result<(), String> {
+        let path = &self.path;
+        let sink = self.sink.as_mut().expect("writer is open until finish");
+        while let Some(row) = self.pending.front() {
+            let (Some(from), Some(to)) = (sink.resolve(row.from), sink.resolve(row.to)) else {
+                break;
+            };
+            let position = |n: u64| {
+                Position::try_from(n as usize).map_err(|e| format!("{path}: coordinate {n}: {e}"))
+            };
+            let (sequence, start, end) = (&row.sequence, row.start, row.end);
+            self.indexer
+                .add_record(sequence, position(start + 1)?, position(end.max(start + 1))?, Chunk::new(from, to))
+                .map_err(|e| {
+                    format!(
+                        "{path}: cannot index {sequence}:{start}-{end}: {e}. A Tabix index holds coordinates up to 512 Mb"
+                    )
+                })?;
+            self.pending.pop_front();
+        }
+        if let Sink::Parallel(writer) = sink {
+            writer.forget_before(self.pending.front().map_or(self.before.0, |row| row.from.0));
+        }
         Ok(())
     }
 
     pub fn finish(mut self) -> Result<(), String> {
         let path = self.path.clone();
         let fail = |e: std::io::Error| format!("{path}: {e}");
-        let writer = self.writer.take().expect("writer is open until finish");
-        writer.finish().map_err(fail)?;
+        if let Some(Sink::Parallel(writer)) = self.sink.as_mut() {
+            writer.flush_all().map_err(fail)?;
+        }
+        self.index_written()?;
+        let sink = self.sink.take().expect("writer is open until finish");
+        sink.finish().map_err(fail)?;
+        if !self.pending.is_empty() {
+            return Err(format!("{path}: rows left unindexed"));
+        }
         let indexer = mem::take(&mut self.indexer);
         // A reader downloads the whole index, so recompress it at the best level.
         let mut default_level = tabix::io::Writer::new(Vec::new());

@@ -1,6 +1,7 @@
 mod anchor;
 mod bed;
 mod gfa;
+mod parallel_bgzf;
 mod place;
 mod sorter;
 mod walks;
