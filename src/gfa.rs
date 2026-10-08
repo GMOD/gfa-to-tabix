@@ -45,7 +45,7 @@ fn parse_u64(bytes: &[u8], what: &str) -> Result<u64, String> {
         .ok_or_else(|| format!("{what}: {} is not a non-negative integer", text(bytes)))
 }
 
-fn is_blunt(overlap: &[u8]) -> bool {
+pub fn is_blunt(overlap: &[u8]) -> bool {
     matches!(overlap, b"" | b"*" | b"0M")
 }
 

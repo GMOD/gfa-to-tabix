@@ -2,6 +2,8 @@ mod anchor;
 mod bed;
 mod gfa;
 mod place;
+mod sorter;
+mod walks;
 
 use std::env;
 use std::fs::File;
@@ -13,7 +15,7 @@ use flate2::read::MultiGzDecoder;
 use bed::Layout;
 use gfa::Graph;
 
-const USAGE: &str = "usage: gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [-o PREFIX] gfa";
+const USAGE: &str = "usage: gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
 
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
@@ -41,13 +43,40 @@ options:
                         returns the whole graph under a region. contig files
                         every node under its own coordinate, as 0.1.0 did
   -o, --out PREFIX      write PREFIX.segs.bed.gz and PREFIX.links.bed.gz, each
-                        with a .tbi; default the input name without .gfa[.gz]";
+                        with a .tbi; default the input name without .gfa[.gz]
+
+walks (a base-level GFA with integer node ids and W or P lines):
+  --walks               instead write PREFIX.walks.bed.gz, PREFIX.nodes.bed.gz
+                        and PREFIX.links.bed.gz: every path cut into pieces
+                        filed under fixed chunks of each reference, with the
+                        nodes and links the pieces touch. Reads the GFA twice
+  --refs REFS           comma-separated reference samples, e.g. GRCh38,CHM13
+  --chunk BP            chunk size on the reference (default 65536)
+  --cap STEPS           most steps in one row (default 8192)
+  --settle BP           a run of reference steps in another chunk shorter than
+                        this stays in the piece it interrupts (default chunk/2)
+  --sequences           add each node's sequence to its rows as SQ:Z:";
 
 struct Args {
     gfa: String,
     reference: Option<String>,
     prefix: Option<String>,
-    layout: Layout,
+    layout: Option<Layout>,
+    walks: bool,
+    refs: Option<String>,
+    chunk: Option<u64>,
+    cap: Option<usize>,
+    settle: Option<u64>,
+    sequences: bool,
+}
+
+fn positive<T: std::str::FromStr + PartialOrd + Default>(name: &str, value: &str) -> T {
+    match value.parse::<T>() {
+        Ok(n) if n > T::default() => n,
+        _ => fail(&format!(
+            "argument {name}: {value} is not a positive integer"
+        )),
+    }
 }
 
 fn fail(message: &str) -> ! {
@@ -59,7 +88,9 @@ fn parse_args() -> Args {
     let mut gfa = None;
     let mut reference = None;
     let mut prefix = None;
-    let mut layout = Layout::Anchored;
+    let mut layout = None;
+    let (mut walks, mut sequences) = (false, false);
+    let (mut refs, mut chunk, mut cap, mut settle) = (None, None, None, None);
     let mut args = env::args().skip(1);
     while let Some(arg) = args.next() {
         let (flag, inline) = match arg.split_once('=') {
@@ -75,7 +106,7 @@ fn parse_args() -> Args {
                 .unwrap_or_else(|| fail(&format!("argument {name}: expected one argument")))
         };
         match flag.as_str() {
-            "-h" | "--help" | "--version" if inline.is_some() => {
+            "-h" | "--help" | "--version" | "--walks" | "--sequences" if inline.is_some() => {
                 fail(&format!("argument {flag}: takes no value"))
             }
             "-h" | "--help" => {
@@ -89,14 +120,27 @@ fn parse_args() -> Args {
             "--reference" => reference = Some(value("--reference")),
             "--layout" => {
                 layout = match value("--layout").as_str() {
-                    "anchored" => Layout::Anchored,
-                    "contig" => Layout::Contig,
+                    "anchored" => Some(Layout::Anchored),
+                    "contig" => Some(Layout::Contig),
                     other => fail(&format!(
                         "argument --layout: {other} is not anchored or contig"
                     )),
                 }
             }
             "-o" | "--out" => prefix = Some(value("-o/--out")),
+            "--walks" => walks = true,
+            "--sequences" => sequences = true,
+            "--refs" => refs = Some(value("--refs")),
+            "--chunk" => chunk = Some(positive("--chunk", &value("--chunk"))),
+            "--cap" => cap = Some(positive("--cap", &value("--cap"))),
+            "--settle" => {
+                let given = value("--settle");
+                settle = Some(given.parse().unwrap_or_else(|_| {
+                    fail(&format!(
+                        "argument --settle: {given} is not a non-negative integer"
+                    ))
+                }))
+            }
             "-" => gfa = Some(arg),
             _ if flag.starts_with('-') => fail(&format!("unrecognized argument: {arg}")),
             _ if gfa.is_some() => fail(&format!("unrecognized argument: {arg}")),
@@ -106,11 +150,27 @@ fn parse_args() -> Args {
     let Some(gfa) = gfa else {
         fail("the following arguments are required: gfa")
     };
+    if walks {
+        if refs.is_none() {
+            fail("--walks needs --refs");
+        }
+        if reference.is_some() || layout.is_some() {
+            fail("--reference and --layout do not apply with --walks; name references with --refs");
+        }
+    } else if refs.is_some() || chunk.is_some() || cap.is_some() || settle.is_some() || sequences {
+        fail("--refs, --chunk, --cap, --settle and --sequences apply only with --walks");
+    }
     Args {
         gfa,
         reference,
         prefix,
         layout,
+        walks,
+        refs,
+        chunk,
+        cap,
+        settle,
+        sequences,
     }
 }
 
@@ -154,6 +214,27 @@ fn run(args: &Args) -> Result<(), String> {
         Some(prefix) => prefix.clone(),
         None => default_prefix(&args.gfa)?,
     };
+    if args.walks {
+        let chunk = args.chunk.unwrap_or(65536);
+        let mut refs: Vec<String> = Vec::new();
+        for name in args.refs.as_deref().unwrap_or("").split(',') {
+            if !name.is_empty() && !refs.iter().any(|r| r == name) {
+                refs.push(name.to_string());
+            }
+        }
+        if refs.is_empty() {
+            return Err("--refs names no sample".into());
+        }
+        let options = walks::Options {
+            refs,
+            chunk,
+            cap: args.cap.unwrap_or(8192),
+            settle: args.settle.unwrap_or(chunk / 2),
+            sequences: args.sequences,
+        };
+        return walks::run(&args.gfa, &prefix, &options);
+    }
+    let layout = args.layout.unwrap_or(Layout::Anchored);
     let graph = Graph::read(open_input(&args.gfa)?)?;
     if graph.segment_count() == 0 {
         return Err(format!("{}: no S lines", args.gfa));
@@ -168,12 +249,12 @@ fn run(args: &Args) -> Result<(), String> {
         eprintln!("{note}");
     }
 
-    let spans = match args.layout {
+    let spans = match layout {
         Layout::Anchored => anchor::anchored(&graph, &placed.nodes),
         Layout::Contig => anchor::by_contig(&placed.nodes),
     };
-    let mut nodes = bed::node_rows(&graph, &placed.nodes, &spans, args.layout);
-    let (mut links, skipped) = bed::link_rows(&graph, &placed.nodes, &spans, args.layout);
+    let mut nodes = bed::node_rows(&graph, &placed.nodes, &spans, layout);
+    let (mut links, skipped) = bed::link_rows(&graph, &placed.nodes, &spans, layout);
     bed::sort(&mut nodes, &spans);
     bed::sort(&mut links, &spans);
     let nodes_path = format!("{prefix}.segs.bed.gz");

@@ -1,5 +1,6 @@
 use std::fs::{self, File};
 use std::io::{self, Write};
+use std::mem;
 
 use flate2::read::MultiGzDecoder;
 
@@ -150,62 +151,108 @@ fn compressor(file: File) -> bgzf::io::Writer<File> {
 // Writes the rows and their index beside each other, under temporary names
 // until both are complete.
 pub fn write(path: &str, rows: &[Row], spans: &Spans) -> Result<(), String> {
-    let index_path = format!("{path}.tbi");
-    let (partial, partial_index) = (format!("{path}.partial"), format!("{index_path}.partial"));
-    let written = write_pair(path, &partial, &partial_index, rows, spans)
-        .and_then(|()| fs::rename(&partial, path).map_err(|e| format!("{path}: {e}")))
-        .and_then(|()| {
-            fs::rename(&partial_index, &index_path).map_err(|e| format!("{index_path}: {e}"))
-        });
-    if written.is_err() {
-        let _ = fs::remove_file(&partial);
-        let _ = fs::remove_file(&partial_index);
+    let mut writer = Writer::create(path)?;
+    for row in rows {
+        writer.push(
+            &spans.sequences[row.sequence as usize],
+            row.start,
+            row.end,
+            &row.line,
+        )?;
     }
-    written
+    writer.finish()
 }
 
-fn write_pair(
-    path: &str,
-    partial: &str,
-    partial_index: &str,
-    rows: &[Row],
-    spans: &Spans,
-) -> Result<(), String> {
-    let fail = |e: std::io::Error| format!("{path}: {e}");
-    let mut writer = File::create(partial)
-        .map(bgzf::io::Writer::new)
-        .map_err(fail)?;
-    let mut indexer = tabix::index::Indexer::default();
-    indexer.set_header(Builder::bed().build());
-    let mut before = writer.virtual_position();
-    for row in rows {
-        writer.write_all(&row.line).map_err(fail)?;
+// A bgzip-compressed BED file and its Tabix index, written row by row in
+// sorted order. Until `finish`, both sit under `.partial` names, which a
+// writer dropped unfinished removes.
+pub struct Writer {
+    path: String,
+    partial: String,
+    partial_index: String,
+    writer: Option<bgzf::io::Writer<File>>,
+    indexer: tabix::index::Indexer,
+    before: bgzf::VirtualPosition,
+}
+
+impl Writer {
+    pub fn create(path: &str) -> Result<Writer, String> {
+        let partial = format!("{path}.partial");
+        let writer = File::create(&partial)
+            .map(bgzf::io::Writer::new)
+            .map_err(|e| format!("{path}: {e}"))?;
+        let mut indexer = tabix::index::Indexer::default();
+        indexer.set_header(Builder::bed().build());
+        Ok(Writer {
+            path: path.to_string(),
+            partial_index: format!("{path}.tbi.partial"),
+            partial,
+            before: writer.virtual_position(),
+            writer: Some(writer),
+            indexer,
+        })
+    }
+
+    // `line` ends in a newline.
+    pub fn push(
+        &mut self,
+        sequence: &[u8],
+        start: u64,
+        end: u64,
+        line: &[u8],
+    ) -> Result<(), String> {
+        let path = &self.path;
+        let writer = self.writer.as_mut().expect("writer is open until finish");
+        writer.write_all(line).map_err(|e| format!("{path}: {e}"))?;
         let after = writer.virtual_position();
-        let sequence = String::from_utf8_lossy(&spans.sequences[row.sequence as usize]);
+        let sequence = String::from_utf8_lossy(sequence);
         let position = |n: u64| {
             Position::try_from(n as usize).map_err(|e| format!("{path}: coordinate {n}: {e}"))
         };
-        indexer
-            .add_record(&sequence, position(row.start + 1)?, position(row.end.max(row.start + 1))?, Chunk::new(before, after))
+        self.indexer
+            .add_record(&sequence, position(start + 1)?, position(end.max(start + 1))?, Chunk::new(self.before, after))
             .map_err(|e| {
                 format!(
-                    "{path}: cannot index {sequence}:{}-{}: {e}. A Tabix index holds coordinates up to 512 Mb",
-                    row.start, row.end
+                    "{path}: cannot index {sequence}:{start}-{end}: {e}. A Tabix index holds coordinates up to 512 Mb"
                 )
             })?;
-        before = after;
+        self.before = after;
+        Ok(())
     }
-    writer.finish().map_err(fail)?;
-    // A reader downloads the whole index, so recompress it at the best level.
-    let mut default_level = tabix::io::Writer::new(Vec::new());
-    default_level.write_index(&indexer.build()).map_err(fail)?;
-    let compressed = default_level.into_inner().finish().map_err(fail)?;
-    let mut index_writer = File::create(partial_index).map(compressor).map_err(fail)?;
-    io::copy(
-        &mut MultiGzDecoder::new(compressed.as_slice()),
-        &mut index_writer,
-    )
-    .map_err(fail)?;
-    index_writer.finish().map_err(fail)?;
-    Ok(())
+
+    pub fn finish(mut self) -> Result<(), String> {
+        let path = self.path.clone();
+        let fail = |e: std::io::Error| format!("{path}: {e}");
+        let writer = self.writer.take().expect("writer is open until finish");
+        writer.finish().map_err(fail)?;
+        let indexer = mem::take(&mut self.indexer);
+        // A reader downloads the whole index, so recompress it at the best level.
+        let mut default_level = tabix::io::Writer::new(Vec::new());
+        default_level.write_index(&indexer.build()).map_err(fail)?;
+        let compressed = default_level.into_inner().finish().map_err(fail)?;
+        let mut index_writer = File::create(&self.partial_index)
+            .map(compressor)
+            .map_err(fail)?;
+        io::copy(
+            &mut MultiGzDecoder::new(compressed.as_slice()),
+            &mut index_writer,
+        )
+        .map_err(fail)?;
+        index_writer.finish().map_err(fail)?;
+        let index_path = format!("{path}.tbi");
+        fs::rename(&self.partial, &path).map_err(fail)?;
+        fs::rename(&self.partial_index, &index_path).map_err(|e| format!("{index_path}: {e}"))?;
+        self.partial.clear();
+        self.partial_index.clear();
+        Ok(())
+    }
+}
+
+impl Drop for Writer {
+    fn drop(&mut self) {
+        if !self.partial.is_empty() {
+            let _ = fs::remove_file(&self.partial);
+            let _ = fs::remove_file(&self.partial_index);
+        }
+    }
 }
