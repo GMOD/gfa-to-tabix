@@ -2,9 +2,9 @@
 
 `gfa-to-tabix` indexes a pangenome graph's GFA by genome coordinate. It writes
 the graph's nodes and links as two bgzip-compressed, Tabix-indexed BED files,
-so a genome browser can fetch the part of the graph under a region with HTTP
-range requests. The [JBrowse 2](https://jbrowse.org) graph track reads this
-pair.
+and with [`--walks`](#walks) a third holding every haplotype's path, so a
+genome browser can fetch the part of the graph under a region with HTTP range
+requests. The [JBrowse 2](https://jbrowse.org) graph track reads these files.
 
 One binary does the whole conversion. It needs no gfatools, awk, bgzip or tabix.
 

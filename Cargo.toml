@@ -1,9 +1,9 @@
 [package]
 name = "gfa-to-tabix"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.91"
-description = "Indexes a pangenome graph's GFA by genome coordinate, as two Tabix-indexed BED files"
+description = "Indexes a pangenome graph's GFA by genome coordinate, as Tabix-indexed BED files of its nodes, links and haplotype walks"
 license = "Apache-2.0"
 repository = "https://github.com/GMOD/gfa-to-tabix"
 readme = "README.md"
