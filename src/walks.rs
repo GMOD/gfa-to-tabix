@@ -392,7 +392,10 @@ impl Prefetched {
     }
 }
 
-fn read_lines(path: &str, mut each: impl FnMut(&[u8]) -> Result<(), String>) -> Result<(), String> {
+fn read_lines(
+    path: &str,
+    mut each: impl FnMut(u64, &[u8]) -> Result<(), String>,
+) -> Result<(), String> {
     let mut input = Prefetched::open(path);
     let mut line = Vec::new();
     let mut number = 0u64;
@@ -401,13 +404,67 @@ fn read_lines(path: &str, mut each: impl FnMut(&[u8]) -> Result<(), String>) -> 
         if line.last() == Some(&b'\r') {
             line.pop();
         }
-        each(&line).map_err(|e| format!("{path}: line {number}: {e}"))?;
+        each(number, &line).map_err(|e| format!("{path}: line {number}: {e}"))?;
     }
     Ok(())
 }
 
-// Pass 1: node lengths (and sequences), links, and every reference sample's
-// paths, which give each node it visits a reference coordinate.
+// Per node, the visiting path whose name sorts first in byte order and where
+// that path first reaches the node, so a node's coordinate does not depend on
+// the order of the paths in the file.
+#[derive(Default)]
+struct Stable {
+    name: Vec<u32>,
+    offset: Vec<u64>,
+    // by name id: (the path being visited, whether its name sorts before this one)
+    sorts_after: Vec<(u64, bool)>,
+    paths: u64,
+}
+
+impl Stable {
+    fn offer(&mut self, names: &Names, id: usize, name: u32, offset: u64) {
+        let held = self.name[id];
+        let better = if held == NONE {
+            true
+        } else if held == name {
+            offset < self.offset[id]
+        } else {
+            let (path, after) = self.sorts_after[held as usize];
+            if path == self.paths {
+                after
+            } else {
+                let after = names.names[name as usize] < names.names[held as usize];
+                self.sorts_after[held as usize] = (self.paths, after);
+                after
+            }
+        };
+        if better {
+            self.name[id] = name;
+            self.offset[id] = offset;
+        }
+    }
+
+    fn visit(&mut self, names: &Names, name: u32, start: u64, ids: &[u32], lengths: &[u32]) {
+        if self.name.len() < lengths.len() {
+            self.name.resize(lengths.len(), NONE);
+            self.offset.resize(lengths.len(), 0);
+        }
+        if self.sorts_after.len() < names.names.len() {
+            self.sorts_after.resize(names.names.len(), (0, false));
+        }
+        self.paths += 1;
+        let mut offset = start;
+        for &id in ids {
+            let id = id as usize;
+            self.offer(names, id, name, offset);
+            offset += u64::from(lengths[id]);
+        }
+    }
+}
+
+// Pass 1: node lengths (and sequences), links, every reference sample's paths,
+// which give each node they visit a reference coordinate, and every path's
+// claim on the nodes off the references.
 fn first_pass(
     gfa: &str,
     options: &Options,
@@ -420,8 +477,12 @@ fn first_pass(
     let mut ref_walks: Vec<RefWalk> = Vec::new();
     let mut walks = vec![0u64; options.refs.len()];
     let mut handles = Vec::new();
+    let mut ids = Vec::new();
     let mut samples: Vec<Vec<u8>> = Vec::new();
-    read_lines(gfa, |line| {
+    let mut stable = Stable::default();
+    // paths that reach a node before its S line, visited once lengths are known
+    let mut deferred: Vec<u64> = Vec::new();
+    read_lines(gfa, |number, line| {
         match line.first() {
             Some(b'S') if line.get(1) == Some(&b'\t') => {
                 let mut cols = line.split(|&b| b == b'\t').skip(1);
@@ -486,21 +547,31 @@ fn first_pass(
                 if !samples.iter().any(|s| s == path.sample) {
                     samples.push(path.sample.to_vec());
                 }
-                let Some(reference) = options
+                parse_steps(&path, &mut handles)?;
+                let name = names.id(&path.name);
+                ids.clear();
+                ids.extend(handles.iter().map(|h| h >> 1));
+                if ids
+                    .iter()
+                    .all(|&id| lengths.get(id as usize).is_some_and(|&l| l != NONE))
+                {
+                    stable.visit(names, name, path.start, &ids, &lengths);
+                } else {
+                    deferred.push(number);
+                }
+                if let Some(reference) = options
                     .refs
                     .iter()
                     .position(|r| r.as_bytes() == path.sample)
-                else {
-                    return Ok(());
-                };
-                parse_steps(&path, &mut handles)?;
-                walks[reference] += 1;
-                ref_walks.push(RefWalk {
-                    reference,
-                    name: names.id(&path.name),
-                    start: path.start,
-                    ids: handles.iter().map(|h| h >> 1).collect(),
-                });
+                {
+                    walks[reference] += 1;
+                    ref_walks.push(RefWalk {
+                        reference,
+                        name,
+                        start: path.start,
+                        ids: ids.clone(),
+                    });
+                }
             }
             _ => {}
         }
@@ -508,6 +579,33 @@ fn first_pass(
     })?;
     if lengths.is_empty() {
         return Err(format!("{gfa}: no S lines"));
+    }
+    if !deferred.is_empty() {
+        let mut next = deferred.iter().peekable();
+        read_lines(gfa, |number, line| {
+            if next.peek() != Some(&&number) {
+                return Ok(());
+            }
+            next.next();
+            let Some(path) = path_line(line)? else {
+                return Ok(());
+            };
+            parse_steps(&path, &mut handles)?;
+            let name = names.id(&path.name);
+            ids.clear();
+            for &h in &handles {
+                let id = h >> 1;
+                if lengths.get(id as usize).is_none_or(|&l| l == NONE) {
+                    return Err(format!(
+                        "path {} visits segment {id}, which has no S line",
+                        text(&path.name)
+                    ));
+                }
+                ids.push(id);
+            }
+            stable.visit(names, name, path.start, &ids, &lengths);
+            Ok(())
+        })?;
     }
     for (reference, count) in walks.iter().enumerate() {
         if *count == 0 {
@@ -537,27 +635,36 @@ fn first_pass(
             unplaced: 0,
         })
         .collect();
+    let mut on_reference: Vec<Stable> = options.refs.iter().map(|_| Stable::default()).collect();
     for walk in &ref_walks {
-        let reference = &mut references[walk.reference];
-        let mut offset = walk.start;
-        for &id in &walk.ids {
-            let id = id as usize;
-            let length = match lengths.get(id) {
-                Some(&length) if length != NONE => u64::from(length),
-                _ => {
-                    return Err(format!(
-                        "path {} visits segment {id}, which has no S line",
-                        text(&names.names[walk.name as usize])
-                    ));
-                }
-            };
-            if reference.placement[id] == NONE {
-                reference.placement[id] = walk.name;
-                reference.offset[id] = offset;
+        if let Some(id) = walk
+            .ids
+            .iter()
+            .find(|&&id| lengths.get(id as usize).is_none_or(|&l| l == NONE))
+        {
+            return Err(format!(
+                "path {} visits segment {id}, which has no S line",
+                text(&names.names[walk.name as usize])
+            ));
+        }
+        on_reference[walk.reference].visit(names, walk.name, walk.start, &walk.ids, &lengths);
+    }
+    for (reference, best) in references.iter_mut().zip(&on_reference) {
+        for (id, &name) in best.name.iter().enumerate() {
+            if name != NONE {
+                reference.placement[id] = name;
+                reference.offset[id] = best.offset[id];
             }
-            offset += length;
+        }
+        for (id, &name) in stable.name.iter().enumerate() {
+            if name != NONE && reference.placement[id] == NONE {
+                reference.placement[id] = name | OFF_REFERENCE;
+                reference.offset[id] = stable.offset[id];
+            }
         }
     }
+    drop(on_reference);
+    drop(stable);
     let links = Links::build(packed, nodes)?;
     for reference in &mut references {
         reference.link_chunk = vec![NONE; links.targets.len()];
@@ -754,18 +861,7 @@ impl Builder<'_> {
             self.delta_end.push(self.deltas.len() as u32);
             previous = id;
         }
-        let name = self.names.id(&path.name);
         for r in 0..self.references.len() {
-            if self.references[r].sample.as_slice() != path.sample {
-                let reference = &mut self.references[r];
-                for (&h, &before) in handles.iter().zip(&self.before) {
-                    let id = (h >> 1) as usize;
-                    if reference.placement[id] == NONE {
-                        reference.placement[id] = name | OFF_REFERENCE;
-                        reference.offset[id] = path.start + before;
-                    }
-                }
-            }
             if !self.assign_chunks(r, handles) {
                 self.references[r].unplaced += 1;
                 continue;
@@ -940,14 +1036,15 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let (graph, references) = first_pass(gfa, options, &mut names)?;
     let mut ends: HashMap<u32, u64> = HashMap::new();
     for reference in &references {
+        let mut on = 0;
         for (id, &placement) in reference.placement.iter().enumerate() {
-            if placement != NONE {
+            if reference.on_reference(id) {
+                on += 1;
                 let end = reference.offset[id] + u64::from(graph.lengths[id]);
                 let held = ends.entry(placement).or_default();
                 *held = (*held).max(end);
             }
         }
-        let on = reference.placement.iter().filter(|&&p| p != NONE).count();
         eprintln!(
             "{} reference {}: {} paths, {on} nodes",
             elapsed(),
@@ -981,7 +1078,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         runs: Vec::new(),
         pieces: Vec::new(),
     };
-    read_lines(gfa, |line| match line.first() {
+    read_lines(gfa, |_, line| match line.first() {
         Some(b'W' | b'P') if line.get(1) == Some(&b'\t') => match path_line(line)? {
             Some(path) => builder.path(&path),
             None => Ok(()),

@@ -112,8 +112,10 @@ fn each_file_starts_with_the_chunk_size() {
     assert!(built.links.starts_with("#links\tchunk:i:10\n"));
 }
 
+// Node 2 is off Q. R, H, I and D visit it; D#1#d sorts first and reaches it
+// at 6, and again at 30.
 #[test]
-fn a_node_is_rank_0_on_its_reference_and_placed_by_first_visit_elsewhere() {
+fn a_node_is_rank_0_on_its_reference_and_takes_the_first_named_path_elsewhere() {
     let built = build("walks-two-refs.gfa", &[]);
     assert_eq!(
         under(&built.nodes, "R#0#chr"),
@@ -130,7 +132,7 @@ fn a_node_is_rank_0_on_its_reference_and_placed_by_first_visit_elsewhere() {
     assert!(
         built
             .nodes
-            .contains(&tsv(&["Q#0#chr 0 1 2 1 R#0#chr 6 12 LN:i:6"]))
+            .contains(&tsv(&["Q#0#chr 0 1 2 1 D#1#d 6 12 LN:i:6"]))
     );
 }
 
@@ -146,9 +148,11 @@ fn an_inversion_walks_reference_nodes_backwards() {
             "Q#0#chr 20 21 I#1#i 0 24 2 1 10",
         ])
     );
-    assert!(built.links.contains(&tsv(&[
-        "Q#0#chr 10 11 2+ 3+ R#0#chr 6 12 1 Q#0#chr 12 18 0"
-    ])));
+    assert!(
+        built
+            .links
+            .contains(&tsv(&["Q#0#chr 10 11 2+ 3+ D#1#d 6 12 1 Q#0#chr 12 18 0"]))
+    );
 }
 
 #[test]
@@ -228,6 +232,36 @@ fn p_lines_give_the_rows_w_lines_do() {
     assert_eq!(p.walks, w.walks);
     assert_eq!(p.nodes, w.nodes);
     assert_eq!(p.links, w.links);
+}
+
+#[test]
+fn the_order_of_the_paths_changes_no_row() {
+    let gfa = fs::read_to_string(format!(
+        "{}/tests/data/walks-two-refs.gfa",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap();
+    let (paths, rest): (Vec<&str>, Vec<&str>) = gfa.lines().partition(|l| l.starts_with('W'));
+    let reversed: Vec<&str> = paths.iter().rev().copied().collect();
+    let rotated: Vec<&str> = paths[2..].iter().chain(&paths[..2]).copied().collect();
+    let orders = [
+        [rest.clone(), reversed.clone()].concat(),
+        [rest.clone(), rotated].concat(),
+        // paths before the S lines take a second read
+        [reversed, rest].concat(),
+    ];
+    let plain = build("walks-two-refs.gfa", &[]);
+    for (i, lines) in orders.iter().enumerate() {
+        let path =
+            std::env::temp_dir().join(format!("walks-two-refs-{}-{i}.gfa", std::process::id()));
+        fs::write(&path, lines.join("\n") + "\n").unwrap();
+        let shuffled = build(path.to_str().unwrap(), &[]);
+        fs::remove_file(&path).unwrap();
+        assert!(shuffled.output.status.success(), "order {i}");
+        assert_eq!(shuffled.walks, plain.walks, "order {i}");
+        assert_eq!(shuffled.nodes, plain.nodes, "order {i}");
+        assert_eq!(shuffled.links, plain.links, "order {i}");
+    }
 }
 
 #[test]

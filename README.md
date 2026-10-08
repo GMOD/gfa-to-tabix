@@ -193,11 +193,14 @@ back into one walk. `steps` lists the piece's steps as integers: the first is
 is `2 × (id − previous id) + r`. Every row starts from an absolute id, so a row
 decodes on its own.
 
-A reference node is placed where its reference's paths first reach it, at
-rank 0. Any other node takes its position on the first path in file order that
-visits it, at rank 1. The node file holds every node a piece under the chunk
-visits; the link file holds every link between consecutive steps of those
-pieces, and the link from the previous piece, which is filed under both chunks.
+A reference node is placed on its reference at rank 0. Any other node takes
+its position from the path whose name sorts first in byte order among the
+paths that visit it, at that path's earliest visit, and has rank 1. The rows
+therefore do not depend on the order of the W lines, which `vg convert`
+changes from run to run. The node file holds every node a piece under the
+chunk visits; the link file holds every link between consecutive steps of
+those pieces, and the link from the previous piece, which is filed under both
+chunks.
 
 The tool reads the GFA twice, so it takes a file, not stdin; gzip is fine. It
 keeps 12 bytes per node and 4 per link, 16 bytes per node and 4 per link for
