@@ -1,6 +1,9 @@
 // The --walks mode: every path of a base-level GFA cut into pieces filed under
 // fixed chunks of each reference's coordinate, with the nodes and links those
-// pieces touch, as three Tabix-indexed BED files.
+// pieces touch, as three Tabix-indexed BED files. A row's interval is the
+// first base of its chunk: a full-chunk interval would share a Tabix bin with
+// the next chunk, and a query would pull both. A header line gives the chunk
+// size.
 
 use std::collections::HashMap;
 use std::fs;
@@ -943,11 +946,12 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let write = |kind: &str, sorter: Sorter| -> Result<(String, u64), String> {
         let path = format!("{prefix}.{kind}.bed.gz");
         let mut writer = bed::Writer::create(&path)?;
+        writer.header(format!("#{kind}\tchunk:i:{}\n", chunks.size).as_bytes())?;
         let mut line = Vec::new();
         let rows = sorter.merge(|chunk, rest| {
             let (name, start) = chunks.starts[chunk as usize];
             let name = &names.names[name as usize];
-            let end = start + chunks.size;
+            let end = start + 1;
             line.clear();
             line.extend_from_slice(name);
             line.push(b'\t');

@@ -193,6 +193,17 @@ impl Writer {
         })
     }
 
+    // A line before the rows. It starts with `#`, the index's comment prefix,
+    // so Tabix readers return it as the header.
+    pub fn header(&mut self, line: &[u8]) -> Result<(), String> {
+        let writer = self.writer.as_mut().expect("writer is open until finish");
+        writer
+            .write_all(line)
+            .map_err(|e| format!("{}: {e}", self.path))?;
+        self.before = writer.virtual_position();
+        Ok(())
+    }
+
     // `line` ends in a newline.
     pub fn push(
         &mut self,
