@@ -239,7 +239,7 @@ chops nodes at 1,024 bp, so for its graphs that is the one chunk back described
 above; a graph with longer nodes needs more.
 
 A reader can list the haplotypes from the header without reading any rows. On
-the chr22 graph under [Scale](#scale) the header is 465 lines and 9,750 bytes,
+the chr22 graph under [Scale](#scale) the header is 465 lines and 9,778 bytes,
 which the file's first BGZF block holds.
 
 A reference node is placed on its reference at rank 0. Any other node takes
@@ -326,9 +326,10 @@ step per node per haplotype; expect memory to grow with the total path length.
 
 `--walks` holds only per-node and per-link arrays, and streams the paths. On a
 Minigraph-Cactus chr22 (3.1 M nodes, 4.7 M links, 1,131 paths, 630 M steps,
-a 5.0 GB GFA) with `--refs GRCh38,CHM13`, it runs in about 2 min and peaks at
-1.4 GB on a 16-core laptop, and in about 3 min from the gzipped GFA. The
-files, three for each reference, total 408 MB.
+a 5.0 GB GFA) with `--refs GRCh38,CHM13`, it runs in about 2 min from the
+gzipped GFA and peaks at 1.4 GB on a 16-core laptop. The files, three for each
+reference, total 408 MB. GRCh38's three indexes total 31 KB, where one set
+covering both references took 56 KB.
 
 ## Matching the JBrowse scripts
 
