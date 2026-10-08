@@ -260,8 +260,8 @@ step per node per haplotype; expect memory to grow with the total path length.
 
 `--walks` holds only per-node and per-link arrays, and streams the paths. On a
 Minigraph-Cactus chr22 (3.1 M nodes, 4.7 M links, 1,131 paths, 630 M steps,
-a 5.0 GB GFA) with `--refs GRCh38,CHM13`, it runs in 1 min 45 s and peaks at
-1.4 GB on a 16-core laptop; from the gzipped GFA it takes 2 min 48 s. The six
+a 5.0 GB GFA) with `--refs GRCh38,CHM13`, it runs in about 2 min and peaks at
+1.4 GB on a 16-core laptop, and in about 3 min from the gzipped GFA. The six
 files total 443 MB.
 
 ## Matching the JBrowse scripts
