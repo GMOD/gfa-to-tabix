@@ -174,9 +174,7 @@ of a reference has no rows under it, and the tool counts these on stderr.
 Every row is filed under the first base of its chunk, `anchorSeq chunkStart
 chunkStart+1`. A row spanning the whole chunk would share a Tabix bin with the
 next chunk, and a query would read both. A reader fetching a window therefore
-queries from the start of the chunk before the window. Each file opens with a
-header line that Tabix keeps, `#walks`, a tab and `chunk:i:65536` (`#nodes` and
-`#links` in the others), so a reader can learn the chunk size.
+queries from the start of the chunk before the window.
 
 ```
 walks:  anchorSeq cs cs+1  path fragStart hapOffset piece nsteps steps
@@ -192,6 +190,26 @@ back into one walk. `steps` lists the piece's steps as integers: the first is
 `2 × id + r`, with `r` 1 for a step on the reverse strand, and each one after
 is `2 × (id − previous id) + r`. Every row starts from an absolute id, so a row
 decodes on its own.
+
+Each file opens with header lines, which start with `#`: `tabix -H` prints them
+and region queries skip them. The first gives the chunk size: `#walks`, a tab
+and `chunk:i:65536` (`#nodes` and `#links` in the other two files, which have
+only this line). The walk file then names each sample in `--refs`, in that
+order, and each other haplotype with rows, as its PanSN `sample#haplotype` (a
+path name up to its second `#`), once each in byte order:
+
+```
+#walks	chunk:i:65536
+#reference	GRCh38
+#reference	CHM13
+#haplotype	HG00097#1
+#haplotype	HG00097#2
+...
+```
+
+A reader can list the haplotypes from the header without reading any rows. On
+the chr22 graph under [Scale](#scale) the header is 465 lines and 9,750 bytes,
+which the file's first BGZF block holds.
 
 A reference node is placed on its reference at rank 0. Any other node takes
 its position from the path whose name sorts first in byte order among the
