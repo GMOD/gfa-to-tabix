@@ -49,6 +49,8 @@ hprc.links.bed.gz   hprc.links.bed.gz.tbi
 The input may be gzipped, and `-` reads stdin, so
 `zstd -dc graph.gfa.zst | gfa-to-tabix - -o graph` handles other compression.
 
+`--walks` writes the paths themselves instead; see [Walks](#walks).
+
 ## Where the coordinates come from
 
 A GFA lists nodes (S lines) and links (L lines) in no positional order. The tool
@@ -127,6 +129,81 @@ Anchored, a link has one row per reference sequence. By contig, it has two rows,
 one under each node's coordinate.
 
 Rows are sorted by sequence name in byte order, then by start.
+
+## Walks
+
+`--walks` indexes every haplotype's path through a base-level graph with integer
+node ids and W or P lines, such as `vg convert -f` writes from a
+Minigraph-Cactus GBZ:
+
+```bash
+vg convert -f chr22.gbz > chr22.gfa
+gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
+```
+
+It writes six files:
+
+```
+chr22.walks.bed.gz  chr22.walks.bed.gz.tbi
+chr22.nodes.bed.gz  chr22.nodes.bed.gz.tbi
+chr22.links.bed.gz  chr22.links.bed.gz.tbi
+```
+
+The tool cuts each path into pieces, one for each stretch the path spends in a
+64 kb chunk of a reference, and files each piece under its chunk. A region
+query on the walk file returns every path's steps through the region, and the
+same query on the node and link files returns the nodes and links those steps
+visit. Each sample named in `--refs` gets its own rows, in the same three
+files, so one set answers queries on GRCh38 and on CHM13.
+
+A step on a reference node takes that node's chunk; a step on any other node
+takes the chunk of the last reference step before it. A run of reference steps
+in another chunk that spans fewer than `--settle` bp, such as a collapsed
+repeat copy or a short inversion, stays in the piece it interrupts. A piece of
+more than `--cap` steps continues in further rows. A path that visits no node
+of a reference has no rows under it, and the tool counts these on stderr.
+
+| Option            | Effect                                                                |
+| ----------------- | --------------------------------------------------------------------- |
+| `--refs <names>`  | Comma-separated PanSN samples to file rows under. Required.           |
+| `--chunk <bp>`    | Chunk size. Default 65536.                                            |
+| `--cap <steps>`   | Most steps in one row. Default 8192.                                  |
+| `--settle <bp>`   | Shortest run that moves a path to another chunk. Default chunk / 2.   |
+| `--sequences`     | Add each node's sequence to its rows.                                 |
+
+Every row is filed under the first base of its chunk, `anchorSeq chunkStart
+chunkStart+1`. A row spanning the whole chunk would share a Tabix bin with the
+next chunk, and a query would read both. A reader fetching a window therefore
+queries from the start of the chunk before the window. Each file opens with a
+header line that Tabix keeps, `#walks`, a tab and `chunk:i:65536` (`#nodes` and
+`#links` in the others), so a reader can learn the chunk size.
+
+```
+walks:  anchorSeq cs cs+1  path fragStart hapOffset piece nsteps steps
+nodes:  anchorSeq cs cs+1  nodeId rank sequence start end  LN:i:length  [SQ:Z:bases]
+links:  anchorSeq cs cs+1  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtStart tgtEnd tgtRank
+```
+
+`path` is `sample#haplotype#contig`. `fragStart` is where the W line starts on
+that contig, or the start in a P line's name (`[start]`, `#start` or
+`:start-end`), and `hapOffset` is where the piece starts. `piece` numbers the
+pieces along the path for one reference, so a reader joins consecutive pieces
+back into one walk. `steps` lists the piece's steps as integers: the first is
+`2 × id + r`, with `r` 1 for a step on the reverse strand, and each one after
+is `2 × (id − previous id) + r`. Every row starts from an absolute id, so a row
+decodes on its own.
+
+A reference node is placed where its reference's paths first reach it, at
+rank 0. Any other node takes its position on the first path in file order that
+visits it, at rank 1. The node file holds every node a piece under the chunk
+visits; the link file holds every link between consecutive steps of those
+pieces, and the link from the previous piece, which is filed under both chunks.
+
+The tool reads the GFA twice, so it takes a file, not stdin; gzip is fine. It
+keeps 12 bytes per node and 4 per link, 16 bytes per node and 4 per link for
+each reference, and with `--sequences` the graph's bases. Rows wait for an
+external sort in up to 2 GB of memory and then in compressed runs in a
+temporary directory beside the output.
 
 ## Reading the files in JBrowse
 
