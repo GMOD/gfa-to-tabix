@@ -10,6 +10,7 @@ use std::fs;
 use std::io::BufRead;
 use std::path::PathBuf;
 use std::thread;
+use std::time::Instant;
 
 use crate::bed;
 use crate::gfa::is_blunt;
@@ -871,6 +872,8 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     if gfa == "-" {
         return Err("--walks reads the GFA twice, so it needs a file, not stdin".into());
     }
+    let clock = Instant::now();
+    let elapsed = || format!("[{:6.1} s]", clock.elapsed().as_secs_f64());
     let mut names = Names::default();
     let (graph, references) = first_pass(gfa, options, &mut names)?;
     let mut ends: HashMap<u32, u64> = HashMap::new();
@@ -884,7 +887,8 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         }
         let on = reference.placement.iter().filter(|&&p| p != NONE).count();
         eprintln!(
-            "reference {}: {} paths, {on} nodes",
+            "{} reference {}: {} paths, {on} nodes",
+            elapsed(),
             text(&reference.sample),
             reference.walks
         );
@@ -922,7 +926,12 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         },
         _ => Ok(()),
     })?;
-    eprintln!("{} paths, {} steps", builder.paths, builder.steps);
+    eprintln!(
+        "{} {} paths, {} steps",
+        elapsed(),
+        builder.paths,
+        builder.steps
+    );
     for reference in &builder.references {
         eprintln!(
             "{}: {} pieces, {} steps held in their chunk by --settle, {} paths visit no {} node and are left out",
@@ -979,6 +988,6 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let (path, rows) = result?;
         summary.push(format!("{rows} rows -> {path}"));
     }
-    eprintln!("{} (+ .tbi)", summary.join(", "));
+    eprintln!("{} {} (+ .tbi)", elapsed(), summary.join(", "));
     Ok(())
 }

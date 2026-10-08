@@ -47,13 +47,17 @@ fn write_run(path: &Path, batch: Batch, dedup: bool) -> Result<(), String> {
     }
     let fail = io_error(path);
     let file = File::create(path).map_err(&fail)?;
-    let mut out = DeflateEncoder::new(BufWriter::with_capacity(1 << 20, file), Compression::fast());
+    let mut out = BufWriter::with_capacity(1 << 20, DeflateEncoder::new(file, Compression::fast()));
     for row in &rows {
         out.write_all(&row.0.to_le_bytes()).map_err(&fail)?;
         out.write_all(&row.2.to_le_bytes()).map_err(&fail)?;
         out.write_all(row_text(row)).map_err(&fail)?;
     }
-    out.finish().and_then(|mut w| w.flush()).map_err(&fail)
+    out.into_inner()
+        .map_err(|e| fail(e.into_error()))?
+        .finish()
+        .map(drop)
+        .map_err(&fail)
 }
 
 struct Run {
