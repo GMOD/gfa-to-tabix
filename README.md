@@ -157,9 +157,8 @@ visit. Each sample named in `--refs` gets its own rows, in the same three
 files, so one set answers queries on GRCh38 and on CHM13.
 
 A step on a reference node takes that node's chunk; a step on any other node
-takes the chunk of the last reference step before it. A run of reference steps
-in another chunk that spans fewer than `--settle` bp, such as a collapsed
-repeat copy or a short inversion, stays in the piece it interrupts. A piece of
+takes the chunk of the last reference step before it. A query over a window
+therefore returns every path that visits a reference node in it. A piece of
 more than `--cap` steps continues in further rows. A path that visits no node
 of a reference has no rows under it, and the tool counts these on stderr.
 
@@ -168,8 +167,23 @@ of a reference has no rows under it, and the tool counts these on stderr.
 | `--refs <names>`  | Comma-separated PanSN samples to file rows under. Required.           |
 | `--chunk <bp>`    | Chunk size. Default 65536.                                            |
 | `--cap <steps>`   | Most steps in one row. Default 8192.                                  |
-| `--settle <bp>`   | Shortest run that moves a path to another chunk. Default chunk / 2.   |
+| `--settle <bp>`   | Shortest run that moves a path to another chunk. Default 0, off.      |
 | `--sequences`     | Add each node's sequence to its rows.                                 |
+
+`--settle` keeps a run of reference steps in another chunk that spans fewer
+than the given bp, such as a pass over a collapsed repeat copy, in the piece it
+interrupts. A window over that run's own nodes then lacks those steps, and
+after a long stretch off the reference the run can be filed two or more chunks
+from its nodes, beyond the one chunk back a reader queries. On the chr22 graph
+under [Scale](#scale), 45 windows cut with every haplotype, as the JBrowse
+graph track cuts them, hold 18,267 cases of a path visiting a reference node in
+the window. With `--settle 32768` the cut left the path out in 60 of them and
+drew it without some of those nodes in 89, mostly at 18.74 Mb in the 22q11
+repeats; without it, the cut left none out. Against gbz-base with 8
+haplotypes, 41 of the windows matched without it and 39 with it. Without it, a
+path that passes over nodes placed on another repeat copy, as at 20.3 Mb, is
+drawn in more fragments. The six files are 408 MB without it and 443 MB with
+it, and a window of 10 to 260 kb reads the same bytes within 3%.
 
 Every row is filed under the first base of its chunk, `anchorSeq chunkStart
 chunkStart+1`. A row spanning the whole chunk would share a Tabix bin with the
@@ -283,7 +297,7 @@ step per node per haplotype; expect memory to grow with the total path length.
 Minigraph-Cactus chr22 (3.1 M nodes, 4.7 M links, 1,131 paths, 630 M steps,
 a 5.0 GB GFA) with `--refs GRCh38,CHM13`, it runs in about 2 min and peaks at
 1.4 GB on a 16-core laptop, and in about 3 min from the gzipped GFA. The six
-files total 443 MB.
+files total 408 MB.
 
 ## Matching the JBrowse scripts
 

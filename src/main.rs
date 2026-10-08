@@ -55,7 +55,7 @@ walks (a base-level GFA with integer node ids and W or P lines):
   --chunk BP            chunk size on the reference (default 65536)
   --cap STEPS           most steps in one row (default 8192)
   --settle BP           a run of reference steps in another chunk shorter than
-                        this stays in the piece it interrupts (default chunk/2)
+                        this stays in the piece it interrupts (default 0, off)
   --sequences           add each node's sequence to its rows as SQ:Z:";
 
 struct Args {
@@ -230,7 +230,7 @@ fn run(args: &Args) -> Result<(), String> {
             refs,
             chunk,
             cap: args.cap.unwrap_or(8192),
-            settle: args.settle.unwrap_or(chunk / 2),
+            settle: args.settle.unwrap_or(0),
             sequences: args.sequences,
         };
         return walks::run(&args.gfa, &prefix, &options);

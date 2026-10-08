@@ -220,6 +220,19 @@ fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
     );
 }
 
+// With --chunk 20, nodes 1 to 4 lie in chunk 0-20 and node 5, 6 bp, in 20-40.
+#[test]
+fn by_default_a_short_run_is_filed_under_its_own_chunk() {
+    let built = build("walks-two-refs.gfa", &["--chunk", "20"]);
+    assert_eq!(
+        rows_of(&built.walks, "R#0#chr", "R#0#chr"),
+        tsv(&[
+            "R#0#chr 0 1 R#0#chr 0 0 0 4 2,2,2,2",
+            "R#0#chr 20 21 R#0#chr 0 24 1 1 10",
+        ])
+    );
+}
+
 #[test]
 fn settle_keeps_a_short_run_in_the_chunk_the_path_is_in() {
     let built = build("walks-two-refs.gfa", &["--settle", "7"]);
