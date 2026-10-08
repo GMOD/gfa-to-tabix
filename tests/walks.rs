@@ -198,6 +198,39 @@ fn the_first_header_line_gives_the_chunk_the_longest_node_and_the_cap() {
     }
 }
 
+// Placed by first visit, the repeat's second pass would be filed under chunk
+// 0-10 and 10-20 again; on R's own path each step takes the chunk of its own
+// offset. H keeps first-visit placement.
+#[test]
+fn a_reference_files_its_own_revisits_at_its_own_offset() {
+    let built = build("walks-repeat.gfa", &["--refs", "R"]);
+    assert!(built.output.status.success());
+    let walks = built.file("R", "walks");
+    assert_eq!(
+        rows_of(walks, "R#0#chr", "R#0#chr"),
+        tsv(&[
+            "R#0#chr 0 1 R#0#chr 0 0 0 2 2,2",
+            "R#0#chr 10 11 R#0#chr 0 12 1 2 6,-2",
+            "R#0#chr 20 21 R#0#chr 0 24 2 1 6",
+            "R#0#chr 30 31 R#0#chr 0 30 3 1 8",
+        ])
+    );
+    assert_eq!(
+        rows_of(walks, "R#0#chr", "H#1#h"),
+        tsv(&[
+            "R#0#chr 0 1 H#1#h 0 0 0 2 2,2",
+            "R#0#chr 0 1 H#1#h 0 18 2 1 4",
+            "R#0#chr 10 11 H#1#h 0 12 1 1 6",
+            "R#0#chr 10 11 H#1#h 0 24 3 1 6",
+            "R#0#chr 30 31 H#1#h 0 30 4 1 8",
+        ])
+    );
+    assert_eq!(
+        under(built.file("R", "nodes"), "R#0#chr\t20"),
+        tsv(&["R#0#chr 20 21 3 0 R#0#chr 12 18 LN:i:6"])
+    );
+}
+
 #[test]
 fn a_haplotype_with_two_contigs_is_listed_once() {
     let gfa = fs::read_to_string(format!(

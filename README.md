@@ -162,9 +162,14 @@ so a reader on GRCh38 downloads an index that covers GRCh38 alone.
 
 A step on a reference node takes that node's chunk; a step on any other node
 takes the chunk of the last reference step before it. A query over a window
-therefore returns every path that visits a reference node in it. A piece of
-more than `--cap` steps continues in further rows. A path that visits no node
-of a reference has no rows under it, and the tool counts these on stderr.
+therefore returns every path that visits a reference node in it. On the
+reference's own paths, a step takes the chunk of its own offset along the
+path, so where the reference passes a node more than once, as in a satellite
+array, each pass is filed where it lies. A node has one coordinate, from its
+first visit, so another haplotype that passes such a collapsed node again is
+filed under the reference's first copy. A piece of more than `--cap` steps
+continues in further rows. A path that visits no node of a reference has no
+rows under it, and the tool counts these on stderr.
 
 | Option            | Effect                                                                |
 | ----------------- | --------------------------------------------------------------------- |

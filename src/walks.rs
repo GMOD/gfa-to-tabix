@@ -301,12 +301,15 @@ impl Graph {
 
 // Per reference sample, per node: where the node is placed (a name id, with
 // OFF_REFERENCE set for rank 1), its offset there, and the last chunk a row
-// for it was filed under; per link, the last chunk likewise.
+// for it was filed under; per link, the last chunk likewise. `path_ends` holds
+// where each of the sample's own paths ends, which bounds its chunks even past
+// its last first-visited node.
 struct Reference {
     sample: Vec<u8>,
     walks: u64,
     placement: Vec<u32>,
     offset: Vec<u64>,
+    path_ends: HashMap<u32, u64>,
     node_chunk: Vec<u32>,
     link_chunk: Vec<u32>,
     pieces: u64,
@@ -630,6 +633,7 @@ fn first_pass(
             walks,
             placement: vec![NONE; nodes],
             offset: vec![0; nodes],
+            path_ends: HashMap::new(),
             node_chunk: vec![NONE; nodes],
             link_chunk: Vec::new(),
             pieces: 0,
@@ -651,6 +655,16 @@ fn first_pass(
             ));
         }
         on_reference[walk.reference].visit(names, walk.name, walk.start, &walk.ids, &lengths);
+        let length: u64 = walk
+            .ids
+            .iter()
+            .map(|&id| u64::from(lengths[id as usize]))
+            .sum();
+        let end = references[walk.reference]
+            .path_ends
+            .entry(walk.name)
+            .or_default();
+        *end = (*end).max(walk.start + length);
     }
     for (reference, best) in references.iter_mut().zip(&on_reference) {
         for (id, &name) in best.name.iter().enumerate() {
@@ -879,11 +893,13 @@ impl Builder<'_> {
             previous = id;
         }
         for r in 0..self.references.len() {
-            if !self.assign_chunks(r, handles) {
+            let own = (self.references[r].sample == path.sample)
+                .then(|| (self.names.index[&path.name], path.start));
+            if !self.assign_chunks(r, handles, own) {
                 self.references[r].unplaced += 1;
                 continue;
             }
-            if self.references[r].sample != path.sample {
+            if own.is_none() {
                 let haplotypes = &mut self.references[r].haplotypes;
                 let name = haplotype(&path.name);
                 if !haplotypes.contains(name) {
@@ -901,24 +917,30 @@ impl Builder<'_> {
     }
 
     // Gives every step the chunk its piece is filed under: a reference step
-    // its own, any other step the last reference step's before it (the first
-    // reference step's for those that lead). A run of reference steps in one
-    // chunk spanning fewer than --settle bp (a collapsed repeat copy, a short
-    // inversion) stays with the chunk the path was in. False when the path
-    // visits no node of the reference.
-    fn assign_chunks(&mut self, r: usize, handles: &[u32]) -> bool {
+    // its node's, any other step the last reference step's before it (the
+    // first reference step's for those that lead). On one of the reference's
+    // own paths, `own` (its name id and start), a step takes the chunk of its
+    // own offset, so a later visit to a node is filed where the path is, not
+    // at the node's first visit. A run of reference steps in one chunk spanning
+    // fewer than --settle bp (a collapsed repeat copy, a short inversion)
+    // stays with the chunk the path was in. False when the path visits no node
+    // of the reference.
+    fn assign_chunks(&mut self, r: usize, handles: &[u32], own: Option<(u32, u64)>) -> bool {
         let reference = &self.references[r];
         self.chunk_of.clear();
         self.runs.clear();
-        for &h in handles {
+        for (i, &h) in handles.iter().enumerate() {
             let id = (h >> 1) as usize;
             if !reference.on_reference(id) {
                 self.chunk_of.push(NONE);
                 continue;
             }
-            let key = self
-                .chunks
-                .of(reference.placement[id], reference.offset[id]);
+            let key = match own {
+                Some((name, start)) => self.chunks.of(name, start + self.before[i]),
+                None => self
+                    .chunks
+                    .of(reference.placement[id], reference.offset[id]),
+            };
             self.chunk_of.push(key);
             let bp = u64::from(self.graph.lengths[id]);
             match self.runs.last_mut() {
@@ -1073,6 +1095,9 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                     reference.offset[id] + u64::from(graph.lengths[id]),
                 );
             }
+        }
+        for (&name, &end) in &reference.path_ends {
+            extend(name, end);
         }
         eprintln!(
             "{} reference {}: {} paths, {on} nodes",
