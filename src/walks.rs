@@ -2,10 +2,10 @@
 // fixed chunks of each reference's coordinate, with the nodes and links those
 // pieces touch, as three Tabix-indexed BED files. A row's interval is the
 // first base of its chunk: a full-chunk interval would share a Tabix bin with
-// the next chunk, and a query would pull both. A header line gives the chunk
-// size.
+// the next chunk, and a query would pull both. Header lines give the chunk
+// size and, in the walk file, the references and haplotypes.
 
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
@@ -746,6 +746,15 @@ struct Builder<'a> {
     chunk_of: Vec<u32>,
     runs: Vec<Run>,
     pieces: Vec<(usize, usize)>,
+    haplotypes: BTreeSet<Vec<u8>>,
+}
+
+// A path's PanSN haplotype, `sample#haplotype`: its name up to the second `#`.
+fn haplotype(name: &[u8]) -> &[u8] {
+    match name.iter().enumerate().filter(|&(_, &b)| b == b'#').nth(1) {
+        Some((at, _)) => &name[..at],
+        None => name,
+    }
 }
 
 fn node_row(out: &mut Vec<u8>, id: usize, reference: &Reference, graph: &Graph, names: &Names) {
@@ -865,6 +874,14 @@ impl Builder<'_> {
             if !self.assign_chunks(r, handles) {
                 self.references[r].unplaced += 1;
                 continue;
+            }
+            if !self
+                .options
+                .refs
+                .iter()
+                .any(|s| s.as_bytes() == path.sample)
+            {
+                self.haplotypes.insert(haplotype(&path.name).to_vec());
             }
             self.cut_pieces();
             self.references[r].pieces += self.pieces.len() as u64;
@@ -1077,6 +1094,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         chunk_of: Vec::new(),
         runs: Vec::new(),
         pieces: Vec::new(),
+        haplotypes: BTreeSet::new(),
     };
     read_lines(gfa, |_, line| match line.first() {
         Some(b'W' | b'P') if line.get(1) == Some(&b'\t') => match path_line(line)? {
@@ -1108,14 +1126,29 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         walks,
         nodes,
         links,
+        haplotypes,
         ..
     } = builder;
-    let (names, chunks) = (&names, &chunks);
+    let mut walks_header = Vec::new();
+    for sample in &options.refs {
+        walks_header.extend_from_slice(b"#reference\t");
+        walks_header.extend_from_slice(sample.as_bytes());
+        walks_header.push(b'\n');
+    }
+    for name in &haplotypes {
+        walks_header.extend_from_slice(b"#haplotype\t");
+        walks_header.extend_from_slice(name);
+        walks_header.push(b'\n');
+    }
+    let (names, chunks, walks_header) = (&names, &chunks, &walks_header);
     let threads = thread::available_parallelism().map_or(4, |n| n.get());
     let write = |kind: &str, sorter: Sorter| -> Result<(String, u64), String> {
         let path = format!("{prefix}.{kind}.bed.gz");
         let mut writer = bed::Writer::create_parallel(&path, threads)?;
         writer.header(format!("#{kind}\tchunk:i:{}\n", chunks.size).as_bytes())?;
+        if kind == "walks" {
+            writer.header(walks_header)?;
+        }
         let mut line = Vec::new();
         let rows = sorter.merge(|chunk, rest| {
             let (name, start) = chunks.starts[chunk as usize];

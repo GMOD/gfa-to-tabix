@@ -112,6 +112,56 @@ fn each_file_starts_with_the_chunk_size() {
     assert!(built.links.starts_with("#links\tchunk:i:10\n"));
 }
 
+fn header(text: &str) -> String {
+    text.lines()
+        .take_while(|line| line.starts_with('#'))
+        .map(|line| line.to_string() + "\n")
+        .collect()
+}
+
+// U#1#u visits no reference node, so it has no rows and no line.
+#[test]
+fn the_walk_file_names_the_references_and_each_haplotype_with_rows() {
+    let built = build("walks-two-refs.gfa", &[]);
+    assert_eq!(
+        header(&built.walks),
+        tsv(&[
+            "#walks chunk:i:10",
+            "#reference R",
+            "#reference Q",
+            "#haplotype D#1",
+            "#haplotype H#1",
+            "#haplotype I#1",
+        ])
+    );
+    assert_eq!(header(&built.nodes), tsv(&["#nodes chunk:i:10"]));
+    assert_eq!(header(&built.links), tsv(&["#links chunk:i:10"]));
+}
+
+#[test]
+fn a_haplotype_with_two_contigs_is_listed_once() {
+    let gfa = fs::read_to_string(format!(
+        "{}/tests/data/walks-two-refs.gfa",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap();
+    let path = std::env::temp_dir().join(format!("walks-contigs-{}.gfa", std::process::id()));
+    fs::write(
+        &path,
+        gfa + "W\tH\t1\th2\t0\t12\t>1>2\nW\tH\t2\th\t0\t6\t>1\n",
+    )
+    .unwrap();
+    let built = build(path.to_str().unwrap(), &[]);
+    fs::remove_file(&path).unwrap();
+    assert!(built.output.status.success());
+    assert!(header(&built.walks).ends_with(&tsv(&[
+        "#haplotype D#1",
+        "#haplotype H#1",
+        "#haplotype H#2",
+        "#haplotype I#1",
+    ])));
+}
+
 // Node 2 is off Q. R, H, I and D visit it; D#1#d sorts first and reaches it
 // at 6, and again at 30.
 #[test]
