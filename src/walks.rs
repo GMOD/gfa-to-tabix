@@ -1028,6 +1028,24 @@ impl Builder<'_> {
         for (k, &(a, b)) in pieces.iter().enumerate() {
             let chunk = self.chunk_of[a];
             let (before, deltas, delta_end) = (&self.before, &self.deltas, &self.delta_end);
+            let (chunks, names, chunk_of) = (&self.chunks, &self.names, &self.chunk_of);
+            // where the piece before or after this one is filed: its chunk's
+            // start, with the reference sequence's name when it differs
+            let neighbour = |out: &mut Vec<u8>, tag: &[u8], at: Option<&(usize, usize)>| {
+                if let Some(&(c, _)) = at {
+                    let (name, start) = chunks.starts[chunk_of[c] as usize];
+                    out.push(b'\t');
+                    out.extend_from_slice(tag);
+                    if name == chunks.starts[chunk as usize].0 {
+                        out.extend_from_slice(b":i:");
+                    } else {
+                        out.extend_from_slice(b":Z:");
+                        out.extend_from_slice(&names.names[name as usize]);
+                        out.push(b':');
+                    }
+                    push_u64(out, start);
+                }
+            };
             self.walks.push(chunk, |out| {
                 out.extend_from_slice(&path.name);
                 out.push(b'\t');
@@ -1045,6 +1063,8 @@ impl Builder<'_> {
                         &deltas[delta_end[a] as usize..delta_end[b - 1] as usize],
                     );
                 }
+                neighbour(out, b"pv", k.checked_sub(1).and_then(|j| pieces.get(j)));
+                neighbour(out, b"nx", pieces.get(k + 1));
             })?;
             for &h in &handles[a..b] {
                 self.emit_node(r, chunk, (h >> 1) as usize)?;

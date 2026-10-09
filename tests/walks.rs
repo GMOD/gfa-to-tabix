@@ -122,9 +122,9 @@ fn each_reference_files_every_path_under_its_own_chunks() {
         assert_eq!(
             rows_of(built.file(sample, "walks"), anchor, "R#0#chr"),
             tsv(&[
-                &format!("{anchor} 0 1 R#0#chr 0 0 0 2 2,2"),
-                &format!("{anchor} 10 11 R#0#chr 0 12 1 2 6,2"),
-                &format!("{anchor} 20 21 R#0#chr 0 24 2 1 10"),
+                &format!("{anchor} 0 1 R#0#chr 0 0 0 2 2,2 nx:i:10"),
+                &format!("{anchor} 10 11 R#0#chr 0 12 1 2 6,2 pv:i:0 nx:i:20"),
+                &format!("{anchor} 20 21 R#0#chr 0 24 2 1 10 pv:i:10"),
             ])
         );
     }
@@ -209,20 +209,20 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     assert_eq!(
         rows_of(walks, "R#0#chr", "R#0#chr"),
         tsv(&[
-            "R#0#chr 0 1 R#0#chr 0 0 0 2 2,2",
-            "R#0#chr 10 11 R#0#chr 0 12 1 2 6,-2",
-            "R#0#chr 20 21 R#0#chr 0 24 2 1 6",
-            "R#0#chr 30 31 R#0#chr 0 30 3 1 8",
+            "R#0#chr 0 1 R#0#chr 0 0 0 2 2,2 nx:i:10",
+            "R#0#chr 10 11 R#0#chr 0 12 1 2 6,-2 pv:i:0 nx:i:20",
+            "R#0#chr 20 21 R#0#chr 0 24 2 1 6 pv:i:10 nx:i:30",
+            "R#0#chr 30 31 R#0#chr 0 30 3 1 8 pv:i:20",
         ])
     );
     assert_eq!(
         rows_of(walks, "R#0#chr", "H#1#h"),
         tsv(&[
-            "R#0#chr 0 1 H#1#h 0 0 0 2 2,2",
-            "R#0#chr 0 1 H#1#h 0 18 2 1 4",
-            "R#0#chr 10 11 H#1#h 0 12 1 1 6",
-            "R#0#chr 10 11 H#1#h 0 24 3 1 6",
-            "R#0#chr 30 31 H#1#h 0 30 4 1 8",
+            "R#0#chr 0 1 H#1#h 0 0 0 2 2,2 nx:i:10",
+            "R#0#chr 0 1 H#1#h 0 18 2 1 4 pv:i:10 nx:i:10",
+            "R#0#chr 10 11 H#1#h 0 12 1 1 6 pv:i:0 nx:i:0",
+            "R#0#chr 10 11 H#1#h 0 24 3 1 6 pv:i:0 nx:i:30",
+            "R#0#chr 30 31 H#1#h 0 30 4 1 8 pv:i:10",
         ])
     );
     assert_eq!(
@@ -287,9 +287,9 @@ fn an_inversion_walks_reference_nodes_backwards() {
     assert_eq!(
         rows_of(&built.walks, "Q#0#chr", "I#1#i"),
         tsv(&[
-            "Q#0#chr 0 1 I#1#i 0 0 0 1 2",
-            "Q#0#chr 10 11 I#1#i 0 6 1 3 7,-1,4",
-            "Q#0#chr 20 21 I#1#i 0 24 2 1 10",
+            "Q#0#chr 0 1 I#1#i 0 0 0 1 2 nx:i:10",
+            "Q#0#chr 10 11 I#1#i 0 6 1 3 7,-1,4 pv:i:0 nx:i:20",
+            "Q#0#chr 20 21 I#1#i 0 24 2 1 10 pv:i:10",
         ])
     );
     assert!(
@@ -305,11 +305,11 @@ fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
     assert_eq!(
         rows_of(&built.walks, "R#0#chr", "D#1#d"),
         tsv(&[
-            "R#0#chr 0 1 D#1#d 0 0 0 2 2,2",
-            "R#0#chr 0 1 D#1#d 0 24 2 2 2,2",
-            "R#0#chr 10 11 D#1#d 0 12 1 2 6,2",
-            "R#0#chr 10 11 D#1#d 0 36 3 2 6,2",
-            "R#0#chr 20 21 D#1#d 0 48 4 1 10",
+            "R#0#chr 0 1 D#1#d 0 0 0 2 2,2 nx:i:10",
+            "R#0#chr 0 1 D#1#d 0 24 2 2 2,2 pv:i:10 nx:i:10",
+            "R#0#chr 10 11 D#1#d 0 12 1 2 6,2 pv:i:0 nx:i:0",
+            "R#0#chr 10 11 D#1#d 0 36 3 2 6,2 pv:i:0 nx:i:20",
+            "R#0#chr 20 21 D#1#d 0 48 4 1 10 pv:i:10",
         ])
     );
 }
@@ -321,8 +321,8 @@ fn by_default_a_short_run_is_filed_under_its_own_chunk() {
     assert_eq!(
         rows_of(&built.walks, "R#0#chr", "R#0#chr"),
         tsv(&[
-            "R#0#chr 0 1 R#0#chr 0 0 0 4 2,2,2,2",
-            "R#0#chr 20 21 R#0#chr 0 24 1 1 10",
+            "R#0#chr 0 1 R#0#chr 0 0 0 4 2,2,2,2 nx:i:20",
+            "R#0#chr 20 21 R#0#chr 0 24 1 1 10 pv:i:0",
         ])
     );
 }
@@ -342,10 +342,10 @@ fn the_cap_continues_a_piece_in_a_row_that_restarts_from_an_absolute_id() {
     assert_eq!(
         rows_of(&built.walks, "R#0#chr", "H#1#h"),
         tsv(&[
-            "R#0#chr 0 1 H#1#h 100 100 0 2 2,2",
-            "R#0#chr 10 11 H#1#h 100 112 1 2 6,8",
-            "R#0#chr 10 11 H#1#h 100 121 2 1 8",
-            "R#0#chr 20 21 H#1#h 100 127 3 1 10",
+            "R#0#chr 0 1 H#1#h 100 100 0 2 2,2 nx:i:10",
+            "R#0#chr 10 11 H#1#h 100 112 1 2 6,8 pv:i:0 nx:i:10",
+            "R#0#chr 10 11 H#1#h 100 121 2 1 8 pv:i:10 nx:i:20",
+            "R#0#chr 20 21 H#1#h 100 127 3 1 10 pv:i:10",
         ])
     );
 }
@@ -467,4 +467,36 @@ fn an_unknown_reference_lists_the_samples() {
             .contains("--refs X matches no path's sample; have: R, Q, H, I, D, U")
     );
     assert!(built.walks.is_empty());
+}
+
+#[test]
+fn a_row_names_the_chunks_of_the_pieces_before_and_after_it() {
+    let gfa = std::env::temp_dir().join(format!("walks-neighbours-{}.gfa", std::process::id()));
+    fs::write(
+        &gfa,
+        tsv(&[
+            "S 1 AAAAAA",
+            "S 2 AAAAAA",
+            "S 3 AAAAAA",
+            "S 4 AAAAAA",
+            "L 1 + 2 + 0M",
+            "L 2 + 3 + 0M",
+            "L 3 + 4 + 0M",
+            "W R 0 chr1 0 12 >1>2",
+            "W R 0 chr2 0 12 >3>4",
+            "W H 1 h 0 24 >1>2>3>4",
+        ]),
+    )
+    .unwrap();
+    let built = build(gfa.to_str().unwrap(), &["--refs", "R"]);
+    fs::remove_file(&gfa).unwrap();
+    assert!(built.output.status.success());
+    // a neighbour on another reference sequence is named with its chunk
+    assert_eq!(
+        rows_of(&built.walks, "R#0#chr1", "H#1#h") + &rows_of(&built.walks, "R#0#chr2", "H#1#h"),
+        tsv(&[
+            "R#0#chr1 0 1 H#1#h 0 0 0 2 2,2 nx:Z:R#0#chr2:0",
+            "R#0#chr2 0 1 H#1#h 0 12 1 2 6,2 pv:Z:R#0#chr1:0",
+        ])
+    );
 }
