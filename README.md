@@ -200,7 +200,7 @@ next chunk, and a query would read both. A reader fetching a window therefore
 queries from the start of the chunk before the window.
 
 ```
-walks:  anchorSeq cs cs+1  path fragStart hapOffset piece nsteps steps
+walks:  anchorSeq cs cs+1  path fragStart hapOffset piece nsteps steps  [pv:i:cs] [nx:i:cs]
 nodes:  anchorSeq cs cs+1  nodeId rank sequence start end  LN:i:length  [SQ:Z:bases]
 links:  anchorSeq cs cs+1  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtStart tgtEnd tgtRank
 ```
@@ -213,6 +213,14 @@ back into one walk. `steps` lists the piece's steps as integers: the first is
 `2 × id + r`, with `r` 1 for a step on the reverse strand, and each one after
 is `2 × (id − previous id) + r`. Every row starts from an absolute id, so a row
 decodes on its own.
+
+`pv` and `nx` give the start of the chunk the path's previous and next piece is
+filed under, as `pv:Z:seq:start` when that chunk is on another reference
+sequence, and a row at either end of its path has no tag there. A reader that
+cuts a path off at the edge of what it read, such as a haplotype that leaves the
+reference inside a window and rejoins it in a chunk the read did not reach,
+reads on to that chunk, and knows a contig that ends from one that goes on. The
+tags add 0.8% to the chr22 walk file under [Scale](#scale).
 
 Each file opens with header lines, which start with `#`: `tabix -H` prints them
 and region queries skip them. The first is `#walks` (`#nodes` and `#links` in
