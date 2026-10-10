@@ -356,8 +356,6 @@ cannot be indexed.
 
 - [jbrowse-plugin-graphgenomeviewer](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer) -
   JBrowse 2 plugin that browses these graphs by locus
-- [BandageJS](https://github.com/cmdcolin/BandageJS) - standalone page for GFA
-  and gbz-base graphs
 - [@gmod/gbz-base](https://github.com/GMOD/gbz-base-js) - range-request reader
   for `.gbz.db` databases
 - [gbz-haplotype-index](https://github.com/GMOD/gbz-haplotype-index) - names
