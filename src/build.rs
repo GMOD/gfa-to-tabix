@@ -3,7 +3,7 @@
 
 use std::fs;
 use std::io::{self, BufReader, Read, Write};
-use std::process::{Child, ChildStdin, Command, Stdio};
+use std::process::{ChildStdin, Command, Output, Stdio};
 use std::thread::{self, JoinHandle};
 
 use crate::bed::{Layout, Row, Writer};
@@ -125,12 +125,9 @@ impl<R: Read> Read for Sniffer<R> {
     }
 }
 
-// `gfatools bubble -`, reading the text the sniffer passes it, its output
-// gathered on a thread.
-struct Bubbler {
-    child: Child,
-    output: Option<JoinHandle<io::Result<Vec<u8>>>>,
-}
+// `gfatools bubble -` reading the text the sniffer passes it. Its stderr is
+// shown only when it fails.
+struct Bubbler(JoinHandle<io::Result<Output>>);
 
 impl Bubbler {
     fn spawn() -> io::Result<(Bubbler, ChildStdin)> {
@@ -138,45 +135,26 @@ impl Bubbler {
             .args(["bubble", "-"])
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()?;
         let stdin = child.stdin.take().expect("stdin is piped");
-        let mut stdout = child.stdout.take().expect("stdout is piped");
-        let output = thread::spawn(move || {
-            let mut text = Vec::new();
-            stdout.read_to_end(&mut text).map(|_| text)
-        });
-        Ok((
-            Bubbler {
-                child,
-                output: Some(output),
-            },
-            stdin,
-        ))
+        Ok((Bubbler(thread::spawn(|| child.wait_with_output())), stdin))
     }
 
-    fn finish(mut self) -> Result<Vec<u8>, String> {
-        let output = self.output.take().expect("output is gathered once");
-        let text = output
+    fn finish(self) -> Result<Vec<u8>, String> {
+        let output = self
+            .0
             .join()
-            .map_err(|_| "gfatools bubble: reading its output panicked".to_string())?
+            .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
             .map_err(|e| format!("gfatools bubble: {e}"))?;
-        let status = self
-            .child
-            .wait()
-            .map_err(|e| format!("gfatools bubble: {e}"))?;
-        if !status.success() {
-            return Err(format!("gfatools bubble failed: {status}"));
+        if !output.status.success() {
+            return Err(format!(
+                "gfatools bubble failed ({}): {}",
+                output.status,
+                String::from_utf8_lossy(&output.stderr).trim()
+            ));
         }
-        Ok(text)
-    }
-}
-
-impl Drop for Bubbler {
-    fn drop(&mut self) {
-        if self.output.is_some() {
-            let _ = self.child.kill();
-            let _ = self.child.wait();
-        }
+        Ok(output.stdout)
     }
 }
 
@@ -402,14 +380,12 @@ fn write_json(path: &str, value: &Json) -> Result<(), String> {
 pub fn run(options: &Options) -> Result<(), String> {
     let prefix = options.prefix.as_str();
     let forced = options.reference.is_some() || options.snarls.is_some();
-    let (mut bubbler, mut tee, mut missing) = (None, None, None);
-    if !forced {
-        match Bubbler::spawn() {
-            Ok((spawned, stdin)) => (bubbler, tee) = (Some(spawned), Some(stdin)),
-            Err(e) => missing = Some(e),
-        }
-    }
-    let mut sniffer = Sniffer::new(crate::open_input(&options.graph)?, tee.take());
+    let (bubbler, tee, missing) = match (!forced).then(Bubbler::spawn) {
+        Some(Ok((bubbler, tee))) => (Some(bubbler), Some(tee), None),
+        Some(Err(e)) => (None, None, Some(e)),
+        None => (None, None, None),
+    };
+    let mut sniffer = Sniffer::new(crate::open_input(&options.graph)?, tee);
     let graph = Graph::read(BufReader::with_capacity(1 << 20, &mut sniffer))?;
     let sniffed = sniffer.finish();
     let (graph, placed) = crate::place_graph(&options.graph, graph, options.reference.as_deref())?;
@@ -418,22 +394,12 @@ pub fn run(options: &Options) -> Result<(), String> {
     } else {
         sniffed.ok_or_else(|| format!("{}: no S lines", options.graph))?
     };
-    if route == Route::Paths {
-        bubbler = None;
-    }
-    eprintln!(
-        "{} graph: {}",
-        if route == Route::Rgfa {
-            "rgfa"
-        } else {
-            "paths"
-        },
-        options.graph
-    );
-    let tier = options.tier.unwrap_or(match route {
-        Route::Rgfa => 10000,
-        Route::Paths => 50,
-    });
+    let (name, default_tier) = match route {
+        Route::Rgfa => ("rgfa", 10000),
+        Route::Paths => ("paths", 50),
+    };
+    eprintln!("{name} graph: {}", options.graph);
+    let tier = options.tier.unwrap_or(default_tier);
 
     let (graph, placed, snarls) = (&graph, &placed, options.snarls.as_deref());
     let (sample, bubbles) = thread::scope(|scope| {
