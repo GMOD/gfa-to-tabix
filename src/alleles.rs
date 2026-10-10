@@ -89,7 +89,7 @@ fn read_segments(path: &str) -> Result<(Vec<Segment>, HashMap<String, u32>), Str
     Ok((segments, index))
 }
 
-fn commify(n: i64) -> String {
+pub(crate) fn commify(n: i64) -> String {
     let digits = n.unsigned_abs().to_string();
     let mut out = String::new();
     for (i, c) in digits.chars().enumerate() {

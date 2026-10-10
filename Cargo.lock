@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "gfa-to-tabix"
-version = "0.8.1"
+version = "0.9.0"
 dependencies = [
  "flate2",
  "noodles-bgzf",

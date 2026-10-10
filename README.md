@@ -381,6 +381,50 @@ gfa-to-tabix bubbles --snarls graph.snarls.vcf -o graph
   inversion, shortest, longest, three `.`, and the segment ids, the first
   qualified by its reference start (`544433@3943363`)
 
+## Paths
+
+`gfa-to-tabix paths -o <prefix> <ref.call.bed> [<sample.call.bed> ...]` writes
+`<prefix>.bed.gz` with its index: one row per bubble and sample, so a
+multi-row feature display partitioned on `strain` draws a lane per haplotype,
+each block that haplotype's allele at that bubble. The inputs are the files
+`minigraph --call` writes, one per sample and the reference's first:
+
+```bash
+for fa in ref.fa s1.fa s2.fa; do
+  minigraph -cxasm --call -t8 graph.rgfa.gz $fa > $(basename $fa .fa).call.bed
+done
+gfa-to-tabix paths -o graph.paths ref.call.bed s1.call.bed s2.call.bed
+```
+
+- A file's name without `.call.bed` is its sample. The reference's names the
+  PanSN prefix (`ref#1#`) that the rows drop from their contigs
+- minigraph writes one line per bubble, in the same order for every sample; the
+  command refuses files of different lengths
+- A bare `.` in a call line is no alignment over the bubble (`nocall`), not a
+  deletion of its span
+
+Columns, after the BED's first nine (`itemRgb` is the class colour, so the
+track draws with no colour config):
+
+| column | holds |
+| ------ | ----- |
+| `name` | the length change for the block label (`+113,174`, `-3,217`, `ref`, `no call`) |
+| `strand` | the orientation the contig aligned in; `-` over a run of bubbles is an inversion |
+| `strain` | the sample, the row |
+| `class` | `ref`, `ins`, `del`, `sub` or `nocall` |
+| `delta` | `pathLen - refLen` |
+| `pathLen` | bp of the sample's path through the bubble (-1 for no call) |
+| `refLen` | the reference span the bubble covers, 0 at a pure-insertion site |
+| `alleles` | distinct paths observed at the bubble across the samples; `gfatools bubble`'s own count saturates |
+| `nonRef` | samples that leave the reference path at the bubble |
+| `path` | the segment ids traversed (`>s2650>s1949`), `<` for reverse, the same ids the graph view draws |
+
+`alleles` and `nonRef` repeat down a bubble's rows, so one filter on either
+cuts the track to the sites worth looking at. At a pure-insertion bubble, `*` is
+the reference allele, and `delta` classifies it. The command holds every row in
+memory, so hundreds of samples over a whole genome's bubbles need the memory for
+all of them.
+
 ## Matching the JBrowse scripts
 
 The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`,

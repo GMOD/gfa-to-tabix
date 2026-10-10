@@ -4,6 +4,7 @@ mod bed;
 mod bubbles;
 mod gfa;
 mod parallel_bgzf;
+mod paths;
 mod place;
 mod sorter;
 mod walks;
@@ -18,7 +19,7 @@ use flate2::read::MultiGzDecoder;
 use bed::Layout;
 use gfa::Graph;
 
-const USAGE: &str = "usage: gfa-to-tabix alleles|bubbles [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
+const USAGE: &str = "usage: gfa-to-tabix alleles|bubbles|paths [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
 
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
@@ -304,6 +305,16 @@ options:
   -o, --out PREFIX   output prefix
   --min-alleles N    skip a snarl with fewer traversals (default 2)";
 
+const PATHS_USAGE: &str =
+    "usage: gfa-to-tabix paths [-h] -o PREFIX REFERENCE.call.bed [SAMPLE.call.bed ...]
+
+Write PREFIX.bed.gz (+ .tbi) from the files `minigraph -cxasm --call graph.rgfa
+sample.fa` writes, one per sample and the reference's first: a row per bubble
+and sample, with the sample's path, its length change against the reference and
+how many samples carry each allele. Each file's name, without .call.bed, is its
+sample, and the reference's names the PanSN prefix the rows drop from their
+contigs. Every file must have the same lines, which minigraph writes.";
+
 fn subcommand_fail(usage: &str, message: &str) -> ! {
     eprintln!("{usage}\ngfa-to-tabix: error: {message}");
     process::exit(2)
@@ -361,11 +372,42 @@ fn bubbles_command(args: Vec<String>) -> ! {
     finish(bubbles::run(&snarls, &prefix, min_alleles))
 }
 
+fn paths_command(args: Vec<String>) -> ! {
+    let (mut prefix, mut files) = (None, Vec::new());
+    let mut args = args.into_iter();
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "-h" | "--help" => {
+                println!("{PATHS_USAGE}");
+                process::exit(0)
+            }
+            "-o" | "--out" => {
+                prefix = Some(
+                    args.next()
+                        .unwrap_or_else(|| subcommand_fail(PATHS_USAGE, "-o/--out needs a value")),
+                )
+            }
+            other if other.starts_with('-') => {
+                subcommand_fail(PATHS_USAGE, &format!("unrecognized argument: {other}"))
+            }
+            _ => files.push(arg),
+        }
+    }
+    let Some(prefix) = prefix else {
+        subcommand_fail(PATHS_USAGE, "-o is required")
+    };
+    if files.is_empty() {
+        subcommand_fail(PATHS_USAGE, "needs at least the reference's call file")
+    }
+    finish(paths::run(&prefix, &files))
+}
+
 fn main() {
     let mut raw = env::args().skip(1);
     match raw.next().as_deref() {
         Some("alleles") => alleles_command(raw.collect()),
         Some("bubbles") => bubbles_command(raw.collect()),
+        Some("paths") => paths_command(raw.collect()),
         _ => {}
     }
     let args = parse_args();
