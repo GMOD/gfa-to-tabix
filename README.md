@@ -360,6 +360,27 @@ gfa-to-tabix alleles hprc
 - Columns: `#chrom start end name score strand thickStart thickEnd itemRgb class
   delta altLen refLen CIGAR discoveryRank firstSeenIn nested segments`
 
+## Bubbles
+
+`gfa-to-tabix bubbles --snarls <vcf> -o <prefix>` writes
+`<prefix>.bubbles.bed.gz` with its index from a `vg deconstruct` snarl VCF
+(`pggb -V` writes one too). It gives a plain GFA the bubble file that
+`gfatools bubble` gives an rGFA, which finds none on a plain GFA.
+
+```bash
+vg deconstruct -P K12 -a graph.gbz > graph.snarls.vcf
+gfa-to-tabix bubbles --snarls graph.snarls.vcf -o graph
+```
+
+- `-a` makes `vg deconstruct` write the `LV` tag, and the command keeps the
+  `LV=0` snarls, none of which overlap
+- The reference's contig names in the VCF must match the segment files', so
+  rename a PanSN path with `bcftools annotate --rename-chrs` first
+- `--min-alleles N` skips a snarl with fewer than N traversals (default 2)
+- Columns are `gfatools bubble`'s: chrom, start, end, segments, walks,
+  inversion, shortest, longest, three `.`, and the segment ids, the first
+  qualified by its reference start (`544433@3943363`)
+
 ## Matching the JBrowse scripts
 
 The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`

@@ -1,6 +1,7 @@
 mod alleles;
 mod anchor;
 mod bed;
+mod bubbles;
 mod gfa;
 mod parallel_bgzf;
 mod place;
@@ -17,7 +18,7 @@ use flate2::read::MultiGzDecoder;
 use bed::Layout;
 use gfa::Graph;
 
-const USAGE: &str = "usage: gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
+const USAGE: &str = "usage: gfa-to-tabix alleles|bubbles ... (see `gfa-to-tabix alleles -h`)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
 
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
@@ -285,9 +286,36 @@ fn run(args: &Args) -> Result<(), String> {
 const ALLELES_USAGE: &str = "usage: gfa-to-tabix alleles [-h] PREFIX
 
 Read PREFIX.segs.bed.gz and PREFIX.links.bed.gz, as this tool writes them with
---layout contig, and write PREFIX.alleles.bed.gz (+ .tbi): one row per allele the graph holds,
-anchored on the reference, with a CIGAR that states its size. The two files are
-all it needs, so a hosted pair works without the graph.";
+--layout contig, and write PREFIX.alleles.bed.gz (+ .tbi): one row per allele
+the graph holds, anchored on the reference, with a CIGAR that states its size.
+The two files are all it needs, so a hosted pair works without the graph.";
+
+const BUBBLES_USAGE: &str =
+    "usage: gfa-to-tabix bubbles [-h] [--min-alleles N] -o PREFIX --snarls VCF
+
+Write PREFIX.bubbles.bed.gz (+ .tbi) from a `vg deconstruct` snarl VCF (gz
+accepted; `pggb -V` writes one too), in the layout `gfatools bubble` writes for
+an rGFA. gfatools finds no bubbles on a plain GFA, and a snarl VCF carries each
+bubble's reference span and alleles. Keeps the top-level snarls, none of which
+overlap.
+
+options:
+  --snarls VCF       the snarl VCF
+  -o, --out PREFIX   output prefix
+  --min-alleles N    skip a snarl with fewer traversals (default 2)";
+
+fn subcommand_fail(usage: &str, message: &str) -> ! {
+    eprintln!("{usage}\ngfa-to-tabix: error: {message}");
+    process::exit(2)
+}
+
+fn finish(result: Result<(), String>) -> ! {
+    if let Err(message) = result {
+        eprintln!("gfa-to-tabix: error: {message}");
+        process::exit(1);
+    }
+    process::exit(0)
+}
 
 fn alleles_command(args: Vec<String>) -> ! {
     match args.as_slice() {
@@ -295,24 +323,50 @@ fn alleles_command(args: Vec<String>) -> ! {
             println!("{ALLELES_USAGE}");
             process::exit(0)
         }
-        [prefix] if !prefix.starts_with('-') => {
-            if let Err(message) = alleles::run(prefix) {
-                eprintln!("gfa-to-tabix: error: {message}");
-                process::exit(1);
+        [prefix] if !prefix.starts_with('-') => finish(alleles::run(prefix)),
+        _ => subcommand_fail(ALLELES_USAGE, "expected one PREFIX"),
+    }
+}
+
+fn bubbles_command(args: Vec<String>) -> ! {
+    let (mut snarls, mut prefix, mut min_alleles) = (None, None, 2usize);
+    let mut args = args.into_iter();
+    while let Some(arg) = args.next() {
+        let mut value = |name: &str| {
+            args.next()
+                .unwrap_or_else(|| subcommand_fail(BUBBLES_USAGE, &format!("{name} needs a value")))
+        };
+        match arg.as_str() {
+            "-h" | "--help" => {
+                println!("{BUBBLES_USAGE}");
+                process::exit(0)
             }
-            process::exit(0)
-        }
-        _ => {
-            eprintln!("{ALLELES_USAGE}\ngfa-to-tabix: error: expected one PREFIX");
-            process::exit(2)
+            "--snarls" => snarls = Some(value("--snarls")),
+            "-o" | "--out" => prefix = Some(value("-o/--out")),
+            "--min-alleles" => {
+                let given = value("--min-alleles");
+                min_alleles = given.parse().unwrap_or_else(|_| {
+                    subcommand_fail(
+                        BUBBLES_USAGE,
+                        &format!("--min-alleles: {given} is not a non-negative integer"),
+                    )
+                })
+            }
+            other => subcommand_fail(BUBBLES_USAGE, &format!("unrecognized argument: {other}")),
         }
     }
+    let (Some(snarls), Some(prefix)) = (snarls, prefix) else {
+        subcommand_fail(BUBBLES_USAGE, "--snarls and -o are required")
+    };
+    finish(bubbles::run(&snarls, &prefix, min_alleles))
 }
 
 fn main() {
     let mut raw = env::args().skip(1);
-    if raw.next().as_deref() == Some("alleles") {
-        alleles_command(raw.collect());
+    match raw.next().as_deref() {
+        Some("alleles") => alleles_command(raw.collect()),
+        Some("bubbles") => bubbles_command(raw.collect()),
+        _ => {}
     }
     let args = parse_args();
     if let Err(message) = run(&args) {
