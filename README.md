@@ -339,6 +339,27 @@ gzipped GFA and peaks at 1.4 GB on a 16-core laptop. The files, three for each
 reference, total 408 MB. GRCh38's three indexes total 31 KB, where one set
 covering both references took 56 KB.
 
+## Alleles
+
+`gfa-to-tabix alleles <prefix>` reads `<prefix>.segs.bed.gz` and
+`<prefix>.links.bed.gz`, indexed with `--layout contig`, and writes
+`<prefix>.alleles.bed.gz` with its index: one row per allele the graph holds,
+anchored on the reference, with a CIGAR that states its size. The graph itself
+is not needed, so a hosted pair works.
+
+```bash
+gfa-to-tabix hprc.sv.gfa.gz --layout contig -o hprc
+gfa-to-tabix alleles hprc
+```
+
+- A link between two backbone nodes that leaves a gap is a deletion
+- A link from a backbone node to an off-backbone one enters an allele; the walk
+  follows links until it arrives back on the backbone
+- A walk that never rejoins the backbone is dropped, and the count goes to
+  stderr
+- Columns: `#chrom start end name score strand thickStart thickEnd itemRgb class
+  delta altLen refLen CIGAR discoveryRank firstSeenIn nested segments`
+
 ## Matching the JBrowse scripts
 
 The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`
@@ -347,7 +368,8 @@ from the
 which ran `gfatools gfa2bed`, awk, a Python script, `sort`, `bgzip` and
 `tabix`. Its rows match those scripts' output byte for byte, and
 `scripts/parity.sh` runs both and compares the rows and the answers htslib's
-`tabix` gives from each index.
+`tabix` gives from each index. `alleles` likewise matches `build_rgfa_alleles.sh`,
+and `parity.sh` compares those rows too.
 
 A Tabix index holds coordinates up to 512 Mb, so a longer reference sequence
 cannot be indexed.

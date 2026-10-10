@@ -42,5 +42,12 @@ for kind in segs links; do
     done
   done < <(tabix -l "$work/old.$kind.bed.gz")
 done
+bash "$scripts/build_rgfa_alleles.sh" "$work/old" >/dev/null 2>&1
+"$binary" alleles "$work/new" 2>/dev/null
+if ! cmp -s <(gzip -dc "$work/old.alleles.bed.gz") <(gzip -dc "$work/new.alleles.bed.gz"); then
+  echo "FAIL alleles rows differ: $gfa $reference"
+  diff <(gzip -dc "$work/old.alleles.bed.gz") <(gzip -dc "$work/new.alleles.bed.gz") | head -6
+  status=1
+fi
 [ $status -eq 0 ] && echo "ok   $(basename "$gfa") $reference ($(gzip -dc "$work/new.segs.bed.gz" | wc -l) nodes, $(gzip -dc "$work/new.links.bed.gz" | wc -l) link rows)"
 exit $status

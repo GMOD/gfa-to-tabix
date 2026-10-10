@@ -1,3 +1,4 @@
+mod alleles;
 mod anchor;
 mod bed;
 mod gfa;
@@ -281,7 +282,38 @@ fn run(args: &Args) -> Result<(), String> {
     Ok(())
 }
 
+const ALLELES_USAGE: &str = "usage: gfa-to-tabix alleles [-h] PREFIX
+
+Read PREFIX.segs.bed.gz and PREFIX.links.bed.gz, as this tool writes them with
+--layout contig, and write PREFIX.alleles.bed.gz (+ .tbi): one row per allele the graph holds,
+anchored on the reference, with a CIGAR that states its size. The two files are
+all it needs, so a hosted pair works without the graph.";
+
+fn alleles_command(args: Vec<String>) -> ! {
+    match args.as_slice() {
+        [flag] if flag == "-h" || flag == "--help" => {
+            println!("{ALLELES_USAGE}");
+            process::exit(0)
+        }
+        [prefix] if !prefix.starts_with('-') => {
+            if let Err(message) = alleles::run(prefix) {
+                eprintln!("gfa-to-tabix: error: {message}");
+                process::exit(1);
+            }
+            process::exit(0)
+        }
+        _ => {
+            eprintln!("{ALLELES_USAGE}\ngfa-to-tabix: error: expected one PREFIX");
+            process::exit(2)
+        }
+    }
+}
+
 fn main() {
+    let mut raw = env::args().skip(1);
+    if raw.next().as_deref() == Some("alleles") {
+        alleles_command(raw.collect());
+    }
     let args = parse_args();
     if let Err(message) = run(&args) {
         eprintln!("gfa-to-tabix: error: {message}");
