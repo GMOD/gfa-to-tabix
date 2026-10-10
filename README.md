@@ -49,7 +49,68 @@ hprc.links.bed.gz   hprc.links.bed.gz.tbi
 The input may be gzipped, and `-` reads stdin, so
 `zstd -dc graph.gfa.zst | gfa-to-tabix - -o graph` handles other compression.
 
-`--walks` writes the paths themselves instead; see [Walks](#walks).
+`--walks` writes the paths themselves instead; see [Walks](#walks). `build`
+writes the index and everything else a graph track reads; see [Build](#build).
+
+## Build
+
+`gfa-to-tabix build` writes everything a JBrowse graph track reads, from one
+read of the graph:
+
+```bash
+gfa-to-tabix build hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc --assembly hg38
+gfa-to-tabix build ecoli.gfa.gz --reference K12 --snarls ecoli.snarls.vcf -o ecoli
+```
+
+| File                               | Holds                                              |
+| ---------------------------------- | -------------------------------------------------- |
+| `hprc.segs/links.bed.gz`           | the fine index, anchored layout                    |
+| `hprc.contig.segs/links.bed.gz`    | the contig layout                                  |
+| `hprc.fold10000.segs/links.bed.gz` | the coarse tier ([Fold](#fold))                    |
+| `hprc.alleles.bed.gz`              | the allele inventory ([Alleles](#alleles))         |
+| `hprc.bubbles.bed.gz`              | the bubbles ([Bubbles](#bubbles))                  |
+| `hprc.graph.json`                  | the manifest                                       |
+| `hprc.config.json`                 | the tracks, ready to merge into a JBrowse config   |
+
+Each `.bed.gz` gets a `.tbi`.
+
+- `--tier N` folds under N bp: default 10000 for an rGFA, 50 for a plain GFA
+- `--assembly` names the JBrowse assembly the tracks sit on. Default the
+  graph's reference sample, else `reference`; the config maps it onto the
+  sample with `assemblyNameToPanSN`
+- An S line with no `SN` tag among the first 100,000, `--reference` or
+  `--snarls` makes it a plain GFA
+- An rGFA's bubbles need `gfatools` on PATH, which reads the text alongside the
+  parse. Without it the build says so and writes no bubble file
+- A plain GFA's bubbles come from `--snarls`, a `vg deconstruct -a` snarl VCF;
+  without one there is no bubble file
+- The config's coarse slot is `{ "uri": "hprc.fold10000", "foldBelowBp": 10000 }`
+- `zstd -dc graph.gfa.zst | gfa-to-tabix build - -o graph` reads other
+  compression
+- It replaces JBrowse's `build_pangenome_graph.sh`, whose rows it matches byte
+  for byte. It parses the graph once, where the script read it four times, and
+  writes the index, tier, alleles and bubbles concurrently: 0.77 s against the
+  script's 2.46 s on a 59 MB chr22 SV rGFA
+
+The manifest, `<prefix>.graph.json`, names each file relative to itself, or
+`null` for one not written, so it works wherever the set is hosted:
+
+```json
+{
+  "schema": 1,
+  "reference": "GRCh38",
+  "index": "hprc",
+  "contig": "hprc.contig",
+  "tier": { "prefix": "hprc.fold10000", "foldBelowBp": 10000 },
+  "bubbles": "hprc.bubbles.bed.gz",
+  "alleles": "hprc.alleles.bed.gz"
+}
+```
+
+- `reference`: the PanSN sample of the first reference segment (`GRCh38` from
+  `GRCh38#0#chr1`), `null` when the backbone names carry no sample
+- `index`, `contig`, `tier.prefix`: prefixes of `.segs.bed.gz` and
+  `.links.bed.gz` pairs
 
 ## Where the coordinates come from
 

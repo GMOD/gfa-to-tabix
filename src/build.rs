@@ -22,7 +22,7 @@ pub struct Options {
     pub tier: Option<i64>,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum Route {
     Rgfa,
     Paths,
@@ -451,4 +451,42 @@ pub fn run(options: &Options) -> Result<(), String> {
             .map_or_else(String::new, |s| format!(", graph sample '{s}'"))
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct ByteAtATime<'a>(&'a [u8]);
+
+    impl Read for ByteAtATime<'_> {
+        fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+            let Some((&first, rest)) = self.0.split_first() else {
+                return Ok(0);
+            };
+            buf[0] = first;
+            self.0 = rest;
+            Ok(1)
+        }
+    }
+
+    fn sniff(text: &str) -> Option<Route> {
+        let mut sniffer = Sniffer::new(ByteAtATime(text.as_bytes()), None);
+        io::copy(&mut sniffer, &mut io::sink()).unwrap();
+        sniffer.finish()
+    }
+
+    #[test]
+    fn a_tag_split_across_reads_is_found() {
+        assert_eq!(
+            sniff("S\ts1\tACGT\tSN:Z:chr1\nS\ts2\tAC\tSN:Z:chr1"),
+            Some(Route::Rgfa)
+        );
+        assert_eq!(
+            sniff("S\ts1\tACGT\tSN:Z:chr1\nS\ts2\tAC\tLN:i:2\n"),
+            Some(Route::Paths)
+        );
+        assert_eq!(sniff("S\ts1\tSN:Z\tSN:Z:x\n"), Some(Route::Rgfa));
+        assert!(sniff("H\tVN:Z:1.0\nL\ta\t+\tb\t+\t*\n").is_none());
+    }
 }
