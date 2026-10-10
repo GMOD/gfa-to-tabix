@@ -127,6 +127,12 @@ pub fn run(vcf: &str, prefix: &str, min_alleles: usize) -> Result<(), String> {
         });
     }
 
+    if total > 0 && top == 0 {
+        eprintln!(
+            "note: no record has LV=0, so no bubble was written; `vg deconstruct -a` writes the LV tag"
+        );
+    }
+
     // top-level bubbles do not overlap; a snarl VCF does not guarantee it
     bubbles.sort_by(|a, b| {
         (a.chrom.as_bytes(), a.start, a.end).cmp(&(b.chrom.as_bytes(), b.start, b.end))

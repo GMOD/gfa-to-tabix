@@ -383,14 +383,14 @@ gfa-to-tabix bubbles --snarls graph.snarls.vcf -o graph
 
 ## Matching the JBrowse scripts
 
-The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`
-from the
-[JBrowse repository](https://github.com/GMOD/jbrowse-components/tree/main/scripts),
-which ran `gfatools gfa2bed`, awk, a Python script, `sort`, `bgzip` and
-`tabix`. Its rows match those scripts' output byte for byte, and
-`scripts/parity.sh` runs both and compares the rows and the answers htslib's
-`tabix` gives from each index. `alleles` likewise matches `build_rgfa_alleles.sh`,
-and `parity.sh` compares those rows too.
+The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`,
+and `alleles` reproduces `build_rgfa_alleles.sh`, from the
+[JBrowse repository](https://github.com/GMOD/jbrowse-components/tree/c87a58557c2a74b6b770f34994350b69e842ace9/scripts),
+where they ran `gfatools gfa2bed`, awk, Python, `sort`, `bgzip` and `tabix`.
+JBrowse has since dropped them for this tool. The rows match those scripts'
+output byte for byte, and `scripts/parity.sh` runs both from a checkout of that
+commit and compares the rows and the answers htslib's `tabix` gives from each
+index. `bubbles` matches `snarls_to_bubble_bed.py` as of the same commit.
 
 A Tabix index holds coordinates up to 512 Mb, so a longer reference sequence
 cannot be indexed.
