@@ -18,7 +18,7 @@ use flate2::read::MultiGzDecoder;
 use bed::Layout;
 use gfa::Graph;
 
-const USAGE: &str = "usage: gfa-to-tabix alleles|bubbles ... (see `gfa-to-tabix alleles -h`)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
+const USAGE: &str = "usage: gfa-to-tabix alleles|bubbles [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
 
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
