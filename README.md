@@ -352,6 +352,26 @@ which ran `gfatools gfa2bed`, awk, a Python script, `sort`, `bgzip` and
 A Tabix index holds coordinates up to 512 Mb, so a longer reference sequence
 cannot be indexed.
 
+## See also
+
+- [jbrowse-plugin-graphgenomeviewer](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer) -
+  JBrowse 2 plugin that browses these graphs by locus
+- [BandageJS](https://github.com/cmdcolin/BandageJS) - standalone page for GFA
+  and gbz-base graphs
+- [@gmod/gbz-base](https://github.com/GMOD/gbz-base-js) - range-request reader
+  for `.gbz.db` databases
+- [gbz-haplotype-index](https://github.com/GMOD/gbz-haplotype-index) - names
+  every walk in a gbz-base cut
+- [gfa-to-pairwise-paf](https://github.com/cmdcolin/gfa-to-pairwise-paf-rs) -
+  graph to PAF, for synteny views
+
+Tutorials on [jbrowse.org](https://jbrowse.org/jb2/docs/tutorials/)
+
+- [Hosting your own graph](https://jbrowse.org/jb2/docs/tutorials/pangenome_prepare_graph/)
+- [Minigraph-Cactus](https://jbrowse.org/jb2/docs/tutorials/pangenome_cactus/)
+- [pggb](https://jbrowse.org/jb2/docs/tutorials/pangenome_ecoli/)
+- [HPRC part 2: haplotypes against each other](https://jbrowse.org/jb2/docs/tutorials/pangenome_hprc_haplotypes/)
+
 ## License
 
 Apache-2.0
