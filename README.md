@@ -381,6 +381,33 @@ gfa-to-tabix bubbles --snarls graph.snarls.vcf -o graph
   inversion, shortest, longest, three `.`, and the segment ids, the first
   qualified by its reference start (`544433@3943363`)
 
+## Fold
+
+`gfa-to-tabix fold <graph> --below <bp> -o <prefix>` writes the index of the
+graph with every variant under `bp` folded into the reference: the coarse tier a
+graph track draws once zoomed out past the fine index, so a whole chromosome
+fits.
+
+```bash
+gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
+```
+
+- It keeps the backbone, every allele whose own length or the reference it
+  replaces reaches `bp`, and the shortest way from each one's ends back to the
+  backbone. The reference between kept alleles becomes one segment
+- `--layout` should match the fine index's, so a tier window returns what a fine
+  window does. `--reference` names a plain GFA's backbone path, as for the index
+- The graph track folds each cut it draws the same way, at ten of the linear
+  view's pixels, so a tier folded at N and handed over at N / 10 bp per pixel
+  draws what the fine cut drew just below the handover. In the track's config,
+  `coarse: { uri: "hprc.fold10000", aboveBpPerPx: 1000 }` is that handover
+- The fold is [bandage-core](https://github.com/GMOD/bandage-core)'s
+  `foldVariants`, ported. `scripts/parity-fold.sh` compares the rows with
+  `bandage-fold | gfa-to-tabix -` byte for byte, at five sizes and both layouts,
+  and CI runs it. On HPRC release 2.1's SV rGFA the rows match the hosted tier,
+  and the fold takes 12 s and 640 MB. `bandage-fold` cannot read that graph:
+  Node refuses the 3.5 GB of text as one string
+
 ## Paths
 
 `gfa-to-tabix paths -o <prefix> <ref.call.bed> [<sample.call.bed> ...]` writes

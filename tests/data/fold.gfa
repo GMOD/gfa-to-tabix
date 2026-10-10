@@ -1,0 +1,16 @@
+H	VN:Z:1.0
+S	b1	*	LN:i:100	SN:Z:chr	SO:i:0	SR:i:0
+S	b2	*	LN:i:90	SN:Z:chr	SO:i:110	SR:i:0
+S	b3	*	LN:i:100	SN:Z:chr	SO:i:200	SR:i:0
+S	b4	*	LN:i:100	SN:Z:chr	SO:i:300	SR:i:0
+S	a1	*	LN:i:10	SN:Z:seqA	SO:i:1000	SR:i:1
+S	a2a	*	LN:i:60	SN:Z:seqA	SO:i:2000	SR:i:1
+S	a2b	*	LN:i:60	SN:Z:seqA	SO:i:2060	SR:i:1
+L	b1	+	b2	+	0M
+L	b2	+	b3	+	0M
+L	b3	+	b4	+	0M
+L	b1	+	a1	+	0M
+L	a1	+	b2	+	0M
+L	b3	+	a2a	+	0M
+L	a2a	+	a2b	+	0M
+L	a2b	+	b4	+	0M

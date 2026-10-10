@@ -30,7 +30,7 @@ jobs:
       - run: cargo test --release --locked
 
   parity:
-    name: Byte parity with the JBrowse scripts
+    name: Byte parity with the JBrowse scripts and bandage-fold
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -60,3 +60,4 @@ jobs:
           key: cargo-parity-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
       - run: cargo build --release --locked
       - run: scripts/parity-fixtures.sh jbrowse/scripts target/release/gfa-to-tabix
+      - run: scripts/parity-fold.sh target/release/gfa-to-tabix

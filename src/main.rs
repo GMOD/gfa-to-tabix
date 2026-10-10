@@ -2,6 +2,7 @@ mod alleles;
 mod anchor;
 mod bed;
 mod bubbles;
+mod fold;
 mod gfa;
 mod parallel_bgzf;
 mod paths;
@@ -19,7 +20,7 @@ use flate2::read::MultiGzDecoder;
 use bed::Layout;
 use gfa::Graph;
 
-const USAGE: &str = "usage: gfa-to-tabix alleles|bubbles|paths [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
+const USAGE: &str = "usage: gfa-to-tabix alleles|bubbles|paths|fold [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
 
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
@@ -215,6 +216,25 @@ fn default_prefix(gfa: &str) -> Result<String, String> {
     Ok(stem.to_string())
 }
 
+// The graph and each segment's place on a genome: from the rGFA's tags, or from
+// its paths for a plain GFA or when a reference is named
+fn load_placed(gfa: &str, reference: Option<&str>) -> Result<(Graph, place::Placed), String> {
+    let graph = Graph::read(open_input(gfa)?)?;
+    if graph.segment_count() == 0 {
+        return Err(format!("{gfa}: no S lines"));
+    }
+    let use_paths = reference.is_some() || (!graph.is_rgfa() && !graph.paths.is_empty());
+    let placed = if use_paths || !graph.has_tags() {
+        place::from_paths(&graph, reference)?
+    } else {
+        place::from_tags(&graph)
+    };
+    for note in &placed.notes {
+        eprintln!("{note}");
+    }
+    Ok((graph, placed))
+}
+
 fn run(args: &Args) -> Result<(), String> {
     let prefix = match &args.prefix {
         Some(prefix) => prefix.clone(),
@@ -241,26 +261,22 @@ fn run(args: &Args) -> Result<(), String> {
         return walks::run(&args.gfa, &prefix, &options);
     }
     let layout = args.layout.unwrap_or(Layout::Anchored);
-    let graph = Graph::read(open_input(&args.gfa)?)?;
-    if graph.segment_count() == 0 {
-        return Err(format!("{}: no S lines", args.gfa));
-    }
-    let use_paths = args.reference.is_some() || (!graph.is_rgfa() && !graph.paths.is_empty());
-    let placed = if use_paths || !graph.has_tags() {
-        place::from_paths(&graph, args.reference.as_deref())?
-    } else {
-        place::from_tags(&graph)
-    };
-    for note in &placed.notes {
-        eprintln!("{note}");
-    }
+    let (graph, placed) = load_placed(&args.gfa, args.reference.as_deref())?;
+    write_index(&graph, &placed, layout, &prefix)
+}
 
+fn write_index(
+    graph: &Graph,
+    placed: &place::Placed,
+    layout: Layout,
+    prefix: &str,
+) -> Result<(), String> {
     let spans = match layout {
-        Layout::Anchored => anchor::anchored(&graph, &placed.nodes),
+        Layout::Anchored => anchor::anchored(graph, &placed.nodes),
         Layout::Contig => anchor::by_contig(&placed.nodes),
     };
-    let mut nodes = bed::node_rows(&graph, &placed.nodes, &spans, layout);
-    let (mut links, skipped) = bed::link_rows(&graph, &placed.nodes, &spans, layout);
+    let mut nodes = bed::node_rows(graph, &placed.nodes, &spans, layout);
+    let (mut links, skipped) = bed::link_rows(graph, &placed.nodes, &spans, layout);
     bed::sort(&mut nodes, &spans);
     bed::sort(&mut links, &spans);
     let nodes_path = format!("{prefix}.segs.bed.gz");
@@ -372,6 +388,85 @@ fn bubbles_command(args: Vec<String>) -> ! {
     finish(bubbles::run(&snarls, &prefix, min_alleles))
 }
 
+const FOLD_USAGE: &str = "usage: gfa-to-tabix fold [-h] --below BP [--reference REFERENCE] [--layout LAYOUT] -o PREFIX gfa
+
+Write PREFIX.segs.bed.gz and PREFIX.links.bed.gz (+ .tbi) for the graph with
+every variant under BP folded into the reference: the coarse tier a graph track
+draws once zoomed out past the fine index. It keeps the backbone, every allele
+whose own length or the reference it replaces reaches BP, and the shortest way
+from each one's ends back to the backbone. The graph track folds each cut it
+draws the same way, at ten of the linear view's pixels, so a tier folded at BP
+and handed over at BP / 10 bp per pixel draws what the fine cut drew just below
+the handover. --layout should match the fine index's.
+
+  --below BP         the size to fold under
+  --reference NAME   for a plain GFA, the backbone path, as for the index
+  --layout LAYOUT    anchored (default) or contig
+  -o, --out PREFIX   output prefix";
+
+fn fold_command(args: Vec<String>) -> ! {
+    let (mut gfa, mut prefix, mut below, mut reference) = (None, None, None, None);
+    let mut layout = Layout::Anchored;
+    let mut args = args.into_iter();
+    while let Some(arg) = args.next() {
+        let mut value = |name: &str| {
+            args.next()
+                .unwrap_or_else(|| subcommand_fail(FOLD_USAGE, &format!("{name} needs a value")))
+        };
+        match arg.as_str() {
+            "-h" | "--help" => {
+                println!("{FOLD_USAGE}");
+                process::exit(0)
+            }
+            "--below" => {
+                let given = value("--below");
+                below = Some(
+                    given
+                        .parse::<i64>()
+                        .ok()
+                        .filter(|n| *n > 0)
+                        .unwrap_or_else(|| {
+                            subcommand_fail(
+                                FOLD_USAGE,
+                                &format!("--below: {given} is not a positive integer"),
+                            )
+                        }),
+                )
+            }
+            "--reference" => reference = Some(value("--reference")),
+            "--layout" => {
+                layout = match value("--layout").as_str() {
+                    "anchored" => Layout::Anchored,
+                    "contig" => Layout::Contig,
+                    other => subcommand_fail(
+                        FOLD_USAGE,
+                        &format!("--layout: {other} is not anchored or contig"),
+                    ),
+                }
+            }
+            "-o" | "--out" => prefix = Some(value("-o/--out")),
+            "-" => gfa = Some(arg),
+            other if other.starts_with('-') => {
+                subcommand_fail(FOLD_USAGE, &format!("unrecognized argument: {other}"))
+            }
+            _ => gfa = Some(arg),
+        }
+    }
+    let (Some(gfa), Some(prefix), Some(below)) = (gfa, prefix, below) else {
+        subcommand_fail(FOLD_USAGE, "--below, -o and a graph are required")
+    };
+    finish((|| {
+        let (graph, placed) = load_placed(&gfa, reference.as_deref())?;
+        let folded = Graph::read(io::Cursor::new(fold::fold(&graph, &placed, below)))?;
+        eprintln!(
+            "{} segments, {} links -> fold under {below} bp",
+            graph.segment_count(),
+            graph.links.len()
+        );
+        write_index(&folded, &place::from_tags(&folded), layout, &prefix)
+    })())
+}
+
 fn paths_command(args: Vec<String>) -> ! {
     let (mut prefix, mut files) = (None, Vec::new());
     let mut args = args.into_iter();
@@ -408,6 +503,7 @@ fn main() {
         Some("alleles") => alleles_command(raw.collect()),
         Some("bubbles") => bubbles_command(raw.collect()),
         Some("paths") => paths_command(raw.collect()),
+        Some("fold") => fold_command(raw.collect()),
         _ => {}
     }
     let args = parse_args();
