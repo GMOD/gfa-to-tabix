@@ -118,6 +118,7 @@ name = "gfa-to-tabix"
 version = "0.10.0"
 dependencies = [
  "flate2",
+ "memchr",
  "noodles-bgzf",
  "noodles-core",
  "noodles-csi",

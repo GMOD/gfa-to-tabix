@@ -30,6 +30,12 @@ pub struct Row {
     line: Vec<u8>,
 }
 
+impl Row {
+    pub fn text(&self) -> String {
+        String::from_utf8_lossy(self.line.strip_suffix(b"\n").unwrap_or(&self.line)).into_owned()
+    }
+}
+
 fn push_fields(line: &mut Vec<u8>, fields: &[&[u8]]) {
     for (i, field) in fields.iter().enumerate() {
         if i > 0 {

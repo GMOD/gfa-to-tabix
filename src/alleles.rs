@@ -36,16 +36,20 @@ struct Row {
     line: String,
 }
 
-fn read_rows(path: &str) -> Result<impl Iterator<Item = Result<Vec<String>, String>>, String> {
+fn fields(
+    lines: impl Iterator<Item = Result<String, String>>,
+) -> impl Iterator<Item = Result<Vec<String>, String>> {
+    lines
+        .filter(|line| !matches!(line, Ok(l) if l.starts_with('#') || l.is_empty()))
+        .map(|line| line.map(|l| l.split('\t').map(str::to_string).collect()))
+}
+
+fn read_lines(path: &str) -> Result<impl Iterator<Item = Result<String, String>>, String> {
     let file = File::open(path).map_err(|e| format!("{path}: {e}"))?;
     let path = path.to_string();
     Ok(BufReader::with_capacity(1 << 20, MultiGzDecoder::new(file))
         .lines()
-        .filter(|line| !matches!(line, Ok(l) if l.starts_with('#') || l.is_empty()))
-        .map(move |line| {
-            line.map(|l| l.split('\t').map(str::to_string).collect())
-                .map_err(|e| format!("{path}: {e}"))
-        }))
+        .map(move |line| line.map_err(|e| format!("{path}: {e}"))))
 }
 
 fn number<T: std::str::FromStr>(path: &str, field: &str, what: &str) -> Result<T, String> {
@@ -58,10 +62,13 @@ fn number<T: std::str::FromStr>(path: &str, field: &str, what: &str) -> Result<T
 // under the interval its bubble hangs from and orders its links differently,
 // which changes which route a walk takes at a branch, so only the contig layout
 // is read.
-fn read_segments(path: &str) -> Result<(Vec<Segment>, HashMap<String, u32>), String> {
+fn read_segments(
+    path: &str,
+    lines: impl Iterator<Item = Result<String, String>>,
+) -> Result<(Vec<Segment>, HashMap<String, u32>), String> {
     let mut segments: Vec<Segment> = Vec::new();
     let mut index: HashMap<String, u32> = HashMap::new();
-    for row in read_rows(path)? {
+    for row in fields(lines) {
         let f = row?;
         if f.len() < 5 {
             return Err(format!(
@@ -150,6 +157,7 @@ struct Links {
 
 fn read_links(
     path: &str,
+    lines: impl Iterator<Item = Result<String, String>>,
     segments: &[Segment],
     index: &HashMap<String, u32>,
 ) -> Result<Links, String> {
@@ -159,7 +167,7 @@ fn read_links(
         deletions: Vec::new(),
     };
     let mut seen: std::collections::HashSet<(String, String)> = std::collections::HashSet::new();
-    for row in read_rows(path)? {
+    for row in fields(lines) {
         let f = row?;
         if f.len() < 13 {
             return Err(format!(
@@ -351,9 +359,23 @@ pub fn run(prefix: &str) -> Result<(), String> {
             return Err(format!("missing {path}: index the graph first"));
         }
     }
-    let (segments, index) = read_segments(&segs)?;
-    let links = read_links(&links_path, &segments, &index)?;
+    let (segments, index) = read_segments(&segs, read_lines(&segs)?)?;
+    let links = read_links(&links_path, read_lines(&links_path)?, &segments, &index)?;
+    write(&segments, &links, &format!("{prefix}.alleles.bed.gz"))
+}
 
+pub fn from_rows(
+    name: &str,
+    segs: impl Iterator<Item = String>,
+    links: impl Iterator<Item = String>,
+    out: &str,
+) -> Result<(), String> {
+    let (segments, index) = read_segments(name, segs.map(Ok))?;
+    let links = read_links(name, links.map(Ok), &segments, &index)?;
+    write(&segments, &links, out)
+}
+
+fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
     let mut rows: Vec<Row> = Vec::new();
     for d in &links.deletions {
         let ref_len = d.end - d.start;
@@ -375,7 +397,7 @@ pub fn run(prefix: &str) -> Result<(), String> {
     }
     let mut dangling = 0;
     for entry in &links.entries {
-        match walk(&links, &segments, entry) {
+        match walk(links, segments, entry) {
             Some(r) => rows.push(r),
             None => dangling += 1,
         }
@@ -391,8 +413,7 @@ pub fn run(prefix: &str) -> Result<(), String> {
         ))
     });
 
-    let out = format!("{prefix}.alleles.bed.gz");
-    let mut writer = Writer::create(&out)?;
+    let mut writer = Writer::create(out)?;
     writer.header(HEADER.as_bytes())?;
     for r in &rows {
         writer.push(r.chrom.as_bytes(), r.start, r.end, r.line.as_bytes())?;

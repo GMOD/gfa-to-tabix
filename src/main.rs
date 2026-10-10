@@ -2,8 +2,10 @@ mod alleles;
 mod anchor;
 mod bed;
 mod bubbles;
+mod build;
 mod fold;
 mod gfa;
+mod json;
 mod parallel_bgzf;
 mod paths;
 mod place;
@@ -20,7 +22,7 @@ use flate2::read::MultiGzDecoder;
 use bed::Layout;
 use gfa::Graph;
 
-const USAGE: &str = "usage: gfa-to-tabix alleles|bubbles|paths|fold [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
+const USAGE: &str = "usage: gfa-to-tabix build|alleles|bubbles|paths|fold [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
 
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
@@ -219,7 +221,14 @@ fn default_prefix(gfa: &str) -> Result<String, String> {
 // The graph and each segment's place on a genome: from the rGFA's tags, or from
 // its paths for a plain GFA or when a reference is named
 fn load_placed(gfa: &str, reference: Option<&str>) -> Result<(Graph, place::Placed), String> {
-    let graph = Graph::read(open_input(gfa)?)?;
+    place_graph(gfa, Graph::read(open_input(gfa)?)?, reference)
+}
+
+fn place_graph(
+    gfa: &str,
+    graph: Graph,
+    reference: Option<&str>,
+) -> Result<(Graph, place::Placed), String> {
     if graph.segment_count() == 0 {
         return Err(format!("{gfa}: no S lines"));
     }
@@ -262,15 +271,16 @@ fn run(args: &Args) -> Result<(), String> {
     }
     let layout = args.layout.unwrap_or(Layout::Anchored);
     let (graph, placed) = load_placed(&args.gfa, args.reference.as_deref())?;
-    write_index(&graph, &placed, layout, &prefix)
+    write_index(&graph, &placed, layout, &prefix).map(drop)
 }
 
+// Returns the rows written: the nodes', then the links'.
 fn write_index(
     graph: &Graph,
     placed: &place::Placed,
     layout: Layout,
     prefix: &str,
-) -> Result<(), String> {
+) -> Result<(Vec<bed::Row>, Vec<bed::Row>), String> {
     let spans = match layout {
         Layout::Anchored => anchor::anchored(graph, &placed.nodes),
         Layout::Contig => anchor::by_contig(&placed.nodes),
@@ -297,7 +307,23 @@ fn write_index(
     if unplaced > 0 {
         eprintln!("{unplaced} nodes left out: no path visits them, or no SN tag");
     }
-    Ok(())
+    Ok((nodes, links))
+}
+
+fn write_tier(
+    graph: &Graph,
+    placed: &place::Placed,
+    below: i64,
+    layout: Layout,
+    prefix: &str,
+) -> Result<(), String> {
+    let folded = Graph::read(io::Cursor::new(fold::fold(graph, placed, below)))?;
+    eprintln!(
+        "{} segments, {} links -> fold under {below} bp",
+        graph.segment_count(),
+        graph.links.len()
+    );
+    write_index(&folded, &place::from_tags(&folded), layout, prefix).map(drop)
 }
 
 const ALLELES_USAGE: &str = "usage: gfa-to-tabix alleles [-h] PREFIX
@@ -457,14 +483,87 @@ fn fold_command(args: Vec<String>) -> ! {
     };
     finish((|| {
         let (graph, placed) = load_placed(&gfa, reference.as_deref())?;
-        let folded = Graph::read(io::Cursor::new(fold::fold(&graph, &placed, below)))?;
-        eprintln!(
-            "{} segments, {} links -> fold under {below} bp",
-            graph.segment_count(),
-            graph.links.len()
-        );
-        write_index(&folded, &place::from_tags(&folded), layout, &prefix)
+        write_tier(&graph, &placed, below, layout, &prefix)
     })())
+}
+
+const BUILD_USAGE: &str = "usage: gfa-to-tabix build [-h] [--reference SAMPLE] [--assembly NAME] [--snarls VCF] [--tier BP] -o PREFIX gfa
+
+Write everything a JBrowse graph track reads, from one read of the graph (gz
+accepted; - reads stdin):
+  PREFIX.segs/links.bed.gz           the fine index, anchored layout
+  PREFIX.contig.segs/links.bed.gz    the contig layout
+  PREFIX.foldBP.segs/links.bed.gz    the coarse tier, as `fold` writes it
+  PREFIX.alleles.bed.gz              the allele inventory, as `alleles` writes it
+  PREFIX.bubbles.bed.gz              `gfatools bubble` for an rGFA, --snarls for a plain GFA
+  PREFIX.graph.json                  a manifest naming the files above
+  PREFIX.config.json                 the JBrowse tracks, ready to merge into a config
+Each file gets a .tbi. An rGFA's bubbles need gfatools on PATH; without it the
+build notes so and writes no bubble file.
+
+options:
+  --reference SAMPLE  for a plain GFA, the backbone path, as for the index
+  --assembly NAME     the JBrowse assembly the tracks sit on. Default: the
+                      graph's reference sample, else `reference`
+  --snarls VCF        a `vg deconstruct -a` snarl VCF: a plain GFA's bubbles
+  --tier BP           fold variants under BP into the coarse tier. Default
+                      10000 for an rGFA, 50 for a plain GFA
+  -o, --out PREFIX    output prefix";
+
+fn build_command(args: Vec<String>) -> ! {
+    let (mut graph, mut prefix, mut reference) = (None, None, None);
+    let (mut assembly, mut snarls, mut tier) = (None, None, None);
+    let mut args = args.into_iter();
+    while let Some(arg) = args.next() {
+        let mut value = |name: &str| {
+            args.next()
+                .unwrap_or_else(|| subcommand_fail(BUILD_USAGE, &format!("{name} needs a value")))
+        };
+        match arg.as_str() {
+            "-h" | "--help" => {
+                println!("{BUILD_USAGE}");
+                process::exit(0)
+            }
+            "--reference" => reference = Some(value("--reference")),
+            "--assembly" => assembly = Some(value("--assembly")),
+            "--snarls" => snarls = Some(value("--snarls")),
+            "--tier" => {
+                let given = value("--tier");
+                tier = Some(
+                    given
+                        .parse::<i64>()
+                        .ok()
+                        .filter(|n| *n > 0)
+                        .unwrap_or_else(|| {
+                            subcommand_fail(
+                                BUILD_USAGE,
+                                &format!("--tier: {given} is not a positive integer"),
+                            )
+                        }),
+                )
+            }
+            "-o" | "--out" => prefix = Some(value("-o/--out")),
+            "-" => graph = Some(arg),
+            other if other.starts_with('-') => {
+                subcommand_fail(BUILD_USAGE, &format!("unrecognized argument: {other}"))
+            }
+            _ if graph.is_some() => {
+                subcommand_fail(BUILD_USAGE, &format!("unrecognized argument: {arg}"))
+            }
+            _ => graph = Some(arg),
+        }
+    }
+    let (Some(graph), Some(prefix)) = (graph, prefix) else {
+        subcommand_fail(BUILD_USAGE, "-o and a graph are required")
+    };
+    finish(build::run(&build::Options {
+        graph,
+        prefix,
+        reference,
+        assembly,
+        snarls,
+        tier,
+    }))
 }
 
 fn paths_command(args: Vec<String>) -> ! {
@@ -500,6 +599,7 @@ fn paths_command(args: Vec<String>) -> ! {
 fn main() {
     let mut raw = env::args().skip(1);
     match raw.next().as_deref() {
+        Some("build") => build_command(raw.collect()),
         Some("alleles") => alleles_command(raw.collect()),
         Some("bubbles") => bubbles_command(raw.collect()),
         Some("paths") => paths_command(raw.collect()),
