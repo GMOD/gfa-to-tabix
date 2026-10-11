@@ -264,3 +264,27 @@ impl Graph {
         self.declared.iter().filter(|&&d| d).count()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn steps(path: &Path) -> Vec<(u32, bool)> {
+        path.steps
+            .iter()
+            .map(|s| (s.node(), s.reversed()))
+            .collect()
+    }
+
+    #[test]
+    fn path_and_walk_steps_keep_their_orientation() {
+        let graph =
+            Graph::read("P\tp\ta+,bb-,c+\t*\nW\ts\t1\tchr\t0\t9\t>c<bb<a\n".as_bytes()).unwrap();
+        assert_eq!(
+            graph.node_ids,
+            [b"a".to_vec(), b"bb".to_vec(), b"c".to_vec()]
+        );
+        assert_eq!(steps(&graph.paths[0]), [(0, false), (1, true), (2, false)]);
+        assert_eq!(steps(&graph.paths[1]), [(2, false), (1, true), (0, true)]);
+    }
+}

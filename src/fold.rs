@@ -515,3 +515,246 @@ fn merge_runs(nodes: &[Node], edges: &[&Edge], kept: &[bool], allele: &[usize]) 
         .collect();
     rgfa(nodes, &out_nodes, &out_edges)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // GFA lines with spaces for tabs
+    fn gfa(lines: &[&str]) -> String {
+        lines.iter().map(|l| l.replace(' ', "\t") + "\n").collect()
+    }
+
+    fn folded(text: &str, below: i64) -> String {
+        let graph = Graph::read(text.as_bytes()).unwrap();
+        let (graph, placed) = crate::place_graph("test", graph, None).unwrap();
+        String::from_utf8(fold(&graph, &placed, below)).unwrap()
+    }
+
+    fn twice(text: &str, first: i64, below: i64) -> String {
+        folded(&folded(text, first), below)
+    }
+
+    fn segment(name: &str, length: i64, sequence: &str, start: i64, rank: i64) -> String {
+        format!("S {name} * LN:i:{length} SN:Z:{sequence} SO:i:{start} SR:i:{rank}")
+    }
+
+    fn rgfa(segments: &[(&str, i64, &str, i64, i64)], links: &[&str]) -> String {
+        let mut lines: Vec<String> = segments
+            .iter()
+            .map(|&(name, length, sequence, start, rank)| {
+                segment(name, length, sequence, start, rank)
+            })
+            .collect();
+        lines.extend(links.iter().map(|l| format!("L {l} 0M")));
+        gfa(&lines.iter().map(String::as_str).collect::<Vec<_>>())
+    }
+
+    fn written(segments: &[(&str, i64, &str, i64, i64)], links: &[&str]) -> String {
+        format!("H\tVN:Z:1.0\n{}", rgfa(segments, links))
+    }
+
+    #[test]
+    fn a_single_segment_inversion_folds_by_its_reference_span() {
+        let g = rgfa(
+            &[
+                ("a", 100, "chr", 0, 0),
+                ("b", 140, "chr", 100, 0),
+                ("c", 100, "chr", 240, 0),
+            ],
+            &["a + b +", "b + c +", "a + b -", "b - c +"],
+        );
+        assert_eq!(
+            folded(&g, 100),
+            written(
+                &[
+                    ("a", 100, "chr", 0, 0),
+                    ("b", 140, "chr", 100, 0),
+                    ("c", 100, "chr", 240, 0),
+                ],
+                &["a + b +", "b + c +", "a + b -", "b - c +"],
+            )
+        );
+        assert_eq!(
+            folded(&g, 100_000),
+            written(&[("a", 340, "chr", 0, 0)], &[])
+        );
+    }
+
+    fn uneven_inversion() -> String {
+        rgfa(
+            &[
+                ("p", 100, "chr", 0, 0),
+                ("s1", 30, "chr", 100, 0),
+                ("s2", 40, "chr", 130, 0),
+                ("s3", 100, "chr", 170, 0),
+                ("n", 100, "chr", 270, 0),
+            ],
+            &[
+                "p + s1 +",
+                "s1 + s2 +",
+                "s2 + s3 +",
+                "s3 + n +",
+                "p + s3 -",
+                "s1 - n +",
+            ],
+        )
+    }
+
+    #[test]
+    fn both_breakpoints_of_an_uneven_inversion_fold_alike() {
+        let g = uneven_inversion();
+        assert_eq!(
+            folded(&g, 100),
+            written(
+                &[
+                    ("p", 100, "chr", 0, 0),
+                    ("s1", 170, "chr", 100, 0),
+                    ("n", 100, "chr", 270, 0),
+                ],
+                &["p + s1 +", "s1 + n +", "p + s1 -", "s1 - n +"],
+            )
+        );
+        assert_eq!(folded(&g, 1000), written(&[("p", 370, "chr", 0, 0)], &[]));
+    }
+
+    #[test]
+    fn an_inversion_folded_twice_folds_as_once() {
+        let g = uneven_inversion();
+        assert_eq!(twice(&g, 50, 1000), folded(&g, 1000));
+    }
+
+    #[test]
+    fn a_tandem_self_link_folds_by_the_segment_it_repeats() {
+        let segments = [
+            ("a", 100, "chr", 0, 0),
+            ("b", 140, "chr", 100, 0),
+            ("c", 100, "chr", 240, 0),
+        ];
+        let g = rgfa(&segments, &["a + b +", "b + c +", "b + b +"]);
+        assert_eq!(folded(&g, 100), format!("H\tVN:Z:1.0\n{g}"));
+        assert_eq!(folded(&g, 1000), written(&[("a", 340, "chr", 0, 0)], &[]));
+    }
+
+    #[test]
+    fn a_back_link_between_segments_that_abut_after_a_merge_is_no_continuation() {
+        let g = rgfa(
+            &[
+                ("a", 100, "chr", 0, 0),
+                ("b", 100, "chr", 100, 0),
+                ("c", 100, "chr", 200, 0),
+                ("d", 100, "chr", 300, 0),
+                ("y", 2000, "alt", 0, 1),
+            ],
+            &[
+                "a + b +", "b + c +", "c + d +", "b + y +", "y + c +", "c + a +",
+            ],
+        );
+        let once = folded(&g, 1000);
+        assert_eq!(
+            once,
+            written(
+                &[
+                    ("a", 200, "chr", 0, 0),
+                    ("c", 200, "chr", 200, 0),
+                    ("y", 2000, "alt", 0, 1),
+                ],
+                &["a + c +", "a + y +", "y + c +"],
+            )
+        );
+        assert_eq!(twice(&g, 50, 1000), once);
+    }
+
+    #[test]
+    fn an_allele_on_a_neighbours_far_side_keeps_its_size_through_a_merge() {
+        let g = rgfa(
+            &[
+                ("pre", 100, "chr", 0, 0),
+                ("prev", 100, "chr", 100, 0),
+                ("m", 100, "chr", 200, 0),
+                ("next", 100, "chr", 300, 0),
+                ("after", 100, "chr", 400, 0),
+                ("x", 50, "alt", 0, 1),
+            ],
+            &[
+                "pre + prev +",
+                "prev + m +",
+                "m + next +",
+                "next + after +",
+                "prev + x +",
+                "x + next -",
+            ],
+        );
+        assert_eq!(
+            folded(&g, 150),
+            written(
+                &[
+                    ("pre", 200, "chr", 0, 0),
+                    ("m", 200, "chr", 200, 0),
+                    ("after", 100, "chr", 400, 0),
+                    ("x", 50, "alt", 0, 1),
+                ],
+                &["pre + m +", "m + after +", "pre + x +", "x + m -"],
+            )
+        );
+        assert_eq!(folded(&g, 250), written(&[("pre", 500, "chr", 0, 0)], &[]));
+        assert_eq!(twice(&g, 10, 80), folded(&g, 80));
+        assert_eq!(twice(&g, 10, 150), folded(&g, 150));
+    }
+
+    #[test]
+    fn a_reversed_reference_step_reads_forward_and_stays_on_the_backbone() {
+        let g = gfa(&[
+            "S a * LN:i:100",
+            "S b * LN:i:100",
+            "S c * LN:i:100",
+            "S x * LN:i:50",
+            "L a + b - 0M",
+            "L b - c + 0M",
+            "L a + x + 0M",
+            "L x + c + 0M",
+            "P ref a+,b-,c+ *",
+            "P alt a+,x+,c+ *",
+        ]);
+        assert_eq!(folded(&g, 1000), written(&[("a", 300, "ref", 0, 0)], &[]));
+        assert_eq!(
+            folded(&g, 75),
+            written(
+                &[
+                    ("a", 100, "ref", 0, 0),
+                    ("b", 100, "ref", 100, 0),
+                    ("c", 100, "ref", 200, 0),
+                    ("x", 50, "alt", 100, 1),
+                ],
+                &["a + b +", "b + c +", "a + x +", "x + c +"],
+            )
+        );
+    }
+
+    #[test]
+    fn a_reversed_step_off_the_reference_keeps_its_allele_whole() {
+        let g = gfa(&[
+            "S a * LN:i:100",
+            "S c * LN:i:100",
+            "S x * LN:i:600",
+            "S y * LN:i:600",
+            "L a + c + 0M",
+            "L a + x + 0M",
+            "L x + y - 0M",
+            "L y - c + 0M",
+            "P ref a+,c+ *",
+            "P alt a+,x+,y-,c+ *",
+        ]);
+        assert_eq!(
+            folded(&g, 1000),
+            written(
+                &[
+                    ("a", 100, "ref", 0, 0),
+                    ("c", 100, "ref", 100, 0),
+                    ("x", 1200, "alt", 100, 1),
+                ],
+                &["a + c +", "a + x +", "x + c +"],
+            )
+        );
+    }
+}

@@ -239,3 +239,56 @@ pub fn flip(graph: &mut Graph, flipped: &[bool]) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // a is read forward by ref and reversed by alt; b reversed by ref; x, off
+    // the reference, reversed by alt, the path that places it
+    const GFA: &str = "S\ta\t*\tLN:i:4\nS\tb\t*\tLN:i:2\nS\tx\t*\tLN:i:3\n\
+                       L\ta\t+\tb\t-\t0M\nL\tb\t-\tb\t-\t0M\nL\tx\t-\ta\t-\t0M\n\
+                       P\talt\tx-,a-\t*\nP\tref\ta+,b-\t*\n";
+
+    #[test]
+    fn the_path_that_places_a_segment_says_whether_it_is_flipped() {
+        let graph = Graph::read(GFA.as_bytes()).unwrap();
+        let placed = from_paths(&graph, Some("ref")).unwrap();
+        assert_eq!(placed.flipped, [false, true, true]);
+    }
+
+    #[test]
+    fn a_flip_turns_every_link_end_and_step_on_a_flipped_segment() {
+        let mut graph = Graph::read(GFA.as_bytes()).unwrap();
+        let placed = from_paths(&graph, Some("ref")).unwrap();
+        flip(&mut graph, &placed.flipped);
+        let links: Vec<String> = graph
+            .links
+            .iter()
+            .map(|l| {
+                text(
+                    &[
+                        graph.node_ids[l.source as usize].as_slice(),
+                        &l.source_strand,
+                        &graph.node_ids[l.target as usize],
+                        &l.target_strand,
+                    ]
+                    .concat(),
+                )
+            })
+            .collect();
+        assert_eq!(links, ["a+b+", "b+b+", "x+a-"]);
+        let steps: Vec<Vec<bool>> = graph
+            .paths
+            .iter()
+            .map(|p| p.steps.iter().map(|s| s.reversed()).collect())
+            .collect();
+        assert_eq!(steps, [vec![false, true], vec![false, false]]);
+    }
+
+    #[test]
+    fn an_rgfa_flips_nothing() {
+        let graph = Graph::read("S\ta\t*\tLN:i:4\tSN:Z:chr\tSO:i:0\tSR:i:0\n".as_bytes()).unwrap();
+        assert_eq!(from_tags(&graph).flipped, [false]);
+    }
+}

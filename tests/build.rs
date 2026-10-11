@@ -1,7 +1,8 @@
 // `build` over the hand-checked fixtures. paths.gfa: ref#1#chr walks 1 2 4,
 // so the reference sample is `ref` and the bubble at 4-6 is the one snarl
-// below. rgfa.gfa names its backbone a bare `chr1`, so it has no sample. A
-// stand-in gfatools on PATH answers for the real one.
+// below. reversed.gfa is paths.gfa with ref#1#chr reading 2 reversed. rgfa.gfa
+// names its backbone a bare `chr1`, so it has no sample. A stand-in gfatools on
+// PATH answers for the real one.
 
 use std::fs;
 use std::io::{Read, Write};
@@ -216,6 +217,44 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
     ] {
         assert!(dir.join(format!("my-graph.v1.{kind}.bed.gz.tbi")).exists());
     }
+    fs::remove_dir_all(&dir).unwrap();
+}
+
+#[test]
+fn a_segment_the_reference_reads_reversed_is_written_forward() {
+    let dir = scratch();
+    let snarls = dir.join("snarls.vcf");
+    fs::write(
+        &snarls,
+        SNARLS.replace("CC\tG\t60\t.\tAT=>1>2>4", "GG\tG\t60\t.\tAT=>1<2>4"),
+    )
+    .unwrap();
+    let prefix = dir.join("out");
+    let output = build(
+        &dir,
+        &[
+            &fixture("reversed.gfa"),
+            "-o",
+            prefix.to_str().unwrap(),
+            "--snarls",
+            snarls.to_str().unwrap(),
+        ],
+        None,
+    );
+    assert!(output.status.success(), "{output:?}");
+    let links = gunzip(&dir.join("out.links.bed.gz"));
+    assert!(links.contains("\t1+\t2+\t"), "{links}");
+    assert!(links.contains("\t2+\t4+\t"), "{links}");
+    assert!(!links.contains('-'), "{links}");
+    assert!(!gunzip(&dir.join("out.contig.links.bed.gz")).contains('-'));
+    assert_eq!(
+        gunzip(&dir.join("out.bubbles.bed.gz")),
+        "ref#1#chr\t4\t6\t4\t2\t0\t1\t2\t.\t.\t.\t1@4,4\n"
+    );
+    assert_eq!(
+        gunzip(&dir.join("out.fold50.segs.bed.gz")),
+        "ref#1#chr\t0\t9\t1\t0\tref#1#chr\t0\t9\n"
+    );
     fs::remove_dir_all(&dir).unwrap();
 }
 
