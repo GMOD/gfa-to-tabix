@@ -94,7 +94,11 @@ fn skipped(a: &Node, a_side: Side, b: &Node, b_side: Side) -> i64 {
     if !one_sequence(a, b) || continues(a, a_side, b, b_side) {
         return 0;
     }
-    (b.start - (a.start + a.length)).max(a.start - (b.start + b.length))
+    let at = |n: &Node, side: Side| match side {
+        Side::Start => n.start,
+        Side::End => n.start + n.length,
+    };
+    (at(b, b_side) - at(a, a_side)).abs()
 }
 
 fn alleles(nodes: &[Node], edges: &[Edge]) -> Vec<usize> {
