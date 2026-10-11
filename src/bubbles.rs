@@ -59,7 +59,14 @@ fn info<'a>(field: &'a str, key: &str) -> Option<&'a str> {
     })
 }
 
-pub fn run(vcf: &str, prefix: &str, min_alleles: usize) -> Result<(), String> {
+// `flipped` names the segments the graph's index turned to read forward, as
+// `place::flip` does; a step on one reads reversed when the VCF writes it `>`.
+pub fn run(
+    vcf: &str,
+    prefix: &str,
+    min_alleles: usize,
+    flipped: &HashSet<&[u8]>,
+) -> Result<(), String> {
     let (mut total, mut top) = (0, 0);
     let mut bubbles: Vec<Bubble> = Vec::new();
     for line in crate::open_input(vcf)?.lines() {
@@ -98,7 +105,8 @@ pub fn run(vcf: &str, prefix: &str, min_alleles: usize) -> Result<(), String> {
                 // a reverse step on an interior segment reads that piece
                 // backwards; a snarl written `<5<2` is the same snarl approached
                 // from the other end, so the boundaries are excluded
-                if orientation == '<' && !boundary.contains(&id) {
+                let reversed = (orientation == '<') != flipped.contains(id.as_bytes());
+                if reversed && !boundary.contains(&id) {
                     inversion = true;
                 }
             }

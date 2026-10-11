@@ -14,10 +14,32 @@ pub struct Link {
     pub target_strand: Vec<u8>,
 }
 
+// A node index and whether the path reads the node reversed, packed in one u32
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Step(u32);
+
+impl Step {
+    pub fn new(node: u32, reversed: bool) -> Step {
+        Step(node << 1 | u32::from(reversed))
+    }
+
+    pub fn node(self) -> u32 {
+        self.0 >> 1
+    }
+
+    pub fn reversed(self) -> bool {
+        self.0 & 1 == 1
+    }
+
+    pub fn complement(self) -> Step {
+        Step(self.0 ^ 1)
+    }
+}
+
 pub struct Path {
     pub name: Vec<u8>,
     pub start: u64,
-    pub steps: Vec<u32>,
+    pub steps: Vec<Step>,
 }
 
 #[derive(Default)]
@@ -192,8 +214,8 @@ impl Graph {
         let name = name.to_vec();
         let mut steps = Vec::new();
         for step in cols[2].split(|&b| b == b',') {
-            if !step.is_empty() {
-                steps.push(self.node(&step[..step.len() - 1]));
+            if let Some((&strand, id)) = step.split_last() {
+                steps.push(Step::new(self.node(id), strand == b'-'));
             }
         }
         self.paths.push(Path { name, start, steps });
@@ -214,10 +236,13 @@ impl Graph {
         let name = [cols[1], cols[2], cols[3]].join(&b'#');
         let start = parse_u64(cols[4], "W line start")?;
         let mut steps = Vec::new();
-        for id in walk.split(|&b| b == b'<' || b == b'>') {
-            if !id.is_empty() {
-                steps.push(self.node(id));
+        let mut rest = walk;
+        while let Some((&strand, tail)) = rest.split_first() {
+            let end = memchr::memchr2(b'<', b'>', tail).unwrap_or(tail.len());
+            if end > 0 {
+                steps.push(Step::new(self.node(&tail[..end]), strand == b'<'));
             }
+            rest = &tail[end..];
         }
         self.paths.push(Path { name, start, steps });
         Ok(())

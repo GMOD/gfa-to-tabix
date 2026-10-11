@@ -226,7 +226,7 @@ fn load_placed(gfa: &str, reference: Option<&str>) -> Result<(Graph, place::Plac
 
 fn place_graph(
     gfa: &str,
-    graph: Graph,
+    mut graph: Graph,
     reference: Option<&str>,
 ) -> Result<(Graph, place::Placed), String> {
     if graph.segment_count() == 0 {
@@ -241,6 +241,7 @@ fn place_graph(
     for note in &placed.notes {
         eprintln!("{note}");
     }
+    place::flip(&mut graph, &placed.flipped);
     Ok((graph, placed))
 }
 
@@ -411,7 +412,12 @@ fn bubbles_command(args: Vec<String>) -> ! {
     let (Some(snarls), Some(prefix)) = (snarls, prefix) else {
         subcommand_fail(BUBBLES_USAGE, "--snarls and -o are required")
     };
-    finish(bubbles::run(&snarls, &prefix, min_alleles))
+    finish(bubbles::run(
+        &snarls,
+        &prefix,
+        min_alleles,
+        &std::collections::HashSet::new(),
+    ))
 }
 
 const FOLD_USAGE: &str = "usage: gfa-to-tabix fold [-h] --below BP [--reference REFERENCE] [--layout LAYOUT] -o PREFIX gfa

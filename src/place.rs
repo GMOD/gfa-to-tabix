@@ -11,6 +11,9 @@ pub struct Node {
 
 pub struct Placed {
     pub nodes: Vec<Option<Node>>,
+    // segments the path that placed them reads reversed, which `flip` turns
+    // to read forward there
+    pub flipped: Vec<bool>,
     pub summary: String,
     pub notes: Vec<String>,
 }
@@ -32,6 +35,7 @@ pub fn from_tags(graph: &Graph) -> Placed {
         .collect();
     Placed {
         nodes,
+        flipped: vec![false; graph.node_ids.len()],
         summary: "rGFA: coordinates from SN/SO/SR tags".into(),
         notes: Vec::new(),
     }
@@ -138,13 +142,14 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         .filter(|&i| is_reference[i])
         .chain((0..paths.len()).filter(|&i| !is_reference[i]));
     let mut first_visit: Vec<Option<(usize, u64, i64)>> = vec![None; graph.node_ids.len()];
+    let mut flipped = vec![false; graph.node_ids.len()];
     let mut carriers: Vec<Vec<u32>> = vec![Vec::new(); graph.node_ids.len()];
     for i in order {
         let path = &paths[i];
         let rank = if is_reference[i] { 0 } else { 1 };
         let mut offset = path.start;
-        for &node in &path.steps {
-            let node = node as usize;
+        for &step in &path.steps {
+            let node = step.node() as usize;
             let Some(length) = graph.lengths[node] else {
                 return Err(if graph.declared[node] {
                     format!(
@@ -162,6 +167,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
             };
             if first_visit[node].is_none() {
                 first_visit[node] = Some((i, offset, rank));
+                flipped[node] = step.reversed();
             }
             if !carriers[node].contains(&assembly_ids[i]) {
                 carriers[node].push(assembly_ids[i]);
@@ -191,6 +197,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         .collect();
     Ok(Placed {
         nodes,
+        flipped,
         summary: format!(
             "plain GFA: coordinates from paths, reference {} ({} of {} paths)",
             text(&reference_assembly),
@@ -199,4 +206,36 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         ),
         notes,
     })
+}
+
+fn complement(strand: &mut [u8]) {
+    match strand {
+        [b'+'] => strand[0] = b'-',
+        [b'-'] => strand[0] = b'+',
+        _ => {}
+    }
+}
+
+// Turns every flipped segment to read forward where it is placed: each link
+// end and path step on it takes the other strand. A self-link turns at both
+// ends.
+pub fn flip(graph: &mut Graph, flipped: &[bool]) {
+    if !flipped.contains(&true) {
+        return;
+    }
+    for link in &mut graph.links {
+        if flipped[link.source as usize] {
+            complement(&mut link.source_strand);
+        }
+        if flipped[link.target as usize] {
+            complement(&mut link.target_strand);
+        }
+    }
+    for path in &mut graph.paths {
+        for step in &mut path.steps {
+            if flipped[step.node() as usize] {
+                *step = step.complement();
+            }
+        }
+    }
 }

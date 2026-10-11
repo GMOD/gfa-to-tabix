@@ -1,6 +1,7 @@
 // Everything a JBrowse graph track reads, from one read of the graph. Ports
 // jbrowse-components' build_pangenome_graph.sh, which read the graph four times.
 
+use std::collections::HashSet;
 use std::fs;
 use std::io::{self, BufReader, Read, Write};
 use std::process::{ChildStdin, Command, Output, Stdio};
@@ -191,6 +192,7 @@ fn bubble_file(
     bubbler: Option<Bubbler>,
     missing: Option<io::Error>,
     snarls: Option<&str>,
+    flipped: &HashSet<&[u8]>,
     prefix: &str,
 ) -> Result<bool, String> {
     let path = format!("{prefix}.bubbles.bed.gz");
@@ -211,7 +213,7 @@ fn bubble_file(
             );
             Ok(false)
         }
-        (Route::Paths, _, Some(snarls)) => bubbles::run(snarls, prefix, 2).map(|()| true),
+        (Route::Paths, _, Some(snarls)) => bubbles::run(snarls, prefix, 2, flipped).map(|()| true),
         (Route::Paths, _, None) => {
             eprintln!("note: no --snarls given, so no bubble file or bubble tracks for this graph");
             Ok(false)
@@ -401,9 +403,18 @@ pub fn run(options: &Options) -> Result<(), String> {
     eprintln!("{name} graph: {}", options.graph);
     let tier = options.tier.unwrap_or(default_tier);
 
+    let flipped: HashSet<&[u8]> = graph
+        .node_ids
+        .iter()
+        .zip(&placed.flipped)
+        .filter(|&(_, &flipped)| flipped)
+        .map(|(id, _)| id.as_slice())
+        .collect();
     let (graph, placed, snarls) = (&graph, &placed, options.snarls.as_deref());
+    let flipped = &flipped;
     let (sample, bubbles) = thread::scope(|scope| {
-        let bubbles = scope.spawn(move || bubble_file(route, bubbler, missing, snarls, prefix));
+        let bubbles =
+            scope.spawn(move || bubble_file(route, bubbler, missing, snarls, flipped, prefix));
         let fine = scope.spawn(|| {
             crate::write_index(graph, placed, Layout::Anchored, prefix)
                 .map(|(nodes, _)| reference_sample(&nodes))
