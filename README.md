@@ -87,10 +87,10 @@ Each `.bed.gz` gets a `.tbi`.
 - The config's coarse slot is `{ "uri": "hprc.fold10000", "foldBelowBp": 10000 }`
 - `zstd -dc graph.gfa.zst | gfa-to-tabix build - -o graph` reads other
   compression
-- It replaces JBrowse's `build_pangenome_graph.sh`, whose rows it matches byte
-  for byte. It parses the graph once, where the script read it four times, and
-  writes the index, tier, alleles and bubbles concurrently: 0.77 s against the
-  script's 2.46 s on a 59 MB chr22 SV rGFA
+- It replaced JBrowse's retired `build_pangenome_graph.sh`. It parses the graph
+  once, where the script read it four times, and writes the index, tier,
+  alleles and bubbles concurrently: 0.77 s against the script's 2.46 s on a
+  59 MB chr22 SV rGFA
 
 The manifest, `<prefix>.graph.json`, names each file relative to itself, or
 `null` for one not written, so it works wherever the set is hosted:
