@@ -32,7 +32,8 @@ reads by region. https://github.com/GMOD/gfa-to-tabix
 An rGFA (minigraph, or the minigraph stage of Minigraph-Cactus) gives every
 node a coordinate in its SN/SO/SR tags. A plain GFA (pggb, odgi, vg, base-level
 Minigraph-Cactus) gets coordinates from its P or W lines instead: each node
-takes its position on the first path to reach it, reference paths first.
+takes its position on the first path to reach it, reference paths first, and
+reads forward there.
 
 positional arguments:
   gfa                   GFA file, gz accepted; - reads stdin
@@ -428,8 +429,10 @@ draws once zoomed out past the fine index. It keeps the backbone, every allele
 whose own length or the reference it replaces reaches BP, and the shortest way
 from each one's ends back to the backbone. The graph track folds each cut it
 draws the same way, at ten of the linear view's pixels, so a tier folded at BP
-and handed over at BP / 10 bp per pixel draws what the fine cut drew just below
-the handover. --layout should match the fine index's.
+and handed over at BP / 10 bp per pixel draws close to what the fine cut drew
+just below the handover. Not exactly: the way back from a big allele to the
+backbone can run through part of a small allele in one fold and not the other.
+--layout should match the fine index's.
 
   --below BP         the size to fold under
   --reference NAME   for a plain GFA, the backbone path, as for the index

@@ -9,7 +9,9 @@
 // and from each big allele's two ends the shortest way back to the backbone.
 // Kept segments keep their ids, and a run of one allele's segments that no kept
 // link branches off merges into its first, so folding the result again at a
-// larger size folds the original at that size.
+// larger size comes close to folding the original at that size. Not exactly:
+// the way back from a big allele to the backbone can run through part of a
+// small allele in one fold and not the other.
 
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap, HashSet};

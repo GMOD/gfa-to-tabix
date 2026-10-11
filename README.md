@@ -129,6 +129,11 @@ and position of the first path to reach it, at rank 0 on the reference and
 rank 1 elsewhere. The graph must be blunt (overlaps `*` or `0M`), because
 summing node lengths is only the path coordinate when nodes abut.
 
+A node that path reads reversed is turned to read forward there before anything
+is written: every link end on it takes the other strand. The index then reads
+the reference forward, as an rGFA's does, and only a haplotype that reads
+against the reference shows as an inversion.
+
 ## Layouts
 
 A reference query has to return the alternate alleles at a locus, and their
@@ -441,6 +446,10 @@ gfa-to-tabix bubbles --snarls graph.snarls.vcf -o graph
 - Columns are `gfatools bubble`'s: chrom, start, end, segments, walks,
   inversion, shortest, longest, three `.`, and the segment ids, the first
   qualified by its reference start (`544433@3943363`)
+- `build` reads a step on a segment it turned forward
+  ([Plain GFA](#where-the-coordinates-come-from)) the other way round, so a
+  segment the reference reads reversed is no inversion. `bubbles` alone has no
+  graph to say which segments turned, and takes every `<` as reverse
 
 ## Fold
 
@@ -460,13 +469,14 @@ gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
   window does. `--reference` names a plain GFA's backbone path, as for the index
 - The graph track folds each cut it draws the same way, at ten of the linear
   view's pixels, so a tier folded at N and handed over at N / 10 bp per pixel
-  draws what the fine cut drew just below the handover. In the track's config,
+  draws close to what the fine cut drew just below the handover. Not exactly:
+  the way back from a big allele to the backbone can run through part of a
+  small allele in one fold and not the other. In the track's config,
   `coarse: { uri: "hprc.fold10000", aboveBpPerPx: 1000 }` is that handover
 - The fold is [bandage-core](https://github.com/GMOD/bandage-core)'s
   `foldVariants`, ported. `scripts/parity-fold.sh` compares the rows with
   `bandage-fold | gfa-to-tabix -` byte for byte, at five sizes and both layouts,
-  and CI runs it. On HPRC release 2.1's SV rGFA the rows match the hosted tier,
-  and the fold takes 12 s and 640 MB. `bandage-fold` cannot read that graph:
+  and CI runs it. On HPRC release 2.1's SV rGFA the fold takes 12 s and 640 MB. `bandage-fold` cannot read that graph:
   Node refuses the 3.5 GB of text as one string
 
 ## Paths
