@@ -55,6 +55,10 @@ struct Edge {
     to_strand: u8,
 }
 
+// (the segment at the other end, the side the link leaves this one by, the side
+// it lands on there)
+type Link = (usize, Side, Side);
+
 // both ends of a link, on each segment's own forward strand: `L a + b +` leaves
 // a's end and enters b's start
 fn edge(from: usize, from_strand: u8, to: usize, to_strand: u8) -> Edge {
@@ -80,12 +84,19 @@ fn one_sequence(a: &Node, b: &Node) -> bool {
     a.sequence == b.sequence && a.rank == b.rank
 }
 
-// whether a link reads one stable sequence straight on: opposite ends of two
-// segments that abut there, either way round
+fn at(n: &Node, side: Side) -> i64 {
+    match side {
+        Side::Start => n.start,
+        Side::End => n.start + n.length,
+    }
+}
+
+// whether a link reads one stable sequence straight on: the earlier segment's
+// end joined to the later one's start, where the two abut
 fn continues(a: &Node, a_side: Side, b: &Node, b_side: Side) -> bool {
     one_sequence(a, b)
-        && a_side != b_side
-        && (a.start + a.length == b.start || b.start + b.length == a.start)
+        && ((a_side == Side::End && b_side == Side::Start && at(a, Side::End) == b.start)
+            || (b_side == Side::End && a_side == Side::Start && at(b, Side::End) == a.start))
 }
 
 // reference bp a link jumps between two segments of one stable sequence at one
@@ -94,10 +105,6 @@ fn skipped(a: &Node, a_side: Side, b: &Node, b_side: Side) -> i64 {
     if !one_sequence(a, b) || continues(a, a_side, b, b_side) {
         return 0;
     }
-    let at = |n: &Node, side: Side| match side {
-        Side::Start => n.start,
-        Side::End => n.start + n.length,
-    };
     (at(b, b_side) - at(a, a_side)).abs()
 }
 
@@ -122,7 +129,7 @@ fn alleles(nodes: &[Node], edges: &[Edge]) -> Vec<usize> {
 // An allele's own length, or the reference between the backbone it hangs from
 // where that is longer: a 93 bp segment standing in for 7 kb of reference is a
 // 7 kb deletion. The backbone is never folded.
-fn content(group: &[usize], nodes: &[Node], links: &[Vec<(usize, Side)>], allele: &[usize]) -> i64 {
+fn content(group: &[usize], nodes: &[Node], links: &[Vec<Link>], allele: &[usize]) -> i64 {
     if nodes[group[0]].backbone() {
         return i64::MAX;
     }
@@ -132,13 +139,13 @@ fn content(group: &[usize], nodes: &[Node], links: &[Vec<(usize, Side)>], allele
     let mut one = true;
     for &i in group {
         length += nodes[i].length;
-        for &(other, _) in &links[i] {
+        for &(other, _, other_side) in &links[i] {
             let node = &nodes[other];
             if allele[other] != allele[i] && node.backbone() {
                 let held = *sequence.get_or_insert(node.sequence);
                 one &= node.sequence == held;
-                lo = lo.min(node.start + node.length);
-                hi = hi.max(node.start);
+                lo = lo.min(at(node, other_side));
+                hi = hi.max(at(node, other_side));
             }
         }
     }
@@ -155,7 +162,7 @@ fn content(group: &[usize], nodes: &[Node], links: &[Vec<(usize, Side)>], allele
 fn ends(
     group: &[usize],
     nodes: &[Node],
-    links: &[Vec<(usize, Side)>],
+    links: &[Vec<Link>],
     allele: &[usize],
 ) -> Vec<(usize, Side)> {
     let start = |i: usize| nodes[i].start;
@@ -178,7 +185,7 @@ fn ends(
         for side in [Side::Start, Side::End] {
             if !links[i]
                 .iter()
-                .any(|&(other, s)| s == side && allele[other] == allele[i])
+                .any(|&(other, s, _)| s == side && allele[other] == allele[i])
             {
                 out.push((i, side));
             }
@@ -192,13 +199,13 @@ fn ends(
 fn nearest_outside(
     i: usize,
     side: Side,
-    links: &[Vec<(usize, Side)>],
+    links: &[Vec<Link>],
     allele: &[usize],
     dist: &[u64],
     nodes: &[Node],
 ) -> Option<usize> {
     let mut best: Option<usize> = None;
-    for &(j, s) in &links[i] {
+    for &(j, s, _) in &links[i] {
         if s == side
             && allele[j] != allele[i]
             && dist[j] != u64::MAX
@@ -214,7 +221,7 @@ fn nearest_outside(
 
 // Shortest bp from every node back to the backbone, and the neighbour that way
 // lies through, ties to the lower id
-fn distances(nodes: &[Node], links: &[Vec<(usize, Side)>]) -> (Vec<u64>, Vec<Option<usize>>) {
+fn distances(nodes: &[Node], links: &[Vec<Link>]) -> (Vec<u64>, Vec<Option<usize>>) {
     let mut dist = vec![u64::MAX; nodes.len()];
     let mut pred: Vec<Option<usize>> = vec![None; nodes.len()];
     let mut heap: BinaryHeap<Reverse<(u64, &[u8], usize)>> = BinaryHeap::new();
@@ -228,7 +235,7 @@ fn distances(nodes: &[Node], links: &[Vec<(usize, Side)>]) -> (Vec<u64>, Vec<Opt
         if d0 > dist[i] {
             continue;
         }
-        for &(other, _) in &links[i] {
+        for &(other, _, _) in &links[i] {
             if nodes[other].backbone() {
                 continue;
             }
@@ -334,10 +341,10 @@ pub fn fold(graph: &Graph, placed: &Placed, below: i64) -> Vec<u8> {
         return rgfa(&nodes, &n, &e);
     }
 
-    let mut links: Vec<Vec<(usize, Side)>> = vec![Vec::new(); nodes.len()];
+    let mut links: Vec<Vec<Link>> = vec![Vec::new(); nodes.len()];
     for e in &edges {
-        links[e.from].push((e.to, e.from_side));
-        links[e.to].push((e.from, e.to_side));
+        links[e.from].push((e.to, e.from_side, e.to_side));
+        links[e.to].push((e.from, e.to_side, e.from_side));
     }
     let allele = alleles(&nodes, &edges);
     let mut order: Vec<usize> = Vec::new();
