@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # parity-fixtures.sh <jbrowse-components/scripts dir> <gfa-to-tabix binary>
-# Every fixture through the JBrowse shell scripts and through this tool.
+# Every fixture through the JBrowse shell scripts and through this tool, except
+# the path GFAs whose placing path reads a segment reversed: this tool flips
+# those segments (0.12.0) and the retired scripts do not.
 set -uo pipefail
 
 here=$(dirname "$0")
@@ -15,9 +17,6 @@ paths paths.gfa
 paths paths.gfa alt
 paths walks.gfa
 paths walks.gfa ref#1
-paths ecoli_pggb_subgraph.gfa
-paths ecoli_pggb_subgraph.gfa Sakai
-paths cactus.gfa
 paths cactus.gfa ref
 CASES
 exit $status
