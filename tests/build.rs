@@ -80,6 +80,7 @@ fn gunzip(path: &Path) -> String {
 const PLUGIN: &str = r#"  "plugins": [
     {
       "name": "GraphGenomeView",
+      "storePlugin": "GraphGenomeView",
       "esmUrl": "https://jbrowse.org/plugins/jbrowse-plugin-graphgenomeviewer/latest/dist/jbrowse-plugin-graphgenomeviewer.esm.js"
     }
   ],"#;

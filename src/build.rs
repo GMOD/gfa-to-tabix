@@ -361,6 +361,7 @@ impl Built<'_> {
                 "plugins",
                 Json::List(vec![object([
                     ("name", text("GraphGenomeView")),
+                    ("storePlugin", text("GraphGenomeView")),
                     ("esmUrl", text(PLUGIN_URL)),
                 ])]),
             ),
