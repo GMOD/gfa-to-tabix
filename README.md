@@ -9,6 +9,19 @@
 
 `dot -Tsvg docs/overview.dot -o docs/overview.svg` redraws the figure.
 
+## Input
+
+| Input                | Written by                                                          | Command                                  |
+| -------------------- | ------------------------------------------------------------------- | ---------------------------------------- |
+| rGFA                 | minigraph; the minigraph stage of Minigraph-Cactus (`*.sv.gfa.gz`) | `gfa-to-tabix graph.gfa.gz`              |
+| Plain GFA with paths | pggb, odgi, vg, base-level Minigraph-Cactus                         | `gfa-to-tabix graph.gfa.gz --reference X` |
+| Base-level graph with W or P lines, for haplotype paths | `vg convert -f` on a GBZ         | `gfa-to-tabix graph.gfa --walks --refs X` |
+
+- **rGFA:** every S line has `SN`, `SO` and `SR` tags that name the node's sequence, offset and rank. The tool copies them
+- **Plain GFA:** no coordinate tags. The tool takes coordinates from the P or W lines of the reference, so the nodes must abut (overlap `*` or `0M`)
+- **Reference:** a PanSN sample (`sample#haplotype#contig`), an assembly or a path name
+- [How to produce and pass each input](docs/inputs.md)
+
 ## Install
 
 A static binary for Linux x86_64 or macOS on Apple silicon, from the
@@ -69,6 +82,7 @@ a base-level graph.
 
 ## Docs
 
+- [Inputs](docs/inputs.md): rGFA, plain GFA, base-level graphs for walks
 - [Subcommands](docs/subcommands.md): `build`, `alleles`, `bubbles`, `fold`, `paths`
 - [Walks](docs/walks.md) and [the walks row format](docs/walks-format.md)
 - [The node and link index](docs/index-format.md): coordinates, layouts, columns, scale
