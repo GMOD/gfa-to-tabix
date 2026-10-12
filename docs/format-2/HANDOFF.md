@@ -1,8 +1,8 @@
 # Handoff: walk format 2
 
 Status on 2026-10-12: `--walks` writes format 2, which
-[docs/walks-format.md](../walks-format.md) describes, on branch
-`worktree-format-2`. The plugin reads it on its main, unreleased.
+[docs/walks-format.md](../walks-format.md) describes, on
+main. The graph genome viewer plugin reads it from 6.27.0.
 
 - **Problem:** a format-1 walk set's bytes per window grow linearly with the
   cohort, because Tabix indexes the reference axis and every haplotype's rows
@@ -16,7 +16,7 @@ Status on 2026-10-12: `--walks` writes format 2, which
 - **Measured on chr22:** the two files total 71 MB against format 1's 408 MB,
   and a two-chunk read fetches 0.14 of format 1's at the median on both
   references. Every piece checked rebuilds step for step
-- **Next:** release the plugin, then land and release format 2 here, then
+- **Next:** release format 2 here, then
   rebuild the hosted files. Walk rows at Mb scale need the plugin's walk-row
   pipeline reworked; see step 2
 - **Not worth building yet:** an index on the haplotype axis, a custom
@@ -178,7 +178,7 @@ changes their size and growth little:
 
 ### 1. The plugin's format-2 reader (done)
 
-Landed in jbrowse-plugin-graphgenomeviewer as c5f28fe, not yet released.
+Landed in jbrowse-plugin-graphgenomeviewer as c5f28fe and released in 6.27.0.
 `agent-docs/reference/GRAPH_TRACK.md` ("Format 2") describes it.
 
 - `WalkReader` reads the walk file's header, and on format 2 reads and sizes
