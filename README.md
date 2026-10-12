@@ -242,7 +242,15 @@ Where a step is filed:
   each pass is filed where it lies
 - A node has one coordinate, from the first-named reference path's earliest
   visit, so another haplotype that passes such a collapsed node again is filed
-  under the reference's first copy
+  under the reference's first copy. On HPRC v2.1's Minigraph-Cactus chr22
+  neither GRCh38 nor CHM13 passes a node twice, so no step there is filed this
+  way
+- In a segmental duplication, a haplotype can step onto the reference nodes of
+  a distant paralog and back. The steps after the jump take the paralog's
+  chunk, so a window at the haplotype's own locus shows it in more pieces and
+  leaves out some of its inserted nodes. On HPRC v2.1 chr22 this files under
+  0.1% of steps away from their locus, in at most 74 of 1,130 paths, nearly all
+  in the 22q11 low-copy repeats
 - A path that visits no node of a reference has no rows under it, and the tool
   counts these on stderr
 
