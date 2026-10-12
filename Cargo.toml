@@ -9,7 +9,7 @@ repository = "https://github.com/GMOD/gfa-to-tabix"
 readme = "README.md"
 keywords = ["pangenome", "gfa", "tabix", "bioinformatics"]
 categories = ["science", "command-line-utilities"]
-exclude = ["tests", ".github", "scripts"]
+exclude = ["tests", ".github", "scripts", "docs"]
 
 [dependencies]
 flate2 = { version = "1.1.10", default-features = false, features = ["zlib-rs"] }
