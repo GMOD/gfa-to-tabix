@@ -39,6 +39,9 @@ cargo install gfa-to-tabix
 
 ## Usage
 
+For a JBrowse graph track, run [`build`](#everything-a-graph-track-needs) instead:
+it takes the same inputs and writes the index and everything else the track reads.
+
 ```bash
 # an rGFA: minigraph, or the minigraph stage of Minigraph-Cactus
 gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc
@@ -66,9 +69,10 @@ The input may be gzipped, and `-` reads stdin.
 
 ```bash
 gfa-to-tabix build hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc --assembly hg38
+gfa-to-tabix build ecoli.gfa.gz --reference K12 -o ecoli
 ```
 
-`build` reads the graph once and writes the index, a zoomed-out tier, the
+`build` takes an rGFA or a plain GFA, and reads the graph once and writes the index, a zoomed-out tier, the
 alleles, the bubbles, a manifest and a JBrowse track config.
 
 ## Haplotype paths
