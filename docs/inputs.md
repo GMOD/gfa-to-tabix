@@ -29,3 +29,11 @@ A base-level graph of a human chromosome has millions of nodes, and the node and
 
 - Every S line among the first 100,000 has an `SN` tag, and no `--reference`: rGFA
 - Anything else: plain GFA
+
+## Errors
+
+The tool stops before writing anything on these:
+
+- `--reference NOPE matches no path; have: K12#0#chr`: the name matches no path. The message lists the paths the graph has
+- `link 1->2 has a non-blunt overlap (5M)`: the graph's nodes overlap. The message says to blunt the graph first, or use an rGFA
+- `no P or W lines, and the S lines carry no rGFA tags`: the file has neither coordinate source
