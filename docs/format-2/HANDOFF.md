@@ -1,8 +1,9 @@
 # Handoff: walk format 2
 
-Status on 2026-10-12: `--walks` writes format 2, which
-[docs/walks-format.md](../walks-format.md) describes, on
-main. The graph genome viewer plugin reads it from 6.27.0.
+Status on 2026-10-12: gfa-to-tabix 1.0.0 writes format 2, which
+[docs/walks-format.md](../walks-format.md) describes, and graph genome viewer
+6.27.0 reads it. HPRC v2.1's format-2 sets are hosted on jbrowse.org, and the
+demo config and tutorials read them.
 
 - **Problem:** a format-1 walk set's bytes per window grow linearly with the
   cohort, because Tabix indexes the reference axis and every haplotype's rows
@@ -13,17 +14,39 @@ main. The graph genome viewer plugin reads it from 6.27.0.
   through it once, each distinct route a haplotype takes off that path once,
   the lengths of the nodes those routes visit, and each path piece as the list
   of routes it takes
-- **Measured on chr22:** the two files total 71 MB against format 1's 408 MB,
-  and a two-chunk read fetches 0.14 of format 1's at the median on both
+- **Measured genome-wide:** the two files total 2.85 GB against format 1's
+  18.4 GB, and a two-chunk read fetches 0.14 of format 1's at the median on both
   references. Every piece checked rebuilds step for step
-- **Next:** release format 2 here, then
-  rebuild the hosted files. Walk rows at Mb scale need the plugin's walk-row
-  pipeline reworked; see step 2
+- **Next:** walk rows at Mb scale need the plugin's walk-row pipeline reworked;
+  see step 2
 - **Not worth building yet:** an index on the haplotype axis, a custom
   container and a binary encoding. Revisit when the choices in a two-chunk read
   pass about 2 MB
 
-## Format 2 as built
+## Format 2 genome-wide
+
+HPRC v2.1, `hprc-v2.1-mc-grch38.W.gfa.gz` (53,150 paths, 38.4 G steps), built
+on ada with `--walks --refs GRCh38,CHM13` into `~/hprc-gbz/walks-f2/` and
+hosted as `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f2.{GRCh38,CHM13}`.
+The format-1 set compared is `hprc-v2.1-mc-grch38-w6` from gfa-to-tabix 0.6.0.
+
+| measure                                   | GRCh38            | CHM13             |
+| ----------------------------------------- | ----------------- | ----------------- |
+| file, format 1's three → format 2's one   | 9.03 → 1.22 GB    | 9.34 → 1.63 GB    |
+| index, format 1's three → format 2's one  | 2.08 → 0.67 MB    | 1.95 → 0.63 MB    |
+| two-chunk read over format 1: median, p99 | 0.136, 0.190      | 0.135, 0.183      |
+| two-chunk read: median, max               | 0.046, 0.31 MB    | 0.047, 4.5 MB     |
+
+- The build takes 28.6 minutes and peaks at 12.9 GB on ada's 24 cores, where
+  format 1 took 44 minutes and 16.1 GB. No walk row needs step counts
+- `check_format2.py` decoded 6 chunks of every chromosome of both references,
+  282 chunks with 176 M steps, and matched format 1 in all of them. The read
+  sizes come from 439 and 429 two-chunk reads sampled across the chromosomes
+- Read over HTTP from jbrowse.org, eight windows on both references cut the
+  same GFA from both formats, format 2 in 0.08-0.85 s against format 1's
+  0.13-1.48 s from a cold start
+
+## Format 2 on chr22
 
 HPRC v2.1 chr22, `--walks --refs GRCh38,CHM13`, written to
 `~/work/scratch/walks-20261008/f2/` and compared with the Oct 8 format-1 build.
@@ -219,14 +242,14 @@ pipeline is now the limit:
 - Merge identical local haplotypes before drawing, as GBZ-base does
 - Stop rule: every haplotype over 3 Mb at chr22:20 Mb drawn in under 3 s warm
 
-### 3. Release and rehost
+### 3. Release and rehost (done)
 
-- Release the plugin first: it reads both formats. Then land and release
-  gfa-to-tabix's format 2 (branch `worktree-format-2`), so no released
-  converter writes files no released plugin reads
-- Build the genome-wide sets, upload them, and update the hosted configs and
-  the jbrowse.org tutorials. Each step changes public files, so it waits for
-  the owner
+- Graph genome viewer 6.27.0 reads both formats, and gfa-to-tabix 1.0.0 writes
+  format 2
+- `demos/hprc/config.json` and jbrowse-components'
+  `test_data/graphgenomeview/hprc.json` read the `-f2` sets, and the
+  pangenome tutorials describe the one-file set. The format-1 sets stay hosted
+  for configs that name them
 
 ### 4. Benchmarks against GBZ-base
 
