@@ -5,6 +5,10 @@
 - One static binary does the whole conversion. It needs no gfatools, awk, bgzip or tabix
 - The [JBrowse 2](https://jbrowse.org) graph track reads the files
 
+![A five-node graph, the rows gfa-to-tabix files for it, and a region query that returns two of them](docs/overview.svg)
+
+`dot -Tsvg docs/overview.dot -o docs/overview.svg` redraws the figure.
+
 ## Install
 
 A static binary for Linux x86_64 or macOS on Apple silicon, from the

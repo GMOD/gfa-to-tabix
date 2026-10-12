@@ -1,0 +1,73 @@
+digraph overview {
+  bgcolor="white"
+  fontname="Helvetica"
+  rankdir=TB
+  compound=true
+  newrank=true
+  splines=true
+  nodesep=0.35
+  ranksep=0.6
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded", fillcolor="#e8eef7", color="#4a6fa5"]
+  edge [fontname="Helvetica", fontsize=11, color="#555555"]
+
+  subgraph cluster_graph {
+    label=<<B>1. GFA graph</B><BR/>chr1 is the reference; s5 is an alternate allele>
+    labeljust=l
+    fontname="Helvetica"
+    fontsize=13
+    color="#bbbbbb"
+    style="rounded"
+    margin=14
+    s1 [label="s1\nchr1:0-10"]
+    s2 [label="s2\nchr1:10-20"]
+    s3 [label="s3\nchr1:20-30"]
+    s4 [label="s4\nchr1:30-40"]
+    s5 [label="s5\nrank 1, off chr1", fillcolor="#fde6cf", color="#c77a2b"]
+    {rank=same; s1; s2; s3; s4}
+    s1 -> s2 -> s3 -> s4 [weight=20]
+    s2 -> s5 [color="#c77a2b", weight=1]
+    s5 -> s4 [color="#c77a2b", weight=1, constraint=false]
+  }
+
+  subgraph cluster_files {
+    label=<<B>2. hprc.segs.bed.gz</B><BR/>one row per node, filed under a reference interval>
+    labeljust=l
+    fontname="Helvetica"
+    fontsize=13
+    color="#bbbbbb"
+    style="rounded"
+    margin=14
+    rows [shape=plaintext, style="", label=<
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5" COLOR="#999999">
+        <TR BGCOLOR="#dddddd"><TD>anchor</TD><TD>start</TD><TD>end</TD><TD>node</TD><TD>rank</TD></TR>
+        <TR><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>s1</TD><TD>0</TD></TR>
+        <TR><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>s2</TD><TD>0</TD></TR>
+        <TR BGCOLOR="#fde6cf"><TD>chr1</TD><TD><B>10</B></TD><TD><B>40</B></TD><TD>s5</TD><TD>1</TD></TR>
+        <TR><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>s3</TD><TD>0</TD></TR>
+        <TR><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>s4</TD><TD>0</TD></TR>
+      </TABLE>>]
+    note [shape=plaintext, style="", fontsize=11, fontcolor="#c77a2b", label="s5 is off chr1, so it takes the span\nof the reference nodes it links to"]
+    {rank=same; rows; note}
+    rows -> note [style=invis]
+  }
+
+  subgraph cluster_query {
+    label=<<B>3. Region query</B><BR/>one tabix range request>
+    labeljust=l
+    fontname="Helvetica"
+    fontsize=13
+    color="#bbbbbb"
+    style="rounded"
+    margin=14
+    q [label="chr1:22-28", fillcolor="#eeeeee", color="#888888"]
+    r3 [label="s3\nthe reference node", fillcolor="#e8eef7"]
+    r5 [label="s5\nthe alternate allele\nunder the same region", fillcolor="#fde6cf", color="#c77a2b"]
+    {rank=same; q; r3; r5}
+    q -> r3 [weight=10]
+    r3 -> r5 [style=invis, weight=10]
+    q -> r5 [constraint=false]
+  }
+
+  s2 -> rows [ltail=cluster_graph, lhead=cluster_files, label="  file by\n  coordinate  ", style=bold]
+  rows -> q [ltail=cluster_files, lhead=cluster_query, label="  rows that\n  overlap  ", style=bold]
+}
