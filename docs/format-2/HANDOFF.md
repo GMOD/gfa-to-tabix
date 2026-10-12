@@ -1,8 +1,8 @@
 # Handoff: walk format 2
 
 Status on 2026-10-12: `--walks` writes format 2, which
-[docs/walks-format.md](../walks-format.md) describes. The plugin does not read
-it yet.
+[docs/walks-format.md](../walks-format.md) describes, on branch
+`worktree-format-2`. The plugin reads it on its main, unreleased.
 
 - **Problem:** a format-1 walk set's bytes per window grow linearly with the
   cohort, because Tabix indexes the reference axis and every haplotype's rows
@@ -16,8 +16,9 @@ it yet.
 - **Measured on chr22:** the two files total 71 MB against format 1's 408 MB,
   and a two-chunk read fetches 0.14 of format 1's at the median on both
   references. Every piece checked rebuilds step for step
-- **Next:** the plugin's format-2 reader, then walk rows drawn from the
-  choices, then rebuilding the hosted files
+- **Next:** release the plugin, then land and release format 2 here, then
+  rebuild the hosted files. Walk rows at Mb scale need the plugin's walk-row
+  pipeline reworked; see step 2
 - **Not worth building yet:** an index on the haplotype axis, a custom
   container and a binary encoding. Revisit when the choices in a two-chunk read
   pass about 2 MB
@@ -175,41 +176,57 @@ changes their size and growth little:
 
 ## Next steps, in order
 
-### 1. The plugin's format-2 reader
+### 1. The plugin's format-2 reader (done)
 
-- `WalkReader` reads the walk file's header, and on format 2 reads that file
-  alone: the byte budget and `PanSNRefNames` use its index, and the node and
-  link files are never opened
-- Per chunk: R from the `ref` rows with each node's position, the routes, and
-  the walk rows that `keep` accepts, decoded into the step arrays `joinPieces`
-  takes
-- Links: consecutive handles of R and of each route (entry, interior, exit),
-  and the joint between consecutive pieces of every path read. Built from
-  every path, links match format 1's among kept nodes (0.00-0.01% lost, Fable
-  review); built from the selected walks alone, 2-13% of drawn edges go
-- A node off the reference takes its position from the path whose name sorts
-  first among the chunk's walk rows that visit it, at its earliest offset, as
-  the converter placed it in format 1
-- Regenerate the `test_data` walk fixtures in format 2 from the W lines their
-  tests list, and keep the format-1 reader until the hosted sets are rebuilt
-- Stop rules: on the 150-window harness the tables equal format 1's except
-  positions of nodes whose first-named path is filed in another chunk; an
-  8-haplotype cut is no slower than format 1's 0.09-0.28 s
+Landed in jbrowse-plugin-graphgenomeviewer as c5f28fe, not yet released.
+`agent-docs/reference/GRAPH_TRACK.md` ("Format 2") describes it.
 
-### 2. Walk rows from the choices
+- `WalkReader` reads the walk file's header, and on format 2 reads and sizes
+  that file alone; `getFeatures` reads the `ref` rows, and both adapters take
+  reference names from the walk file's index
+- Each chunk decodes once into the step arrays `joinPieces` takes. Positions of
+  nodes off R and the links wait for `WalkGraph.tables(kept)`, which handles
+  only the nodes a cut keeps: deciding per chunk lost links in the 22q11
+  repeats, where one node sits in routes of several chunks
+- Parity, `walkFormat2.test.ts`: 50 chr22 windows on GRCh38 and CHM13 against
+  0.11.0's format-1 files give the same GFA, apart from 3,111 nodes off R in
+  one 22q11 window whose first-named path is filed under an unread chunk. The
+  four `walks_*` fixtures, rebuilt in both formats, match too
+- Speed: the 50 windows take 2.66 s against format 1's 2.74 s. The slowest
+  window relative to format 1 sits in the 16.3 Mb repeats, 0.24 s against
+  0.12 s, where long nested routes repeat nodes that format 1 listed once
 
-- A walk row's runs on and off the reference come from its choices: a stretch
-  along R spans the R positions between routes, and a route spans its nodes'
-  lengths. No steps are decoded and no node rows read
+### 2. Walk rows at Mb scale
+
+Format 2 lets a window of every haplotype's walk rows reach Mb scale, which
+format 1's 8 MB byte budget refused at chr22:20-23 Mb. The plugin's walk-row
+pipeline is now the limit:
+
+| every haplotype from 20 Mb | time   | heap     |
+| -------------------------- | ------ | -------- |
+| 0.1 Mb                     | 0.39 s | +57 MB   |
+| 1 Mb                       | 3.7 s  | +90 MB   |
+| 3 Mb                       | 13.3 s | +1.0 GB  |
+
+- At 1 Mb format 2's decoding is 10% of the time. `walkCut` (35%) and
+  `tables()` (31%) take most of the rest, with a Map or Set lookup per step
+  over about 14 M steps, and format 1 pays the same
+- Rows from the choices skip both: a stretch along R is a run on the reference
+  spanning R's positions, and a route is a run off it spanning its nodes'
+  lengths. The cut would hand the pane runs and the reference walk alone, so
+  this changes ADR-043, whose repeat pick re-slices the walks' steps on the main
+  thread
 - Merge identical local haplotypes before drawing, as GBZ-base does
-- Stop rule: every haplotype over a 3 Mb window at chr22:20 Mb drawn in under
-  3 s warm; otherwise keep it as an optimization and stop
+- Stop rule: every haplotype over 3 Mb at chr22:20 Mb drawn in under 3 s warm
 
-### 3. Rebuild and rehost
+### 3. Release and rehost
 
+- Release the plugin first: it reads both formats. Then land and release
+  gfa-to-tabix's format 2 (branch `worktree-format-2`), so no released
+  converter writes files no released plugin reads
 - Build the genome-wide sets, upload them, and update the hosted configs and
-  the jbrowse.org tutorials; release gfa-to-tabix and the plugin together.
-  Each step changes public files, so it waits for the owner
+  the jbrowse.org tutorials. Each step changes public files, so it waits for
+  the owner
 
 ### 4. Benchmarks against GBZ-base
 
