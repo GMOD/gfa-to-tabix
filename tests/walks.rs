@@ -5,8 +5,12 @@
 // base. H#1#h inserts 7 (3 bp) between 3 and 4,
 // I#1#i inverts 2-3, D#1#d repeats 1-4, and U#1#u visits only 8 and 9.
 // walks-two-refs-p.gfa says the same in P lines.
+//
+// A handle is 2 * id + 1 when reversed. In a ref row and a route row each
+// handle is written as 2 * (id - previous id) + reverse; a walk row names its
+// routes by 2 * (route id - previous route id) + flip.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::io::{Read, Write};
 use std::process::{Command, Output};
@@ -18,23 +22,23 @@ use flate2::write::GzEncoder;
 
 struct Built {
     output: Output,
-    // by `sample.kind`, from out.<sample>.<kind>.bed.gz
+    // by sample, from out.<sample>.walks.bed.gz
     files: BTreeMap<String, String>,
-    // every sample's file of the kind, one after another
+    // every sample's file, one after another
     walks: String,
-    nodes: String,
-    links: String,
 }
 
 impl Built {
-    fn file(&self, sample: &str, kind: &str) -> &str {
-        self.files
-            .get(&format!("{sample}.{kind}"))
-            .map_or("", String::as_str)
+    fn file(&self, sample: &str) -> &str {
+        self.files.get(sample).map_or("", String::as_str)
     }
 }
 
-fn build(fixture: &str, args: &[&str]) -> Built {
+fn fixture(name: &str) -> String {
+    format!("{}/tests/data/{name}", env!("CARGO_MANIFEST_DIR"))
+}
+
+fn build(fixture_name: &str, args: &[&str]) -> Built {
     static RUNS: AtomicUsize = AtomicUsize::new(0);
     let dir = std::env::temp_dir().join(format!(
         "gfa-to-tabix-walks-{}-{}",
@@ -42,10 +46,10 @@ fn build(fixture: &str, args: &[&str]) -> Built {
         RUNS.fetch_add(1, Ordering::Relaxed)
     ));
     fs::create_dir_all(&dir).unwrap();
-    let input = if fixture == "-" || fixture.starts_with('/') {
-        fixture.to_string()
+    let input = if fixture_name == "-" || fixture_name.starts_with('/') {
+        fixture_name.to_string()
     } else {
-        format!("{}/tests/data/{fixture}", env!("CARGO_MANIFEST_DIR"))
+        fixture(fixture_name)
     };
     let output = Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix"))
         .arg(input)
@@ -61,9 +65,9 @@ fn build(fixture: &str, args: &[&str]) -> Built {
         if name.ends_with(".bed.gz.tbi") {
             continue;
         }
-        let key = name
+        let sample = name
             .strip_prefix("out.")
-            .and_then(|n| n.strip_suffix(".bed.gz"))
+            .and_then(|n| n.strip_suffix(".walks.bed.gz"))
             .unwrap_or_else(|| panic!("left behind: {name}"));
         assert!(
             dir.join(format!("{name}.tbi")).exists(),
@@ -73,19 +77,10 @@ fn build(fixture: &str, args: &[&str]) -> Built {
         MultiGzDecoder::new(fs::File::open(entry.path()).unwrap())
             .read_to_string(&mut text)
             .unwrap();
-        files.insert(key.to_string(), text);
+        files.insert(sample.to_string(), text);
     }
-    let all = |kind: &str| -> String {
-        files
-            .iter()
-            .filter(|(key, _)| key.ends_with(&format!(".{kind}")))
-            .map(|(_, text)| text.as_str())
-            .collect()
-    };
     let built = Built {
-        walks: all("walks"),
-        nodes: all("nodes"),
-        links: all("links"),
+        walks: files.values().map(String::as_str).collect(),
         files,
         output,
     };
@@ -97,16 +92,6 @@ fn tsv(rows: &[&str]) -> String {
     rows.iter().map(|r| r.replace(' ', "\t") + "\n").collect()
 }
 
-fn rows_of(text: &str, anchor: &str, column: &str) -> String {
-    text.lines()
-        .filter(|line| {
-            let cols: Vec<&str> = line.split('\t').collect();
-            cols.len() > 3 && cols[0] == anchor && cols[3] == column
-        })
-        .map(|line| line.to_string() + "\n")
-        .collect()
-}
-
 fn under(text: &str, anchor: &str) -> String {
     text.lines()
         .filter(|line| line.starts_with(&format!("{anchor}\t")))
@@ -114,37 +99,14 @@ fn under(text: &str, anchor: &str) -> String {
         .collect()
 }
 
-#[test]
-fn each_reference_files_every_path_under_its_own_chunks() {
-    let built = build("walks-two-refs.gfa", &[]);
-    assert!(built.output.status.success());
-    for (sample, anchor) in [("R", "R#0#chr"), ("Q", "Q#0#chr")] {
-        assert_eq!(
-            rows_of(built.file(sample, "walks"), anchor, "R#0#chr"),
-            tsv(&[
-                &format!("{anchor} 0 1 R#0#chr 0 0 0 2 2,2 nx:i:10"),
-                &format!("{anchor} 10 11 R#0#chr 0 12 1 2 6,2 pv:i:0 nx:i:20"),
-                &format!("{anchor} 20 21 R#0#chr 0 24 2 1 10 pv:i:10"),
-            ])
-        );
-    }
-}
-
-#[test]
-fn each_reference_has_its_own_three_files_holding_only_its_rows() {
-    let built = build("walks-two-refs.gfa", &[]);
-    assert_eq!(
-        built.files.keys().collect::<Vec<_>>(),
-        [
-            "Q.links", "Q.nodes", "Q.walks", "R.links", "R.nodes", "R.walks"
-        ]
-    );
-    for (key, text) in &built.files {
-        let anchor = format!("{}#0#chr\t", &key[..1]);
-        let rows: Vec<&str> = text.lines().filter(|l| !l.starts_with('#')).collect();
-        assert!(!rows.is_empty(), "{key}");
-        assert!(rows.iter().all(|row| row.starts_with(&anchor)), "{key}");
-    }
+fn rows_of(text: &str, anchor: &str, kind: &str, name: &str) -> String {
+    text.lines()
+        .filter(|line| {
+            let cols: Vec<&str> = line.split('\t').collect();
+            cols.len() > 4 && cols[0] == anchor && cols[3] == kind && cols[4] == name
+        })
+        .map(|line| line.to_string() + "\n")
+        .collect()
 }
 
 fn header(text: &str) -> String {
@@ -154,17 +116,243 @@ fn header(text: &str) -> String {
         .collect()
 }
 
+// Decoding, written from the format's description and independent of the
+// encoder: every piece's steps, by (path, fragStart) and piece index.
+
+fn deltas(field: &str, previous: &mut i64) -> Vec<u32> {
+    if field == "." {
+        return Vec::new();
+    }
+    field
+        .split(',')
+        .map(|tok| {
+            let d: i64 = tok.parse().unwrap();
+            let r = d & 1;
+            *previous += (d - r) / 2;
+            (2 * *previous + r) as u32
+        })
+        .collect()
+}
+
+type Route = (Option<u32>, Vec<u32>, Option<u32>);
+
+fn flipped((e, interior, x): &Route) -> Route {
+    (
+        x.map(|h| h ^ 1),
+        interior.iter().rev().map(|h| h ^ 1).collect(),
+        e.map(|h| h ^ 1),
+    )
+}
+
+struct RefPath {
+    handles: Vec<u32>,
+}
+
+impl RefPath {
+    fn occurrences(&self, h: u32) -> impl Iterator<Item = usize> + '_ {
+        self.handles
+            .iter()
+            .enumerate()
+            .filter(move |(_, r)| *r >> 1 == h >> 1)
+            .map(|(i, _)| i)
+    }
+
+    fn nearest(&self, h: u32, i: usize) -> usize {
+        let mut best = None;
+        for j in self.occurrences(h) {
+            if best.is_none_or(|b: usize| j.abs_diff(i) <= b.abs_diff(i)) {
+                best = Some(j);
+            }
+        }
+        best.unwrap()
+    }
+
+    fn step(&self, i: usize, h: u32) -> (usize, u32) {
+        if self.handles[i] == h {
+            (i + 1, self.handles[i + 1])
+        } else {
+            (i - 1, self.handles[i - 1] ^ 1)
+        }
+    }
+}
+
+fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
+    let start: u32 = cols[9].parse().unwrap();
+    let mut end_parts = cols[10].split(':');
+    let end = (i64::from(start) + end_parts.next().unwrap().parse::<i64>().unwrap()) as u32;
+    let tail: Option<usize> = end_parts.next().map(|n| n.parse().unwrap());
+    let counted = tail.is_some();
+    let mut choices = Vec::new();
+    let mut previous = 0i64;
+    if cols[11] != "." {
+        for tok in cols[11].split(',') {
+            let mut parts = tok.split(':');
+            let d: i64 = parts.next().unwrap().parse().unwrap();
+            let flip = d & 1;
+            previous += (d - flip) / 2;
+            let route = &routes[previous as usize];
+            let count: Option<usize> = parts.next().map(|n| n.parse().unwrap());
+            choices.push((if flip == 1 { flipped(route) } else { route.clone() }, count));
+        }
+    }
+    let mut steps = Vec::new();
+    let mut rest = &choices[..];
+    if let Some(((None, interior, _), _)) = choices.first() {
+        steps.extend_from_slice(interior);
+        rest = &choices[1..];
+    }
+    let mut h = start;
+    let mut i = path.occurrences(h).next().unwrap();
+    steps.push(h);
+    let mut follow = |steps: &mut Vec<u32>, h: &mut u32, i: &mut usize, target: u32, count: Option<usize>| {
+        let mut taken = 0;
+        while if counted { taken < count.unwrap() } else { *h != target } {
+            (*i, *h) = path.step(*i, *h);
+            steps.push(*h);
+            taken += 1;
+        }
+    };
+    for ((entry, interior, exit), count) in rest {
+        let entry = entry.expect("an open route after the first choice");
+        follow(&mut steps, &mut h, &mut i, entry, *count);
+        assert_eq!(h, entry);
+        steps.extend_from_slice(interior);
+        let Some(exit) = exit else {
+            return steps;
+        };
+        h = *exit;
+        i = path.nearest(h, i);
+        steps.push(h);
+    }
+    follow(&mut steps, &mut h, &mut i, end, tail);
+    assert_eq!(h, end);
+    steps
+}
+
+// Every path's steps rebuilt from a walk file, joining its pieces in order.
+fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
+    let mut chunks: BTreeMap<(String, u64), Vec<Vec<&str>>> = BTreeMap::new();
+    for line in text.lines().filter(|l| !l.starts_with('#')) {
+        let cols: Vec<&str> = line.split('\t').collect();
+        chunks
+            .entry((cols[0].to_string(), cols[1].parse().unwrap()))
+            .or_default()
+            .push(cols);
+    }
+    let mut pieces: BTreeMap<String, BTreeMap<u64, Vec<u32>>> = BTreeMap::new();
+    for rows in chunks.values() {
+        let mut refs: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "ref").collect();
+        refs.sort_by_key(|c| c[6].parse::<u64>().unwrap());
+        let path = RefPath {
+            handles: refs.iter().flat_map(|c| deltas(c[9], &mut 0)).collect(),
+        };
+        let mut previous = 0i64;
+        let routes: Vec<Route> = rows
+            .iter()
+            .filter(|c| c[3] == "route")
+            .map(|c| {
+                let entry = deltas(c[4], &mut previous).first().copied();
+                let interior = deltas(c[5], &mut previous);
+                let exit = deltas(c[6], &mut previous).first().copied();
+                (entry, interior, exit)
+            })
+            .collect();
+        for cols in rows {
+            let steps = match cols[3] {
+                "ref" => deltas(cols[9], &mut 0),
+                "walk" => decode_walk(&path, &routes, cols),
+                _ => continue,
+            };
+            assert_eq!(steps.len(), cols[8].parse::<usize>().unwrap(), "{cols:?}");
+            pieces
+                .entry(format!("{}@{}", cols[4], cols[5]))
+                .or_default()
+                .insert(cols[7].parse().unwrap(), steps);
+        }
+    }
+    pieces
+        .into_iter()
+        .map(|(path, pieces)| {
+            assert!(pieces.keys().copied().eq(0..pieces.len() as u64), "{path}");
+            (path, pieces.into_values().flatten().collect())
+        })
+        .collect()
+}
+
+// The handles of each W line, by `sample#hap#contig@start`.
+fn gfa_paths(gfa: &str) -> HashMap<String, Vec<u32>> {
+    gfa.lines()
+        .filter(|l| l.starts_with("W\t"))
+        .map(|line| {
+            let cols: Vec<&str> = line.split('\t').collect();
+            let mut handles = Vec::new();
+            let walk = cols[6];
+            let mut at = 0;
+            while at < walk.len() {
+                let reverse = u32::from(&walk[at..=at] == "<");
+                let end = walk[at + 1..]
+                    .find(['<', '>'])
+                    .map_or(walk.len(), |p| at + 1 + p);
+                handles.push(2 * walk[at + 1..end].parse::<u32>().unwrap() + reverse);
+                at = end;
+            }
+            (format!("{}#{}#{}@{}", cols[1], cols[2], cols[3], cols[4]), handles)
+        })
+        .collect()
+}
+
+fn assert_rebuilds(gfa: &str, built: &Built, samples: &[&str]) {
+    let paths = gfa_paths(gfa);
+    for sample in samples {
+        let decoded = decode_file(built.file(sample));
+        assert!(!decoded.is_empty(), "{sample}");
+        for (path, steps) in &decoded {
+            assert_eq!(steps, &paths[path], "{sample}: {path}");
+        }
+    }
+}
+
+#[test]
+fn every_path_rebuilds_from_its_rows() {
+    for (gfa, refs, chunk) in [
+        ("walks-two-refs.gfa", "R,Q", "10"),
+        ("walks-two-refs.gfa", "R,Q", "7"),
+        ("walks-two-refs.gfa", "R,Q", "1000"),
+        ("walks-repeat.gfa", "R", "10"),
+        ("walks-repeat.gfa", "R", "1000"),
+        ("walks-loop.gfa", "R", "10"),
+        ("walks-loop.gfa", "R", "1000"),
+    ] {
+        let built = build(gfa, &["--refs", refs, "--chunk", chunk]);
+        assert!(built.output.status.success(), "{gfa} {chunk}");
+        let samples: Vec<&str> = refs.split(',').collect();
+        assert_rebuilds(&fs::read_to_string(fixture(gfa)).unwrap(), &built, &samples);
+    }
+}
+
+#[test]
+fn each_reference_has_one_file_holding_only_its_rows() {
+    let built = build("walks-two-refs.gfa", &[]);
+    assert_eq!(built.files.keys().collect::<Vec<_>>(), ["Q", "R"]);
+    for (sample, text) in &built.files {
+        let anchor = format!("{sample}#0#chr\t");
+        let rows: Vec<&str> = text.lines().filter(|l| !l.starts_with('#')).collect();
+        assert!(!rows.is_empty(), "{sample}");
+        assert!(rows.iter().all(|row| row.starts_with(&anchor)), "{sample}");
+    }
+}
+
 // U#1#u visits no reference node, so it has no rows and no line. Each walk
 // file lists the other reference among its haplotypes, since its walk has
 // rows there.
 #[test]
-fn a_walk_file_names_its_reference_and_each_haplotype_with_rows() {
+fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
     let built = build("walks-two-refs.gfa", &[]);
     for (sample, other) in [("R", "Q"), ("Q", "R")] {
         assert_eq!(
-            header(built.file(sample, "walks")),
+            header(built.file(sample)),
             tsv(&[
-                "#walks chunk:i:10 maxnode:i:6 cap:i:8192",
+                "#walks format:i:2 chunk:i:10 maxnode:i:6",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",
@@ -172,72 +360,120 @@ fn a_walk_file_names_its_reference_and_each_haplotype_with_rows() {
                 &format!("#haplotype {other}#0"),
             ])
         );
-        for kind in ["nodes", "links"] {
-            assert_eq!(
-                header(built.file(sample, kind)),
-                tsv(&[&format!("#{kind} chunk:i:10 maxnode:i:6 cap:i:8192")])
-            );
-        }
     }
+}
+
+// A chunk's ref row lists its reference steps and their lengths, and its
+// nodes row the ids and lengths of the nodes its routes visit off R. H's
+// insertion of 7 between 3 and 4 is the chunk's one route, and H's walk row
+// names it after starting on 3. Q's 6 in place of 2 is a route off R that
+// leaves R at 1 and does not return in chunk 0-10; stored the way round whose
+// handles sort first, it reads 6 reversed back onto 1 reversed, and Q's walk
+// row takes it flipped.
+#[test]
+fn a_chunk_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
+    let built = build("walks-two-refs.gfa", &[]);
+    let r = built.file("R");
+    assert_eq!(
+        under(r, "R#0#chr\t0"),
+        tsv(&[
+            "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6 nx:i:10",
+            "R#0#chr 0 1 nodes 6 6",
+            "R#0#chr 0 1 route . 13 -9",
+            "R#0#chr 0 1 walk D#1#d 0 0 0 2 2 2 . nx:i:10",
+            "R#0#chr 0 1 walk D#1#d 0 24 2 2 2 2 . pv:i:10 nx:i:10",
+            "R#0#chr 0 1 walk H#1#h 100 100 0 2 2 2 . nx:i:10",
+            "R#0#chr 0 1 walk I#1#i 0 0 0 1 2 0 . nx:i:10",
+            "R#0#chr 0 1 walk I#1#i 0 12 2 1 5 0 . pv:i:10 nx:i:10",
+            "R#0#chr 0 1 walk Q#0#chr 0 0 0 2 2 0 1 nx:i:10",
+        ])
+    );
+    assert_eq!(
+        rows_of(r, "R#0#chr", "route", "6") + &rows_of(r, "R#0#chr", "walk", "H#1#h"),
+        tsv(&[
+            "R#0#chr 10 11 route 6 8 -6",
+            "R#0#chr 0 1 walk H#1#h 100 100 0 2 2 2 . nx:i:10",
+            "R#0#chr 10 11 walk H#1#h 100 112 1 3 6 2 0 pv:i:0 nx:i:20",
+            "R#0#chr 20 21 walk H#1#h 100 127 2 1 10 0 . pv:i:10",
+        ])
+    );
 }
 
 // walks-repeat.gfa: R#0#chr walks 1 2 3 2 3 4, a two-node repeat collapsed
 // into one copy. Nodes 1-3 are 6 bp and node 4 is 15 bp, so R reaches them at
-// 0, 6, 12, 18, 24 and 30 and ends at 45. H#1#h takes the same steps.
-#[test]
-fn the_first_header_line_gives_the_chunk_the_longest_node_and_the_cap() {
-    let built = build("walks-repeat.gfa", &["--refs", "R", "--cap", "3"]);
-    assert!(built.output.status.success());
-    for kind in ["walks", "nodes", "links"] {
-        assert!(
-            built
-                .file("R", kind)
-                .starts_with(&format!("#{kind}\tchunk:i:10\tmaxnode:i:15\tcap:i:3\n")),
-            "{kind}"
-        );
-    }
-}
-
-// Placed by first visit, the repeat's second pass would be filed under chunk
-// 0-10 and 10-20 again; on R's own path each step takes the chunk of its own
-// offset. H keeps first-visit placement.
+// 0, 6, 12, 18, 24 and 30 and ends at 45. H#1#h takes the same steps. Placed by
+// first visit, the repeat's second pass would be filed under chunk 0-10 and
+// 10-20 again; on R's own path each step takes the chunk of its own offset. H
+// keeps first-visit placement.
 #[test]
 fn a_reference_files_its_own_revisits_at_its_own_offset() {
     let built = build("walks-repeat.gfa", &["--refs", "R"]);
     assert!(built.output.status.success());
-    let walks = built.file("R", "walks");
+    let walks = built.file("R");
+    assert!(header(walks).starts_with("#walks\tformat:i:2\tchunk:i:10\tmaxnode:i:15\n"));
     assert_eq!(
-        rows_of(walks, "R#0#chr", "R#0#chr"),
+        rows_of(walks, "R#0#chr", "ref", "R#0#chr"),
         tsv(&[
-            "R#0#chr 0 1 R#0#chr 0 0 0 2 2,2 nx:i:10",
-            "R#0#chr 10 11 R#0#chr 0 12 1 2 6,-2 pv:i:0 nx:i:20",
-            "R#0#chr 20 21 R#0#chr 0 24 2 1 6 pv:i:10 nx:i:30",
-            "R#0#chr 30 31 R#0#chr 0 30 3 1 8 pv:i:20",
+            "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6 nx:i:10",
+            "R#0#chr 10 11 ref R#0#chr 0 12 1 2 6,-2 6,6 pv:i:0 nx:i:20",
+            "R#0#chr 20 21 ref R#0#chr 0 24 2 1 6 6 pv:i:10 nx:i:30",
+            "R#0#chr 30 31 ref R#0#chr 0 30 3 1 8 15 pv:i:20",
         ])
     );
     assert_eq!(
-        rows_of(walks, "R#0#chr", "H#1#h"),
+        rows_of(walks, "R#0#chr", "walk", "H#1#h"),
         tsv(&[
-            "R#0#chr 0 1 H#1#h 0 0 0 2 2,2 nx:i:10",
-            "R#0#chr 0 1 H#1#h 0 18 2 1 4 pv:i:10 nx:i:10",
-            "R#0#chr 10 11 H#1#h 0 12 1 1 6 pv:i:0 nx:i:0",
-            "R#0#chr 10 11 H#1#h 0 24 3 1 6 pv:i:0 nx:i:30",
-            "R#0#chr 30 31 H#1#h 0 30 4 1 8 pv:i:10",
+            "R#0#chr 0 1 walk H#1#h 0 0 0 2 2 2 . nx:i:10",
+            "R#0#chr 0 1 walk H#1#h 0 18 2 1 4 0 . pv:i:10 nx:i:10",
+            "R#0#chr 10 11 walk H#1#h 0 12 1 1 6 0 . pv:i:0 nx:i:0",
+            "R#0#chr 10 11 walk H#1#h 0 24 3 1 6 0 . pv:i:0 nx:i:30",
+            "R#0#chr 30 31 walk H#1#h 0 30 4 1 8 0 . pv:i:10",
+        ])
+    );
+}
+
+// walks-loop.gfa, in one chunk: R walks 1 2 3 2 3 4. A takes the repeat three
+// times. Following R from 1 until the first 3 would stop a pass early, so A's
+// row gives each stretch along R as a step count after a colon, and the tail
+// after the last route likewise. F inserts 5 inside the second copy.
+#[test]
+fn a_walk_the_default_rule_would_misread_states_its_step_counts() {
+    let built = build("walks-loop.gfa", &["--refs", "R", "--chunk", "1000"]);
+    assert!(built.output.status.success());
+    let walks = built.file("R");
+    assert_eq!(
+        rows_of(walks, "R#0#chr", "walk", "A#1#a") + &rows_of(walks, "R#0#chr", "walk", "F#1#f"),
+        tsv(&[
+            "R#0#chr 0 1 walk A#1#a 0 0 0 8 2 6:2 5:4",
+            "R#0#chr 0 1 walk F#1#f 0 0 0 7 2 6:1 2:3",
         ])
     );
     assert_eq!(
-        under(built.file("R", "nodes"), "R#0#chr\t20"),
-        tsv(&["R#0#chr 20 21 3 0 R#0#chr 12 18 LN:i:6"])
+        rows_of(walks, "R#0#chr", "walk", "B#1#b"),
+        tsv(&["R#0#chr 0 1 walk B#1#b 0 0 0 4 2 6 6"])
+    );
+    let stderr = String::from_utf8_lossy(&built.output.stderr);
+    assert!(stderr.contains("6 walk rows, 2 with step counts"), "{stderr}");
+}
+
+#[test]
+fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
+    let built = build("walks-two-refs.gfa", &[]);
+    assert_eq!(
+        rows_of(&built.walks, "R#0#chr", "walk", "D#1#d"),
+        tsv(&[
+            "R#0#chr 0 1 walk D#1#d 0 0 0 2 2 2 . nx:i:10",
+            "R#0#chr 0 1 walk D#1#d 0 24 2 2 2 2 . pv:i:10 nx:i:10",
+            "R#0#chr 10 11 walk D#1#d 0 12 1 2 6 2 . pv:i:0 nx:i:0",
+            "R#0#chr 10 11 walk D#1#d 0 36 3 2 6 2 . pv:i:0 nx:i:20",
+            "R#0#chr 20 21 walk D#1#d 0 48 4 1 10 0 . pv:i:10",
+        ])
     );
 }
 
 #[test]
 fn a_haplotype_with_two_contigs_is_listed_once() {
-    let gfa = fs::read_to_string(format!(
-        "{}/tests/data/walks-two-refs.gfa",
-        env!("CARGO_MANIFEST_DIR")
-    ))
-    .unwrap();
+    let gfa = fs::read_to_string(fixture("walks-two-refs.gfa")).unwrap();
     let path = std::env::temp_dir().join(format!("walks-contigs-{}.gfa", std::process::id()));
     fs::write(
         &path,
@@ -247,125 +483,13 @@ fn a_haplotype_with_two_contigs_is_listed_once() {
     let built = build(path.to_str().unwrap(), &[]);
     fs::remove_file(&path).unwrap();
     assert!(built.output.status.success());
-    assert!(header(built.file("R", "walks")).ends_with(&tsv(&[
+    assert!(header(built.file("R")).ends_with(&tsv(&[
         "#haplotype D#1",
         "#haplotype H#1",
         "#haplotype H#2",
         "#haplotype I#1",
         "#haplotype Q#0",
     ])));
-}
-
-// Node 2 is off Q. R, H, I and D visit it; D#1#d sorts first and reaches it
-// at 6, and again at 30.
-#[test]
-fn a_node_is_rank_0_on_its_reference_and_takes_the_first_named_path_elsewhere() {
-    let built = build("walks-two-refs.gfa", &[]);
-    assert_eq!(
-        under(&built.nodes, "R#0#chr"),
-        tsv(&[
-            "R#0#chr 0 1 1 0 R#0#chr 0 6 LN:i:6",
-            "R#0#chr 0 1 2 0 R#0#chr 6 12 LN:i:6",
-            "R#0#chr 0 1 6 1 Q#0#chr 6 12 LN:i:6",
-            "R#0#chr 10 11 3 0 R#0#chr 12 18 LN:i:6",
-            "R#0#chr 10 11 4 0 R#0#chr 18 24 LN:i:6",
-            "R#0#chr 10 11 7 1 H#1#h 118 121 LN:i:3",
-            "R#0#chr 20 21 5 0 R#0#chr 24 30 LN:i:6",
-        ])
-    );
-    assert!(
-        built
-            .nodes
-            .contains(&tsv(&["Q#0#chr 0 1 2 1 D#1#d 6 12 LN:i:6"]))
-    );
-}
-
-#[test]
-fn an_inversion_walks_reference_nodes_backwards() {
-    let built = build("walks-two-refs.gfa", &[]);
-    // <3 is 2*3+1; <2 steps back one node with the reverse bit, -1.
-    assert_eq!(
-        rows_of(&built.walks, "Q#0#chr", "I#1#i"),
-        tsv(&[
-            "Q#0#chr 0 1 I#1#i 0 0 0 1 2 nx:i:10",
-            "Q#0#chr 10 11 I#1#i 0 6 1 3 7,-1,4 pv:i:0 nx:i:20",
-            "Q#0#chr 20 21 I#1#i 0 24 2 1 10 pv:i:10",
-        ])
-    );
-    assert!(
-        built
-            .links
-            .contains(&tsv(&["Q#0#chr 10 11 2+ 3+ D#1#d 6 12 1 Q#0#chr 12 18 0"]))
-    );
-}
-
-#[test]
-fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
-    let built = build("walks-two-refs.gfa", &[]);
-    assert_eq!(
-        rows_of(&built.walks, "R#0#chr", "D#1#d"),
-        tsv(&[
-            "R#0#chr 0 1 D#1#d 0 0 0 2 2,2 nx:i:10",
-            "R#0#chr 0 1 D#1#d 0 24 2 2 2,2 pv:i:10 nx:i:10",
-            "R#0#chr 10 11 D#1#d 0 12 1 2 6,2 pv:i:0 nx:i:0",
-            "R#0#chr 10 11 D#1#d 0 36 3 2 6,2 pv:i:0 nx:i:20",
-            "R#0#chr 20 21 D#1#d 0 48 4 1 10 pv:i:10",
-        ])
-    );
-}
-
-// With --chunk 20, nodes 1 to 4 lie in chunk 0-20 and node 5, 6 bp, in 20-40.
-#[test]
-fn by_default_a_short_run_is_filed_under_its_own_chunk() {
-    let built = build("walks-two-refs.gfa", &["--chunk", "20"]);
-    assert_eq!(
-        rows_of(&built.walks, "R#0#chr", "R#0#chr"),
-        tsv(&[
-            "R#0#chr 0 1 R#0#chr 0 0 0 4 2,2,2,2 nx:i:20",
-            "R#0#chr 20 21 R#0#chr 0 24 1 1 10 pv:i:0",
-        ])
-    );
-}
-
-#[test]
-fn settle_keeps_a_short_run_in_the_chunk_the_path_is_in() {
-    let built = build("walks-two-refs.gfa", &["--settle", "7"]);
-    assert_eq!(
-        rows_of(&built.walks, "R#0#chr", "I#1#i"),
-        tsv(&["R#0#chr 0 1 I#1#i 0 0 0 5 2,5,-1,4,2"])
-    );
-}
-
-#[test]
-fn the_cap_continues_a_piece_in_a_row_that_restarts_from_an_absolute_id() {
-    let built = build("walks-two-refs.gfa", &["--cap", "2"]);
-    assert_eq!(
-        rows_of(&built.walks, "R#0#chr", "H#1#h"),
-        tsv(&[
-            "R#0#chr 0 1 H#1#h 100 100 0 2 2,2 nx:i:10",
-            "R#0#chr 10 11 H#1#h 100 112 1 2 6,8 pv:i:0 nx:i:10",
-            "R#0#chr 10 11 H#1#h 100 121 2 1 8 pv:i:10 nx:i:20",
-            "R#0#chr 20 21 H#1#h 100 127 3 1 10 pv:i:10",
-        ])
-    );
-}
-
-#[test]
-fn a_link_between_pieces_is_filed_under_both_chunks() {
-    let built = build("walks-two-refs.gfa", &[]);
-    let links = under(&built.links, "R#0#chr");
-    for chunk in ["0 1", "10 11"] {
-        for link in [
-            "2+ 3+ R#0#chr 6 12 0 R#0#chr 12 18 0",
-            "1- 4- R#0#chr 0 6 0 R#0#chr 18 24 0",
-        ] {
-            assert!(
-                links.contains(&tsv(&[&format!("R#0#chr {chunk} {link}")])),
-                "{chunk} {link}"
-            );
-        }
-    }
-    assert!(!links.contains("R#0#chr\t0\t1\t3+\t4+"));
 }
 
 #[test]
@@ -377,8 +501,6 @@ fn a_path_off_every_reference_is_counted_and_left_out() {
         "{stderr}"
     );
     assert!(!built.walks.contains("U#1#u"));
-    assert!(!built.nodes.contains("\t8\t"));
-    assert!(!built.links.contains("8+"));
 }
 
 #[test]
@@ -387,17 +509,11 @@ fn p_lines_give_the_rows_w_lines_do() {
     let p = build("walks-two-refs-p.gfa", &[]);
     assert!(p.output.status.success());
     assert_eq!(p.walks, w.walks);
-    assert_eq!(p.nodes, w.nodes);
-    assert_eq!(p.links, w.links);
 }
 
 #[test]
 fn the_order_of_the_paths_changes_no_row() {
-    let gfa = fs::read_to_string(format!(
-        "{}/tests/data/walks-two-refs.gfa",
-        env!("CARGO_MANIFEST_DIR")
-    ))
-    .unwrap();
+    let gfa = fs::read_to_string(fixture("walks-two-refs.gfa")).unwrap();
     let (paths, rest): (Vec<&str>, Vec<&str>) = gfa.lines().partition(|l| l.starts_with('W'));
     let reversed: Vec<&str> = paths.iter().rev().copied().collect();
     let rotated: Vec<&str> = paths[2..].iter().chain(&paths[..2]).copied().collect();
@@ -416,18 +532,12 @@ fn the_order_of_the_paths_changes_no_row() {
         fs::remove_file(&path).unwrap();
         assert!(shuffled.output.status.success(), "order {i}");
         assert_eq!(shuffled.walks, plain.walks, "order {i}");
-        assert_eq!(shuffled.nodes, plain.nodes, "order {i}");
-        assert_eq!(shuffled.links, plain.links, "order {i}");
     }
 }
 
 #[test]
 fn gzipped_input_gives_the_same_rows() {
-    let gfa = fs::read(format!(
-        "{}/tests/data/walks-two-refs.gfa",
-        env!("CARGO_MANIFEST_DIR")
-    ))
-    .unwrap();
+    let gfa = fs::read(fixture("walks-two-refs.gfa")).unwrap();
     let path = std::env::temp_dir().join(format!("walks-two-refs-{}.gfa.gz", std::process::id()));
     let mut encoder = GzEncoder::new(fs::File::create(&path).unwrap(), Compression::default());
     encoder.write_all(&gfa).unwrap();
@@ -437,18 +547,18 @@ fn gzipped_input_gives_the_same_rows() {
     let plain = build("walks-two-refs.gfa", &[]);
     assert!(gzipped.output.status.success());
     assert_eq!(gzipped.walks, plain.walks);
-    assert_eq!(gzipped.nodes, plain.nodes);
-    assert_eq!(gzipped.links, plain.links);
 }
 
+// A ref row's bases are its nodes' sequences in step order, as the S lines
+// give them; a nodes row's are its nodes' in id order.
 #[test]
-fn sequences_adds_each_nodes_bases() {
+fn sequences_adds_the_bases_of_ref_and_nodes_rows() {
     let built = build("walks-two-refs.gfa", &["--sequences"]);
-    assert!(
-        built
-            .nodes
-            .contains(&tsv(&["R#0#chr 10 11 7 1 H#1#h 118 121 LN:i:3 SQ:Z:GGG"]))
-    );
+    let r = built.file("R");
+    assert!(r.contains(&tsv(&[
+        "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6 nx:i:10 SQ:Z:AAAAAACCCCCC"
+    ])));
+    assert!(r.contains(&tsv(&["R#0#chr 10 11 nodes 7 3 SQ:Z:GGG"])));
 }
 
 #[test]
@@ -467,6 +577,18 @@ fn an_unknown_reference_lists_the_samples() {
             .contains("--refs X matches no path's sample; have: R, Q, H, I, D, U")
     );
     assert!(built.walks.is_empty());
+}
+
+#[test]
+fn cap_and_settle_are_gone() {
+    for flag in ["--cap", "--settle"] {
+        let built = build("walks-two-refs.gfa", &[flag, "5"]);
+        assert_eq!(built.output.status.code(), Some(2), "{flag}");
+        assert!(
+            String::from_utf8_lossy(&built.output.stderr).contains("unrecognized argument"),
+            "{flag}"
+        );
+    }
 }
 
 #[test]
@@ -493,10 +615,11 @@ fn a_row_names_the_chunks_of_the_pieces_before_and_after_it() {
     assert!(built.output.status.success());
     // a neighbour on another reference sequence is named with its chunk
     assert_eq!(
-        rows_of(&built.walks, "R#0#chr1", "H#1#h") + &rows_of(&built.walks, "R#0#chr2", "H#1#h"),
+        rows_of(&built.walks, "R#0#chr1", "walk", "H#1#h")
+            + &rows_of(&built.walks, "R#0#chr2", "walk", "H#1#h"),
         tsv(&[
-            "R#0#chr1 0 1 H#1#h 0 0 0 2 2,2 nx:Z:R#0#chr2:0",
-            "R#0#chr2 0 1 H#1#h 0 12 1 2 6,2 pv:Z:R#0#chr1:0",
+            "R#0#chr1 0 1 walk H#1#h 0 0 0 2 2 2 . nx:Z:R#0#chr2:0",
+            "R#0#chr2 0 1 walk H#1#h 0 12 1 2 6 2 . pv:Z:R#0#chr1:0",
         ])
     );
 }

@@ -10,6 +10,7 @@ mod parallel_bgzf;
 mod paths;
 mod place;
 mod sorter;
+mod routes;
 mod walks;
 
 use std::env;
@@ -22,7 +23,7 @@ use flate2::read::MultiGzDecoder;
 use bed::Layout;
 use gfa::Graph;
 
-const USAGE: &str = "usage: gfa-to-tabix build|alleles|bubbles|paths|fold [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--cap STEPS] [--settle BP]\n                    [--sequences]] [-o PREFIX] gfa";
+const USAGE: &str = "usage: gfa-to-tabix build|alleles|bubbles|paths|fold [-h] ...  (subcommands)\n       gfa-to-tabix [-h] [--version] [--reference REFERENCE] [--layout LAYOUT]\n                    [--walks --refs REFS [--chunk BP] [--sequences]] [-o PREFIX] gfa";
 
 const HELP: &str = "
 Index a pangenome graph's GFA by genome coordinate: write its nodes and links
@@ -54,18 +55,15 @@ options:
                         with a .tbi; default the input name without .gfa[.gz]
 
 walks (a base-level GFA with integer node ids and W or P lines):
-  --walks               instead write PREFIX.SAMPLE.walks.bed.gz,
-                        PREFIX.SAMPLE.nodes.bed.gz and
-                        PREFIX.SAMPLE.links.bed.gz for each SAMPLE in --refs:
-                        every path cut into pieces filed under fixed chunks of
-                        that reference, with the nodes and links the pieces
-                        touch. Reads the GFA twice
+  --walks               instead write PREFIX.SAMPLE.walks.bed.gz for each
+                        SAMPLE in --refs: every path cut into pieces filed
+                        under fixed chunks of that reference, each piece as
+                        the routes it takes off the reference. Reads the GFA
+                        twice
   --refs REFS           comma-separated reference samples, e.g. GRCh38,CHM13
   --chunk BP            chunk size on the reference (default 65536)
-  --cap STEPS           most steps in one row (default 8192)
-  --settle BP           a run of reference steps in another chunk shorter than
-                        this stays in the piece it interrupts (default 0, off)
-  --sequences           add each node's sequence to its rows as SQ:Z:";
+  --sequences           add the bases of each reference and route row's
+                        nodes as SQ:Z:";
 
 struct Args {
     gfa: String,
@@ -75,8 +73,6 @@ struct Args {
     walks: bool,
     refs: Option<String>,
     chunk: Option<u64>,
-    cap: Option<usize>,
-    settle: Option<u64>,
     sequences: bool,
 }
 
@@ -100,7 +96,7 @@ fn parse_args() -> Args {
     let mut prefix = None;
     let mut layout = None;
     let (mut walks, mut sequences) = (false, false);
-    let (mut refs, mut chunk, mut cap, mut settle) = (None, None, None, None);
+    let (mut refs, mut chunk) = (None, None);
     let mut args = env::args().skip(1);
     while let Some(arg) = args.next() {
         let (flag, inline) = match arg.split_once('=') {
@@ -142,15 +138,6 @@ fn parse_args() -> Args {
             "--sequences" => sequences = true,
             "--refs" => refs = Some(value("--refs")),
             "--chunk" => chunk = Some(positive("--chunk", &value("--chunk"))),
-            "--cap" => cap = Some(positive("--cap", &value("--cap"))),
-            "--settle" => {
-                let given = value("--settle");
-                settle = Some(given.parse().unwrap_or_else(|_| {
-                    fail(&format!(
-                        "argument --settle: {given} is not a non-negative integer"
-                    ))
-                }))
-            }
             "-" => gfa = Some(arg),
             _ if flag.starts_with('-') => fail(&format!("unrecognized argument: {arg}")),
             _ if gfa.is_some() => fail(&format!("unrecognized argument: {arg}")),
@@ -167,8 +154,8 @@ fn parse_args() -> Args {
         if reference.is_some() || layout.is_some() {
             fail("--reference and --layout do not apply with --walks; name references with --refs");
         }
-    } else if refs.is_some() || chunk.is_some() || cap.is_some() || settle.is_some() || sequences {
-        fail("--refs, --chunk, --cap, --settle and --sequences apply only with --walks");
+    } else if refs.is_some() || chunk.is_some() || sequences {
+        fail("--refs, --chunk and --sequences apply only with --walks");
     }
     Args {
         gfa,
@@ -178,8 +165,6 @@ fn parse_args() -> Args {
         walks,
         refs,
         chunk,
-        cap,
-        settle,
         sequences,
     }
 }
@@ -265,8 +250,6 @@ fn run(args: &Args) -> Result<(), String> {
         let options = walks::Options {
             refs,
             chunk,
-            cap: args.cap.unwrap_or(8192),
-            settle: args.settle.unwrap_or(0),
             sequences: args.sequences,
         };
         return walks::run(&args.gfa, &prefix, &options);
