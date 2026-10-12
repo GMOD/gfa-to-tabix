@@ -250,6 +250,10 @@ pipeline is now the limit:
   `test_data/graphgenomeview/hprc.json` read the `-f2` sets, and the
   pangenome tutorials describe the one-file set. The format-1 sets stay hosted
   for configs that name them
+- @jbrowse/graph-walks 1.0.0 reads format 2 only, and the plugin (unreleased
+  after 6.27.0), BandageJS and the tube map read through it. Their hosted HPRC
+  examples, jb2hubs' `hprc-grch38.json` and jbrowse-components'
+  `demos/hprc/README.txt` name the `-f2` files
 
 ### 4. Benchmarks against GBZ-base
 

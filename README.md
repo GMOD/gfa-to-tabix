@@ -301,8 +301,15 @@ the output. The sort's merge encodes the chunks on every core.
 
 Files from gfa-to-tabix 0.12 and earlier are format 1: three files per
 reference, the walks with every step, the nodes they visit and the links
-between them. The graph genome viewer plugin reads format 2 from 6.27.0, and
-format 1 in every version.
+between them. Readers:
+
+- The graph genome viewer plugin reads format 2 from 6.27.0. Releases that
+  read through [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks)
+  refuse format 1
+- [BandageJS](https://jbrowse.org/demos/bandagejs/) and the tube map read
+  format 2 only, through @jbrowse/graph-walks
+- jbrowse.org hosts HPRC v2.1's files as
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f2.{GRCh38,CHM13}.walks.bed.gz`
 
 ## Reading the files in JBrowse
 
@@ -346,7 +353,7 @@ prefix alone is enough:
 ```
 
 For files written with `--walks`, `walksUri` takes the prefix up to the
-reference sample, so a track on hg38 reads the GRCh38 set and a track on hs1
+reference sample, so a track on hg38 reads the GRCh38 file and a track on hs1
 would name the CHM13 one. `defaultHaplotypes` names the haplotypes the track
 draws until the user picks others:
 
