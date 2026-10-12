@@ -293,7 +293,8 @@ the output. The sort's merge encodes the chunks on every core.
 
 Files from gfa-to-tabix 0.12 and earlier are format 1: three files per
 reference, the walks with every step, the nodes they visit and the links
-between them.
+between them. The graph genome viewer plugin reads format 2 from 6.27.0, and
+format 1 in every version.
 
 ## Reading the files in JBrowse
 
