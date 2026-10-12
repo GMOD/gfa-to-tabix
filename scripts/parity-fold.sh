@@ -7,7 +7,7 @@
 set -uo pipefail
 
 binary=$1
-version=${2:-10.2.0}
+version=${2:-10.2.3}
 data=$(dirname "$0")/../tests/data
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
