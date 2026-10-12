@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "gfa-to-tabix"
-version = "0.12.1"
+version = "1.0.0"
 dependencies = [
  "flate2",
  "memchr",
