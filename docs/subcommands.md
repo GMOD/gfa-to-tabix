@@ -128,8 +128,8 @@ gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
   window does. `--reference` takes a plain GFA's backbone path, as for the index
 - The graph track folds each cut it draws the same way, at ten of the linear
   view's pixels, so a tier folded at N and handed over at N / 10 bp per pixel
-  draws close to what the fine cut drew just below the handover. Not exactly:
-  the way back from a big allele to the backbone can run through part of a
+  draws close to what the fine cut drew just below the handover. The two differ
+  where the way back from a big allele to the backbone runs through part of a
   small allele in one fold and not the other. In the track's config,
   `coarse: { uri: "hprc.fold10000", aboveBpPerPx: 1000 }` is that handover
 - The fold is [bandage-core](https://github.com/GMOD/bandage-core)'s

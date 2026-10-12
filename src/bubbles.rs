@@ -141,7 +141,7 @@ pub fn run(
         );
     }
 
-    // top-level bubbles do not overlap; a snarl VCF does not guarantee it
+    // top-level bubbles do not overlap; a snarl VCF may list overlapping records
     bubbles.sort_by(|a, b| {
         (a.chrom.as_bytes(), a.start, a.end).cmp(&(b.chrom.as_bytes(), b.start, b.end))
     });

@@ -83,8 +83,8 @@ its PanSN `sample#haplotype`, once each in byte order:
   vg chops nodes at 1,024 bp, so for its graphs that is the one chunk back
   described above; a graph with longer nodes needs more
 - A reader can list the haplotypes from the header without reading any rows. On
-  the chr22 graph under [Scale](#scale) the header is 465 lines and 9,778
-  bytes, which the file's first BGZF block holds
+  the chr22 graph under [Scale](#scale) the header is under 10 KB, which the
+  file's first BGZF block holds
 
 ## Pieces and ordering
 
@@ -93,12 +93,12 @@ its PanSN `sample#haplotype`, once each in byte order:
   what it read, such as a haplotype that leaves the reference inside a window
   and rejoins it in a chunk the read did not reach, reads on to that chunk, and
   knows a contig that ends from one that goes on
-- The rows do not depend on the order of the W lines, which `vg convert`
+- The rows are the same for any order of the W lines, which `vg convert`
   changes from run to run
 
 ## Scale
 
-The tool reads the GFA twice, so it takes a file, not stdin; gzip is fine. It
+The tool reads the GFA twice, so it takes a file path; gzip input works. It
 holds about 16 bytes per node, 24 more per node for each reference, and with
 `--sequences` the graph's bases. Pieces wait for an external sort in up to
 512 MB of memory and then in compressed runs in a temporary directory beside

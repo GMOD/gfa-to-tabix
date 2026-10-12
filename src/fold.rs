@@ -9,8 +9,8 @@
 // and from each big allele's two ends the shortest way back to the backbone.
 // Kept segments keep their ids, and a run of one allele's segments that no kept
 // link branches off merges into its first, so folding the result again at a
-// larger size comes close to folding the original at that size. Not exactly:
-// the way back from a big allele to the backbone can run through part of a
+// larger size comes close to folding the original at that size. The two differ
+// where the way back from a big allele to the backbone runs through part of a
 // small allele in one fold and not the other.
 
 use std::cmp::Reverse;
@@ -197,7 +197,7 @@ fn ends(
 }
 
 // The neighbour off one end of an allele nearest the backbone, ties to the
-// lower id so the choice does not depend on the order nodes arrived in
+// lower id so the choice is the same for any order nodes arrive in
 fn nearest_outside(
     i: usize,
     side: Side,

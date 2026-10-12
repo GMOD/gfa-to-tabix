@@ -5,8 +5,8 @@
 // A link between two backbone (rank 0) nodes that leaves a gap is a deletion.
 // A link from a backbone node to a rank > 0 one enters an allele; the walk goes
 // on bidirected until it arrives on a backbone node, which is the exit. It
-// tests the arrival, not a table of departures, because the file states only
-// one of an L-line's two equivalent directions.
+// tests the arrival, because the file states only one of an L-line's two
+// equivalent directions.
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -308,7 +308,7 @@ fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<Row> {
                 continue;
             }
             // at a branch, stay on the contig the allele came in on, so a
-            // nested bubble does not switch the walk onto another haplotype
+            // nested bubble leaves the walk on the same haplotype
             let held = pick.map(|p| &segments[p.0 as usize].chrom);
             if pick.is_none()
                 || (next_segment.chrom == segment.chrom && held != Some(&segment.chrom))

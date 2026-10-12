@@ -17,7 +17,7 @@ The tool walks every path of the reference assembly first, then every other
 path in file order, adding node lengths as it goes. A node takes the path name
 and position of the first path to reach it, at rank 0 on the reference and
 rank 1 elsewhere. The graph must be blunt (overlaps `*` or `0M`), because
-summing node lengths is only the path coordinate when nodes abut.
+summing node lengths gives the path coordinate only when nodes abut.
 
 A node that path reads reversed is turned to read forward there before anything
 is written: every link end on it takes the other strand. The index then reads
@@ -105,15 +105,15 @@ cannot be indexed.
 ## Wide intervals
 
 A Tabix query reads every row filed in the bins above the window, overlapping
-or not. A component with a wide interval costs every query inside its bin, and
-the cost grows with the component's node count.
+or not. A component with a wide interval adds its rows to every query inside its
+bin, and the added bytes grow with the component's node count.
 
 - **Measured:** `chr22.sv.gfa.gz` has 3 filed intervals over 1 Mb, each holding
   one row, and 51 over 128 kb, holding 763 rows. A 100 kb window fetches a
   median 6.9× the bytes of its overlapping node rows and 10.3× for links, mostly
   from the 16 kb bin floor
-- **Not measured:** genome-wide HPRC, and BGZF block bytes (the figures above
-  count uncompressed rows)
+- **Scope:** the figures cover chr22 and count uncompressed rows, so genome-wide
+  HPRC and BGZF block bytes are unmeasured
 - **Cause:** `widen` in `src/anchor.rs` keeps one minimum and maximum per
   reference sequence, so a component attached at 1 Mb and 40 Mb files as 1-40 Mb.
   A reference node's links share the interval of its deletion link
