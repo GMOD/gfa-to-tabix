@@ -1,27 +1,58 @@
-# Handoff: a smaller walk format
+# Handoff: walk format 2
 
-Status on 2026-10-12: measured and reviewed, nothing implemented.
+Status on 2026-10-12: `--walks` writes format 2, which
+[docs/walks-format.md](../walks-format.md) describes. The plugin does not read
+it yet.
 
-- **Problem:** a walk set's bytes per window grow linearly with the cohort,
-  because Tabix indexes the reference axis and every haplotype's rows sit under
-  each chunk. The plugin downloads every haplotype and drops the unselected ones
-  after the fetch. Genome-wide, the two references' sets total 18 GB, against
-  10 GB for HPRC's `gbz.db` with sequences
-- **Format 2, the routes layout:** store each distinct off-reference traversal
-  once per chunk (routes) and each haplotype's sequence of route ids (choices),
-  and drop the links file. A chr22 window drops to about 0.16 of today's bytes,
-  and walks rebuild exactly
-- **One break:** the cheap fix (no links file, slim nodes, 0.49 of today) is a
-  subset of format 2, so its changes become format 2's first commits and no
-  release ships the cheap fix as a format
-- **Why now:** at 464 haplotypes drawing takes longer than the download (the
-  plugin's `GRAPH_TRACK.md` has the timings). The case for format 2 is hosting,
-  cohorts past a few thousand haplotypes, and changing the format before others
-  build walk sets
-- **Not worth building yet:** an index on the haplotype axis, in Tabix or a
-  custom container, and a binary encoding. Revisit past about 2,000 haplotypes
+- **Problem:** a format-1 walk set's bytes per window grow linearly with the
+  cohort, because Tabix indexes the reference axis and every haplotype's rows
+  sit under each chunk. The plugin downloads every haplotype and drops the
+  unselected ones after the fetch. Genome-wide, the two references' sets total
+  18 GB, against 10 GB for HPRC's `gbz.db` with sequences
+- **Format 2:** one file per reference. A chunk holds the reference's path
+  through it once, each distinct route a haplotype takes off that path once,
+  the lengths of the nodes those routes visit, and each path piece as the list
+  of routes it takes
+- **Measured on chr22:** the two files total 71 MB against format 1's 408 MB,
+  and a two-chunk read fetches 0.14 of format 1's at the median on both
+  references. Every piece checked rebuilds step for step
+- **Next:** the plugin's format-2 reader, then walk rows drawn from the
+  choices, then rebuilding the hosted files
+- **Not worth building yet:** an index on the haplotype axis, a custom
+  container and a binary encoding. Revisit when the choices in a two-chunk read
+  pass about 2 MB
 
-## How the numbers were made
+## Format 2 as built
+
+HPRC v2.1 chr22, `--walks --refs GRCh38,CHM13`, written to
+`~/work/scratch/walks-20261008/f2/` and compared with the Oct 8 format-1 build.
+`scripts/window_sizes.py` gzips each chunk's rows on their own and sums a chunk
+and the one before it; `scripts/check_format2.py` decodes format-2 rows without
+the encoder and compares every piece with format 1.
+
+| measure                                     | GRCh38                | CHM13                  |
+| ------------------------------------------- | --------------------- | ---------------------- |
+| file                                        | 32.1 MB               | 39.0 MB                |
+| per-chunk gzip total, format 1 → 2          | 201.3 → 30.8 MB       | 194.3 → 37.4 MB        |
+| two-chunk read over format 1: median, p99   | 0.136, 0.237          | 0.137, 0.168           |
+| two-chunk read over format 1: max           | 0.41                  | 0.53                   |
+| two-chunk read: median, p99, max            | 0.05, 0.53, 6.79 MB   | 0.06, 0.58, 10.19 MB   |
+| reads over the 8 MB budget, format 1 → 2    | 5 → 0                 | 3 → 2                  |
+| parity, every 7th chunk                     | 112 chunks, 99 M steps | 114 chunks, 82 M steps |
+
+- The build takes 2 min 22 s and peaks at 1.8 GB on 16 cores, where format 1
+  took 2 min 20 s and 1.4 GB. Encoding chunks in parallel raised the peak from
+  0.8 GB, since satellite chunks decode side by side
+- No chr22 walk row needs step counts. `tests/data/walks-loop.gfa`, whose
+  reference passes two nodes twice, has two that do, and
+  `tests/walks.rs` rebuilds every fixture path from its rows
+- Route rows are the largest part. Writing each route's node lengths on its
+  row cost 9 MB of GRCh38's 43, because nested variation repeats nodes across
+  routes; one `nodes` row per chunk replaced them
+- The two CHM13 reads over the budget sit in the satellite at 0.26 and
+  0.39 Mb, where routes are 61-82% singletons
+
+## How the investigation's numbers were made
 
 - Data: the Oct 8 chr22 walk build, HPRC v2.1 Minigraph-Cactus, 463 haplotypes,
   at `~/work/scratch/walks-20261008/settle/s0/chr22.{walks,nodes,links}.bed.gz`.
@@ -45,7 +76,7 @@ Status on 2026-10-12: measured and reviewed, nothing implemented.
   its walk steps imply
 - Run each with `python3 -I`; each needs `tabix` on PATH
 
-## Results
+## Investigation results
 
 Whole of chr22, GRCh38 chunks, gzip -6:
 
@@ -117,86 +148,99 @@ changes their size and growth little:
 - The contig name and fragStart are the same in every chunk a path crosses.
   Moving both to a path table saves 54% of those columns, 21% of choices
 
-## Decisions so far
+## Decisions
 
-- Keep BGZF text with Tabix or CSI indexes; build no custom container and no
-  binary encoding yet. After format 2 a median two-chunk read is about 0.1 MB
-- Store every haplotype's choices for a chunk together. Splitting them into
+- Format 2 replaces format 1 in one break, with no intermediate format. A
+  reader tells them apart by `format:i:2` on the walk file's first header line
+- One file per reference, `<prefix>.<sample>.walks.bed.gz`, so `walksUri`
+  configs keep their names. A window reads one index and one range, and the
+  index is the larger part of a cold load: the hosted GRCh38 format-1 set's
+  three indexes are 2.1 MB
+- Keep one choice row per haplotype per chunk, as
+  [Sharing across haplotypes](#sharing-across-haplotypes) measures, and store
+  every haplotype's choices for a chunk together. Splitting them into
   64-haplotype groups returns 84% of the choices for 8 selected haplotypes,
   and at 10,000 haplotypes the group index reaches 238 MB genome-wide, which
   `@gmod/tabix` loads whole
-- Keep one choice row per haplotype per chunk, as
-  [Sharing across haplotypes](#sharing-across-haplotypes) measures
-- Ship the routes layout as format 2 in one break. A separate cheap-fix format
-  would give the plugin a third format to read and need another genome-wide
-  rebuild, 44 minutes for 18 GB, for a saving format 2 includes
+- The encoder decodes every walk row it writes and writes step counts where the
+  default rule would misread one, so an exact rebuild does not depend on the
+  graph
+- Node lengths appear once per chunk. Positions of nodes off the reference are
+  not stored: a reader takes them from the walks it decodes
+- No path table: it would take a window from about 0.17 to 0.16 of format 1
+  for an extra read per sequence. `--settle` and `--cap` are gone; with
+  `--settle 0` no path was left out and 41 windows matched gbz-base against 39
+- Keep BGZF text and TBI. Write CSI only once a reference sequence passes
+  512 Mb, because the plugin takes the index type from its config
 
 ## Next steps, in order
 
-### 1. Links from steps, in the plugin
+### 1. The plugin's format-2 reader
 
-- Build links in `WalkGraph` (`src/RgfaTabixAdapter/walkRows.ts:422`) from
-  consecutive decoded steps and stop reading the links file. The change works
-  on today's files and cuts about a third of each window's bytes, and format 2
-  needs it. `WalkTabixSyntenyAdapter` already reads with `links: false`, and
-  every chunk checked held no link its walks don't imply. The links file's
-  extras are the link from the previous piece, filed under both chunks; the
-  `pv` tag locates that piece
-- `WalkGraph.tables` keeps every link from the file whose two nodes the kept
-  walks visit, including links that only unselected haplotypes take. Links from
-  the kept walks' steps leave those out, so compare the drawn graph for 8
-  haplotypes before and after
+- `WalkReader` reads the walk file's header, and on format 2 reads that file
+  alone: the byte budget and `PanSNRefNames` use its index, and the node and
+  link files are never opened
+- Per chunk: R from the `ref` rows with each node's position, the routes, and
+  the walk rows that `keep` accepts, decoded into the step arrays `joinPieces`
+  takes
+- Links: consecutive handles of R and of each route (entry, interior, exit),
+  and the joint between consecutive pieces of every path read. Built from
+  every path, links match format 1's among kept nodes (0.00-0.01% lost, Fable
+  review); built from the selected walks alone, 2-13% of drawn edges go
+- A node off the reference takes its position from the path whose name sorts
+  first among the chunk's walk rows that visit it, at its earliest offset, as
+  the converter placed it in format 1
+- Regenerate the `test_data` walk fixtures in format 2 from the W lines their
+  tests list, and keep the format-1 reader until the hosted sets are rebuilt
+- Stop rules: on the 150-window harness the tables equal format 1's except
+  positions of nodes whose first-named path is filed in another chunk; an
+  8-haplotype cut is no slower than format 1's 0.09-0.28 s
 
-### 2. Format 2: the routes layout
+### 2. Walk rows from the choices
 
-Files and versioning:
+- A walk row's runs on and off the reference come from its choices: a stretch
+  along R spans the R positions between routes, and a route spans its nodes'
+  lengths. No steps are decoded and no node rows read
+- Merge identical local haplotypes before drawing, as GBZ-base does
+- Stop rule: every haplotype over a 3 Mb window at chr22:20 Mb drawn in under
+  3 s warm; otherwise keep it as an optimization and stop
 
-- Open every output file with a header such as
-  `#gfa-to-tabix format:i:2 kind:Z:routes chunk:i:65536`, and have `--walks`
-  write a manifest. A reader tells old sets from new by this header
-- Write CSI instead of TBI, which lifts the 512 Mb limit. The plugin's adapter
-  reads CSI with `csi: true`
-- Decide between one file per reference and two. Route and reference rows can
-  list their nodes' lengths, which leaves a node file nothing to hold, and a
-  window then reads one index and one range. Node rows need no placement
-  columns, because a reader can compute a node's position from any decoded walk
-  that visits it and that walk's hapOffset, and `launchFromGraph/contributors.ts`
-  reads the result from `node.stable`. That walk can differ from the
-  first-named path the converter picks today
+### 3. Rebuild and rehost
 
-Rows:
+- Build the genome-wide sets, upload them, and update the hosted configs and
+  the jbrowse.org tutorials; release gfa-to-tabix and the plugin together.
+  Each step changes public files, so it waits for the owner
 
-- **Routes** row: chunk, route id, entry and exit reference handle, carrier
-  count, optional per-group counts, delta-encoded steps. A route's row number
-  is its id, and a reader can count a route's uses in the choices, so write
-  either column only if a reader needs it before decoding the choices
-- **Choices** row: chunk, path id, hapOffset, piece, first and last reference
-  handle, then per choice: route id delta and flip, and the implied reference
-  step count only where the reference visits a node twice; `pv` and `nx` as
-  today. Implied counts written everywhere were 28% of the choices measured
-  above
-- **Path table:** each path id with its `sample#haplotype#contig` and
-  fragStart, filed under each reference sequence so a reader fetches it once
-  per sequence. chr22's graph has 1,131 paths
-- **Decoder rules**, checked on every chr22 walk row:
-  - the current reference handle's orientation gives the direction of travel
-  - a route lands on the occurrence of its exit node nearest the current
-    position
-  - each row stores its first and last reference handle
-  - steps before the first or after the last reference step are open routes,
-    and an open route at a row's end still records its exit, which the builder
-    knows
-- **Untested rule:** chr22 never runs the nearest-occurrence rule, since
-  GRCh38's path visits no node twice within a chunk there. Check the rules on a
-  graph whose reference does, such as a pggb build, before fixing them
-- **Builder:** deduplicate routes per chunk through the existing external
-  `Sorter` (`src/sorter.rs`) and assign ids in the merge. A table per chunk kept
-  in memory while paths stream would hold every chunk until the end
-- **Parity test:** every window's rebuilt walks equal the walk file's, step for
-  step, on chr22 and on a graph whose reference revisits nodes
-- Write the format up in `docs/format.md`
+### 4. Benchmarks against GBZ-base
 
-### 3. Correctness in the other subcommands
+- Query 1,000 random intervals at each length from 100 bp to 1 Mbp on both
+  references with a cold cache, locally and over HTTP, and record wall time
+  and peak memory against `chr22.gbz.db`, as the GBZ-base paper does (Fig. 3,
+  Supp. 7). Format 2 reads a whole chunk even for 100 bp
+
+### 5. Later, on evidence
+
+- A per-bin summary file (sites, non-reference haplotype fraction, largest
+  allele delta, inversions) for the planned chromosome overview, drawn as a
+  wiggle; a chromosome's routes are too much to read whole
+- The container question when choices in a two-chunk read pass about 2 MB: a
+  bigBed-style single file whose directory a reader fetches by range, so k
+  haplotypes cost routes plus k small choice blocks. A binary encoding,
+  column-wise compression (16-30% in GAF-base) and GBWT-style choices belong to
+  the same decision
+- The graph's identity in the header, `NM:Z:` with its pggname, as GBZ-base
+  records it
+- HPRC release 2's whole-genome pggb graph, whose references revisit nodes, for
+  parity and route bytes
+- Tiers and nested routes:
+  - A tier made by dropping routes under N bp removes 70-80% of routes and uses
+    at 100 bp in typical chunks, but misses the heavy bytes: at 11.80, 18.22,
+    18.68 and 38.08 Mb, 90-100% of route bytes sit in long routes at sites with
+    10 or more routes
+  - Edits against a site consensus cut tokens to 23-26% at 18.15 and 18.68 Mb
+    but only to 58-69% at 38.08 and 18.22 Mb
+
+### Correctness in the other subcommands
 
 Format 2 needs none of these, so they can land at any time.
 
@@ -206,51 +250,24 @@ Format 2 needs none of these, so they can land at any time.
   `:start-end` only, while `src/walks.rs` also reads `[start]` and `#start`
 - Decide rGFA or plain once, from the full parse: `build` samples the first
   100,000 S lines, while placement checks every one
-- Write CSI for the segs, links and other outputs too
 - Add tests that query an index larger than one BGZF block
-
-### 4. Tiers and repeat regions
-
-Format 2 leaves these out; its format header leaves room for them.
-
-- A tier made by dropping routes under N bp removes 70-80% of routes and uses
-  at 100 bp in typical chunks, but misses the heavy bytes: at 11.80, 18.22,
-  18.68 and 38.08 Mb, 90-100% of route bytes sit in long routes at sites with
-  10 or more routes. Their nested variation stays at every tier
-- Prototype routes as edits against a site consensus, or as nested sites, and
-  measure at 18.22 and 38.08 Mb before promising tiers. Edits against a
-  consensus cut tokens to 23-26% at 18.15 and 18.68 Mb but only to 58-69% at
-  38.08 and 18.22 Mb
-- Routes shrink the 11.8-12.0 Mb satellite by 2.4×, so some windows there stay
-  over the plugin's 8 MB byte budget. The plugin can draw those windows from
-  the per-bin summary below
-- A per-bin summary file (sites, non-reference haplotype fraction, largest
-  allele delta, inversions) gives the plugin its planned chromosome overview,
-  drawn as a wiggle
-
-### 5. Revisit the container
-
-Past about 2,000 haplotypes, reconsider a bigBed-style single file whose
-directory a reader fetches by range, so k haplotypes cost routes plus k small
-choice blocks. A binary encoding and GBWT-style choices belong to the same
-decision.
-
-## Stop rules for step 2
-
-- Window bytes (routes + choices + nodes) at most 25% of today at the median
-  chunk and at most 60% at p99
-- Exact rebuild on every window of the parity test
-- Otherwise ship the cheap fix as format 2 and keep the walk rows
 
 ## Against GBZ
 
-- `chr22.gbz.db` is 196 MB, with sequences and both references. Today's walk set
-  is 407 MB without sequences; the routes layout would be about 90 MB
-- gbz-base takes 18-43 round trips per window; a walk set takes 3 plus its
-  indexes
+- The GBZ-base paper (Sirén and Paten, bioRxiv 2026.07.10.737775 v2) reports
+  10.7 GiB for GBZ-base, 5.7 GiB for GBZ and 3.35 GiB for an experimental GBZ
+  v3 on the HPRC v2.1 CHM13 graph, with sequences. Format 2's two genome-wide
+  files would be about 3 GB without sequences, so size is close to even
+- Format 2 reads one range per window, where gbz-base takes 18-43 round trips,
+  and gives every haplotype's coordinates through `hapOffset`; GBZ-base finds
+  coordinates only for haplotypes it indexes, at tens of MB each
+- A haplotype that leaves the reference before a window and rejoins it after
+  has no row in the window's chunks, in format 1 and format 2 alike. GBZ-base
+  fails the other way: its snarl extension turned one 100 kbp query into
+  10 Mbp, 75 s and 9 GiB
 - Choices still grow almost linearly, about 20 GB genome-wide at 10,000
-  haplotypes, so the routes layout wins on requests and static hosting, not on
-  growth. The plugin's `agent-docs/reference/GBZ.md` argues the same about any
+  haplotypes, so format 2 wins on requests and static hosting, not on growth.
+  The plugin's `agent-docs/reference/GBZ.md` argues the same about any
   per-haplotype store
 
 ## Other findings from the same review
