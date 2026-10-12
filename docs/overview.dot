@@ -5,71 +5,72 @@ digraph overview {
   rankdir=TB
   newrank=true
   compound=true
-  nodesep=0.45
-  ranksep=0.7
-  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded", fillcolor="#e8eef7", color="#4a6fa5", margin="0.15,0.08"]
-  edge [fontname="Helvetica", fontsize=11, color="#555555"]
+  nodesep=0.4
+  ranksep=0.55
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded", fillcolor="#e8eef7", color="#4a6fa5", margin="0.15,0.06"]
+  edge [fontname="Helvetica", fontsize=11, color="#555555", arrowsize=0.8]
 
   subgraph cluster_graph {
     label=<<B>1. The graph (GFA)</B>   reference chr1 in blue, an alternate allele in orange>
     labeljust=l
-    fontname="Helvetica"
     fontsize=14
     color="#bbbbbb"
     style="rounded,filled"
     fillcolor="#fafafa"
-    margin=16
-    s1 [label="s1\nchr1:0-10"]
-    s2 [label="s2\nchr1:10-20"]
-    s3 [label="s3\nchr1:20-30"]
-    s4 [label="s4\nchr1:30-40"]
-    s5 [label="s5\noff chr1, rank 1", fillcolor="#fde6cf", color="#c77a2b"]
+    margin=14
+    s1 [label=<<B>s1</B><BR/><FONT POINT-SIZE="10">chr1:0-10</FONT>>]
+    s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>]
+    s3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
+    s4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>]
+    s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25, rank 1</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
     {rank=same; s1; s2; s3; s4}
     s1 -> s2 -> s3 -> s4 [weight=20]
-    s2 -> s5 [color="#c77a2b"]
-    s5 -> s4 [color="#c77a2b", constraint=false]
+    s3 -> s5 [style=invis, weight=20]
+    s2 -> s5 [color="#c77a2b", weight=0]
+    s5 -> s4 [color="#c77a2b", weight=0]
   }
 
   subgraph cluster_files {
-    label=<<B>2. The index (hprc.segs.bed.gz)</B>   one row per node, filed under a reference interval>
+    label=<<B>2. The index (hprc.segs.bed.gz)</B>   one row per node, sorted by the interval it is filed under>
     labeljust=l
-    fontname="Helvetica"
     fontsize=14
     color="#bbbbbb"
     style="rounded,filled"
     fillcolor="#fafafa"
-    margin=16
+    margin=14
     rows [shape=plaintext, style="", label=<
-      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5" COLOR="#999999">
-        <TR BGCOLOR="#dddddd"><TD>anchor</TD><TD>start</TD><TD>end</TD><TD>node</TD><TD>rank</TD></TR>
-        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>s1</TD><TD>0</TD></TR>
-        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>s2</TD><TD>0</TD></TR>
-        <TR BGCOLOR="#fde6cf"><TD>chr1</TD><TD><B>10</B></TD><TD><B>40</B></TD><TD>s5</TD><TD>1</TD></TR>
-        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>s3</TD><TD>0</TD></TR>
-        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>s4</TD><TD>0</TD></TR>
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
+        <TR><TD COLSPAN="3" BORDER="0"><I>filed under</I></TD><TD COLSPAN="2" BORDER="0"></TD><TD COLSPAN="3" BORDER="0"><I>own coordinate</I></TD></TR>
+        <TR BGCOLOR="#dddddd"><TD>anchorSeq</TD><TD>start</TD><TD>end</TD><TD>node</TD><TD>rank</TD><TD>sequence</TD><TD>start</TD><TD>end</TD></TR>
+        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>s1</TD><TD>0</TD><TD>chr1</TD><TD>0</TD><TD>10</TD></TR>
+        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>s2</TD><TD>0</TD><TD>chr1</TD><TD>10</TD><TD>20</TD></TR>
+        <TR BGCOLOR="#fde6cf"><TD>chr1</TD><TD><B>10</B></TD><TD><B>40</B></TD><TD>s5</TD><TD>1</TD><TD>HG002</TD><TD>10</TD><TD>25</TD></TR>
+        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>s3</TD><TD>0</TD><TD>chr1</TD><TD>20</TD><TD>30</TD></TR>
+        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>s4</TD><TD>0</TD><TD>chr1</TD><TD>30</TD><TD>40</TD></TR>
+        <TR><TD COLSPAN="8" BORDER="0" CELLPADDING="8"><FONT POINT-SIZE="11" COLOR="#a15f1c">s5 lies off chr1, so the tool files it under the<BR/>reference span it hangs from: s2 to s4, chr1:10-40.</FONT></TD></TR>
       </TABLE>>]
-    note [shape=plaintext, style="", fontsize=12, fontcolor="#a15f1c", label="A reference node keeps its own span.\nAn alternate allele lies off chr1, so its row\ntakes the span of the reference nodes it\nlinks to: 10-40, from s2 to s4."]
-    {rank=same; rows; note}
-    rows -> note [style=invis]
   }
 
   subgraph cluster_query {
-    label=<<B>3. A region query</B>   one tabix range request returns the rows that overlap>
+    label=<<B>3. A region query</B>   one tabix range request returns every row whose interval overlaps>
     labeljust=l
-    fontname="Helvetica"
     fontsize=14
     color="#bbbbbb"
     style="rounded,filled"
     fillcolor="#fafafa"
-    margin=16
-    q [label="chr1:22-28", fillcolor="#eeeeee", color="#888888"]
-    r3 [label="s3  (reference, 20-30)"]
-    r5 [label="s5  (alternate, 10-40)", fillcolor="#fde6cf", color="#c77a2b"]
-    {rank=same; r3; r5}
-    q -> r3
-    q -> r5
+    margin=14
+    hits [shape=plaintext, style="", label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="1" CELLPADDING="0">
+        <TR><TD></TD><TD WIDTH="34" ALIGN="LEFT"><FONT POINT-SIZE="10" COLOR="#777777">0</FONT></TD><TD WIDTH="34"></TD><TD WIDTH="34" ALIGN="LEFT"><FONT POINT-SIZE="10" COLOR="#777777">10</FONT></TD><TD WIDTH="34"></TD><TD WIDTH="34" ALIGN="LEFT"><FONT POINT-SIZE="10" COLOR="#777777">20</FONT></TD><TD WIDTH="34"></TD><TD WIDTH="34" ALIGN="LEFT"><FONT POINT-SIZE="10" COLOR="#777777">30</FONT></TD><TD WIDTH="34"></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="10" COLOR="#777777">40</FONT></TD></TR>
+        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>chr1:25-30</B>  </TD><TD COLSPAN="5"></TD><TD BGCOLOR="#555555"></TD><TD COLSPAN="2"></TD><TD ALIGN="LEFT">  query</TD></TR>
+        <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s1</FONT>  </TD><TD COLSPAN="2" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="3"></TD><TD BGCOLOR="#fff3b0"></TD><TD COLSPAN="2"></TD><TD></TD></TR>
+        <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s2</FONT>  </TD><TD COLSPAN="2"></TD><TD COLSPAN="2" BGCOLOR="#e4e4e4"></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD COLSPAN="2"></TD><TD></TD></TR>
+        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD COLSPAN="2"></TD><TD COLSPAN="3" BGCOLOR="#f3c08f"></TD><TD BGCOLOR="#c77a2b"></TD><TD COLSPAN="2" BGCOLOR="#f3c08f"></TD><TD ALIGN="LEFT">  returned</TD></TR>
+        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD COLSPAN="4"></TD><TD BGCOLOR="#a9bfe2"></TD><TD BGCOLOR="#4a6fa5"></TD><TD COLSPAN="2"></TD><TD ALIGN="LEFT">  returned</TD></TR>
+        <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s4</FONT>  </TD><TD COLSPAN="5"></TD><TD BGCOLOR="#fff3b0"></TD><TD COLSPAN="2" BGCOLOR="#e4e4e4"></TD><TD></TD></TR>
+      </TABLE>>]
   }
 
   s5 -> rows [ltail=cluster_graph, lhead=cluster_files, label="  gfa-to-tabix files\n  each node by coordinate", penwidth=2]
-  rows -> q [ltail=cluster_files, lhead=cluster_query, label="  a browser asks\n  for a region", penwidth=2]
+  rows -> hits [ltail=cluster_files, lhead=cluster_query, label="  a browser asks\n  for a region", penwidth=2]
 }
