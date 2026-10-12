@@ -23,6 +23,17 @@ pub struct Piece {
     pub handles: Vec<u32>,
 }
 
+// A piece as the streaming pass holds it, borrowed from its path
+pub struct PieceRef<'a> {
+    pub reference: bool,
+    pub name: &'a [u8],
+    pub frag: u64,
+    pub offset: u64,
+    pub piece: u32,
+    pub tags: &'a [u8],
+    pub handles: &'a [u32],
+}
+
 fn push_varint(out: &mut Vec<u8>, mut n: u64) {
     while n >= 0x80 {
         out.push(n as u8 | 0x80);
@@ -57,16 +68,16 @@ impl Piece {
     // The sort key's text: reference pieces sort first in a chunk, then by
     // name, fragStart and offset, which are big-endian so bytes sort as
     // numbers. Handles follow as zigzag varint deltas.
-    pub fn write(
-        out: &mut Vec<u8>,
-        reference: bool,
-        name: &[u8],
-        frag: u64,
-        offset: u64,
-        piece: u32,
-        tags: &[u8],
-        handles: &[u32],
-    ) {
+    pub fn write(out: &mut Vec<u8>, piece: &PieceRef) {
+        let PieceRef {
+            reference,
+            name,
+            frag,
+            offset,
+            piece,
+            tags,
+            handles,
+        } = *piece;
         out.push(u8::from(!reference));
         out.extend_from_slice(name);
         out.push(0);
@@ -209,9 +220,17 @@ struct Route {
 impl Route {
     fn flipped(&self) -> Route {
         Route {
-            entry: if self.exit == NONE { NONE } else { self.exit ^ 1 },
+            entry: if self.exit == NONE {
+                NONE
+            } else {
+                self.exit ^ 1
+            },
             interior: self.interior.iter().rev().map(|h| h ^ 1).collect(),
-            exit: if self.entry == NONE { NONE } else { self.entry ^ 1 },
+            exit: if self.entry == NONE {
+                NONE
+            } else {
+                self.entry ^ 1
+            },
         }
     }
 
@@ -487,7 +506,9 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     let mut order: Vec<usize> = (0..routes.list.len()).collect();
     order.sort_by(|&a, &b| {
         let (a, b) = (&routes.list[a], &routes.list[b]);
-        anchor(a).cmp(&anchor(b)).then_with(|| a.sort_key().cmp(&b.sort_key()))
+        anchor(a)
+            .cmp(&anchor(b))
+            .then_with(|| a.sort_key().cmp(&b.sort_key()))
     });
     let mut id = vec![0usize; order.len()];
     for (rank, &route) in order.iter().enumerate() {
@@ -522,7 +543,9 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         line.push(b'\t');
         push_list(
             &mut line,
-            p.handles.iter().map(|&h| i64::from(lengths[(h >> 1) as usize])),
+            p.handles
+                .iter()
+                .map(|&h| i64::from(lengths[(h >> 1) as usize])),
         );
         line.extend_from_slice(&p.tags);
         with_bases(&mut line, &p.handles);
@@ -552,7 +575,9 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         line.push(b'\t');
         push_list(
             &mut line,
-            interior.iter().map(|&h| i64::from(lengths[(h >> 1) as usize])),
+            interior
+                .iter()
+                .map(|&h| i64::from(lengths[(h >> 1) as usize])),
         );
         with_bases(&mut line, &interior);
         line.push(b'\n');

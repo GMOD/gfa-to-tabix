@@ -192,7 +192,14 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
             previous += (d - flip) / 2;
             let route = &routes[previous as usize];
             let count: Option<usize> = parts.next().map(|n| n.parse().unwrap());
-            choices.push((if flip == 1 { flipped(route) } else { route.clone() }, count));
+            choices.push((
+                if flip == 1 {
+                    flipped(route)
+                } else {
+                    route.clone()
+                },
+                count,
+            ));
         }
     }
     let mut steps = Vec::new();
@@ -204,14 +211,19 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
     let mut h = start;
     let mut i = path.occurrences(h).next().unwrap();
     steps.push(h);
-    let mut follow = |steps: &mut Vec<u32>, h: &mut u32, i: &mut usize, target: u32, count: Option<usize>| {
-        let mut taken = 0;
-        while if counted { taken < count.unwrap() } else { *h != target } {
-            (*i, *h) = path.step(*i, *h);
-            steps.push(*h);
-            taken += 1;
-        }
-    };
+    let follow =
+        |steps: &mut Vec<u32>, h: &mut u32, i: &mut usize, target: u32, count: Option<usize>| {
+            let mut taken = 0;
+            while if counted {
+                taken < count.unwrap()
+            } else {
+                *h != target
+            } {
+                (*i, *h) = path.step(*i, *h);
+                steps.push(*h);
+                taken += 1;
+            }
+        };
     for ((entry, interior, exit), count) in rest {
         let entry = entry.expect("an open route after the first choice");
         follow(&mut steps, &mut h, &mut i, entry, *count);
@@ -296,7 +308,10 @@ fn gfa_paths(gfa: &str) -> HashMap<String, Vec<u32>> {
                 handles.push(2 * walk[at + 1..end].parse::<u32>().unwrap() + reverse);
                 at = end;
             }
-            (format!("{}#{}#{}@{}", cols[1], cols[2], cols[3], cols[4]), handles)
+            (
+                format!("{}#{}#{}@{}", cols[1], cols[2], cols[3], cols[4]),
+                handles,
+            )
         })
         .collect()
 }
@@ -453,7 +468,10 @@ fn a_walk_the_default_rule_would_misread_states_its_step_counts() {
         tsv(&["R#0#chr 0 1 walk B#1#b 0 0 0 4 2 6 6"])
     );
     let stderr = String::from_utf8_lossy(&built.output.stderr);
-    assert!(stderr.contains("6 walk rows, 2 with step counts"), "{stderr}");
+    assert!(
+        stderr.contains("6 walk rows, 2 with step counts"),
+        "{stderr}"
+    );
 }
 
 #[test]

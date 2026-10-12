@@ -9,8 +9,8 @@ mod json;
 mod parallel_bgzf;
 mod paths;
 mod place;
-mod sorter;
 mod routes;
+mod sorter;
 mod walks;
 
 use std::env;

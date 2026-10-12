@@ -18,7 +18,7 @@ use std::time::Instant;
 
 use crate::bed;
 use crate::gfa::is_blunt;
-use crate::routes::{self, Piece};
+use crate::routes::{self, Piece, PieceRef};
 use crate::sorter::Sorter;
 
 pub struct Options {
@@ -809,19 +809,25 @@ impl Builder {
                 }
             };
             tags.clear();
-            neighbour(&mut tags, b"pv", k.checked_sub(1).and_then(|j| pieces.get(j)));
+            neighbour(
+                &mut tags,
+                b"pv",
+                k.checked_sub(1).and_then(|j| pieces.get(j)),
+            );
             neighbour(&mut tags, b"nx", pieces.get(k + 1));
             let before = &self.before;
             self.rows.push(chunk, |out| {
                 Piece::write(
                     out,
-                    reference,
-                    &path.name,
-                    path.start,
-                    path.start + before[a],
-                    k as u32,
-                    &tags,
-                    &handles[a..b],
+                    &PieceRef {
+                        reference,
+                        name: &path.name,
+                        frag: path.start,
+                        offset: path.start + before[a],
+                        piece: k as u32,
+                        tags: &tags,
+                        handles: &handles[a..b],
+                    },
                 )
             })?;
         }
@@ -958,11 +964,17 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let pieces: Vec<Piece> = raw.iter().map(|r| Piece::read(r)).collect();
         let (mut lines, mut ends) = (Vec::new(), Vec::new());
         let mut counts = routes::Counts::default();
-        routes::write_chunk(&pieces, &graph.lengths, sequence, &mut counts, &mut |rest| {
-            lines.extend_from_slice(rest);
-            ends.push(lines.len());
-            Ok(())
-        })?;
+        routes::write_chunk(
+            &pieces,
+            &graph.lengths,
+            sequence,
+            &mut counts,
+            &mut |rest| {
+                lines.extend_from_slice(rest);
+                ends.push(lines.len());
+                Ok(())
+            },
+        )?;
         Ok((lines, ends, counts))
     };
     let mut line = Vec::new();
@@ -1021,7 +1033,11 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             }
             batch.push((chunk, Vec::new()));
         }
-        batch.last_mut().expect("a chunk is open").1.push(rest.to_vec());
+        batch
+            .last_mut()
+            .expect("a chunk is open")
+            .1
+            .push(rest.to_vec());
         Ok(())
     })?;
     write_batch(&mut batch)?;
