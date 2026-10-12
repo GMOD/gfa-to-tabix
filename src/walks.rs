@@ -10,6 +10,8 @@ use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
+use std::sync::Mutex;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc::{Receiver, sync_channel};
 use std::thread;
 use std::time::Instant;
@@ -950,43 +952,80 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     }
     let sequence_of = |id: usize| graph.sequence(id);
     let sequence = options.sequences.then_some(&sequence_of);
-    let mut held: Vec<Piece> = Vec::new();
-    let mut held_chunk = NONE;
+    // Chunks encode in parallel, a batch at a time, and are written in order.
+    type Encoded = Result<(Vec<u8>, Vec<usize>, routes::Counts), String>;
+    let encode = |raw: &[Vec<u8>]| -> Encoded {
+        let pieces: Vec<Piece> = raw.iter().map(|r| Piece::read(r)).collect();
+        let (mut lines, mut ends) = (Vec::new(), Vec::new());
+        let mut counts = routes::Counts::default();
+        routes::write_chunk(&pieces, &graph.lengths, sequence, &mut counts, &mut |rest| {
+            lines.extend_from_slice(rest);
+            ends.push(lines.len());
+            Ok(())
+        })?;
+        Ok((lines, ends, counts))
+    };
     let mut line = Vec::new();
-    let mut flush = |chunk: u32, pieces: &mut Vec<Piece>| -> Result<(), String> {
-        if pieces.is_empty() {
-            return Ok(());
+    let mut write_batch = |batch: &mut Vec<(u32, Vec<Vec<u8>>)>| -> Result<(), String> {
+        let next = AtomicUsize::new(0);
+        let encoded: Vec<Mutex<Option<Encoded>>> = batch.iter().map(|_| Mutex::new(None)).collect();
+        thread::scope(|scope| {
+            for _ in 0..threads.min(batch.len()) {
+                scope.spawn(|| {
+                    loop {
+                        let k = next.fetch_add(1, Ordering::Relaxed);
+                        let Some((_, raw)) = batch.get(k) else {
+                            break;
+                        };
+                        *encoded[k].lock().unwrap() = Some(encode(raw));
+                    }
+                });
+            }
+        });
+        for ((chunk, _), slot) in batch.iter().zip(encoded) {
+            let (name, start) = chunks.starts[*chunk as usize];
+            let name_text = &names.names[name as usize];
+            let (lines, ends, chunk_counts) = slot
+                .into_inner()
+                .unwrap()
+                .expect("every chunk of the batch is encoded")
+                .map_err(|e| format!("{}:{start}: {e}", text(name_text)))?;
+            let (writer, _, rows, counts) = &mut writers[chunks.owner[name as usize] as usize];
+            counts.routes += chunk_counts.routes;
+            counts.walks += chunk_counts.walks;
+            counts.counted += chunk_counts.counted;
+            let mut from = 0;
+            for end in ends {
+                line.clear();
+                line.extend_from_slice(name_text);
+                line.push(b'\t');
+                push_u64(&mut line, start);
+                line.push(b'\t');
+                push_u64(&mut line, start + 1);
+                line.push(b'\t');
+                line.extend_from_slice(&lines[from..end]);
+                writer.push(name_text, start, start + 1, &line)?;
+                *rows += 1;
+                from = end;
+            }
         }
-        let (name, start) = chunks.starts[chunk as usize];
-        let (writer, _, rows, counts) = &mut writers[chunks.owner[name as usize] as usize];
-        let name = &names.names[name as usize];
-        let end = start + 1;
-        routes::write_chunk(pieces, &graph.lengths, sequence, counts, &mut |rest| {
-            line.clear();
-            line.extend_from_slice(name);
-            line.push(b'\t');
-            push_u64(&mut line, start);
-            line.push(b'\t');
-            push_u64(&mut line, end);
-            line.push(b'\t');
-            line.extend_from_slice(rest);
-            *rows += 1;
-            writer.push(name, start, end, &line)
-        })
-        .map_err(|e| format!("{}:{start}: {e}", text(name)))?;
-        pieces.clear();
+        batch.clear();
         Ok(())
     };
+    let batch_size = 4 * threads;
+    let mut batch: Vec<(u32, Vec<Vec<u8>>)> = Vec::new();
     rows.merge(|chunk, rest| {
-        if chunk != held_chunk {
-            flush(held_chunk, &mut held)?;
-            held_chunk = chunk;
+        if batch.last().is_none_or(|(c, _)| *c != chunk) {
+            if batch.len() == batch_size {
+                write_batch(&mut batch)?;
+            }
+            batch.push((chunk, Vec::new()));
         }
-        held.push(Piece::read(rest));
+        batch.last_mut().expect("a chunk is open").1.push(rest.to_vec());
         Ok(())
     })?;
-    flush(held_chunk, &mut held)?;
-    drop(flush);
+    write_batch(&mut batch)?;
+    drop(write_batch);
     for (writer, path, rows, counts) in writers {
         writer.finish()?;
         eprintln!(

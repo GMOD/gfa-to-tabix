@@ -121,7 +121,7 @@ struct IdHasher(u64);
 
 impl Hasher for IdHasher {
     fn finish(&self) -> u64 {
-        self.0
+        self.0 ^ (self.0 >> 32)
     }
     fn write(&mut self, bytes: &[u8]) {
         for &b in bytes {
@@ -237,7 +237,7 @@ struct Walk {
 
 #[derive(Default)]
 struct Routes {
-    index: HashMap<Route, usize>,
+    index: HashMap<Route, usize, BuildHasherDefault<IdHasher>>,
     list: Vec<Route>,
     uses: Vec<u64>,
 }

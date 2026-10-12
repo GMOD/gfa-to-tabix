@@ -2,9 +2,9 @@
 
 `gfa-to-tabix` indexes a pangenome graph's GFA by genome coordinate. It writes
 the graph's nodes and links as two bgzip-compressed, Tabix-indexed BED files,
-and with [`--walks`](#walks) a third holding every haplotype's path, one set
-per reference, so a genome browser can fetch the part of the graph under a
-region with HTTP range requests. The [JBrowse 2](https://jbrowse.org) graph track reads these files.
+or with [`--walks`](#walks) one file per reference holding every haplotype's
+path, so a genome browser can fetch the part of the graph under a region with
+HTTP range requests. The [JBrowse 2](https://jbrowse.org) graph track reads these files.
 
 One binary does the whole conversion. It needs no gfatools, awk, bgzip or tabix.
 
@@ -207,98 +207,58 @@ vg convert -f chr22.gbz > chr22.gfa
 gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
 ```
 
-It writes three files and their indexes for each sample in `--refs`,
-`<prefix>.<sample>.<kind>.bed.gz`:
+The command writes one file and its index for each sample in `--refs`,
+`<prefix>.<sample>.walks.bed.gz`:
 
 ```
 chr22.GRCh38.walks.bed.gz  chr22.GRCh38.walks.bed.gz.tbi
-chr22.GRCh38.nodes.bed.gz  chr22.GRCh38.nodes.bed.gz.tbi
-chr22.GRCh38.links.bed.gz  chr22.GRCh38.links.bed.gz.tbi
 chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
-chr22.CHM13.nodes.bed.gz   chr22.CHM13.nodes.bed.gz.tbi
-chr22.CHM13.links.bed.gz   chr22.CHM13.links.bed.gz.tbi
 ```
 
-The tool cuts each path into pieces, one for each stretch the path spends in a
-64 kb chunk of a reference, and files each piece under its chunk. A region
-query on the walk file returns every path's steps through the region, and the
-same query on the node and link files returns the nodes and links those steps
-visit. A sample's three files hold only the rows filed under its own chunks,
-so a reader on GRCh38 downloads an index that covers GRCh38 alone.
+- The tool cuts each path into pieces, one for each stretch the path spends in
+  a 64 kb chunk of a reference, and files each piece under its chunk. A region
+  query returns every path's steps through the region
+- A chunk holds the reference's path through it once, each distinct route a
+  haplotype takes off that path once, and every other path's piece as the list
+  of routes it takes. A reader rebuilds every step exactly
+- A sample's file holds only the rows filed under its own chunks, so a reader
+  on GRCh38 downloads an index that covers GRCh38 alone
+- [docs/walks-format.md](docs/walks-format.md) describes the rows and how to
+  decode them
 
-A step on a reference node takes that node's chunk; a step on any other node
-takes the chunk of the last reference step before it. A query over a window
-therefore returns every path that visits a reference node in it. On the
-reference's own paths, a step takes the chunk of its own offset along the
-path, so where the reference passes a node more than once, as in a satellite
-array, each pass is filed where it lies. A node has one coordinate, from its
-first visit, so another haplotype that passes such a collapsed node again is
-filed under the reference's first copy. A piece of more than `--cap` steps
-continues in further rows. A path that visits no node of a reference has no
-rows under it, and the tool counts these on stderr.
+| Option            | Effect                                                                   |
+| ----------------- | ------------------------------------------------------------------------ |
+| `--refs <names>`  | Comma-separated PanSN samples, each with its own file. Required.         |
+| `--chunk <bp>`    | Chunk size. Default 65536.                                               |
+| `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
 
-| Option            | Effect                                                                |
-| ----------------- | --------------------------------------------------------------------- |
-| `--refs <names>`  | Comma-separated PanSN samples, each with its own files. Required.     |
-| `--chunk <bp>`    | Chunk size. Default 65536.                                            |
-| `--cap <steps>`   | Most steps in one row. Default 8192.                                  |
-| `--settle <bp>`   | Shortest run that moves a path to another chunk. Default 0, off.      |
-| `--sequences`     | Add each node's sequence to its rows.                                 |
+Where a step is filed:
 
-`--settle` keeps a run of reference steps in another chunk that spans fewer
-than the given bp, such as a pass over a collapsed repeat copy, in the piece it
-interrupts. A window over that run's own nodes then lacks those steps, and
-after a long stretch off the reference the run can be filed two or more chunks
-from its nodes, beyond the one chunk back a reader queries. On the chr22 graph
-under [Scale](#scale), 45 windows cut with every haplotype, as the JBrowse
-graph track cuts them, hold 18,267 cases of a path visiting a reference node in
-the window. With `--settle 32768` the cut left the path out in 60 of them and
-drew it without some of those nodes in 89, mostly at 18.74 Mb in the 22q11
-repeats; without it, the cut left none out. Against gbz-base with 8
-haplotypes, 41 of the windows matched without it and 39 with it. Without it, a
-path that passes over nodes placed on another repeat copy, as at 20.3 Mb, is
-drawn in more fragments. The files are 408 MB without it and 443 MB with
-it, and a window of 10 to 260 kb reads the same bytes within 3%.
+- A step on a reference node takes that node's chunk, and a step on any other
+  node takes the chunk of the last reference step before it. A query over a
+  window therefore returns every path that visits a reference node in it
+- On the reference's own paths, a step takes the chunk of its own offset, so
+  where the reference passes a node more than once, as in a satellite array,
+  each pass is filed where it lies
+- A node has one coordinate, from the first-named reference path's earliest
+  visit, so another haplotype that passes such a collapsed node again is filed
+  under the reference's first copy
+- A path that visits no node of a reference has no rows under it, and the tool
+  counts these on stderr
 
 Every row is filed under the first base of its chunk, `anchorSeq chunkStart
 chunkStart+1`. A row spanning the whole chunk would share a Tabix bin with the
 next chunk, and a query would read both. A reader fetching a window therefore
 queries from the start of the chunk before the window.
 
-```
-walks:  anchorSeq cs cs+1  path fragStart hapOffset piece nsteps steps  [pv:i:cs] [nx:i:cs]
-nodes:  anchorSeq cs cs+1  nodeId rank sequence start end  LN:i:length  [SQ:Z:bases]
-links:  anchorSeq cs cs+1  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtStart tgtEnd tgtRank
-```
-
-`path` is `sample#haplotype#contig`. `fragStart` is where the W line starts on
-that contig, or the start in a P line's name (`[start]`, `#start` or
-`:start-end`), and `hapOffset` is where the piece starts. `piece` numbers the
-pieces along the path for one reference, so a reader joins consecutive pieces
-back into one walk. `steps` lists the piece's steps as integers: the first is
-`2 × id + r`, with `r` 1 for a step on the reverse strand, and each one after
-is `2 × (id − previous id) + r`. Every row starts from an absolute id, so a row
-decodes on its own.
-
-`pv` and `nx` give the start of the chunk the path's previous and next piece is
-filed under, as `pv:Z:seq:start` when that chunk is on another reference
-sequence, and a row at either end of its path has no tag there. A reader that
-cuts a path off at the edge of what it read, such as a haplotype that leaves the
-reference inside a window and rejoins it in a chunk the read did not reach,
-reads on to that chunk, and knows a contig that ends from one that goes on. The
-tags add 0.8% to the chr22 walk file under [Scale](#scale).
-
-Each file opens with header lines, which start with `#`: `tabix -H` prints them
-and region queries skip them. The first is `#walks` (`#nodes` and `#links` in
-the other two files, which have only this line) and three tab-separated
-fields: `chunk:i:` the chunk size, `maxnode:i:` the longest node in bp, and
-`cap:i:` the most steps in one row, as `--cap` set it. The walk file then
-names its reference sample and each other haplotype with rows in the file, the
-other `--refs` samples included, as its PanSN `sample#haplotype` (a path name
-up to its second `#`), once each in byte order:
+The file opens with header lines, which start with `#`: `tabix -H` prints them
+and region queries skip them. The first gives the format, the chunk size and
+the longest node in bp. The next names the reference sample, and the rest each
+other haplotype with rows in the file, the other `--refs` samples included, as
+its PanSN `sample#haplotype`, once each in byte order:
 
 ```
-#walks	chunk:i:65536	maxnode:i:1024	cap:i:8192
+#walks	format:i:2	chunk:i:65536	maxnode:i:1024
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
@@ -307,7 +267,7 @@ up to its second `#`), once each in byte order:
 ```
 
 A node that overlaps a window starts at most `maxnode` bp before it, so the
-chunk holding its row is at most that far back: a reader queries from
+chunk holding its rows is at most that far back: a reader queries from
 `max(chunk, maxnode)` bp before the window, rounded down to a chunk start. vg
 chops nodes at 1,024 bp, so for its graphs that is the one chunk back described
 above; a graph with longer nodes needs more.
@@ -316,20 +276,24 @@ A reader can list the haplotypes from the header without reading any rows. On
 the chr22 graph under [Scale](#scale) the header is 465 lines and 9,778 bytes,
 which the file's first BGZF block holds.
 
-A reference node is placed on its reference at rank 0. Any other node takes
-its position from the path whose name sorts first in byte order among the
-paths that visit it, at that path's earliest visit, and has rank 1. The rows
-therefore do not depend on the order of the W lines, which `vg convert`
-changes from run to run. The node file holds every node a piece under the
-chunk visits; the link file holds every link between consecutive steps of
-those pieces, and the link from the previous piece, which is filed under both
-chunks.
+Each row of a piece names the chunks its path's previous and next pieces are
+filed under, as `pv` and `nx`. A reader that cuts a path off at the edge of what
+it read, such as a haplotype that leaves the reference inside a window and
+rejoins it in a chunk the read did not reach, reads on to that chunk, and knows
+a contig that ends from one that goes on.
+
+The rows do not depend on the order of the W lines, which `vg convert` changes
+from run to run.
 
 The tool reads the GFA twice, so it takes a file, not stdin; gzip is fine. It
-keeps 12 bytes per node and 4 per link, 16 bytes per node and 4 per link for
-each reference, and with `--sequences` the graph's bases. Rows wait for an
-external sort in up to 2 GB of memory and then in compressed runs in a
-temporary directory beside the output.
+holds about 16 bytes per node, 24 more per node for each reference, and with
+`--sequences` the graph's bases. Pieces wait for an external sort in up to
+512 MB of memory and then in compressed runs in a temporary directory beside
+the output. The sort's merge encodes the chunks on every core.
+
+Files from gfa-to-tabix 0.12 and earlier are format 1: three files per
+reference, the walks with every step, the nodes they visit and the links
+between them.
 
 ## Reading the files in JBrowse
 
@@ -398,12 +362,17 @@ each, because a Tabix index spends 8 bytes per 16 kb of every contig.
 A base-level graph of a human chromosome has millions of nodes and one path
 step per node per haplotype; expect memory to grow with the total path length.
 
-`--walks` holds only per-node and per-link arrays, and streams the paths. On a
+`--walks` holds only per-node arrays, and streams the paths. On a
 Minigraph-Cactus chr22 (3.1 M nodes, 4.7 M links, 1,131 paths, 630 M steps,
-a 5.0 GB GFA) with `--refs GRCh38,CHM13`, it runs in about 2 min from the
-gzipped GFA and peaks at 1.4 GB on a 16-core laptop. The files, three for each
-reference, total 408 MB. GRCh38's three indexes total 31 KB, where one set
-covering both references took 56 KB.
+a 5.0 GB GFA) with `--refs GRCh38,CHM13`:
+
+- It runs in about 2.5 min from the gzipped GFA and peaks at 1.8 GB on a
+  16-core laptop
+- The two files total 71 MB, where format 1's six took 408 MB. GRCh38's index
+  is 10 KB
+- A read of two chunks, which every window makes, fetches 0.05 MB at the
+  median and 0.5 MB at the 99th percentile, about 0.14 of format 1's
+  (`docs/format-2/scripts/window_sizes.py`)
 
 ## Alleles
 
