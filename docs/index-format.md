@@ -102,6 +102,25 @@ graphs that size, use [`--walks`](walks.md).
 A Tabix index holds coordinates up to 512 Mb, so a longer reference sequence
 cannot be indexed.
 
+## Wide intervals
+
+A Tabix query reads every row filed in the bins above the window, overlapping
+or not. A component with a wide interval costs every query inside its bin, and
+the cost grows with the component's node count.
+
+- **Measured:** `chr22.sv.gfa.gz` has 3 filed intervals over 1 Mb, each holding
+  one row, and 51 over 128 kb, holding 763 rows. A 100 kb window fetches a
+  median 6.9× the bytes of its overlapping node rows and 10.3× for links, mostly
+  from the 16 kb bin floor
+- **Not measured:** genome-wide HPRC, and BGZF block bytes (the figures above
+  count uncompressed rows)
+- **Cause:** `widen` in `src/anchor.rs` keeps one minimum and maximum per
+  reference sequence, so a component attached at 1 Mb and 40 Mb files as 1-40 Mb.
+  A reference node's links share the interval of its deletion link
+- **Fix if the genome-wide tail is heavy:** file a component once per cluster of
+  attachments, split where the gap exceeds a threshold, and file a deletion
+  link under its own span only
+
 ## Matching the JBrowse scripts
 
 The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`,
