@@ -18,7 +18,7 @@ path of the graph, cut into pieces filed under fixed chunks of that reference.
 - A step on a reference node takes the chunk holding that node's position. A
   step on any other node takes the chunk of the last reference step before it,
   or of the first one after it for steps that lead the path
-- On the reference's own paths, a step takes the chunk of its own offset, so
+- On the reference paths, a step takes the chunk that holds its offset, so
   where the reference passes a node twice each pass lies where it is
 - A piece is a run of a path's steps in one chunk. `piece` numbers the pieces
   along the path, so a reader joins consecutive pieces back into one walk
@@ -58,7 +58,7 @@ first token's previous id is 0 unless a row says otherwise. An empty list is
 seq cs cs+1 ref path fragStart hapOffset piece nsteps steps lengths [pv] [nx] [SQ:Z:bases]
 ```
 
-- One row per piece of the reference's own paths in the chunk, so usually one
+- One row per piece of the reference paths in the chunk, so usually one
 - `path` is `sample#haplotype#contig`. `fragStart` is where the W line starts on
   that contig, or the start in a P line's name (`[start]`, `#start` or
   `:start-end`). `hapOffset` is where the piece starts

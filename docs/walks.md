@@ -23,13 +23,13 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 - A chunk holds the reference's path through it once, each distinct route a
   haplotype takes off that path once, and every other path's piece as the list
   of routes it takes. A reader rebuilds every step exactly
-- A sample's file holds only the rows filed under its own chunks, so a reader
-  on GRCh38 downloads an index that covers GRCh38 alone
+- A sample's file holds only the rows filed under its chunks, so a reader on
+  GRCh38 downloads an index that covers GRCh38 alone
 - [walks-format.md](walks-format.md) describes the rows and how to decode them
 
 | Option            | Effect                                                                   |
 | ----------------- | ------------------------------------------------------------------------ |
-| `--refs <names>`  | Comma-separated PanSN samples, each with its own file. Required.         |
+| `--refs <names>`  | Comma-separated PanSN samples, one file per sample. Required.            |
 | `--chunk <bp>`    | Chunk size. Default 65536.                                               |
 | `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
 
@@ -38,7 +38,7 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 - A step on a reference node takes that node's chunk, and a step on any other
   node takes the chunk of the last reference step before it. A query over a
   window therefore returns every path that visits a reference node in it
-- On the reference's own paths, a step takes the chunk of its own offset, so
+- On the reference paths, a step takes the chunk that holds its offset, so
   where the reference passes a node more than once, as in a satellite array,
   each pass is filed where it lies
 - A node has one coordinate, from the first-named reference path's earliest
@@ -64,7 +64,7 @@ queries from the start of the chunk before the window.
 
 The file opens with header lines, which start with `#`: `tabix -H` prints them
 and region queries skip them. The first gives the format, the chunk size and
-the longest node in bp. The next names the reference sample, and the rest each
+the longest node in bp. The next is the reference sample, and the rest each
 other haplotype with rows in the file, the other `--refs` samples included, as
 its PanSN `sample#haplotype`, once each in byte order:
 
@@ -88,7 +88,7 @@ its PanSN `sample#haplotype`, once each in byte order:
 
 ## Pieces and ordering
 
-- Each row of a piece names the chunks its path's previous and next pieces are
+- Each row of a piece lists the chunks its path's previous and next pieces are
   filed under, as `pv` and `nx`. A reader that cuts a path off at the edge of
   what it read, such as a haplotype that leaves the reference inside a window
   and rejoins it in a chunk the read did not reach, reads on to that chunk, and

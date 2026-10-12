@@ -46,7 +46,7 @@ fn own_spans(nodes: &[Option<Node>]) -> (Vec<Option<Span>>, Vec<Vec<u8>>) {
     (own, sequences.names)
 }
 
-// Every node under its own coordinate.
+// Every node under its coordinate.
 pub fn by_contig(nodes: &[Option<Node>]) -> Spans {
     let (own, sequences) = own_spans(nodes);
     let nodes: Vec<Vec<Span>> = own
@@ -78,7 +78,7 @@ fn widen(spans: &mut Vec<Span>, span: Span) {
     }
 }
 
-// A reference node (rank 0) under its own coordinate. Every other node under
+// A reference node (rank 0) under its coordinate. Every other node under
 // the reference interval its bubble hangs from: the nodes joined to it without
 // passing through the reference form one component, and the component's
 // interval on a reference sequence runs from the first to the last reference
@@ -87,7 +87,7 @@ fn widen(spans: &mut Vec<Span>, span: Span) {
 //
 // A link is filed under the interval covering what both of its nodes reach. A
 // node in a component reaches the component's interval. A reference node
-// reaches its own coordinate, the components hanging from it and the reference
+// reaches its coordinate, the components hanging from it and the reference
 // nodes it links to. A region query on the link file then returns every link
 // with a node under the region, and every link between the nodes those lead
 // to, along with others the reader drops: it keeps a link when one of its

@@ -64,9 +64,9 @@ fn row(spans: &Spans, (sequence, start, end): Span, rest: &[u8]) -> Row {
     }
 }
 
-// One row per interval a node is filed under. By contig that is its own
+// One row per interval a node is filed under. By contig that is its
 // coordinate: `sequence start end id rank [carriers]`. Anchored, the interval
-// leads and the node's own coordinate follows the rank:
+// leads and the node's coordinate follows the rank:
 // `anchorSequence anchorStart anchorEnd id rank sequence start end [carriers]`.
 pub fn node_rows(graph: &Graph, nodes: &[Option<Node>], spans: &Spans, layout: Layout) -> Vec<Row> {
     let mut rows = Vec::new();

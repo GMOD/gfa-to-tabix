@@ -4,7 +4,7 @@
 // runs on each cut it draws, so a tier and a fine cut fold alike.
 //
 // An allele is a run of segments contiguous on one stable sequence at one rank.
-// One is big when its own length, or the reference between the backbone it
+// One is big when its length, or the reference between the backbone it
 // hangs from, reaches `below`. The fold keeps the backbone, every big allele,
 // and from each big allele's two ends the shortest way back to the backbone.
 // Kept segments keep their ids, and a run of one allele's segments that no kept

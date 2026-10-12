@@ -115,7 +115,7 @@ Whole of chr22, GRCh38 chunks, gzip -6:
 - The last row applies the saving measured under
   [Sharing across haplotypes](#sharing-across-haplotypes) to the whole
   chromosome
-- The routes rows leave out the reference's own path, which the decoder needs.
+- The routes rows leave out the reference path, which the decoder needs.
   It adds 0.3 MB
 - Per chunk, routes + choices over walks: median 0.36, p90 0.40, max 2.48;
   15 chunks exceed 0.5
@@ -319,9 +319,9 @@ Format 2 needs none of these, so they can land at any time.
 - Anchored segs/links rows can span megabases (chr9:43.4-61.7 Mb on the HPRC SV
   graph), and such wide rows push Tabix's bins back: a 10 kb query on chr1 reads
   about 130 KB for 10 link rows. Filing under one base, as walks do, fixes it
-- For a plain GFA the converter writes every carrier into the `SM:Z` column of
-  every node row and twice into every link row, and `src/place.rs:172` checks membership with a linear `contains`
-  per path step
+- For a plain GFA the converter writes every haplotype with the allele into the
+  `SM:Z` column of every node row and twice into every link row, and
+  `src/place.rs:172` checks membership with a linear `contains` per path step
 - `build` writes one coarse tier and walk sets get none
 - Docs across this README, the plugin and the jbrowse.org tutorials disagree on
   minimum versions, describe the fold tier as "one node per bubble" in six

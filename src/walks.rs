@@ -97,7 +97,7 @@ struct PathLine<'a> {
     walk: bool,
 }
 
-// `vg convert -W` names a path piece `sample#hap#contig[start]` or, for a
+// `vg convert -W` writes a path piece as `sample#hap#contig[start]` or, for a
 // haplotype, `sample#hap#contig#start`; `odgi extract` writes `name:start-end`.
 fn split_p_name(name: &[u8]) -> (&[u8], u64) {
     let number = |s: &[u8]| parse_u64(s, "").ok();
@@ -271,7 +271,7 @@ struct RefWalk {
     ids: Vec<u32>,
 }
 
-// Reads (and decompresses) the input on its own thread, so parsing never
+// Reads (and decompresses) the input on a separate thread, so parsing never
 // waits on inflate.
 struct Prefetched {
     chunks: Receiver<Result<Vec<u8>, String>>,
@@ -737,8 +737,8 @@ impl Builder {
     // Gives every step the chunk its piece is filed under: a reference step
     // its node's, any other step the last reference step's before it (the
     // first reference step's for those that lead). On one of the reference's
-    // own paths, `own` (its name id and start), a step takes the chunk of its
-    // own offset, so a later visit to a node is filed where the path is, not
+    // own paths, `own` (its name id and start), a step takes the chunk that
+    // holds its offset, so a later visit to a node is filed where the path is, not
     // at the node's first visit. False when the path visits no node of the
     // reference.
     fn assign_chunks(&mut self, r: usize, handles: &[u32], own: Option<(u32, u64)>) -> bool {

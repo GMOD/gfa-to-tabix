@@ -1,4 +1,4 @@
-// Format 2's rows for one chunk of a reference. The reference's own pieces in
+// Format 2's rows for one chunk of a reference. The reference's pieces in
 // the chunk become `ref` rows, and concatenated in offset order they are the
 // chunk's reference path R. Every other piece becomes a `walk` row that lists
 // the routes it takes off R: a route is an entry handle on R, the steps off R
@@ -478,7 +478,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     for piece in pieces.iter().filter(|p| !p.reference) {
         let Some(mut walk) = encode(&path, &piece.handles, &mut routes) else {
             return Err(format!(
-                "{}: a piece with no step on the reference's own path in its chunk",
+                "{}: a piece with no step on the reference path in its chunk",
                 String::from_utf8_lossy(&piece.name)
             ));
         };

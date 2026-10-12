@@ -165,7 +165,7 @@ pub fn run(prefix: &str, files: &[String]) -> Result<(), String> {
                     ("sub", "0,154,138", format!("{} sub", commify(path_len)))
                 };
             }
-            // `ref#hap#contig` -> `contig`, so the rows sit on the reference's own refNames
+            // `ref#hap#contig` -> `contig`, so the rows sit on the reference's refNames
             let chrom = match call
                 .chrom
                 .strip_prefix(strip.as_str())

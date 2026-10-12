@@ -50,7 +50,7 @@ options:
   --layout LAYOUT       anchored (default) files every node under the reference
                         interval its bubble hangs from, so one query per file
                         returns the whole graph under a region. contig files
-                        every node under its own coordinate, as 0.1.0 did
+                        every node under its coordinate, as 0.1.0 did
   -o, --out PREFIX      write PREFIX.segs.bed.gz and PREFIX.links.bed.gz, each
                         with a .tbi; default the input name without .gfa[.gz]
 
@@ -323,7 +323,7 @@ const BUBBLES_USAGE: &str =
 
 Write PREFIX.bubbles.bed.gz (+ .tbi) from a `vg deconstruct` snarl VCF (gz
 accepted; `pggb -V` writes one too), in the layout `gfatools bubble` writes for
-an rGFA. gfatools finds no bubbles on a plain GFA, and a snarl VCF carries each
+an rGFA. gfatools finds no bubbles on a plain GFA, and a snarl VCF has each
 bubble's reference span and alleles. Keeps the top-level snarls, none of which
 overlap.
 
@@ -338,9 +338,9 @@ const PATHS_USAGE: &str =
 Write PREFIX.bed.gz (+ .tbi) from the files `minigraph -cxasm --call graph.rgfa
 sample.fa` writes, one per sample and the reference's first: a row per bubble
 and sample, with the sample's path, its length change against the reference and
-how many samples carry each allele. Each file's name, without .call.bed, is its
-sample, and the reference's names the PanSN prefix the rows drop from their
-contigs. Every file must have the same lines, which minigraph writes.";
+how many samples have each allele. Each file's name, without .call.bed, is its
+sample, and the reference's sample name gives the PanSN prefix the rows drop
+from their contigs. Every file must have the same lines, which minigraph writes.";
 
 fn subcommand_fail(usage: &str, message: &str) -> ! {
     eprintln!("{usage}\ngfa-to-tabix: error: {message}");

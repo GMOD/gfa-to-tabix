@@ -26,7 +26,7 @@ gfa-to-tabix build ecoli.gfa.gz --reference K12 --snarls ecoli.snarls.vcf -o eco
 Each `.bed.gz` gets a `.tbi`.
 
 - `--tier N` folds under N bp: default 10000 for an rGFA, 50 for a plain GFA
-- `--assembly` names the JBrowse assembly the tracks sit on. Default the
+- `--assembly` sets the JBrowse assembly the tracks sit on. Default the
   graph's reference sample, else `reference`; the config maps it onto the
   sample with `assemblyNameToPanSN`
 - An S line with no `SN` tag among the first 100,000, `--reference` or
@@ -43,7 +43,7 @@ Each `.bed.gz` gets a `.tbi`.
   alleles and bubbles concurrently: 0.77 s against the script's 2.46 s on a
   59 MB chr22 SV rGFA
 
-The manifest, `<prefix>.graph.json`, names each file relative to itself, or
+The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 `null` for one not written, so it works wherever the set is hosted:
 
 ```json
@@ -59,7 +59,7 @@ The manifest, `<prefix>.graph.json`, names each file relative to itself, or
 ```
 
 - `reference`: the PanSN sample of the first reference segment (`GRCh38` from
-  `GRCh38#0#chr1`), `null` when the backbone names carry no sample
+  `GRCh38#0#chr1`), `null` when the backbone names have no sample
 - `index`, `contig`, `tier.prefix`: prefixes of `.segs.bed.gz` and
   `.links.bed.gz` pairs
 
@@ -125,7 +125,7 @@ gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
   replaces reaches `bp`, and the shortest way from each one's ends back to the
   backbone. The reference between kept alleles becomes one segment
 - `--layout` should match the fine index's, so a tier window returns what a fine
-  window does. `--reference` names a plain GFA's backbone path, as for the index
+  window does. `--reference` takes a plain GFA's backbone path, as for the index
 - The graph track folds each cut it draws the same way, at ten of the linear
   view's pixels, so a tier folded at N and handed over at N / 10 bp per pixel
   draws close to what the fine cut drew just below the handover. Not exactly:
@@ -154,8 +154,8 @@ done
 gfa-to-tabix paths -o graph.paths ref.call.bed s1.call.bed s2.call.bed
 ```
 
-- A file's name without `.call.bed` is its sample. The reference's names the
-  PanSN prefix (`ref#1#`) that the rows drop from their contigs
+- A file's name without `.call.bed` is its sample. The reference's sample name
+  gives the PanSN prefix (`ref#1#`) that the rows drop from their contigs
 - minigraph writes one line per bubble, in the same order for every sample; the
   command refuses files of different lengths
 - A bare `.` in a call line is no alignment over the bubble (`nocall`), not a

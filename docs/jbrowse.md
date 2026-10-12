@@ -2,7 +2,7 @@
 
 With the
 [graph genome viewer plugin](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer),
-a graph track names the node file, the link file and the index of each:
+a graph track lists the node file, the link file and the index of each:
 
 ```json
 {
@@ -46,7 +46,7 @@ prefix alone is enough:
 
 For files written with `--walks`, `walksUri` takes the prefix up to the
 reference sample, so a track on hg38 reads the GRCh38 file and a track on hs1
-would name the CHM13 one. `defaultHaplotypes` names the haplotypes the track
+would name the CHM13 one. `defaultHaplotypes` lists the haplotypes the track
 draws until the user picks others:
 
 ```json

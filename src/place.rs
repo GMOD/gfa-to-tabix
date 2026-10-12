@@ -45,7 +45,7 @@ fn sample(name: &[u8]) -> &[u8] {
     name.split(|&b| b == b'#').next().unwrap_or(name)
 }
 
-// PanSN names an assembly with its first two fields: HG002#1#chr1 -> HG002.1
+// PanSN identifies an assembly by its first two fields: HG002#1#chr1 -> HG002.1
 fn assembly(name: &[u8]) -> Vec<u8> {
     let fields: Vec<&[u8]> = name.split(|&b| b == b'#').collect();
     if fields.len() >= 3 {

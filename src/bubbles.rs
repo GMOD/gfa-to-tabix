@@ -3,12 +3,12 @@
 // that an rGFA gets from gfatools, which finds no bubbles on a plain GFA.
 // Ports jbrowse-components' snarls_to_bubble_bed.py.
 //
-// Each VCF record carries what a bubble needs: ID `>source>sink` names the
+// Each VCF record has what a bubble needs: ID `>source>sink` gives the
 // snarl's boundary segments, POS and REF its span on the reference, LV its
 // level in the snarl tree and AT one traversal per allele. Top level (LV=0) is
 // the cut gfatools makes by reporting top-level bubbles only.
 //
-// Columns are gfatools' own, and only the ones MinigraphBubbleAdapter reads are
+// Columns are those of gfatools, and only the ones MinigraphBubbleAdapter reads are
 // meaningful: chrom, start, end, segments, walks, inversion, shortest, longest,
 // three `.`, then the comma-separated segment ids.
 
@@ -59,7 +59,7 @@ fn info<'a>(field: &'a str, key: &str) -> Option<&'a str> {
     })
 }
 
-// `flipped` names the segments the graph's index turned to read forward, as
+// `flipped` lists the segments the graph's index turned to read forward, as
 // `place::flip` does; a step on one reads reversed when the VCF writes it `>`.
 pub fn run(
     vcf: &str,

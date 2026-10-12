@@ -78,7 +78,7 @@ a base-level graph.
 
 - [jbrowse-plugin-graphgenomeviewer](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer): the JBrowse 2 plugin that browses these graphs by locus
 - [@gmod/gbz-base](https://github.com/GMOD/gbz-base-js): range-request reader for `.gbz.db` databases
-- [gbz-haplotype-index](https://github.com/GMOD/gbz-haplotype-index): names every walk in a gbz-base cut
+- [gbz-haplotype-index](https://github.com/GMOD/gbz-haplotype-index): lists every walk in a gbz-base cut
 - [gfa-to-pairwise-paf](https://github.com/cmdcolin/gfa-to-pairwise-paf-rs): graph to PAF, for synteny views
 - [JBrowse pangenome tutorials](https://jbrowse.org/jb2/docs/tutorials/pangenome_prepare_graph/)
 

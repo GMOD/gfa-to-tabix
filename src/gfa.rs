@@ -71,7 +71,7 @@ pub fn is_blunt(overlap: &[u8]) -> bool {
     matches!(overlap, b"" | b"*" | b"0M")
 }
 
-// `odgi extract` names a path `K12#1#chr:1004500-1004961`; the suffix is the
+// `odgi extract` writes a path as `K12#1#chr:1004500-1004961`; the suffix is the
 // only record of where the extracted piece starts.
 fn split_range_suffix(name: &[u8]) -> (&[u8], u64) {
     if let Some(colon) = name.iter().rposition(|&b| b == b':') {
@@ -248,7 +248,7 @@ impl Graph {
         Ok(())
     }
 
-    // A graph is rGFA when every S line carries an SN tag.
+    // A graph is rGFA when every S line has an SN tag.
     pub fn is_rgfa(&self) -> bool {
         self.declared
             .iter()

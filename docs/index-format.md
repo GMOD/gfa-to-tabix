@@ -7,7 +7,7 @@ How `gfa-to-tabix` gives every node a coordinate, files it, and what the rows ho
 A GFA lists nodes (S lines) and links (L lines) in no positional order. The tool
 gives every node a coordinate one of two ways.
 
-**rGFA.** Every S line carries three tags: `SN`, the sequence the node lies on;
+**rGFA.** Every S line has three tags: `SN`, the sequence the node lies on;
 `SO`, its offset on that sequence; and `SR`, its rank, 0 for the reference and
 higher for a node another assembly contributed. The tool copies them out. It
 takes this route when every S line has an `SN` tag and no `--reference` is given.
@@ -30,7 +30,7 @@ A reference query has to return the alternate alleles at a locus, and their
 nodes do not lie on the reference. The tool files each row under an interval
 chosen so that they come back.
 
-**`anchored`** (default). A reference node, rank 0, is filed under its own
+**`anchored`** (default). A reference node, rank 0, is filed under its
 coordinate. Every other node is filed under the reference interval its bubble
 hangs from: the nodes joined to it without passing through the reference form
 one component, and the component's interval runs from the first to the last
@@ -39,7 +39,7 @@ under a region, however deeply alleles nest. A window inside a large bubble
 returns all of that bubble.
 
 A link is filed under the interval that covers what both of its nodes reach: a
-component's interval for a node in one, and for a reference node its own
+component's interval for a node in one, and for a reference node its
 coordinate, the components hanging from it and the reference nodes it links
 to. A region query on the link file therefore returns every link with a node
 under the region and every link between the nodes those lead to. It also
@@ -51,12 +51,12 @@ deletion that spans it, touches no node under the region. The query returns
 it all the same, and a reader that wants it drawn keeps it too.
 
 A component that links to two reference sequences gets a row under each. A
-component that links to none keeps its own coordinates.
+component that links to none keeps its coordinates.
 
 A zero-length node is filed under one base, since a region query skips a row
-whose interval is empty; its own coordinate in the later columns stays exact.
+whose interval is empty; its coordinate in the later columns stays exact.
 
-**`contig`**. Every node is filed under its own coordinate, as version 0.1.0
+**`contig`**. Every node is filed under its coordinate, as version 0.1.0
 did. A reader has to follow links from the reference onto other contigs, one
 round of queries per step, and the index covers every contig in the graph. Use
 it to browse the graph from a non-reference assembly's coordinates.
@@ -119,7 +119,7 @@ the cost grows with the component's node count.
   A reference node's links share the interval of its deletion link
 - **Fix if the genome-wide tail is heavy:** file a component once per cluster of
   attachments, split where the gap exceeds a threshold, and file a deletion
-  link under its own span only
+  link under its span only
 
 ## Matching the JBrowse scripts
 
