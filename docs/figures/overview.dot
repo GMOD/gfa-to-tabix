@@ -50,7 +50,9 @@ digraph overview {
         <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>s3</TD><TD>0</TD><TD>chr1</TD><TD>20</TD><TD>30</TD></TR>
         <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>s4</TD><TD>0</TD><TD>chr1</TD><TD>30</TD><TD>40</TD></TR>
         <!-- end segs -->
-        <TR><TD COLSPAN="8" BORDER="0" CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#a15f1c">s5 lies off chr1, so the tool files it under the reference span<BR/>it hangs from: s2 to s4, chr1:10-40.</FONT></TD></TR>
+        <!-- begin segs-caption -->
+        <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#a15f1c">s5 lies off chr1, so the tool files it under the reference span<BR/>it hangs from: s2 to s4, chr1:10-40.</FONT></TD></TR>
+        <!-- end segs-caption -->
       </TABLE></TD></TR>
       <TR><TD HEIGHT="18"></TD></TR>
       <TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
@@ -107,7 +109,9 @@ digraph overview {
         <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
         <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5→s4</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="6" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
         <!-- end lanes -->
-        <TR><TD COLSPAN="20" BORDER="0" CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The reader keeps a link when the node file returned one of its nodes, or when both<BR/>its nodes are far ends of links it kept. s1→s2 fails both tests, since no kept link ends at s1.</FONT></TD></TR>
+        <!-- begin keep-caption -->
+        <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The reader keeps a link when the node file returned one of its nodes, or when both its nodes<BR/>are far ends of links it kept. s1→s2 fails both tests, since no kept link ends at s1.</FONT></TD></TR>
+        <!-- end keep-caption -->
       </TABLE>>]
   }
 
@@ -119,18 +123,23 @@ digraph overview {
     style="rounded,filled"
     fillcolor="#fafafa"
     margin=14
-    d2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
-    d3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
-    d4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
-    d5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
-    {rank=same; d2; d3; d4}
-    d2 -> d3 -> d4 [weight=20]
-    d3 -> d5 [style=invis, weight=20]
-    d2 -> d5 [color="#c77a2b", weight=0]
-    d5 -> d4 [color="#c77a2b", weight=0]
+    // begin drawn
+    d_s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
+    d_s3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
+    d_s4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
+    d_s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
+    {rank=same; d_s2; d_s3; d_s4}
+    d_s2 -> d_s3 [weight=20]
+    d_s2 -> d_s5 [color="#c77a2b", weight=0]
+    d_s3 -> d_s4 [weight=20]
+    d_s5 -> d_s4 [color="#c77a2b", weight=0]
+    d_s3 -> d_s5 [style=invis, weight=20]
+    // end drawn
   }
 
   s5 -> rows [ltail=cluster_graph, lhead=cluster_files, label="  gfa-to-tabix graph.gfa", penwidth=2]
   rows -> hits [ltail=cluster_files, lhead=cluster_query, label="  a browser queries\n  chr1:25-30", penwidth=2]
-  hits -> d3 [ltail=cluster_query, lhead=cluster_drawn, label="  kept rows", penwidth=2]
+  // begin drawn-arrow
+  hits -> d_s3 [ltail=cluster_query, lhead=cluster_drawn, label="  kept rows", penwidth=2]
+  // end drawn-arrow
 }

@@ -11,6 +11,7 @@ import gzip
 import subprocess
 import sys
 import tempfile
+import textwrap
 from pathlib import Path
 
 FIGURES = Path(__file__).resolve().parent.parent / "docs" / "figures"
@@ -33,6 +34,11 @@ def read_rows(path):
         return [line.rstrip("\n").split("\t") for line in f if not line.startswith("#")]
 
 
+def read_header(path):
+    with gzip.open(path, "rt") as f:
+        return [line.rstrip("\n").split("\t") for line in f if line.startswith("#")]
+
+
 def td(text="", bg=None, bold=False, **attrs):
     attrs = "".join(f' {k.upper()}="{v}"' for k, v in attrs.items())
     if bg:
@@ -43,6 +49,32 @@ def td(text="", bg=None, bold=False, **attrs):
 def tr(cells, bg=None):
     attr = f' BGCOLOR="{bg}"' if bg else ""
     return f"<TR{attr}>{''.join(cells)}</TR>"
+
+
+def caption(cols, text, width, color="#555555"):
+    lines = "<BR/>".join(textwrap.wrap(text, width))
+    return tr([td(f'<FONT POINT-SIZE="12" COLOR="{color}">{lines}</FONT>', border=0, cellpadding=8, colspan=cols, align="LEFT", balign="LEFT")])
+
+
+def link_ends(row):
+    return tuple(
+        {"name": row[i][:-1], "seq": row[j], "start": row[j + 1], "end": row[j + 2], "rank": row[j + 3]}
+        for i, j in ((3, 5), (4, 9))
+    )
+
+
+def segs_caption(segs, links):
+    off = next(r for r in segs if r[4] != "0")
+    name, seq, start, end = off[3], off[0], off[1], off[2]
+    attached = []
+    for end_a, end_b in (link_ends(row) for row in links):
+        for this, other in ((end_a, end_b), (end_b, end_a)):
+            if this["name"] == name and other["rank"] == "0":
+                attached.append((int(other["start"]), other["name"]))
+    attached.sort()
+    first, last = attached[0][1], attached[-1][1]
+    text = f"{name} lies off {seq}, so the tool files it under the reference span it hangs from: {first} to {last}, {seq}:{start}-{end}."
+    return [caption(8, text, 64, "#a15f1c")]
 
 
 def segs_table(segs):
@@ -101,9 +133,6 @@ def lanes(segs, links):
     def heading(text):
         return f'<TR><TD COLSPAN="{cells + 4}" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>{text}</I></TD></TR>'
 
-    def overlaps(row):
-        return row[0] == seq and int(row[1]) < qend and int(row[2]) > qstart
-
     tick_cells = cell(TICK_BP)
     ticks = [
         f'<TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">{bp}</FONT></TD>'
@@ -116,27 +145,85 @@ def lanes(segs, links):
     ]
     rows += lane(f"{seq}:{qstart}-{qend}", qstart, qend, ("#555555", "#555555"), "query", True)
 
+    q = run_query(segs, links)
     rows.append(heading(f"{PREFIX}.segs.bed.gz"))
-    returned = set()
     for row in segs:
-        hit = overlaps(row)
+        hit = row[3] in q["returned"]
         colors = (ORANGE if row[4] != "0" else BLUE)[1:] if hit else GREY
         rows += lane(row[3], row[1], row[2], colors, "returned" if hit else "", hit)
-        if hit:
-            returned.add(row[3])
 
+    hits = q["hits"]
+    count = "all" if len(hits) == len(links) else f"{len(hits)} of"
+    rows.append(heading(f"{PREFIX}.links.bed.gz: {count} {len(links)} rows return"))
+    for i, row in enumerate(hits):
+        keep = i in q["kept"]
+        rows += lane(link_label(row), row[1], row[2], KEPT if keep else DROPPED, "kept" if keep else "dropped", keep)
+    return rows
+
+
+def overlaps(row):
+    seq, qstart, qend = QUERY
+    return row[0] == seq and int(row[1]) < qend and int(row[2]) > qstart
+
+
+def link_label(row):
+    return f"{row[3][:-1]}→{row[4][:-1]}"
+
+
+def run_query(segs, links):
+    returned = {r[3] for r in segs if overlaps(r)}
     hits = [r for r in links if overlaps(r)]
     ends = [(r[3][:-1], r[4][:-1]) for r in hits]
     kept = {i for i, (a, b) in enumerate(ends) if a in returned or b in returned}
     far = {n for i in kept for n in ends[i]} - returned
     kept |= {i for i, (a, b) in enumerate(ends) if a in far and b in far}
-    count = "all" if len(hits) == len(links) else f"{len(hits)} of"
-    rows.append(heading(f"{PREFIX}.links.bed.gz: {count} {len(links)} rows return"))
-    for i, row in enumerate(hits):
-        keep = i in kept
-        label = f"{ends[i][0]}→{ends[i][1]}"
-        rows += lane(label, row[1], row[2], KEPT if keep else DROPPED, "kept" if keep else "dropped", keep)
-    return rows
+    return {"returned": returned, "hits": hits, "ends": ends, "kept": kept, "far": far}
+
+
+def keep_caption(segs, links):
+    q = run_query(segs, links)
+    text = "The reader keeps a link when the node file returned one of its nodes, or when both its nodes are far ends of links it kept."
+    for i, row in enumerate(q["hits"]):
+        if i not in q["kept"]:
+            loose = next(n for n in q["ends"][i] if n not in q["returned"] | q["far"])
+            text += f" {link_label(row)} fails both tests, since no kept link ends at {loose}."
+    return [caption(20, text, 92)]
+
+
+def drawn(segs, links):
+    q = run_query(segs, links)
+    nodes = {}
+    for row in segs:
+        if row[3] in q["returned"]:
+            nodes[row[3]] = {"seq": row[5], "start": row[6], "end": row[7], "rank": row[4], "far": False}
+    for i in sorted(q["kept"]):
+        for end in link_ends(q["hits"][i]):
+            nodes.setdefault(end["name"], {**end, "far": True})
+
+    ref = sorted((n for n in nodes if nodes[n]["rank"] == "0"), key=lambda n: int(nodes[n]["start"]))
+    lines = []
+    for name in ref + [n for n in nodes if n not in ref]:
+        n = nodes[name]
+        attrs = [f'label=<<B>{name}</B><BR/><FONT POINT-SIZE="10">{n["seq"]}:{n["start"]}-{n["end"]}</FONT>>']
+        if n["far"]:
+            attrs += ['style="dashed,rounded,filled"', 'fillcolor="#f4f7fb"']
+        if n["rank"] != "0":
+            attrs += [f'fillcolor="{ORANGE[0]}"', f'color="{ORANGE[2]}"']
+        lines.append(f"d_{name} [{', '.join(attrs)}]")
+    lines.append(f"{{rank=same; {'; '.join(f'd_{n}' for n in ref)}}}")
+    for i in sorted(q["kept"]):
+        a, b = q["ends"][i]
+        if a in ref and b in ref:
+            lines.append(f"d_{a} -> d_{b} [weight=20]")
+        else:
+            lines.append(f'd_{a} -> d_{b} [color="{ORANGE[2]}", weight=0]')
+    for name in nodes:
+        if name not in ref:
+            linked = [ref.index(e) for i in q["kept"] for e in q["ends"][i] if name in q["ends"][i] and e in ref]
+            middle = ref[(min(linked) + max(linked)) // 2]
+            lines.append(f"d_{middle} -> d_{name} [style=invis, weight=20]")
+    arrow = f'hits -> d_{ref[len(ref) // 2]} [ltail=cluster_query, lhead=cluster_drawn, label="  kept rows", penwidth=2]'
+    return lines, [arrow]
 
 
 def tokens(column):
@@ -262,6 +349,21 @@ def walks(rows, w_lines):
     return table, rebuilt
 
 
+def walks_caption(header, rows):
+    chunk = int(next(f for f in header[0] if f.startswith("chunk:i:")).split(":")[2])
+    starts = {(r[0], r[1]) for r in rows}
+    if len(starts) != 1:
+        sys.exit("figures.py: the walks figure expects one chunk")
+    seq, start = starts.pop()
+    text = (
+        f"Every row starts {seq} {start} {int(start) + 1}, the chunk's first base, so a query returns whole "
+        f"{chunk // 1024} kb chunks. The file holds each distinct route once, and a walk row lists only the routes "
+        "its path takes. The bold tokens code R's steps as 2 × node id + strand and each walk's routes as "
+        "2 × route id + flip, both as deltas from the token before; docs/walks-format.md decodes them."
+    )
+    return [caption(3, text, 100)]
+
+
 def read_w_lines(gfa):
     paths = {}
     with open(gfa) as f:
@@ -273,15 +375,15 @@ def read_w_lines(gfa):
 
 
 def splice_regions(text, regions, name):
+    lines = text.split("\n")
     for region, rows in regions.items():
-        begin, end = f"<!-- begin {region} -->", f"<!-- end {region} -->"
-        head, found, rest = text.partition(begin)
-        if not found or end not in rest:
-            sys.exit(f"figures.py: {name} lacks the {region} markers")
-        indent = head[head.rfind("\n") + 1 :]
-        body = "".join(f"{indent}{row}\n" for row in rows)
-        text = f"{head}{begin}\n{body}{indent}{end}{rest.partition(end)[2]}"
-    return text
+        begin = [i for i, line in enumerate(lines) if line.strip().endswith(f"begin {region}") or f"begin {region} -->" in line]
+        end = [i for i, line in enumerate(lines) if line.strip().endswith(f"end {region}") or f"end {region} -->" in line]
+        if len(begin) != 1 or len(end) != 1 or end[0] < begin[0]:
+            sys.exit(f"figures.py: {name} needs one begin and one end marker for {region}")
+        indent = lines[begin[0]][: len(lines[begin[0]]) - len(lines[begin[0]].lstrip())]
+        lines[begin[0] + 1 : end[0]] = [f"{indent}{row}" for row in rows]
+    return "\n".join(lines)
 
 
 def generate(binary):
@@ -291,10 +393,21 @@ def generate(binary):
         subprocess.run([binary, FIGURES / "overview.gfa", "-o", out], **quiet)
         segs, links = read_rows(f"{out}.segs.bed.gz"), read_rows(f"{out}.links.bed.gz")
         subprocess.run([binary, FIGURES / "walks.gfa", "--walks", "--refs", "GRCh38", "-o", out], **quiet)
-        table, rebuilt = walks(read_rows(f"{out}.GRCh38.walks.bed.gz"), read_w_lines(FIGURES / "walks.gfa"))
+        walk_file = f"{out}.GRCh38.walks.bed.gz"
+        walk_rows, header = read_rows(walk_file), read_header(walk_file)
+    table, rebuilt = walks(walk_rows, read_w_lines(FIGURES / "walks.gfa"))
+    drawn_nodes, drawn_arrow = drawn(segs, links)
     return {
-        "overview": {"segs": segs_table(segs), "links": links_table(links), "lanes": lanes(segs, links)},
-        "walks": {"rows": table, "rebuilt": rebuilt},
+        "overview": {
+            "segs": segs_table(segs),
+            "segs-caption": segs_caption(segs, links),
+            "links": links_table(links),
+            "lanes": lanes(segs, links),
+            "keep-caption": keep_caption(segs, links),
+            "drawn": drawn_nodes,
+            "drawn-arrow": drawn_arrow,
+        },
+        "walks": {"rows": table, "caption": walks_caption(header, walk_rows), "rebuilt": rebuilt},
     }
 
 

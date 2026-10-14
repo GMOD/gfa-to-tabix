@@ -60,7 +60,9 @@ digraph walks {
         <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">HG002#1#chr1 0 0 0 4 2 6 <B>2</B></FONT></TD><TD ALIGN="LEFT">follows R from 1+ to 4+ by route 1</TD></TR>
         <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">HG002#2#chr1 0 0 0 4 2 6 <B>.</B></FONT></TD><TD ALIGN="LEFT">follows R from 1+ to 4+, no routes</TD></TR>
         <!-- end rows -->
-        <TR><TD COLSPAN="3" BORDER="0" CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Every row starts GRCh38#0#chr1 0 1, the chunk's first base, so a query returns whole 64 kb chunks.<BR/>The file holds each distinct route once, and a walk row lists only the routes its path takes.<BR/>The bold tokens code R's steps as 2 × node id + strand and each walk's routes as 2 × route id + flip,<BR/>both as deltas from the token before; docs/walks-format.md decodes them.</FONT></TD></TR>
+        <!-- begin caption -->
+        <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="3" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Every row starts GRCh38#0#chr1 0 1, the chunk's first base, so a query returns whole 64 kb chunks.<BR/>The file holds each distinct route once, and a walk row lists only the routes its path takes. The<BR/>bold tokens code R's steps as 2 × node id + strand and each walk's routes as 2 × route id + flip,<BR/>both as deltas from the token before; docs/walks-format.md decodes them.</FONT></TD></TR>
+        <!-- end caption -->
       </TABLE>>]
   }
 

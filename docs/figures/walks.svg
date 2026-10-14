@@ -188,8 +188,8 @@
 <polygon fill="none" stroke="#aaaaaa" points="382.04,-329.96 382.04,-354.21 649.38,-354.21 649.38,-329.96 382.04,-329.96"/>
 <text xml:space="preserve" text-anchor="start" x="387.04" y="-337.81" font-family="Helvetica,sans-Serif" font-size="12.00">follows R from 1+ to 4+, no routes</text>
 <text xml:space="preserve" text-anchor="start" x="40.62" y="-310.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">Every row starts GRCh38#0#chr1 0 1, the chunk&#39;s first base, so a query returns whole 64 kb chunks.</text>
-<text xml:space="preserve" text-anchor="start" x="40.62" y="-296.31" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">The file holds each distinct route once, and a walk row lists only the routes its path takes.</text>
-<text xml:space="preserve" text-anchor="start" x="40.62" y="-282.06" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">The bold tokens code R&#39;s steps as 2 × node id + strand and each walk&#39;s routes as 2 × route id + flip,</text>
+<text xml:space="preserve" text-anchor="start" x="40.62" y="-296.31" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">The file holds each distinct route once, and a walk row lists only the routes its path takes. The</text>
+<text xml:space="preserve" text-anchor="start" x="40.62" y="-282.06" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">bold tokens code R&#39;s steps as 2 × node id + strand and each walk&#39;s routes as 2 × route id + flip,</text>
 <text xml:space="preserve" text-anchor="start" x="40.62" y="-267.81" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">both as deltas from the token before; docs/walks&#45;format.md decodes them.</text>
 </g>
 <!-- paths&#45;&gt;rows -->
