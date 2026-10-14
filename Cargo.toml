@@ -12,6 +12,7 @@ categories = ["science", "command-line-utilities"]
 exclude = ["tests", ".github", "scripts", "docs"]
 
 [dependencies]
+clap = { version = "4.6.7", features = ["derive", "wrap_help"] }
 flate2 = { version = "1.1.10", default-features = false, features = ["zlib-rs"] }
 memchr = "2.8.3"
 noodles-bgzf = "0.52.0"

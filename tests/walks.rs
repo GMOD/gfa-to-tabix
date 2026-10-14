@@ -603,7 +603,7 @@ fn cap_and_settle_are_gone() {
         let built = build("walks-two-refs.gfa", &[flag, "5"]);
         assert_eq!(built.output.status.code(), Some(2), "{flag}");
         assert!(
-            String::from_utf8_lossy(&built.output.stderr).contains("unrecognized argument"),
+            String::from_utf8_lossy(&built.output.stderr).contains("unexpected argument"),
             "{flag}"
         );
     }

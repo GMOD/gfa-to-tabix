@@ -449,7 +449,11 @@ fn a_late_untagged_segment_makes_a_plain_gfa() {
     fs::write(&graph, gfa).unwrap();
     let output = build(
         &dir,
-        &[graph.to_str().unwrap(), "-o", dir.join("out").to_str().unwrap()],
+        &[
+            graph.to_str().unwrap(),
+            "-o",
+            dir.join("out").to_str().unwrap(),
+        ],
         None,
     );
     assert!(output.status.success(), "{output:?}");
@@ -469,12 +473,19 @@ fn a_partly_tagged_graph_with_no_paths_skips_gfatools() {
     .unwrap();
     let output = build(
         &dir,
-        &[graph.to_str().unwrap(), "-o", dir.join("out").to_str().unwrap()],
+        &[
+            graph.to_str().unwrap(),
+            "-o",
+            dir.join("out").to_str().unwrap(),
+        ],
         None,
     );
     assert!(output.status.success(), "{output:?}");
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("not every S line has an SN tag"), "{stderr}");
+    assert!(
+        stderr.contains("not every S line has an SN tag"),
+        "{stderr}"
+    );
     assert!(read(&dir.join("out.graph.json")).contains("\"bubbles\": null"));
     fs::remove_dir_all(&dir).unwrap();
 }

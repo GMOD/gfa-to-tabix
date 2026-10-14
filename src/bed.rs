@@ -17,7 +17,7 @@ use crate::gfa::Graph;
 use crate::parallel_bgzf;
 use crate::place::Node;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, clap::ValueEnum)]
 pub enum Layout {
     Anchored,
     Contig,

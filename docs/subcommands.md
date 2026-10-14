@@ -76,7 +76,7 @@ is not needed, so a hosted pair works.
 gfa-to-tabix hprc.sv.gfa.gz --layout contig -o hprc
 gfa-to-tabix alleles hprc
 ```
-
+- A link from a backbone node forward to a later one is a deletion. A link back to an earlier one is a duplication, which the inventory leaves out
 - A link from a backbone node forward to a later one is a deletion; a link back to an earlier one is not
 - A link from a backbone node to an off-backbone one enters an allele; the walk
   follows links until it arrives back on the backbone
