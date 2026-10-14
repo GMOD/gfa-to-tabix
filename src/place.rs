@@ -14,6 +14,7 @@ pub struct Placed {
     // segments the path that placed them reads reversed, which `flip` turns
     // to read forward there
     pub flipped: Vec<bool>,
+    pub from_tags: bool,
     pub summary: String,
     pub notes: Vec<String>,
 }
@@ -36,6 +37,7 @@ pub fn from_tags(graph: &Graph) -> Placed {
     Placed {
         nodes,
         flipped: vec![false; graph.node_ids.len()],
+        from_tags: true,
         summary: "rGFA: coordinates from SN/SO/SR tags".into(),
         notes: Vec::new(),
     }
@@ -198,6 +200,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
     Ok(Placed {
         nodes,
         flipped,
+        from_tags: false,
         summary: format!(
             "plain GFA: coordinates from paths, reference {} ({} of {} paths)",
             text(&reference_assembly),

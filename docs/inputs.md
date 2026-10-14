@@ -27,7 +27,8 @@ A base-level graph of a human chromosome has millions of nodes, and the node and
 
 ## How the tool tells them apart
 
-- Every S line among the first 100,000 has an `SN` tag, and no `--reference`: rGFA
+- Every S line has an `SN` tag, and no `--reference`: rGFA
+- Some S lines have `SN` tags and the graph has no P or W lines: rGFA, which leaves out the untagged segments
 - Anything else: plain GFA
 
 ## Errors

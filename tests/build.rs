@@ -428,6 +428,57 @@ fn a_plain_gfa_needs_no_gfatools() {
     fs::remove_dir_all(&dir).unwrap();
 }
 
+// The first untagged S line comes after 100,000 tagged ones, past where an
+// earlier version stopped looking and took the graph for an rGFA.
+#[test]
+fn a_late_untagged_segment_makes_a_plain_gfa() {
+    let dir = scratch();
+    fake_gfatools(&dir, "echo 'should not finish' >&2; exit 3");
+    let n = 100_001;
+    let mut gfa = String::new();
+    for i in 0..n {
+        gfa += &format!("S\ts{i}\tA");
+        if i < n - 1 {
+            gfa += &format!("\tSN:Z:chr\tSO:i:{i}\tSR:i:0");
+        }
+        gfa += "\n";
+    }
+    let steps: Vec<String> = (0..n).map(|i| format!("s{i}+")).collect();
+    gfa += &format!("P\tref\t{}\t*\n", steps.join(","));
+    let graph = dir.join("late.gfa");
+    fs::write(&graph, gfa).unwrap();
+    let output = build(
+        &dir,
+        &[graph.to_str().unwrap(), "-o", dir.join("out").to_str().unwrap()],
+        None,
+    );
+    assert!(output.status.success(), "{output:?}");
+    assert!(read(&dir.join("out.graph.json")).contains("\"prefix\": \"out.fold50\""));
+    fs::remove_dir_all(&dir).unwrap();
+}
+
+#[test]
+fn a_partly_tagged_graph_with_no_paths_skips_gfatools() {
+    let dir = scratch();
+    fake_gfatools(&dir, "echo 'should not finish' >&2; exit 3");
+    let graph = dir.join("partly.gfa");
+    fs::write(
+        &graph,
+        "S\ta\tAAAA\tSN:Z:chr\tSO:i:0\tSR:i:0\nS\tb\tCC\nL\ta\t+\tb\t+\t0M\n",
+    )
+    .unwrap();
+    let output = build(
+        &dir,
+        &[graph.to_str().unwrap(), "-o", dir.join("out").to_str().unwrap()],
+        None,
+    );
+    assert!(output.status.success(), "{output:?}");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("not every S line has an SN tag"), "{stderr}");
+    assert!(read(&dir.join("out.graph.json")).contains("\"bubbles\": null"));
+    fs::remove_dir_all(&dir).unwrap();
+}
+
 #[test]
 fn a_graph_and_an_output_prefix_are_required() {
     let output = Command::new(BINARY)

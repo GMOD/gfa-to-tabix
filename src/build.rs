@@ -4,7 +4,7 @@
 use std::collections::HashSet;
 use std::fs;
 use std::io::{self, BufReader, Read, Write};
-use std::process::{ChildStdin, Command, Output, Stdio};
+use std::process::{Child, ChildStdin, Command, Stdio};
 use std::thread::{self, JoinHandle};
 
 use crate::bed::{Layout, Row, Writer};
@@ -29,18 +29,15 @@ enum Route {
     Paths,
 }
 
-const SAMPLED_SEGMENTS: usize = 100_000;
 const SN_TAG: &[u8] = b"\tSN:Z:";
 
-// Passes the GFA through while it decides the route: an rGFA tags every
-// segment, and a Minigraph-Cactus base-level GFA tags only its reference
-// walk's, so one untagged S line among the first 100,000 means the path route.
-// Until it decides on the path route it copies the text to `tee`.
+// Copies the GFA to `tee` as it passes through, until an S line with no SN tag
+// shows the graph is no rGFA, which `gfatools bubble` needs. A
+// Minigraph-Cactus base-level GFA tags only its reference walk's segments.
 struct Sniffer<R> {
     inner: R,
     tee: Option<ChildStdin>,
-    route: Option<Route>,
-    segments: usize,
+    untagged: bool,
     line_start: bool,
     in_segment: bool,
     tagged: bool,
@@ -53,8 +50,7 @@ impl<R: Read> Sniffer<R> {
         Sniffer {
             inner,
             tee,
-            route: None,
-            segments: 0,
+            untagged: false,
             line_start: true,
             in_segment: false,
             tagged: false,
@@ -63,17 +59,14 @@ impl<R: Read> Sniffer<R> {
     }
 
     fn end_segment(&mut self) {
-        self.segments += 1;
         if !self.tagged {
-            self.route = Some(Route::Paths);
+            self.untagged = true;
             self.tee = None;
-        } else if self.segments >= SAMPLED_SEGMENTS {
-            self.route = Some(Route::Rgfa);
         }
     }
 
     fn scan(&mut self, mut bytes: &[u8]) {
-        while self.route.is_none() && !bytes.is_empty() {
+        while !self.untagged && !bytes.is_empty() {
             if self.line_start {
                 self.line_start = false;
                 self.in_segment = bytes[0] == b'S';
@@ -103,13 +96,14 @@ impl<R: Read> Sniffer<R> {
         }
     }
 
-    // Closes the tee, so its reader sees the end of the text.
-    fn finish(mut self) -> Option<Route> {
-        if self.route.is_none() && self.in_segment && !self.line_start {
+    // Closes the tee, so its reader sees the end of the text. True when every
+    // S line has an SN tag.
+    fn finish(mut self) -> bool {
+        if !self.untagged && self.in_segment && !self.line_start {
             self.end_segment();
         }
         self.tee = None;
-        self.route.or((self.segments > 0).then_some(Route::Rgfa))
+        !self.untagged
     }
 }
 
@@ -128,7 +122,24 @@ impl<R: Read> Read for Sniffer<R> {
 
 // `gfatools bubble -` reading the text the sniffer passes it. Its stderr is
 // shown only when it fails.
-struct Bubbler(JoinHandle<io::Result<Output>>);
+struct Bubbler {
+    child: Child,
+    stdout: JoinHandle<io::Result<Vec<u8>>>,
+    stderr: JoinHandle<io::Result<Vec<u8>>>,
+}
+
+fn read_all(mut pipe: impl Read + Send + 'static) -> JoinHandle<io::Result<Vec<u8>>> {
+    thread::spawn(move || {
+        let mut out = Vec::new();
+        pipe.read_to_end(&mut out).map(|_| out)
+    })
+}
+
+fn join<T>(handle: JoinHandle<T>) -> T {
+    handle
+        .join()
+        .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+}
 
 impl Bubbler {
     fn spawn() -> io::Result<(Bubbler, ChildStdin)> {
@@ -139,23 +150,35 @@ impl Bubbler {
             .stderr(Stdio::piped())
             .spawn()?;
         let stdin = child.stdin.take().expect("stdin is piped");
-        Ok((Bubbler(thread::spawn(|| child.wait_with_output())), stdin))
+        let stdout = read_all(child.stdout.take().expect("stdout is piped"));
+        let stderr = read_all(child.stderr.take().expect("stderr is piped"));
+        Ok((
+            Bubbler {
+                child,
+                stdout,
+                stderr,
+            },
+            stdin,
+        ))
     }
 
-    fn finish(self) -> Result<Vec<u8>, String> {
-        let output = self
-            .0
-            .join()
-            .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
-            .map_err(|e| format!("gfatools bubble: {e}"))?;
-        if !output.status.success() {
+    fn finish(mut self) -> Result<Vec<u8>, String> {
+        let fail = |e: io::Error| format!("gfatools bubble: {e}");
+        let status = self.child.wait().map_err(fail)?;
+        let stdout = join(self.stdout).map_err(fail)?;
+        let stderr = join(self.stderr).map_err(fail)?;
+        if !status.success() {
             return Err(format!(
-                "gfatools bubble failed ({}): {}",
-                output.status,
-                String::from_utf8_lossy(&output.stderr).trim()
+                "gfatools bubble failed ({status}): {}",
+                String::from_utf8_lossy(&stderr).trim()
             ));
         }
-        Ok(output.stdout)
+        Ok(stdout)
+    }
+
+    fn cancel(mut self) {
+        let _ = self.child.kill();
+        let _ = self.child.wait();
     }
 }
 
@@ -187,30 +210,23 @@ fn write_bubbles(text: &[u8], out: &str) -> Result<usize, String> {
     Ok(rows.len())
 }
 
+// `gfatools` is the bubbler, or the note that says why there is none.
 fn bubble_file(
     route: Route,
-    bubbler: Option<Bubbler>,
-    missing: Option<io::Error>,
+    gfatools: Result<Bubbler, String>,
     snarls: Option<&str>,
     flipped: &HashSet<&[u8]>,
     prefix: &str,
 ) -> Result<bool, String> {
     let path = format!("{prefix}.bubbles.bed.gz");
-    match (route, bubbler, snarls) {
-        (Route::Rgfa, Some(bubbler), _) => {
+    match (route, gfatools, snarls) {
+        (Route::Rgfa, Ok(bubbler), _) => {
             let count = write_bubbles(&bubbler.finish()?, &path)?;
             eprintln!("{count} bubbles from gfatools -> {path} (+ .tbi)");
             Ok(true)
         }
-        (Route::Rgfa, None, _) => {
-            let why = match missing {
-                Some(e) if e.kind() != io::ErrorKind::NotFound => format!("gfatools: {e}"),
-                _ => "gfatools is not on PATH".into(),
-            };
-            eprintln!(
-                "note: {why}, so no bubble file or bubble tracks for this graph. \
-                 Install it from https://github.com/lh3/gfatools"
-            );
+        (Route::Rgfa, Err(note), _) => {
+            eprintln!("note: {note}");
             Ok(false)
         }
         (Route::Paths, _, Some(snarls)) => bubbles::run(snarls, prefix, 2, flipped).map(|()| true),
@@ -383,19 +399,36 @@ fn write_json(path: &str, value: &Json) -> Result<(), String> {
 pub fn run(options: &Options) -> Result<(), String> {
     let prefix = options.prefix.as_str();
     let forced = options.reference.is_some() || options.snarls.is_some();
-    let (bubbler, tee, missing) = match (!forced).then(Bubbler::spawn) {
-        Some(Ok((bubbler, tee))) => (Some(bubbler), Some(tee), None),
-        Some(Err(e)) => (None, None, Some(e)),
-        None => (None, None, None),
+    let no_bubbles = "so no bubble file or bubble tracks for this graph";
+    let (bubbler, tee) = match (!forced).then(Bubbler::spawn) {
+        Some(Ok((bubbler, tee))) => (Ok(bubbler), Some(tee)),
+        spawned => {
+            let why = match spawned {
+                Some(Err(e)) if e.kind() != io::ErrorKind::NotFound => format!("gfatools: {e}"),
+                _ => "gfatools is not on PATH".into(),
+            };
+            let install = "Install it from https://github.com/lh3/gfatools";
+            (Err(format!("{why}, {no_bubbles}. {install}")), None)
+        }
     };
     let mut sniffer = Sniffer::new(crate::open_input(&options.graph)?, tee);
     let graph = Graph::read(BufReader::with_capacity(1 << 20, &mut sniffer))?;
-    let sniffed = sniffer.finish();
+    let tagged = sniffer.finish();
     let (graph, placed) = crate::place_graph(&options.graph, graph, options.reference.as_deref())?;
-    let route = if forced {
-        Route::Paths
+    let route = if placed.from_tags && options.snarls.is_none() {
+        Route::Rgfa
     } else {
-        sniffed.ok_or_else(|| format!("{}: no S lines", options.graph))?
+        Route::Paths
+    };
+    let gfatools = match bubbler {
+        Ok(bubbler) if route == Route::Rgfa && tagged => Ok(bubbler),
+        Ok(bubbler) => {
+            bubbler.cancel();
+            Err(format!(
+                "not every S line has an SN tag, which gfatools bubble needs, {no_bubbles}"
+            ))
+        }
+        Err(why) => Err(why),
     };
     let (name, default_tier) = match route {
         Route::Rgfa => ("rgfa", 10000),
@@ -414,8 +447,7 @@ pub fn run(options: &Options) -> Result<(), String> {
     let (graph, placed, snarls) = (&graph, &placed, options.snarls.as_deref());
     let flipped = &flipped;
     let (sample, bubbles) = thread::scope(|scope| {
-        let bubbles =
-            scope.spawn(move || bubble_file(route, bubbler, missing, snarls, flipped, prefix));
+        let bubbles = scope.spawn(move || bubble_file(route, gfatools, snarls, flipped, prefix));
         let fine = scope.spawn(|| {
             crate::write_index(graph, placed, Layout::Anchored, prefix)
                 .map(|(nodes, _)| reference_sample(&nodes))
@@ -482,7 +514,7 @@ mod tests {
         }
     }
 
-    fn sniff(text: &str) -> Option<Route> {
+    fn tagged(text: &str) -> bool {
         let mut sniffer = Sniffer::new(ByteAtATime(text.as_bytes()), None);
         io::copy(&mut sniffer, &mut io::sink()).unwrap();
         sniffer.finish()
@@ -490,15 +522,9 @@ mod tests {
 
     #[test]
     fn a_tag_split_across_reads_is_found() {
-        assert_eq!(
-            sniff("S\ts1\tACGT\tSN:Z:chr1\nS\ts2\tAC\tSN:Z:chr1"),
-            Some(Route::Rgfa)
-        );
-        assert_eq!(
-            sniff("S\ts1\tACGT\tSN:Z:chr1\nS\ts2\tAC\tLN:i:2\n"),
-            Some(Route::Paths)
-        );
-        assert_eq!(sniff("S\ts1\tSN:Z\tSN:Z:x\n"), Some(Route::Rgfa));
-        assert!(sniff("H\tVN:Z:1.0\nL\ta\t+\tb\t+\t*\n").is_none());
+        assert!(tagged("S\ts1\tACGT\tSN:Z:chr1\nS\ts2\tAC\tSN:Z:chr1"));
+        assert!(!tagged("S\ts1\tACGT\tSN:Z:chr1\nS\ts2\tAC\tLN:i:2\n"));
+        assert!(tagged("S\ts1\tSN:Z\tSN:Z:x\n"));
+        assert!(!tagged("S\ts1\tSN:Z\n"));
     }
 }

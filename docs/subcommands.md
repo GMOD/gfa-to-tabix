@@ -29,8 +29,9 @@ Each `.bed.gz` gets a `.tbi`.
 - `--assembly` sets the JBrowse assembly the tracks sit on. Default the
   graph's reference sample, else `reference`; the config maps it onto the
   sample with `assemblyNameToPanSN`
-- An S line with no `SN` tag among the first 100,000, `--reference` or
-  `--snarls` makes it a plain GFA
+- `build` tells an rGFA from a plain GFA as
+  [the index does](inputs.md#how-the-tool-tells-them-apart), and `--snarls`
+  makes it a plain GFA
 - An rGFA's bubbles need `gfatools` on PATH, which reads the text alongside the
   parse. Without it the build says so and writes no bubble file
 - A plain GFA's bubbles come from `--snarls`, a `vg deconstruct -a` snarl VCF;
