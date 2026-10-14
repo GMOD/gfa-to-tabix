@@ -36,7 +36,7 @@ digraph walks {
     subgraph cluster_file {
       label=<<B>2. graph.GRCh38.walks.bed.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">per chunk: R, the reference path, once; each distinct route off R once; the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>
       rows [shape=plaintext, style="", label=<
-        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6" COLOR="#aaaaaa">
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6" COLOR="#aaaaaa">
           <!-- begin rows -->
           <TR><TD BGCOLOR="#e8eef7">R</TD><TD ALIGN="LEFT">1 2 3 4</TD></TR>
           <TR><TD BGCOLOR="#ede4f5">route 0</TD><TD ALIGN="LEFT">2 → 4</TD></TR>
@@ -45,7 +45,8 @@ digraph walks {
           <TR><TD>HG002#1</TD><TD ALIGN="LEFT">route 1</TD></TR>
           <TR><TD>HG002#2</TD><TD ALIGN="LEFT">no route</TD></TR>
           <!-- end rows -->
-        </TABLE>>]
+        </TABLE></TD></TR>
+        <TR><TD CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Simplified rows; docs/<BR/>walks-format.md gives<BR/>the real columns.</FONT></TD></TR></TABLE>>]
     }
 
     subgraph cluster_rebuilt {

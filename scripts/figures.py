@@ -81,10 +81,10 @@ def simple_caption(segs):
     off = next(r for r in segs if r[4] != "0")
     span = coordinate(*off[0:3])
     text = (
-        f"{off[3]} lies off {off[0]}, so the tool files it under the span it hangs from, {span}, "
-        "and a query anywhere in that span returns it. The tool files links the same way."
+        f"{off[3]} lies off {off[0]}, so the tool files it under the span it hangs from, {span}. "
+        "The tool files links the same way."
     )
-    return [caption(20, text, 70, "#555555")]
+    return [caption(20, text, 80, "#555555")]
 
 
 def segs_table(segs):
