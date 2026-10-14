@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 use std::fs::{self, File};
-use std::io;
+use std::io::{self, Write};
 use std::mem;
 use std::rc::Rc;
 
@@ -45,14 +45,15 @@ fn push_fields(line: &mut Vec<u8>, fields: &[&[u8]]) {
     }
 }
 
-fn coordinates(sequence: &[u8], start: u64, end: u64) -> Vec<u8> {
-    let mut line = sequence.to_vec();
-    line.extend_from_slice(format!("\t{start}\t{end}").as_bytes());
-    line
+fn push_coordinates(line: &mut Vec<u8>, sequence: &[u8], start: u64, end: u64) {
+    line.extend_from_slice(sequence);
+    write!(line, "\t{start}\t{end}").expect("a Vec takes every write");
 }
 
 fn row(spans: &Spans, (sequence, start, end): Span, rest: &[u8]) -> Row {
-    let mut line = coordinates(&spans.sequences[sequence as usize], start, end);
+    let name = &spans.sequences[sequence as usize];
+    let mut line = Vec::with_capacity(name.len() + 44 + rest.len());
+    push_coordinates(&mut line, name, start, end);
     line.push(b'\t');
     line.extend_from_slice(rest);
     line.push(b'\n');
@@ -77,7 +78,7 @@ pub fn node_rows(graph: &Graph, nodes: &[Option<Node>], spans: &Spans, layout: L
         push_fields(&mut rest, &[id, rank.as_bytes()]);
         if layout == Layout::Anchored {
             rest.push(b'\t');
-            rest.extend_from_slice(&coordinates(&node.sequence, node.start, node.end));
+            push_coordinates(&mut rest, &node.sequence, node.start, node.end);
         }
         if let Some(carriers) = &node.carriers {
             push_fields(&mut rest, &[b"", carriers]);
@@ -106,29 +107,19 @@ pub fn link_rows(
             skipped += 1;
             continue;
         };
-        let source_id = [
-            graph.node_ids[source].as_slice(),
-            &[strand(link.source_reversed)],
-        ]
-        .concat();
-        let target_id = [
-            graph.node_ids[target].as_slice(),
-            &[strand(link.target_reversed)],
-        ]
-        .concat();
-        let (a_rank, b_rank) = (a.rank.to_string(), b.rank.to_string());
         let mut rest = Vec::new();
-        push_fields(
-            &mut rest,
-            &[
-                &source_id,
-                &target_id,
-                &coordinates(&a.sequence, a.start, a.end),
-                a_rank.as_bytes(),
-                &coordinates(&b.sequence, b.start, b.end),
-                b_rank.as_bytes(),
-            ],
-        );
+        for (id, reversed) in [
+            (source, link.source_reversed),
+            (target, link.target_reversed),
+        ] {
+            rest.extend_from_slice(&graph.node_ids[id]);
+            rest.push(strand(reversed));
+            rest.push(b'\t');
+        }
+        push_coordinates(&mut rest, &a.sequence, a.start, a.end);
+        write!(rest, "\t{}\t", a.rank).expect("a Vec takes every write");
+        push_coordinates(&mut rest, &b.sequence, b.start, b.end);
+        write!(rest, "\t{}", b.rank).expect("a Vec takes every write");
         if let (Some(a), Some(b)) = (&a.carriers, &b.carriers) {
             push_fields(&mut rest, &[b"", a, b]);
         }
