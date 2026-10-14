@@ -99,16 +99,7 @@ pub fn run(prefix: &str, files: &[String]) -> Result<(), String> {
         }
     }
 
-    let reference_paths: Vec<&str> = reference_calls
-        .iter()
-        .map(|c| {
-            if c.field == "." {
-                "."
-            } else {
-                path_of(&c.field)
-            }
-        })
-        .collect();
+    let reference_paths: Vec<&str> = reference_calls.iter().map(|c| path_of(&c.field)).collect();
     let mut alleles = vec![0usize; bubbles];
     let mut non_reference = vec![0usize; bubbles];
     let mut seen: HashSet<(usize, &str)> = HashSet::new();

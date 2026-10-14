@@ -179,11 +179,11 @@ fn ends(
         }
     }
     let mut out = Vec::new();
-    let mut seen = vec![first];
+    let mut outermost = vec![first];
     if last != first {
-        seen.push(last);
+        outermost.push(last);
     }
-    for i in seen {
+    for i in outermost {
         for side in [Side::Start, Side::End] {
             if !links[i]
                 .iter()
@@ -255,19 +255,15 @@ fn distances(nodes: &[Node], links: &[Vec<Link>]) -> (Vec<u64>, Vec<Option<usize
     (dist, pred)
 }
 
-#[derive(Clone)]
-struct Merged {
-    length: i64,
-}
-
-type OutNode = (usize, Option<Merged>);
+// a segment, with the length of the run merged into it
+type OutNode = (usize, Option<i64>);
 type OutEdge<'a> = (&'a [u8], u8, &'a [u8], u8);
 
 fn rgfa(nodes: &[Node], out_nodes: &[OutNode], out_edges: &[OutEdge]) -> Vec<u8> {
     let mut text = b"H\tVN:Z:1.0\n".to_vec();
-    for (i, merged) in out_nodes {
-        let node = &nodes[*i];
-        let length = merged.as_ref().map_or(node.length, |m| m.length);
+    for &(i, merged) in out_nodes {
+        let node = &nodes[i];
+        let length = merged.unwrap_or(node.length);
         text.extend_from_slice(b"S\t");
         text.extend_from_slice(node.name);
         text.extend_from_slice(format!("\t*\tLN:i:{length}\tSN:Z:").as_bytes());
@@ -318,29 +314,20 @@ pub fn fold(graph: &Graph, placed: &Placed, below: i64) -> Vec<u8> {
             ))
         })
         .collect();
-    let pass = |kept: &[bool]| -> (Vec<OutNode>, Vec<OutEdge>) {
-        (
-            (0..nodes.len())
-                .filter(|&i| kept[i])
-                .map(|i| (i, None))
-                .collect(),
-            edges
-                .iter()
-                .filter(|e| kept[e.from] && kept[e.to])
-                .map(|e| {
-                    (
-                        nodes[e.from].name,
-                        e.from_strand,
-                        nodes[e.to].name,
-                        e.to_strand,
-                    )
-                })
-                .collect(),
-        )
-    };
     if below <= 0 || !nodes.iter().any(Node::backbone) {
-        let (n, e) = pass(&vec![true; nodes.len()]);
-        return rgfa(&nodes, &n, &e);
+        let out_nodes: Vec<OutNode> = (0..nodes.len()).map(|i| (i, None)).collect();
+        let out_edges: Vec<OutEdge> = edges
+            .iter()
+            .map(|e| {
+                (
+                    nodes[e.from].name,
+                    e.from_strand,
+                    nodes[e.to].name,
+                    e.to_strand,
+                )
+            })
+            .collect();
+        return rgfa(&nodes, &out_nodes, &out_edges);
     }
 
     let mut links: Vec<Vec<Link>> = vec![Vec::new(); nodes.len()];
@@ -443,7 +430,7 @@ fn merge_runs(nodes: &[Node], edges: &[&Edge], kept: &[bool], allele: &[usize]) 
     // a run member's outer side, as the merged segment's start or end
     let mut head_of: Vec<usize> = (0..nodes.len()).collect();
     let mut outer: HashMap<(usize, bool), Side> = HashMap::new();
-    let mut merged: HashMap<usize, Merged> = HashMap::new();
+    let mut merged: HashMap<usize, i64> = HashMap::new();
     for i in 0..nodes.len() {
         if !kept[i] || has_prev.contains(&i) || !next.contains_key(&i) {
             continue;
@@ -464,12 +451,7 @@ fn merge_runs(nodes: &[Node], edges: &[&Edge], kept: &[bool], allele: &[usize]) 
         for &j in &run {
             head_of[j] = i;
         }
-        merged.insert(
-            i,
-            Merged {
-                length: run.iter().map(|&j| nodes[j].length).sum(),
-            },
-        );
+        merged.insert(i, run.iter().map(|&j| nodes[j].length).sum());
     }
     let endpoint = |i: usize, side: Side| -> (usize, Option<Side>) {
         let side = if head_of[i] == i && !merged.contains_key(&i) {
@@ -482,7 +464,7 @@ fn merge_runs(nodes: &[Node], edges: &[&Edge], kept: &[bool], allele: &[usize]) 
 
     let out_nodes: Vec<OutNode> = (0..nodes.len())
         .filter(|&i| kept[i] && head_of[i] == i)
-        .map(|i| (i, merged.get(&i).cloned()))
+        .map(|i| (i, merged.get(&i).copied()))
         .collect();
     let out_edges: Vec<OutEdge> = edges
         .iter()

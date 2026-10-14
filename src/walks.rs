@@ -17,7 +17,7 @@ use std::thread;
 use std::time::Instant;
 
 use crate::bed;
-use crate::gfa::{is_blunt, parse_u64, split_path_name};
+use crate::gfa::{blunt_error, is_blunt, parse_u64, split_path_name, text};
 use crate::routes::{self, Piece, PieceRef};
 use crate::sorter::Sorter;
 
@@ -30,10 +30,6 @@ pub struct Options {
 const NONE: u32 = u32::MAX;
 // Set on a placement taken from a path off the reference: rank 1.
 const OFF_REFERENCE: u32 = 1 << 31;
-
-fn text(bytes: &[u8]) -> String {
-    String::from_utf8_lossy(bytes).into_owned()
-}
 
 fn push_u64(out: &mut Vec<u8>, mut n: u64) {
     let mut digits = [0u8; 20];
@@ -112,7 +108,7 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
                 .get(2)
                 .and_then(|o| o.split(|&b| b == b',').find(|o| !is_blunt(o)))
             {
-                return Err(blunt_error(format!(
+                return Err(blunt_error(&format!(
                     "path {} has a non-blunt overlap ({})",
                     text(cols[0]),
                     text(bad)
@@ -129,14 +125,6 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
         }
         _ => Ok(None),
     }
-}
-
-fn blunt_error(what: String) -> String {
-    format!(
-        "{what}. Coordinates come from summing node lengths along a path, \
-         which is only right when consecutive nodes abut. Blunt the graph \
-         first (e.g. `vg mod -X` or `odgi build`)."
-    )
 }
 
 fn parse_steps(path: &PathLine, handles: &mut Vec<u32>) -> Result<(), String> {
@@ -431,7 +419,7 @@ fn first_pass(
                     return Err("L line with too few fields".into());
                 }
                 if cols.len() > 4 && !is_blunt(cols[4]) {
-                    return Err(blunt_error(format!(
+                    return Err(blunt_error(&format!(
                         "link {}->{} has a non-blunt overlap ({})",
                         text(cols[0]),
                         text(cols[2]),
@@ -852,7 +840,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         names,
         chunks,
         references,
-        rows: Sorter::new(&temp.0, "rows", false, SORT_BUDGET),
+        rows: Sorter::new(&temp.0, "rows", SORT_BUDGET),
         paths: 0,
         steps: 0,
         handles: Vec::new(),

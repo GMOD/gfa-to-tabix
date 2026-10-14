@@ -25,7 +25,6 @@ struct Batch {
 pub struct Sorter {
     dir: PathBuf,
     name: &'static str,
-    dedup: bool,
     budget: usize,
     batch: Batch,
     runs: Vec<PathBuf>,
@@ -36,15 +35,12 @@ fn io_error(path: &Path) -> impl Fn(io::Error) -> String + '_ {
     move |e| format!("{}: {e}", path.display())
 }
 
-fn write_run(path: &Path, batch: Batch, dedup: bool) -> Result<(), String> {
+fn write_run(path: &Path, batch: Batch) -> Result<(), String> {
     let Batch { text, mut rows } = batch;
     let row_text = |&(_, offset, length): &(u32, u32, u32)| {
         &text[offset as usize..offset as usize + length as usize]
     };
     rows.sort_unstable_by(|a, b| a.0.cmp(&b.0).then_with(|| row_text(a).cmp(row_text(b))));
-    if dedup {
-        rows.dedup_by(|a, b| a.0 == b.0 && row_text(a) == row_text(b));
-    }
     let fail = io_error(path);
     let file = File::create(path).map_err(&fail)?;
     let mut out = BufWriter::with_capacity(1 << 20, DeflateEncoder::new(file, Compression::fast()));
@@ -108,13 +104,11 @@ impl Ord for Head {
 }
 
 impl Sorter {
-    // Run files go in `dir` as `name.0`, `name.1`, ... With `dedup`, rows
-    // equal in key and text come out once.
-    pub fn new(dir: &Path, name: &'static str, dedup: bool, budget: usize) -> Sorter {
+    // Run files go in `dir` as `name.0`, `name.1`, ...
+    pub fn new(dir: &Path, name: &'static str, budget: usize) -> Sorter {
         Sorter {
             dir: dir.to_path_buf(),
             name,
-            dedup,
             budget: budget.min(u32::MAX as usize),
             batch: Batch::default(),
             runs: Vec::new(),
@@ -151,17 +145,15 @@ impl Sorter {
         let batch = mem::take(&mut self.batch);
         let path = self.dir.join(format!("{}.{}", self.name, self.runs.len()));
         self.runs.push(path.clone());
-        let dedup = self.dedup;
-        self.spilling = Some(thread::spawn(move || write_run(&path, batch, dedup)));
+        self.spilling = Some(thread::spawn(move || write_run(&path, batch)));
         Ok(())
     }
 
     // Streams every row in (key, text) order to `emit`, then deletes the runs.
-    // Returns the number of rows emitted.
     pub fn merge(
         mut self,
         mut emit: impl FnMut(u32, &[u8]) -> Result<(), String>,
-    ) -> Result<u64, String> {
+    ) -> Result<(), String> {
         self.spill()?;
         self.wait()?;
         let mut runs = Vec::with_capacity(self.runs.len());
@@ -187,22 +179,8 @@ impl Sorter {
             }
             runs.push(run);
         }
-        let mut emitted = 0;
-        let mut last: Option<(u32, Vec<u8>)> = None;
         while let Some(Reverse(mut head)) = heap.pop() {
-            let repeat = self.dedup
-                && last
-                    .as_ref()
-                    .is_some_and(|(key, text)| *key == head.key && *text == head.text);
-            if !repeat {
-                emit(head.key, &head.text)?;
-                emitted += 1;
-                if self.dedup {
-                    let (key, text) = last.get_or_insert_with(|| (0, Vec::new()));
-                    *key = head.key;
-                    text.clone_from(&head.text);
-                }
-            }
+            emit(head.key, &head.text)?;
             let path = &self.runs[head.run];
             if runs[head.run]
                 .next(&mut head.key, &mut head.text)
@@ -214,7 +192,7 @@ impl Sorter {
         for path in &self.runs {
             fs::remove_file(path).map_err(io_error(path))?;
         }
-        Ok(emitted)
+        Ok(())
     }
 }
 

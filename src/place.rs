@@ -1,4 +1,4 @@
-use crate::gfa::Graph;
+use crate::gfa::{Graph, blunt_error, text};
 
 pub struct Node {
     pub sequence: Vec<u8>,
@@ -57,17 +57,9 @@ fn assembly(name: &[u8]) -> Vec<u8> {
     }
 }
 
-fn text(bytes: &[u8]) -> String {
-    String::from_utf8_lossy(bytes).into_owned()
-}
-
 pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, String> {
     if let Some(overlap) = &graph.overlap {
-        return Err(format!(
-            "{overlap}. Coordinates come from summing node lengths along a path, \
-             which is only right when consecutive nodes abut. Blunt the graph \
-             first (e.g. `vg mod -X` or `odgi build`), or use an rGFA."
-        ));
+        return Err(format!("{} Or use an rGFA.", blunt_error(overlap)));
     }
     let paths = &graph.paths;
     if paths.is_empty() {

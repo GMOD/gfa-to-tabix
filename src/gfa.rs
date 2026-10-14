@@ -56,7 +56,7 @@ pub struct Graph {
     pub overlap: Option<String>,
 }
 
-fn text(bytes: &[u8]) -> String {
+pub fn text(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
 }
 
@@ -72,6 +72,14 @@ pub fn parse_u64(bytes: &[u8], what: &str) -> Result<u64, String> {
 
 pub fn is_blunt(overlap: &[u8]) -> bool {
     matches!(overlap, b"" | b"*" | b"0M")
+}
+
+pub fn blunt_error(what: &str) -> String {
+    format!(
+        "{what}. Coordinates come from summing node lengths along a path, \
+         which is only right when consecutive nodes abut. Blunt the graph \
+         first (e.g. `vg mod -X` or `odgi build`)."
+    )
 }
 
 // A P line's name and where its piece starts. `vg convert` writes a path piece

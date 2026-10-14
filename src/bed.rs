@@ -12,7 +12,7 @@ use noodles_csi::binning_index::index::header::Builder;
 use noodles_csi::binning_index::index::reference_sequence::bin::Chunk;
 use noodles_tabix as tabix;
 
-use crate::anchor::{Span, Spans};
+use crate::anchor::{Span, Spans, widen};
 use crate::gfa::Graph;
 use crate::parallel_bgzf;
 use crate::place::Node;
@@ -129,14 +129,8 @@ pub fn link_rows(
             Layout::Contig => rows.extend(ends.map(|&span| row(spans, span, &rest))),
             Layout::Anchored => {
                 let mut covering: Vec<Span> = Vec::new();
-                for &(sequence, start, end) in ends {
-                    match covering.iter_mut().find(|c| c.0 == sequence) {
-                        Some(held) => {
-                            held.1 = held.1.min(start);
-                            held.2 = held.2.max(end);
-                        }
-                        None => covering.push((sequence, start, end)),
-                    }
+                for &span in ends {
+                    widen(&mut covering, span);
                 }
                 rows.extend(covering.into_iter().map(|span| row(spans, span, &rest)));
             }

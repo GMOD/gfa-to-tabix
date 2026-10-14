@@ -68,7 +68,7 @@ fn find(parent: &mut [u32], mut node: u32) -> u32 {
     node
 }
 
-fn widen(spans: &mut Vec<Span>, span: Span) {
+pub fn widen(spans: &mut Vec<Span>, span: Span) {
     match spans.iter_mut().find(|s| s.0 == span.0) {
         Some(held) => {
             held.1 = held.1.min(span.1);
