@@ -95,7 +95,9 @@ pub fn run(
         }
         let pos: u64 = f[1]
             .parse()
-            .map_err(|_| format!("{vcf}: POS {:?} is not a number", f[1]))?;
+            .ok()
+            .filter(|&pos| pos > 0)
+            .ok_or_else(|| format!("{vcf}: POS {:?} is not a positive number", f[1]))?;
         let boundary: Vec<&str> = steps(f[2]).into_iter().map(|(_, id)| id).collect();
         let mut segments: HashSet<&str> = HashSet::new();
         let mut inversion = false;

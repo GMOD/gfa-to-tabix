@@ -227,10 +227,19 @@ impl Graph {
         let (name, start) = split_path_name(cols[1]);
         let name = name.to_vec();
         let mut steps = Vec::new();
-        for step in cols[2].split(|&b| b == b',') {
-            if let Some((&strand, id)) = step.split_last() {
-                steps.push(Step::new(self.node(id), strand == b'-'));
-            }
+        for step in cols[2].split(|&b| b == b',').filter(|s| !s.is_empty()) {
+            let (id, reversed) = match step.split_last() {
+                Some((b'+', id)) if !id.is_empty() => (id, false),
+                Some((b'-', id)) if !id.is_empty() => (id, true),
+                _ => {
+                    return Err(format!(
+                        "path {}: step {} is not a segment id and + or -",
+                        text(cols[1]),
+                        text(step)
+                    ));
+                }
+            };
+            steps.push(Step::new(self.node(id), reversed));
         }
         self.paths.push(Path { name, start, steps });
         Ok(())
@@ -300,6 +309,15 @@ mod tests {
         );
         assert_eq!(steps(&graph.paths[0]), [(0, false), (1, true), (2, false)]);
         assert_eq!(steps(&graph.paths[1]), [(2, false), (1, true), (0, true)]);
+    }
+
+    #[test]
+    fn a_step_needs_a_strand() {
+        for steps in ["a+,b", "a+,b?", "a+,+"] {
+            let text = format!("S\ta\tA\nS\tb\tC\nP\tp\t{steps}\t*\n");
+            let error = Graph::read(text.as_bytes()).err().unwrap();
+            assert!(error.contains("is not a segment id and + or -"), "{error}");
+        }
     }
 
     #[test]

@@ -75,3 +75,22 @@ fn both_options_are_required() {
         .unwrap();
     assert_eq!(output.status.code(), Some(2));
 }
+
+#[test]
+fn a_record_at_pos_0_is_refused() {
+    let dir =
+        std::env::temp_dir().join(format!("gfa-to-tabix-bubbles-pos0-{}", std::process::id()));
+    fs::create_dir_all(&dir).unwrap();
+    fs::write(dir.join("s.vcf"), VCF.replace("K#1#c\t11\t", "K#1#c\t0\t")).unwrap();
+    let output = Command::new(BINARY)
+        .arg("bubbles")
+        .arg("--snarls")
+        .arg(dir.join("s.vcf"))
+        .arg("-o")
+        .arg(dir.join("out"))
+        .output()
+        .unwrap();
+    fs::remove_dir_all(&dir).unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("POS \"0\" is not a positive number"));
+}

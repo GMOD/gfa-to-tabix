@@ -150,10 +150,13 @@ pub fn run(prefix: &str, files: &[String]) -> Result<(), String> {
                 );
             } else {
                 path = parts[0];
-                path_len = parts
-                    .get(1)
-                    .and_then(|s| s.parse::<f64>().ok())
-                    .unwrap_or(0.0) as i64;
+                let given = parts.get(1).copied().unwrap_or("");
+                path_len = given.parse::<i64>().map_err(|_| {
+                    format!(
+                        "{strain}: pathLen {given:?} in {:?} is not a number",
+                        call.field
+                    )
+                })?;
                 delta = path_len - ref_span;
                 (class, rgb, label) = if path == reference_paths[i] {
                     ("ref", "204,204,204", "ref".to_string())

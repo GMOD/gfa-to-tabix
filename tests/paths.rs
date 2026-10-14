@@ -71,3 +71,12 @@ fn files_of_different_lengths_are_refused() {
     assert!(text.is_empty());
     assert!(String::from_utf8_lossy(&output.stderr).contains("same order for every sample"));
 }
+
+#[test]
+fn a_path_length_that_is_no_number_is_refused() {
+    let bad = REF.replace(">5:50:", ">5:x:");
+    let (output, text) = run(&[("ref.call.bed", &bad)]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(text.is_empty());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("pathLen \"x\""));
+}
