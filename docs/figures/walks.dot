@@ -35,20 +35,20 @@ digraph walks {
 
     subgraph cluster_file {
       // begin label
-      label=<<B>2. graph.GRCh38.walks.bed.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">per 64 kb stretch of chr1: GRCh38's path once, each distinct route off it once,</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>2. graph.GRCh38.walks.bed.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">per 64 kb stretch of chr1: GRCh38's path and each route off it, once each,</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>
       // end label
       rows [shape=plaintext, style="", label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6" COLOR="#aaaaaa">
           <!-- begin rows -->
-          <TR><TD BGCOLOR="#e8eef7">GRCh38#0</TD><TD ALIGN="LEFT">1 2 3 4</TD></TR>
+          <TR><TD BGCOLOR="#e8eef7">GRCh38#0</TD><TD ALIGN="LEFT">1 → 2 → 3 → 4</TD></TR>
           <TR><TD BGCOLOR="#ede4f5">route 0</TD><TD ALIGN="LEFT">2 → 4</TD></TR>
           <TR><TD BGCOLOR="#fde6cf">route 1</TD><TD ALIGN="LEFT">2 → 5 → 4</TD></TR>
           <TR><TD>CHM13#0</TD><TD ALIGN="LEFT">route 0</TD></TR>
           <TR><TD>HG002#1</TD><TD ALIGN="LEFT">route 1</TD></TR>
-          <TR><TD>HG002#2</TD><TD ALIGN="LEFT">no route</TD></TR>
+          <TR><TD>HG002#2</TD><TD ALIGN="LEFT">GRCh38's path</TD></TR>
           <!-- end rows -->
         </TABLE></TD></TR>
-        <TR><TD CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Simplified rows; docs/<BR/>walks-format.md gives<BR/>the real columns.</FONT></TD></TR></TABLE>>]
+        <TR><TD CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Simplified rows; docs/walks-format.md<BR/>gives the real columns.</FONT></TD></TR></TABLE>>]
     }
 
     subgraph cluster_rebuilt {

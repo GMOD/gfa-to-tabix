@@ -5,7 +5,7 @@
 - One static binary does the whole conversion. It needs no gfatools, awk, bgzip or tabix
 - The [JBrowse 2](https://jbrowse.org) graph track reads the files
 
-![A five-node graph, its node and link rows, a region query on both files, and the bubble a browser draws from the rows it keeps](docs/figures/overview.svg)
+![A five-node graph, its node rows queried at chr1:25-30, and the nodes and links a browser draws from the rows returned](docs/figures/overview.svg)
 
 `scripts/figures.py target/release/gfa-to-tabix` redraws both figures from the tool's output on `docs/figures/*.gfa`, and CI fails when they go stale.
 

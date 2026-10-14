@@ -53,13 +53,13 @@ digraph overview {
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s4</FONT>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <!-- end lanes -->
           <!-- begin caption -->
-          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">s5 lies off chr1, so the tool files it under the span it hangs from, chr1:10-40.<BR/>The tool files links the same way.</FONT></TD></TR>
+          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">s5 lies off chr1, so the tool files it under the span it hangs from, chr1:10-40.<BR/>The tool files each link in graph.links.bed.gz under the span its two nodes cover.</FONT></TD></TR>
           <!-- end caption -->
         </TABLE>>]
     }
 
     subgraph cluster_drawn {
-      label=<<B>3. What the browser draws</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">yellow marks chr1:25-30; the links of s3 and s5 bring in s2 and s4, dashed</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>3. What the browser draws</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">yellow marks chr1:25-30 on s3; the links of s3 and s5 bring in s2 and s4, dashed</FONT><BR ALIGN="LEFT"/>>
       // begin drawn
       drawn [shape=box, style="", color=transparent, label="", fixedsize=true, width=5.29, height=2.02]
       // end drawn
@@ -68,6 +68,6 @@ digraph overview {
 
   // begin arrows
   s3 -> hits [ltail=cluster_graph, lhead=cluster_query, label="  gfa-to-tabix graph.gfa", penwidth=2]
-  hits -> drawn [ltail=cluster_query, lhead=cluster_drawn, label="  the rows returned,\n  with their links", penwidth=2]
+  hits -> drawn [ltail=cluster_query, lhead=cluster_drawn, label="  the rows returned, plus\n  their links from graph.links.bed.gz", penwidth=2]
   // end arrows
 }

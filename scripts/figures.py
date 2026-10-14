@@ -54,7 +54,7 @@ def tr(cells, bg=None):
 
 
 def caption(cols, text, width, color="#555555"):
-    lines = "<BR/>".join(textwrap.wrap(text, width))
+    lines = "<BR/>".join(line for para in text.split("\n") for line in textwrap.wrap(para, width))
     return tr([td(f'<FONT POINT-SIZE="12" COLOR="{color}">{lines}</FONT>', border=0, cellpadding=8, colspan=cols, align="LEFT", balign="LEFT")])
 
 
@@ -83,10 +83,10 @@ def simple_caption(segs):
     off = next(r for r in segs if r[4] != "0")
     span = coordinate(*off[0:3])
     text = (
-        f"{off[3]} lies off {off[0]}, so the tool files it under the span it hangs from, {span}. "
-        "The tool files links the same way."
+        f"{off[3]} lies off {off[0]}, so the tool files it under the span it hangs from, {span}.\n"
+        f"The tool files each link in {PREFIX}.links.bed.gz under the span its two nodes cover."
     )
-    return [caption(20, text, 80, "#555555")]
+    return [caption(20, text, 84, "#555555")]
 
 
 def segs_table(segs):
@@ -337,13 +337,10 @@ def bandage(nodes, edges, pad=36, width=14):
     paths = {n: catmull_rom([(x - left, y - top) for x, y in p]) for n, p in paths.items()}
     cx, cy = (max(xs) + min(xs)) / 2 - left, (max(ys) + min(ys)) / 2 - top
     body = []
-    for name, v in nodes.items():
-        if v["query"]:
-            body.append(f'<path d="{polyline(portion(paths[name], *v["query"]))}" fill="none" stroke="{HIGHLIGHT}" stroke-width="{2 * width}"/>')
     for a, b in edges:
         (ax, ay), (x0, y0) = paths[a][-2:]
         (x1, y1), (bx, by) = paths[b][:2]
-        reach = math.dist((x0, y0), (x1, y1)) / 2
+        reach = math.dist((x0, y0), (x1, y1)) / 4
         u0, u1 = reach / math.dist((ax, ay), (x0, y0)), reach / math.dist((bx, by), (x1, y1))
         c0 = (x0 + (x0 - ax) * u0, y0 + (y0 - ay) * u0)
         c1 = (x1 + (x1 - bx) * u1, y1 + (y1 - by) * u1)
@@ -357,14 +354,19 @@ def bandage(nodes, edges, pad=36, width=14):
         dash = ' stroke-dasharray="5,2"' if v["far"] else ""
         body.append(f'<path d="{d}" fill="none" stroke="{v["line"]}" stroke-width="{width}"{dash}/>')
         body.append(f'<path d="{d}" fill="none" stroke="{v["fill"]}" stroke-width="{width - 3}"/>')
+        if v["query"]:
+            body.append(f'<path d="{polyline(portion(paths[name], *v["query"]))}" fill="none" stroke="{HIGHLIGHT}" stroke-width="{width - 3}"/>')
         mid = len(paths[name]) // 2
         (ax, ay), (mx, my), (bx, by) = paths[name][mid - 1 : mid + 2]
         nx, ny = ay - by, bx - ax
         if nx * (mx - cx) + ny * (my - cy) < 0:
             nx, ny = -nx, -ny
         d = math.hypot(nx, ny)
-        x, y = mx + nx / d * 24, my + ny / d * 24 + (4 if ny > 0 else -4)
-        body += [text(x, y - 2, name, 12, bold=True), text(x, y + 10, v["label"], 10)]
+        x, y = mx + nx / d * (width / 2 + 6), my + ny / d * (width / 2 + 6)
+        if ny > 0:
+            body += [text(x, y + 11, name, 12, bold=True), text(x, y + 23, v["label"], 10)]
+        else:
+            body += [text(x, y - 14, name, 12, bold=True), text(x, y - 2, v["label"], 10)]
     w, h = max(xs) - left + pad + 20, max(ys) - top + pad
     return w, h, "\n".join(body)
 
@@ -413,7 +415,7 @@ def overview_graphs(segs, links):
     ]
     simple = [
         arrow((graph_bottom, "cluster_graph"), ("hits", "cluster_query"), f"gfa-to-tabix {PREFIX}.gfa"),
-        arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), "the rows returned,\nwith their links"),
+        arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), f"the rows returned, plus\ntheir links from {PREFIX}.links.bed.gz"),
     ]
     return graph, drawn, detail, simple, panel
 
@@ -507,7 +509,7 @@ def walks(rows, w_lines):
         meaning, bg = "", None
         if kind == "ref":
             meaning, bg = f"R, the reference path: {' '.join(handle(h) for h in R)}", BLUE[0]
-            simple.append(tr([td(reference, bg), td(" ".join(node(h) for h in R), align="LEFT")]))
+            simple.append(tr([td(reference, bg), td(" → ".join(node(h) for h in R), align="LEFT")]))
         elif kind == "nodes":
             ids, total = [], 0
             for d in rest[0].split(","):
@@ -537,7 +539,7 @@ def walks(rows, w_lines):
                 f'<FONT POINT-SIZE="11" COLOR="{route_colors(routes[c])[-1]}">route {c}</FONT>' for c, _ in choices
             )
             rebuilt.append(rebuilt_row(path, cells, label))
-            simple.append(tr([td(path), td(taken or "no route", align="LEFT")]))
+            simple.append(tr([td(path), td(taken or f"{REF}'s path", align="LEFT")]))
         columns = " ".join(rest)
         table.append(tr([
             td(kind, bg),
@@ -556,7 +558,7 @@ def walks_label(header, rows):
     grey = '<FONT POINT-SIZE="12" COLOR="#555555">'
     return [
         f'label=<<B>2. {PREFIX}.{REF}.walks.bed.gz</B><BR ALIGN="LEFT"/>'
-        f"{grey}per {chunk_size(header) // 1024} kb stretch of {contig}: {REF}'s path once, each distinct route off it once,</FONT>"
+        f"{grey}per {chunk_size(header) // 1024} kb stretch of {contig}: {REF}'s path and each route off it, once each,</FONT>"
         f'<BR ALIGN="LEFT"/>{grey}and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>'
     ]
 
