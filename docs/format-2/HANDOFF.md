@@ -298,21 +298,8 @@ Format 2 needs none of these, so they can land at any time.
 
 ## Against GBZ
 
-- The GBZ-base paper (Sirén and Paten, bioRxiv 2026.07.10.737775 v2) reports
-  10.7 GiB for GBZ-base, 5.7 GiB for GBZ and 3.35 GiB for an experimental GBZ
-  v3 on the HPRC v2.1 CHM13 graph, with sequences. Format 2's two genome-wide
-  files would be about 3 GB without sequences, so size is close to even
-- Format 2 reads one range per window, where gbz-base takes 18-43 round trips,
-  and gives every haplotype's coordinates through `hapOffset`; GBZ-base finds
-  coordinates only for haplotypes it indexes, at tens of MB each
-- A haplotype that leaves the reference before a window and rejoins it after
-  has no row in the window's chunks, in format 1 and format 2 alike. GBZ-base
-  fails the other way: its snarl extension turned one 100 kbp query into
-  10 Mbp, 75 s and 9 GiB
-- Choices still grow almost linearly, about 20 GB genome-wide at 10,000
-  haplotypes, so format 2 wins on requests and static hosting, not on growth.
-  The plugin's `agent-docs/reference/GBZ.md` argues the same about any
-  per-haplotype store
+[gbz-comparison.md](../gbz-comparison.md) compares format 2 with gbz-base and
+gbz-haplotype-index.
 
 ## Other findings from the same review
 

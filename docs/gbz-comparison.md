@@ -47,8 +47,9 @@ The Minigraph-Cactus GRCh38 graph: 139.5 M nodes, 464 haplotypes.
 | reads per window        | one index, one range of two chunks      | 18 to 43 round trips |                     |
 | bytes per window, chr22 | 0.05 MB median, 0.5 MB p99              |                      |                     |
 
-- The GBZ-base paper (Sirén and Paten, bioRxiv 2026.07.10.737775 v2) gives 10.7
-  GiB for gbz-base and 5.7 GiB for the GBZ on the CHM13 graph, with bases
+- The GBZ-base paper (Sirén and Paten, bioRxiv 2026.07.10.737775 v2) gives
+  10.7 GiB for gbz-base, 5.7 GiB for the GBZ and 3.35 GiB for an experimental
+  GBZ v3 on the CHM13 graph, with bases
 - Drawn in JBrowse at the HPRC tutorial's loci on 2026-10-08, the walk files
   took 5 to 7 requests and 2.4 to 7.9 s per window, and gbz-base with the index
   17 to 57 requests and 6.4 to 13.3 s. Those walk files were format 1, three
