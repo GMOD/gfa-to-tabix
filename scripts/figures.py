@@ -401,8 +401,22 @@ def walks(rows, w_lines):
     return table, simple, rebuilt
 
 
+def chunk_size(header):
+    return int(next(f for f in header[0] if f.startswith("chunk:i:")).split(":")[2])
+
+
+def walks_label(header, rows):
+    contig = rows[0][0].rsplit("#", 1)[1]
+    grey = '<FONT POINT-SIZE="12" COLOR="#555555">'
+    return [
+        f'label=<<B>2. {PREFIX}.{REF}.walks.bed.gz</B><BR ALIGN="LEFT"/>'
+        f"{grey}per {chunk_size(header) // 1024} kb stretch of {contig}: {REF}'s path once, each distinct route off it once,</FONT>"
+        f'<BR ALIGN="LEFT"/>{grey}and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>'
+    ]
+
+
 def walks_caption(header, rows):
-    chunk = int(next(f for f in header[0] if f.startswith("chunk:i:")).split(":")[2])
+    chunk = chunk_size(header)
     starts = {(r[0], r[1]) for r in rows}
     if len(starts) != 1:
         sys.exit("figures.py: the walks figure expects one chunk")
@@ -442,7 +456,7 @@ def walks_graph(lengths, links, paths, contigs):
     graph, _, bottom = bubble("n", ref, labels, links)
     arrows = [
         arrow((bottom, "cluster_graph"), ("rows", "cluster_file"), f"gfa-to-tabix --walks\n--refs {REF}"),
-        arrow(("rows", "cluster_file"), ("rebuilt", "cluster_rebuilt"), f"a query on {contig}\nreturns the chunk"),
+        arrow(("rows", "cluster_file"), ("rebuilt", "cluster_rebuilt"), f"a query on {contig}\nreturns these rows"),
     ]
     return graph, arrows
 
@@ -492,6 +506,7 @@ def generate(binary):
         },
         "walks": {
             "graph": walks_nodes,
+            "label": walks_label(header, walk_rows),
             "rows": simple,
             "rebuilt": rebuilt,
             "arrows": walks_arrows,

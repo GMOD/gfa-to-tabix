@@ -69,6 +69,6 @@ digraph walks {
 
   // begin arrows
   nbelow -> rows [ltail=cluster_graph, lhead=cluster_file, label="  gfa-to-tabix --walks\n  --refs GRCh38", penwidth=2]
-  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a query on chr1\n  returns the chunk", penwidth=2]
+  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a query on chr1\n  returns these rows", penwidth=2]
   // end arrows
 }

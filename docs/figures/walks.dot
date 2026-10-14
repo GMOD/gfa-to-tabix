@@ -34,7 +34,9 @@ digraph walks {
     }
 
     subgraph cluster_file {
-      label=<<B>2. graph.GRCh38.walks.bed.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">per chunk: GRCh38's path once, each distinct route off it once,</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>
+      // begin label
+      label=<<B>2. graph.GRCh38.walks.bed.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">per 64 kb stretch of chr1: GRCh38's path once, each distinct route off it once,</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>
+      // end label
       rows [shape=plaintext, style="", label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6" COLOR="#aaaaaa">
           <!-- begin rows -->
@@ -65,6 +67,6 @@ digraph walks {
 
   // begin arrows
   nbelow -> rows [ltail=cluster_graph, lhead=cluster_file, label="  gfa-to-tabix --walks\n  --refs GRCh38", penwidth=2]
-  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a query on chr1\n  returns the chunk", penwidth=2]
+  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a query on chr1\n  returns these rows", penwidth=2]
   // end arrows
 }
