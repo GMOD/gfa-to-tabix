@@ -81,8 +81,16 @@ alleles, the bubbles, a manifest and a JBrowse track config.
 gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
 ```
 
-`--walks` writes one file per reference holding every haplotype's path through
-a base-level graph.
+`--walks` indexes the path of every haplotype in a base-level graph by position
+on one or more reference genomes:
+
+- **Out:** one Tabix-indexed BED file per sample in `--refs`, here
+  `chr22.GRCh38.walks.bed.gz` and `chr22.CHM13.walks.bed.gz`
+- Both files list the same paths, including those of GRCh38 and CHM13. Rows in
+  the GRCh38 file have GRCh38 coordinates, and rows in the CHM13 file have
+  CHM13 coordinates
+- A browser showing GRCh38 queries the GRCh38 file, and a region query returns
+  the rows a reader needs to rebuild each haplotype's path through that region
 
 ![Four haplotype paths through a bubble, the walk rows for their chunk, and the paths a reader rebuilds from them](docs/figures/walks.svg)
 
