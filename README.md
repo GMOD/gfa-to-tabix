@@ -101,6 +101,7 @@ on one or more reference genomes:
 - [Walks](docs/walks.md) and [the walks row format](docs/walks-format.md)
 - [The node and link index](docs/index-format.md): coordinates, layouts, columns, scale
 - [JBrowse configuration](docs/jbrowse.md)
+- [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md): what each holds, sizes and requests on HPRC v2.1, and which to pick
 
 ## See also
 
@@ -112,6 +113,7 @@ Alternative data formats
 
 - [@gmod/gbz-base](https://github.com/GMOD/gbz-base-js): range-request reader for `.gbz.db` databases
 - [gbz-haplotype-index](https://github.com/GMOD/gbz-haplotype-index): lists every walk in a gbz-base cut
+- [How these compare with gfa-to-tabix](docs/gbz-comparison.md)
 - [gfa-to-pairwise-paf](https://github.com/cmdcolin/gfa-to-pairwise-paf-rs): graph to PAF, for synteny views
 
 Tutorials
