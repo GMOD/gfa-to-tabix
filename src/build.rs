@@ -7,7 +7,7 @@ use std::io::{self, BufReader, Read, Write};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::thread::{self, JoinHandle};
 
-use crate::bed::{Layout, Row, Writer};
+use crate::bed::{self, Layout, Line, Row};
 use crate::gfa::Graph;
 use crate::json::{Json, object, text};
 use crate::{alleles, bubbles};
@@ -182,9 +182,8 @@ impl Bubbler {
     }
 }
 
-// The order `LC_ALL=C sort -k1,1 -k2,2n` gives.
 fn write_bubbles(text: &[u8], out: &str) -> Result<usize, String> {
-    let mut rows: Vec<(&[u8], u64, u64, Vec<u8>)> = Vec::new();
+    let mut rows: Vec<Line> = Vec::new();
     for line in text.split(|&b| b == b'\n').filter(|l| !l.is_empty()) {
         let fields: Vec<&[u8]> = line.splitn(4, |&b| b == b'\t').collect();
         let number = |i: usize| {
@@ -199,14 +198,14 @@ fn write_bubbles(text: &[u8], out: &str) -> Result<usize, String> {
                     )
                 })
         };
-        rows.push((fields[0], number(1)?, number(2)?, [line, b"\n"].concat()));
+        rows.push(Line {
+            chrom: fields[0].to_vec(),
+            start: number(1)?,
+            end: number(2)?,
+            text: [line, b"\n"].concat(),
+        });
     }
-    rows.sort_unstable_by(|a, b| (a.0, a.1, &a.3).cmp(&(b.0, b.1, &b.3)));
-    let mut writer = Writer::create(out)?;
-    for (chrom, start, end, line) in &rows {
-        writer.push(chrom, *start, *end, line)?;
-    }
-    writer.finish()?;
+    bed::write_lines(out, b"", &mut rows)?;
     Ok(rows.len())
 }
 

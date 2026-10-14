@@ -174,6 +174,25 @@ pub fn write(path: &str, rows: &[Row], spans: &Spans) -> Result<(), String> {
     writer.finish()
 }
 
+// A whole BED line, newline included, and the interval it is filed under
+pub struct Line {
+    pub chrom: Vec<u8>,
+    pub start: u64,
+    pub end: u64,
+    pub text: Vec<u8>,
+}
+
+// Sorts the lines as `sort` does the rows, then writes them after `header`.
+pub fn write_lines(path: &str, header: &[u8], lines: &mut [Line]) -> Result<(), String> {
+    lines.sort_unstable_by(|a, b| (&a.chrom, a.start, &a.text).cmp(&(&b.chrom, b.start, &b.text)));
+    let mut writer = Writer::create(path)?;
+    writer.header(header)?;
+    for line in lines.iter() {
+        writer.push(&line.chrom, line.start, line.end, &line.text)?;
+    }
+    writer.finish()
+}
+
 // A bgzip-compressed BED file and its Tabix index, written row by row in
 // sorted order. Until `finish`, both sit under `.partial` names, which a
 // writer dropped unfinished removes.

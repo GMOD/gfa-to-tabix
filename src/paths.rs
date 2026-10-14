@@ -20,7 +20,7 @@ use std::fs;
 use std::path::Path;
 
 use crate::alleles::commify;
-use crate::bed::Writer;
+use crate::bed::{self, Line};
 
 const HEADER: &str = "#chrom\tstart\tend\tname\tscore\tstrand\tthickStart\tthickEnd\titemRgb\tstrain\tclass\tdelta\tpathLen\trefLen\talleles\tnonRef\tpath\n";
 
@@ -29,13 +29,6 @@ struct Call {
     start: String,
     end: String,
     field: String,
-}
-
-struct Row {
-    chrom: String,
-    start: u64,
-    end: u64,
-    line: String,
 }
 
 pub fn sample_name(path: &str) -> String {
@@ -118,7 +111,7 @@ pub fn run(prefix: &str, files: &[String]) -> Result<(), String> {
     }
 
     let strip = format!("{reference}#");
-    let mut rows: Vec<Row> = Vec::new();
+    let mut rows: Vec<Line> = Vec::new();
     for (strain, calls) in &samples {
         for (i, call) in calls.iter().enumerate() {
             let (start, end) = (number(strain, &call.start)?, number(strain, &call.end)?);
@@ -174,29 +167,17 @@ pub fn run(prefix: &str, files: &[String]) -> Result<(), String> {
                 "{chrom}\t{start}\t{end}\t{label}\t0\t{strand}\t{start}\t{end}\t{rgb}\t{strain}\t{class}\t{delta}\t{path_len}\t{ref_span}\t{}\t{}\t{path}\n",
                 alleles[i], non_reference[i]
             );
-            rows.push(Row {
-                chrom,
+            rows.push(Line {
+                chrom: chrom.into_bytes(),
                 start,
                 end,
-                line,
+                text: line.into_bytes(),
             });
         }
     }
-    rows.sort_unstable_by(|a, b| {
-        (a.chrom.as_bytes(), a.start, a.line.as_bytes()).cmp(&(
-            b.chrom.as_bytes(),
-            b.start,
-            b.line.as_bytes(),
-        ))
-    });
 
     let out = format!("{prefix}.bed.gz");
-    let mut writer = Writer::create(&out)?;
-    writer.header(HEADER.as_bytes())?;
-    for r in &rows {
-        writer.push(r.chrom.as_bytes(), r.start, r.end, r.line.as_bytes())?;
-    }
-    writer.finish()?;
+    bed::write_lines(&out, HEADER.as_bytes(), &mut rows)?;
     eprintln!(
         "{} rows ({} bubbles x {} samples) -> {out} (+ .tbi)",
         rows.len(),

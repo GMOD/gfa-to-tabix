@@ -14,7 +14,7 @@ use std::io::{BufRead, BufReader};
 
 use flate2::read::MultiGzDecoder;
 
-use crate::bed::Writer;
+use crate::bed::{self, Line};
 
 const HEADER: &str = "#chrom\tstart\tend\tname\tscore\tstrand\tthickStart\tthickEnd\titemRgb\tclass\tdelta\taltLen\trefLen\tCIGAR\tdiscoveryRank\tfirstSeenIn\tnested\tsegments\n";
 
@@ -28,13 +28,6 @@ struct Segment {
 
 // (segment index, traversed forward)
 type State = (u32, bool);
-
-struct Row {
-    chrom: String,
-    start: u64,
-    end: u64,
-    line: String,
-}
 
 fn fields(
     lines: impl Iterator<Item = Result<String, String>>,
@@ -246,7 +239,7 @@ struct Allele<'a> {
     segments: &'a str,
 }
 
-fn row(a: Allele) -> Row {
+fn row(a: Allele) -> Line {
     let rgb = match a.class {
         "ins" => "192,0,192",
         "sub" => "0,154,138",
@@ -268,15 +261,15 @@ fn row(a: Allele) -> Row {
         u8::from(a.nested),
         a.segments,
     );
-    Row {
-        chrom,
+    Line {
+        chrom: chrom.into_bytes(),
         start,
         end,
-        line,
+        text: line.into_bytes(),
     }
 }
 
-fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<Row> {
+fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<Line> {
     let mut visited: std::collections::HashSet<State> = std::collections::HashSet::new();
     let mut current = entry.state;
     let mut path = String::new();
@@ -381,7 +374,7 @@ pub fn from_rows(
 }
 
 fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
-    let mut rows: Vec<Row> = Vec::new();
+    let mut rows: Vec<Line> = Vec::new();
     for d in &links.deletions {
         let ref_len = d.end - d.start;
         rows.push(row(Allele {
@@ -410,30 +403,17 @@ fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
     if dangling > 0 {
         eprintln!("note: {dangling} walk(s) reached no backbone link and were dropped");
     }
-    rows.sort_unstable_by(|a, b| {
-        (a.chrom.as_bytes(), a.start, a.line.as_bytes()).cmp(&(
-            b.chrom.as_bytes(),
-            b.start,
-            b.line.as_bytes(),
-        ))
-    });
+    bed::write_lines(out, HEADER.as_bytes(), &mut rows)?;
 
-    let mut writer = Writer::create(out)?;
-    writer.header(HEADER.as_bytes())?;
-    for r in &rows {
-        writer.push(r.chrom.as_bytes(), r.start, r.end, r.line.as_bytes())?;
+    fn column(line: &Line, n: usize) -> Option<&[u8]> {
+        line.text.split(|&b| b == b'\t').nth(n)
     }
-    writer.finish()?;
-
     let count = |class: &str| {
         rows.iter()
-            .filter(|r| r.line.split('\t').nth(9) == Some(class))
+            .filter(|r| column(r, 9) == Some(class.as_bytes()))
             .count()
     };
-    let nested = rows
-        .iter()
-        .filter(|r| r.line.split('\t').nth(16) == Some("1"))
-        .count();
+    let nested = rows.iter().filter(|r| column(r, 16) == Some(b"1")).count();
     eprintln!(
         "{} alleles -> {out} (+ .tbi): {} ins, {} del, {} sub; {nested} nested",
         rows.len(),
