@@ -9,26 +9,26 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 1475.53)">
 <title>overview</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-1475.53 652,-1475.53 652,4 -4,4"/>
-<g id="clust1" class="cluster">
+<g id="clust2" class="cluster">
 <title>cluster_graph</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M29,-1276.53C29,-1276.53 494,-1276.53 494,-1276.53 500,-1276.53 506,-1282.53 506,-1288.53 506,-1288.53 506,-1451.53 506,-1451.53 506,-1457.53 500,-1463.53 494,-1463.53 494,-1463.53 29,-1463.53 29,-1463.53 23,-1463.53 17,-1457.53 17,-1451.53 17,-1451.53 17,-1288.53 17,-1288.53 17,-1282.53 23,-1276.53 29,-1276.53"/>
 <text xml:space="preserve" text-anchor="start" x="25" y="-1447.23" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">1. The graph (GFA)</text>
 <text xml:space="preserve" text-anchor="start" x="25" y="-1435.13" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">nodes are S lines and arrows are links (L lines)</text>
 <text xml:space="preserve" text-anchor="start" x="25" y="-1423.13" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">chr1 in blue; s5, an HG002 allele in place of s3, in orange</text>
 </g>
-<g id="clust3" class="cluster">
+<g id="clust4" class="cluster">
 <title>cluster_files</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M20,-689.39C20,-689.39 628,-689.39 628,-689.39 634,-689.39 640,-695.39 640,-701.39 640,-701.39 640,-1235.03 640,-1235.03 640,-1241.03 634,-1247.03 628,-1247.03 628,-1247.03 20,-1247.03 20,-1247.03 14,-1247.03 8,-1241.03 8,-1235.03 8,-1235.03 8,-701.39 8,-701.39 8,-695.39 14,-689.39 20,-689.39"/>
 <text xml:space="preserve" text-anchor="start" x="16" y="-1230.73" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">2. The index</text>
 <text xml:space="preserve" text-anchor="start" x="16" y="-1218.63" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">each node and each link has a row filed under a chr1 interval</text>
 </g>
-<g id="clust4" class="cluster">
+<g id="clust5" class="cluster">
 <title>cluster_query</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M27,-212.5C27,-212.5 621,-212.5 621,-212.5 627,-212.5 633,-218.5 633,-224.5 633,-224.5 633,-634.39 633,-634.39 633,-640.39 627,-646.39 621,-646.39 621,-646.39 27,-646.39 27,-646.39 21,-646.39 15,-640.39 15,-634.39 15,-634.39 15,-224.5 15,-224.5 15,-218.5 21,-212.5 27,-212.5"/>
 <text xml:space="preserve" text-anchor="start" x="23" y="-630.09" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">3. A region query</text>
 <text xml:space="preserve" text-anchor="start" x="23" y="-617.99" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">one tabix request per file returns the rows filed over chr1:25&#45;30</text>
 </g>
-<g id="clust5" class="cluster">
+<g id="clust6" class="cluster">
 <title>cluster_drawn</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M154,-8C154,-8 494,-8 494,-8 500,-8 506,-14 506,-20 506,-20 506,-171 506,-171 506,-177 500,-183 494,-183 494,-183 154,-183 154,-183 148,-183 142,-177 142,-171 142,-171 142,-20 142,-20 142,-14 148,-8 154,-8"/>
 <text xml:space="preserve" text-anchor="start" x="150" y="-166.7" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">4. What the browser draws</text>

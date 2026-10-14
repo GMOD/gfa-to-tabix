@@ -9,20 +9,20 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 989.17)">
 <title>walks</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-989.17 688,-989.17 688,4 -4,4"/>
-<g id="clust1" class="cluster">
+<g id="clust2" class="cluster">
 <title>cluster_graph</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M87,-619.28C87,-619.28 664,-619.28 664,-619.28 670,-619.28 676,-625.28 676,-631.28 676,-631.28 676,-965.17 676,-965.17 676,-971.17 670,-977.17 664,-977.17 664,-977.17 87,-977.17 87,-977.17 81,-977.17 75,-971.17 75,-965.17 75,-965.17 75,-631.28 75,-631.28 75,-625.28 81,-619.28 87,-619.28"/>
 <text xml:space="preserve" text-anchor="start" x="83" y="-960.87" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">1. A base&#45;level graph (GFA)</text>
 <text xml:space="preserve" text-anchor="start" x="83" y="-948.77" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">W lines give each haplotype&#39;s path</text>
 <text xml:space="preserve" text-anchor="start" x="83" y="-936.77" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">GRCh38&#39;s nodes in blue; node 5, which only HG002#1 visits, in orange; CHM13&#39;s deletion in purple</text>
 </g>
-<g id="clust3" class="cluster">
+<g id="clust4" class="cluster">
 <title>cluster_file</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M20,-238.64C20,-238.64 662,-238.64 662,-238.64 668,-238.64 674,-244.64 674,-250.64 674,-250.64 674,-564.28 674,-564.28 674,-570.28 668,-576.28 662,-576.28 662,-576.28 20,-576.28 20,-576.28 14,-576.28 8,-570.28 8,-564.28 8,-564.28 8,-250.64 8,-250.64 8,-244.64 14,-238.64 20,-238.64"/>
 <text xml:space="preserve" text-anchor="start" x="16" y="-559.98" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">2. graph.GRCh38.walks.bed.gz</text>
 <text xml:space="preserve" text-anchor="start" x="16" y="-547.88" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">every row of the one chunk this graph fills</text>
 </g>
-<g id="clust4" class="cluster">
+<g id="clust5" class="cluster">
 <title>cluster_rebuilt</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M134,-8C134,-8 548,-8 548,-8 554,-8 560,-14 560,-20 560,-20 560,-183.64 560,-183.64 560,-189.64 554,-195.64 548,-195.64 548,-195.64 134,-195.64 134,-195.64 128,-195.64 122,-189.64 122,-183.64 122,-183.64 122,-20 122,-20 122,-14 128,-8 134,-8"/>
 <text xml:space="preserve" text-anchor="start" x="130" y="-179.34" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">3. What the reader rebuilds</text>

@@ -2,7 +2,6 @@
 digraph overview {
   bgcolor="white"
   fontname="Helvetica"
-  rankdir=TB
   newrank=true
   compound=true
   nodesep=0.4
@@ -10,131 +9,111 @@ digraph overview {
   node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded", fillcolor="#e8eef7", color="#4a6fa5", margin="0.15,0.06"]
   edge [fontname="Helvetica", fontsize=11, color="#555555", arrowsize=0.8]
 
-  subgraph cluster_graph {
-    label=<<B>1. The graph (GFA)</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">nodes are S lines and arrows are links (L lines)</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">chr1 in blue; s5, an HG002 allele in place of s3, in orange</FONT><BR ALIGN="LEFT"/>>
-    labeljust=l
-    fontsize=14
-    color="#bbbbbb"
-    style="rounded,filled"
-    fillcolor="#fafafa"
-    margin=14
-    s1 [label=<<B>s1</B><BR/><FONT POINT-SIZE="10">chr1:0-10</FONT>>]
-    s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>]
-    s3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
-    s4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>]
-    s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25, rank 1</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
-    {rank=same; s1; s2; s3; s4}
-    s1 -> s2 -> s3 -> s4 [weight=20]
-    s3 -> s5 [style=invis, weight=20]
-    s2 -> s5 [color="#c77a2b", weight=0]
-    s5 -> s4 [color="#c77a2b", weight=0]
-  }
+  subgraph {
+    graph [labeljust=l, fontsize=14, color="#bbbbbb", style="rounded,filled", fillcolor="#fafafa", margin=14]
 
-  subgraph cluster_files {
-    label=<<B>2. The index</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">each node and each link has a row filed under a chr1 interval</FONT><BR ALIGN="LEFT"/>>
-    labeljust=l
-    fontsize=14
-    color="#bbbbbb"
-    style="rounded,filled"
-    fillcolor="#fafafa"
-    margin=14
-    rows [shape=plaintext, style="", label=<
-      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
-        <TR><TD COLSPAN="8" BORDER="0" ALIGN="LEFT"><B>graph.segs.bed.gz</B></TD></TR>
-        <TR><TD COLSPAN="3" BORDER="0"><I>filed under</I></TD><TD COLSPAN="2" BORDER="0"></TD><TD COLSPAN="3" BORDER="0"><I>the node's own coordinate</I></TD></TR>
-        <TR BGCOLOR="#dddddd"><TD>anchorSeq</TD><TD>start</TD><TD>end</TD><TD>node</TD><TD>rank</TD><TD>sequence</TD><TD>start</TD><TD>end</TD></TR>
-        <!-- begin segs -->
-        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>s1</TD><TD>0</TD><TD>chr1</TD><TD>0</TD><TD>10</TD></TR>
-        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>s2</TD><TD>0</TD><TD>chr1</TD><TD>10</TD><TD>20</TD></TR>
-        <TR BGCOLOR="#fde6cf"><TD>chr1</TD><TD><B>10</B></TD><TD><B>40</B></TD><TD>s5</TD><TD>1</TD><TD>HG002</TD><TD>10</TD><TD>25</TD></TR>
-        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>s3</TD><TD>0</TD><TD>chr1</TD><TD>20</TD><TD>30</TD></TR>
-        <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>s4</TD><TD>0</TD><TD>chr1</TD><TD>30</TD><TD>40</TD></TR>
-        <!-- end segs -->
-        <!-- begin segs-caption -->
-        <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#a15f1c">s5 lies off chr1, so the tool files it under the reference span<BR/>it hangs from: s2 to s4, chr1:10-40.</FONT></TD></TR>
-        <!-- end segs-caption -->
-      </TABLE></TD></TR>
-      <TR><TD HEIGHT="18"></TD></TR>
-      <TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
-        <TR><TD COLSPAN="13" BORDER="0" ALIGN="LEFT"><B>graph.links.bed.gz</B></TD></TR>
-        <TR><TD COLSPAN="3" BORDER="0"><I>filed under</I></TD><TD COLSPAN="2" BORDER="0"><I>link</I></TD><TD COLSPAN="4" BORDER="0"><I>source node</I></TD><TD COLSPAN="4" BORDER="0"><I>target node</I></TD></TR>
-        <TR BGCOLOR="#dddddd"><TD>seq</TD><TD>start</TD><TD>end</TD><TD>src</TD><TD>tgt</TD><TD>seq</TD><TD>start</TD><TD>end</TD><TD>rank</TD><TD>seq</TD><TD>start</TD><TD>end</TD><TD>rank</TD></TR>
-        <!-- begin links -->
-        <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s1+</TD><TD>s2+</TD><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>0</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD></TR>
-        <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s2+</TD><TD>s3+</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>0</TD></TR>
-        <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s2+</TD><TD BGCOLOR="#fde6cf">s5+</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD><TD BGCOLOR="#fde6cf">HG002</TD><TD BGCOLOR="#fde6cf">10</TD><TD BGCOLOR="#fde6cf">25</TD><TD BGCOLOR="#fde6cf">1</TD></TR>
-        <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>10</TD><TD>40</TD><TD>s3+</TD><TD>s4+</TD><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>0</TD><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>0</TD></TR>
-        <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>10</TD><TD>40</TD><TD BGCOLOR="#fde6cf">s5+</TD><TD>s4+</TD><TD BGCOLOR="#fde6cf">HG002</TD><TD BGCOLOR="#fde6cf">10</TD><TD BGCOLOR="#fde6cf">25</TD><TD BGCOLOR="#fde6cf">1</TD><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>0</TD></TR>
-        <!-- end links -->
-        <TR><TD COLSPAN="13" BORDER="0" CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The tool files a link under the span both its nodes reach, so a query near either node returns it.<BR/>The row gives both nodes' coordinates, so a reader places the far node without another query.</FONT></TD></TR>
-      </TABLE></TD></TR></TABLE>>]
-  }
+    subgraph cluster_graph {
+      label=<<B>1. The graph (GFA)</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">nodes are S lines and arrows are links (L lines)</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">chr1 in blue; s5, an HG002 allele in place of s3, in orange</FONT><BR ALIGN="LEFT"/>>
+      s1 [label=<<B>s1</B><BR/><FONT POINT-SIZE="10">chr1:0-10</FONT>>]
+      s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>]
+      s3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
+      s4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>]
+      s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25, rank 1</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
+      {rank=same; s1; s2; s3; s4}
+      s1 -> s2 -> s3 -> s4 [weight=20]
+      s3 -> s5 [style=invis, weight=20]
+      s2 -> s5 [color="#c77a2b", weight=0]
+      s5 -> s4 [color="#c77a2b", weight=0]
+    }
 
-  subgraph cluster_query {
-    label=<<B>3. A region query</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">one tabix request per file returns the rows filed over chr1:25-30</FONT><BR ALIGN="LEFT"/>>
-    labeljust=l
-    fontsize=14
-    color="#bbbbbb"
-    style="rounded,filled"
-    fillcolor="#fafafa"
-    margin=14
-    hits [shape=plaintext, style="", label=<
-      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
-        <!-- begin lanes -->
-        <TR><TD></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD></TD></TR>
-        <TR><TD></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">0</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">10</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">20</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">30</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">40</FONT></TD><TD></TD></TR>
-        <TR><TD HEIGHT="1"></TD><TD></TD><TD COLSPAN="16" BGCOLOR="#999999"></TD><TD></TD><TD></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>chr1:25-30</B>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#555555"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  query</FONT></TD></TR>
-        <TR><TD COLSPAN="20" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>graph.segs.bed.gz</I></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s1</FONT>  </TD><TD></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="6"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s2</FONT>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="2"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="6" BGCOLOR="#f3c08f"></TD><TD COLSPAN="2" BGCOLOR="#c77a2b"></TD><TD COLSPAN="4" BGCOLOR="#f3c08f"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD></TD><TD COLSPAN="8"></TD><TD COLSPAN="2" BGCOLOR="#a9bfe2"></TD><TD COLSPAN="2" BGCOLOR="#4a6fa5"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s4</FONT>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
-        <TR><TD COLSPAN="20" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>graph.links.bed.gz: all 5 rows return</I></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s1→s2</FONT>  </TD><TD></TD><TD COLSPAN="10" BGCOLOR="#ececec"></TD><TD COLSPAN="2" BGCOLOR="#bdbdbd"></TD><TD COLSPAN="4" BGCOLOR="#ececec"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  dropped</FONT></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s2→s3</B>  </TD><TD></TD><TD COLSPAN="10" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s2→s5</B>  </TD><TD></TD><TD COLSPAN="10" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3→s4</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="6" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
-        <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-        <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5→s4</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="6" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
-        <!-- end lanes -->
-        <!-- begin keep-caption -->
-        <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The reader keeps a link when the node file returned one of its nodes, or when both its nodes<BR/>are far ends of links it kept. s1→s2 fails both tests, since no kept link ends at s1.</FONT></TD></TR>
-        <!-- end keep-caption -->
-      </TABLE>>]
-  }
+    subgraph cluster_files {
+      label=<<B>2. The index</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">each node and each link has a row filed under a chr1 interval</FONT><BR ALIGN="LEFT"/>>
+      rows [shape=plaintext, style="", label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
+          <TR><TD COLSPAN="8" BORDER="0" ALIGN="LEFT"><B>graph.segs.bed.gz</B></TD></TR>
+          <TR><TD COLSPAN="3" BORDER="0"><I>filed under</I></TD><TD COLSPAN="2" BORDER="0"></TD><TD COLSPAN="3" BORDER="0"><I>the node's own coordinate</I></TD></TR>
+          <TR BGCOLOR="#dddddd"><TD>anchorSeq</TD><TD>start</TD><TD>end</TD><TD>node</TD><TD>rank</TD><TD>sequence</TD><TD>start</TD><TD>end</TD></TR>
+          <!-- begin segs -->
+          <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>s1</TD><TD>0</TD><TD>chr1</TD><TD>0</TD><TD>10</TD></TR>
+          <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>s2</TD><TD>0</TD><TD>chr1</TD><TD>10</TD><TD>20</TD></TR>
+          <TR BGCOLOR="#fde6cf"><TD>chr1</TD><TD><B>10</B></TD><TD><B>40</B></TD><TD>s5</TD><TD>1</TD><TD>HG002</TD><TD>10</TD><TD>25</TD></TR>
+          <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>s3</TD><TD>0</TD><TD>chr1</TD><TD>20</TD><TD>30</TD></TR>
+          <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>s4</TD><TD>0</TD><TD>chr1</TD><TD>30</TD><TD>40</TD></TR>
+          <!-- end segs -->
+          <!-- begin segs-caption -->
+          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#a15f1c">s5 lies off chr1, so the tool files it under the reference span<BR/>it hangs from: s2 to s4, chr1:10-40.</FONT></TD></TR>
+          <!-- end segs-caption -->
+        </TABLE></TD></TR>
+        <TR><TD HEIGHT="18"></TD></TR>
+        <TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
+          <TR><TD COLSPAN="13" BORDER="0" ALIGN="LEFT"><B>graph.links.bed.gz</B></TD></TR>
+          <TR><TD COLSPAN="3" BORDER="0"><I>filed under</I></TD><TD COLSPAN="2" BORDER="0"><I>link</I></TD><TD COLSPAN="4" BORDER="0"><I>source node</I></TD><TD COLSPAN="4" BORDER="0"><I>target node</I></TD></TR>
+          <TR BGCOLOR="#dddddd"><TD>seq</TD><TD>start</TD><TD>end</TD><TD>src</TD><TD>tgt</TD><TD>seq</TD><TD>start</TD><TD>end</TD><TD>rank</TD><TD>seq</TD><TD>start</TD><TD>end</TD><TD>rank</TD></TR>
+          <!-- begin links -->
+          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s1+</TD><TD>s2+</TD><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>0</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s2+</TD><TD>s3+</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>0</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s2+</TD><TD BGCOLOR="#fde6cf">s5+</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD><TD BGCOLOR="#fde6cf">HG002</TD><TD BGCOLOR="#fde6cf">10</TD><TD BGCOLOR="#fde6cf">25</TD><TD BGCOLOR="#fde6cf">1</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>10</TD><TD>40</TD><TD>s3+</TD><TD>s4+</TD><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>0</TD><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>0</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>10</TD><TD>40</TD><TD BGCOLOR="#fde6cf">s5+</TD><TD>s4+</TD><TD BGCOLOR="#fde6cf">HG002</TD><TD BGCOLOR="#fde6cf">10</TD><TD BGCOLOR="#fde6cf">25</TD><TD BGCOLOR="#fde6cf">1</TD><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>0</TD></TR>
+          <!-- end links -->
+          <TR><TD COLSPAN="13" BORDER="0" CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The tool files a link under the span both its nodes reach, so a query near either node returns it.<BR/>The row gives both nodes' coordinates, so a reader places the far node without another query.</FONT></TD></TR>
+        </TABLE></TD></TR></TABLE>>]
+    }
 
-  subgraph cluster_drawn {
-    label=<<B>4. What the browser draws</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">the dashed nodes come from the link rows alone</FONT><BR ALIGN="LEFT"/>>
-    labeljust=l
-    fontsize=14
-    color="#bbbbbb"
-    style="rounded,filled"
-    fillcolor="#fafafa"
-    margin=14
-    // begin drawn
-    d_s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
-    d_s3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
-    d_s4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
-    d_s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
-    {rank=same; d_s2; d_s3; d_s4}
-    d_s2 -> d_s3 [weight=20]
-    d_s2 -> d_s5 [color="#c77a2b", weight=0]
-    d_s3 -> d_s4 [weight=20]
-    d_s5 -> d_s4 [color="#c77a2b", weight=0]
-    d_s3 -> d_s5 [style=invis, weight=20]
-    // end drawn
+    subgraph cluster_query {
+      label=<<B>3. A region query</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">one tabix request per file returns the rows filed over chr1:25-30</FONT><BR ALIGN="LEFT"/>>
+      hits [shape=plaintext, style="", label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+          <!-- begin lanes -->
+          <TR><TD></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD WIDTH="16"></TD><TD></TD></TR>
+          <TR><TD></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">0</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">10</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">20</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">30</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">40</FONT></TD><TD></TD></TR>
+          <TR><TD HEIGHT="1"></TD><TD></TD><TD COLSPAN="16" BGCOLOR="#999999"></TD><TD></TD><TD></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>chr1:25-30</B>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#555555"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  query</FONT></TD></TR>
+          <TR><TD COLSPAN="20" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>graph.segs.bed.gz</I></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s1</FONT>  </TD><TD></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="6"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s2</FONT>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="2"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="6" BGCOLOR="#f3c08f"></TD><TD COLSPAN="2" BGCOLOR="#c77a2b"></TD><TD COLSPAN="4" BGCOLOR="#f3c08f"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD></TD><TD COLSPAN="8"></TD><TD COLSPAN="2" BGCOLOR="#a9bfe2"></TD><TD COLSPAN="2" BGCOLOR="#4a6fa5"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s4</FONT>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
+          <TR><TD COLSPAN="20" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>graph.links.bed.gz: all 5 rows return</I></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s1→s2</FONT>  </TD><TD></TD><TD COLSPAN="10" BGCOLOR="#ececec"></TD><TD COLSPAN="2" BGCOLOR="#bdbdbd"></TD><TD COLSPAN="4" BGCOLOR="#ececec"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  dropped</FONT></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s2→s3</B>  </TD><TD></TD><TD COLSPAN="10" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s2→s5</B>  </TD><TD></TD><TD COLSPAN="10" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3→s4</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="6" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
+          <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5→s4</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="6" BGCOLOR="#cfcfcf"></TD><TD COLSPAN="2" BGCOLOR="#666666"></TD><TD COLSPAN="4" BGCOLOR="#cfcfcf"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
+          <!-- end lanes -->
+          <!-- begin keep-caption -->
+          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The reader keeps a link when the node file returned one of its nodes, or when both its nodes<BR/>are far ends of links it kept. s1→s2 fails both tests, since no kept link ends at s1.</FONT></TD></TR>
+          <!-- end keep-caption -->
+        </TABLE>>]
+    }
+
+    subgraph cluster_drawn {
+      label=<<B>4. What the browser draws</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">the dashed nodes come from the link rows alone</FONT><BR ALIGN="LEFT"/>>
+      // begin drawn
+      d_s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
+      d_s3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
+      d_s4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
+      d_s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
+      {rank=same; d_s2; d_s3; d_s4}
+      d_s2 -> d_s3 [weight=20]
+      d_s2 -> d_s5 [color="#c77a2b", weight=0]
+      d_s3 -> d_s4 [weight=20]
+      d_s5 -> d_s4 [color="#c77a2b", weight=0]
+      d_s3 -> d_s5 [style=invis, weight=20]
+      // end drawn
+    }
   }
 
   s5 -> rows [ltail=cluster_graph, lhead=cluster_files, label="  gfa-to-tabix graph.gfa", penwidth=2]
