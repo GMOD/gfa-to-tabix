@@ -361,7 +361,7 @@ def walks(rows, w_lines):
         meaning, bg = "", None
         if kind == "ref":
             meaning, bg = f"R, the reference path: {' '.join(handle(h) for h in R)}", BLUE[0]
-            simple.append(tr([td("R", bg), td(" ".join(node(h) for h in R), align="LEFT")]))
+            simple.append(tr([td(reference, bg), td(" ".join(node(h) for h in R), align="LEFT")]))
         elif kind == "nodes":
             ids, total = [], 0
             for d in rest[0].split(","):
@@ -416,7 +416,7 @@ def walks_caption(header, rows):
 
 
 def read_gfa(path):
-    lengths, links, paths = {}, [], {}
+    lengths, links, paths, contigs = {}, [], {}, {}
     with open(path) as f:
         for line in f:
             fields = line.rstrip("\n").split("\t")
@@ -425,16 +425,24 @@ def read_gfa(path):
             elif fields[0] == "L":
                 links.append((fields[1], fields[3]))
             elif fields[0] == "W":
-                paths[f"{fields[1]}#{fields[2]}"] = [int(x) for x in fields[6].replace("<", ">").split(">") if x]
-    return lengths, links, paths
+                name = f"{fields[1]}#{fields[2]}"
+                paths[name] = [int(x) for x in fields[6].replace("<", ">").split(">") if x]
+                contigs[name] = (fields[3], int(fields[4]))
+    return lengths, links, paths, contigs
 
 
-def walks_graph(lengths, links, paths):
-    ref = [str(n) for n in next(path for name, path in paths.items() if name.startswith(f"{REF}#"))]
-    graph, _, bottom = bubble("n", ref, {n: f"{length} bp" for n, length in lengths.items()}, links)
+def walks_graph(lengths, links, paths, contigs):
+    name = next(name for name in paths if name.startswith(f"{REF}#"))
+    ref = [str(n) for n in paths[name]]
+    labels = {n: f"{length} bp" for n, length in lengths.items()}
+    contig, start = contigs[name]
+    for n in ref:
+        labels[n] = coordinate(contig, start, start + lengths[n])
+        start += lengths[n]
+    graph, _, bottom = bubble("n", ref, labels, links)
     arrows = [
         arrow((bottom, "cluster_graph"), ("rows", "cluster_file"), f"gfa-to-tabix --walks\n--refs {REF}"),
-        arrow(("rows", "cluster_file"), ("rebuilt", "cluster_rebuilt"), "a region query\nreturns the chunk"),
+        arrow(("rows", "cluster_file"), ("rebuilt", "cluster_rebuilt"), f"a query on {contig}\nreturns the chunk"),
     ]
     return graph, arrows
 
@@ -460,9 +468,9 @@ def generate(binary):
         subprocess.run([binary, FIGURES / "walks.gfa", "--walks", "--refs", REF, "-o", out], **quiet)
         walk_file = f"{out}.{REF}.walks.bed.gz"
         walk_rows, header = read_rows(walk_file), read_header(walk_file)
-    lengths, gfa_links, paths = read_gfa(FIGURES / "walks.gfa")
+    lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, simple, rebuilt = walks(walk_rows, paths)
-    walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths)
+    walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
     graph, drawn, arrows, simple_arrows = overview_graphs(segs, links)
     return {
         "overview": {

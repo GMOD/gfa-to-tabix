@@ -15,10 +15,10 @@ digraph walks {
     subgraph cluster_graph {
       label=<<B>1. A base-level graph (GFA)</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">W lines give each haplotype's path</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">HG002#1 takes node 5 in place of 3 (orange); CHM13 skips 3 (purple)</FONT><BR ALIGN="LEFT"/>>
       // begin graph
-      n1 [label=<<B>1</B><BR/><FONT POINT-SIZE="10">10 bp</FONT>>]
-      n2 [label=<<B>2</B><BR/><FONT POINT-SIZE="10">10 bp</FONT>>]
-      n3 [label=<<B>3</B><BR/><FONT POINT-SIZE="10">10 bp</FONT>>]
-      n4 [label=<<B>4</B><BR/><FONT POINT-SIZE="10">10 bp</FONT>>]
+      n1 [label=<<B>1</B><BR/><FONT POINT-SIZE="10">chr1:0-10</FONT>>]
+      n2 [label=<<B>2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>]
+      n3 [label=<<B>3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
+      n4 [label=<<B>4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>]
       n5 [label=<<B>5</B><BR/><FONT POINT-SIZE="10">15 bp</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
       {rank=same; n1; n2; n3; n4}
       n1 -> n2 [weight=20]
@@ -69,6 +69,6 @@ digraph walks {
 
   // begin arrows
   nbelow -> rows [ltail=cluster_graph, lhead=cluster_file, label="  gfa-to-tabix --walks\n  --refs GRCh38", penwidth=2]
-  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a region query\n  returns the chunk", penwidth=2]
+  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a query on chr1\n  returns the chunk", penwidth=2]
   // end arrows
 }

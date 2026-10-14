@@ -11,10 +11,10 @@
 <polygon fill="white" stroke="none" points="-4,4 -4,-832.22 686,-832.22 686,4 -4,4"/>
 <g id="clust2" class="cluster">
 <title>cluster_graph</title>
-<path fill="#fafafa" stroke="#bbbbbb" d="M81,-590.78C81,-590.78 490,-590.78 490,-590.78 496,-590.78 502,-596.78 502,-602.78 502,-602.78 502,-808.22 502,-808.22 502,-814.22 496,-820.22 490,-820.22 490,-820.22 81,-820.22 81,-820.22 75,-820.22 69,-814.22 69,-808.22 69,-808.22 69,-602.78 69,-602.78 69,-596.78 75,-590.78 81,-590.78"/>
-<text xml:space="preserve" text-anchor="start" x="77" y="-803.92" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">1. A base&#45;level graph (GFA)</text>
-<text xml:space="preserve" text-anchor="start" x="77" y="-791.82" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">W lines give each haplotype&#39;s path</text>
-<text xml:space="preserve" text-anchor="start" x="77" y="-779.82" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">HG002#1 takes node 5 in place of 3 (orange); CHM13 skips 3 (purple)</text>
+<path fill="#fafafa" stroke="#bbbbbb" d="M46,-590.78C46,-590.78 511,-590.78 511,-590.78 517,-590.78 523,-596.78 523,-602.78 523,-602.78 523,-808.22 523,-808.22 523,-814.22 517,-820.22 511,-820.22 511,-820.22 46,-820.22 46,-820.22 40,-820.22 34,-814.22 34,-808.22 34,-808.22 34,-602.78 34,-602.78 34,-596.78 40,-590.78 46,-590.78"/>
+<text xml:space="preserve" text-anchor="start" x="42" y="-803.92" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">1. A base&#45;level graph (GFA)</text>
+<text xml:space="preserve" text-anchor="start" x="42" y="-791.82" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">W lines give each haplotype&#39;s path</text>
+<text xml:space="preserve" text-anchor="start" x="42" y="-779.82" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">HG002#1 takes node 5 in place of 3 (orange); CHM13 skips 3 (purple)</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_file</title>
@@ -31,48 +31,48 @@
 <!-- n1 -->
 <g id="node1" class="node">
 <title>n1</title>
-<path fill="#e8eef7" stroke="#4a6fa5" d="M132,-683.22C132,-683.22 102,-683.22 102,-683.22 96,-683.22 90,-677.22 90,-671.22 90,-671.22 90,-659.22 90,-659.22 90,-653.22 96,-647.22 102,-647.22 102,-647.22 132,-647.22 132,-647.22 138,-647.22 144,-653.22 144,-659.22 144,-659.22 144,-671.22 144,-671.22 144,-677.22 138,-683.22 132,-683.22"/>
-<text xml:space="preserve" text-anchor="start" x="112.88" y="-665.82" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">1</text>
-<text xml:space="preserve" text-anchor="start" x="103.5" y="-655.72" font-family="Helvetica,sans-Serif" font-size="10.00">10 bp</text>
+<path fill="#e8eef7" stroke="#4a6fa5" d="M103.67,-683.22C103.67,-683.22 60.33,-683.22 60.33,-683.22 54.33,-683.22 48.33,-677.22 48.33,-671.22 48.33,-671.22 48.33,-659.22 48.33,-659.22 48.33,-653.22 54.33,-647.22 60.33,-647.22 60.33,-647.22 103.67,-647.22 103.67,-647.22 109.67,-647.22 115.67,-653.22 115.67,-659.22 115.67,-659.22 115.67,-671.22 115.67,-671.22 115.67,-677.22 109.67,-683.22 103.67,-683.22"/>
+<text xml:space="preserve" text-anchor="start" x="77.88" y="-665.82" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">1</text>
+<text xml:space="preserve" text-anchor="start" x="59.12" y="-655.72" font-family="Helvetica,sans-Serif" font-size="10.00">chr1:0&#45;10</text>
 </g>
 <!-- n2 -->
 <g id="node2" class="node">
 <title>n2</title>
-<path fill="#e8eef7" stroke="#4a6fa5" d="M244,-683.22C244,-683.22 214,-683.22 214,-683.22 208,-683.22 202,-677.22 202,-671.22 202,-671.22 202,-659.22 202,-659.22 202,-653.22 208,-647.22 214,-647.22 214,-647.22 244,-647.22 244,-647.22 250,-647.22 256,-653.22 256,-659.22 256,-659.22 256,-671.22 256,-671.22 256,-677.22 250,-683.22 244,-683.22"/>
-<text xml:space="preserve" text-anchor="start" x="224.88" y="-665.82" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">2</text>
-<text xml:space="preserve" text-anchor="start" x="215.5" y="-655.72" font-family="Helvetica,sans-Serif" font-size="10.00">10 bp</text>
+<path fill="#e8eef7" stroke="#4a6fa5" d="M234.68,-683.22C234.68,-683.22 185.32,-683.22 185.32,-683.22 179.32,-683.22 173.32,-677.22 173.32,-671.22 173.32,-671.22 173.32,-659.22 173.32,-659.22 173.32,-653.22 179.32,-647.22 185.32,-647.22 185.32,-647.22 234.68,-647.22 234.68,-647.22 240.68,-647.22 246.68,-653.22 246.68,-659.22 246.68,-659.22 246.68,-671.22 246.68,-671.22 246.68,-677.22 240.68,-683.22 234.68,-683.22"/>
+<text xml:space="preserve" text-anchor="start" x="205.88" y="-665.82" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">2</text>
+<text xml:space="preserve" text-anchor="start" x="184.12" y="-655.72" font-family="Helvetica,sans-Serif" font-size="10.00">chr1:10&#45;20</text>
 </g>
 <!-- n1&#45;&gt;n2 -->
 <g id="edge1" class="edge">
 <title>n1&#45;&gt;n2</title>
-<path fill="none" stroke="#555555" d="M144.12,-665.22C160.2,-665.22 176.27,-665.22 192.35,-665.22"/>
-<polygon fill="#555555" stroke="#555555" points="192.3,-668.02 200.3,-665.22 192.3,-662.42 192.3,-668.02"/>
+<path fill="none" stroke="#555555" d="M116,-665.22C131.86,-665.22 147.72,-665.22 163.58,-665.22"/>
+<polygon fill="#555555" stroke="#555555" points="163.4,-668.02 171.4,-665.22 163.4,-662.42 163.4,-668.02"/>
 </g>
 <!-- n3 -->
 <g id="node3" class="node">
 <title>n3</title>
-<path fill="#e8eef7" stroke="#4a6fa5" d="M356,-683.22C356,-683.22 326,-683.22 326,-683.22 320,-683.22 314,-677.22 314,-671.22 314,-671.22 314,-659.22 314,-659.22 314,-653.22 320,-647.22 326,-647.22 326,-647.22 356,-647.22 356,-647.22 362,-647.22 368,-653.22 368,-659.22 368,-659.22 368,-671.22 368,-671.22 368,-677.22 362,-683.22 356,-683.22"/>
+<path fill="#e8eef7" stroke="#4a6fa5" d="M365.68,-683.22C365.68,-683.22 316.32,-683.22 316.32,-683.22 310.32,-683.22 304.32,-677.22 304.32,-671.22 304.32,-671.22 304.32,-659.22 304.32,-659.22 304.32,-653.22 310.32,-647.22 316.32,-647.22 316.32,-647.22 365.68,-647.22 365.68,-647.22 371.68,-647.22 377.68,-653.22 377.68,-659.22 377.68,-659.22 377.68,-671.22 377.68,-671.22 377.68,-677.22 371.68,-683.22 365.68,-683.22"/>
 <text xml:space="preserve" text-anchor="start" x="336.88" y="-665.82" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">3</text>
-<text xml:space="preserve" text-anchor="start" x="327.5" y="-655.72" font-family="Helvetica,sans-Serif" font-size="10.00">10 bp</text>
+<text xml:space="preserve" text-anchor="start" x="315.12" y="-655.72" font-family="Helvetica,sans-Serif" font-size="10.00">chr1:20&#45;30</text>
 </g>
 <!-- n2&#45;&gt;n3 -->
 <g id="edge2" class="edge">
 <title>n2&#45;&gt;n3</title>
-<path fill="none" stroke="#555555" d="M256.12,-665.22C272.2,-665.22 288.27,-665.22 304.35,-665.22"/>
-<polygon fill="#555555" stroke="#555555" points="304.3,-668.02 312.3,-665.22 304.3,-662.42 304.3,-668.02"/>
+<path fill="none" stroke="#555555" d="M247.1,-665.22C262.94,-665.22 278.78,-665.22 294.63,-665.22"/>
+<polygon fill="#555555" stroke="#555555" points="294.44,-668.02 302.44,-665.22 294.44,-662.42 294.44,-668.02"/>
 </g>
 <!-- n4 -->
 <g id="node4" class="node">
 <title>n4</title>
-<path fill="#e8eef7" stroke="#4a6fa5" d="M468,-683.22C468,-683.22 438,-683.22 438,-683.22 432,-683.22 426,-677.22 426,-671.22 426,-671.22 426,-659.22 426,-659.22 426,-653.22 432,-647.22 438,-647.22 438,-647.22 468,-647.22 468,-647.22 474,-647.22 480,-653.22 480,-659.22 480,-659.22 480,-671.22 480,-671.22 480,-677.22 474,-683.22 468,-683.22"/>
-<text xml:space="preserve" text-anchor="start" x="448.88" y="-665.82" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">4</text>
-<text xml:space="preserve" text-anchor="start" x="439.5" y="-655.72" font-family="Helvetica,sans-Serif" font-size="10.00">10 bp</text>
+<path fill="#e8eef7" stroke="#4a6fa5" d="M496.68,-683.22C496.68,-683.22 447.32,-683.22 447.32,-683.22 441.32,-683.22 435.32,-677.22 435.32,-671.22 435.32,-671.22 435.32,-659.22 435.32,-659.22 435.32,-653.22 441.32,-647.22 447.32,-647.22 447.32,-647.22 496.68,-647.22 496.68,-647.22 502.68,-647.22 508.68,-653.22 508.68,-659.22 508.68,-659.22 508.68,-671.22 508.68,-671.22 508.68,-677.22 502.68,-683.22 496.68,-683.22"/>
+<text xml:space="preserve" text-anchor="start" x="467.88" y="-665.82" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">4</text>
+<text xml:space="preserve" text-anchor="start" x="446.12" y="-655.72" font-family="Helvetica,sans-Serif" font-size="10.00">chr1:30&#45;40</text>
 </g>
 <!-- n2&#45;&gt;n4 -->
 <g id="edge6" class="edge">
 <title>n2:s&#45;&gt;n4:s</title>
-<path fill="none" stroke="#8a5fb0" d="M229,-647.22C229,-624.86 409.81,-622.59 446.54,-640.41"/>
-<polygon fill="#8a5fb0" stroke="#8a5fb0" points="444.42,-642.24 451.96,-646.12 448.48,-638.39 444.42,-642.24"/>
+<path fill="none" stroke="#8a5fb0" d="M210,-647.22C210,-634.23 418.73,-632.83 463.58,-643.03"/>
+<polygon fill="#8a5fb0" stroke="#8a5fb0" points="462.23,-645.49 470.64,-646.55 464.73,-640.48 462.23,-645.49"/>
 </g>
 <!-- n5 -->
 <g id="node5" class="node">
@@ -84,14 +84,14 @@
 <!-- n2&#45;&gt;n5 -->
 <g id="edge4" class="edge">
 <title>n2&#45;&gt;n5</title>
-<path fill="none" stroke="#c77a2b" d="M254.84,-683.52C270.5,-694.01 290.65,-707.5 307.53,-718.81"/>
-<polygon fill="#c77a2b" stroke="#c77a2b" points="305.56,-720.86 313.77,-722.98 308.68,-716.2 305.56,-720.86"/>
+<path fill="none" stroke="#c77a2b" d="M240.17,-683.49C259.61,-694.62 284.98,-709.15 305.4,-720.84"/>
+<polygon fill="#c77a2b" stroke="#c77a2b" points="303.89,-723.2 312.22,-724.75 306.67,-718.34 303.89,-723.2"/>
 </g>
 <!-- n3&#45;&gt;n4 -->
 <g id="edge3" class="edge">
 <title>n3&#45;&gt;n4</title>
-<path fill="none" stroke="#555555" d="M368.12,-665.22C384.2,-665.22 400.27,-665.22 416.35,-665.22"/>
-<polygon fill="#555555" stroke="#555555" points="416.3,-668.02 424.3,-665.22 416.3,-662.42 416.3,-668.02"/>
+<path fill="none" stroke="#555555" d="M378.1,-665.22C393.94,-665.22 409.78,-665.22 425.63,-665.22"/>
+<polygon fill="#555555" stroke="#555555" points="425.44,-668.02 433.44,-665.22 425.44,-662.42 425.44,-668.02"/>
 </g>
 <!-- nbelow -->
 <!-- n3&#45;&gt;nbelow -->
@@ -99,8 +99,8 @@
 <!-- n5&#45;&gt;n4 -->
 <g id="edge5" class="edge">
 <title>n5&#45;&gt;n4</title>
-<path fill="none" stroke="#c77a2b" d="M366.98,-723.82C382.67,-713.32 402.82,-699.82 419.68,-688.53"/>
-<polygon fill="#c77a2b" stroke="#c77a2b" points="420.82,-691.14 425.91,-684.36 417.7,-686.49 420.82,-691.14"/>
+<path fill="none" stroke="#c77a2b" d="M368.46,-725.5C387.4,-714.65 412.84,-700.09 433.76,-688.11"/>
+<polygon fill="#c77a2b" stroke="#c77a2b" points="434.97,-690.65 440.52,-684.24 432.18,-685.79 434.97,-690.65"/>
 </g>
 <!-- rows -->
 <g id="node7" class="node">
@@ -227,7 +227,7 @@
 <title>rows&#45;&gt;rebuilt</title>
 <path fill="none" stroke="#555555" stroke-width="2" d="M341,-238.64C341,-227.82 341,-216.94 341,-206.24"/>
 <polygon fill="#555555" stroke="#555555" stroke-width="2" points="343.8,-206.67 341,-198.67 338.2,-206.67 343.8,-206.67"/>
-<text xml:space="preserve" text-anchor="middle" x="393.5" y="-220.19" font-family="Helvetica,sans-Serif" font-size="11.00"> &#160;a region query</text>
+<text xml:space="preserve" text-anchor="middle" x="393.5" y="-220.19" font-family="Helvetica,sans-Serif" font-size="11.00"> &#160;a query on chr1</text>
 <text xml:space="preserve" text-anchor="middle" x="393.5" y="-206.69" font-family="Helvetica,sans-Serif" font-size="11.00"> &#160;returns the chunk</text>
 </g>
 </g>
