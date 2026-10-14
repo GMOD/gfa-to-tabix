@@ -16,6 +16,7 @@ from pathlib import Path
 
 FIGURES = Path(__file__).resolve().parent.parent / "docs" / "figures"
 PREFIX = "graph"
+REF = "GRCh38"
 QUERY = ("chr1", 25, 30)
 BP_PER_CELL = 2.5
 TICK_BP = 10
@@ -192,6 +193,7 @@ def keep_caption(segs, links):
 
 def bubble(prefix, ref, labels, edges, far=()):
     alts = [n for n in labels if n not in ref]
+    centre = prefix + ref[len(ref) // 2]
     lines = []
     for name in ref + alts:
         attrs = [f'label=<<B>{name}</B><BR/><FONT POINT-SIZE="10">{labels[name]}</FONT>>']
@@ -201,17 +203,23 @@ def bubble(prefix, ref, labels, edges, far=()):
             attrs += [f'fillcolor="{ORANGE[0]}"', f'color="{ORANGE[2]}"']
         lines.append(f"{prefix}{name} [{', '.join(attrs)}]")
     lines.append(f"{{rank=same; {'; '.join(prefix + n for n in ref)}}}")
+    skips = [(a, b) for a, b in edges if a in ref and b in ref and abs(ref.index(a) - ref.index(b)) > 1]
     for a, b in edges:
-        if a in ref and b in ref:
+        if (a, b) in skips:
+            lines.append(f'{prefix}{a}:s -> {prefix}{b}:s [color="{PURPLE[1]}", constraint=false]')
+        elif a in ref and b in ref:
             lines.append(f"{prefix}{a} -> {prefix}{b} [weight=20]")
         else:
-            lines.append(f'{prefix}{a} -> {prefix}{b} [color="{ORANGE[2]}", weight=0]')
+            lines.append(f'{prefix}{a} -> {prefix}{b} [color="{ORANGE[2]}", constraint=false]')
     for name in alts:
         linked = [ref.index(e) for edge in edges if name in edge for e in edge if e in ref]
         middle = ref[(min(linked) + max(linked)) // 2]
-        lines.append(f"{prefix}{middle} -> {prefix}{name} [style=invis, weight=20]")
-    top = prefix + ref[len(ref) // 2]
-    return lines, top, prefix + alts[0] if alts else top
+        lines.append(f"{prefix}{name} -> {prefix}{middle} [style=invis, weight=20]")
+    bottom = centre
+    if skips:
+        bottom = f"{prefix}below"
+        lines += [f'{bottom} [style=invis, label="", width=0, height=0]', f"{centre} -> {bottom} [style=invis]"]
+    return lines, prefix + alts[0] if alts else centre, bottom
 
 
 def arrow(tail, head, label):
@@ -337,9 +345,9 @@ def walks(rows, w_lines):
     route_id = 0
     for row in rows:
         kind, rest = row[3], row[4:]
-        meaning, bold, bg = "", None, None
+        meaning, bg = "", None
         if kind == "ref":
-            meaning, bold, bg = f"R, the reference path: {' '.join(handle(h) for h in R)}", 5, BLUE[0]
+            meaning, bg = f"R, the reference path: {' '.join(handle(h) for h in R)}", BLUE[0]
         elif kind == "nodes":
             ids, total = [], 0
             for d in rest[0].split(","):
@@ -359,7 +367,6 @@ def walks(rows, w_lines):
             choices, _ = deltas(rest[7])
             taken = " and ".join(f"route {c}" for c, _ in choices)
             meaning = f"follows R from {handle(first)} to {handle(last)}" + (f" by {taken}" if choices else ", no routes")
-            bold = 7
             steps, cells = splice(R, routes, first, last, choices)
             path = rest[0].rsplit("#", 1)[0]
             if [h[0] for h in steps] != w_lines[path]:
@@ -368,7 +375,7 @@ def walks(rows, w_lines):
                 f'<FONT POINT-SIZE="11" COLOR="{route_colors(routes[c])[-1]}">route {c}</FONT>' for c, _ in choices
             )
             rebuilt.append(rebuilt_row(path, cells, label))
-        columns = " ".join(f"<B>{v}</B>" if i == bold else v for i, v in enumerate(rest))
+        columns = " ".join(rest)
         table.append(tr([
             td(kind, bg),
             td(f'<FONT FACE="Courier" POINT-SIZE="11">{columns}</FONT>', align="LEFT"),
@@ -386,20 +393,33 @@ def walks_caption(header, rows):
     text = (
         f"Every row starts {seq} {start} {int(start) + 1}, the chunk's first base, so a query returns whole "
         f"{chunk // 1024} kb chunks. The file holds each distinct route once, and a walk row lists only the routes "
-        "its path takes. The bold tokens code R's steps as 2 × node id + strand and each walk's routes as "
-        "2 × route id + flip, both as deltas from the token before; docs/walks-format.md decodes them."
+        "its path takes."
     )
     return [caption(3, text, 100)]
 
 
-def read_w_lines(gfa):
-    paths = {}
-    with open(gfa) as f:
+def read_gfa(path):
+    lengths, links, paths = {}, [], {}
+    with open(path) as f:
         for line in f:
             fields = line.rstrip("\n").split("\t")
-            if fields[0] == "W":
+            if fields[0] == "S":
+                lengths[fields[1]] = len(fields[2])
+            elif fields[0] == "L":
+                links.append((fields[1], fields[3]))
+            elif fields[0] == "W":
                 paths[f"{fields[1]}#{fields[2]}"] = [int(x) for x in fields[6].replace("<", ">").split(">") if x]
-    return paths
+    return lengths, links, paths
+
+
+def walks_graph(lengths, links, paths):
+    ref = [str(n) for n in next(path for name, path in paths.items() if name.startswith(f"{REF}#"))]
+    graph, _, bottom = bubble("n", ref, {n: f"{length} bp" for n, length in lengths.items()}, links)
+    arrows = [
+        arrow((bottom, "cluster_graph"), ("rows", "cluster_file"), f"gfa-to-tabix --walks\n--refs {REF}"),
+        arrow(("rows", "cluster_file"), ("rebuilt", "cluster_rebuilt"), "a region query\nreturns the chunk"),
+    ]
+    return graph, arrows
 
 
 def splice_regions(text, regions, name):
@@ -420,10 +440,12 @@ def generate(binary):
         quiet = dict(check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run([binary, FIGURES / "overview.gfa", "-o", out], **quiet)
         segs, links = read_rows(f"{out}.segs.bed.gz"), read_rows(f"{out}.links.bed.gz")
-        subprocess.run([binary, FIGURES / "walks.gfa", "--walks", "--refs", "GRCh38", "-o", out], **quiet)
-        walk_file = f"{out}.GRCh38.walks.bed.gz"
+        subprocess.run([binary, FIGURES / "walks.gfa", "--walks", "--refs", REF, "-o", out], **quiet)
+        walk_file = f"{out}.{REF}.walks.bed.gz"
         walk_rows, header = read_rows(walk_file), read_header(walk_file)
-    table, rebuilt = walks(walk_rows, read_w_lines(FIGURES / "walks.gfa"))
+    lengths, gfa_links, paths = read_gfa(FIGURES / "walks.gfa")
+    table, rebuilt = walks(walk_rows, paths)
+    walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths)
     graph, drawn, arrows = overview_graphs(segs, links)
     return {
         "overview": {
@@ -436,7 +458,13 @@ def generate(binary):
             "drawn": drawn,
             "arrows": arrows,
         },
-        "walks": {"rows": table, "caption": walks_caption(header, walk_rows), "rebuilt": rebuilt},
+        "walks": {
+            "graph": walks_nodes,
+            "rows": table,
+            "caption": walks_caption(header, walk_rows),
+            "rebuilt": rebuilt,
+            "arrows": walks_arrows,
+        },
     }
 
 
