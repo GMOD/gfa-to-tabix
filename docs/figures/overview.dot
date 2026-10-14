@@ -13,7 +13,7 @@ digraph overview {
     graph [labeljust=l, fontsize=14, color="#bbbbbb", style="rounded,filled", fillcolor="#fafafa", margin=14]
 
     subgraph cluster_graph {
-      label=<<B>1. The graph (GFA)</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">nodes are S lines and arrows are links (L lines)</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">chr1 in blue; s5, an HG002 allele in place of s3, in orange</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>1. The graph (GFA)</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">nodes are S lines and arrows are links (L lines)</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">s5 is an HG002 allele in place of s3</FONT><BR ALIGN="LEFT"/>>
       // begin graph
       s1 [label=<<B>s1</B><BR/><FONT POINT-SIZE="10">chr1:0-10</FONT>>]
       s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>]
@@ -34,33 +34,31 @@ digraph overview {
       label=<<B>2. The index</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">each node and each link has a row filed under a chr1 interval</FONT><BR ALIGN="LEFT"/>>
       rows [shape=plaintext, style="", label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
-          <TR><TD COLSPAN="8" BORDER="0" ALIGN="LEFT"><B>graph.segs.bed.gz</B></TD></TR>
-          <TR><TD COLSPAN="3" BORDER="0"><I>filed under</I></TD><TD COLSPAN="2" BORDER="0"></TD><TD COLSPAN="3" BORDER="0"><I>the node's own coordinate</I></TD></TR>
-          <TR BGCOLOR="#dddddd"><TD>anchorSeq</TD><TD>start</TD><TD>end</TD><TD>node</TD><TD>rank</TD><TD>sequence</TD><TD>start</TD><TD>end</TD></TR>
+          <TR><TD COLSPAN="4" BORDER="0" ALIGN="LEFT"><B>graph.segs.bed.gz</B></TD></TR>
+          <TR BGCOLOR="#dddddd"><TD>filed under</TD><TD>node</TD><TD>rank</TD><TD>own coordinate</TD></TR>
           <!-- begin segs -->
-          <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>s1</TD><TD>0</TD><TD>chr1</TD><TD>0</TD><TD>10</TD></TR>
-          <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>s2</TD><TD>0</TD><TD>chr1</TD><TD>10</TD><TD>20</TD></TR>
-          <TR BGCOLOR="#fde6cf"><TD>chr1</TD><TD><B>10</B></TD><TD><B>40</B></TD><TD>s5</TD><TD>1</TD><TD>HG002</TD><TD>10</TD><TD>25</TD></TR>
-          <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>s3</TD><TD>0</TD><TD>chr1</TD><TD>20</TD><TD>30</TD></TR>
-          <TR BGCOLOR="#e8eef7"><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>s4</TD><TD>0</TD><TD>chr1</TD><TD>30</TD><TD>40</TD></TR>
+          <TR BGCOLOR="#e8eef7"><TD>chr1:0-10</TD><TD>s1</TD><TD>0</TD><TD>chr1:0-10</TD></TR>
+          <TR BGCOLOR="#e8eef7"><TD>chr1:10-20</TD><TD>s2</TD><TD>0</TD><TD>chr1:10-20</TD></TR>
+          <TR BGCOLOR="#fde6cf"><TD><B>chr1:10-40</B></TD><TD>s5</TD><TD>1</TD><TD>HG002:10-25</TD></TR>
+          <TR BGCOLOR="#e8eef7"><TD>chr1:20-30</TD><TD>s3</TD><TD>0</TD><TD>chr1:20-30</TD></TR>
+          <TR BGCOLOR="#e8eef7"><TD>chr1:30-40</TD><TD>s4</TD><TD>0</TD><TD>chr1:30-40</TD></TR>
           <!-- end segs -->
           <!-- begin segs-caption -->
-          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#a15f1c">s5 lies off chr1, so the tool files it under the reference span<BR/>it hangs from: s2 to s4, chr1:10-40.</FONT></TD></TR>
+          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="4" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#a15f1c">s5 lies off chr1, so the tool files it under the reference span<BR/>it hangs from: s2 to s4, chr1:10-40.</FONT></TD></TR>
           <!-- end segs-caption -->
         </TABLE></TD></TR>
         <TR><TD HEIGHT="18"></TD></TR>
         <TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
-          <TR><TD COLSPAN="13" BORDER="0" ALIGN="LEFT"><B>graph.links.bed.gz</B></TD></TR>
-          <TR><TD COLSPAN="3" BORDER="0"><I>filed under</I></TD><TD COLSPAN="2" BORDER="0"><I>link</I></TD><TD COLSPAN="4" BORDER="0"><I>source node</I></TD><TD COLSPAN="4" BORDER="0"><I>target node</I></TD></TR>
-          <TR BGCOLOR="#dddddd"><TD>seq</TD><TD>start</TD><TD>end</TD><TD>src</TD><TD>tgt</TD><TD>seq</TD><TD>start</TD><TD>end</TD><TD>rank</TD><TD>seq</TD><TD>start</TD><TD>end</TD><TD>rank</TD></TR>
+          <TR><TD COLSPAN="4" BORDER="0" ALIGN="LEFT"><B>graph.links.bed.gz</B></TD></TR>
+          <TR BGCOLOR="#dddddd"><TD>filed under</TD><TD>link</TD><TD>source node</TD><TD>target node</TD></TR>
           <!-- begin links -->
-          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s1+</TD><TD>s2+</TD><TD>chr1</TD><TD>0</TD><TD>10</TD><TD>0</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD></TR>
-          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s2+</TD><TD>s3+</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>0</TD></TR>
-          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>0</TD><TD>40</TD><TD>s2+</TD><TD BGCOLOR="#fde6cf">s5+</TD><TD>chr1</TD><TD>10</TD><TD>20</TD><TD>0</TD><TD BGCOLOR="#fde6cf">HG002</TD><TD BGCOLOR="#fde6cf">10</TD><TD BGCOLOR="#fde6cf">25</TD><TD BGCOLOR="#fde6cf">1</TD></TR>
-          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>10</TD><TD>40</TD><TD>s3+</TD><TD>s4+</TD><TD>chr1</TD><TD>20</TD><TD>30</TD><TD>0</TD><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>0</TD></TR>
-          <TR BGCOLOR="#f2f2f2"><TD>chr1</TD><TD>10</TD><TD>40</TD><TD BGCOLOR="#fde6cf">s5+</TD><TD>s4+</TD><TD BGCOLOR="#fde6cf">HG002</TD><TD BGCOLOR="#fde6cf">10</TD><TD BGCOLOR="#fde6cf">25</TD><TD BGCOLOR="#fde6cf">1</TD><TD>chr1</TD><TD>30</TD><TD>40</TD><TD>0</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1:0-40</TD><TD>s1+ → s2+</TD><TD>chr1:0-10</TD><TD>chr1:10-20</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1:0-40</TD><TD>s2+ → s3+</TD><TD>chr1:10-20</TD><TD>chr1:20-30</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1:0-40</TD><TD>s2+ → s5+</TD><TD>chr1:10-20</TD><TD BGCOLOR="#fde6cf">HG002:10-25</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1:10-40</TD><TD>s3+ → s4+</TD><TD>chr1:20-30</TD><TD>chr1:30-40</TD></TR>
+          <TR BGCOLOR="#f2f2f2"><TD>chr1:10-40</TD><TD>s5+ → s4+</TD><TD BGCOLOR="#fde6cf">HG002:10-25</TD><TD>chr1:30-40</TD></TR>
           <!-- end links -->
-          <TR><TD COLSPAN="13" BORDER="0" CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The tool files a link under the span both its nodes reach, so a query near either node returns it.<BR/>The row gives both nodes' coordinates, so a reader places the far node without another query.</FONT></TD></TR>
+          <TR><TD COLSPAN="4" BORDER="0" CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The tool files a link under the span both its nodes reach, so a<BR/>query near either node returns it. The row gives both nodes'<BR/>coordinates, so a reader places the far node without another query.</FONT></TD></TR>
         </TABLE></TD></TR></TABLE>>]
     }
 

@@ -74,15 +74,15 @@ def segs_caption(segs, links):
                 attached.append((int(other["start"]), other["name"]))
     attached.sort()
     first, last = attached[0][1], attached[-1][1]
-    text = f"{name} lies off {seq}, so the tool files it under the reference span it hangs from: {first} to {last}, {seq}:{start}-{end}."
-    return [caption(8, text, 64, "#a15f1c")]
+    text = f"{name} lies off {seq}, so the tool files it under the reference span it hangs from: {first} to {last}, {coordinate(seq, start, end)}."
+    return [caption(4, text, 64, "#a15f1c")]
 
 
 def segs_table(segs):
     rows = []
     for row in segs:
         off = row[4] != "0"
-        cells = [td(v, bold=off and i in (1, 2)) for i, v in enumerate(row)]
+        cells = [td(coordinate(*row[0:3]), bold=off), td(row[3]), td(row[4]), td(coordinate(*row[5:8]))]
         rows.append(tr(cells, ORANGE[0] if off else BLUE[0]))
     return rows
 
@@ -90,12 +90,8 @@ def segs_table(segs):
 def links_table(links):
     rows = []
     for row in links:
-        off = set()
-        if row[8] != "0":
-            off |= {3, 5, 6, 7, 8}
-        if row[12] != "0":
-            off |= {4, 9, 10, 11, 12}
-        rows.append(tr([td(v, ORANGE[0] if i in off else None) for i, v in enumerate(row)], "#f2f2f2"))
+        ends = [td(coordinate(*row[i:i + 3]), ORANGE[0] if row[i + 3] != "0" else None) for i in (5, 9)]
+        rows.append(tr([td(coordinate(*row[0:3])), td(f"{row[3]} → {row[4]}"), *ends], "#f2f2f2"))
     return rows
 
 
