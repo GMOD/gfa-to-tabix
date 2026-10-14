@@ -60,32 +60,46 @@ fn text(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
 }
 
-fn parse_u64(bytes: &[u8], what: &str) -> Result<u64, String> {
-    std::str::from_utf8(bytes)
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .ok_or_else(|| format!("{what}: {} is not a non-negative integer", text(bytes)))
+pub fn parse_u64(bytes: &[u8], what: &str) -> Result<u64, String> {
+    if bytes.is_empty() || bytes.len() > 19 || !bytes.iter().all(u8::is_ascii_digit) {
+        return Err(format!(
+            "{what}: {} is not a non-negative integer",
+            text(bytes)
+        ));
+    }
+    Ok(bytes.iter().fold(0, |n, &b| n * 10 + u64::from(b - b'0')))
 }
 
 pub fn is_blunt(overlap: &[u8]) -> bool {
     matches!(overlap, b"" | b"*" | b"0M")
 }
 
-// `odgi extract` writes a path as `K12#1#chr:1004500-1004961`; the suffix is the
-// only record of where the extracted piece starts.
-fn split_range_suffix(name: &[u8]) -> (&[u8], u64) {
-    if let Some(colon) = name.iter().rposition(|&b| b == b':') {
-        let tail = &name[colon + 1..];
-        if let Some(dash) = tail.iter().position(|&b| b == b'-') {
-            let (start, end) = (&tail[..dash], &tail[dash + 1..]);
-            let digits = |s: &[u8]| !s.is_empty() && s.iter().all(u8::is_ascii_digit);
-            if digits(start)
-                && digits(end)
-                && let Ok(start) = parse_u64(start, "path range")
-            {
-                return (&name[..colon], start);
-            }
-        }
+// A P line's name and where its piece starts. `vg convert` writes a path piece
+// as `sample#hap#contig[start-end]` or, for a haplotype,
+// `sample#hap#contig#start`; `odgi extract` writes `name:start-end`.
+pub fn split_path_name(name: &[u8]) -> (&[u8], u64) {
+    let number = |s: &[u8]| parse_u64(s, "").ok();
+    if let Some(inner) = name.strip_suffix(b"]")
+        && let Some(open) = inner.iter().rposition(|&b| b == b'[')
+        && let Some(start) = inner[open + 1..]
+            .split(|&b| b == b'-')
+            .next()
+            .and_then(number)
+    {
+        return (&name[..open], start);
+    }
+    if name.iter().filter(|&&b| b == b'#').count() == 3
+        && let Some(hash) = name.iter().rposition(|&b| b == b'#')
+        && let Some(start) = number(&name[hash + 1..])
+    {
+        return (&name[..hash], start);
+    }
+    if let Some(colon) = name.iter().rposition(|&b| b == b':')
+        && let [start, end] = name[colon + 1..].split(|&b| b == b'-').collect::<Vec<_>>()[..]
+        && number(end).is_some()
+        && let Some(start) = number(start)
+    {
+        return (&name[..colon], start);
     }
     (name, 0)
 }
@@ -210,7 +224,7 @@ impl Graph {
                 text(bad)
             ));
         }
-        let (name, start) = split_range_suffix(cols[1]);
+        let (name, start) = split_path_name(cols[1]);
         let name = name.to_vec();
         let mut steps = Vec::new();
         for step in cols[2].split(|&b| b == b',') {
@@ -286,5 +300,31 @@ mod tests {
         );
         assert_eq!(steps(&graph.paths[0]), [(0, false), (1, true), (2, false)]);
         assert_eq!(steps(&graph.paths[1]), [(2, false), (1, true), (0, true)]);
+    }
+
+    #[test]
+    fn a_path_piece_name_gives_its_start() {
+        let names = [
+            "G#0#chr1[100-106]",
+            "G#0#chr1[100]",
+            "G#1#chr1#100",
+            "G#0#chr1:100-106",
+        ];
+        let text: String = names.iter().map(|n| format!("P\t{n}\ta+\t*\n")).collect();
+        let graph = Graph::read(text.as_bytes()).unwrap();
+        let read: Vec<(&[u8], u64)> = graph
+            .paths
+            .iter()
+            .map(|p| (p.name.as_slice(), p.start))
+            .collect();
+        assert_eq!(
+            read,
+            [
+                (b"G#0#chr1".as_slice(), 100),
+                (b"G#0#chr1", 100),
+                (b"G#1#chr1", 100),
+                (b"G#0#chr1", 100),
+            ]
+        );
     }
 }

@@ -17,7 +17,7 @@ use std::thread;
 use std::time::Instant;
 
 use crate::bed;
-use crate::gfa::is_blunt;
+use crate::gfa::{is_blunt, parse_u64, split_path_name};
 use crate::routes::{self, Piece, PieceRef};
 use crate::sorter::Sorter;
 
@@ -47,16 +47,6 @@ fn push_u64(out: &mut Vec<u8>, mut n: u64) {
         }
     }
     out.extend_from_slice(&digits[at..]);
-}
-
-fn parse_u64(bytes: &[u8], what: &str) -> Result<u64, String> {
-    if bytes.is_empty() || bytes.len() > 19 || !bytes.iter().all(u8::is_ascii_digit) {
-        return Err(format!(
-            "{what}: {} is not a non-negative integer",
-            text(bytes)
-        ));
-    }
-    Ok(bytes.iter().fold(0, |n, &b| n * 10 + u64::from(b - b'0')))
 }
 
 fn node_id(bytes: &[u8]) -> Result<u32, String> {
@@ -97,35 +87,6 @@ struct PathLine<'a> {
     walk: bool,
 }
 
-// `vg convert -W` writes a path piece as `sample#hap#contig[start]` or, for a
-// haplotype, `sample#hap#contig#start`; `odgi extract` writes `name:start-end`.
-fn split_p_name(name: &[u8]) -> (&[u8], u64) {
-    let number = |s: &[u8]| parse_u64(s, "").ok();
-    if let Some(inner) = name.strip_suffix(b"]")
-        && let Some(open) = inner.iter().rposition(|&b| b == b'[')
-        && let Some(start) = inner[open + 1..]
-            .split(|&b| b == b'-')
-            .next()
-            .and_then(number)
-    {
-        return (&name[..open], start);
-    }
-    if name.iter().filter(|&&b| b == b'#').count() == 3
-        && let Some(hash) = name.iter().rposition(|&b| b == b'#')
-        && let Some(start) = number(&name[hash + 1..])
-    {
-        return (&name[..hash], start);
-    }
-    if let Some(colon) = name.iter().rposition(|&b| b == b':')
-        && let [start, end] = name[colon + 1..].split(|&b| b == b'-').collect::<Vec<_>>()[..]
-        && number(end).is_some()
-        && let Some(start) = number(start)
-    {
-        return (&name[..colon], start);
-    }
-    (name, 0)
-}
-
 fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
     let mut cols = line.split(|&b| b == b'\t');
     match cols.next() {
@@ -157,7 +118,7 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
                     text(bad)
                 )));
             }
-            let (name, start) = split_p_name(cols[0]);
+            let (name, start) = split_path_name(cols[0]);
             Ok(Some(PathLine {
                 sample: name.split(|&b| b == b'#').next().unwrap_or(name),
                 name: name.to_vec(),
