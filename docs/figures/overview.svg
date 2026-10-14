@@ -20,7 +20,7 @@
 <title>cluster_files</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M20,-689.39C20,-689.39 628,-689.39 628,-689.39 634,-689.39 640,-695.39 640,-701.39 640,-701.39 640,-1235.03 640,-1235.03 640,-1241.03 634,-1247.03 628,-1247.03 628,-1247.03 20,-1247.03 20,-1247.03 14,-1247.03 8,-1241.03 8,-1235.03 8,-1235.03 8,-701.39 8,-701.39 8,-695.39 14,-689.39 20,-689.39"/>
 <text xml:space="preserve" text-anchor="start" x="16" y="-1230.73" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">2. The index</text>
-<text xml:space="preserve" text-anchor="start" x="16" y="-1218.63" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">one row per node and one per link, each filed under a chr1 interval</text>
+<text xml:space="preserve" text-anchor="start" x="16" y="-1218.63" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">each node and each link has a row filed under a chr1 interval</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_query</title>
@@ -434,7 +434,7 @@
 <text xml:space="preserve" text-anchor="start" x="128.21" y="-422.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
 <polygon fill="#fff3b0" stroke="none" points="378.68,-416.32 378.68,-434.32 422.85,-434.32 422.85,-416.32 378.68,-416.32"/>
 <polygon fill="#e4e4e4" stroke="none" points="422.85,-416.32 422.85,-434.32 511.2,-434.32 511.2,-416.32 422.85,-416.32"/>
-<text xml:space="preserve" text-anchor="start" x="50.13" y="-394.17" font-family="Helvetica,sans-Serif" font-style="italic" font-size="12.00">graph.links.bed.gz: all five rows return</text>
+<text xml:space="preserve" text-anchor="start" x="50.13" y="-394.17" font-family="Helvetica,sans-Serif" font-style="italic" font-size="12.00">graph.links.bed.gz: all 5 rows return</text>
 <polygon fill="#fff3b0" stroke="none" points="378.68,-385.32 378.68,-390.32 400.76,-390.32 400.76,-385.32 378.68,-385.32"/>
 <polygon fill="#fff3b0" stroke="none" points="400.76,-385.32 400.76,-390.32 422.85,-390.32 422.85,-385.32 400.76,-385.32"/>
 <text xml:space="preserve" text-anchor="start" x="91.46" y="-373.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s1→s2</text>

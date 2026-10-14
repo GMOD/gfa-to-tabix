@@ -1,4 +1,4 @@
-// Draw with: dot -Tsvg docs/walks.dot -o docs/walks.svg
+// scripts/figures.py fills the marked rows from the tool's output and draws this figure
 digraph walks {
   bgcolor="white"
   fontname="Helvetica"
@@ -51,6 +51,7 @@ digraph walks {
     rows [shape=plaintext, style="", label=<
       <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
         <TR BGCOLOR="#dddddd"><TD>kind</TD><TD>columns after the kind</TD><TD>what the row says</TD></TR>
+        <!-- begin rows -->
         <TR><TD BGCOLOR="#e8eef7">ref</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">GRCh38#0#chr1 0 0 0 4 <B>2,2,2,2</B> 10,10,10,10</FONT></TD><TD ALIGN="LEFT">R, the reference path: 1+ 2+ 3+ 4+</TD></TR>
         <TR><TD>nodes</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">5 15</FONT></TD><TD ALIGN="LEFT">node 5, 15 bp, the one node a route visits</TD></TR>
         <TR><TD BGCOLOR="#ede4f5">route</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">4 . 4</FONT></TD><TD ALIGN="LEFT">route 0: from 2+ straight to 4+</TD></TR>
@@ -58,6 +59,7 @@ digraph walks {
         <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">CHM13#0#chr1 0 0 0 3 2 6 <B>0</B></FONT></TD><TD ALIGN="LEFT">follows R from 1+ to 4+ by route 0</TD></TR>
         <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">HG002#1#chr1 0 0 0 4 2 6 <B>2</B></FONT></TD><TD ALIGN="LEFT">follows R from 1+ to 4+ by route 1</TD></TR>
         <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">HG002#2#chr1 0 0 0 4 2 6 <B>.</B></FONT></TD><TD ALIGN="LEFT">follows R from 1+ to 4+, no routes</TD></TR>
+        <!-- end rows -->
         <TR><TD COLSPAN="3" BORDER="0" CELLPADDING="8" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Every row starts GRCh38#0#chr1 0 1, the chunk's first base, so a query returns whole 64 kb chunks.<BR/>The file holds each distinct route once, and a walk row lists only the routes its path takes.<BR/>The bold tokens code R's steps as 2 × node id + strand and each walk's routes as 2 × route id + flip,<BR/>both as deltas from the token before; docs/walks-format.md decodes them.</FONT></TD></TR>
       </TABLE>>]
   }
@@ -72,10 +74,12 @@ digraph walks {
     margin=14
     rebuilt [shape=plaintext, style="", label=<
       <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="4" CELLPADDING="4" COLOR="#ffffff">
-        <TR><TD BORDER="0" ALIGN="RIGHT">GRCh38#0</TD><TD WIDTH="60" BGCOLOR="#e8eef7">1</TD><TD WIDTH="60" BGCOLOR="#e8eef7">2</TD><TD WIDTH="60" BGCOLOR="#e8eef7">3</TD><TD WIDTH="60" BGCOLOR="#e8eef7">4</TD><TD BORDER="0"></TD></TR>
+        <!-- begin rebuilt -->
+        <TR><TD BORDER="0" ALIGN="RIGHT">GRCh38#0</TD><TD WIDTH="60" BGCOLOR="#e8eef7">1</TD><TD WIDTH="60" BGCOLOR="#e8eef7">2</TD><TD WIDTH="60" BGCOLOR="#e8eef7">3</TD><TD WIDTH="60" BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"></TD></TR>
         <TR><TD BORDER="0" ALIGN="RIGHT">CHM13#0</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BORDER="0"></TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#8a5fb0">route 0</FONT></TD></TR>
         <TR><TD BORDER="0" ALIGN="RIGHT">HG002#1</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BGCOLOR="#fde6cf">5</TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#c77a2b">route 1</FONT></TD></TR>
-        <TR><TD BORDER="0" ALIGN="RIGHT">HG002#2</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BGCOLOR="#e8eef7">3</TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0"></TD></TR>
+        <TR><TD BORDER="0" ALIGN="RIGHT">HG002#2</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BGCOLOR="#e8eef7">3</TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"></TD></TR>
+        <!-- end rebuilt -->
       </TABLE>>]
   }
 
