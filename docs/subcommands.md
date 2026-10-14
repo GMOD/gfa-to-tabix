@@ -76,7 +76,7 @@ gfa-to-tabix hprc.sv.gfa.gz --layout contig -o hprc
 gfa-to-tabix alleles hprc
 ```
 
-- A link between two backbone nodes that leaves a gap is a deletion
+- A link from a backbone node forward to a later one is a deletion; a link back to an earlier one is not
 - A link from a backbone node to an off-backbone one enters an allele; the walk
   follows links until it arrives back on the backbone
 - A walk that never rejoins the backbone is dropped, and the count goes to

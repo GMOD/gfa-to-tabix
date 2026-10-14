@@ -109,7 +109,7 @@ mod shapes {
         ("g3", S, 5040, 5050, 1),
     ];
 
-    const LINKS: [(&str, &str, &str, &str); 17] = [
+    const LINKS: [(&str, &str, &str, &str); 19] = [
         ("s1", "+", "a1", "+"), // an insertion
         ("a1", "+", "s2", "+"),
         ("s2", "+", "s4", "+"), // a clean skip of s3
@@ -119,6 +119,8 @@ mod shapes {
         ("s5", "-", "d1", "-"),
         ("s7", "-", "s6", "-"), // the skip written backwards
         ("s8", "+", "s9", "-"), // mixed orientation
+        ("s9", "+", "s8", "+"), // a back-link: a tandem duplication
+        ("s3", "-", "s4", "-"), // a back-link written backwards
         ("s5", "+", "f1", "+"),
         ("f1", "+", "f2", "+"),
         ("f2", "+", "s6", "+"),
@@ -238,6 +240,10 @@ mod shapes {
 
         // a mixed-orientation pair is an inversion breakpoint, not a skip
         assert!(pick(&rows, &[("class", "del"), ("start", "1100")]).is_empty());
+
+        // a link back to an earlier node repeats the reference between them
+        assert!(pick(&rows, &[("class", "del"), ("start", "1000")]).is_empty());
+        assert!(pick(&rows, &[("class", "del"), ("end", "400")]).is_empty());
 
         // an insertion consumes no reference, so it is one base wide and its
         // size sits in the CIGAR

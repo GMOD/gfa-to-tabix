@@ -2,7 +2,7 @@
 // writes, with no GFA: one row per allele the graph holds, anchored on the
 // reference. Ports jbrowse-components' build_rgfa_alleles.sh.
 //
-// A link between two backbone (rank 0) nodes that leaves a gap is a deletion.
+// A link from a backbone (rank 0) node forward to a later one is a deletion.
 // A link from a backbone node to a rank > 0 one enters an allele; the walk goes
 // on bidirected until it arrives on a backbone node, which is the exit. It
 // tests the arrival, because the file states only one of an L-line's two
@@ -205,13 +205,18 @@ fn read_links(
         };
         let (a, b) = (&segments[source.0 as usize], &segments[target.0 as usize]);
         if a.rank == 0 && b.rank == 0 {
-            let (lo, hi) = (source_at.min(target_at), source_at.max(target_at));
-            // a mixed-orientation backbone pair is an inversion breakpoint
-            if f[5] == f[9] && source.1 == target.1 && hi > lo {
+            // a mixed-orientation backbone pair is an inversion breakpoint,
+            // and a link back to an earlier node a duplication
+            let (from, to) = if source.1 {
+                (source_at, target_at)
+            } else {
+                (target_at, source_at)
+            };
+            if f[5] == f[9] && source.1 == target.1 && from < to {
                 links.deletions.push(Deletion {
                     chrom: f[5].clone(),
-                    start: lo,
-                    end: hi,
+                    start: from,
+                    end: to,
                 });
             }
         } else if a.rank == 0 && b.rank > 0 {
