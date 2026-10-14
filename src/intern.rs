@@ -2,8 +2,7 @@ use std::collections::HashMap;
 use std::hash::{BuildHasherDefault, Hasher};
 use std::ops::Deref;
 
-// Node ids and names hash well by multiplication alone, several times faster
-// than the default SipHash.
+// Node ids and names hash well by multiplication alone.
 #[derive(Default)]
 pub struct IdHasher(u64);
 
