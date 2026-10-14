@@ -5,9 +5,9 @@
 - One static binary does the whole conversion. It needs no gfatools, awk, bgzip or tabix
 - The [JBrowse 2](https://jbrowse.org) graph track reads the files
 
-![A five-node graph, the rows gfa-to-tabix files for it, and a region query that returns two of them](docs/overview.svg)
+![A five-node graph, its node and link rows, a region query on both files, and the bubble a browser draws from the rows it keeps](docs/overview.svg)
 
-`dot -Tsvg docs/overview.dot -o docs/overview.svg` redraws the figure.
+`dot -Tsvg docs/overview.dot -o docs/overview.svg` redraws the figure, and likewise `docs/walks.dot`.
 
 ## Input
 
@@ -83,6 +83,8 @@ gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
 
 `--walks` writes one file per reference holding every haplotype's path through
 a base-level graph.
+
+![Four haplotype paths through a bubble, the walk rows for their chunk, and the paths a reader rebuilds from them](docs/walks.svg)
 
 ## Docs
 

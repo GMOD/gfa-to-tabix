@@ -1,0 +1,84 @@
+// Draw with: dot -Tsvg docs/walks.dot -o docs/walks.svg
+digraph walks {
+  bgcolor="white"
+  fontname="Helvetica"
+  rankdir=TB
+  newrank=true
+  compound=true
+  nodesep=0.4
+  ranksep=0.55
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded", fillcolor="#e8eef7", color="#4a6fa5", margin="0.15,0.06"]
+  edge [fontname="Helvetica", fontsize=11, color="#555555", arrowsize=0.8]
+
+  subgraph cluster_graph {
+    label=<<B>1. A base-level graph (GFA)</B>   W lines give each haplotype's path<BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">GRCh38's nodes in blue; node 5, which only HG002#1 visits, in orange; CHM13's deletion in purple</FONT><BR ALIGN="LEFT"/>>
+    labeljust=l
+    fontsize=14
+    color="#bbbbbb"
+    style="rounded,filled"
+    fillcolor="#fafafa"
+    margin=14
+    n1 [label=<<B>1</B><BR/><FONT POINT-SIZE="10">10 bp</FONT>>]
+    n2 [label=<<B>2</B><BR/><FONT POINT-SIZE="10">10 bp</FONT>>]
+    n3 [label=<<B>3</B><BR/><FONT POINT-SIZE="10">10 bp</FONT>>]
+    n4 [label=<<B>4</B><BR/><FONT POINT-SIZE="10">10 bp</FONT>>]
+    n5 [label=<<B>5</B><BR/><FONT POINT-SIZE="10">15 bp</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
+    {rank=same; n1; n2; n3; n4}
+    n1 -> n2 -> n3 -> n4 [weight=20]
+    n5 -> n3 [style=invis, weight=20]
+    n2 -> n5 [color="#c77a2b", constraint=false]
+    n5 -> n4 [color="#c77a2b", constraint=false]
+    n2:s -> n4:s [color="#8a5fb0", constraint=false]
+    paths [shape=plaintext, style="", label=<
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
+        <TR BGCOLOR="#dddddd"><TD>haplotype</TD><TD>path</TD></TR>
+        <TR><TD BGCOLOR="#e8eef7">GRCh38#0, the reference</TD><TD ALIGN="LEFT"><FONT FACE="Courier">&gt;1&gt;2&gt;3&gt;4</FONT></TD></TR>
+        <TR><TD>CHM13#0</TD><TD ALIGN="LEFT"><FONT FACE="Courier">&gt;1&gt;2&gt;4</FONT></TD></TR>
+        <TR><TD>HG002#1</TD><TD ALIGN="LEFT"><FONT FACE="Courier">&gt;1&gt;2&gt;5&gt;4</FONT></TD></TR>
+        <TR><TD>HG002#2</TD><TD ALIGN="LEFT"><FONT FACE="Courier">&gt;1&gt;2&gt;3&gt;4</FONT></TD></TR>
+      </TABLE>>]
+    n3 -> paths [style=invis]
+  }
+
+  subgraph cluster_file {
+    label=<<B>2. graph.GRCh38.walks.bed.gz</B>   the rows of one chunk>
+    labeljust=l
+    fontsize=14
+    color="#bbbbbb"
+    style="rounded,filled"
+    fillcolor="#fafafa"
+    margin=14
+    rows [shape=plaintext, style="", label=<
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
+        <TR BGCOLOR="#dddddd"><TD>kind</TD><TD>columns after the kind</TD><TD>what the row says</TD></TR>
+        <TR><TD BGCOLOR="#e8eef7">ref</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">GRCh38#0#chr1 0 0 0 4 2,2,2,2 10,10,10,10</FONT></TD><TD ALIGN="LEFT">R, GRCh38's path: 1+ 2+ 3+ 4+</TD></TR>
+        <TR><TD>nodes</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">5 15</FONT></TD><TD ALIGN="LEFT">node 5, 15 bp, is the one node off R</TD></TR>
+        <TR><TD BGCOLOR="#ede4f5">route</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">4 . 4</FONT></TD><TD ALIGN="LEFT">route 0: from 2+ straight to 4+</TD></TR>
+        <TR><TD BGCOLOR="#fde6cf">route</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">-4 6 -2</FONT></TD><TD ALIGN="LEFT">route 1: from 2+ through 5+ to 4+</TD></TR>
+        <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">CHM13#0#chr1 0 0 0 3 2 6 0</FONT></TD><TD ALIGN="LEFT">R from 1+ to 4+, taking route 0</TD></TR>
+        <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">HG002#1#chr1 0 0 0 4 2 6 2</FONT></TD><TD ALIGN="LEFT">R from 1+ to 4+, taking route 1</TD></TR>
+        <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">HG002#2#chr1 0 0 0 4 2 6 .</FONT></TD><TD ALIGN="LEFT">R from 1+ to 4+, taking no route</TD></TR>
+        <TR><TD COLSPAN="3" BORDER="0" CELLPADDING="8" BALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#555555">Every row starts GRCh38#0#chr1 0 1, the chunk's first base, so a query returns whole 64 kb chunks.<BR/>The file holds each distinct route once, and a walk row lists only the routes its path takes.<BR/>Node lists are delta-coded handles, 2 × id + strand; docs/walks-format.md decodes them.</FONT></TD></TR>
+      </TABLE>>]
+  }
+
+  subgraph cluster_rebuilt {
+    label=<<B>3. What the reader rebuilds</B>   R with each walk's routes spliced in>
+    labeljust=l
+    fontsize=14
+    color="#bbbbbb"
+    style="rounded,filled"
+    fillcolor="#fafafa"
+    margin=14
+    rebuilt [shape=plaintext, style="", label=<
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="4" CELLPADDING="4" COLOR="#ffffff">
+        <TR><TD BORDER="0" ALIGN="RIGHT">GRCh38#0</TD><TD WIDTH="60" BGCOLOR="#e8eef7">1</TD><TD WIDTH="60" BGCOLOR="#e8eef7">2</TD><TD WIDTH="60" BGCOLOR="#e8eef7">3</TD><TD WIDTH="60" BGCOLOR="#e8eef7">4</TD><TD BORDER="0"></TD></TR>
+        <TR><TD BORDER="0" ALIGN="RIGHT">CHM13#0</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BORDER="0"></TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#8a5fb0">route 0</FONT></TD></TR>
+        <TR><TD BORDER="0" ALIGN="RIGHT">HG002#1</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BGCOLOR="#fde6cf">5</TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#c77a2b">route 1</FONT></TD></TR>
+        <TR><TD BORDER="0" ALIGN="RIGHT">HG002#2</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BGCOLOR="#e8eef7">3</TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0"></TD></TR>
+      </TABLE>>]
+  }
+
+  paths -> rows [ltail=cluster_graph, lhead=cluster_file, label="  gfa-to-tabix --walks\n  --refs GRCh38", penwidth=2]
+  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a browser reads\n  the chunk", penwidth=2]
+}
