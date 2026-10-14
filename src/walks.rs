@@ -879,7 +879,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let mut writers = Vec::with_capacity(references.len());
     for reference in &references {
         let path = format!("{prefix}.{}.walks.bed.gz", text(&reference.sample));
-        let mut writer = bed::Writer::create_parallel(&path, threads)?;
+        let mut writer = bed::Writer::create(&path)?;
         let mut header = format!(
             "#walks\tformat:i:2\tchunk:i:{}\tmaxnode:i:{longest}\n#reference\t{}\n",
             chunks.size,

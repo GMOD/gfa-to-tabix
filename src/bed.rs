@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 use std::fs::{self, File};
-use std::io::{self, Write};
+use std::io;
 use std::mem;
 use std::rc::Rc;
 
@@ -200,7 +200,7 @@ pub struct Writer {
     path: String,
     partial: String,
     partial_index: String,
-    sink: Option<Sink>,
+    sink: Option<parallel_bgzf::Writer>,
     indexer: tabix::index::Indexer,
     before: StreamPos,
     // rows written whose virtual positions are not known yet
@@ -218,64 +218,13 @@ struct Pending {
     to: StreamPos,
 }
 
-enum Sink {
-    Serial(bgzf::io::Writer<File>),
-    Parallel(parallel_bgzf::Writer),
-}
-
-impl Sink {
-    fn position(&self) -> StreamPos {
-        match self {
-            Sink::Serial(writer) => {
-                let position = writer.virtual_position();
-                (position.compressed(), position.uncompressed())
-            }
-            Sink::Parallel(writer) => writer.position(),
-        }
-    }
-
-    fn resolve(&self, position: StreamPos) -> Option<bgzf::VirtualPosition> {
-        match self {
-            Sink::Serial(_) => bgzf::VirtualPosition::try_from(position).ok(),
-            Sink::Parallel(writer) => writer.resolve(position),
-        }
-    }
-
-    fn write(&mut self, data: &[u8]) -> io::Result<()> {
-        match self {
-            Sink::Serial(writer) => writer.write_all(data),
-            Sink::Parallel(writer) => writer.write(data).map(drop),
-        }
-    }
-
-    fn finish(self) -> io::Result<()> {
-        match self {
-            Sink::Serial(writer) => writer.finish().map(drop),
-            Sink::Parallel(writer) => writer.finish(),
-        }
-    }
-}
-
 impl Writer {
+    // Compresses on every core, at bgzip's default level.
     pub fn create(path: &str) -> Result<Writer, String> {
-        Writer::open(path, |file| Sink::Serial(bgzf::io::Writer::new(file)))
-    }
-
-    // Compresses with `threads` threads, at the level `create` uses.
-    pub fn create_parallel(path: &str, threads: usize) -> Result<Writer, String> {
-        Writer::open(path, |file| {
-            Sink::Parallel(parallel_bgzf::Writer::new(
-                file,
-                flate2::Compression::new(6),
-                threads,
-            ))
-        })
-    }
-
-    fn open(path: &str, sink: impl FnOnce(File) -> Sink) -> Result<Writer, String> {
         let partial = format!("{path}.partial");
+        let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
         let sink = File::create(&partial)
-            .map(sink)
+            .map(|file| parallel_bgzf::Writer::new(file, flate2::Compression::new(6), threads))
             .map_err(|e| format!("{path}: {e}"))?;
         let mut indexer = tabix::index::Indexer::default();
         indexer.set_header(Builder::bed().build());
@@ -290,17 +239,17 @@ impl Writer {
         })
     }
 
-    fn sink(&mut self) -> &mut Sink {
-        self.sink.as_mut().expect("writer is open until finish")
+    fn write(&mut self, data: &[u8]) -> Result<StreamPos, String> {
+        let sink = self.sink.as_mut().expect("writer is open until finish");
+        sink.write(data)
+            .map_err(|e| format!("{}: {e}", self.path))?;
+        Ok(sink.position())
     }
 
     // A line before the rows. It starts with `#`, the index's comment prefix,
     // so Tabix readers return it as the header.
     pub fn header(&mut self, line: &[u8]) -> Result<(), String> {
-        let path = self.path.clone();
-        let sink = self.sink();
-        sink.write(line).map_err(|e| format!("{path}: {e}"))?;
-        self.before = sink.position();
+        self.before = self.write(line)?;
         Ok(())
     }
 
@@ -312,10 +261,7 @@ impl Writer {
         end: u64,
         line: &[u8],
     ) -> Result<(), String> {
-        let path = self.path.clone();
-        let sink = self.sink();
-        sink.write(line).map_err(|e| format!("{path}: {e}"))?;
-        let after = sink.position();
+        let after = self.write(line)?;
         let sequence = match self.pending.back() {
             Some(last) if last.sequence.as_bytes() == sequence => last.sequence.clone(),
             _ => Rc::from(String::from_utf8_lossy(sequence)),
@@ -352,18 +298,18 @@ impl Writer {
                 })?;
             self.pending.pop_front();
         }
-        if let Sink::Parallel(writer) = sink {
-            writer.forget_before(self.pending.front().map_or(self.before.0, |row| row.from.0));
-        }
+        sink.forget_before(self.pending.front().map_or(self.before.0, |row| row.from.0));
         Ok(())
     }
 
     pub fn finish(mut self) -> Result<(), String> {
         let path = self.path.clone();
         let fail = |e: std::io::Error| format!("{path}: {e}");
-        if let Some(Sink::Parallel(writer)) = self.sink.as_mut() {
-            writer.flush_all().map_err(fail)?;
-        }
+        self.sink
+            .as_mut()
+            .expect("writer is open until finish")
+            .flush_all()
+            .map_err(fail)?;
         self.index_written()?;
         let sink = self.sink.take().expect("writer is open until finish");
         sink.finish().map_err(fail)?;
