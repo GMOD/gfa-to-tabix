@@ -8,8 +8,7 @@
 // writes and compares the steps, and writes explicit step counts for a walk
 // that the default rule would decode wrongly.
 
-use std::collections::HashMap;
-use std::hash::{BuildHasherDefault, Hasher};
+use crate::intern::FastMap;
 
 const NONE: u32 = u32::MAX;
 
@@ -126,25 +125,7 @@ impl Piece {
     }
 }
 
-// Node ids hash well by multiplication alone.
-#[derive(Default)]
-struct IdHasher(u64);
-
-impl Hasher for IdHasher {
-    fn finish(&self) -> u64 {
-        self.0 ^ (self.0 >> 32)
-    }
-    fn write(&mut self, bytes: &[u8]) {
-        for &b in bytes {
-            self.0 = (self.0.rotate_left(8) ^ u64::from(b)).wrapping_mul(0x9e37_79b9_7f4a_7c15);
-        }
-    }
-    fn write_u32(&mut self, n: u32) {
-        self.0 = (self.0 ^ u64::from(n)).wrapping_mul(0x9e37_79b9_7f4a_7c15);
-    }
-}
-
-type IdMap<V> = HashMap<u32, V, BuildHasherDefault<IdHasher>>;
+type IdMap<V> = FastMap<u32, V>;
 
 // The chunk's reference path R, with each node's occurrences in it chained
 // from the first.
@@ -256,7 +237,7 @@ struct Walk {
 
 #[derive(Default)]
 struct Routes {
-    index: HashMap<Route, usize, BuildHasherDefault<IdHasher>>,
+    index: FastMap<Route, usize>,
     list: Vec<Route>,
     uses: Vec<u64>,
 }
