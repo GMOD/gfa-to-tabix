@@ -46,6 +46,8 @@ under the region and every link between the nodes those lead to. It also
 returns links of neither kind, so a reader keeps a link when one of its nodes
 came back from the node file, or when both are far ends of links it kept.
 
+![A five-node graph, its node and link rows, a region query on both files, and the bubble a browser draws from the rows it keeps](figures/overview.svg)
+
 A link between two reference nodes on opposite sides of the region, such as a
 deletion that spans it, touches no node under the region. The query returns
 it all the same, and a reader that wants it drawn keeps it too.
