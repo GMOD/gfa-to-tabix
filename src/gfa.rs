@@ -1,5 +1,6 @@
-use std::collections::HashMap;
 use std::io::BufRead;
+
+use crate::intern::Interner;
 
 pub struct Placement {
     pub sequence: u32,
@@ -44,13 +45,11 @@ pub struct Path {
 
 #[derive(Default)]
 pub struct Graph {
-    node_index: HashMap<Vec<u8>, u32>,
-    pub node_ids: Vec<Vec<u8>>,
+    pub node_ids: Interner,
     pub lengths: Vec<Option<u64>>,
     pub declared: Vec<bool>,
     pub tagged: Vec<Option<Placement>>,
-    sequence_index: HashMap<Vec<u8>, u32>,
-    pub sequences: Vec<Vec<u8>>,
+    pub sequences: Interner,
     pub links: Vec<Link>,
     pub paths: Vec<Path>,
     pub overlap: Option<String>,
@@ -134,25 +133,12 @@ impl Graph {
     }
 
     fn node(&mut self, id: &[u8]) -> u32 {
-        if let Some(&index) = self.node_index.get(id) {
-            return index;
+        let index = self.node_ids.id(id);
+        if index as usize == self.lengths.len() {
+            self.lengths.push(None);
+            self.declared.push(false);
+            self.tagged.push(None);
         }
-        let index = self.node_ids.len() as u32;
-        self.node_index.insert(id.to_vec(), index);
-        self.node_ids.push(id.to_vec());
-        self.lengths.push(None);
-        self.declared.push(false);
-        self.tagged.push(None);
-        index
-    }
-
-    fn sequence(&mut self, name: &[u8]) -> u32 {
-        if let Some(&index) = self.sequence_index.get(name) {
-            return index;
-        }
-        let index = self.sequences.len() as u32;
-        self.sequence_index.insert(name.to_vec(), index);
-        self.sequences.push(name.to_vec());
         index
     }
 
@@ -185,7 +171,7 @@ impl Graph {
             Some(cols[2].len() as u64)
         };
         if let Some(name) = name {
-            let sequence = self.sequence(name);
+            let sequence = self.sequences.id(name);
             self.tagged[node] = Some(Placement {
                 sequence,
                 start: offset.unwrap_or(0),
@@ -312,7 +298,7 @@ mod tests {
         let graph =
             Graph::read("P\tp\ta+,bb-,c+\t*\nW\ts\t1\tchr\t0\t9\t>c<bb<a\n".as_bytes()).unwrap();
         assert_eq!(
-            graph.node_ids,
+            graph.node_ids[..],
             [b"a".to_vec(), b"bb".to_vec(), b"c".to_vec()]
         );
         assert_eq!(steps(&graph.paths[0]), [(0, false), (1, true), (2, false)]);

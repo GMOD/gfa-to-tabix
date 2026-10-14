@@ -18,6 +18,7 @@ use std::time::Instant;
 
 use crate::bed;
 use crate::gfa::{blunt_error, is_blunt, parse_u64, split_path_name, text};
+use crate::intern::Interner;
 use crate::routes::{self, Piece, PieceRef};
 use crate::sorter::Sorter;
 
@@ -52,24 +53,6 @@ fn node_id(bytes: &[u8]) -> Result<u32, String> {
             "--walks needs integer node ids below 2^31, as vg and Minigraph-Cactus write; {} is not one",
             text(bytes)
         )),
-    }
-}
-
-#[derive(Default)]
-struct Names {
-    index: HashMap<Vec<u8>, u32>,
-    names: Vec<Vec<u8>>,
-}
-
-impl Names {
-    fn id(&mut self, name: &[u8]) -> u32 {
-        if let Some(&id) = self.index.get(name) {
-            return id;
-        }
-        let id = self.names.len() as u32;
-        self.index.insert(name.to_vec(), id);
-        self.names.push(name.to_vec());
-        id
     }
 }
 
@@ -316,7 +299,7 @@ struct Stable {
 }
 
 impl Stable {
-    fn offer(&mut self, names: &Names, id: usize, name: u32, offset: u64) {
+    fn offer(&mut self, names: &Interner, id: usize, name: u32, offset: u64) {
         let held = self.name[id];
         let better = if held == NONE {
             true
@@ -327,7 +310,7 @@ impl Stable {
             if path == self.paths {
                 after
             } else {
-                let after = names.names[name as usize] < names.names[held as usize];
+                let after = names[name as usize] < names[held as usize];
                 self.sorts_after[held as usize] = (self.paths, after);
                 after
             }
@@ -338,13 +321,13 @@ impl Stable {
         }
     }
 
-    fn visit(&mut self, names: &Names, name: u32, start: u64, ids: &[u32], lengths: &[u32]) {
+    fn visit(&mut self, names: &Interner, name: u32, start: u64, ids: &[u32], lengths: &[u32]) {
         if self.name.len() < lengths.len() {
             self.name.resize(lengths.len(), NONE);
             self.offset.resize(lengths.len(), 0);
         }
-        if self.sorts_after.len() < names.names.len() {
-            self.sorts_after.resize(names.names.len(), (0, false));
+        if self.sorts_after.len() < names.len() {
+            self.sorts_after.resize(names.len(), (0, false));
         }
         self.paths += 1;
         let mut offset = start;
@@ -362,7 +345,7 @@ impl Stable {
 fn first_pass(
     gfa: &str,
     options: &Options,
-    names: &mut Names,
+    names: &mut Interner,
 ) -> Result<(Graph, Vec<Reference>), String> {
     let mut lengths: Vec<u32> = Vec::new();
     let mut sequence_at: Vec<u64> = Vec::new();
@@ -530,7 +513,7 @@ fn first_pass(
         {
             return Err(format!(
                 "path {} visits segment {id}, which has no S line",
-                text(&names.names[walk.name as usize])
+                text(&names[walk.name as usize])
             ));
         }
         on_reference[walk.reference].visit(names, walk.name, walk.start, &walk.ids, &lengths);
@@ -583,14 +566,14 @@ struct Chunks {
 
 impl Chunks {
     // `ends` maps a reference sequence's name id to (its reference, its end).
-    fn new(size: u64, ends: &HashMap<u32, (u32, u64)>, names: &Names) -> Result<Chunks, String> {
+    fn new(size: u64, ends: &HashMap<u32, (u32, u64)>, names: &Interner) -> Result<Chunks, String> {
         let mut sequences: Vec<(&[u8], u32, u32, u64)> = ends
             .iter()
-            .map(|(&name, &(owner, end))| (names.names[name as usize].as_slice(), name, owner, end))
+            .map(|(&name, &(owner, end))| (names[name as usize].as_slice(), name, owner, end))
             .collect();
         sequences.sort_unstable();
-        let mut first = vec![NONE; names.names.len()];
-        let mut owner = vec![NONE; names.names.len()];
+        let mut first = vec![NONE; names.len()];
+        let mut owner = vec![NONE; names.len()];
         let mut starts = Vec::new();
         let count: u64 = sequences.iter().map(|&(_, _, _, end)| end / size + 1).sum();
         if count >= u64::from(NONE) {
@@ -618,7 +601,7 @@ impl Chunks {
 
 struct Builder {
     graph: Graph,
-    names: Names,
+    names: Interner,
     chunks: Chunks,
     references: Vec<Reference>,
     rows: Sorter,
@@ -660,8 +643,14 @@ impl Builder {
             offset += self.graph.length(path, h)?;
         }
         for r in 0..self.references.len() {
-            let own = (self.references[r].sample == path.sample)
-                .then(|| (self.names.index[&path.name], path.start));
+            let own = (self.references[r].sample == path.sample).then(|| {
+                (
+                    self.names
+                        .get(&path.name)
+                        .expect("the first pass named every path"),
+                    path.start,
+                )
+            });
             if !self.assign_chunks(r, handles, own) {
                 self.references[r].unplaced += 1;
                 continue;
@@ -751,7 +740,7 @@ impl Builder {
                         out.extend_from_slice(b":i:");
                     } else {
                         out.extend_from_slice(b":Z:");
-                        out.extend_from_slice(&names.names[name as usize]);
+                        out.extend_from_slice(&names[name as usize]);
                         out.push(b':');
                     }
                     push_u64(out, start);
@@ -800,7 +789,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     }
     let clock = Instant::now();
     let elapsed = || format!("[{:6.1} s]", clock.elapsed().as_secs_f64());
-    let mut names = Names::default();
+    let mut names = Interner::default();
     let (graph, references) = first_pass(gfa, options, &mut names)?;
     let mut ends: HashMap<u32, (u32, u64)> = HashMap::new();
     for (r, reference) in references.iter().enumerate() {
@@ -945,7 +934,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         });
         for ((chunk, _), slot) in batch.iter().zip(encoded) {
             let (name, start) = chunks.starts[*chunk as usize];
-            let name_text = &names.names[name as usize];
+            let name_text = &names[name as usize];
             let (lines, ends, chunk_counts) = slot
                 .into_inner()
                 .unwrap()

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::gfa::Graph;
+use crate::intern::Interner;
 use crate::place::Node;
 
 // (sequence, start, end): an interval a row is filed under
@@ -14,28 +15,8 @@ pub struct Spans {
     pub links: Vec<Vec<Span>>,
 }
 
-struct Sequences {
-    index: HashMap<Vec<u8>, u32>,
-    names: Vec<Vec<u8>>,
-}
-
-impl Sequences {
-    fn id(&mut self, name: &[u8]) -> u32 {
-        if let Some(&id) = self.index.get(name) {
-            return id;
-        }
-        let id = self.names.len() as u32;
-        self.index.insert(name.to_vec(), id);
-        self.names.push(name.to_vec());
-        id
-    }
-}
-
 fn own_spans(nodes: &[Option<Node>]) -> (Vec<Option<Span>>, Vec<Vec<u8>>) {
-    let mut sequences = Sequences {
-        index: HashMap::new(),
-        names: Vec::new(),
-    };
+    let mut sequences = Interner::default();
     let own = nodes
         .iter()
         .map(|node| {
@@ -43,7 +24,7 @@ fn own_spans(nodes: &[Option<Node>]) -> (Vec<Option<Span>>, Vec<Vec<u8>>) {
                 .map(|n| (sequences.id(&n.sequence), n.start, n.end))
         })
         .collect();
-    (own, sequences.names)
+    (own, sequences.into_names())
 }
 
 // Every node under its coordinate.

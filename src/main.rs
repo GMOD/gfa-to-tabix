@@ -6,6 +6,7 @@ mod build;
 mod cli;
 mod fold;
 mod gfa;
+mod intern;
 mod json;
 mod parallel_bgzf;
 mod paths;
