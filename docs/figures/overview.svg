@@ -219,95 +219,80 @@
 <!-- hits -->
 <g id="node7" class="node">
 <title>hits</title>
-<text xml:space="preserve" text-anchor="start" x="139.4" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">0</text>
-<text xml:space="preserve" text-anchor="start" x="228.95" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">10</text>
-<text xml:space="preserve" text-anchor="start" x="321.5" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">20</text>
-<text xml:space="preserve" text-anchor="start" x="414.05" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">30</text>
-<text xml:space="preserve" text-anchor="start" x="506.6" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">40</text>
-<polygon fill="#999999" stroke="none" points="142.4,-580.32 142.4,-581.32 512.6,-581.32 512.6,-580.32 142.4,-580.32"/>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-575.32 373.78,-580.32 396.91,-580.32 396.91,-575.32 373.78,-575.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-575.32 396.91,-580.32 420.05,-580.32 420.05,-575.32 396.91,-575.32"/>
-<text xml:space="preserve" text-anchor="start" x="39.76" y="-563.04" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">chr1:25&#45;30</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-563.04" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#555555" stroke="none" points="373.78,-557.32 373.78,-575.32 420.05,-575.32 420.05,-557.32 373.78,-557.32"/>
-<text xml:space="preserve" text-anchor="start" x="535.74" y="-562.04" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;query</text>
+<text xml:space="preserve" text-anchor="start" x="139.55" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">0</text>
+<text xml:space="preserve" text-anchor="start" x="229.4" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">10</text>
+<text xml:space="preserve" text-anchor="start" x="322.25" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">20</text>
+<text xml:space="preserve" text-anchor="start" x="415.1" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">30</text>
+<text xml:space="preserve" text-anchor="start" x="507.95" y="-584.57" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#777777">40</text>
+<polygon fill="#999999" stroke="none" points="142.55,-580.32 142.55,-581.32 513.95,-581.32 513.95,-580.32 142.55,-580.32"/>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-575.32 374.68,-580.32 397.89,-580.32 397.89,-575.32 374.68,-575.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-575.32 397.89,-580.32 421.1,-580.32 421.1,-575.32 397.89,-575.32"/>
+<text xml:space="preserve" text-anchor="start" x="39.84" y="-563.04" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">chr1:25&#45;30</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-563.04" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#555555" stroke="none" points="374.68,-557.32 374.68,-575.32 421.1,-575.32 421.1,-557.32 374.68,-557.32"/>
+<text xml:space="preserve" text-anchor="start" x="537.16" y="-562.04" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;query</text>
 <text xml:space="preserve" text-anchor="start" x="32.63" y="-535.17" font-family="Helvetica,sans-Serif" font-style="italic" font-size="12.00">graph.segs.bed.gz</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-526.32 373.78,-531.32 396.91,-531.32 396.91,-526.32 373.78,-526.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-526.32 396.91,-531.32 420.05,-531.32 420.05,-526.32 396.91,-526.32"/>
-<text xml:space="preserve" text-anchor="start" x="98.26" y="-514.04" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s1</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-514.04" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#e4e4e4" stroke="none" points="142.4,-508.32 142.4,-526.32 234.95,-526.32 234.95,-508.32 142.4,-508.32"/>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-508.32 373.78,-526.32 420.05,-526.32 420.05,-508.32 373.78,-508.32"/>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-503.32 373.78,-508.32 396.91,-508.32 396.91,-503.32 373.78,-503.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-503.32 396.91,-508.32 420.05,-508.32 420.05,-503.32 396.91,-503.32"/>
-<text xml:space="preserve" text-anchor="start" x="98.26" y="-491.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s2</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-491.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#e4e4e4" stroke="none" points="234.95,-485.32 234.95,-503.32 327.5,-503.32 327.5,-485.32 234.95,-485.32"/>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-485.32 373.78,-503.32 420.05,-503.32 420.05,-485.32 373.78,-485.32"/>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-480.32 373.78,-485.32 396.91,-485.32 396.91,-480.32 373.78,-480.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-480.32 396.91,-485.32 420.05,-485.32 420.05,-480.32 396.91,-480.32"/>
-<text xml:space="preserve" text-anchor="start" x="96.01" y="-468.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s5</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-468.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#f3c08f" stroke="none" points="234.95,-462.32 234.95,-480.32 373.78,-480.32 373.78,-462.32 234.95,-462.32"/>
-<polygon fill="#c77a2b" stroke="none" points="373.78,-462.32 373.78,-480.32 420.05,-480.32 420.05,-462.32 373.78,-462.32"/>
-<polygon fill="#f3c08f" stroke="none" points="420.05,-462.32 420.05,-480.32 512.6,-480.32 512.6,-462.32 420.05,-462.32"/>
-<text xml:space="preserve" text-anchor="start" x="535.74" y="-467.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;returned</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-457.32 373.78,-462.32 396.91,-462.32 396.91,-457.32 373.78,-457.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-457.32 396.91,-462.32 420.05,-462.32 420.05,-457.32 396.91,-457.32"/>
-<text xml:space="preserve" text-anchor="start" x="96.01" y="-445.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s3</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-445.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#a9bfe2" stroke="none" points="327.5,-439.32 327.5,-457.32 373.78,-457.32 373.78,-439.32 327.5,-439.32"/>
-<polygon fill="#4a6fa5" stroke="none" points="373.78,-439.32 373.78,-457.32 420.05,-457.32 420.05,-439.32 373.78,-439.32"/>
-<text xml:space="preserve" text-anchor="start" x="535.74" y="-444.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;returned</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-434.32 373.78,-439.32 396.91,-439.32 396.91,-434.32 373.78,-434.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-434.32 396.91,-439.32 420.05,-439.32 420.05,-434.32 396.91,-434.32"/>
-<text xml:space="preserve" text-anchor="start" x="98.26" y="-422.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s4</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-422.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-416.32 373.78,-434.32 420.05,-434.32 420.05,-416.32 373.78,-416.32"/>
-<polygon fill="#e4e4e4" stroke="none" points="420.05,-416.32 420.05,-434.32 512.6,-434.32 512.6,-416.32 420.05,-416.32"/>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-526.32 374.68,-531.32 397.89,-531.32 397.89,-526.32 374.68,-526.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-526.32 397.89,-531.32 421.1,-531.32 421.1,-526.32 397.89,-526.32"/>
+<text xml:space="preserve" text-anchor="start" x="98.34" y="-514.04" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s1</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-514.04" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#e4e4e4" stroke="none" points="142.55,-508.32 142.55,-526.32 235.4,-526.32 235.4,-508.32 142.55,-508.32"/>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-508.32 374.68,-526.32 421.1,-526.32 421.1,-508.32 374.68,-508.32"/>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-503.32 374.68,-508.32 397.89,-508.32 397.89,-503.32 374.68,-503.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-503.32 397.89,-508.32 421.1,-508.32 421.1,-503.32 397.89,-503.32"/>
+<text xml:space="preserve" text-anchor="start" x="98.34" y="-491.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s2</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-491.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#e4e4e4" stroke="none" points="235.4,-485.32 235.4,-503.32 328.25,-503.32 328.25,-485.32 235.4,-485.32"/>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-485.32 374.68,-503.32 421.1,-503.32 421.1,-485.32 374.68,-485.32"/>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-480.32 374.68,-485.32 397.89,-485.32 397.89,-480.32 374.68,-480.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-480.32 397.89,-485.32 421.1,-485.32 421.1,-480.32 397.89,-480.32"/>
+<text xml:space="preserve" text-anchor="start" x="96.09" y="-468.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s5</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-468.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#f3c08f" stroke="none" points="235.4,-462.32 235.4,-480.32 513.95,-480.32 513.95,-462.32 235.4,-462.32"/>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-457.32 374.68,-462.32 397.89,-462.32 397.89,-457.32 374.68,-457.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-457.32 397.89,-462.32 421.1,-462.32 421.1,-457.32 397.89,-457.32"/>
+<text xml:space="preserve" text-anchor="start" x="96.09" y="-445.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s3</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-445.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#a9bfe2" stroke="none" points="328.25,-439.32 328.25,-457.32 421.1,-457.32 421.1,-439.32 328.25,-439.32"/>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-434.32 374.68,-439.32 397.89,-439.32 397.89,-434.32 374.68,-434.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-434.32 397.89,-439.32 421.1,-439.32 421.1,-434.32 397.89,-434.32"/>
+<text xml:space="preserve" text-anchor="start" x="98.34" y="-422.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s4</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-422.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-416.32 374.68,-434.32 421.1,-434.32 421.1,-416.32 374.68,-416.32"/>
+<polygon fill="#e4e4e4" stroke="none" points="421.1,-416.32 421.1,-434.32 513.95,-434.32 513.95,-416.32 421.1,-416.32"/>
 <text xml:space="preserve" text-anchor="start" x="32.63" y="-394.17" font-family="Helvetica,sans-Serif" font-style="italic" font-size="12.00">graph.links.bed.gz: all 5 rows return</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-385.32 373.78,-390.32 396.91,-390.32 396.91,-385.32 373.78,-385.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-385.32 396.91,-390.32 420.05,-390.32 420.05,-385.32 396.91,-385.32"/>
-<text xml:space="preserve" text-anchor="start" x="75.01" y="-373.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s1→s2</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-373.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#ececec" stroke="none" points="142.4,-367.32 142.4,-385.32 373.78,-385.32 373.78,-367.32 142.4,-367.32"/>
-<polygon fill="#bdbdbd" stroke="none" points="373.78,-367.32 373.78,-385.32 420.05,-385.32 420.05,-367.32 373.78,-367.32"/>
-<polygon fill="#ececec" stroke="none" points="420.05,-367.32 420.05,-385.32 512.6,-385.32 512.6,-367.32 420.05,-367.32"/>
-<text xml:space="preserve" text-anchor="start" x="535.74" y="-372.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;dropped</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-362.32 373.78,-367.32 396.91,-367.32 396.91,-362.32 373.78,-362.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-362.32 396.91,-367.32 420.05,-367.32 420.05,-362.32 396.91,-362.32"/>
-<text xml:space="preserve" text-anchor="start" x="70.51" y="-350.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s2→s3</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-350.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#cfcfcf" stroke="none" points="142.4,-344.32 142.4,-362.32 373.78,-362.32 373.78,-344.32 142.4,-344.32"/>
-<polygon fill="#666666" stroke="none" points="373.78,-344.32 373.78,-362.32 420.05,-362.32 420.05,-344.32 373.78,-344.32"/>
-<polygon fill="#cfcfcf" stroke="none" points="420.05,-344.32 420.05,-362.32 512.6,-362.32 512.6,-344.32 420.05,-344.32"/>
-<text xml:space="preserve" text-anchor="start" x="535.74" y="-349.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;kept</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-339.32 373.78,-344.32 396.91,-344.32 396.91,-339.32 373.78,-339.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-339.32 396.91,-344.32 420.05,-344.32 420.05,-339.32 396.91,-339.32"/>
-<text xml:space="preserve" text-anchor="start" x="70.51" y="-327.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s2→s5</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-327.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#cfcfcf" stroke="none" points="142.4,-321.32 142.4,-339.32 373.78,-339.32 373.78,-321.32 142.4,-321.32"/>
-<polygon fill="#666666" stroke="none" points="373.78,-321.32 373.78,-339.32 420.05,-339.32 420.05,-321.32 373.78,-321.32"/>
-<polygon fill="#cfcfcf" stroke="none" points="420.05,-321.32 420.05,-339.32 512.6,-339.32 512.6,-321.32 420.05,-321.32"/>
-<text xml:space="preserve" text-anchor="start" x="535.74" y="-326.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;kept</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-316.32 373.78,-321.32 396.91,-321.32 396.91,-316.32 373.78,-316.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-316.32 396.91,-321.32 420.05,-321.32 420.05,-316.32 396.91,-316.32"/>
-<text xml:space="preserve" text-anchor="start" x="70.51" y="-304.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s3→s4</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-304.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#cfcfcf" stroke="none" points="234.95,-298.32 234.95,-316.32 373.78,-316.32 373.78,-298.32 234.95,-298.32"/>
-<polygon fill="#666666" stroke="none" points="373.78,-298.32 373.78,-316.32 420.05,-316.32 420.05,-298.32 373.78,-298.32"/>
-<polygon fill="#cfcfcf" stroke="none" points="420.05,-298.32 420.05,-316.32 512.6,-316.32 512.6,-298.32 420.05,-298.32"/>
-<text xml:space="preserve" text-anchor="start" x="535.74" y="-303.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;kept</text>
-<polygon fill="#fff3b0" stroke="none" points="373.78,-293.32 373.78,-298.32 396.91,-298.32 396.91,-293.32 373.78,-293.32"/>
-<polygon fill="#fff3b0" stroke="none" points="396.91,-293.32 396.91,-298.32 420.05,-298.32 420.05,-293.32 396.91,-293.32"/>
-<text xml:space="preserve" text-anchor="start" x="70.51" y="-281.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s5→s4</text>
-<text xml:space="preserve" text-anchor="start" x="111.76" y="-281.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
-<polygon fill="#cfcfcf" stroke="none" points="234.95,-275.32 234.95,-293.32 373.78,-293.32 373.78,-275.32 234.95,-275.32"/>
-<polygon fill="#666666" stroke="none" points="373.78,-275.32 373.78,-293.32 420.05,-293.32 420.05,-275.32 373.78,-275.32"/>
-<polygon fill="#cfcfcf" stroke="none" points="420.05,-275.32 420.05,-293.32 512.6,-293.32 512.6,-275.32 420.05,-275.32"/>
-<text xml:space="preserve" text-anchor="start" x="535.74" y="-280.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;kept</text>
-<text xml:space="preserve" text-anchor="start" x="40.62" y="-255.92" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">The reader keeps a link when the node file returned one of its nodes, or when both its nodes</text>
-<text xml:space="preserve" text-anchor="start" x="40.62" y="-241.67" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">are far ends of links it kept. s1→s2 fails both tests, since no kept link ends at s1.</text>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-385.32 374.68,-390.32 397.89,-390.32 397.89,-385.32 374.68,-385.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-385.32 397.89,-390.32 421.1,-390.32 421.1,-385.32 397.89,-385.32"/>
+<text xml:space="preserve" text-anchor="start" x="75.09" y="-373.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#999999">s1→s2</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-373.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#e4e4e4" stroke="none" points="142.55,-367.32 142.55,-385.32 513.95,-385.32 513.95,-367.32 142.55,-367.32"/>
+<text xml:space="preserve" text-anchor="start" x="537.16" y="-372.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;dropped</text>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-362.32 374.68,-367.32 397.89,-367.32 397.89,-362.32 374.68,-362.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-362.32 397.89,-367.32 421.1,-367.32 421.1,-362.32 397.89,-362.32"/>
+<text xml:space="preserve" text-anchor="start" x="70.59" y="-350.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s2→s3</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-350.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#c4c4c4" stroke="none" points="142.55,-344.32 142.55,-362.32 513.95,-362.32 513.95,-344.32 142.55,-344.32"/>
+<text xml:space="preserve" text-anchor="start" x="537.16" y="-349.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;kept</text>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-339.32 374.68,-344.32 397.89,-344.32 397.89,-339.32 374.68,-339.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-339.32 397.89,-344.32 421.1,-344.32 421.1,-339.32 397.89,-339.32"/>
+<text xml:space="preserve" text-anchor="start" x="70.59" y="-327.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s2→s5</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-327.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#c4c4c4" stroke="none" points="142.55,-321.32 142.55,-339.32 513.95,-339.32 513.95,-321.32 142.55,-321.32"/>
+<text xml:space="preserve" text-anchor="start" x="537.16" y="-326.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;kept</text>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-316.32 374.68,-321.32 397.89,-321.32 397.89,-316.32 374.68,-316.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-316.32 397.89,-321.32 421.1,-321.32 421.1,-316.32 397.89,-316.32"/>
+<text xml:space="preserve" text-anchor="start" x="70.59" y="-304.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s3→s4</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-304.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#c4c4c4" stroke="none" points="235.4,-298.32 235.4,-316.32 513.95,-316.32 513.95,-298.32 235.4,-298.32"/>
+<text xml:space="preserve" text-anchor="start" x="537.16" y="-303.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;kept</text>
+<polygon fill="#fff3b0" stroke="none" points="374.68,-293.32 374.68,-298.32 397.89,-298.32 397.89,-293.32 374.68,-293.32"/>
+<polygon fill="#fff3b0" stroke="none" points="397.89,-293.32 397.89,-298.32 421.1,-298.32 421.1,-293.32 397.89,-293.32"/>
+<text xml:space="preserve" text-anchor="start" x="70.59" y="-281.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">s5→s4</text>
+<text xml:space="preserve" text-anchor="start" x="111.84" y="-281.05" font-family="Helvetica,sans-Serif" font-size="12.00"> &#160;</text>
+<polygon fill="#c4c4c4" stroke="none" points="235.4,-275.32 235.4,-293.32 513.95,-293.32 513.95,-275.32 235.4,-275.32"/>
+<text xml:space="preserve" text-anchor="start" x="537.16" y="-280.05" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#777777"> &#160;kept</text>
+<text xml:space="preserve" text-anchor="start" x="40.63" y="-255.92" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">The reader keeps a link when the node file returned one of its nodes, or when both its nodes</text>
+<text xml:space="preserve" text-anchor="start" x="40.63" y="-241.67" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">are far ends of links it kept. s1→s2 fails both tests, since no kept link ends at s1.</text>
 </g>
 <!-- rows&#45;&gt;hits -->
 <g id="edge13" class="edge">

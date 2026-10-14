@@ -24,9 +24,8 @@ TICK_BP = 10
 BLUE = ("#e8eef7", "#a9bfe2", "#4a6fa5")
 ORANGE = ("#fde6cf", "#f3c08f", "#c77a2b")
 PURPLE = ("#ede4f5", "#8a5fb0")
-GREY = ("#e4e4e4", "#e4e4e4")
-KEPT = ("#cfcfcf", "#666666")
-DROPPED = ("#ececec", "#bdbdbd")
+GREY = "#e4e4e4"
+KEPT = "#c4c4c4"
 HIGHLIGHT = "#fff3b0"
 
 
@@ -104,11 +103,10 @@ def lanes(segs, links):
     cells = cell(max(int(r[2]) for r in segs + links))
     query = range(cell(qstart), cell(qend))
 
-    def bars(start, end, light, dark):
+    def bars(start, end, color):
         fills = []
         for i in range(cells):
-            inside = cell(start) <= i < cell(end)
-            fills.append(dark if inside and i in query else light if inside else HIGHLIGHT if i in query else None)
+            fills.append(color if cell(start) <= i < cell(end) else HIGHLIGHT if i in query else None)
         runs, i = [], 0
         while i < cells:
             j = i
@@ -118,13 +116,13 @@ def lanes(segs, links):
             i = j
         return "".join(runs)
 
-    def lane(label, start, end, colors, note, shown):
+    def lane(label, start, end, color, note, shown):
         text = f"<B>{label}</B>" if shown else f'<FONT COLOR="#999999">{label}</FONT>'
         note = f'<FONT POINT-SIZE="12" COLOR="#777777">  {note}</FONT>' if note else ""
         gap = "".join(td(bg=HIGHLIGHT if i in query else None) for i in range(cells))
         return [
             f'<TR><TD HEIGHT="5"></TD><TD></TD>{gap}<TD></TD><TD></TD></TR>',
-            f'<TR><TD ALIGN="RIGHT" HEIGHT="18">{text}  </TD><TD></TD>{bars(start, end, *colors)}<TD></TD><TD ALIGN="LEFT">{note}</TD></TR>',
+            f'<TR><TD ALIGN="RIGHT" HEIGHT="18">{text}  </TD><TD></TD>{bars(start, end, color)}<TD></TD><TD ALIGN="LEFT">{note}</TD></TR>',
         ]
 
     def heading(text):
@@ -140,21 +138,21 @@ def lanes(segs, links):
         tr([td(), td(colspan=tick_cells - 2).join(ticks), td()]),
         tr([td(height=1), td(), td(bg="#999999", colspan=cells), td(), td()]),
     ]
-    rows += lane(f"{seq}:{qstart}-{qend}", qstart, qend, ("#555555", "#555555"), "query", True)
+    rows += lane(coordinate(seq, qstart, qend), qstart, qend, "#555555", "query", True)
 
     q = run_query(segs, links)
     rows.append(heading(f"{PREFIX}.segs.bed.gz"))
     for row in segs:
         hit = row[3] in q["returned"]
-        colors = (ORANGE if row[4] != "0" else BLUE)[1:] if hit else GREY
-        rows += lane(row[3], row[1], row[2], colors, "returned" if hit else "", hit)
+        color = (ORANGE if row[4] != "0" else BLUE)[1] if hit else GREY
+        rows += lane(row[3], row[1], row[2], color, "", hit)
 
     hits = q["hits"]
     count = "all" if len(hits) == len(links) else f"{len(hits)} of"
     rows.append(heading(f"{PREFIX}.links.bed.gz: {count} {len(links)} rows return"))
     for i, row in enumerate(hits):
         keep = i in q["kept"]
-        rows += lane(link_label(row), row[1], row[2], KEPT if keep else DROPPED, "kept" if keep else "dropped", keep)
+        rows += lane(link_label(row), row[1], row[2], KEPT if keep else GREY, "kept" if keep else "dropped", keep)
     return rows
 
 
