@@ -3,11 +3,13 @@
 
 Runs the tool on docs/figures/*.gfa, writes the rows it outputs into the
 marked regions of docs/figures/*.dot and redraws the SVGs with Graphviz.
-With --check, exits 1 if a .dot file differs from what the tool writes now.
+With --check, exits 1 if a .dot file or a drawn panel differs from what the
+tool writes now.
 """
 
 import difflib
 import gzip
+import math
 import subprocess
 import sys
 import tempfile
@@ -155,7 +157,7 @@ def lanes(segs, links, with_links=True):
     for row in segs:
         hit = row[3] in q["returned"]
         color = (ORANGE if row[4] != "0" else BLUE)[1] if hit else GREY
-        rows += lane(row[3], row[1], row[2], color, "", hit)
+        rows += lane(row[3], row[1], row[2], color, "returned" if hit else "", hit)
 
     if not with_links:
         return rows
@@ -197,14 +199,12 @@ def keep_caption(segs, links):
     return [caption(20, text, 92)]
 
 
-def bubble(prefix, ref, labels, edges, far=()):
+def bubble(prefix, ref, labels, edges):
     alts = [n for n in labels if n not in ref]
     centre = prefix + ref[len(ref) // 2]
     lines = []
     for name in ref + alts:
         attrs = [f'label=<<B>{name}</B><BR/><FONT POINT-SIZE="10">{labels[name]}</FONT>>']
-        if name in far:
-            attrs += ['style="dashed,rounded,filled"', 'fillcolor="#f4f7fb"']
         if name in alts:
             attrs += [f'fillcolor="{ORANGE[0]}"', f'color="{ORANGE[2]}"']
         lines.append(f"{prefix}{name} [{', '.join(attrs)}]")
@@ -225,7 +225,7 @@ def bubble(prefix, ref, labels, edges, far=()):
     if skips:
         bottom = f"{prefix}below"
         lines += [f'{bottom} [style=invis, label="", width=0, height=0]', f"{centre} -> {bottom} [style=invis]"]
-    return lines, prefix + alts[0] if alts else centre, bottom
+    return lines, bottom
 
 
 def arrow(tail, head, label):
@@ -246,9 +246,132 @@ def ref_order(nodes):
     return sorted((n for n in nodes if nodes[n]["rank"] == "0"), key=lambda n: int(nodes[n]["start"]))
 
 
+def force_layout(lengths, seeds, edges, px_per_bp=8, bp_per_point=5, steps=800):
+    """Lays out each node as a chain of points, as Bandage does. Springs hold
+    chains and links together, and points of different nodes repel."""
+    pts, chains, springs, owner = [], {}, [], []
+    for name, bp in lengths.items():
+        n = max(2, round(bp / bp_per_point))
+        step = bp * px_per_bp / n
+        x, y = seeds[name]
+        chains[name] = list(range(len(pts), len(pts) + n + 1))
+        pts += [[x + k * step, y] for k in range(n + 1)]
+        owner += [name] * (n + 1)
+        springs += [(a, b, step, 1.0) for a, b in zip(chains[name], chains[name][1:])]
+        springs += [(a, b, 2 * step, 1.0) for a, b in zip(chains[name], chains[name][2:])]
+    springs += [(chains[a][-1], chains[b][0], 10, 1.0) for a, b in edges]
+
+    def push(disp, i, j, f, dx, dy, d):
+        disp[i][0] += f * dx / d
+        disp[i][1] += f * dy / d
+        disp[j][0] -= f * dx / d
+        disp[j][1] -= f * dy / d
+
+    for it in range(steps):
+        disp = [[0.0, 0.0] for _ in pts]
+        for i in range(len(pts)):
+            for j in range(i + 1, len(pts)):
+                if owner[i] == owner[j]:
+                    continue
+                dx, dy = pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]
+                d2 = max(dx * dx + dy * dy, 1.0)
+                push(disp, i, j, 1600 / d2, dx, dy, math.sqrt(d2))
+        for a, b, rest, k in springs:
+            dx, dy = pts[a][0] - pts[b][0], pts[a][1] - pts[b][1]
+            d = max(math.hypot(dx, dy), 0.01)
+            push(disp, a, b, -k * (d - rest), dx, dy, d)
+        cap = 6 * (1 - it / steps) + 0.1
+        for p, (dx, dy) in zip(pts, disp):
+            scale = min(0.3, cap / max(math.hypot(dx, dy), 1e-9))
+            p[0] += dx * scale
+            p[1] += dy * scale
+    return {name: [tuple(pts[i]) for i in chain] for name, chain in chains.items()}
+
+
+def catmull_rom(points, per=8):
+    p = [points[0], *points, points[-1]]
+    out = [points[0]]
+    for a, b, c, d in zip(p, p[1:], p[2:], p[3:]):
+        for k in range(1, per + 1):
+            t = k / per
+            out.append(tuple(
+                0.5 * (2 * b[i] + (c[i] - a[i]) * t + (2 * a[i] - 5 * b[i] + 4 * c[i] - d[i]) * t * t
+                       + (3 * b[i] - a[i] - 3 * c[i] + d[i]) * t * t * t)
+                for i in (0, 1)
+            ))
+    return out
+
+
+def polyline(points):
+    return "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in points)
+
+
+def portion(points, f0, f1):
+    cuts = [0.0]
+    for a, b in zip(points, points[1:]):
+        cuts.append(cuts[-1] + math.dist(a, b))
+
+    def at(f):
+        s = f * cuts[-1]
+        i = next(i for i in range(len(points) - 1) if s <= cuts[i + 1])
+        t = (s - cuts[i]) / (cuts[i + 1] - cuts[i])
+        (ax, ay), (bx, by) = points[i], points[i + 1]
+        return i, (ax + t * (bx - ax), ay + t * (by - ay))
+
+    (i0, p0), (i1, p1) = at(f0), at(f1)
+    return [p0, *points[i0 + 1 : i1 + 1], p1]
+
+
+def text(x, y, label, size, bold=False):
+    weight = ' font-weight="bold"' if bold else ""
+    return f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" font-family="Helvetica,sans-Serif" font-size="{size}"{weight}>{label}</text>'
+
+
+def bandage(nodes, edges, pad=36, width=14):
+    """Draws nodes as tubes as long as their sequence, as Bandage and the
+    JBrowse graph view do."""
+    paths = force_layout({n: v["bp"] for n, v in nodes.items()}, {n: v["seed"] for n, v in nodes.items()}, edges)
+    xs = [x for p in paths.values() for x, _ in p]
+    ys = [y for p in paths.values() for _, y in p]
+    left, top = min(xs) - pad - 20, min(ys) - pad
+    paths = {n: catmull_rom([(x - left, y - top) for x, y in p]) for n, p in paths.items()}
+    cx, cy = (max(xs) + min(xs)) / 2 - left, (max(ys) + min(ys)) / 2 - top
+    body = []
+    for name, v in nodes.items():
+        if v["query"]:
+            body.append(f'<path d="{polyline(portion(paths[name], *v["query"]))}" fill="none" stroke="{HIGHLIGHT}" stroke-width="{2 * width}"/>')
+    for a, b in edges:
+        (ax, ay), (x0, y0) = paths[a][-2:]
+        (x1, y1), (bx, by) = paths[b][:2]
+        reach = math.dist((x0, y0), (x1, y1)) / 2
+        u0, u1 = reach / math.dist((ax, ay), (x0, y0)), reach / math.dist((bx, by), (x1, y1))
+        c0 = (x0 + (x0 - ax) * u0, y0 + (y0 - ay) * u0)
+        c1 = (x1 + (x1 - bx) * u1, y1 + (y1 - by) * u1)
+        color = ORANGE[2] if nodes[a]["alt"] or nodes[b]["alt"] else "#555555"
+        body.append(
+            f'<path d="M{x0:.1f},{y0:.1f} C{c0[0]:.1f},{c0[1]:.1f} {c1[0]:.1f},{c1[1]:.1f} {x1:.1f},{y1:.1f}" '
+            f'fill="none" stroke="{color}" stroke-width="1.5"/>'
+        )
+    for name, v in nodes.items():
+        d = polyline(paths[name])
+        dash = ' stroke-dasharray="5,2"' if v["far"] else ""
+        body.append(f'<path d="{d}" fill="none" stroke="{v["line"]}" stroke-width="{width}"{dash}/>')
+        body.append(f'<path d="{d}" fill="none" stroke="{v["fill"]}" stroke-width="{width - 3}"/>')
+        mid = len(paths[name]) // 2
+        (ax, ay), (mx, my), (bx, by) = paths[name][mid - 1 : mid + 2]
+        nx, ny = ay - by, bx - ax
+        if nx * (mx - cx) + ny * (my - cy) < 0:
+            nx, ny = -nx, -ny
+        d = math.hypot(nx, ny)
+        x, y = mx + nx / d * 24, my + ny / d * 24 + (4 if ny > 0 else -4)
+        body += [text(x, y - 2, name, 12, bold=True), text(x, y + 10, v["label"], 10)]
+    w, h = max(xs) - left + pad + 20, max(ys) - top + pad
+    return w, h, "\n".join(body)
+
+
 def overview_graphs(segs, links):
     nodes = {r[3]: {"seq": r[5], "start": r[6], "end": r[7], "rank": r[4]} for r in segs}
-    graph, _, graph_bottom = bubble("", ref_order(nodes), coordinates(nodes), [(r[3][:-1], r[4][:-1]) for r in links])
+    graph, graph_bottom = bubble("", ref_order(nodes), coordinates(nodes), [(r[3][:-1], r[4][:-1]) for r in links])
 
     q = run_query(segs, links)
     drawn = {n: nodes[n] for n in nodes if n in q["returned"]}
@@ -257,19 +380,42 @@ def overview_graphs(segs, links):
             drawn.setdefault(end["name"], end)
     edges = [q["ends"][i] for i in sorted(q["kept"])]
     far = set(drawn) - q["returned"]
-    drawn_lines, drawn_top, _ = bubble("d_", ref_order(drawn), coordinates(drawn), edges, far)
 
     seq, qstart, qend = QUERY
+    ref = ref_order(drawn)
+    seeds = {n: (80 * i, 0) for i, n in enumerate(ref)}
+    for n in drawn:
+        if n not in ref:
+            linked = [seeds[e][0] for edge in edges if n in edge for e in edge if e in ref]
+            seeds[n] = (sum(linked) / len(linked), -40)
+    tubes = {}
+    for n, v in drawn.items():
+        start, end = int(v["start"]), int(v["end"])
+        lo, hi = max(start, qstart), min(end, qend)
+        alt = v["rank"] != "0"
+        tubes[n] = {
+            "bp": end - start,
+            "seed": seeds[n],
+            "label": coordinate(v["seq"], start, end),
+            "alt": alt,
+            "far": n in far,
+            "line": (ORANGE if alt else BLUE)[2],
+            "fill": BLUE[0] if n in far else (ORANGE if alt else BLUE)[1],
+            "query": ((lo - start) / (end - start), (hi - start) / (end - start)) if v["seq"] == seq and lo < hi else None,
+        }
+    w, h, panel = bandage(tubes, edges)
+    drawn = [f'drawn [shape=box, style="", color=transparent, label="", fixedsize=true, width={w / 72:.2f}, height={h / 72:.2f}]']
+
     detail = [
         arrow((graph_bottom, "cluster_graph"), ("rows", "cluster_files"), f"gfa-to-tabix {PREFIX}.gfa"),
         arrow(("rows", "cluster_files"), ("hits", "cluster_query"), f"a browser queries\n{coordinate(seq, qstart, qend)}"),
-        arrow(("hits", "cluster_query"), (drawn_top, "cluster_drawn"), "kept rows"),
+        arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), "kept rows"),
     ]
     simple = [
         arrow((graph_bottom, "cluster_graph"), ("hits", "cluster_query"), f"gfa-to-tabix {PREFIX}.gfa"),
-        arrow(("hits", "cluster_query"), (drawn_top, "cluster_drawn"), "the rows returned,\nwith their links"),
+        arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), "the rows returned,\nwith their links"),
     ]
-    return graph, drawn_lines, detail, simple
+    return graph, drawn, detail, simple, panel
 
 
 def tokens(column):
@@ -453,7 +599,7 @@ def walks_graph(lengths, links, paths, contigs):
     for n in ref:
         labels[n] = coordinate(contig, start, start + lengths[n])
         start += lengths[n]
-    graph, _, bottom = bubble("n", ref, labels, links)
+    graph, bottom = bubble("n", ref, labels, links)
     arrows = [
         arrow((bottom, "cluster_graph"), ("rows", "cluster_file"), f"gfa-to-tabix --walks\n--refs {REF}"),
         arrow(("rows", "cluster_file"), ("rebuilt", "cluster_rebuilt"), f"a query on {contig}\nreturns these rows"),
@@ -473,6 +619,20 @@ def splice_regions(text, regions, name):
     return "\n".join(lines)
 
 
+def inject(svg, body):
+    node = svg.index("<title>drawn</title>")
+    points = svg[svg.index('points="', node) + 8 :].split('"', 1)[0]
+    xs, ys = zip(*(map(float, p.split(",")) for p in points.split()))
+    close = svg.index("</g>", node) + len("</g>")
+    group = f'\n<!-- begin bandage -->\n<g transform="translate({min(xs)},{min(ys)})">\n{body}\n</g>\n<!-- end bandage -->'
+    return svg[:close] + group + svg[close:]
+
+
+def drawn_panel(svg):
+    begin, end = svg.find("<!-- begin bandage -->"), svg.find("<!-- end bandage -->")
+    return "\n".join(svg[begin:end].split("\n")[2:-2]) if begin >= 0 else None
+
+
 def generate(binary):
     with tempfile.TemporaryDirectory() as tmp:
         out = f"{tmp}/{PREFIX}"
@@ -485,7 +645,7 @@ def generate(binary):
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, simple, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
-    graph, drawn, arrows, simple_arrows = overview_graphs(segs, links)
+    graph, drawn, arrows, simple_arrows, panel = overview_graphs(segs, links)
     return {
         "overview": {
             "graph": graph,
@@ -493,6 +653,7 @@ def generate(binary):
             "caption": simple_caption(segs),
             "drawn": drawn,
             "arrows": simple_arrows,
+            "svg": panel,
         },
         "overview-detail": {
             "graph": graph,
@@ -503,6 +664,7 @@ def generate(binary):
             "keep-caption": keep_caption(segs, links),
             "drawn": drawn,
             "arrows": arrows,
+            "svg": panel,
         },
         "walks": {
             "graph": walks_nodes,
@@ -528,17 +690,22 @@ def main():
     check = "--check" in sys.argv[1:]
     stale = False
     for figure, regions in generate(Path(args[0]).resolve()).items():
-        dot = FIGURES / f"{figure}.dot"
+        dot, svg = FIGURES / f"{figure}.dot", FIGURES / f"{figure}.svg"
+        panel = regions.pop("svg", None)
         old = dot.read_text()
         new = splice_regions(old, regions, dot.name)
         if check:
+            if panel is not None and drawn_panel(svg.read_text()) != panel:
+                stale = True
+                print(f"{svg}: the drawn panel differs from the tool's output")
             if new != old:
                 stale = True
                 sys.stdout.writelines(difflib.unified_diff(
                     old.splitlines(True), new.splitlines(True), str(dot), "from the tool"))
             continue
         dot.write_text(new)
-        subprocess.run(["dot", "-Tsvg", dot, "-o", dot.with_suffix(".svg")], check=True)
+        drawing = subprocess.run(["dot", "-Tsvg", dot], check=True, capture_output=True, text=True).stdout
+        svg.write_text(inject(drawing, panel) if panel is not None else drawing)
     if stale:
         sys.exit("figures.py: docs/figures is stale; run scripts/figures.py <binary> to redraw it")
 

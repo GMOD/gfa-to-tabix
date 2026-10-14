@@ -78,9 +78,9 @@ digraph overview {
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s2</FONT>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="2"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="12" BGCOLOR="#f3c08f"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="12" BGCOLOR="#f3c08f"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD></TD><TD COLSPAN="8"></TD><TD COLSPAN="4" BGCOLOR="#a9bfe2"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD></TD><TD COLSPAN="8"></TD><TD COLSPAN="4" BGCOLOR="#a9bfe2"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s4</FONT>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <TR><TD COLSPAN="20" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>graph.links.bed.gz: all 5 rows return</I></TD></TR>
@@ -102,18 +102,9 @@ digraph overview {
     }
 
     subgraph cluster_drawn {
-      label=<<B>4. What the browser draws</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">the dashed nodes come from the link rows alone</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>4. What the browser draws</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">yellow marks chr1:25-30; the dashed nodes come from the link rows alone</FONT><BR ALIGN="LEFT"/>>
       // begin drawn
-      d_s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
-      d_s3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
-      d_s4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>, style="dashed,rounded,filled", fillcolor="#f4f7fb"]
-      d_s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
-      {rank=same; d_s2; d_s3; d_s4}
-      d_s2 -> d_s3 [weight=20]
-      d_s2 -> d_s5 [color="#c77a2b", constraint=false]
-      d_s3 -> d_s4 [weight=20]
-      d_s5 -> d_s4 [color="#c77a2b", constraint=false]
-      d_s5 -> d_s3 [style=invis, weight=20]
+      drawn [shape=box, style="", color=transparent, label="", fixedsize=true, width=5.29, height=2.02]
       // end drawn
     }
   }
@@ -121,6 +112,6 @@ digraph overview {
   // begin arrows
   s3 -> rows [ltail=cluster_graph, lhead=cluster_files, label="  gfa-to-tabix graph.gfa", penwidth=2]
   rows -> hits [ltail=cluster_files, lhead=cluster_query, label="  a browser queries\n  chr1:25-30", penwidth=2]
-  hits -> d_s5 [ltail=cluster_query, lhead=cluster_drawn, label="  kept rows", penwidth=2]
+  hits -> drawn [ltail=cluster_query, lhead=cluster_drawn, label="  kept rows", penwidth=2]
   // end arrows
 }
