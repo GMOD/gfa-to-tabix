@@ -23,8 +23,9 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 - A chunk holds the reference's path through it once, each distinct route a
   haplotype takes off that path once, and every other path's piece as the list
   of routes it takes. A reader rebuilds every step exactly
-- A sample's file holds only the rows filed under its chunks, so a reader on
-  GRCh38 downloads an index that covers GRCh38 alone
+- Every file lists the same paths, including those of the `--refs` samples.
+  Rows in `chr22.GRCh38.walks.bed.gz` have GRCh38 coordinates, so a reader on
+  GRCh38 downloads that file's index and no other
 - [walks-format.md](walks-format.md) describes the rows and how to decode them
 
 | Option            | Effect                                                                   |

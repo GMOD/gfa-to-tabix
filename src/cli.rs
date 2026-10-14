@@ -46,9 +46,9 @@ pub struct Cli {
     #[arg(short, long = "out", value_name = "PREFIX")]
     pub out: Option<String>,
 
-    /// Instead write PREFIX.SAMPLE.walks.bed.gz for each SAMPLE in --refs:
-    /// every path cut into pieces filed under fixed chunks of that reference,
-    /// each piece as the routes it takes off the reference. Reads the GFA twice
+    /// Instead write PREFIX.SAMPLE.walks.bed.gz and a .tbi for each SAMPLE in
+    /// --refs. Each file lists every haplotype's path in SAMPLE's coordinates.
+    /// Reads the GFA twice
     #[arg(long, requires = "refs", help_heading = WALKS)]
     pub walks: bool,
 

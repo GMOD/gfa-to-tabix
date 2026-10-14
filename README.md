@@ -92,7 +92,7 @@ on one or more reference genomes:
 - A browser showing GRCh38 queries the GRCh38 file, and a region query returns
   the rows a reader needs to rebuild each haplotype's path through that region
 
-![Four haplotype paths through a bubble, the walk rows for their chunk, and the paths a reader rebuilds from them](docs/figures/walks.svg)
+![Four haplotype paths through a bubble, the rows the GRCh38 file has for one 64 kb stretch of chr1, and the paths a reader rebuilds from those rows](docs/figures/walks.svg)
 
 ## Docs
 
