@@ -14,16 +14,20 @@ digraph overview {
 
     subgraph cluster_graph {
       label=<<B>1. The graph (GFA)</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">nodes are S lines and arrows are links (L lines)</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">chr1 in blue; s5, an HG002 allele in place of s3, in orange</FONT><BR ALIGN="LEFT"/>>
+      // begin graph
       s1 [label=<<B>s1</B><BR/><FONT POINT-SIZE="10">chr1:0-10</FONT>>]
       s2 [label=<<B>s2</B><BR/><FONT POINT-SIZE="10">chr1:10-20</FONT>>]
       s3 [label=<<B>s3</B><BR/><FONT POINT-SIZE="10">chr1:20-30</FONT>>]
       s4 [label=<<B>s4</B><BR/><FONT POINT-SIZE="10">chr1:30-40</FONT>>]
-      s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25, rank 1</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
+      s5 [label=<<B>s5</B><BR/><FONT POINT-SIZE="10">HG002:10-25</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
       {rank=same; s1; s2; s3; s4}
-      s1 -> s2 -> s3 -> s4 [weight=20]
-      s3 -> s5 [style=invis, weight=20]
+      s1 -> s2 [weight=20]
+      s2 -> s3 [weight=20]
       s2 -> s5 [color="#c77a2b", weight=0]
+      s3 -> s4 [weight=20]
       s5 -> s4 [color="#c77a2b", weight=0]
+      s3 -> s5 [style=invis, weight=20]
+      // end graph
     }
 
     subgraph cluster_files {
@@ -116,9 +120,9 @@ digraph overview {
     }
   }
 
+  // begin arrows
   s5 -> rows [ltail=cluster_graph, lhead=cluster_files, label="  gfa-to-tabix graph.gfa", penwidth=2]
   rows -> hits [ltail=cluster_files, lhead=cluster_query, label="  a browser queries\n  chr1:25-30", penwidth=2]
-  // begin drawn-arrow
   hits -> d_s3 [ltail=cluster_query, lhead=cluster_drawn, label="  kept rows", penwidth=2]
-  // end drawn-arrow
+  // end arrows
 }

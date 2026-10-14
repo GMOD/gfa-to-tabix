@@ -190,40 +190,68 @@ def keep_caption(segs, links):
     return [caption(20, text, 92)]
 
 
-def drawn(segs, links):
+def bubble(prefix, ref, labels, edges, far=()):
+    alts = [n for n in labels if n not in ref]
+    lines = []
+    for name in ref + alts:
+        attrs = [f'label=<<B>{name}</B><BR/><FONT POINT-SIZE="10">{labels[name]}</FONT>>']
+        if name in far:
+            attrs += ['style="dashed,rounded,filled"', 'fillcolor="#f4f7fb"']
+        if name in alts:
+            attrs += [f'fillcolor="{ORANGE[0]}"', f'color="{ORANGE[2]}"']
+        lines.append(f"{prefix}{name} [{', '.join(attrs)}]")
+    lines.append(f"{{rank=same; {'; '.join(prefix + n for n in ref)}}}")
+    for a, b in edges:
+        if a in ref and b in ref:
+            lines.append(f"{prefix}{a} -> {prefix}{b} [weight=20]")
+        else:
+            lines.append(f'{prefix}{a} -> {prefix}{b} [color="{ORANGE[2]}", weight=0]')
+    for name in alts:
+        linked = [ref.index(e) for edge in edges if name in edge for e in edge if e in ref]
+        middle = ref[(min(linked) + max(linked)) // 2]
+        lines.append(f"{prefix}{middle} -> {prefix}{name} [style=invis, weight=20]")
+    top = prefix + ref[len(ref) // 2]
+    return lines, top, prefix + alts[0] if alts else top
+
+
+def arrow(tail, head, label):
+    (tail, tail_cluster), (head, head_cluster) = tail, head
+    label = "\\n".join(f"  {line}" for line in label.split("\n"))
+    return f'{tail} -> {head} [ltail={tail_cluster}, lhead={head_cluster}, label="{label}", penwidth=2]'
+
+
+def coordinate(seq, start, end):
+    return f"{seq}:{start}-{end}"
+
+
+def coordinates(nodes):
+    return {n: coordinate(v["seq"], v["start"], v["end"]) for n, v in nodes.items()}
+
+
+def ref_order(nodes):
+    return sorted((n for n in nodes if nodes[n]["rank"] == "0"), key=lambda n: int(nodes[n]["start"]))
+
+
+def overview_graphs(segs, links):
+    nodes = {r[3]: {"seq": r[5], "start": r[6], "end": r[7], "rank": r[4]} for r in segs}
+    graph, _, graph_bottom = bubble("", ref_order(nodes), coordinates(nodes), [(r[3][:-1], r[4][:-1]) for r in links])
+
     q = run_query(segs, links)
-    nodes = {}
-    for row in segs:
-        if row[3] in q["returned"]:
-            nodes[row[3]] = {"seq": row[5], "start": row[6], "end": row[7], "rank": row[4], "far": False}
+    drawn = {n: nodes[n] for n in nodes if n in q["returned"]}
     for i in sorted(q["kept"]):
         for end in link_ends(q["hits"][i]):
-            nodes.setdefault(end["name"], {**end, "far": True})
+            drawn.setdefault(end["name"], end)
+    edges = [q["ends"][i] for i in sorted(q["kept"])]
+    far = set(drawn) - q["returned"]
+    drawn_lines, drawn_top, _ = bubble("d_", ref_order(drawn), coordinates(drawn), edges, far)
 
-    ref = sorted((n for n in nodes if nodes[n]["rank"] == "0"), key=lambda n: int(nodes[n]["start"]))
-    lines = []
-    for name in ref + [n for n in nodes if n not in ref]:
-        n = nodes[name]
-        attrs = [f'label=<<B>{name}</B><BR/><FONT POINT-SIZE="10">{n["seq"]}:{n["start"]}-{n["end"]}</FONT>>']
-        if n["far"]:
-            attrs += ['style="dashed,rounded,filled"', 'fillcolor="#f4f7fb"']
-        if n["rank"] != "0":
-            attrs += [f'fillcolor="{ORANGE[0]}"', f'color="{ORANGE[2]}"']
-        lines.append(f"d_{name} [{', '.join(attrs)}]")
-    lines.append(f"{{rank=same; {'; '.join(f'd_{n}' for n in ref)}}}")
-    for i in sorted(q["kept"]):
-        a, b = q["ends"][i]
-        if a in ref and b in ref:
-            lines.append(f"d_{a} -> d_{b} [weight=20]")
-        else:
-            lines.append(f'd_{a} -> d_{b} [color="{ORANGE[2]}", weight=0]')
-    for name in nodes:
-        if name not in ref:
-            linked = [ref.index(e) for i in q["kept"] for e in q["ends"][i] if name in q["ends"][i] and e in ref]
-            middle = ref[(min(linked) + max(linked)) // 2]
-            lines.append(f"d_{middle} -> d_{name} [style=invis, weight=20]")
-    arrow = f'hits -> d_{ref[len(ref) // 2]} [ltail=cluster_query, lhead=cluster_drawn, label="  kept rows", penwidth=2]'
-    return lines, [arrow]
+    seq, qstart, qend = QUERY
+    arrows = [
+        arrow((graph_bottom, "cluster_graph"), ("rows", "cluster_files"), f"gfa-to-tabix {PREFIX}.gfa"),
+        arrow(("rows", "cluster_files"), ("hits", "cluster_query"), f"a browser queries\n{coordinate(seq, qstart, qend)}"),
+        arrow(("hits", "cluster_query"), (drawn_top, "cluster_drawn"), "kept rows"),
+    ]
+    return graph, drawn_lines, arrows
 
 
 def tokens(column):
@@ -396,16 +424,17 @@ def generate(binary):
         walk_file = f"{out}.GRCh38.walks.bed.gz"
         walk_rows, header = read_rows(walk_file), read_header(walk_file)
     table, rebuilt = walks(walk_rows, read_w_lines(FIGURES / "walks.gfa"))
-    drawn_nodes, drawn_arrow = drawn(segs, links)
+    graph, drawn, arrows = overview_graphs(segs, links)
     return {
         "overview": {
+            "graph": graph,
             "segs": segs_table(segs),
             "segs-caption": segs_caption(segs, links),
             "links": links_table(links),
             "lanes": lanes(segs, links),
             "keep-caption": keep_caption(segs, links),
-            "drawn": drawn_nodes,
-            "drawn-arrow": drawn_arrow,
+            "drawn": drawn,
+            "arrows": arrows,
         },
         "walks": {"rows": table, "caption": walks_caption(header, walk_rows), "rebuilt": rebuilt},
     }
