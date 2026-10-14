@@ -10,9 +10,13 @@ pub struct Placement {
 
 pub struct Link {
     pub source: u32,
-    pub source_strand: Vec<u8>,
+    pub source_reversed: bool,
     pub target: u32,
-    pub target_strand: Vec<u8>,
+    pub target_reversed: bool,
+}
+
+pub fn strand(reversed: bool) -> u8 {
+    if reversed { b'-' } else { b'+' }
 }
 
 // A node index and whether the path reads the node reversed, packed in one u32
@@ -193,13 +197,24 @@ impl Graph {
                 text(cols[5])
             ));
         }
+        let reversed = |strand: &[u8]| match strand {
+            b"+" => Ok(false),
+            b"-" => Ok(true),
+            _ => Err(format!(
+                "link {}->{}: strand {} is not + or -",
+                text(cols[1]),
+                text(cols[3]),
+                text(strand)
+            )),
+        };
+        let (source_reversed, target_reversed) = (reversed(cols[2])?, reversed(cols[4])?);
         let source = self.node(cols[1]);
         let target = self.node(cols[3]);
         self.links.push(Link {
             source,
-            source_strand: cols[2].to_vec(),
+            source_reversed,
             target,
-            target_strand: cols[4].to_vec(),
+            target_reversed,
         });
         Ok(())
     }
@@ -312,6 +327,12 @@ mod tests {
             let error = Graph::read(text.as_bytes()).err().unwrap();
             assert!(error.contains("is not a segment id and + or -"), "{error}");
         }
+    }
+
+    #[test]
+    fn a_link_strand_is_plus_or_minus() {
+        let error = Graph::read("L\ta\t+\tb\tx\t0M\n".as_bytes()).err().unwrap();
+        assert!(error.contains("strand x is not + or -"), "{error}");
     }
 
     #[test]

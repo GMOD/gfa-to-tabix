@@ -13,7 +13,7 @@ use noodles_csi::binning_index::index::reference_sequence::bin::Chunk;
 use noodles_tabix as tabix;
 
 use crate::anchor::{Span, Spans, widen};
-use crate::gfa::Graph;
+use crate::gfa::{Graph, strand};
 use crate::parallel_bgzf;
 use crate::place::Node;
 
@@ -106,8 +106,16 @@ pub fn link_rows(
             skipped += 1;
             continue;
         };
-        let source_id = [graph.node_ids[source].as_slice(), &link.source_strand].concat();
-        let target_id = [graph.node_ids[target].as_slice(), &link.target_strand].concat();
+        let source_id = [
+            graph.node_ids[source].as_slice(),
+            &[strand(link.source_reversed)],
+        ]
+        .concat();
+        let target_id = [
+            graph.node_ids[target].as_slice(),
+            &[strand(link.target_reversed)],
+        ]
+        .concat();
         let (a_rank, b_rank) = (a.rank.to_string(), b.rank.to_string());
         let mut rest = Vec::new();
         push_fields(

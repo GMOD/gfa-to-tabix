@@ -16,7 +16,7 @@
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
-use crate::gfa::Graph;
+use crate::gfa::{Graph, strand};
 use crate::place::Placed;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -308,9 +308,9 @@ pub fn fold(graph: &Graph, placed: &Placed, below: i64) -> Vec<u8> {
             let (a, b) = (compact[l.source as usize]?, compact[l.target as usize]?);
             Some(edge(
                 a,
-                l.source_strand.first().copied().unwrap_or(b'+'),
+                strand(l.source_reversed),
                 b,
-                l.target_strand.first().copied().unwrap_or(b'+'),
+                strand(l.target_reversed),
             ))
         })
         .collect();

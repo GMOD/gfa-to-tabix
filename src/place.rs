@@ -203,14 +203,6 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
     })
 }
 
-fn complement(strand: &mut [u8]) {
-    match strand {
-        [b'+'] => strand[0] = b'-',
-        [b'-'] => strand[0] = b'+',
-        _ => {}
-    }
-}
-
 // Turns every flipped segment to read forward where it is placed: each link
 // end and path step on it takes the other strand. A self-link turns at both
 // ends.
@@ -219,12 +211,8 @@ pub fn flip(graph: &mut Graph, flipped: &[bool]) {
         return;
     }
     for link in &mut graph.links {
-        if flipped[link.source as usize] {
-            complement(&mut link.source_strand);
-        }
-        if flipped[link.target as usize] {
-            complement(&mut link.target_strand);
-        }
+        link.source_reversed ^= flipped[link.source as usize];
+        link.target_reversed ^= flipped[link.target as usize];
     }
     for path in &mut graph.paths {
         for step in &mut path.steps {
@@ -238,6 +226,7 @@ pub fn flip(graph: &mut Graph, flipped: &[bool]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::gfa::strand;
 
     // a is read forward by ref and reversed by alt; b reversed by ref; x, off
     // the reference, reversed by alt, the path that places it
@@ -264,9 +253,9 @@ mod tests {
                 text(
                     &[
                         graph.node_ids[l.source as usize].as_slice(),
-                        &l.source_strand,
+                        &[strand(l.source_reversed)],
                         &graph.node_ids[l.target as usize],
-                        &l.target_strand,
+                        &[strand(l.target_reversed)],
                     ]
                     .concat(),
                 )
