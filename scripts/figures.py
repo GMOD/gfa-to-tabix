@@ -77,6 +77,16 @@ def segs_caption(segs, links):
     return [caption(4, text, 64, "#a15f1c")]
 
 
+def simple_caption(segs):
+    off = next(r for r in segs if r[4] != "0")
+    span = coordinate(*off[0:3])
+    text = (
+        f"{off[3]} lies off {off[0]}, so the tool files it under the span it hangs from, {span}, "
+        "and a query anywhere in that span returns it. The tool files links the same way."
+    )
+    return [caption(20, text, 70, "#555555")]
+
+
 def segs_table(segs):
     rows = []
     for row in segs:
@@ -98,7 +108,7 @@ def cell(bp):
     return int(int(bp) / BP_PER_CELL)
 
 
-def lanes(segs, links):
+def lanes(segs, links, with_links=True):
     seq, qstart, qend = QUERY
     cells = cell(max(int(r[2]) for r in segs + links))
     query = range(cell(qstart), cell(qend))
@@ -147,6 +157,8 @@ def lanes(segs, links):
         color = (ORANGE if row[4] != "0" else BLUE)[1] if hit else GREY
         rows += lane(row[3], row[1], row[2], color, "", hit)
 
+    if not with_links:
+        return rows
     hits = q["hits"]
     count = "all" if len(hits) == len(links) else f"{len(hits)} of"
     rows.append(heading(f"{PREFIX}.links.bed.gz: {count} {len(links)} rows return"))
@@ -248,12 +260,16 @@ def overview_graphs(segs, links):
     drawn_lines, drawn_top, _ = bubble("d_", ref_order(drawn), coordinates(drawn), edges, far)
 
     seq, qstart, qend = QUERY
-    arrows = [
+    detail = [
         arrow((graph_bottom, "cluster_graph"), ("rows", "cluster_files"), f"gfa-to-tabix {PREFIX}.gfa"),
         arrow(("rows", "cluster_files"), ("hits", "cluster_query"), f"a browser queries\n{coordinate(seq, qstart, qend)}"),
         arrow(("hits", "cluster_query"), (drawn_top, "cluster_drawn"), "kept rows"),
     ]
-    return graph, drawn_lines, arrows
+    simple = [
+        arrow((graph_bottom, "cluster_graph"), ("hits", "cluster_query"), f"gfa-to-tabix {PREFIX}.gfa"),
+        arrow(("hits", "cluster_query"), (drawn_top, "cluster_drawn"), "the rows returned,\nwith their links"),
+    ]
+    return graph, drawn_lines, detail, simple
 
 
 def tokens(column):
@@ -334,7 +350,10 @@ def walks(rows, w_lines):
     def rebuilt_row(path, cells, label=""):
         return tr([td(path, border=0, align="RIGHT"), *cells, td(label, border=0, align="LEFT")])
 
-    table = []
+    def node(h):
+        return f"{h[0]}{'-' if h[1] else ''}"
+
+    table, simple = [], []
     rebuilt = [rebuilt_row(reference, [td(h[0], BLUE[0], width=60) for h in R])]
     route_id = 0
     for row in rows:
@@ -342,6 +361,7 @@ def walks(rows, w_lines):
         meaning, bg = "", None
         if kind == "ref":
             meaning, bg = f"R, the reference path: {' '.join(handle(h) for h in R)}", BLUE[0]
+            simple.append(tr([td("R", bg), td(" ".join(node(h) for h in R), align="LEFT")]))
         elif kind == "nodes":
             ids, total = [], 0
             for d in rest[0].split(","):
@@ -354,6 +374,8 @@ def walks(rows, w_lines):
             via = f"through {' '.join(handle(h) for h in interior)} to" if interior else "straight to"
             meaning = f"route {route_id}: from {handle(entry)} {via} {handle(exit_)}"
             bg = route_colors(routes[route_id])[0]
+            nodes = [entry, *interior, exit_]
+            simple.append(tr([td(f"route {route_id}", bg), td(" → ".join(node(h) for h in nodes if h), align="LEFT")]))
             route_id += 1
         elif kind == "walk":
             start, end = int(rest[5]), int(rest[5]) + int(rest[6])
@@ -369,13 +391,14 @@ def walks(rows, w_lines):
                 f'<FONT POINT-SIZE="11" COLOR="{route_colors(routes[c])[-1]}">route {c}</FONT>' for c, _ in choices
             )
             rebuilt.append(rebuilt_row(path, cells, label))
+            simple.append(tr([td(path), td(taken or "no route", align="LEFT")]))
         columns = " ".join(rest)
         table.append(tr([
             td(kind, bg),
             td(f'<FONT FACE="Courier" POINT-SIZE="11">{columns}</FONT>', align="LEFT"),
             td(meaning, align="LEFT"),
         ]))
-    return table, rebuilt
+    return table, simple, rebuilt
 
 
 def walks_caption(header, rows):
@@ -438,11 +461,18 @@ def generate(binary):
         walk_file = f"{out}.{REF}.walks.bed.gz"
         walk_rows, header = read_rows(walk_file), read_header(walk_file)
     lengths, gfa_links, paths = read_gfa(FIGURES / "walks.gfa")
-    table, rebuilt = walks(walk_rows, paths)
+    table, simple, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths)
-    graph, drawn, arrows = overview_graphs(segs, links)
+    graph, drawn, arrows, simple_arrows = overview_graphs(segs, links)
     return {
         "overview": {
+            "graph": graph,
+            "lanes": lanes(segs, links, with_links=False),
+            "caption": simple_caption(segs),
+            "drawn": drawn,
+            "arrows": simple_arrows,
+        },
+        "overview-detail": {
             "graph": graph,
             "segs": segs_table(segs),
             "segs-caption": segs_caption(segs, links),
@@ -453,6 +483,12 @@ def generate(binary):
             "arrows": arrows,
         },
         "walks": {
+            "graph": walks_nodes,
+            "rows": simple,
+            "rebuilt": rebuilt,
+            "arrows": walks_arrows,
+        },
+        "walks-detail": {
             "graph": walks_nodes,
             "rows": table,
             "caption": walks_caption(header, walk_rows),

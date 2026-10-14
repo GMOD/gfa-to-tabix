@@ -10,7 +10,7 @@ path of the graph, cut into pieces filed under fixed chunks of that reference.
   routes it takes
 - A reader rebuilds every step of every piece exactly from these rows
 
-![Four haplotype paths through a bubble, the walk rows for their chunk, and the paths a reader rebuilds from them](figures/walks.svg)
+![Four haplotype paths through a bubble, the walk rows for their chunk, and the paths a reader rebuilds from them](figures/walks-detail.svg)
 
 [Example](#example) lists a harder chunk, whose one route has no entry and is
 taken flipped.
