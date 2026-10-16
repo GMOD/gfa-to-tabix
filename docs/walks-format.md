@@ -1,4 +1,4 @@
-# Walk file format 2
+# Walk file format 3
 
 `gfa-to-tabix --walks` writes one file per reference sample,
 `<prefix>.<sample>.walks.bed.gz`, bgzipped and Tabix-indexed. It holds every
@@ -34,13 +34,14 @@ taken flipped.
 ## Header
 
 ```
-#walks	format:i:2	chunk:i:65536	maxnode:i:1024
+#walks	format:i:3	chunk:i:65536	maxnode:i:1024
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
 ```
 
-- `format:i:2` marks this format. Format 1 files have no `format` tag
+- `format:i:3` marks this format. Format 2 files lack the [record tags](#records),
+  and format 1 files have no `format` tag
 - `maxnode` is the longest node in bp. A node overlapping a window starts at
   most that far before it, so a reader queries from `max(chunk, maxnode)` bp
   before the window, rounded down to a chunk start
@@ -60,7 +61,7 @@ first token's previous id is 0 unless a row says otherwise. An empty list is
 ### ref
 
 ```
-seq cs cs+1 ref path fragStart hapOffset piece nsteps steps lengths [pv] [nx] [SQ:Z:bases]
+seq cs cs+1 ref path fragStart hapOffset piece nsteps steps lengths [pv] [nx] [pg] [pr] [ng] [nr] [SQ:Z:bases]
 ```
 
 - One row per piece of the reference paths in the chunk, so usually one
@@ -107,7 +108,7 @@ seq cs cs+1 route entry interior exit
 ### walk
 
 ```
-seq cs cs+1 walk path fragStart hapOffset piece nsteps start end choices [pv] [nx]
+seq cs cs+1 walk path fragStart hapOffset piece nsteps start end choices [pv] [nx] [pg] [pr] [ng] [nr]
 ```
 
 - One row per piece of every other path, the other references' included.
@@ -126,6 +127,24 @@ seq cs cs+1 walk path fragStart hapOffset piece nsteps start end choices [pv] [n
 filed under, as `pv:i:cs`, or as `pv:Z:seq:cs` on another reference sequence. A
 row at either end of its path has no tag there. A reader that cuts a path off
 at the edge of what it read follows the tag to the chunk the path goes on in.
+
+### Records
+
+A contig can span several W lines, one per stretch the graph holds, as where
+Minigraph-Cactus clips a haplotype. `piece`, `pv` and `nx` run within one line
+(one record), so the tool links a contig's records in start order:
+
+- A record's last piece has `ng:i:bp`, the contig bp between this record's end
+  and the next record's start, which the graph lacks. `nr` gives the chunk the
+  next record's first piece is filed under, written like `nx`
+- The next record's first piece mirrors these as `pg` and `pr`
+- A record that visits no node of the reference has no rows in the file. Its
+  neighbours get `ng` and `pg` but no `nr` or `pr`
+- A last piece with neither `nx` nor `ng` ends the contig's last record in the
+  graph. The contig itself may go on
+- The tool refuses two records of a contig that overlap or start at the same
+  base, and a W line whose end column is not its start plus its nodes' lengths,
+  since `ng` would then depend on which one to believe
 
 ## Decoding a walk row
 

@@ -70,7 +70,7 @@ other haplotype with rows in the file, the other `--refs` samples included, as
 its PanSN `sample#haplotype`, once each in byte order:
 
 ```
-#walks	format:i:2	chunk:i:65536	maxnode:i:1024
+#walks	format:i:3	chunk:i:65536	maxnode:i:1024
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
@@ -94,6 +94,12 @@ its PanSN `sample#haplotype`, once each in byte order:
   what it read, such as a haplotype that leaves the reference inside a window
   and rejoins it in a chunk the read did not reach, reads on to that chunk, and
   knows a contig that ends from one that goes on
+- A contig in several W lines, as Minigraph-Cactus writes where it clips a
+  haplotype, has pieces numbered per line. The last piece of a line gives the
+  bp the graph lacks before the contig's next line, as `ng`, and the chunk that
+  line starts in, as `nr`; the next line's first piece mirrors them as `pg` and
+  `pr`. A last piece with neither `nx` nor `ng` ends the contig's last line in
+  the graph; the contig itself may go on
 - The rows are the same for any order of the W lines, which `vg convert`
   changes from run to run
 
