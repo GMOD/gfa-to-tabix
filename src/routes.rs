@@ -18,6 +18,7 @@ pub struct Piece {
     pub frag: u64,
     pub offset: u64,
     pub piece: u32,
+    pub record: u32,
     pub tags: Vec<u8>,
     pub handles: Vec<u32>,
 }
@@ -29,6 +30,7 @@ pub struct PieceRef<'a> {
     pub frag: u64,
     pub offset: u64,
     pub piece: u32,
+    pub record: u32,
     pub tags: &'a [u8],
     pub handles: &'a [u32],
 }
@@ -66,7 +68,9 @@ fn unzigzag(n: u64) -> i64 {
 impl Piece {
     // The sort key's text: reference pieces sort first in a chunk, then by
     // name, fragStart and offset, which are big-endian so bytes sort as
-    // numbers. Handles follow as zigzag varint deltas.
+    // numbers. The record index never decides the order, since no two pieces
+    // share a name, fragStart, offset and piece. Handles follow as zigzag
+    // varint deltas.
     pub fn write(out: &mut Vec<u8>, piece: &PieceRef) {
         let PieceRef {
             reference,
@@ -74,6 +78,7 @@ impl Piece {
             frag,
             offset,
             piece,
+            record,
             tags,
             handles,
         } = *piece;
@@ -83,6 +88,7 @@ impl Piece {
         out.extend_from_slice(&frag.to_be_bytes());
         out.extend_from_slice(&offset.to_be_bytes());
         out.extend_from_slice(&piece.to_be_bytes());
+        out.extend_from_slice(&record.to_be_bytes());
         out.extend_from_slice(&(tags.len() as u32).to_be_bytes());
         out.extend_from_slice(tags);
         let mut previous = 0i64;
@@ -105,6 +111,7 @@ impl Piece {
         let frag = u64::from_be_bytes(take(8).try_into().unwrap());
         let offset = u64::from_be_bytes(take(8).try_into().unwrap());
         let piece = u32::from_be_bytes(take(4).try_into().unwrap());
+        let record = u32::from_be_bytes(take(4).try_into().unwrap());
         let tags_len = u32::from_be_bytes(take(4).try_into().unwrap()) as usize;
         let tags = take(tags_len).to_vec();
         let mut handles = Vec::new();
@@ -119,6 +126,7 @@ impl Piece {
             frag,
             offset,
             piece,
+            record,
             tags,
             handles,
         }

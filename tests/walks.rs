@@ -337,6 +337,7 @@ fn every_path_rebuilds_from_its_rows() {
         ("walks-repeat.gfa", "R", "1000"),
         ("walks-loop.gfa", "R", "10"),
         ("walks-loop.gfa", "R", "1000"),
+        ("walks-records.gfa", "R", "10"),
     ] {
         let built = build(gfa, &["--refs", refs, "--chunk", chunk]);
         assert!(built.output.status.success(), "{gfa} {chunk}");
@@ -367,7 +368,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         assert_eq!(
             header(built.file(sample)),
             tsv(&[
-                "#walks format:i:2 chunk:i:10 maxnode:i:6",
+                "#walks format:i:3 chunk:i:10 maxnode:i:6",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",
@@ -425,7 +426,7 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     let built = build("walks-repeat.gfa", &["--refs", "R"]);
     assert!(built.output.status.success());
     let walks = built.file("R");
-    assert!(header(walks).starts_with("#walks\tformat:i:2\tchunk:i:10\tmaxnode:i:15\n"));
+    assert!(header(walks).starts_with("#walks\tformat:i:3\tchunk:i:10\tmaxnode:i:15\n"));
     assert_eq!(
         rows_of(walks, "R#0#chr", "ref", "R#0#chr"),
         tsv(&[
@@ -531,25 +532,27 @@ fn p_lines_give_the_rows_w_lines_do() {
 
 #[test]
 fn the_order_of_the_paths_changes_no_row() {
-    let gfa = fs::read_to_string(fixture("walks-two-refs.gfa")).unwrap();
-    let (paths, rest): (Vec<&str>, Vec<&str>) = gfa.lines().partition(|l| l.starts_with('W'));
-    let reversed: Vec<&str> = paths.iter().rev().copied().collect();
-    let rotated: Vec<&str> = paths[2..].iter().chain(&paths[..2]).copied().collect();
-    let orders = [
-        [rest.clone(), reversed.clone()].concat(),
-        [rest.clone(), rotated].concat(),
-        // paths before the S lines take a second read
-        [reversed, rest].concat(),
-    ];
-    let plain = build("walks-two-refs.gfa", &[]);
-    for (i, lines) in orders.iter().enumerate() {
-        let path =
-            std::env::temp_dir().join(format!("walks-two-refs-{}-{i}.gfa", std::process::id()));
-        fs::write(&path, lines.join("\n") + "\n").unwrap();
-        let shuffled = build(path.to_str().unwrap(), &[]);
-        fs::remove_file(&path).unwrap();
-        assert!(shuffled.output.status.success(), "order {i}");
-        assert_eq!(shuffled.walks, plain.walks, "order {i}");
+    for (name, refs) in [("walks-two-refs.gfa", "R,Q"), ("walks-records.gfa", "R")] {
+        let gfa = fs::read_to_string(fixture(name)).unwrap();
+        let (paths, rest): (Vec<&str>, Vec<&str>) = gfa.lines().partition(|l| l.starts_with('W'));
+        let reversed: Vec<&str> = paths.iter().rev().copied().collect();
+        let rotated: Vec<&str> = paths[2..].iter().chain(&paths[..2]).copied().collect();
+        let orders = [
+            [rest.clone(), reversed.clone()].concat(),
+            [rest.clone(), rotated].concat(),
+            // paths before the S lines take a second read
+            [reversed, rest].concat(),
+        ];
+        let plain = build(name, &["--refs", refs]);
+        assert!(plain.output.status.success(), "{name}");
+        for (i, lines) in orders.iter().enumerate() {
+            let path = std::env::temp_dir().join(format!("{name}-{}-{i}", std::process::id()));
+            fs::write(&path, lines.join("\n") + "\n").unwrap();
+            let shuffled = build(path.to_str().unwrap(), &["--refs", refs]);
+            fs::remove_file(&path).unwrap();
+            assert!(shuffled.output.status.success(), "{name} order {i}");
+            assert_eq!(shuffled.walks, plain.walks, "{name} order {i}");
+        }
     }
 }
 
@@ -639,5 +642,75 @@ fn a_row_names_the_chunks_of_the_pieces_before_and_after_it() {
             "R#0#chr1 0 1 walk H#1#h 0 0 0 2 2 2 . nx:Z:R#0#chr2:0",
             "R#0#chr2 0 1 walk H#1#h 0 12 1 2 6 2 . pv:Z:R#0#chr1:0",
         ])
+    );
+}
+
+// walks-records.gfa: R#0#chr is 1 2 3 4, 6 bp each, so chunk 0-10 holds 1 and
+// 2 and chunk 10-20 holds 3 and 4. H#1#h has three W lines: 1 2 over 0-12, 5 6
+// over 20-26, which visits no R node and has no rows, and 2 3 4 over 40-58,
+// which starts in chunk 0-10 and ends in 10-20. G#1#g has 1 2 over 0-12 and 4
+// over 30-36.
+#[test]
+fn a_record_names_the_gap_to_the_records_beside_it_on_its_contig() {
+    let built = build("walks-records.gfa", &["--refs", "R"]);
+    assert!(built.output.status.success());
+    let walks = built.file("R");
+    assert!(header(walks).starts_with("#walks\tformat:i:3\t"));
+    assert_eq!(
+        rows_of(walks, "R#0#chr", "walk", "H#1#h"),
+        tsv(&[
+            "R#0#chr 0 1 walk H#1#h 0 0 0 2 2 2 . ng:i:8",
+            "R#0#chr 0 1 walk H#1#h 40 40 0 1 4 0 . nx:i:10 pg:i:14",
+            "R#0#chr 10 11 walk H#1#h 40 46 1 2 6 2 . pv:i:0",
+        ])
+    );
+    assert_eq!(
+        rows_of(walks, "R#0#chr", "walk", "G#1#g"),
+        tsv(&[
+            "R#0#chr 0 1 walk G#1#g 0 0 0 2 2 2 . ng:i:18 nr:i:10",
+            "R#0#chr 10 11 walk G#1#g 30 30 0 1 8 0 . pg:i:18 pr:i:0",
+        ])
+    );
+}
+
+fn build_lines(name: &str, lines: &[&str]) -> Built {
+    let gfa = fs::read_to_string(fixture("walks-records.gfa")).unwrap();
+    let path = std::env::temp_dir().join(format!("walks-{name}-{}.gfa", std::process::id()));
+    fs::write(&path, gfa + &tsv(lines)).unwrap();
+    let built = build(path.to_str().unwrap(), &["--refs", "R"]);
+    fs::remove_file(&path).unwrap();
+    built
+}
+
+#[test]
+fn records_of_a_contig_that_overlap_or_share_a_start_are_refused() {
+    for (name, line, error) in [
+        (
+            "overlap",
+            "W G 1 g 10 22 >2>3",
+            "path G#1#g: the line covering 0-12 overlaps the one covering 10-22",
+        ),
+        (
+            "same-start",
+            "W G 1 g 30 33 >5",
+            "path G#1#g has two lines starting at 30",
+        ),
+    ] {
+        let built = build_lines(name, &[line]);
+        assert_eq!(built.output.status.code(), Some(1), "{name}");
+        let stderr = String::from_utf8_lossy(&built.output.stderr);
+        assert!(stderr.contains(error), "{name}: {stderr}");
+        assert!(built.walks.is_empty(), "{name}");
+    }
+}
+
+#[test]
+fn a_w_line_whose_end_disagrees_with_its_steps_is_refused() {
+    let built = build_lines("end", &["W F 1 f 0 13 >1>2"]);
+    assert_eq!(built.output.status.code(), Some(1));
+    let stderr = String::from_utf8_lossy(&built.output.stderr);
+    assert!(
+        stderr.contains("line 18: path F#1#f ends at 13, but its steps from 0 end at 12"),
+        "{stderr}"
     );
 }

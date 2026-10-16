@@ -1,0 +1,17 @@
+H	VN:Z:1.1
+S	1	AAAAAA
+S	2	CCCCCC
+S	3	GGGGGG
+S	4	TTTTTT
+S	5	AAA
+S	6	CCC
+L	1	+	2	+	0M
+L	2	+	3	+	0M
+L	3	+	4	+	0M
+L	5	+	6	+	0M
+W	R	0	chr	0	24	>1>2>3>4
+W	H	1	h	40	58	>2>3>4
+W	G	1	g	0	12	>1>2
+W	H	1	h	0	12	>1>2
+W	G	1	g	30	36	>4
+W	H	1	h	20	26	>5>6

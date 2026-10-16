@@ -1,6 +1,6 @@
 // The --walks mode: every path of a base-level GFA cut into pieces filed under
 // fixed chunks of each reference's coordinate, written as one Tabix-indexed
-// BED file per reference in format 2 (`routes.rs` writes a chunk's rows). A
+// BED file per reference in format 3 (`routes.rs` writes a chunk's rows). A
 // row's interval is the first base of its chunk: a full-chunk interval would
 // share a Tabix bin with the next chunk, and a query would pull both. Header
 // lines give the format, the chunk size and the longest node, then the
@@ -57,11 +57,13 @@ fn node_id(bytes: &[u8]) -> Result<u32, String> {
 }
 
 // A P or W line: the PanSN sample, the name its rows carry, where the path
-// starts on that sequence, and its steps as handles, 2 * id + reverse.
+// starts and (on a W line) ends on that sequence, and its steps as handles,
+// 2 * id + reverse.
 struct PathLine<'a> {
     sample: &'a [u8],
     name: Vec<u8>,
     start: u64,
+    end: Option<u64>,
     steps: &'a [u8],
     walk: bool,
 }
@@ -78,6 +80,7 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
                 sample: cols[0],
                 name: [cols[0], cols[1], cols[2]].join(&b'#'),
                 start: parse_u64(cols[3], "W line start")?,
+                end: Some(parse_u64(cols[4], "W line end")?),
                 steps: cols[5],
                 walk: true,
             }))
@@ -102,6 +105,7 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
                 sample: name.split(|&b| b == b'#').next().unwrap_or(name),
                 name: name.to_vec(),
                 start,
+                end: None,
                 steps: cols[1],
                 walk: false,
             }))
@@ -599,12 +603,44 @@ impl Chunks {
     }
 }
 
+// A W or P line with steps: its name id and the stretch of its contig it covers.
+struct Record {
+    name: u32,
+    start: u64,
+    end: u64,
+}
+
+// Under one reference: the chunks a record's first and last pieces are filed
+// under, NONE for a record with no rows there, and its number of pieces.
+#[derive(Clone, Copy)]
+struct Placed {
+    first: u32,
+    last: u32,
+    pieces: u32,
+}
+
+const UNPLACED: Placed = Placed {
+    first: NONE,
+    last: NONE,
+    pieces: 0,
+};
+
+// The records before and after one on its contig, NONE at either end.
+#[derive(Clone, Copy)]
+struct Link {
+    previous: u32,
+    next: u32,
+}
+
 struct Builder {
     graph: Graph,
     names: Interner,
     chunks: Chunks,
     references: Vec<Reference>,
     rows: Sorter,
+    records: Vec<Record>,
+    // by record, then reference
+    placed: Vec<Placed>,
     paths: u64,
     steps: u64,
     handles: Vec<u32>,
@@ -631,17 +667,36 @@ impl Builder {
     }
 
     fn cut_path(&mut self, path: &PathLine, handles: &[u32]) -> Result<(), String> {
-        if handles.is_empty() {
-            return Ok(());
-        }
-        self.paths += 1;
-        self.steps += handles.len() as u64;
         self.before.clear();
         let mut offset = 0u64;
         for &h in handles {
             self.before.push(offset);
             offset += self.graph.length(path, h)?;
         }
+        if let Some(end) = path.end
+            && end != path.start + offset
+        {
+            return Err(format!(
+                "path {} ends at {end}, but its steps from {} end at {}",
+                text(&path.name),
+                path.start,
+                path.start + offset
+            ));
+        }
+        if handles.is_empty() {
+            return Ok(());
+        }
+        self.paths += 1;
+        self.steps += handles.len() as u64;
+        let record = self.records.len() as u32;
+        self.records.push(Record {
+            name: self
+                .names
+                .get(&path.name)
+                .expect("the first pass named every path"),
+            start: path.start,
+            end: path.start + offset,
+        });
         for r in 0..self.references.len() {
             let own = (self.references[r].sample == path.sample).then(|| {
                 (
@@ -653,6 +708,7 @@ impl Builder {
             });
             if !self.assign_chunks(r, handles, own) {
                 self.references[r].unplaced += 1;
+                self.placed.push(UNPLACED);
                 continue;
             }
             if own.is_none() {
@@ -664,8 +720,13 @@ impl Builder {
             }
             self.cut_pieces();
             self.references[r].pieces += self.pieces.len() as u64;
+            self.placed.push(Placed {
+                first: self.chunk_of[0],
+                last: self.chunk_of[handles.len() - 1],
+                pieces: self.pieces.len() as u32,
+            });
             let pieces = std::mem::take(&mut self.pieces);
-            let result = self.write_pieces(r, path, handles, &pieces);
+            let result = self.write_pieces(r, path, handles, record, &pieces);
             self.pieces = pieces;
             result?;
         }
@@ -722,37 +783,21 @@ impl Builder {
         r: usize,
         path: &PathLine,
         handles: &[u32],
+        record: u32,
         pieces: &[(usize, usize)],
     ) -> Result<(), String> {
         let reference = self.references[r].sample == path.sample;
         let mut tags = Vec::new();
         for (k, &(a, b)) in pieces.iter().enumerate() {
             let chunk = self.chunk_of[a];
-            let (chunks, names, chunk_of) = (&self.chunks, &self.names, &self.chunk_of);
-            // where the piece before or after this one is filed: its chunk's
-            // start, with the reference sequence's name when it differs
-            let neighbour = |out: &mut Vec<u8>, tag: &[u8], at: Option<&(usize, usize)>| {
-                if let Some(&(c, _)) = at {
-                    let (name, start) = chunks.starts[chunk_of[c] as usize];
-                    out.push(b'\t');
-                    out.extend_from_slice(tag);
-                    if name == chunks.starts[chunk as usize].0 {
-                        out.extend_from_slice(b":i:");
-                    } else {
-                        out.extend_from_slice(b":Z:");
-                        out.extend_from_slice(&names[name as usize]);
-                        out.push(b':');
-                    }
-                    push_u64(out, start);
-                }
-            };
             tags.clear();
-            neighbour(
-                &mut tags,
-                b"pv",
-                k.checked_sub(1).and_then(|j| pieces.get(j)),
-            );
-            neighbour(&mut tags, b"nx", pieces.get(k + 1));
+            let previous = k.checked_sub(1).and_then(|j| pieces.get(j));
+            for (tag, at) in [(b"pv", previous), (b"nx", pieces.get(k + 1))] {
+                if let Some(&(c, _)) = at {
+                    let there = self.chunk_of[c];
+                    push_chunk_tag(&mut tags, tag, &self.chunks, &self.names, chunk, there);
+                }
+            }
             let before = &self.before;
             self.rows.push(chunk, |out| {
                 Piece::write(
@@ -763,6 +808,7 @@ impl Builder {
                         frag: path.start,
                         offset: path.start + before[a],
                         piece: k as u32,
+                        record,
                         tags: &tags,
                         handles: &handles[a..b],
                     },
@@ -771,6 +817,62 @@ impl Builder {
         }
         Ok(())
     }
+}
+
+// A tag giving the start of the chunk `there`, with its reference sequence's
+// name when that differs from the sequence of the chunk `here`.
+fn push_chunk_tag(
+    out: &mut Vec<u8>,
+    tag: &[u8],
+    chunks: &Chunks,
+    names: &Interner,
+    here: u32,
+    there: u32,
+) {
+    let (name, start) = chunks.starts[there as usize];
+    out.push(b'\t');
+    out.extend_from_slice(tag);
+    if name == chunks.starts[here as usize].0 {
+        out.extend_from_slice(b":i:");
+    } else {
+        out.extend_from_slice(b":Z:");
+        out.extend_from_slice(&names[name as usize]);
+        out.push(b':');
+    }
+    push_u64(out, start);
+}
+
+// Chains the records of each contig in start order, refusing two that start
+// at the same place or overlap.
+fn link_records(records: &[Record], names: &Interner) -> Result<Vec<Link>, String> {
+    let mut order: Vec<u32> = (0..records.len() as u32).collect();
+    order.sort_unstable_by_key(|&i| (records[i as usize].name, records[i as usize].start));
+    let mut links = vec![
+        Link {
+            previous: NONE,
+            next: NONE,
+        };
+        records.len()
+    ];
+    for pair in order.windows(2) {
+        let (a, b) = (&records[pair[0] as usize], &records[pair[1] as usize]);
+        if a.name != b.name {
+            continue;
+        }
+        let name = text(&names[a.name as usize]);
+        if a.start == b.start {
+            return Err(format!("path {name} has two lines starting at {}", a.start));
+        }
+        if b.start < a.end {
+            return Err(format!(
+                "path {name}: the line covering {}-{} overlaps the one covering {}-{}",
+                a.start, a.end, b.start, b.end
+            ));
+        }
+        links[pair[0] as usize].next = pair[1];
+        links[pair[1] as usize].previous = pair[0];
+    }
+    Ok(links)
 }
 
 struct TempDir(PathBuf);
@@ -830,6 +932,8 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         chunks,
         references,
         rows: Sorter::new(&temp.0, "rows", SORT_BUDGET),
+        records: Vec::new(),
+        placed: Vec::new(),
         paths: 0,
         steps: 0,
         handles: Vec::new(),
@@ -866,8 +970,11 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         chunks,
         references,
         rows,
+        records,
+        placed,
         ..
     } = builder;
+    let links = link_records(&records, &names)?;
     let longest = graph
         .lengths
         .iter()
@@ -881,7 +988,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let path = format!("{prefix}.{}.walks.bed.gz", text(&reference.sample));
         let mut writer = bed::Writer::create(&path)?;
         let mut header = format!(
-            "#walks\tformat:i:2\tchunk:i:{}\tmaxnode:i:{longest}\n#reference\t{}\n",
+            "#walks\tformat:i:3\tchunk:i:{}\tmaxnode:i:{longest}\n#reference\t{}\n",
             chunks.size,
             text(&reference.sample)
         )
@@ -898,8 +1005,38 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let sequence = options.sequences.then_some(&sequence_of);
     // Chunks encode in parallel, a batch at a time, and are written in order.
     type Encoded = Result<(Vec<u8>, Vec<usize>, routes::Counts), String>;
-    let encode = |raw: &[Vec<u8>]| -> Encoded {
-        let pieces: Vec<Piece> = raw.iter().map(|r| Piece::read(r)).collect();
+    let refs = references.len();
+    // the gap to the record before or after a piece's on its contig, and the
+    // chunk that record's nearest piece is filed under
+    let record_tags = |piece: &mut Piece, chunk: u32| {
+        let r = chunks.owner[chunks.starts[chunk as usize].0 as usize] as usize;
+        let record = piece.record as usize;
+        let link = links[record];
+        let here = &records[record];
+        if piece.piece == 0 && link.previous != NONE {
+            let previous = link.previous as usize;
+            piece.tags.extend_from_slice(b"\tpg:i:");
+            push_u64(&mut piece.tags, here.start - records[previous].end);
+            let last = placed[previous * refs + r].last;
+            if last != NONE {
+                push_chunk_tag(&mut piece.tags, b"pr", &chunks, &names, chunk, last);
+            }
+        }
+        if piece.piece + 1 == placed[record * refs + r].pieces && link.next != NONE {
+            let next = link.next as usize;
+            piece.tags.extend_from_slice(b"\tng:i:");
+            push_u64(&mut piece.tags, records[next].start - here.end);
+            let first = placed[next * refs + r].first;
+            if first != NONE {
+                push_chunk_tag(&mut piece.tags, b"nr", &chunks, &names, chunk, first);
+            }
+        }
+    };
+    let encode = |chunk: u32, raw: &[Vec<u8>]| -> Encoded {
+        let mut pieces: Vec<Piece> = raw.iter().map(|r| Piece::read(r)).collect();
+        for piece in &mut pieces {
+            record_tags(piece, chunk);
+        }
         let (mut lines, mut ends) = (Vec::new(), Vec::new());
         let mut counts = routes::Counts::default();
         routes::write_chunk(
@@ -924,10 +1061,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                 scope.spawn(|| {
                     loop {
                         let k = next.fetch_add(1, Ordering::Relaxed);
-                        let Some((_, raw)) = batch.get(k) else {
+                        let Some((chunk, raw)) = batch.get(k) else {
                             break;
                         };
-                        *encoded[k].lock().unwrap() = Some(encode(raw));
+                        *encoded[k].lock().unwrap() = Some(encode(*chunk, raw));
                     }
                 });
             }
