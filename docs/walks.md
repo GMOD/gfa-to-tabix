@@ -133,5 +133,7 @@ between them. Readers:
   refuse format 1
 - [BandageJS](https://jbrowse.org/demos/bandagejs/) and the tube map read
   format 2 only, through @jbrowse/graph-walks
+- @jbrowse/graph-walks 1.1.0 refuses format 3, though its chunk decoder skips
+  the record tags and decodes format 3 rows as it does format 2's
 - jbrowse.org hosts HPRC v2.1's files as
   `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f2.{GRCh38,CHM13}.walks.bed.gz`
