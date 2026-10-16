@@ -673,13 +673,29 @@ fn a_record_names_the_gap_to_the_records_beside_it_on_its_contig() {
     );
 }
 
-fn build_lines(name: &str, lines: &[&str]) -> Built {
+// walks-records.gfa with `lines` added at its end, or at its start with
+// `first`, where they reach nodes before their S lines.
+fn build_lines(name: &str, lines: &[&str], first: bool) -> Built {
     let gfa = fs::read_to_string(fixture("walks-records.gfa")).unwrap();
+    let text = if first {
+        tsv(lines) + &gfa
+    } else {
+        gfa + &tsv(lines)
+    };
     let path = std::env::temp_dir().join(format!("walks-{name}-{}.gfa", std::process::id()));
-    fs::write(&path, gfa + &tsv(lines)).unwrap();
+    fs::write(&path, text).unwrap();
     let built = build(path.to_str().unwrap(), &["--refs", "R"]);
     fs::remove_file(&path).unwrap();
     built
+}
+
+// The first pass ends with a line per reference; the refusals come before it.
+fn refused_in_first_pass(built: &Built) -> String {
+    assert_eq!(built.output.status.code(), Some(1));
+    assert!(built.walks.is_empty());
+    let stderr = String::from_utf8_lossy(&built.output.stderr).into_owned();
+    assert!(!stderr.contains("reference R:"), "{stderr}");
+    stderr
 }
 
 #[test]
@@ -696,21 +712,22 @@ fn records_of_a_contig_that_overlap_or_share_a_start_are_refused() {
             "path G#1#g has two lines starting at 30",
         ),
     ] {
-        let built = build_lines(name, &[line]);
-        assert_eq!(built.output.status.code(), Some(1), "{name}");
-        let stderr = String::from_utf8_lossy(&built.output.stderr);
-        assert!(stderr.contains(error), "{name}: {stderr}");
-        assert!(built.walks.is_empty(), "{name}");
+        for first in [false, true] {
+            let stderr = refused_in_first_pass(&build_lines(name, &[line], first));
+            assert!(stderr.contains(error), "{name}: {stderr}");
+        }
     }
 }
 
 #[test]
 fn a_w_line_whose_end_disagrees_with_its_steps_is_refused() {
-    let built = build_lines("end", &["W F 1 f 0 13 >1>2"]);
-    assert_eq!(built.output.status.code(), Some(1));
-    let stderr = String::from_utf8_lossy(&built.output.stderr);
-    assert!(
-        stderr.contains("line 18: path F#1#f ends at 13, but its steps from 0 end at 12"),
-        "{stderr}"
-    );
+    for (first, number) in [(false, 18), (true, 1)] {
+        let stderr = refused_in_first_pass(&build_lines("end", &["W F 1 f 0 13 >1>2"], first));
+        assert!(
+            stderr.contains(&format!(
+                "line {number}: path F#1#f ends at 13, but its steps from 0 end at 12"
+            )),
+            "{stderr}"
+        );
+    }
 }

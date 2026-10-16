@@ -325,7 +325,15 @@ impl Stable {
         }
     }
 
-    fn visit(&mut self, names: &Interner, name: u32, start: u64, ids: &[u32], lengths: &[u32]) {
+    // Returns where the path ends.
+    fn visit(
+        &mut self,
+        names: &Interner,
+        name: u32,
+        start: u64,
+        ids: &[u32],
+        lengths: &[u32],
+    ) -> u64 {
         if self.name.len() < lengths.len() {
             self.name.resize(lengths.len(), NONE);
             self.offset.resize(lengths.len(), 0);
@@ -340,17 +348,44 @@ impl Stable {
             self.offer(names, id, name, offset);
             offset += u64::from(lengths[id]);
         }
+        offset
     }
 }
 
+// A W or P line with steps: its name id and the stretch of its contig it covers.
+struct Record {
+    name: u32,
+    start: u64,
+    end: u64,
+}
+
+// Refuses a W line whose end column disagrees with its steps.
+fn record(path: &PathLine, name: u32, end: u64) -> Result<Record, String> {
+    if let Some(stated) = path.end
+        && stated != end
+    {
+        return Err(format!(
+            "path {} ends at {stated}, but its steps from {} end at {end}",
+            text(&path.name),
+            path.start
+        ));
+    }
+    Ok(Record {
+        name,
+        start: path.start,
+        end,
+    })
+}
+
 // Pass 1: node lengths (and sequences), every reference sample's paths,
-// which give each node they visit a reference coordinate, and every path's
-// claim on the nodes off the references.
+// which give each node they visit a reference coordinate, every path's claim
+// on the nodes off the references, and the record of every path with steps,
+// in file order.
 fn first_pass(
     gfa: &str,
     options: &Options,
     names: &mut Interner,
-) -> Result<(Graph, Vec<Reference>), String> {
+) -> Result<(Graph, Vec<Reference>, Vec<Record>), String> {
     let mut lengths: Vec<u32> = Vec::new();
     let mut sequence_at: Vec<u64> = Vec::new();
     let mut bases = Vec::new();
@@ -360,8 +395,10 @@ fn first_pass(
     let mut ids = Vec::new();
     let mut samples: Vec<Vec<u8>> = Vec::new();
     let mut stable = Stable::default();
-    // paths that reach a node before its S line, visited once lengths are known
-    let mut deferred: Vec<u64> = Vec::new();
+    let mut records: Vec<Record> = Vec::new();
+    // paths that reach a node before its S line, by line number and record,
+    // visited once lengths are known
+    let mut deferred: Vec<(u64, usize)> = Vec::new();
     read_lines(gfa, |number, line| {
         match line.first() {
             Some(b'S') if line.get(1) == Some(&b'\t') => {
@@ -429,9 +466,18 @@ fn first_pass(
                     .iter()
                     .all(|&id| lengths.get(id as usize).is_some_and(|&l| l != NONE))
                 {
-                    stable.visit(names, name, path.start, &ids, &lengths);
+                    let end = stable.visit(names, name, path.start, &ids, &lengths);
+                    let record = record(&path, name, end)?;
+                    if !ids.is_empty() {
+                        records.push(record);
+                    }
                 } else {
-                    deferred.push(number);
+                    deferred.push((number, records.len()));
+                    records.push(Record {
+                        name,
+                        start: path.start,
+                        end: path.start,
+                    });
                 }
                 if let Some(reference) = options
                     .refs
@@ -457,9 +503,9 @@ fn first_pass(
     if !deferred.is_empty() {
         let mut next = deferred.iter().peekable();
         read_lines(gfa, |number, line| {
-            if next.peek() != Some(&&number) {
+            let Some(&&(_, at)) = next.peek().filter(|(n, _)| *n == number) else {
                 return Ok(());
-            }
+            };
             next.next();
             let Some(path) = path_line(line)? else {
                 return Ok(());
@@ -477,7 +523,8 @@ fn first_pass(
                 }
                 ids.push(id);
             }
-            stable.visit(names, name, path.start, &ids, &lengths);
+            let end = stable.visit(names, name, path.start, &ids, &lengths);
+            records[at] = record(&path, name, end)?;
             Ok(())
         })?;
     }
@@ -553,6 +600,7 @@ fn first_pass(
             bases,
         },
         references,
+        records,
     ))
 }
 
@@ -603,13 +651,6 @@ impl Chunks {
     }
 }
 
-// A W or P line with steps: its name id and the stretch of its contig it covers.
-struct Record {
-    name: u32,
-    start: u64,
-    end: u64,
-}
-
 // Under one reference: the chunks a record's first and last pieces are filed
 // under, NONE for a record with no rows there, and its number of pieces.
 #[derive(Clone, Copy)]
@@ -638,7 +679,6 @@ struct Builder {
     chunks: Chunks,
     references: Vec<Reference>,
     rows: Sorter,
-    records: Vec<Record>,
     // by record, then reference
     placed: Vec<Placed>,
     paths: u64,
@@ -673,30 +713,12 @@ impl Builder {
             self.before.push(offset);
             offset += self.graph.length(path, h)?;
         }
-        if let Some(end) = path.end
-            && end != path.start + offset
-        {
-            return Err(format!(
-                "path {} ends at {end}, but its steps from {} end at {}",
-                text(&path.name),
-                path.start,
-                path.start + offset
-            ));
-        }
         if handles.is_empty() {
             return Ok(());
         }
+        let record = self.paths as u32;
         self.paths += 1;
         self.steps += handles.len() as u64;
-        let record = self.records.len() as u32;
-        self.records.push(Record {
-            name: self
-                .names
-                .get(&path.name)
-                .expect("the first pass named every path"),
-            start: path.start,
-            end: path.start + offset,
-        });
         for r in 0..self.references.len() {
             let own = (self.references[r].sample == path.sample).then(|| {
                 (
@@ -892,7 +914,8 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let clock = Instant::now();
     let elapsed = || format!("[{:6.1} s]", clock.elapsed().as_secs_f64());
     let mut names = Interner::default();
-    let (graph, references) = first_pass(gfa, options, &mut names)?;
+    let (graph, references, records) = first_pass(gfa, options, &mut names)?;
+    let links = link_records(&records, &names)?;
     let mut ends: HashMap<u32, (u32, u64)> = HashMap::new();
     for (r, reference) in references.iter().enumerate() {
         let mut extend = |name: u32, end: u64| {
@@ -932,7 +955,6 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         chunks,
         references,
         rows: Sorter::new(&temp.0, "rows", SORT_BUDGET),
-        records: Vec::new(),
         placed: Vec::new(),
         paths: 0,
         steps: 0,
@@ -970,11 +992,9 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         chunks,
         references,
         rows,
-        records,
         placed,
         ..
     } = builder;
-    let links = link_records(&records, &names)?;
     let longest = graph
         .lengths
         .iter()
