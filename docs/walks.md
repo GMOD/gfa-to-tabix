@@ -137,5 +137,6 @@ Readers:
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/) and the tube map read
   through @jbrowse/graph-walks
-- jbrowse.org hosts HPRC v2.1's files as
-  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f2.{GRCh38,CHM13}.walks.bed.gz`
+- jbrowse.org hosts HPRC v2.1's format 3 files as
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f3.{GRCh38,CHM13}.walks.bed.gz`,
+  and keeps the format 2 set at `-f2` for readers on graph-walks 1.x
