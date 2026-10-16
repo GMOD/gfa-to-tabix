@@ -116,6 +116,9 @@ steps, a 5.0 GB GFA) with `--refs GRCh38,CHM13`:
 
 - It runs in about 2.5 min from the gzipped GFA and peaks at 1.8 GB on a
   16-core laptop
+- The first read refuses a W line that repeats or overlaps another of its
+  contig, or whose end column disagrees with its steps, so a bad chr22 fails
+  in about 30 s, before the second read
 - The two files total 71 MB, where format 1's six took 408 MB. GRCh38's index
   is 10 KB
 - A read of two chunks, which every window makes, fetches 0.05 MB at the
