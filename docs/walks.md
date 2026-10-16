@@ -125,18 +125,12 @@ steps, a 5.0 GB GFA) with `--refs GRCh38,CHM13`:
   median and 0.5 MB at the 99th percentile, about 0.14 of format 1's
   (`docs/format-2/scripts/window_sizes.py`)
 
-## Older formats and readers
+## Readers
 
-Files from gfa-to-tabix 0.12 and earlier are format 1: three files per
-reference, the walks with every step, the nodes they visit and the links
-between them. gfa-to-tabix 1.0 wrote format 2, which lacks the record tags.
-Readers:
-
-- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 2.0 reads format
-  3 only and asks for a rebuild of anything older; 1.x reads format 2 only
+- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 2 reads format 3
+  only, and asks for a rebuild of a file from gfa-to-tabix 1.0 or earlier
 - The graph genome viewer plugin,
-  [BandageJS](https://jbrowse.org/demos/bandagejs/) and the tube map read
-  through @jbrowse/graph-walks
-- jbrowse.org hosts HPRC v2.1's format 3 files as
-  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f3.{GRCh38,CHM13}.walks.bed.gz`,
-  and keeps the format 2 set at `-f2` for readers on graph-walks 1.x
+  [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
+  the tube map read through @jbrowse/graph-walks
+- jbrowse.org hosts HPRC v2.1's files as
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f3.{GRCh38,CHM13}.walks.bed.gz`
