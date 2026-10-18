@@ -59,7 +59,8 @@ taken flipped.
   overlapping a window starts at most that far before it, so a reader queries
   from `max(chunk, maxnode)` bp before the window, rounded down to a chunk start
 - `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
-  A reader ignores it
+  A reader ignores it. A file without the tag predates nearest-pass placement
+  and files every step on a revisited node under the reference's first pass
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
   `sample#haplotype`, once each in byte order
 

@@ -93,8 +93,9 @@ The tables list the chunk rule.
 
 ### Stay sweep
 
-pggb chr22, current code, *L* = 1 unless noted. Criterion 3 compares with the
-first-visit rows above (97.2% and 94.0%).
+pggb chr22, current code, *L* = 1 except the two window-cost columns, which read
+the file's lookback (16 chunks on GRCh38, 31 on CHM13). Criterion 3 compares
+with the first-visit rows above (97.2% and 94.0%).
 
 | file | placement, bp once | piece precision | strict recall | pieces per pair | p99 walk rows | windows over 8 MB |
 |---|---|---|---|---|---|---|
@@ -103,36 +104,41 @@ first-visit rows above (97.2% and 94.0%).
 | CHM13, stay 311 | 91.6% | 51.2% | 93.8% | 6.34 | 510,775 | 174 |
 | CHM13, stay 1024 | 91.9% | 68.3% | 93.3% | 2.45 | 167,446 | 172 |
 
-- At the file's lookback (16 and 31 chunks), placement is 95.6–96.4% and strict
-  recall 97.3–98.3% for both stays
+- At the file's lookback, placement over query bases counted once is 97.2–97.3%
+  and strict recall 97.3–98.3%, for both stays and both references
+- Criterion 3 passes only for GRCh38 at stay 311. Strict recall falls 0.2 point
+  (GRCh38, stay 1024) to 0.7 point (CHM13, stay 1024) below first visit, as it
+  does for the 4 kb stay
 - Neither stay passes criteria 4, 5 or 6 on pggb. Stay 4 kb passed 4 and 5
   (see [Baseline](#baseline)) but hides real passages
-- Stay 1024 halves the pieces of 311 and changes recall by under 0.7 point
+- Stay 1024 cuts the pieces of 311 by 50% on GRCh38 and 61% on CHM13, and
+  changes recall by under 0.5 point
 - Satellite (GRCh38) and the CHM13 short arm stay weak: 43–46% and 74–76% strict
   recall
 - The costliest windows (chr22:12.6–13.0M on GRCh38, the short arm on CHM13)
-  hold their size under both stays: up to 205 MB and 75 MB gzipped
+  stay large under both stays: GRCh38 peaks at 205 MB gzipped, and CHM13 at
+  75 MB (stay 311) or 65 MB (stay 1024)
 
 ### Genome-wide MC
 
-HPRC v2.1 MC, both references, `--stay 0`, nearest by predicted offset against
-nearest by chunk:
+HPRC v2.1 MC, both references, built without a stay, nearest by predicted offset
+against nearest by chunk:
 
 | | predicted offset | chunk |
 |---|---|---|
-| GRCh38 file | byte-identical | byte-identical |
+| GRCh38 file | identical to the other column, byte for byte | identical to the other column, byte for byte |
 | CHM13 pieces | 24,252,423 | 24,255,105 |
 | windows over 8 MB, GRCh38 / CHM13 | 0 / 2 | 0 / 2 |
 | windows over 32 M steps, GRCh38 / CHM13 | 4 / 3 | 4 / 3 |
-| wall time | 33:45 | 30:33 |
 
 ## Decision (proposed)
 
 1. **Nearest pass by predicted offset.** A step on a node the reference passes
    more than once takes the pass on the same reference sequence nearest the
    offset that the path's last placed step plus the bp walked since predict.
-   Nearest by chunk gives the same files on genome-wide MC (see
-   [Genome-wide MC](#genome-wide-mc)), so the rule the code implements stays
+   On genome-wide MC, nearest by chunk gives the same GRCh38 file and a CHM13
+   file with 0.01% more pieces (see [Genome-wide MC](#genome-wide-mc)), so the
+   rule the code implements stays
 2. **Stay.** A run of steps filed away from the current piece's chunk stays in
    that piece when the path returns to exactly that chunk and the run holds at
    most `--stay` bp on reference nodes (default 311, pggb's `-k 311` minimum
@@ -155,7 +161,7 @@ nearest by chunk:
 |---|---|
 | first visit (format 3) | fails 4, 5 and 6 on pggb |
 | nearest pass alone | fails 4 and 5: 45 pieces per pair, 44% piece precision |
-| nearest by chunk against nearest by predicted offset | equal on every chr22 measure; GRCh38 files byte-identical and CHM13 within 0.02% of pieces genome-wide; the offset rule stays because the code implements it |
+| nearest by chunk against nearest by predicted offset | within 0.3 point on every chr22 measure; genome-wide MC GRCh38 files identical and CHM13 within 0.02% of pieces; the offset rule stays because the code implements it and the measures do not separate them |
 | stay capped at 4 kb away | hides real passages: about 1,300–1,700 per reference between 312 bp and 4 kb align where they went |
 | stay without nearest pass | strict recall falls to 90% on CHM13 and 91% in GRCh38's LCR22B–D |
 | excursion rows for paralog jumps | every lost (haplotype, chunk) pair is filed elsewhere, none absent, so the rows have nothing to add |

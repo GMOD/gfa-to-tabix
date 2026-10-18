@@ -33,6 +33,7 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 | `--refs <names>`  | Comma-separated PanSN samples, one file per sample. Required.            |
 | `--chunk <bp>`    | Chunk size. Default 65536.                                               |
 | `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
+| `--stay <bp>`     | Keep a piece in its chunk across a stretch elsewhere of at most this many bp of reference nodes. Default 311; 0 turns it off. |
 
 ## Where a step is filed
 
