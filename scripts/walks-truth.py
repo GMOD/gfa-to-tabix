@@ -52,7 +52,7 @@ def lift(args):
             block = None
 
             def flush():
-                if block and block[1] > block[0]:
+                if block and block[1] != block[0]:
                     a, b, ta, tb = block
                     lo, hi = (a, b) if forward else (b, a)
                     out.write(f"{q.decode()}\t{lo}\t{hi}\t{t.decode()}\t{ta}\t{tb}\t{'+' if forward else '-'}\n")
