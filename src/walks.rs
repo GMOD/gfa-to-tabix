@@ -18,7 +18,7 @@ use std::time::Instant;
 
 use crate::bed;
 use crate::gfa::{blunt_error, is_blunt, parse_u64, split_path_name, text};
-use crate::intern::Interner;
+use crate::intern::{FastMap, Interner};
 use crate::routes::{self, Piece, PieceRef};
 use crate::sorter::Sorter;
 
@@ -183,7 +183,8 @@ impl Graph {
 // OFF_REFERENCE set for rank 1) and its offset there. `path_ends` holds where
 // each of the sample's own paths ends, which bounds its chunks even past its
 // last first-visited node. `visits` lists every pass of the sample's paths
-// over a node they pass more than once.
+// over a node they pass more than once, by node, name and offset;
+// `visits_of` gives each such node's stretch of it.
 struct Reference {
     sample: Vec<u8>,
     walks: u64,
@@ -191,7 +192,8 @@ struct Reference {
     offset: Vec<u64>,
     reverse: Bits,
     revisited: Bits,
-    visits: HashMap<u32, Vec<Visit>>,
+    visits: Vec<Visit>,
+    visits_of: FastMap<u32, (u32, u32)>,
     path_ends: HashMap<u32, u64>,
     pieces: u64,
     unplaced: u64,
@@ -218,7 +220,8 @@ impl Reference {
         if !self.revisited.get(id) {
             return self.first_visit(id);
         }
-        let visits = &self.visits[&(id as u32)];
+        let (from, to) = self.visits_of[&(id as u32)];
+        let visits = &self.visits[from as usize..to as usize];
         let lo = visits.partition_point(|v| v.name < name);
         let hi = visits.partition_point(|v| v.name <= name);
         let on = &visits[lo..hi];
@@ -609,7 +612,8 @@ fn first_pass(
             offset: vec![0; nodes],
             reverse: Bits::with_len(nodes),
             revisited: Bits::with_len(nodes),
-            visits: HashMap::new(),
+            visits: Vec::new(),
+            visits_of: FastMap::default(),
             path_ends: HashMap::new(),
             pieces: 0,
             unplaced: 0,
@@ -683,6 +687,7 @@ fn index_visits<'a>(
             *n = n.saturating_add(1);
         }
     }
+    let mut visits = Vec::new();
     for walk in walks {
         let mut offset = walk.start;
         for &h in &walk.handles {
@@ -700,14 +705,17 @@ fn index_visits<'a>(
             }
             if passes[id] > 1 {
                 reference.revisited.set(id);
-                reference.visits.entry(id as u32).or_default().push(visit);
+                visits.push((id as u32, visit));
             }
             offset += u64::from(lengths[id]);
         }
     }
-    for visits in reference.visits.values_mut() {
-        visits.sort_unstable_by_key(|v| (v.name, v.offset));
+    visits.sort_unstable_by_key(|&(id, v)| (id, v.name, v.offset));
+    for (k, &(id, _)) in visits.iter().enumerate() {
+        let k = k as u32;
+        reference.visits_of.entry(id).or_insert((k, k)).1 = k + 1;
     }
+    reference.visits = visits.into_iter().map(|(_, v)| v).collect();
 }
 
 // The chunks every reference sequence is cut into, numbered in the order the
