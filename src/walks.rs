@@ -182,12 +182,16 @@ impl Graph {
 // Per reference sample, per node: where the node is placed (a name id, with
 // OFF_REFERENCE set for rank 1) and its offset there. `path_ends` holds where
 // each of the sample's own paths ends, which bounds its chunks even past its
-// last first-visited node.
+// last first-visited node. `visits` lists every pass of the sample's paths
+// over a node they pass more than once.
 struct Reference {
     sample: Vec<u8>,
     walks: u64,
     placement: Vec<u32>,
     offset: Vec<u64>,
+    reverse: Bits,
+    revisited: Bits,
+    visits: HashMap<u32, Vec<Visit>>,
     path_ends: HashMap<u32, u64>,
     pieces: u64,
     unplaced: u64,
@@ -198,13 +202,59 @@ impl Reference {
     fn on_reference(&self, id: usize) -> bool {
         self.placement[id] & OFF_REFERENCE == 0
     }
+
+    fn first_visit(&self, id: usize) -> Visit {
+        Visit {
+            name: self.placement[id],
+            offset: self.offset[id],
+            reverse: self.reverse.get(id),
+        }
+    }
+
+    // The pass over `id` on sequence `name` whose offset lies nearest
+    // `expected`, the earlier on a tie; the first visit when that sequence
+    // has none.
+    fn visit_near(&self, id: usize, name: u32, expected: i64) -> Visit {
+        if !self.revisited.get(id) {
+            return self.first_visit(id);
+        }
+        self.visits[&(id as u32)]
+            .iter()
+            .filter(|v| v.name == name)
+            .min_by_key(|v| (v.offset as i64 - expected).unsigned_abs())
+            .copied()
+            .unwrap_or_else(|| self.first_visit(id))
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Visit {
+    name: u32,
+    offset: u64,
+    reverse: bool,
+}
+
+struct Bits(Vec<u64>);
+
+impl Bits {
+    fn with_len(n: usize) -> Bits {
+        Bits(vec![0; n.div_ceil(64)])
+    }
+
+    fn get(&self, i: usize) -> bool {
+        self.0[i / 64] >> (i % 64) & 1 == 1
+    }
+
+    fn set(&mut self, i: usize) {
+        self.0[i / 64] |= 1 << (i % 64);
+    }
 }
 
 struct RefWalk {
     reference: usize,
     name: u32,
     start: u64,
-    ids: Vec<u32>,
+    handles: Vec<u32>,
 }
 
 // Reads (and decompresses) the input on a separate thread, so parsing never
@@ -489,7 +539,7 @@ fn first_pass(
                         reference,
                         name,
                         start: path.start,
-                        ids: ids.clone(),
+                        handles: handles.clone(),
                     });
                 }
             }
@@ -549,6 +599,9 @@ fn first_pass(
             walks,
             placement: vec![NONE; nodes],
             offset: vec![0; nodes],
+            reverse: Bits::with_len(nodes),
+            revisited: Bits::with_len(nodes),
+            visits: HashMap::new(),
             path_ends: HashMap::new(),
             pieces: 0,
             unplaced: 0,
@@ -557,8 +610,9 @@ fn first_pass(
         .collect();
     let mut on_reference: Vec<Stable> = options.refs.iter().map(|_| Stable::default()).collect();
     for walk in &ref_walks {
-        if let Some(id) = walk
-            .ids
+        ids.clear();
+        ids.extend(walk.handles.iter().map(|h| h >> 1));
+        if let Some(id) = ids
             .iter()
             .find(|&&id| lengths.get(id as usize).is_none_or(|&l| l == NONE))
         {
@@ -567,12 +621,8 @@ fn first_pass(
                 text(&names[walk.name as usize])
             ));
         }
-        on_reference[walk.reference].visit(names, walk.name, walk.start, &walk.ids, &lengths);
-        let length: u64 = walk
-            .ids
-            .iter()
-            .map(|&id| u64::from(lengths[id as usize]))
-            .sum();
+        on_reference[walk.reference].visit(names, walk.name, walk.start, &ids, &lengths);
+        let length: u64 = ids.iter().map(|&id| u64::from(lengths[id as usize])).sum();
         let end = references[walk.reference]
             .path_ends
             .entry(walk.name)
@@ -593,6 +643,13 @@ fn first_pass(
             }
         }
     }
+    for (r, reference) in references.iter_mut().enumerate() {
+        index_visits(
+            reference,
+            ref_walks.iter().filter(|w| w.reference == r),
+            &lengths,
+        );
+    }
     Ok((
         Graph {
             lengths,
@@ -602,6 +659,44 @@ fn first_pass(
         references,
         records,
     ))
+}
+
+// Notes each first visit's strand, and every pass over the nodes the
+// sample's paths pass more than once.
+fn index_visits<'a>(
+    reference: &mut Reference,
+    walks: impl Iterator<Item = &'a RefWalk> + Clone,
+    lengths: &[u32],
+) {
+    let mut passes = vec![0u8; reference.placement.len()];
+    for walk in walks.clone() {
+        for &h in &walk.handles {
+            let n = &mut passes[(h >> 1) as usize];
+            *n = n.saturating_add(1);
+        }
+    }
+    for walk in walks {
+        let mut offset = walk.start;
+        for &h in &walk.handles {
+            let id = (h >> 1) as usize;
+            let visit = Visit {
+                name: walk.name,
+                offset,
+                reverse: h & 1 == 1,
+            };
+            if visit.reverse
+                && visit.name == reference.placement[id]
+                && visit.offset == reference.offset[id]
+            {
+                reference.reverse.set(id);
+            }
+            if passes[id] > 1 {
+                reference.revisited.set(id);
+                reference.visits.entry(id as u32).or_default().push(visit);
+            }
+            offset += u64::from(lengths[id]);
+        }
+    }
 }
 
 // The chunks every reference sequence is cut into, numbered in the order the
@@ -759,30 +854,45 @@ impl Builder {
     // its node's, any other step the last reference step's before it (the
     // first reference step's for those that lead). On one of the reference's
     // own paths, `own` (its name id and start), a step takes the chunk that
-    // holds its offset, so a later visit to a node is filed where the path is, not
-    // at the node's first visit. False when the path visits no node of the
-    // reference.
+    // holds its offset. On any other path, a step on a node the reference
+    // passes more than once takes the pass `visits_along` picks. False when
+    // the path visits no node of the reference.
     fn assign_chunks(&mut self, r: usize, handles: &[u32], own: Option<(u32, u64)>) -> bool {
         let reference = &self.references[r];
         self.chunk_of.clear();
-        let mut current = NONE;
-        for (i, &h) in handles.iter().enumerate() {
-            let id = (h >> 1) as usize;
-            if reference.on_reference(id) {
-                current = match own {
-                    Some((name, start)) => self.chunks.of(name, start + self.before[i]),
-                    None => self
-                        .chunks
-                        .of(reference.placement[id], reference.offset[id]),
-                };
+        self.chunk_of.resize(handles.len(), NONE);
+        match own {
+            Some((name, start)) => {
+                for (i, &h) in handles.iter().enumerate() {
+                    if reference.on_reference((h >> 1) as usize) {
+                        self.chunk_of[i] = self.chunks.of(name, start + self.before[i]);
+                    }
+                }
             }
-            self.chunk_of.push(current);
+            None => {
+                let chunks = &self.chunks;
+                let chunk_of = &mut self.chunk_of;
+                visits_along(
+                    reference,
+                    handles,
+                    &self.before,
+                    &self.graph.lengths,
+                    |i, v| {
+                        chunk_of[i] = chunks.of(v.name, v.offset);
+                    },
+                );
+            }
         }
         let Some(first) = self.chunk_of.iter().copied().find(|&c| c != NONE) else {
             return false;
         };
-        for chunk in self.chunk_of.iter_mut().take_while(|c| **c == NONE) {
-            *chunk = first;
+        let mut current = first;
+        for chunk in self.chunk_of.iter_mut() {
+            if *chunk == NONE {
+                *chunk = current;
+            } else {
+                current = *chunk;
+            }
         }
         true
     }
@@ -839,6 +949,49 @@ impl Builder {
         }
         Ok(())
     }
+}
+
+// Calls `place` with the reference pass each reference step of a path takes.
+// A node the reference passes once has one. For a node it passes more than
+// once, the path's last placed step predicts an offset, as far along the
+// reference as the path has gone since, in the direction their strands agree
+// on, and the pass nearest it wins. Placing starts at the path's first step
+// on a node the reference passes once and runs outward both ways, so a path
+// that follows the reference through a collapsed tandem repeat takes each
+// copy in turn.
+fn visits_along(
+    reference: &Reference,
+    handles: &[u32],
+    before: &[u64],
+    lengths: &[u32],
+    mut place: impl FnMut(usize, Visit),
+) {
+    let id = |i: usize| (handles[i] >> 1) as usize;
+    let on = |i: usize| reference.on_reference(id(i));
+    let Some(anchor) = (0..handles.len())
+        .find(|&i| on(i) && !reference.revisited.get(id(i)))
+        .or_else(|| (0..handles.len()).find(|&i| on(i)))
+    else {
+        return;
+    };
+    let start = reference.first_visit(id(anchor));
+    place(anchor, start);
+    let mut from = |order: &mut dyn Iterator<Item = usize>| {
+        let (mut i, mut at) = (anchor, start);
+        for j in order.filter(|&j| on(j)) {
+            let gone = before[j] as i64 - before[i] as i64;
+            let expected = if (handles[i] & 1 == 1) == at.reverse {
+                at.offset as i64 + gone
+            } else {
+                at.offset as i64 + i64::from(lengths[id(i)]) - gone - i64::from(lengths[id(j)])
+            };
+            at = reference.visit_near(id(j), at.name, expected);
+            i = j;
+            place(j, at);
+        }
+    };
+    from(&mut (anchor + 1..handles.len()));
+    from(&mut (0..anchor).rev());
 }
 
 // A tag giving the start of the chunk `there`, with its reference sequence's

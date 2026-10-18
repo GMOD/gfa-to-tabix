@@ -419,8 +419,8 @@ fn a_chunk_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
 // into one copy. Nodes 1-3 are 6 bp and node 4 is 15 bp, so R reaches them at
 // 0, 6, 12, 18, 24 and 30 and ends at 45. H#1#h takes the same steps. Placed by
 // first visit, the repeat's second pass would be filed under chunk 0-10 and
-// 10-20 again; on R's own path each step takes the chunk of its own offset. H
-// keeps first-visit placement.
+// 10-20 again; on R's own path each step takes the chunk of its own offset.
+// H, following R, takes each pass of the repeat in turn and is filed as R is.
 #[test]
 fn a_reference_files_its_own_revisits_at_its_own_offset() {
     let built = build("walks-repeat.gfa", &["--refs", "R"]);
@@ -440,10 +440,9 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
         rows_of(walks, "R#0#chr", "walk", "H#1#h"),
         tsv(&[
             "R#0#chr 0 1 walk H#1#h 0 0 0 2 2 2 . nx:i:10",
-            "R#0#chr 0 1 walk H#1#h 0 18 2 1 4 0 . pv:i:10 nx:i:10",
-            "R#0#chr 10 11 walk H#1#h 0 12 1 1 6 0 . pv:i:0 nx:i:0",
-            "R#0#chr 10 11 walk H#1#h 0 24 3 1 6 0 . pv:i:0 nx:i:30",
-            "R#0#chr 30 31 walk H#1#h 0 30 4 1 8 0 . pv:i:10",
+            "R#0#chr 10 11 walk H#1#h 0 12 1 2 6 -2 . pv:i:0 nx:i:20",
+            "R#0#chr 20 21 walk H#1#h 0 24 2 1 6 0 . pv:i:10 nx:i:30",
+            "R#0#chr 30 31 walk H#1#h 0 30 3 1 8 0 . pv:i:20",
         ])
     );
 }
