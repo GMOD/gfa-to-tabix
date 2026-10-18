@@ -109,6 +109,7 @@ fn index(cli: Cli) -> Result<(), String> {
             refs,
             chunk: cli.chunk.unwrap_or(65536),
             sequences: cli.sequences,
+            stay: cli.stay.unwrap_or(311),
         };
         return walks::run(&gfa, &prefix, &options);
     }

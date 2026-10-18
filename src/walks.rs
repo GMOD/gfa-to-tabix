@@ -26,6 +26,7 @@ pub struct Options {
     pub refs: Vec<String>,
     pub chunk: u64,
     pub sequences: bool,
+    pub stay: u64,
 }
 
 const NONE: u32 = u32::MAX;
@@ -791,6 +792,7 @@ struct Builder {
     graph: Graph,
     names: Interner,
     chunks: Chunks,
+    stay: u64,
     references: Vec<Reference>,
     rows: Sorter,
     // by record, then reference
@@ -913,6 +915,15 @@ impl Builder {
                 current = *chunk;
             }
         }
+        if own.is_none() && self.stay > 0 {
+            stay_home(
+                &mut self.chunk_of,
+                handles,
+                reference,
+                &self.graph.lengths,
+                self.stay,
+            );
+        }
         true
     }
 
@@ -967,6 +978,44 @@ impl Builder {
             })?;
         }
         Ok(())
+    }
+}
+
+// Files a run of steps away from the current piece's chunk under that chunk
+// when the path comes back to it and the run spends at most `stay` bp on
+// reference nodes. A run that does not come back, or holds more, moves the
+// piece on to the run's first chunk.
+fn stay_home(
+    chunk_of: &mut [u32],
+    handles: &[u32],
+    reference: &Reference,
+    lengths: &[u32],
+    stay: u64,
+) {
+    let n = chunk_of.len();
+    let mut home = chunk_of[0];
+    let mut i = 1;
+    while i < n {
+        if chunk_of[i] == home {
+            i += 1;
+            continue;
+        }
+        let mut content = 0u64;
+        let mut j = i;
+        while j < n && chunk_of[j] != home && content <= stay {
+            let id = (handles[j] >> 1) as usize;
+            if reference.on_reference(id) {
+                content += u64::from(lengths[id]);
+            }
+            j += 1;
+        }
+        if j < n && chunk_of[j] == home && content <= stay {
+            chunk_of[i..j].fill(home);
+            i = j;
+        } else {
+            home = chunk_of[i];
+            i += 1;
+        }
     }
 }
 
@@ -1134,6 +1183,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         before: Vec::new(),
         chunk_of: Vec::new(),
         pieces: Vec::new(),
+        stay: options.stay,
     };
     read_lines(gfa, |_, line| match line.first() {
         Some(b'W' | b'P') if line.get(1) == Some(&b'\t') => match path_line(line)? {
@@ -1167,21 +1217,20 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         placed,
         ..
     } = builder;
-    let longest = graph
-        .lengths
-        .iter()
-        .filter(|&&l| l != NONE)
-        .max()
-        .copied()
-        .unwrap_or(0);
     let threads = thread::available_parallelism().map_or(4, |n| n.get());
     let mut writers = Vec::with_capacity(references.len());
     for reference in &references {
         let path = format!("{prefix}.{}.walks.bed.gz", text(&reference.sample));
         let mut writer = bed::Writer::create(&path)?;
+        let longest = (0..graph.lengths.len())
+            .filter(|&id| reference.on_reference(id))
+            .map(|id| graph.lengths[id])
+            .max()
+            .unwrap_or(0);
         let mut header = format!(
-            "#walks\tformat:i:3\tchunk:i:{}\tmaxnode:i:{longest}\n#reference\t{}\n",
+            "#walks\tformat:i:3\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\n#reference\t{}\n",
             chunks.size,
+            options.stay,
             text(&reference.sample)
         )
         .into_bytes();

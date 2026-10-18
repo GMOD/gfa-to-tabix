@@ -368,7 +368,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         assert_eq!(
             header(built.file(sample)),
             tsv(&[
-                "#walks format:i:3 chunk:i:10 maxnode:i:6",
+                "#walks format:i:3 chunk:i:10 maxnode:i:6 stay:i:311",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",
@@ -385,10 +385,11 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
 // names it after starting on 3. Q's 6 in place of 2 is a route off R that
 // leaves R at 1 and does not return in chunk 0-10; stored the way round whose
 // handles sort first, it reads 6 reversed back onto 1 reversed, and Q's walk
-// row takes it flipped.
+// row takes it flipped. With --stay 0, D and I file each return to chunk 0-10
+// as a piece of its own.
 #[test]
 fn a_chunk_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
-    let built = build("walks-two-refs.gfa", &[]);
+    let built = build("walks-two-refs.gfa", &["--stay", "0"]);
     let r = built.file("R");
     assert_eq!(
         under(r, "R#0#chr\t0"),
@@ -426,7 +427,9 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     let built = build("walks-repeat.gfa", &["--refs", "R"]);
     assert!(built.output.status.success());
     let walks = built.file("R");
-    assert!(header(walks).starts_with("#walks\tformat:i:3\tchunk:i:10\tmaxnode:i:15\n"));
+    assert!(
+        header(walks).starts_with("#walks\tformat:i:3\tchunk:i:10\tmaxnode:i:15\tstay:i:311\n")
+    );
     assert_eq!(
         rows_of(walks, "R#0#chr", "ref", "R#0#chr"),
         tsv(&[
@@ -476,7 +479,7 @@ fn a_walk_the_default_rule_would_misread_states_its_step_counts() {
 
 #[test]
 fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
-    let built = build("walks-two-refs.gfa", &[]);
+    let built = build("walks-two-refs.gfa", &["--stay", "0"]);
     assert_eq!(
         rows_of(&built.walks, "R#0#chr", "walk", "D#1#d"),
         tsv(&[
@@ -487,6 +490,51 @@ fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
             "R#0#chr 20 21 walk D#1#d 0 48 4 1 10 0 . pv:i:10",
         ])
     );
+}
+
+// D spends 12 bp on chunk 10-20's reference nodes before coming back to chunk
+// 0-10. --stay 12 keeps that stretch in D's first piece, as a route through
+// R's nodes of the other chunk; --stay 11 cuts it as above. D's later move to
+// 10-20 never comes back, so it starts a piece either way.
+#[test]
+fn a_short_stretch_elsewhere_stays_in_its_piece() {
+    let built = build("walks-two-refs.gfa", &["--stay", "12"]);
+    assert_eq!(
+        rows_of(&built.walks, "R#0#chr", "walk", "D#1#d"),
+        tsv(&[
+            "R#0#chr 0 1 walk D#1#d 0 0 0 6 2 2 5 nx:i:10",
+            "R#0#chr 10 11 walk D#1#d 0 36 1 2 6 2 . pv:i:0 nx:i:20",
+            "R#0#chr 20 21 walk D#1#d 0 48 2 1 10 0 . pv:i:10",
+        ])
+    );
+    let cut = build("walks-two-refs.gfa", &["--stay", "11"]);
+    assert_eq!(
+        rows_of(&cut.walks, "R#0#chr", "walk", "D#1#d")
+            .lines()
+            .count(),
+        5
+    );
+}
+
+// An insertion of 40 bp off both references leaves maxnode at 6, the longest
+// reference node, since a window reads back only as far as a reference node
+// can start before it.
+#[test]
+fn maxnode_counts_the_reference_nodes() {
+    let gfa = fs::read_to_string(fixture("walks-two-refs.gfa")).unwrap();
+    let path = std::env::temp_dir().join(format!("walks-maxnode-{}.gfa", std::process::id()));
+    fs::write(
+        &path,
+        gfa + &format!(
+            "S\t10\t{}\nL\t1\t+\t10\t+\t0M\nL\t10\t+\t2\t+\t0M\nW\tJ\t1\tj\t0\t70\t>1>10>2>3>4>5\n",
+            "A".repeat(40)
+        ),
+    )
+    .unwrap();
+    let built = build(path.to_str().unwrap(), &[]);
+    fs::remove_file(&path).unwrap();
+    assert!(built.output.status.success());
+    assert!(header(built.file("R")).starts_with("#walks\tformat:i:3\tchunk:i:10\tmaxnode:i:6\t"));
 }
 
 #[test]

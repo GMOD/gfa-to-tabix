@@ -63,6 +63,11 @@ pub struct Cli {
     /// Add the bases of each reference and route row's nodes as SQ:Z:
     #[arg(long, requires = "walks", help_heading = WALKS)]
     pub sequences: bool,
+
+    /// Keep a path's piece in its chunk across a stretch elsewhere that
+    /// returns to it with at most BP of reference nodes (default 311; 0 off)
+    #[arg(long, value_name = "BP", requires = "walks", help_heading = WALKS)]
+    pub stay: Option<u64>,
 }
 
 const BUILD_ABOUT: &str =
