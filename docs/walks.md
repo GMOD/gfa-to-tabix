@@ -42,11 +42,13 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 - On the reference paths, a step takes the chunk that holds its offset, so
   where the reference passes a node more than once, as in a satellite array,
   each pass is filed where it lies
-- A node has one coordinate, from the first-named reference path's earliest
-  visit, so another haplotype that passes such a collapsed node again is filed
-  under the reference's first copy. On HPRC v2.1's Minigraph-Cactus chr22
-  neither GRCh38 nor CHM13 passes a node twice, so no step there is filed this
-  way
+- Where the reference passes a node more than once, a haplotype's step on it
+  takes the pass on the same reference sequence nearest the offset that the
+  path's last placed step and the bp walked since predict
+- A path's piece keeps its chunk across a stretch elsewhere that returns to
+  that chunk with at most `--stay` bp of reference nodes (default 311, pggb's
+  `-k` match length; 0 turns it off). A stretch that never returns starts a
+  new piece, and the reference's own paths are exempt
 - In a segmental duplication, a haplotype can step onto the reference nodes of
   a distant paralog and back. The steps after the jump take the paralog's
   chunk, so a window at the haplotype's own locus shows it in more pieces and
@@ -64,13 +66,13 @@ queries from the start of the chunk before the window.
 ## Header
 
 The file opens with header lines, which start with `#`: `tabix -H` prints them
-and region queries skip them. The first gives the format, the chunk size and
-the longest node in bp. The next is the reference sample, and the rest each
+and region queries skip them. The first gives the format, the chunk size, the
+longest reference node in bp and the stay in bp. The next is the reference sample, and the rest each
 other haplotype with rows in the file, the other `--refs` samples included, as
 its PanSN `sample#haplotype`, once each in byte order:
 
 ```
-#walks	format:i:3	chunk:i:65536	maxnode:i:1024
+#walks	format:i:3	chunk:i:65536	maxnode:i:1024	stay:i:311
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
@@ -78,8 +80,8 @@ its PanSN `sample#haplotype`, once each in byte order:
 ...
 ```
 
-- A node that overlaps a window starts at most `maxnode` bp before it, so the
-  chunk holding its rows is at most that far back: a reader queries from
+- A reference node that overlaps a window starts at most `maxnode` bp before
+  it, so the chunk holding its rows is at most that far back: a reader queries from
   `max(chunk, maxnode)` bp before the window, rounded down to a chunk start.
   vg chops nodes at 1,024 bp, so for its graphs that is the one chunk back
   described above; a graph with longer nodes needs more

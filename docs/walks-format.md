@@ -27,14 +27,27 @@ taken flipped.
   where the reference passes a node twice each pass lies where it is
 - A piece is a run of a path's steps in one chunk. `piece` numbers the pieces
   along the path, so a reader joins consecutive pieces back into one walk
-- A node has one position, from the reference path whose name sorts first in
-  byte order, at its earliest visit. Another haplotype's step on a node the
-  reference passes twice is filed under that first pass
+- A node the reference passes once has that pass as its position. For a node
+  it passes more than once, the path's last placed step predicts an offset: the
+  step's own offset plus the bp the path has walked since, in the direction
+  their strands agree on. The step takes the pass on the same reference
+  sequence nearest that offset, the earlier on a tie, or the first pass when
+  that sequence has none
+- Placing starts at the path's first step on a node the reference passes once
+  (or on any reference node when there is none) and runs outward in both
+  directions
+- A run of steps that the rules above file in other chunks stays in the current
+  piece when the path returns to that piece's chunk and the run holds at most
+  `stay` bp of reference nodes. The run becomes route interior, so a route can
+  hold another chunk's reference nodes. A run that never returns starts a new
+  piece, and the reference's own paths are exempt
+- A reader places a node at its reference position from a `ref` row of a chunk
+  it read whenever one exists. Other nodes take haplotype offsets
 
 ## Header
 
 ```
-#walks	format:i:3	chunk:i:65536	maxnode:i:1024
+#walks	format:i:3	chunk:i:65536	maxnode:i:1024	stay:i:311
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
@@ -42,9 +55,11 @@ taken flipped.
 
 - `format:i:3` marks this format. Format 2 files lack the [record tags](#records),
   and format 1 files have no `format` tag
-- `maxnode` is the longest node in bp. A node overlapping a window starts at
-  most that far before it, so a reader queries from `max(chunk, maxnode)` bp
-  before the window, rounded down to a chunk start
+- `maxnode` is the longest node on the reference paths in bp. A reference node
+  overlapping a window starts at most that far before it, so a reader queries
+  from `max(chunk, maxnode)` bp before the window, rounded down to a chunk start
+- `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
+  A reader ignores it
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
   `sample#haplotype`, once each in byte order
 
