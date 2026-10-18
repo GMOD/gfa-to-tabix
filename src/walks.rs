@@ -218,12 +218,20 @@ impl Reference {
         if !self.revisited.get(id) {
             return self.first_visit(id);
         }
-        self.visits[&(id as u32)]
-            .iter()
-            .filter(|v| v.name == name)
-            .min_by_key(|v| (v.offset as i64 - expected).unsigned_abs())
-            .copied()
-            .unwrap_or_else(|| self.first_visit(id))
+        let visits = &self.visits[&(id as u32)];
+        let lo = visits.partition_point(|v| v.name < name);
+        let hi = visits.partition_point(|v| v.name <= name);
+        let on = &visits[lo..hi];
+        if on.is_empty() {
+            return self.first_visit(id);
+        }
+        let k = on.partition_point(|v| (v.offset as i64) < expected);
+        match (k.checked_sub(1).map(|j| on[j]), on.get(k)) {
+            (Some(a), Some(b)) if b.offset as i64 - expected < expected - a.offset as i64 => *b,
+            (Some(a), _) => a,
+            (None, Some(b)) => *b,
+            (None, None) => unreachable!(),
+        }
     }
 }
 
@@ -696,6 +704,9 @@ fn index_visits<'a>(
             }
             offset += u64::from(lengths[id]);
         }
+    }
+    for visits in reference.visits.values_mut() {
+        visits.sort_unstable_by_key(|v| (v.name, v.offset));
     }
 }
 
