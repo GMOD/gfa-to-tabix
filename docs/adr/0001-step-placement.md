@@ -32,7 +32,7 @@ alignments of each assembly to the reference.
 | # | criterion | measure | pass |
 |---|---|---|---|
 | 1 | exact round trip | the encoder decodes every row it writes | build succeeds |
-| 2 | MC unchanged | files for a reference that revisits no node | byte-identical to main |
+| 2 | MC unchanged | files for a reference that revisits no node, built with `--stay 0` | rows byte-identical to main; the header gains `stay:i:` and `maxnode` counts reference nodes only |
 | 3 | strict recall | (haplotype, chunk) pairs with ≥300 aligned bp seen through a piece whose bases align there, at *L* = 1 | within 0.1 point of first-visit filing, overall and in LCR22A, LCR22B–D, the pericentromeric repeats and the control |
 | 4 | piece precision | pieces with aligned bases visible where filed, at *L* = 1 | ≥ 90% |
 | 5 | fragmentation | pieces per filed (haplotype, chunk) pair | ≤ 1.5 |
@@ -106,9 +106,14 @@ with the first-visit rows above (97.2% and 94.0%).
 
 - At the file's lookback, placement over query bases counted once is 97.2–97.3%
   and strict recall 97.3–98.3%, for both stays and both references
-- Criterion 3 passes only for GRCh38 at stay 311. Strict recall falls 0.2 point
-  (GRCh38, stay 1024) to 0.7 point (CHM13, stay 1024) below first visit, as it
-  does for the 4 kb stay
+- Criterion 3 passes overall only for GRCh38 at stay 311. Strict recall falls
+  0.2 point (GRCh38, stay 1024) to 0.7 point (CHM13, stay 1024) below first
+  visit, as it does for the 4 kb stay. The per-region check at *L* = 1 is not
+  reported for first visit
+- Criterion 7 passes at stay 311: 12:16 and 13.9 GB, against main's 14:51 and
+  42.8 GB
+- Criterion 2 fails at the default stay: on a graph with no revisited node, a
+  stay of 311 absorbs runs and changes rows. It holds with `--stay 0`
 - Neither stay passes criteria 4, 5 or 6 on pggb. Stay 4 kb passed 4 and 5
   (see [Baseline](#baseline)) but hides real passages
 - Stay 1024 cuts the pieces of 311 by 50% on GRCh38 and 61% on CHM13, and
@@ -137,7 +142,7 @@ against nearest by chunk:
    more than once takes the pass on the same reference sequence nearest the
    offset that the path's last placed step plus the bp walked since predict.
    On genome-wide MC, nearest by chunk gives the same GRCh38 file and a CHM13
-   file with 0.01% more pieces (see [Genome-wide MC](#genome-wide-mc)), so the
+   file with 0.011% more pieces (see [Genome-wide MC](#genome-wide-mc)), so the
    rule the code implements stays
 2. **Stay.** A run of steps filed away from the current piece's chunk stays in
    that piece when the path returns to exactly that chunk and the run holds at
@@ -161,7 +166,7 @@ against nearest by chunk:
 |---|---|
 | first visit (format 3) | fails 4, 5 and 6 on pggb |
 | nearest pass alone | fails 4 and 5: 45 pieces per pair, 44% piece precision |
-| nearest by chunk against nearest by predicted offset | within 0.3 point on every chr22 measure; genome-wide MC GRCh38 files identical and CHM13 within 0.02% of pieces; the offset rule stays because the code implements it and the measures do not separate them |
+| nearest by chunk against nearest by predicted offset | within 0.3 point on every chr22 measure; genome-wide MC GRCh38 files identical and CHM13 within 0.011% of pieces; the offset rule stays because the code implements it and the measures do not separate them |
 | stay capped at 4 kb away | hides real passages: about 1,300–1,700 per reference between 312 bp and 4 kb align where they went |
 | stay without nearest pass | strict recall falls to 90% on CHM13 and 91% in GRCh38's LCR22B–D |
 | excursion rows for paralog jumps | every lost (haplotype, chunk) pair is filed elsewhere, none absent, so the rows have nothing to add |
@@ -175,5 +180,10 @@ against nearest by chunk:
   without rule 3 draws absorbed reference nodes at haplotype offsets
 - A window no longer lists a haplotype whose only presence there is a run of
   311 bp or less of reference nodes
-- pggb's CHM13 short arm still exceeds the step budget in 12–14 windows,
-  because filing moves no steps out of a chunk
+- A window can list a haplotype and still lack its absorbed steps: the stay
+  files them under the piece's chunk, and the lookback reaches only backward
+- Rebuilding a hosted MC file at the default stay changes its rows, and the
+  genome-wide MC comparison above ran without a stay
+- pggb's CHM13 short arm still exceeds the step budget in hundreds of windows
+  (516 over 32 M steps at stay 311 and 1024), because filing moves no steps
+  out of a chunk

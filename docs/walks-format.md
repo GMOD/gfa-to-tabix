@@ -38,7 +38,7 @@ taken flipped.
   directions
 - A run of steps that the rules above file in other chunks stays in the current
   piece when the path returns to that piece's chunk and the run holds at most
-  `stay` bp of reference nodes. The run becomes route interior, so a route can
+  `stay` bp of reference nodes. The run joins the piece's routes, which can then
   hold another chunk's reference nodes. A run that never returns starts a new
   piece, and the reference's own paths are exempt
 - A reader places a node at its reference position from a `ref` row of a chunk
@@ -188,8 +188,8 @@ node twice, and no walk row needs counts.
 
 ## Example
 
-`tests/walks.rs` builds `tests/data/walks-two-refs.gfa` with `--chunk 10` and
-checks every row. Chunk 0-10 of R:
+`tests/walks.rs` builds `tests/data/walks-two-refs.gfa` with `--chunk 10
+--stay 0` and checks every row. Chunk 0-10 of R:
 
 ```
 R#0#chr  0  1  ref    R#0#chr  0    0    0  2  2,2  6,6  nx:i:10

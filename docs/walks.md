@@ -19,7 +19,8 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 
 - The tool cuts each path into pieces, one for each stretch the path spends in
   a 64 kb chunk of a reference, and files each piece under its chunk. A region
-  query returns every path's steps through the region
+  query returns every path's steps through the region, except steps that
+  [`--stay`](#where-a-step-is-filed) files under the piece's chunk
 - A chunk holds the reference's path through it once, each distinct route a
   haplotype takes off that path once, and every other path's piece as the list
   of routes it takes. A reader rebuilds every step exactly
@@ -39,7 +40,9 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 
 - A step on a reference node takes that node's chunk, and a step on any other
   node takes the chunk of the last reference step before it. A query over a
-  window therefore returns every path that visits a reference node in it
+  window therefore returns every path that visits a reference node in it. A
+  step that `--stay` absorbs is filed under the piece's chunk instead, so a
+  window can list a path and lack its absorbed steps
 - On the reference paths, a step takes the chunk that holds its offset, so
   where the reference passes a node more than once, as in a satellite array,
   each pass is filed where it lies
@@ -47,14 +50,14 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
   takes the pass on the same reference sequence nearest the offset that the
   path's last placed step and the bp walked since predict
 - A path's piece keeps its chunk across a stretch elsewhere that returns to
-  that chunk with at most `--stay` bp of reference nodes (default 311, pggb's
-  `-k` match length; 0 turns it off). A stretch that never returns starts a
+  that chunk with at most `--stay` bp of reference nodes (default 311, the
+  `-k 311` minimum match of the HPRC pggb graphs; 0 turns it off). A stretch that never returns starts a
   new piece, and the reference's own paths are exempt
 - In a segmental duplication, a haplotype can step onto the reference nodes of
   a distant paralog and back. The steps after the jump take the paralog's
   chunk, so a window at the haplotype's own locus shows it in more pieces and
-  leaves out some of its inserted nodes. On HPRC v2.1 chr22 this files under
-  0.1% of steps away from their locus, in at most 74 of 1,130 paths, nearly all
+  leaves out some of its inserted nodes. Before `--stay`, on HPRC v2.1 chr22 this
+  filed under 0.1% of steps away from their locus, in at most 74 of 1,130 paths, nearly all
   in the 22q11 low-copy repeats
 - A path that visits no node of a reference has no rows under it, and the tool
   counts these on stderr
