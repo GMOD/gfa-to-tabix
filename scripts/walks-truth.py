@@ -29,8 +29,9 @@ to its reference, and measure what a window costs to read.
       R.tsv (name, sequence, start, end) repeats the figures per region.
 
   walks-truth.py cost WALKS
-      Per window of L + 1 chunks: walk rows, row bytes and walk steps, against
-      the readers' budgets (8 MB, 32 M steps read).
+      Per window of L + 1 chunks: walk rows, rows' bytes gzipped chunk by chunk
+      (about what BGZF reads) and walk steps, against the readers' budgets
+      (8 MB, 32 M steps read).
 
 A last piece's length is unknown from the walk rows, so it takes the record's
 mean bp per step. Walk files are read whole.
@@ -41,6 +42,7 @@ import bisect
 import gzip
 import re
 import sys
+import zlib
 from collections import defaultdict
 
 CIGAR = re.compile(rb"(\d+)([=XIDM])")
@@ -282,6 +284,12 @@ def score(args):
 def cost(args):
     size, maxnode = args.chunk, 0
     rows, bytes_, steps = defaultdict(int), defaultdict(int), defaultdict(int)
+    key, packer = None, None
+
+    def close():
+        if packer is not None:
+            bytes_[key] += len(packer.flush())
+
     opener = gzip.open if args.walks.endswith(".gz") else open
     with opener(args.walks, "rt") as f:
         for line in f:
@@ -289,11 +297,15 @@ def cost(args):
                 size, maxnode = header_of(line, size, maxnode)
                 continue
             c = line.split("\t", 9)
-            key = (c[0], int(c[1]))
-            bytes_[key] += len(line)
+            at = (c[0], int(c[1]))
+            if at != key:
+                close()
+                key, packer = at, zlib.compressobj(6, zlib.DEFLATED, 31)
+            bytes_[key] += len(packer.compress(line.encode()))
             if c[3] == "walk":
                 rows[key] += 1
                 steps[key] += int(c[8])
+    close()
     back = lookback(size, maxnode)
     windows = []
     for seq, cs in bytes_:
@@ -305,12 +317,12 @@ def cost(args):
         return sorted(w[i] for w in windows)[min(len(windows) - 1, int(p * len(windows)))]
 
     print(f"{args.walks}: chunk {size}, maxnode {maxnode}, windows read {back + 1} chunks; {len(windows)} windows")
-    for i, label in ((2, "walk rows"), (0, "bytes"), (1, "steps")):
+    for i, label in ((2, "walk rows"), (0, "gz bytes"), (1, "steps")):
         print(f"  {label:10} median {q(i, 0.5):>12,}  p90 {q(i, 0.9):>12,}  p99 {q(i, 0.99):>12,}  max {q(i, 1):>14,}")
     print(f"  windows over {BYTE_BUDGET >> 20} MB: {sum(w[0] > BYTE_BUDGET for w in windows)}; "
           f"over {STEP_BUDGET // 1_000_000} M steps: {sum(w[1] > STEP_BUDGET for w in windows)}")
     for w in windows[-args.top:][::-1]:
-        print(f"    {w[3]}:{w[4]}  {w[0]:,} bytes  {w[1]:,} steps  {w[2]:,} walk rows")
+        print(f"    {w[3]}:{w[4]}  {w[0]:,} gz bytes  {w[1]:,} steps  {w[2]:,} walk rows")
 
 
 def main():
