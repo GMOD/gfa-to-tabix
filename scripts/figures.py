@@ -79,16 +79,6 @@ def segs_caption(segs, links):
     return [caption(4, text, 64, "#a15f1c")]
 
 
-def simple_caption(segs):
-    off = next(r for r in segs if r[4] != "0")
-    span = coordinate(*off[0:3])
-    text = (
-        f"{off[3]} lies off {off[0]}, so the tool files it under the whole span its bubble hangs from, {span}.\n"
-        f"The tool files each link to cover both its nodes, so viewing anywhere in {span} fetches {off[3]} and its links."
-    )
-    return [caption(20, text, 110, "#555555")]
-
-
 def segs_table(segs):
     rows = []
     for row in segs:
@@ -110,7 +100,7 @@ def cell(bp):
     return int(int(bp) / BP_PER_CELL)
 
 
-def lanes(segs, links, with_links=True):
+def lanes(segs, links):
     seq, qstart, qend = QUERY
     cells = cell(max(int(r[2]) for r in segs + links))
     query = range(cell(qstart), cell(qend))
@@ -159,8 +149,6 @@ def lanes(segs, links, with_links=True):
         color = (ORANGE if row[4] != "0" else BLUE)[1] if hit else GREY
         rows += lane(row[3], row[1], row[2], color, "fetched" if hit else "", hit)
 
-    if not with_links:
-        return rows
     hits = q["hits"]
     count = "all" if len(hits) == len(links) else f"{len(hits)} of"
     rows.append(heading(f"{PREFIX}.links.bed.gz: {count} {len(links)} rows return"))
@@ -436,11 +424,177 @@ def overview_graphs(segs, links):
         arrow(("rows", "cluster_files"), ("hits", "cluster_query"), f"a browser queries\n{coordinate(seq, qstart, qend)}"),
         arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), "kept rows"),
     ]
-    simple = [
-        arrow((graph_bottom, "cluster_graph"), ("hits", "cluster_query"), f"gfa-to-tabix {PREFIX}.gfa"),
-        arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), f"the fetched rows, plus\ntheir links from {PREFIX}.links.bed.gz"),
-    ]
-    return graph, drawn, detail, simple, panel
+    return graph, drawn, detail, panel
+
+
+def overview_svg(segs, links):
+    """The README figure: the graph, its node and link rows and the drawn
+    subgraph, all hung off one reference axis that the window cuts through."""
+    seq, qstart, qend = QUERY
+    lo, hi = min(int(r[1]) for r in segs), max(int(r[2]) for r in segs)
+    width, left, right = 820, 150, 750
+    x = lambda bp: left + (bp - lo) * (right - left) / (hi - lo)
+    blue, blue_dark, blue_pale = "#3b7dd8", "#24569e", "#c9dbf3"
+    orange, orange_dark = "#ef8a2b", "#b75e0d"
+    window_fill, window_line = "#f3e8ff", "#9b5de5"
+    ink, muted, grid = "#1f2328", "#6e7781", "#d8dee4"
+    row = 22
+    y_graph, y_axis, y_nodes = 118, 152, 214
+    y_links = y_nodes + len(segs) * row + 50
+    y_rows_end = y_links + len(links) * row + 4
+    y_frame = y_rows_end + 50
+    height = y_frame + 140
+    out = []
+
+    def say(tx, ty, s, size=13, fill=ink, anchor="start", weight="normal", style="normal"):
+        out.append(
+            f'<text x="{tx:.1f}" y="{ty:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
+            f'font-weight="{weight}" font-style="{style}">{s}</text>'
+        )
+
+    def tube(d, color, dark, dash=None, w=15):
+        extra = f' stroke-dasharray="{dash}"' if dash else ""
+        out.append(
+            f'<path d="{d}" fill="none" stroke="{dark}" stroke-width="{w + 3}" stroke-linecap="round"{extra}/>'
+            f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{w}" stroke-linecap="round"{extra}/>'
+        )
+
+    def edge(a, b):
+        (ax, ay), (bx, by) = a, b
+        return (
+            f'<path d="M{ax:.1f},{ay:.1f} C{ax + 20:.1f},{ay:.1f} {bx - 20:.1f},{by:.1f} {bx:.1f},{by:.1f}" '
+            f'fill="none" stroke="{ink}" stroke-width="2"/>'
+        )
+
+    def arrow(ax, y0, y1, title, lines):
+        out.append(f'<line x1="{ax}" y1="{y0}" x2="{ax}" y2="{y1 - 8}" stroke="{muted}" stroke-width="2"/>')
+        out.append(f'<path d="M{ax - 5},{y1 - 9} L{ax},{y1} L{ax + 5},{y1 - 9} Z" fill="{muted}"/>')
+        say(ax + 10, y0 + 22, title, 12, weight="bold")
+        for i, line in enumerate(lines):
+            say(ax + 10, y0 + 37 + 15 * i, line, 12, muted)
+
+    q = run_query(segs, links)
+    nodes = {r[3]: {"start": int(r[6]), "end": int(r[7]), "alt": r[4] != "0"} for r in segs}
+    ref = sorted((n for n in nodes if not nodes[n]["alt"]), key=lambda n: nodes[n]["start"])
+    edges = [(r[3][:-1], r[4][:-1]) for r in links]
+
+    def attachments(name):
+        into = next(a for a, b in edges if b == name and a in ref)
+        out_ = next(b for a, b in edges if a == name and b in ref)
+        return nodes[into]["end"], nodes[out_]["start"]
+
+    out.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
+               f'font-family="DejaVu Sans, Noto Sans, Helvetica, Arial, sans-serif">')
+    out.append(f'<rect width="{width}" height="{height}" fill="white"/>')
+    for bp in range(lo, hi + 1, TICK_BP):
+        out.append(f'<line x1="{x(bp):.1f}" y1="{y_axis}" x2="{x(bp):.1f}" y2="{y_rows_end - 4}" stroke="{grid}"/>')
+
+    wx0, wx1 = x(qstart), x(qend)
+    fx0, fx1 = left + 60, right - 60
+    out.append(f'<path d="M{wx0:.1f},{y_rows_end} L{fx0},{y_frame} L{fx1},{y_frame} L{wx1:.1f},{y_rows_end} Z" fill="{window_fill}"/>')
+    out.append(f'<rect x="{wx0:.1f}" y="22" width="{wx1 - wx0:.1f}" height="{y_rows_end - 22}" fill="{window_fill}" '
+               f'stroke="{window_line}" stroke-width="1.5" stroke-dasharray="5 3"/>')
+    say((wx0 + wx1) / 2, 16, f"view {seq}:{qstart}–{qend}", 13, window_line, "middle", "bold")
+
+    say(16, 40, "pangenome graph", 15, weight="bold")
+    alts = [n for n in nodes if nodes[n]["alt"]]
+    say(16, 58, f"{seq} + an", 12, muted)
+    say(16, 73, "alternate allele", 12, muted)
+    gap = 9
+    for a, b in zip(ref, ref[1:]):
+        out.append(edge((x(nodes[a]["end"]) - gap, y_graph), (x(nodes[b]["start"]) + gap, y_graph)))
+    for name in ref:
+        v = nodes[name]
+        tube(f"M{x(v['start']) + gap:.1f},{y_graph} L{x(v['end']) - gap:.1f},{y_graph}", blue, blue_dark)
+        say((x(v["start"]) + x(v["end"])) / 2, y_graph + 5, name, 13, "white", "middle", "bold")
+    for name in alts:
+        a, b = (x(bp) for bp in attachments(name))
+        sa, sb = a - gap / 2, b + gap / 2
+        top = y_graph - 34
+        out.append(f'<path d="M{a - gap:.1f},{y_graph} Q{a + 4:.1f},{y_graph - 20} {sa:.1f},{top}" fill="none" stroke="{ink}" stroke-width="2"/>')
+        out.append(f'<path d="M{sb:.1f},{top} Q{b - 4:.1f},{y_graph - 20} {b + gap:.1f},{y_graph}" fill="none" stroke="{ink}" stroke-width="2"/>')
+        tube(f"M{sa:.1f},{top} C{sa + 30:.1f},{top - 46} {sb - 30:.1f},{top - 46} {sb:.1f},{top}", orange, orange_dark)
+        say((sa + sb) / 2, top - 29, name, 13, "white", "middle", "bold")
+        say(sb + 30, top - 28, "alternate allele,", 12, orange_dark)
+        say(sb + 30, top - 14, f"off {seq}", 12, orange_dark)
+
+    out.append(f'<line x1="{x(lo):.1f}" y1="{y_axis}" x2="{x(hi):.1f}" y2="{y_axis}" stroke="{ink}" stroke-width="2"/>')
+    for bp in range(lo, hi + 1, TICK_BP):
+        out.append(f'<line x1="{x(bp):.1f}" y1="{y_axis}" x2="{x(bp):.1f}" y2="{y_axis + 6}" stroke="{ink}" stroke-width="2"/>')
+        say(x(bp), y_axis + 20, bp, 12, muted, "middle")
+    say(left - 12, y_axis + 5, seq, 14, anchor="end", weight="bold")
+    arrow(24, 86, 190, "gfa-to-tabix", ["files rows", f"under {seq}"])
+
+    def bars(y0, title, file, entries):
+        say(16, y0 + 12, title, 13, weight="bold")
+        say(16, y0 + 28, file, 11, muted)
+        for i, (name, start, end, fill, stroke, note, status) in enumerate(entries):
+            y = y0 + i * row
+            opacity = 1 if status else 0.22
+            out.append(f'<rect x="{x(start) + 1:.1f}" y="{y}" width="{x(end) - x(start) - 2:.1f}" height="16" rx="8" '
+                       f'fill="{fill}" stroke="{stroke}" opacity="{opacity}"/>')
+            say(x(start) + 10, y + 12.5, name, 12, "white", weight="bold")
+            if note:
+                say(x(start) + 22 + 7.6 * len(name), y + 12.5, note, 11, "white", style="italic")
+            if status == "fetched":
+                say(right + 8, y + 12.5, status, 11, window_line, weight="bold")
+            elif status:
+                say(right + 8, y + 12.5, status, 11, muted, style="italic")
+
+    bars(y_nodes, "node rows", f"{PREFIX}.segs.bed.gz", [
+        (r[3], int(r[1]), int(r[2]), *((orange, orange_dark) if r[4] != "0" else (blue, blue_dark)),
+         "filed under the whole span its bubble hangs from" if r[4] != "0" else "",
+         "fetched" if r[3] in q["returned"] else "")
+        for r in segs
+    ])
+    hit = {id(r): i for i, r in enumerate(q["hits"])}
+    bars(y_links, "link rows", f"{PREFIX}.links.bed.gz", [
+        (link_label(r), int(r[1]), int(r[2]), "#57606a", "#32383f", "",
+         "" if id(r) not in hit else "fetched" if hit[id(r)] in q["kept"] else "unused")
+        for r in links
+    ])
+    say(left, y_links - 12, "each link row also carries both nodes' coordinates", 11, muted, style="italic")
+    arrow(24, y_rows_end, y_frame + 66, "range requests", ["fetch only rows", "in the window"])
+
+    out.append(f'<rect x="{left}" y="{y_frame}" width="{right - left}" height="{height - 14 - y_frame}" rx="10" '
+               f'fill="white" stroke="{window_line}" stroke-width="1.5"/>')
+    say(left + 14, y_frame + 22, "browser draws", 13, weight="bold")
+    say(left + 14, y_frame + 38, "the local subgraph", 12, muted)
+    cy = y_frame + 78
+    ends, under = {}, len(out)
+    for name in ref:
+        v = nodes[name]
+        mid = (x(v["start"]) + x(v["end"])) / 2
+        if name in q["returned"]:
+            a, b, y = x(v["start"] + 1), x(v["end"] - 1), cy + 30
+            tube(f"M{a:.1f},{y} C{a + 20:.1f},{y + 8} {b - 20:.1f},{y + 8} {b:.1f},{y}", blue, blue_dark)
+            say(mid, y + 9, name, 13, "white", "middle", "bold")
+            ends[name] = ((a - gap, y), (b + gap, y))
+            continue
+        before = v["end"] <= qstart
+        a, b = x(v["start"] + (2 if before else 3)), x(v["end"] - (3 if before else 2))
+        mid = (a + b) / 2
+        if name in q["far"]:
+            tube(f"M{a:.1f},{cy} L{b:.1f},{cy}", blue_pale, blue)
+            say(mid, cy + 5, name, 13, blue_dark, "middle", "bold")
+            say(mid, cy + 32, "placed from", 11, muted, "middle", style="italic")
+            say(mid, cy + 45, "link rows", 11, muted, "middle", style="italic")
+            ends[name] = ((a - gap, cy), (b + gap, cy))
+        else:
+            tube(f"M{a:.1f},{cy} L{b:.1f},{cy}", "white", "#afb8c1", dash="4 4")
+            say(mid, cy + 5, name, 12, "#afb8c1", "middle")
+            say(mid, cy + 32, "not drawn", 11, muted, "middle", style="italic")
+    for name in alts:
+        if name not in q["returned"]:
+            continue
+        a, b = (x(bp) for bp in attachments(name))
+        y = cy - 34
+        tube(f"M{a:.1f},{y} C{a + 20:.1f},{y - 16} {b - 20:.1f},{y - 16} {b:.1f},{y}", orange, orange_dark)
+        say((a + b) / 2, y - 7, name, 13, "white", "middle", "bold")
+        ends[name] = ((a - gap, y), (b + gap, y))
+    out[under:under] = [edge(ends[a][1], ends[b][0]) for a, b in (q["ends"][i] for i in sorted(q["kept"]))]
+    out.append("</svg>")
+    return "\n".join(out) + "\n"
 
 
 def tokens(column):
@@ -672,16 +826,9 @@ def generate(binary):
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, simple, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
-    graph, drawn, arrows, simple_arrows, panel = overview_graphs(segs, links)
+    graph, drawn, arrows, panel = overview_graphs(segs, links)
     return {
-        "overview": {
-            "graph": graph,
-            "lanes": lanes(segs, links, with_links=False),
-            "caption": simple_caption(segs),
-            "drawn": drawn,
-            "arrows": simple_arrows,
-            "svg": panel,
-        },
+        "overview": overview_svg(segs, links),
         "overview-detail": {
             "graph": graph,
             "segs": segs_table(segs),
@@ -718,6 +865,13 @@ def main():
     stale = False
     for figure, regions in generate(Path(args[0]).resolve()).items():
         dot, svg = FIGURES / f"{figure}.dot", FIGURES / f"{figure}.svg"
+        if isinstance(regions, str):
+            if not check:
+                svg.write_text(regions)
+            elif svg.read_text() != regions:
+                stale = True
+                print(f"{svg}: differs from the tool's output")
+            continue
         panel = regions.pop("svg", None)
         old = dot.read_text()
         new = splice_regions(old, regions, dot.name)
