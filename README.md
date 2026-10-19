@@ -3,7 +3,9 @@
 gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can load one region at a time.
 
 - **In:** a GFA from minigraph, Minigraph-Cactus, pggb, odgi or vg
-- **Out:** Tabix-indexed BED files with one row per node and one per link, each filed under a reference interval
+- **Out:** Tabix-indexed BED files, each row filed under a reference interval:
+  - the graph's nodes and links, one row each
+  - every haplotype's path through the graph, with `--walks`
 - **Why:** a browser reads a whole-genome graph by fetching only the rows for the region on screen, with HTTP range requests
 - The [JBrowse 2](https://jbrowse.org) graph track reads the files. One static binary does the conversion, with no gfatools, bgzip or tabix
 
@@ -34,6 +36,8 @@ gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
 - **In:** a base-level graph with W or P lines, such as `vg convert -f` writes from a GBZ
 - **Out:** one file per reference, here `chr22.GRCh38.walks.bed.gz` and `chr22.CHM13.walks.bed.gz`
 - A region query returns the rows a reader needs to rebuild every haplotype's path through that region
+
+![Four haplotype paths through a bubble, the rows the GRCh38 file has for one 64 kb stretch of chr1, and the paths a reader rebuilds from those rows](docs/figures/walks.svg)
 
 ## Docs
 
