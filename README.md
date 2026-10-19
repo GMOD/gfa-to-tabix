@@ -1,12 +1,12 @@
 # gfa-to-tabix
 
-gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can load one region at a time.
+gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fetch the subgraph for any region.
 
 - **In:** a GFA from minigraph, Minigraph-Cactus, pggb, odgi or vg
 - **Out:** Tabix-indexed BED files, each row filed under a reference interval:
   - the graph's nodes and links, one row each
   - every haplotype's path through the graph, with `--walks`
-- **Why:** a browser reads a whole-genome graph by fetching only the rows for the region on screen, with HTTP range requests
+- **Why:** the browser gets each region's subgraph with HTTP range requests and never downloads the whole graph
 - The [JBrowse 2](https://jbrowse.org) graph track reads the files. One static binary does the conversion, with no gfatools, bgzip or tabix
 
 ![A five-node graph, its node rows queried at chr1:25-30, and the nodes and links a browser draws from the rows returned](docs/figures/overview.svg)
