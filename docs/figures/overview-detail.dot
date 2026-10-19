@@ -63,7 +63,7 @@ digraph overview {
     }
 
     subgraph cluster_query {
-      label=<<B>3. A region query</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">one tabix request per file returns the rows filed over chr1:25-30</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>3. A region query</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">one Tabix request per file fetches the rows filed over chr1:25-30</FONT><BR ALIGN="LEFT"/>>
       hits [shape=plaintext, style="", label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
           <!-- begin lanes -->
@@ -71,16 +71,16 @@ digraph overview {
           <TR><TD></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">0</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">10</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">20</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">30</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">40</FONT></TD><TD></TD></TR>
           <TR><TD HEIGHT="1"></TD><TD></TD><TD COLSPAN="16" BGCOLOR="#999999"></TD><TD></TD><TD></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>chr1:25-30</B>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#555555"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  query</FONT></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>chr1:25-30</B>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#555555"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  the window</FONT></TD></TR>
           <TR><TD COLSPAN="20" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>graph.segs.bed.gz</I></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s1</FONT>  </TD><TD></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="6"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s2</FONT>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="2"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="12" BGCOLOR="#f3c08f"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="12" BGCOLOR="#f3c08f"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  fetched</FONT></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD></TD><TD COLSPAN="8"></TD><TD COLSPAN="4" BGCOLOR="#a9bfe2"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD></TD><TD COLSPAN="8"></TD><TD COLSPAN="4" BGCOLOR="#a9bfe2"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  fetched</FONT></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s4</FONT>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <TR><TD COLSPAN="20" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>graph.links.bed.gz: all 5 rows return</I></TD></TR>
@@ -96,7 +96,7 @@ digraph overview {
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5→s4</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="12" BGCOLOR="#c4c4c4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  kept</FONT></TD></TR>
           <!-- end lanes -->
           <!-- begin keep-caption -->
-          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The reader keeps a link when the node file returned one of its nodes, or when both its nodes<BR/>are far ends of links it kept. s1→s2 fails both tests, since no kept link ends at s1.</FONT></TD></TR>
+          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">The reader keeps a link when the node file fetched one of its nodes, or when both its nodes<BR/>are far ends of links it kept. s1→s2 fails both tests, since no kept link ends at s1.</FONT></TD></TR>
           <!-- end keep-caption -->
         </TABLE>>]
     }

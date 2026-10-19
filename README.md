@@ -9,9 +9,9 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 - **Why:** a browser fetches only the rows for a region, with HTTP range requests, and never downloads the whole graph
 - The [JBrowse 2](https://jbrowse.org) graph track reads the files. One static binary does the conversion, with no bgzip or tabix; `build` uses gfatools, when installed, for an rGFA's bubbles
 
-![A five-node graph, its node rows queried at chr1:25-30, and the nodes and links a browser draws from the rows returned](docs/figures/overview.svg)
+![A five-node graph, the node rows a browser fetches to view chr1:25-30, and the nodes and links it draws from them](docs/figures/overview.svg)
 
-The tool files each bubble's alleles and their links under the reference span the bubble hangs from, so a query anywhere inside that span returns every allele of the bubble.
+The tool files each bubble's alleles and their links under the reference span the bubble hangs from, so viewing anywhere inside that span fetches every allele of the bubble.
 
 ## Quick start
 

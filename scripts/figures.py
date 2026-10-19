@@ -84,7 +84,7 @@ def simple_caption(segs):
     span = coordinate(*off[0:3])
     text = (
         f"{off[3]} lies off {off[0]}, so the tool files it under the whole span its bubble hangs from, {span}.\n"
-        f"The tool files each link to cover both its nodes, so any query inside {span} returns {off[3]} and its links."
+        f"The tool files each link to cover both its nodes, so viewing anywhere in {span} fetches {off[3]} and its links."
     )
     return [caption(20, text, 110, "#555555")]
 
@@ -150,14 +150,14 @@ def lanes(segs, links, with_links=True):
         tr([td(), td(colspan=tick_cells - 2).join(ticks), td()]),
         tr([td(height=1), td(), td(bg="#999999", colspan=cells), td(), td()]),
     ]
-    rows += lane(coordinate(seq, qstart, qend), qstart, qend, "#555555", "query", True)
+    rows += lane(coordinate(seq, qstart, qend), qstart, qend, "#555555", "the window", True)
 
     q = run_query(segs, links)
     rows.append(heading(f"{PREFIX}.segs.bed.gz"))
     for row in segs:
         hit = row[3] in q["returned"]
         color = (ORANGE if row[4] != "0" else BLUE)[1] if hit else GREY
-        rows += lane(row[3], row[1], row[2], color, "returned" if hit else "", hit)
+        rows += lane(row[3], row[1], row[2], color, "fetched" if hit else "", hit)
 
     if not with_links:
         return rows
@@ -191,7 +191,7 @@ def run_query(segs, links):
 
 def keep_caption(segs, links):
     q = run_query(segs, links)
-    text = "The reader keeps a link when the node file returned one of its nodes, or when both its nodes are far ends of links it kept."
+    text = "The reader keeps a link when the node file fetched one of its nodes, or when both its nodes are far ends of links it kept."
     for i, row in enumerate(q["hits"]):
         if i not in q["kept"]:
             loose = next(n for n in q["ends"][i] if n not in q["returned"] | q["far"])
@@ -385,7 +385,7 @@ def bandage(nodes, edges, pad=36, width=14):
     by = max(ys) - top + pad + 22
     body += [
         f'<path d="M{sx:.1f},{by - 6} V{by} H{ex:.1f} V{by - 6}" fill="none" stroke="#555555" stroke-width="1.2"/>',
-        text((sx + ex) / 2, by + 16, f"a query at {coordinate(*QUERY)} brings back the bubble out to {extent}", 11, color="#555555"),
+        text((sx + ex) / 2, by + 16, f"viewing {coordinate(*QUERY)} fetches the bubble out to {extent}", 11, color="#555555"),
     ]
     w, h = max(xs) - left + pad + 20, by + 26
     return w, h, "\n".join(body)
@@ -438,7 +438,7 @@ def overview_graphs(segs, links):
     ]
     simple = [
         arrow((graph_bottom, "cluster_graph"), ("hits", "cluster_query"), f"gfa-to-tabix {PREFIX}.gfa"),
-        arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), f"the rows returned, plus\ntheir links from {PREFIX}.links.bed.gz"),
+        arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), f"the fetched rows, plus\ntheir links from {PREFIX}.links.bed.gz"),
     ]
     return graph, drawn, detail, simple, panel
 

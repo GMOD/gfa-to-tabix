@@ -31,7 +31,7 @@ digraph overview {
     }
 
     subgraph cluster_query {
-      label=<<B>2. The index, queried at chr1:25-30</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">each node is a row filed under a chr1 interval; a query returns the rows it overlaps</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>2. The index, viewed at chr1:25-30</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">each node is a row filed under a chr1 interval; the browser fetches the rows that overlap the window</FONT><BR ALIGN="LEFT"/>>
       hits [shape=plaintext, style="", label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
           <!-- begin lanes -->
@@ -39,21 +39,21 @@ digraph overview {
           <TR><TD></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">0</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">10</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">20</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">30</FONT></TD><TD COLSPAN="2"></TD><TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">40</FONT></TD><TD></TD></TR>
           <TR><TD HEIGHT="1"></TD><TD></TD><TD COLSPAN="16" BGCOLOR="#999999"></TD><TD></TD><TD></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>chr1:25-30</B>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#555555"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  query</FONT></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>chr1:25-30</B>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#555555"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  the window</FONT></TD></TR>
           <TR><TD COLSPAN="20" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>graph.segs.bed.gz</I></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s1</FONT>  </TD><TD></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="6"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s2</FONT>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD COLSPAN="2"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="12" BGCOLOR="#f3c08f"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s5</B>  </TD><TD></TD><TD COLSPAN="4"></TD><TD COLSPAN="12" BGCOLOR="#f3c08f"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  fetched</FONT></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
-          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD></TD><TD COLSPAN="8"></TD><TD COLSPAN="4" BGCOLOR="#a9bfe2"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  returned</FONT></TD></TR>
+          <TR><TD ALIGN="RIGHT" HEIGHT="18"><B>s3</B>  </TD><TD></TD><TD COLSPAN="8"></TD><TD COLSPAN="4" BGCOLOR="#a9bfe2"></TD><TD COLSPAN="4"></TD><TD></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#777777">  fetched</FONT></TD></TR>
           <TR><TD HEIGHT="5"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD BGCOLOR="#fff3b0"></TD><TD BGCOLOR="#fff3b0"></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR>
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s4</FONT>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <!-- end lanes -->
           <!-- begin caption -->
-          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">s5 lies off chr1, so the tool files it under the whole span its bubble hangs from, chr1:10-40.<BR/>The tool files each link to cover both its nodes, so any query inside chr1:10-40 returns s5 and its links.</FONT></TD></TR>
+          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">s5 lies off chr1, so the tool files it under the whole span its bubble hangs from, chr1:10-40.<BR/>The tool files each link to cover both its nodes, so viewing anywhere in chr1:10-40 fetches s5 and its links.</FONT></TD></TR>
           <!-- end caption -->
         </TABLE>>]
     }
@@ -68,6 +68,6 @@ digraph overview {
 
   // begin arrows
   s3 -> hits [ltail=cluster_graph, lhead=cluster_query, label="  gfa-to-tabix graph.gfa", penwidth=2]
-  hits -> drawn [ltail=cluster_query, lhead=cluster_drawn, label="  the rows returned, plus\n  their links from graph.links.bed.gz", penwidth=2]
+  hits -> drawn [ltail=cluster_query, lhead=cluster_drawn, label="  the fetched rows, plus\n  their links from graph.links.bed.gz", penwidth=2]
   // end arrows
 }
