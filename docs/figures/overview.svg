@@ -1,108 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="820" height="678" viewBox="0 0 820 678" font-family="DejaVu Sans, Noto Sans, Helvetica, Arial, sans-serif">
-<rect width="820" height="678" fill="white"/>
-<line x1="150.0" y1="152" x2="150.0" y2="484" stroke="#d8dee4"/>
-<line x1="300.0" y1="152" x2="300.0" y2="484" stroke="#d8dee4"/>
-<line x1="450.0" y1="152" x2="450.0" y2="484" stroke="#d8dee4"/>
-<line x1="600.0" y1="152" x2="600.0" y2="484" stroke="#d8dee4"/>
-<line x1="750.0" y1="152" x2="750.0" y2="484" stroke="#d8dee4"/>
-<path d="M525.0,488 L210,538 L690,538 L600.0,488 Z" fill="#f3e8ff"/>
-<rect x="525.0" y="22" width="75.0" height="466" fill="#f3e8ff" stroke="#9b5de5" stroke-width="1.5" stroke-dasharray="5 3"/>
-<text x="562.5" y="16.0" font-size="13" fill="#9b5de5" text-anchor="middle" font-weight="bold" font-style="normal">view chr1:25–30</text>
-<text x="16.0" y="40.0" font-size="15" fill="#1f2328" text-anchor="start" font-weight="bold" font-style="normal">pangenome graph</text>
-<text x="16.0" y="58.0" font-size="12" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">chr1 + an</text>
-<text x="16.0" y="73.0" font-size="12" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">alternate allele</text>
-<path d="M291.0,118.0 C311.0,118.0 289.0,118.0 309.0,118.0" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M441.0,118.0 C461.0,118.0 439.0,118.0 459.0,118.0" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M591.0,118.0 C611.0,118.0 589.0,118.0 609.0,118.0" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M159.0,118 L291.0,118" fill="none" stroke="#24569e" stroke-width="18" stroke-linecap="round"/><path d="M159.0,118 L291.0,118" fill="none" stroke="#3b7dd8" stroke-width="15" stroke-linecap="round"/>
-<text x="225.0" y="123.0" font-size="13" fill="white" text-anchor="middle" font-weight="bold" font-style="normal">s1</text>
-<path d="M309.0,118 L441.0,118" fill="none" stroke="#24569e" stroke-width="18" stroke-linecap="round"/><path d="M309.0,118 L441.0,118" fill="none" stroke="#3b7dd8" stroke-width="15" stroke-linecap="round"/>
-<text x="375.0" y="123.0" font-size="13" fill="white" text-anchor="middle" font-weight="bold" font-style="normal">s2</text>
-<path d="M459.0,118 L591.0,118" fill="none" stroke="#24569e" stroke-width="18" stroke-linecap="round"/><path d="M459.0,118 L591.0,118" fill="none" stroke="#3b7dd8" stroke-width="15" stroke-linecap="round"/>
-<text x="525.0" y="123.0" font-size="13" fill="white" text-anchor="middle" font-weight="bold" font-style="normal">s3</text>
-<path d="M609.0,118 L741.0,118" fill="none" stroke="#24569e" stroke-width="18" stroke-linecap="round"/><path d="M609.0,118 L741.0,118" fill="none" stroke="#3b7dd8" stroke-width="15" stroke-linecap="round"/>
-<text x="675.0" y="123.0" font-size="13" fill="white" text-anchor="middle" font-weight="bold" font-style="normal">s4</text>
-<path d="M441.0,118 Q454.0,98 445.5,84" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M604.5,84 Q596.0,98 609.0,118" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M445.5,84 C475.5,38 574.5,38 604.5,84" fill="none" stroke="#b75e0d" stroke-width="18" stroke-linecap="round"/><path d="M445.5,84 C475.5,38 574.5,38 604.5,84" fill="none" stroke="#ef8a2b" stroke-width="15" stroke-linecap="round"/>
-<text x="525.0" y="55.0" font-size="13" fill="white" text-anchor="middle" font-weight="bold" font-style="normal">s5</text>
-<text x="634.5" y="56.0" font-size="12" fill="#b75e0d" text-anchor="start" font-weight="normal" font-style="normal">alternate allele,</text>
-<text x="634.5" y="70.0" font-size="12" fill="#b75e0d" text-anchor="start" font-weight="normal" font-style="normal">off chr1</text>
-<line x1="150.0" y1="152" x2="750.0" y2="152" stroke="#1f2328" stroke-width="2"/>
-<line x1="150.0" y1="152" x2="150.0" y2="158" stroke="#1f2328" stroke-width="2"/>
-<text x="150.0" y="172.0" font-size="12" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="normal">0</text>
-<line x1="300.0" y1="152" x2="300.0" y2="158" stroke="#1f2328" stroke-width="2"/>
-<text x="300.0" y="172.0" font-size="12" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="normal">10</text>
-<line x1="450.0" y1="152" x2="450.0" y2="158" stroke="#1f2328" stroke-width="2"/>
-<text x="450.0" y="172.0" font-size="12" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="normal">20</text>
-<line x1="600.0" y1="152" x2="600.0" y2="158" stroke="#1f2328" stroke-width="2"/>
-<text x="600.0" y="172.0" font-size="12" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="normal">30</text>
-<line x1="750.0" y1="152" x2="750.0" y2="158" stroke="#1f2328" stroke-width="2"/>
-<text x="750.0" y="172.0" font-size="12" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="normal">40</text>
-<text x="138.0" y="157.0" font-size="14" fill="#1f2328" text-anchor="end" font-weight="bold" font-style="normal">chr1</text>
-<line x1="24" y1="86" x2="24" y2="182" stroke="#6e7781" stroke-width="2"/>
-<path d="M19,181 L24,190 L29,181 Z" fill="#6e7781"/>
-<text x="34.0" y="108.0" font-size="12" fill="#1f2328" text-anchor="start" font-weight="bold" font-style="normal">gfa-to-tabix</text>
-<text x="34.0" y="123.0" font-size="12" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">files rows</text>
-<text x="34.0" y="138.0" font-size="12" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">under chr1</text>
-<text x="16.0" y="226.0" font-size="13" fill="#1f2328" text-anchor="start" font-weight="bold" font-style="normal">node rows</text>
-<text x="16.0" y="242.0" font-size="11" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">graph.segs.bed.gz</text>
-<rect x="151.0" y="214" width="148.0" height="16" rx="8" fill="#3b7dd8" stroke="#24569e" opacity="0.22"/>
-<text x="160.0" y="226.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s1</text>
-<rect x="301.0" y="236" width="148.0" height="16" rx="8" fill="#3b7dd8" stroke="#24569e" opacity="0.22"/>
-<text x="310.0" y="248.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s2</text>
-<rect x="301.0" y="258" width="448.0" height="16" rx="8" fill="#ef8a2b" stroke="#b75e0d" opacity="1"/>
-<text x="310.0" y="270.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s5</text>
-<text x="337.2" y="270.5" font-size="11" fill="white" text-anchor="start" font-weight="normal" font-style="italic">filed under the whole span its bubble hangs from</text>
-<text x="758.0" y="270.5" font-size="11" fill="#9b5de5" text-anchor="start" font-weight="bold" font-style="normal">fetched</text>
-<rect x="451.0" y="280" width="148.0" height="16" rx="8" fill="#3b7dd8" stroke="#24569e" opacity="1"/>
-<text x="460.0" y="292.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s3</text>
-<text x="758.0" y="292.5" font-size="11" fill="#9b5de5" text-anchor="start" font-weight="bold" font-style="normal">fetched</text>
-<rect x="601.0" y="302" width="148.0" height="16" rx="8" fill="#3b7dd8" stroke="#24569e" opacity="0.22"/>
-<text x="610.0" y="314.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s4</text>
-<text x="16.0" y="386.0" font-size="13" fill="#1f2328" text-anchor="start" font-weight="bold" font-style="normal">link rows</text>
-<text x="16.0" y="402.0" font-size="11" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">graph.links.bed.gz</text>
-<rect x="151.0" y="374" width="598.0" height="16" rx="8" fill="#57606a" stroke="#32383f" opacity="1"/>
-<text x="160.0" y="386.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s1→s2</text>
-<text x="758.0" y="386.5" font-size="11" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="italic">unused</text>
-<rect x="151.0" y="396" width="598.0" height="16" rx="8" fill="#57606a" stroke="#32383f" opacity="1"/>
-<text x="160.0" y="408.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s2→s3</text>
-<text x="758.0" y="408.5" font-size="11" fill="#9b5de5" text-anchor="start" font-weight="bold" font-style="normal">fetched</text>
-<rect x="151.0" y="418" width="598.0" height="16" rx="8" fill="#57606a" stroke="#32383f" opacity="1"/>
-<text x="160.0" y="430.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s2→s5</text>
-<text x="758.0" y="430.5" font-size="11" fill="#9b5de5" text-anchor="start" font-weight="bold" font-style="normal">fetched</text>
-<rect x="301.0" y="440" width="448.0" height="16" rx="8" fill="#57606a" stroke="#32383f" opacity="1"/>
-<text x="310.0" y="452.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s3→s4</text>
-<text x="758.0" y="452.5" font-size="11" fill="#9b5de5" text-anchor="start" font-weight="bold" font-style="normal">fetched</text>
-<rect x="301.0" y="462" width="448.0" height="16" rx="8" fill="#57606a" stroke="#32383f" opacity="1"/>
-<text x="310.0" y="474.5" font-size="12" fill="white" text-anchor="start" font-weight="bold" font-style="normal">s5→s4</text>
-<text x="758.0" y="474.5" font-size="11" fill="#9b5de5" text-anchor="start" font-weight="bold" font-style="normal">fetched</text>
-<text x="150.0" y="362.0" font-size="11" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="italic">each link row also carries both nodes' coordinates</text>
-<line x1="24" y1="488" x2="24" y2="596" stroke="#6e7781" stroke-width="2"/>
-<path d="M19,595 L24,604 L29,595 Z" fill="#6e7781"/>
-<text x="34.0" y="510.0" font-size="12" fill="#1f2328" text-anchor="start" font-weight="bold" font-style="normal">range requests</text>
-<text x="34.0" y="525.0" font-size="12" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">fetch only rows</text>
-<text x="34.0" y="540.0" font-size="12" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">in the window</text>
-<rect x="150" y="538" width="600" height="126" rx="10" fill="white" stroke="#9b5de5" stroke-width="1.5"/>
-<text x="164.0" y="560.0" font-size="13" fill="#1f2328" text-anchor="start" font-weight="bold" font-style="normal">browser draws</text>
-<text x="164.0" y="576.0" font-size="12" fill="#6e7781" text-anchor="start" font-weight="normal" font-style="normal">the local subgraph</text>
-<path d="M414.0,616.0 C434.0,616.0 436.0,646.0 456.0,646.0" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M414.0,616.0 C434.0,616.0 421.0,582.0 441.0,582.0" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M594.0,646.0 C614.0,646.0 616.0,616.0 636.0,616.0" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M609.0,582.0 C629.0,582.0 616.0,616.0 636.0,616.0" fill="none" stroke="#1f2328" stroke-width="2"/>
-<path d="M180.0,616 L255.0,616" fill="none" stroke="#afb8c1" stroke-width="18" stroke-linecap="round" stroke-dasharray="4 4"/><path d="M180.0,616 L255.0,616" fill="none" stroke="white" stroke-width="15" stroke-linecap="round" stroke-dasharray="4 4"/>
-<text x="217.5" y="621.0" font-size="12" fill="#afb8c1" text-anchor="middle" font-weight="normal" font-style="normal">s1</text>
-<text x="217.5" y="648.0" font-size="11" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="italic">not drawn</text>
-<path d="M330.0,616 L405.0,616" fill="none" stroke="#3b7dd8" stroke-width="18" stroke-linecap="round"/><path d="M330.0,616 L405.0,616" fill="none" stroke="#c9dbf3" stroke-width="15" stroke-linecap="round"/>
-<text x="367.5" y="621.0" font-size="13" fill="#24569e" text-anchor="middle" font-weight="bold" font-style="normal">s2</text>
-<text x="367.5" y="648.0" font-size="11" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="italic">placed from</text>
-<text x="367.5" y="661.0" font-size="11" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="italic">link rows</text>
-<path d="M465.0,646 C485.0,654 565.0,654 585.0,646" fill="none" stroke="#24569e" stroke-width="18" stroke-linecap="round"/><path d="M465.0,646 C485.0,654 565.0,654 585.0,646" fill="none" stroke="#3b7dd8" stroke-width="15" stroke-linecap="round"/>
-<text x="525.0" y="655.0" font-size="13" fill="white" text-anchor="middle" font-weight="bold" font-style="normal">s3</text>
-<path d="M645.0,616 L720.0,616" fill="none" stroke="#3b7dd8" stroke-width="18" stroke-linecap="round"/><path d="M645.0,616 L720.0,616" fill="none" stroke="#c9dbf3" stroke-width="15" stroke-linecap="round"/>
-<text x="682.5" y="621.0" font-size="13" fill="#24569e" text-anchor="middle" font-weight="bold" font-style="normal">s4</text>
-<text x="682.5" y="648.0" font-size="11" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="italic">placed from</text>
-<text x="682.5" y="661.0" font-size="11" fill="#6e7781" text-anchor="middle" font-weight="normal" font-style="italic">link rows</text>
-<path d="M450.0,582 C470.0,566 580.0,566 600.0,582" fill="none" stroke="#b75e0d" stroke-width="18" stroke-linecap="round"/><path d="M450.0,582 C470.0,566 580.0,566 600.0,582" fill="none" stroke="#ef8a2b" stroke-width="15" stroke-linecap="round"/>
-<text x="525.0" y="575.0" font-size="13" fill="white" text-anchor="middle" font-weight="bold" font-style="normal">s5</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="330" viewBox="0 0 820 330" font-family="Helvetica, Arial, sans-serif">
+<rect width="820" height="330" fill="white"/>
+<rect x="463.8" y="22" width="58.8" height="296" fill="#fff3b0"/>
+<text x="493.1" y="16.0" font-size="12" fill="#6e7781" text-anchor="middle" font-weight="normal">view chr1:25-30</text>
+<text x="16.0" y="80.0" font-size="13" fill="#1f2328" text-anchor="start" font-weight="bold">graph</text>
+<rect x="171.0" y="69.0" width="115.5" height="14" fill="#3b7dd8"/>
+<text x="228.8" y="80.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s1</text>
+<rect x="288.5" y="69.0" width="115.5" height="14" fill="#3b7dd8"/>
+<text x="346.2" y="80.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s2</text>
+<rect x="406.0" y="69.0" width="115.5" height="14" fill="#3b7dd8"/>
+<text x="463.8" y="80.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s3</text>
+<rect x="523.5" y="69.0" width="115.5" height="14" fill="#3b7dd8"/>
+<text x="581.2" y="80.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s4</text>
+<path d="M405.0,69 C405.0,34 522.5,34 522.5,69" fill="none" stroke="#ef8a2b" stroke-width="10"/>
+<text x="463.8" y="32.0" font-size="11" fill="#1f2328" text-anchor="middle" font-weight="bold">s5</text>
+<line x1="170.0" y1="98" x2="640.0" y2="98" stroke="#6e7781"/>
+<text x="170.0" y="112.0" font-size="10" fill="#6e7781" text-anchor="middle" font-weight="normal">0</text>
+<text x="287.5" y="112.0" font-size="10" fill="#6e7781" text-anchor="middle" font-weight="normal">10</text>
+<text x="405.0" y="112.0" font-size="10" fill="#6e7781" text-anchor="middle" font-weight="normal">20</text>
+<text x="522.5" y="112.0" font-size="10" fill="#6e7781" text-anchor="middle" font-weight="normal">30</text>
+<text x="640.0" y="112.0" font-size="10" fill="#6e7781" text-anchor="middle" font-weight="normal">40</text>
+<text x="162.0" y="102.0" font-size="11" fill="#6e7781" text-anchor="end" font-weight="normal">chr1</text>
+<text x="16.0" y="150.0" font-size="13" fill="#1f2328" text-anchor="start" font-weight="bold">node rows</text>
+<text x="16.0" y="166.0" font-size="11" fill="#6e7781" text-anchor="start" font-weight="normal">graph.segs.bed.gz</text>
+<rect x="171.0" y="139.0" width="115.5" height="14" fill="#dde3ea"/>
+<text x="228.8" y="150.0" font-size="11" fill="#6e7781" text-anchor="middle" font-weight="bold">s1</text>
+<rect x="288.5" y="157.0" width="115.5" height="14" fill="#dde3ea"/>
+<text x="346.2" y="168.0" font-size="11" fill="#6e7781" text-anchor="middle" font-weight="bold">s2</text>
+<rect x="288.5" y="175.0" width="350.5" height="14" fill="#ef8a2b"/>
+<text x="463.8" y="186.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s5</text>
+<text x="650.0" y="186.0" font-size="11" fill="#6e7781" text-anchor="start" font-weight="normal">filed under its whole bubble</text>
+<rect x="406.0" y="193.0" width="115.5" height="14" fill="#3b7dd8"/>
+<text x="463.8" y="204.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s3</text>
+<rect x="523.5" y="211.0" width="115.5" height="14" fill="#dde3ea"/>
+<text x="581.2" y="222.0" font-size="11" fill="#6e7781" text-anchor="middle" font-weight="bold">s4</text>
+<text x="16.0" y="304.0" font-size="13" fill="#1f2328" text-anchor="start" font-weight="bold">browser draws</text>
+<rect x="288.5" y="293.0" width="115.5" height="14" fill="#9dbde9"/>
+<text x="346.2" y="304.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s2</text>
+<rect x="406.0" y="293.0" width="115.5" height="14" fill="#3b7dd8"/>
+<text x="463.8" y="304.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s3</text>
+<rect x="523.5" y="293.0" width="115.5" height="14" fill="#9dbde9"/>
+<text x="581.2" y="304.0" font-size="11" fill="white" text-anchor="middle" font-weight="bold">s4</text>
+<path d="M405.0,293 C405.0,258 522.5,258 522.5,293" fill="none" stroke="#ef8a2b" stroke-width="10"/>
+<text x="463.8" y="256.0" font-size="11" fill="#1f2328" text-anchor="middle" font-weight="bold">s5</text>
 </svg>
