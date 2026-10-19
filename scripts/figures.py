@@ -428,75 +428,97 @@ def overview_graphs(segs, links):
 
 
 def overview_svg(segs, links):
-    """The README figure: the graph, its node rows and what a browser draws
-    for one window, stacked on one reference axis."""
+    """The README figure: the graph, the lines of its node file, the lines a
+    Tabix query returns, and the nodes a browser draws from them."""
     seq, qstart, qend = QUERY
-    lo, hi = min(int(r[1]) for r in segs), max(int(r[2]) for r in segs)
-    width, left, right = 820, 170, 640
-    x = lambda bp: left + (bp - lo) * (right - left) / (hi - lo)
-    blue, orange, faded, ink, muted = "#3b7dd8", "#ef8a2b", "#dde3ea", "#1f2328", "#6e7781"
+    width, ink, muted, line = 820, "#1f2328", "#57606a", "#8c959f"
+    blue, blue_pale, orange, orange_pale = "#4a6fa5", "#e8eef7", "#c77a2b", "#fde6cf"
+    mono = "Menlo, Consolas, DejaVu Sans Mono, monospace"
     q = run_query(segs, links)
-    nodes = {r[3]: {"start": int(r[6]), "end": int(r[7]), "alt": r[4] != "0"} for r in segs}
-    ref = sorted((n for n in nodes if not nodes[n]["alt"]), key=lambda n: nodes[n]["start"])
+    nodes = {r[3]: {"seq": r[5], "start": r[6], "end": r[7], "alt": r[4] != "0"} for r in segs}
+    ref = sorted((n for n in nodes if not nodes[n]["alt"]), key=lambda n: int(nodes[n]["start"]))
     edges = [(r[3][:-1], r[4][:-1]) for r in links]
-    drawn = q["returned"] | q["far"]
-    row = 18
-    y_graph, y_axis, y_rows = 76, 98, 146
-    y_view = y_rows + len(segs) * row + 64
-    height = y_view + 30
-    out = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
-        f'font-family="Helvetica, Arial, sans-serif">',
-        f'<rect width="{width}" height="{height}" fill="white"/>',
-        f'<rect x="{x(qstart):.1f}" y="22" width="{x(qend) - x(qstart):.1f}" height="{y_view + 18 - 22}" fill="{HIGHLIGHT}"/>',
-    ]
+    out = []
 
-    def say(tx, ty, s, size=13, fill=ink, anchor="start", weight="normal"):
-        out.append(f'<text x="{tx:.1f}" y="{ty:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
-                   f'font-weight="{weight}">{s}</text>')
+    def say(x, y, s, size=13, fill=ink, anchor="start", weight="normal", font=None):
+        family = f' font-family="{font}"' if font else ""
+        out.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
+                   f'font-weight="{weight}"{family}>{s}</text>')
 
-    def bar(start, end, y, color, label, h=14):
-        out.append(f'<rect x="{x(start) + 1:.1f}" y="{y - h / 2:.1f}" width="{x(end) - x(start) - 2:.1f}" height="{h}" fill="{color}"/>')
-        say((x(start) + x(end)) / 2, y + 4, label, 11, "white" if color != faded else muted, "middle", "bold")
+    def graph(top, shown, pale=()):
+        box_w, box_h, step = 96, 38, 150
+        at = {n: (100 + i * step, top + 70) for i, n in enumerate(ref)}
+        for n in nodes:
+            if nodes[n]["alt"]:
+                into = next(a for a, b in edges if b == n)
+                out_ = next(b for a, b in edges if a == n)
+                at[n] = ((at[into][0] + at[out_][0]) / 2, top)
+        for a, b in edges:
+            if a in shown and b in shown:
+                (ax, ay), (bx, by) = at[a], at[b]
+                if ay == by:
+                    ax, bx = ax + box_w / 2, bx - box_w / 2
+                else:
+                    ax, ay = (ax + box_w / 4, ay - box_h / 2) if ay > by else (ax + box_w / 2, ay)
+                    bx, by = (bx - box_w / 2, by) if ay > by else (bx - box_w / 4, by - box_h / 2)
+                color = orange if nodes[a]["alt"] or nodes[b]["alt"] else line
+                out.append(f'<line x1="{ax:.1f}" y1="{ay:.1f}" x2="{bx:.1f}" y2="{by:.1f}" stroke="{color}" '
+                           f'stroke-width="1.5" marker-end="url(#head)"/>')
+        for n in shown:
+            x, y = at[n]
+            fill, stroke = (orange_pale, orange) if nodes[n]["alt"] else (blue_pale, blue)
+            dim = n in pale
+            out.append(f'<rect x="{x - box_w / 2:.1f}" y="{y - box_h / 2:.1f}" width="{box_w}" height="{box_h}" rx="8" '
+                       f'fill="{"white" if dim else fill}" stroke="{"#b6c3d6" if dim else stroke}" stroke-width="1.2"/>')
+            v = nodes[n]
+            say(x, y - 2, n, 13, muted if dim else ink, "middle", "bold")
+            say(x, y + 12, coordinate(v["seq"], v["start"], v["end"]), 10, muted if dim else ink, "middle")
 
-    def arch(name, y, color):
-        into = next(a for a, b in edges if b == name and a in ref)
-        out_ = next(b for a, b in edges if a == name and b in ref)
-        a, b = x(nodes[into]["end"]), x(nodes[out_]["start"])
-        out.append(f'<path d="M{a:.1f},{y - 7} C{a:.1f},{y - 42} {b:.1f},{y - 42} {b:.1f},{y - 7}" fill="none" '
-                   f'stroke="{color}" stroke-width="10"/>')
-        say((a + b) / 2, y - 44, name, 11, ink, "middle", "bold")
+    out.append(f'<defs><marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
+               f'<path d="M0,0 L8,4 L0,8 z" fill="{line}"/></marker></defs>')
 
-    def graph(y, shown):
-        for name in ref:
-            if name in shown:
-                v = nodes[name]
-                bar(v["start"], v["end"], y, blue if name in q["returned"] or shown is nodes else "#9dbde9", name)
-        for name in nodes:
-            if nodes[name]["alt"] and name in shown:
-                arch(name, y, orange)
+    say(24, 28, f"1. A graph: {seq} in blue, and s5, an HG002 allele in place of s3, in orange", 14, weight="bold")
+    graph(52, list(nodes))
 
-    say((x(qstart) + x(qend)) / 2, 16, f"view {seq}:{qstart}-{qend}", 12, muted, "middle")
-    say(16, y_graph + 4, "graph", 13, weight="bold")
-    graph(y_graph, nodes)
-    out.append(f'<line x1="{x(lo):.1f}" y1="{y_axis}" x2="{x(hi):.1f}" y2="{y_axis}" stroke="{muted}"/>')
-    for bp in range(lo, hi + 1, TICK_BP):
-        say(x(bp), y_axis + 14, bp, 10, muted, "middle")
-    say(x(lo) - 8, y_axis + 4, seq, 11, muted, "end")
-
-    say(16, y_rows + 4, "node rows", 13, weight="bold")
-    say(16, y_rows + 20, f"{PREFIX}.segs.bed.gz", 11, muted)
-    for i, r in enumerate(segs):
-        fetched = r[3] in q["returned"]
-        color = (orange if r[4] != "0" else blue) if fetched else faded
-        bar(int(r[1]), int(r[2]), y_rows + i * row, color, r[3])
+    top = 200
+    say(24, top, f"2. gfa-to-tabix writes {PREFIX}.segs.bed.gz, one line per node", 14, weight="bold")
+    cols = [[r[i] for i in range(8)] for r in segs]
+    char, x0 = 8.4, 48
+    widths = [max(len(c[i]) for c in cols) for i in range(8)]
+    xs = [x0]
+    for w in widths[:-1]:
+        xs.append(xs[-1] + (w + 2) * char)
+    end = xs[-1] + widths[-1] * char
+    say(xs[0], top + 28, "where Tabix files the line", 11, muted)
+    say(xs[5], top + 28, "where the node's sequence is", 11, muted)
+    out.append(f'<line x1="{xs[0]}" y1="{top + 33}" x2="{xs[3] - 2 * char:.1f}" y2="{top + 33}" stroke="{line}"/>')
+    out.append(f'<line x1="{xs[5]:.1f}" y1="{top + 33}" x2="{end:.1f}" y2="{top + 33}" stroke="{line}"/>')
+    for i, (r, c) in enumerate(zip(segs, cols)):
+        y = top + 54 + i * 24
+        if r[3] in q["returned"]:
+            out.append(f'<rect x="{x0 - 8}" y="{y - 16}" width="{end - x0 + 16:.1f}" height="22" fill="{HIGHLIGHT}"/>')
+        for x, s in zip(xs, c):
+            alt = r[4] != "0" and x < xs[3]
+            say(x, y, s, 14, "#a15f1c" if alt else ink, weight="bold" if alt else "normal", font=mono)
         if r[4] != "0":
-            say(x(int(r[2])) + 10, y_rows + i * row + 4, "filed under its whole bubble", 11, muted)
+            into = next(a for a, b in edges if b == r[3])
+            out_ = next(b for a, b in edges if a == r[3])
+            say(end + 24, y, f"{r[3]} is not on {seq}, so its line takes the {seq}", 12, muted)
+            say(end + 24, y + 15, f"span from {into} to {out_}, the nodes it joins", 12, muted)
 
-    say(16, y_view + 4, "browser draws", 13, weight="bold")
-    graph(y_view, drawn)
-    out.append("</svg>")
-    return "\n".join(out) + "\n"
+    top += 54 + len(segs) * 24 + 20
+    say(24, top, f"3. A browser showing {seq}:{qstart}-{qend} runs", 14, weight="bold")
+    command = f"tabix {PREFIX}.segs.bed.gz {seq}:{qstart}-{qend}"
+    say(24 + 7.4 * len(f"3. A browser showing {seq}:{qstart}-{qend} runs") + 8, top, command, 14, font=mono)
+    shown = sorted(q["returned"])
+    far = " and ".join(sorted(q["far"]))
+    say(24, top + 22, f"and gets the highlighted lines, {' and '.join(shown)}. It draws those nodes, and adds their "
+        f"neighbours {far}, in grey, from {PREFIX}.links.bed.gz", 12, muted)
+    graph(top + 70, sorted(q["returned"] | q["far"]), pale=q["far"])
+    height = top + 70 + 70 + 34
+    head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
+            f'font-family="Helvetica, Arial, sans-serif"><rect width="{width}" height="{height}" fill="white"/>')
+    return head + "\n" + "\n".join(out) + "\n</svg>\n"
 
 
 def tokens(column):
