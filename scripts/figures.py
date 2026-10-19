@@ -322,9 +322,10 @@ def portion(points, f0, f1):
     return [p0, *points[i0 + 1 : i1 + 1], p1]
 
 
-def text(x, y, label, size, bold=False):
+def text(x, y, label, size, bold=False, color=None, anchor="middle"):
     weight = ' font-weight="bold"' if bold else ""
-    return f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="middle" font-family="Helvetica,sans-Serif" font-size="{size}"{weight}>{label}</text>'
+    fill = f' fill="{color}"' if color else ""
+    return f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}" font-family="Helvetica,sans-Serif" font-size="{size}"{weight}{fill}>{label}</text>'
 
 
 def bandage(nodes, edges, pad=36, width=14):
@@ -336,7 +337,7 @@ def bandage(nodes, edges, pad=36, width=14):
     left, top = min(xs) - pad - 20, min(ys) - pad
     paths = {n: catmull_rom([(x - left, y - top) for x, y in p]) for n, p in paths.items()}
     cx, cy = (max(xs) + min(xs)) / 2 - left, (max(ys) + min(ys)) / 2 - top
-    body = []
+    body, trace = [], []
     for a, b in edges:
         (ax, ay), (x0, y0) = paths[a][-2:]
         (x1, y1), (bx, by) = paths[b][:2]
@@ -344,20 +345,21 @@ def bandage(nodes, edges, pad=36, width=14):
         u0, u1 = reach / math.dist((ax, ay), (x0, y0)), reach / math.dist((bx, by), (x1, y1))
         c0 = (x0 + (x0 - ax) * u0, y0 + (y0 - ay) * u0)
         c1 = (x1 + (x1 - bx) * u1, y1 + (y1 - by) * u1)
-        color = ORANGE[2] if nodes[a]["alt"] or nodes[b]["alt"] else "#555555"
-        body.append(
-            f'<path d="M{x0:.1f},{y0:.1f} C{c0[0]:.1f},{c0[1]:.1f} {c1[0]:.1f},{c1[1]:.1f} {x1:.1f},{y1:.1f}" '
-            f'fill="none" stroke="{color}" stroke-width="1.5"/>'
-        )
+        alt = nodes[a]["alt"] or nodes[b]["alt"]
+        d = f"M{x0:.1f},{y0:.1f} C{c0[0]:.1f},{c0[1]:.1f} {c1[0]:.1f},{c1[1]:.1f} {x1:.1f},{y1:.1f}"
+        body.append(f'<path d="{d}" fill="none" stroke="{ORANGE[2] if alt else "#555555"}" stroke-width="1.5"/>')
+        if not alt:
+            trace.append(d)
     halo = width + 12
     for name, v in nodes.items():
         if v["query"]:
             body.insert(0, f'<path d="{polyline(portion(paths[name], *v["query"]))}" fill="none" stroke="{HIGHLIGHT}" stroke-width="{halo}"/>')
     for name, v in nodes.items():
         d = polyline(paths[name])
-        dash = ' stroke-dasharray="5,2"' if v["far"] else ""
-        body.append(f'<path d="{d}" fill="none" stroke="{v["line"]}" stroke-width="{width}"{dash}/>')
+        body.append(f'<path d="{d}" fill="none" stroke="{v["line"]}" stroke-width="{width}"/>')
         body.append(f'<path d="{d}" fill="none" stroke="{v["fill"]}" stroke-width="{width - 3}"/>')
+        if not v["alt"]:
+            trace.append(d)
         mid = len(paths[name]) // 2
         (ax, ay), (mx, my), (bx, by) = paths[name][mid - 1 : mid + 2]
         nx, ny = ay - by, bx - ax
@@ -365,10 +367,19 @@ def bandage(nodes, edges, pad=36, width=14):
             nx, ny = -nx, -ny
         d = math.hypot(nx, ny)
         x, y = mx + nx / d * (halo / 2 + 4), my + ny / d * (halo / 2 + 4)
+        color = "#999999" if v["far"] else None
         if ny > 0:
-            body += [text(x, y + 11, name, 12, bold=True), text(x, y + 23, v["label"], 10)]
+            body += [text(x, y + 11, name, 12, bold=not v["far"], color=color), text(x, y + 23, v["label"], 10, color=color)]
         else:
-            body += [text(x, y - 14, name, 12, bold=True), text(x, y - 2, v["label"], 10)]
+            body += [text(x, y - 14, name, 12, bold=not v["far"], color=color), text(x, y - 2, v["label"], 10, color=color)]
+    ref = sorted((n for n in nodes if not nodes[n]["alt"]), key=lambda n: paths[n][0][0])
+    (sx, sy), (ex, ey) = paths[ref[0]][0], paths[ref[-1]][-1]
+    body += [f'<path d="{d}" fill="none" stroke="{BLUE[2]}" stroke-width="1.5"/>' for d in trace]
+    body += [
+        f'<path d="M{ex:.1f},{ey:.1f} l8,0" stroke="{BLUE[2]}" stroke-width="1.5" marker-end="url(#ref-arrow)"/>',
+        f'<defs><marker id="ref-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="{BLUE[2]}"/></marker></defs>',
+        text(sx - 8, sy + 4, "chr1 path", 11, color=BLUE[2], anchor="end"),
+    ]
     w, h = max(xs) - left + pad + 20, max(ys) - top + pad
     return w, h, "\n".join(body)
 
@@ -403,7 +414,7 @@ def overview_graphs(segs, links):
             "label": coordinate(v["seq"], start, end),
             "alt": alt,
             "far": n in far,
-            "line": (ORANGE if alt else BLUE)[2],
+            "line": "#9fb3d1" if n in far else (ORANGE if alt else BLUE)[2],
             "fill": BLUE[0] if n in far else (ORANGE if alt else BLUE)[1],
             "query": ((lo - start) / (end - start), (hi - start) / (end - start)) if v["seq"] == seq and lo < hi else None,
         }
