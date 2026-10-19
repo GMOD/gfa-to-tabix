@@ -342,7 +342,7 @@
 <defs><marker id="ref-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a6fa5"/></marker></defs>
 <text x="48.0" y="97.3" text-anchor="end" font-family="Helvetica,sans-Serif" font-size="11" fill="#4a6fa5">chr1 path</text>
 <path d="M56.0,161.22971591108092 V167.22971591108092 H325.2 V161.22971591108092" fill="none" stroke="#555555" stroke-width="1.2"/>
-<text x="190.6" y="183.2" text-anchor="middle" font-family="Helvetica,sans-Serif" font-size="11" fill="#555555">one query returns chr1:10-40, the whole bubble</text>
+<text x="190.6" y="183.2" text-anchor="middle" font-family="Helvetica,sans-Serif" font-size="11" fill="#555555">a query at chr1:25-30 brings back the bubble out to chr1:10-40</text>
 </g>
 <!-- end bandage -->
 <!-- hits&#45;&gt;drawn -->

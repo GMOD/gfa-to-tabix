@@ -5,13 +5,13 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 - **In:** a GFA from minigraph, Minigraph-Cactus, pggb, odgi or vg
 - **Out:** Tabix-indexed BED files, each row filed under a reference interval:
   - the graph's nodes and links, one row each
-  - every haplotype's path through the graph, with `--walks`
-- **Why:** the browser gets each region's subgraph with HTTP range requests and never downloads the whole graph
-- The [JBrowse 2](https://jbrowse.org) graph track reads the files. One static binary does the conversion, with no gfatools, bgzip or tabix
+  - or, with `--walks` on a base-level graph, every haplotype's path through it
+- **Why:** a browser fetches only the rows for a region, with HTTP range requests, and never downloads the whole graph
+- The [JBrowse 2](https://jbrowse.org) graph track reads the files. One static binary does the conversion, with no bgzip or tabix; `build` uses gfatools, when installed, for an rGFA's bubbles
 
 ![A five-node graph, its node rows queried at chr1:25-30, and the nodes and links a browser draws from the rows returned](docs/figures/overview.svg)
 
-The tool files each bubble's nodes and links under the reference span the bubble hangs from, so one query anywhere inside it returns the whole bubble.
+The tool files each bubble's alleles and their links under the reference span the bubble hangs from, so a query anywhere inside that span returns every allele of the bubble.
 
 ## Quick start
 
@@ -27,13 +27,13 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 
 - `build` writes the index and everything else a JBrowse graph track reads, including a track config for the assembly `--assembly` names
 - [Load the files in JBrowse](docs/jbrowse.md)
-- Without `build`, the tool writes only the index: `hprc.segs.bed.gz` and `hprc.links.bed.gz`, each with a `.tbi`
+- `./gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc`, without `build`, writes only the index: `hprc.segs.bed.gz` and `hprc.links.bed.gz`, each with a `.tbi`
 - [Releases](https://github.com/GMOD/gfa-to-tabix/releases) also has a macOS binary for Apple silicon, and `cargo install gfa-to-tabix` builds one with Rust 1.91 or later
 
 ## Haplotype paths
 
 ```bash
-gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
+./gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
 ```
 
 - **In:** a base-level graph with W or P lines, such as `vg convert -f` writes from a GBZ
@@ -56,7 +56,7 @@ gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
 
 - [jbrowse-plugin-graphgenomeviewer](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer): the JBrowse 2 plugin that browses these graphs by locus
 - [JBrowse pangenome tutorials](https://jbrowse.org/jb2/docs/tutorials/pangenome_prepare_graph/)
-- [BandageJS](https://github.com/GMOD/BandageJS) and [sequenceTubeMap](https://github.com/cmdcolin/sequenceTubeMap): whole-graph viewers in the browser
+- [BandageJS](https://github.com/GMOD/BandageJS) and [sequenceTubeMap](https://github.com/cmdcolin/sequenceTubeMap): graph viewers in the browser
 - [gfa-to-pairwise-paf](https://github.com/cmdcolin/gfa-to-pairwise-paf-rs): graph to PAF, for synteny views
 
 ## License

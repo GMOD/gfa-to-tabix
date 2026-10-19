@@ -1,6 +1,6 @@
 # Subcommands
 
-Each subcommand writes one more file a graph track reads:
+What each subcommand writes:
 
 | Subcommand              | Writes                                                           |
 | ----------------------- | ---------------------------------------------------------------- |

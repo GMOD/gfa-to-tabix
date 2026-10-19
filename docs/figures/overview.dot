@@ -53,7 +53,7 @@ digraph overview {
           <TR><TD ALIGN="RIGHT" HEIGHT="18"><FONT COLOR="#999999">s4</FONT>  </TD><TD></TD><TD COLSPAN="10"></TD><TD COLSPAN="2" BGCOLOR="#fff3b0"></TD><TD COLSPAN="4" BGCOLOR="#e4e4e4"></TD><TD></TD><TD ALIGN="LEFT"></TD></TR>
           <!-- end lanes -->
           <!-- begin caption -->
-          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">s5 lies off chr1, so the tool files it under the whole span its bubble hangs from, chr1:10-40.<BR/>The tool files each link to cover both its nodes, so any query inside chr1:10-40 returns the whole bubble.</FONT></TD></TR>
+          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="20" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">s5 lies off chr1, so the tool files it under the whole span its bubble hangs from, chr1:10-40.<BR/>The tool files each link to cover both its nodes, so any query inside chr1:10-40 returns s5 and its links.</FONT></TD></TR>
           <!-- end caption -->
         </TABLE>>]
     }

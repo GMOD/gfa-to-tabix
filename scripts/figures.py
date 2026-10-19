@@ -84,7 +84,7 @@ def simple_caption(segs):
     span = coordinate(*off[0:3])
     text = (
         f"{off[3]} lies off {off[0]}, so the tool files it under the whole span its bubble hangs from, {span}.\n"
-        f"The tool files each link to cover both its nodes, so any query inside {span} returns the whole bubble."
+        f"The tool files each link to cover both its nodes, so any query inside {span} returns {off[3]} and its links."
     )
     return [caption(20, text, 110, "#555555")]
 
@@ -385,7 +385,7 @@ def bandage(nodes, edges, pad=36, width=14):
     by = max(ys) - top + pad + 22
     body += [
         f'<path d="M{sx:.1f},{by - 6} V{by} H{ex:.1f} V{by - 6}" fill="none" stroke="#555555" stroke-width="1.2"/>',
-        text((sx + ex) / 2, by + 16, f"one query returns {extent}, the whole bubble", 11, color="#555555"),
+        text((sx + ex) / 2, by + 16, f"a query at {coordinate(*QUERY)} brings back the bubble out to {extent}", 11, color="#555555"),
     ]
     w, h = max(xs) - left + pad + 20, by + 26
     return w, h, "\n".join(body)

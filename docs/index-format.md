@@ -50,15 +50,16 @@ so that they come back, and `--layout` sets how it chooses.
 **`anchored`** (default):
 
 - The tool files a reference node (rank 0) under its coordinate
-- It files every other node under the reference interval its bubble hangs
-  from. The nodes joined to it without passing through the reference form one
+- The tool files every other node under the reference interval its bubble
+  hangs from. The nodes joined to it without passing through the reference form one
   component, whose interval runs from the first to the last reference node it
   links to
-- One query on each file then returns the whole graph under a region, however
-  deeply alleles nest. A window inside a large bubble returns all of that bubble
-- It files a link under the interval that covers what both of its nodes reach:
-  a component's interval for a node in one, and for a reference node its
+- The tool files a link under the interval that covers what both of its nodes
+  reach: a component's interval for a node in one, and for a reference node its
   coordinate, the components hanging from it and the reference nodes it links to
+- One query on each file then returns the whole graph under a region, however
+  deeply alleles nest. A window inside a large bubble returns every allele of
+  that bubble
 - A region query on the link file returns every link with a node under the
   region and every link between the nodes those lead to. It also returns links
   of neither kind, so a reader keeps a link when one of its nodes came back from
