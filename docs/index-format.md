@@ -106,16 +106,11 @@ The tool sorts rows by sequence name in byte order, then by start.
 
 ## Scale
 
-The tool holds the whole graph in memory. On a laptop, with HPRC release 2's
-`hprc-v2.1-mc-grch38.sv.gfa.gz` (759,223 nodes, 1,107,199 links, 841 MB gzipped):
-
-| Layout     | Time   | Peak memory | Both `.tbi` files                 |
-| ---------- | ------ | ----------- | --------------------------------- |
-| `anchored` | ~12 s  | 0.9 GB      | 0.5 MB                            |
-| `contig`   | ~20 s  | 2.1 GB      | 9 MB, inflating to 635 MB each    |
-
-- A Tabix index spends 8 bytes per 16 kb of every contig, which makes the
-  `contig` indexes large
+- The tool holds the whole graph in memory. HPRC's whole-genome SV rGFA
+  indexes in seconds on a laptop, in about a gigabyte with `anchored` and about
+  twice that with `contig`
+- The `contig` indexes are much larger than the `anchored` ones, because a
+  Tabix index spends 8 bytes per 16 kb of every contig
 - Memory grows with total path length, so for a base-level graph of a human
   chromosome use [`--walks`](walks.md)
 - A Tabix index holds coordinates up to 512 Mb, so the tool cannot index a
@@ -127,12 +122,10 @@ A Tabix query reads every row filed in the bins above the window, overlapping
 or not. A component with a wide interval adds its rows to every query inside its
 bin, and the added bytes grow with the component's node count.
 
-- **Measured:** `chr22.sv.gfa.gz` has 3 filed intervals over 1 Mb, each holding
-  one row, and 51 over 128 kb, holding 763 rows. A 100 kb window fetches a
-  median 6.9× the bytes of its overlapping node rows and 10.3× for links, mostly
-  from the 16 kb bin floor
-- **Scope:** the figures cover chr22 and count uncompressed rows, so genome-wide
-  HPRC and BGZF block bytes are unmeasured
+- **Effect on chr22:** wide intervals are few and hold few rows. A window still
+  fetches several times the bytes of the rows it overlaps, mostly because
+  Tabix's smallest bin spans 16 kb
+- **Unmeasured:** genome-wide HPRC, and compressed bytes
 - **Cause:** `widen` in `src/anchor.rs` keeps one minimum and maximum per
   reference sequence, so a component attached at 1 Mb and 40 Mb files as 1-40 Mb.
   A reference node's links share the interval of its deletion link

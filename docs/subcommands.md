@@ -46,8 +46,8 @@ Each `.bed.gz` gets a `.tbi`.
 - `zstd -dc graph.gfa.zst | gfa-to-tabix build - -o graph` reads other
   compression
 - `build` replaced JBrowse's retired `build_pangenome_graph.sh`, which read the
-  graph four times. `build` parses it once and writes the files concurrently:
-  0.77 s against the script's 2.46 s on a 59 MB chr22 SV rGFA
+  graph four times. `build` parses it once and writes the files concurrently,
+  about three times faster on a chr22 SV rGFA
 
 The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 `null` for one not written, so it works wherever the set is hosted:
@@ -141,8 +141,8 @@ gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
   `foldVariants`, ported. `scripts/parity-fold.sh` compares the rows with
   `bandage-fold | gfa-to-tabix -` byte for byte, at five sizes and both
   layouts, and CI runs it
-- On HPRC release 2.1's SV rGFA the fold takes 12 s and 640 MB. `bandage-fold`
-  cannot read that graph: Node refuses the 3.5 GB of text as one string
+- The fold takes seconds on HPRC release 2.1's whole-genome SV rGFA, which
+  `bandage-fold` cannot read: Node refuses that much text as one string
 
 ## paths
 

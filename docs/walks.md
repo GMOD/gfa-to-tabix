@@ -55,60 +55,47 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 
 ## Paralogs and collapsed repeats
 
-[ADR 0001](adr/0001-step-placement.md) gives the placement rules, the
-alternatives tried and the pggb measurements below.
-
 - **Paralog jumps:** in a segmental duplication, a haplotype can step onto the
   reference nodes of a distant paralog and back. The steps after the jump take
   the paralog's chunk, so a window at the haplotype's own locus shows the
-  haplotype in more pieces and leaves out some of its inserted nodes. Before
-  `--stay`, on HPRC v2.1 Minigraph-Cactus chr22 the tool filed fewer than 0.1%
-  of steps away from their locus, in at most 74 of the 1,130 paths besides GRCh38's, nearly all in
-  the 22q11 low-copy repeats, counted from chr22's W lines
+  haplotype in more pieces and leaves out some of its inserted nodes. On
+  Minigraph-Cactus graphs this is rare and sits almost entirely in low-copy
+  repeats such as 22q11's
 - **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes,
   so the reference path passes those nodes more than once, often megabases
-  apart. On HPRC release 2's pggb chr22, 28% of GRCh38's steps and 74% of
-  CHM13's land on such a node. Minigraph-Cactus's GRCh38 has none
+  apart. pggb graphs have many such nodes; Minigraph-Cactus's GRCh38 path has
+  none
 - **Nearest pass:** a step on such a node takes the pass nearest the offset the
   path's last placed step predicts. Filing every step at the node's first pass
-  gave pggb chr22's GRCh38 file 95 M walk rows (1.65 GB), against 253 k for
-  Minigraph-Cactus, because each hop between passes started a new piece
+  instead split each haplotype into a piece per hop and made pggb walk files
+  dozens of times larger than Minigraph-Cactus's
 - **Stay:** `--stay` then keeps short runs elsewhere in the current piece. On
   a graph whose reference passes no node twice, such as Minigraph-Cactus on
-  GRCh38, the default stay of 311 changes the rows that versions without `--stay` wrote,
-  and `--stay 0` keeps them. The ADR records the default as open
-- **Coverage on pggb chr22:** at the file's lookback, a window shows 97.3–98.3%
-  of the (haplotype, chunk) pairs whose bases align there in impg's alignments. The GRCh38
-  satellite (43–46%) and the CHM13 short arm (74–76%) stay weak at a one-chunk
-  lookback
-- **Cost on pggb chr22 at stay 311:** 31 GRCh38 windows and 174 CHM13 windows
-  fetch over 8 MB gzipped. The costliest, chr22:12.6–13.0M on GRCh38, fetches
-  205 MB, and the CHM13 short arm exceeds 32 M steps in 516 windows, because
-  filing moves no steps out of a chunk
+  GRCh38, the default stay changes the rows that versions without `--stay`
+  wrote, and `--stay 0` keeps them. The default is still open
+- **What to expect on pggb:** a window shows nearly every haplotype whose
+  sequence aligns there, except in satellites and CHM13's short arm. Windows in
+  repeat-dense regions still fetch far more than Minigraph-Cactus windows do,
+  so they load slowly
+- [ADR 0001](adr/0001-step-placement.md) gives the placement rules, the
+  alternatives tried and the measurements behind these points
 
 ## Scale
 
 - The tool reads the GFA twice, so it takes a file path; gzip input works
-- The tool holds about 16 bytes per node, 24 more per node for each reference, and
-  with `--sequences` the graph's bases
+- The tool holds about 16 bytes per node, 24 more per node for each reference,
+  and with `--sequences` the graph's bases
 - Pieces wait for an external sort in up to 512 MB of memory and then in
   compressed runs in a temporary directory beside the output. The sort's merge
   encodes the chunks on every core
-
-On a Minigraph-Cactus chr22 (3.1 M nodes, 4.7 M links, 1,131 paths, 630 M
-steps, a 5.0 GB GFA) with `--refs GRCh38,CHM13`:
-
-- The tool runs in about 2.5 min from the gzipped GFA and peaks at 1.8 GB on a
-  16-core laptop
+- A Minigraph-Cactus chromosome with two references takes minutes and a few GB
+  of memory on a laptop
 - The first read refuses a W line that repeats or overlaps another of its
-  contig, or whose end column disagrees with its steps, so a bad chr22 fails
-  in about 30 s, before the second read
-- The two files total 71 MB, where format 1's six took 408 MB. GRCh38's index
-  is 10 KB, and the header is under 10 KB, which the file's first BGZF block
-  holds
-- A read of two chunks, which every window makes, fetches 0.05 MB at the
-  median and 0.5 MB at the 99th percentile, about 0.14 of format 1's
-  (`docs/format-2/scripts/window_sizes.py`)
+  contig, or whose end column disagrees with its steps, so a malformed file
+  fails before the slow second read
+- The header fits in the file's first BGZF block, and a window reads two
+  chunks, so a reader fetches a small fraction of a megabyte per window
+  (`docs/format-2/scripts/window_sizes.py` measures it)
 
 ## Readers
 
