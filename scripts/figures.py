@@ -83,10 +83,10 @@ def simple_caption(segs):
     off = next(r for r in segs if r[4] != "0")
     span = coordinate(*off[0:3])
     text = (
-        f"{off[3]} lies off {off[0]}, so the tool files it under the span it hangs from, {span}.\n"
-        f"The tool files each link in {PREFIX}.links.bed.gz under the span its two nodes cover."
+        f"{off[3]} lies off {off[0]}, so the tool files it under the whole span its bubble hangs from, {span}.\n"
+        f"The tool files each link to cover both its nodes, so any query inside {span} returns the whole bubble."
     )
-    return [caption(20, text, 84, "#555555")]
+    return [caption(20, text, 110, "#555555")]
 
 
 def segs_table(segs):
@@ -380,7 +380,14 @@ def bandage(nodes, edges, pad=36, width=14):
         f'<defs><marker id="ref-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="{BLUE[2]}"/></marker></defs>',
         text(sx - 8, sy + 4, "chr1 path", 11, color=BLUE[2], anchor="end"),
     ]
-    w, h = max(xs) - left + pad + 20, max(ys) - top + pad
+    first, last = nodes[ref[0]], nodes[ref[-1]]
+    extent = coordinate(first["seq"], first["start"], last["end"])
+    by = max(ys) - top + pad + 22
+    body += [
+        f'<path d="M{sx:.1f},{by - 6} V{by} H{ex:.1f} V{by - 6}" fill="none" stroke="#555555" stroke-width="1.2"/>',
+        text((sx + ex) / 2, by + 16, f"one query returns {extent}, the whole bubble", 11, color="#555555"),
+    ]
+    w, h = max(xs) - left + pad + 20, by + 26
     return w, h, "\n".join(body)
 
 
@@ -410,6 +417,9 @@ def overview_graphs(segs, links):
         alt = v["rank"] != "0"
         tubes[n] = {
             "bp": end - start,
+            "seq": v["seq"],
+            "start": start,
+            "end": end,
             "seed": seeds[n],
             "label": coordinate(v["seq"], start, end),
             "alt": alt,

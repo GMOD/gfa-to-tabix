@@ -102,9 +102,9 @@ digraph overview {
     }
 
     subgraph cluster_drawn {
-      label=<<B>4. What the browser draws</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">the blue line traces chr1's path, and yellow marks chr1:25-30 on s3<BR ALIGN="LEFT"/>the pale nodes lie outside the query and come from the link rows alone</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>4. What the browser draws</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">yellow marks the window, chr1:25-30, and the blue line traces chr1's path<BR ALIGN="LEFT"/>the pale nodes lie outside the window and come from the link rows alone</FONT><BR ALIGN="LEFT"/>>
       // begin drawn
-      drawn [shape=box, style="", color=transparent, label="", fixedsize=true, width=5.29, height=2.02]
+      drawn [shape=box, style="", color=transparent, label="", fixedsize=true, width=5.29, height=2.68]
       // end drawn
     }
   }

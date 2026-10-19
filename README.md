@@ -11,6 +11,8 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 
 ![A five-node graph, its node rows queried at chr1:25-30, and the nodes and links a browser draws from the rows returned](docs/figures/overview.svg)
 
+The tool files each bubble's nodes and links under the reference span the bubble hangs from, so one query anywhere inside it returns the whole bubble.
+
 ## Quick start
 
 ```bash
