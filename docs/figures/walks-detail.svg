@@ -24,9 +24,9 @@
 </g>
 <g id="clust5" class="cluster">
 <title>cluster_rebuilt</title>
-<path fill="#fafafa" stroke="#bbbbbb" d="M134,-8C134,-8 548,-8 548,-8 554,-8 560,-14 560,-20 560,-20 560,-183.64 560,-183.64 560,-189.64 554,-195.64 548,-195.64 548,-195.64 134,-195.64 134,-195.64 128,-195.64 122,-189.64 122,-183.64 122,-183.64 122,-20 122,-20 122,-14 128,-8 134,-8"/>
-<text xml:space="preserve" text-anchor="start" x="130" y="-179.34" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">3. What the reader rebuilds</text>
-<text xml:space="preserve" text-anchor="start" x="130" y="-167.24" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">R with each walk&#39;s routes spliced in</text>
+<path fill="#fafafa" stroke="#bbbbbb" d="M130,-8C130,-8 552,-8 552,-8 558,-8 564,-14 564,-20 564,-20 564,-183.64 564,-183.64 564,-189.64 558,-195.64 552,-195.64 552,-195.64 130,-195.64 130,-195.64 124,-195.64 118,-189.64 118,-183.64 118,-183.64 118,-20 118,-20 118,-14 124,-8 130,-8"/>
+<text xml:space="preserve" text-anchor="start" x="126" y="-179.34" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">3. What the reader rebuilds</text>
+<text xml:space="preserve" text-anchor="start" x="126" y="-167.24" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">R with each walk&#39;s routes spliced in</text>
 </g>
 <!-- n1 -->
 <g id="node1" class="node">
@@ -170,57 +170,58 @@
 <!-- rebuilt -->
 <g id="node8" class="node">
 <title>rebuilt</title>
-<text xml:space="preserve" text-anchor="start" x="154.88" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">GRCh38#0</text>
-<polygon fill="#e8eef7" stroke="none" points="227.38,-115.07 227.38,-139.32 287.38,-139.32 287.38,-115.07 227.38,-115.07"/>
-<polygon fill="none" stroke="#ffffff" points="227.38,-115.07 227.38,-139.32 287.38,-139.32 287.38,-115.07 227.38,-115.07"/>
-<text xml:space="preserve" text-anchor="start" x="253.62" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">1</text>
-<polygon fill="#e8eef7" stroke="none" points="291.38,-115.07 291.38,-139.32 351.38,-139.32 351.38,-115.07 291.38,-115.07"/>
-<polygon fill="none" stroke="#ffffff" points="291.38,-115.07 291.38,-139.32 351.38,-139.32 351.38,-115.07 291.38,-115.07"/>
-<text xml:space="preserve" text-anchor="start" x="317.62" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">2</text>
-<polygon fill="#e8eef7" stroke="none" points="355.38,-115.07 355.38,-139.32 415.38,-139.32 415.38,-115.07 355.38,-115.07"/>
-<polygon fill="none" stroke="#ffffff" points="355.38,-115.07 355.38,-139.32 415.38,-139.32 415.38,-115.07 355.38,-115.07"/>
+<text xml:space="preserve" text-anchor="start" x="150.88" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">GRCh38#0</text>
+<polygon fill="#e8eef7" stroke="none" points="223.38,-115.07 223.38,-139.32 283.38,-139.32 283.38,-115.07 223.38,-115.07"/>
+<polygon fill="none" stroke="#ffffff" points="223.38,-115.07 223.38,-139.32 283.38,-139.32 283.38,-115.07 223.38,-115.07"/>
+<text xml:space="preserve" text-anchor="start" x="249.62" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">1</text>
+<polygon fill="#e8eef7" stroke="none" points="287.38,-115.07 287.38,-139.32 347.38,-139.32 347.38,-115.07 287.38,-115.07"/>
+<polygon fill="none" stroke="#ffffff" points="287.38,-115.07 287.38,-139.32 347.38,-139.32 347.38,-115.07 287.38,-115.07"/>
+<text xml:space="preserve" text-anchor="start" x="313.62" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">2</text>
+<polygon fill="#e8eef7" stroke="none" points="351.38,-115.07 351.38,-139.32 419.38,-139.32 419.38,-115.07 351.38,-115.07"/>
+<polygon fill="none" stroke="#ffffff" points="351.38,-115.07 351.38,-139.32 419.38,-139.32 419.38,-115.07 351.38,-115.07"/>
 <text xml:space="preserve" text-anchor="start" x="381.62" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">3</text>
-<polygon fill="#e8eef7" stroke="none" points="419.38,-115.07 419.38,-139.32 479.38,-139.32 479.38,-115.07 419.38,-115.07"/>
-<polygon fill="none" stroke="#ffffff" points="419.38,-115.07 419.38,-139.32 479.38,-139.32 479.38,-115.07 419.38,-115.07"/>
-<text xml:space="preserve" text-anchor="start" x="445.62" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">4</text>
-<text xml:space="preserve" text-anchor="start" x="159.38" y="-94.67" font-family="Helvetica,sans-Serif" font-size="12.00">CHM13#0</text>
-<polygon fill="#e8eef7" stroke="none" points="227.38,-86.82 227.38,-111.07 287.38,-111.07 287.38,-86.82 227.38,-86.82"/>
-<polygon fill="none" stroke="#ffffff" points="227.38,-86.82 227.38,-111.07 287.38,-111.07 287.38,-86.82 227.38,-86.82"/>
-<text xml:space="preserve" text-anchor="start" x="253.62" y="-94.67" font-family="Helvetica,sans-Serif" font-size="12.00">1</text>
-<polygon fill="#e8eef7" stroke="none" points="291.38,-86.82 291.38,-111.07 351.38,-111.07 351.38,-86.82 291.38,-86.82"/>
-<polygon fill="none" stroke="#ffffff" points="291.38,-86.82 291.38,-111.07 351.38,-111.07 351.38,-86.82 291.38,-86.82"/>
-<text xml:space="preserve" text-anchor="start" x="317.62" y="-94.67" font-family="Helvetica,sans-Serif" font-size="12.00">2</text>
-<polygon fill="#e8eef7" stroke="none" points="419.38,-86.82 419.38,-111.07 479.38,-111.07 479.38,-86.82 419.38,-86.82"/>
-<polygon fill="none" stroke="#ffffff" points="419.38,-86.82 419.38,-111.07 479.38,-111.07 479.38,-86.82 419.38,-86.82"/>
-<text xml:space="preserve" text-anchor="start" x="445.62" y="-94.67" font-family="Helvetica,sans-Serif" font-size="12.00">4</text>
-<text xml:space="preserve" text-anchor="start" x="487.38" y="-95.25" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#8a5fb0">route 0</text>
-<text xml:space="preserve" text-anchor="start" x="161.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">HG002#1</text>
-<polygon fill="#e8eef7" stroke="none" points="227.38,-58.57 227.38,-82.82 287.38,-82.82 287.38,-58.57 227.38,-58.57"/>
-<polygon fill="none" stroke="#ffffff" points="227.38,-58.57 227.38,-82.82 287.38,-82.82 287.38,-58.57 227.38,-58.57"/>
-<text xml:space="preserve" text-anchor="start" x="253.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">1</text>
-<polygon fill="#e8eef7" stroke="none" points="291.38,-58.57 291.38,-82.82 351.38,-82.82 351.38,-58.57 291.38,-58.57"/>
-<polygon fill="none" stroke="#ffffff" points="291.38,-58.57 291.38,-82.82 351.38,-82.82 351.38,-58.57 291.38,-58.57"/>
-<text xml:space="preserve" text-anchor="start" x="317.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">2</text>
-<polygon fill="#fde6cf" stroke="none" points="355.38,-58.57 355.38,-82.82 415.38,-82.82 415.38,-58.57 355.38,-58.57"/>
-<polygon fill="none" stroke="#ffffff" points="355.38,-58.57 355.38,-82.82 415.38,-82.82 415.38,-58.57 355.38,-58.57"/>
+<polygon fill="#e8eef7" stroke="none" points="423.38,-115.07 423.38,-139.32 483.38,-139.32 483.38,-115.07 423.38,-115.07"/>
+<polygon fill="none" stroke="#ffffff" points="423.38,-115.07 423.38,-139.32 483.38,-139.32 483.38,-115.07 423.38,-115.07"/>
+<text xml:space="preserve" text-anchor="start" x="449.62" y="-122.92" font-family="Helvetica,sans-Serif" font-size="12.00">4</text>
+<text xml:space="preserve" text-anchor="start" x="155.38" y="-94.67" font-family="Helvetica,sans-Serif" font-size="12.00">CHM13#0</text>
+<polygon fill="#e8eef7" stroke="none" points="223.38,-86.82 223.38,-111.07 283.38,-111.07 283.38,-86.82 223.38,-86.82"/>
+<polygon fill="none" stroke="#ffffff" points="223.38,-86.82 223.38,-111.07 283.38,-111.07 283.38,-86.82 223.38,-86.82"/>
+<text xml:space="preserve" text-anchor="start" x="249.62" y="-94.67" font-family="Helvetica,sans-Serif" font-size="12.00">1</text>
+<polygon fill="#e8eef7" stroke="none" points="287.38,-86.82 287.38,-111.07 347.38,-111.07 347.38,-86.82 287.38,-86.82"/>
+<polygon fill="none" stroke="#ffffff" points="287.38,-86.82 287.38,-111.07 347.38,-111.07 347.38,-86.82 287.38,-86.82"/>
+<text xml:space="preserve" text-anchor="start" x="313.62" y="-94.67" font-family="Helvetica,sans-Serif" font-size="12.00">2</text>
+<polygon fill="#8a5fb0" stroke="none" points="351.38,-97.45 351.38,-100.45 419.38,-100.45 419.38,-97.45 351.38,-97.45"/>
+<polygon fill="#e8eef7" stroke="none" points="423.38,-86.82 423.38,-111.07 483.38,-111.07 483.38,-86.82 423.38,-86.82"/>
+<polygon fill="none" stroke="#ffffff" points="423.38,-86.82 423.38,-111.07 483.38,-111.07 483.38,-86.82 423.38,-86.82"/>
+<text xml:space="preserve" text-anchor="start" x="449.62" y="-94.67" font-family="Helvetica,sans-Serif" font-size="12.00">4</text>
+<text xml:space="preserve" text-anchor="start" x="491.38" y="-95.25" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#8a5fb0">route 0</text>
+<text xml:space="preserve" text-anchor="start" x="157.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">HG002#1</text>
+<polygon fill="#e8eef7" stroke="none" points="223.38,-58.57 223.38,-82.82 283.38,-82.82 283.38,-58.57 223.38,-58.57"/>
+<polygon fill="none" stroke="#ffffff" points="223.38,-58.57 223.38,-82.82 283.38,-82.82 283.38,-58.57 223.38,-58.57"/>
+<text xml:space="preserve" text-anchor="start" x="249.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">1</text>
+<polygon fill="#e8eef7" stroke="none" points="287.38,-58.57 287.38,-82.82 347.38,-82.82 347.38,-58.57 287.38,-58.57"/>
+<polygon fill="none" stroke="#ffffff" points="287.38,-58.57 287.38,-82.82 347.38,-82.82 347.38,-58.57 287.38,-58.57"/>
+<text xml:space="preserve" text-anchor="start" x="313.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">2</text>
+<polygon fill="#fde6cf" stroke="none" points="351.38,-58.57 351.38,-82.82 419.38,-82.82 419.38,-58.57 351.38,-58.57"/>
+<polygon fill="none" stroke="#ffffff" points="351.38,-58.57 351.38,-82.82 419.38,-82.82 419.38,-58.57 351.38,-58.57"/>
 <text xml:space="preserve" text-anchor="start" x="381.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">5</text>
-<polygon fill="#e8eef7" stroke="none" points="419.38,-58.57 419.38,-82.82 479.38,-82.82 479.38,-58.57 419.38,-58.57"/>
-<polygon fill="none" stroke="#ffffff" points="419.38,-58.57 419.38,-82.82 479.38,-82.82 479.38,-58.57 419.38,-58.57"/>
-<text xml:space="preserve" text-anchor="start" x="445.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">4</text>
-<text xml:space="preserve" text-anchor="start" x="487.38" y="-67" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#c77a2b">route 1</text>
-<text xml:space="preserve" text-anchor="start" x="161.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">HG002#2</text>
-<polygon fill="#e8eef7" stroke="none" points="227.38,-30.32 227.38,-54.57 287.38,-54.57 287.38,-30.32 227.38,-30.32"/>
-<polygon fill="none" stroke="#ffffff" points="227.38,-30.32 227.38,-54.57 287.38,-54.57 287.38,-30.32 227.38,-30.32"/>
-<text xml:space="preserve" text-anchor="start" x="253.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">1</text>
-<polygon fill="#e8eef7" stroke="none" points="291.38,-30.32 291.38,-54.57 351.38,-54.57 351.38,-30.32 291.38,-30.32"/>
-<polygon fill="none" stroke="#ffffff" points="291.38,-30.32 291.38,-54.57 351.38,-54.57 351.38,-30.32 291.38,-30.32"/>
-<text xml:space="preserve" text-anchor="start" x="317.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">2</text>
-<polygon fill="#e8eef7" stroke="none" points="355.38,-30.32 355.38,-54.57 415.38,-54.57 415.38,-30.32 355.38,-30.32"/>
-<polygon fill="none" stroke="#ffffff" points="355.38,-30.32 355.38,-54.57 415.38,-54.57 415.38,-30.32 355.38,-30.32"/>
+<polygon fill="#e8eef7" stroke="none" points="423.38,-58.57 423.38,-82.82 483.38,-82.82 483.38,-58.57 423.38,-58.57"/>
+<polygon fill="none" stroke="#ffffff" points="423.38,-58.57 423.38,-82.82 483.38,-82.82 483.38,-58.57 423.38,-58.57"/>
+<text xml:space="preserve" text-anchor="start" x="449.62" y="-66.42" font-family="Helvetica,sans-Serif" font-size="12.00">4</text>
+<text xml:space="preserve" text-anchor="start" x="491.38" y="-67" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#c77a2b">route 1</text>
+<text xml:space="preserve" text-anchor="start" x="157.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">HG002#2</text>
+<polygon fill="#e8eef7" stroke="none" points="223.38,-30.32 223.38,-54.57 283.38,-54.57 283.38,-30.32 223.38,-30.32"/>
+<polygon fill="none" stroke="#ffffff" points="223.38,-30.32 223.38,-54.57 283.38,-54.57 283.38,-30.32 223.38,-30.32"/>
+<text xml:space="preserve" text-anchor="start" x="249.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">1</text>
+<polygon fill="#e8eef7" stroke="none" points="287.38,-30.32 287.38,-54.57 347.38,-54.57 347.38,-30.32 287.38,-30.32"/>
+<polygon fill="none" stroke="#ffffff" points="287.38,-30.32 287.38,-54.57 347.38,-54.57 347.38,-30.32 287.38,-30.32"/>
+<text xml:space="preserve" text-anchor="start" x="313.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">2</text>
+<polygon fill="#e8eef7" stroke="none" points="351.38,-30.32 351.38,-54.57 419.38,-54.57 419.38,-30.32 351.38,-30.32"/>
+<polygon fill="none" stroke="#ffffff" points="351.38,-30.32 351.38,-54.57 419.38,-54.57 419.38,-30.32 351.38,-30.32"/>
 <text xml:space="preserve" text-anchor="start" x="381.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">3</text>
-<polygon fill="#e8eef7" stroke="none" points="419.38,-30.32 419.38,-54.57 479.38,-54.57 479.38,-30.32 419.38,-30.32"/>
-<polygon fill="none" stroke="#ffffff" points="419.38,-30.32 419.38,-54.57 479.38,-54.57 479.38,-30.32 419.38,-30.32"/>
-<text xml:space="preserve" text-anchor="start" x="445.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">4</text>
+<polygon fill="#e8eef7" stroke="none" points="423.38,-30.32 423.38,-54.57 483.38,-54.57 483.38,-30.32 423.38,-30.32"/>
+<polygon fill="none" stroke="#ffffff" points="423.38,-30.32 423.38,-54.57 483.38,-54.57 483.38,-30.32 423.38,-30.32"/>
+<text xml:space="preserve" text-anchor="start" x="449.62" y="-38.17" font-family="Helvetica,sans-Serif" font-size="12.00">4</text>
 </g>
 <!-- rows&#45;&gt;rebuilt -->
 <g id="edge10" class="edge">

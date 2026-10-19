@@ -1,12 +1,18 @@
 # Subcommands
 
-Each subcommand writes one more file a graph track reads. `build` runs all of
-them from one read of the graph.
+Each subcommand writes one more file a graph track reads:
+
+| Subcommand              | Writes                                                           |
+| ----------------------- | ---------------------------------------------------------------- |
+| [build](#build)         | the index, contig layout, coarse tier, alleles, bubbles, manifest and JBrowse config, from one read of the graph |
+| [alleles](#alleles)     | one row per allele, anchored on the reference                    |
+| [bubbles](#bubbles)     | a plain GFA's bubbles, from a snarl VCF                          |
+| [fold](#fold)           | the coarse tier: the graph with small variants folded            |
+| [paths](#paths)         | one row per bubble and sample, from `minigraph --call`           |
 
 ## build
 
-`gfa-to-tabix build` writes everything a JBrowse graph track reads, from one
-read of the graph:
+`gfa-to-tabix build` writes everything a JBrowse graph track reads:
 
 ```bash
 gfa-to-tabix build hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc --assembly hg38
@@ -32,17 +38,16 @@ Each `.bed.gz` gets a `.tbi`.
 - `build` tells an rGFA from a plain GFA as
   [the index does](inputs.md#how-the-tool-tells-them-apart), and `--snarls`
   makes it a plain GFA
-- An rGFA's bubbles need `gfatools` on PATH, which reads the text alongside the
-  parse. Without it the build says so and writes no bubble file
+- An rGFA's bubbles need `gfatools` on PATH; `build` runs it on the text
+  alongside its own parse. Without it, `build` writes no bubble file and says so
 - A plain GFA's bubbles come from `--snarls`, a `vg deconstruct -a` snarl VCF;
   without one there is no bubble file
 - The config's coarse slot is `{ "uri": "hprc.fold10000", "foldBelowBp": 10000 }`
 - `zstd -dc graph.gfa.zst | gfa-to-tabix build - -o graph` reads other
   compression
-- It replaced JBrowse's retired `build_pangenome_graph.sh`. It parses the graph
-  once, where the script read it four times, and writes the index, tier,
-  alleles and bubbles concurrently: 0.77 s against the script's 2.46 s on a
-  59 MB chr22 SV rGFA
+- `build` replaced JBrowse's retired `build_pangenome_graph.sh`, which read the
+  graph four times. `build` parses it once and writes the files concurrently:
+  0.77 s against the script's 2.46 s on a 59 MB chr22 SV rGFA
 
 The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 `null` for one not written, so it works wherever the set is hosted:
@@ -66,18 +71,18 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 
 ## alleles
 
-`gfa-to-tabix alleles <prefix>` reads `<prefix>.segs.bed.gz` and
-`<prefix>.links.bed.gz`, indexed with `--layout contig`, and writes
-`<prefix>.alleles.bed.gz` with its index: one row per allele the graph holds,
-anchored on the reference, with a CIGAR that states its size. The graph itself
-is not needed, so a hosted pair works.
+- **In:** `<prefix>.segs.bed.gz` and `<prefix>.links.bed.gz`, indexed with
+  `--layout contig`. The command needs no graph, so a hosted pair works
+- **Out:** `<prefix>.alleles.bed.gz` and its index, one row per allele the graph
+  holds, anchored on the reference, with a CIGAR that states its size
 
 ```bash
 gfa-to-tabix hprc.sv.gfa.gz --layout contig -o hprc
 gfa-to-tabix alleles hprc
 ```
-- A link from a backbone node forward to a later one is a deletion. A link back to an earlier one is a duplication, which the inventory leaves out
-- A link from a backbone node forward to a later one is a deletion; a link back to an earlier one is not
+
+- A link from a backbone node forward to a later one is a deletion. A link back
+  to an earlier one is a duplication, which the inventory leaves out
 - A link from a backbone node to an off-backbone one enters an allele; the walk
   follows links until it arrives back on the backbone
 - A walk that never rejoins the backbone is dropped, and the count goes to
@@ -88,9 +93,9 @@ gfa-to-tabix alleles hprc
 ## bubbles
 
 `gfa-to-tabix bubbles --snarls <vcf> -o <prefix>` writes
-`<prefix>.bubbles.bed.gz` with its index from a `vg deconstruct` snarl VCF
-(`pggb -V` writes one too). It gives a plain GFA the bubble file that
-`gfatools bubble` gives an rGFA, which finds none on a plain GFA.
+`<prefix>.bubbles.bed.gz` and its index from a `vg deconstruct` snarl VCF
+(`pggb -V` writes one too). `gfatools bubble` finds no bubbles in a plain GFA,
+so this command gives a plain GFA the file `gfatools` gives an rGFA.
 
 ```bash
 vg deconstruct -P K12 -a graph.gbz > graph.snarls.vcf
@@ -105,11 +110,10 @@ gfa-to-tabix bubbles --snarls graph.snarls.vcf -o graph
 - Columns are `gfatools bubble`'s: chrom, start, end, segments, walks,
   inversion, shortest, longest, three `.`, and the segment ids, the first
   qualified by its reference start (`544433@3943363`)
-- `build` reads a step on a segment it turned forward
-  ([plain GFA](index-format.md#where-the-coordinates-come-from)) the other way
-  round, so a segment the reference reads reversed is no inversion. `bubbles`
-  alone has no graph to say which segments turned, and takes every `<` as
-  reverse
+- `build` knows which segments it turned forward
+  ([plain GFA](index-format.md#where-the-coordinates-come-from)), so a segment
+  the reference reads reversed is no inversion. `bubbles` alone has no graph to
+  say which turned, and takes every `<` as reverse
 
 ## fold
 
@@ -128,11 +132,11 @@ gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
 - `--layout` should match the fine index's, so a tier window returns what a fine
   window does. `--reference` takes a plain GFA's backbone path, as for the index
 - The graph track folds each cut it draws the same way, at ten of the linear
-  view's pixels, so a tier folded at N and handed over at N / 10 bp per pixel
-  draws close to what the fine cut drew just below the handover. The two differ
-  where the way back from a big allele to the backbone runs through part of a
-  small allele in one fold and not the other. In the track's config,
-  `coarse: { uri: "hprc.fold10000", aboveBpPerPx: 1000 }` is that handover
+  view's pixels. A tier folded at N and handed over at N / 10 bp per pixel
+  draws close to what the fine cut drew just below the handover:
+  `coarse: { uri: "hprc.fold10000", aboveBpPerPx: 1000 }` in the track's config
+- The two differ where the way back from a big allele to the backbone runs
+  through part of a small allele in one fold and not the other
 - The fold is [bandage-core](https://github.com/GMOD/bandage-core)'s
   `foldVariants`, ported. `scripts/parity-fold.sh` compares the rows with
   `bandage-fold | gfa-to-tabix -` byte for byte, at five sizes and both
@@ -142,11 +146,12 @@ gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
 
 ## paths
 
-`gfa-to-tabix paths -o <prefix> <ref.call.bed> [<sample.call.bed> ...]` writes
-`<prefix>.bed.gz` with its index: one row per bubble and sample, so a
-multi-row feature display partitioned on `strain` draws a lane per haplotype,
-each block that haplotype's allele at that bubble. The inputs are the files
-`minigraph --call` writes, one per sample and the reference's first:
+`gfa-to-tabix paths -o <prefix> <ref.call.bed> [<sample.call.bed> ...]`
+
+- **In:** the files `minigraph --call` writes, one per sample, the reference's first
+- **Out:** `<prefix>.bed.gz` and its index, one row per bubble and sample. A
+  multi-row feature display partitioned on `strain` draws a lane per haplotype,
+  each block that haplotype's allele at that bubble
 
 ```bash
 for fa in ref.fa s1.fa s2.fa; do

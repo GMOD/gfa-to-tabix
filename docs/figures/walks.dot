@@ -35,7 +35,7 @@ digraph walks {
 
     subgraph cluster_file {
       // begin label
-      label=<<B>2. graph.GRCh38.walks.bed.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">per 64 kb stretch of chr1: GRCh38's path and each route off it, once each,</FONT><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>2. graph.GRCh38.walks.bed.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">for each 64 kb stretch of chr1: GRCh38's path, each route off it, and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>
       // end label
       rows [shape=plaintext, style="", label=<
         <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD><TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6" COLOR="#aaaaaa">
@@ -57,7 +57,7 @@ digraph walks {
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="4" CELLPADDING="4" COLOR="#ffffff">
           <!-- begin rebuilt -->
           <TR><TD BORDER="0" ALIGN="RIGHT">GRCh38#0</TD><TD WIDTH="60" BGCOLOR="#e8eef7">1</TD><TD WIDTH="60" BGCOLOR="#e8eef7">2</TD><TD WIDTH="60" BGCOLOR="#e8eef7">3</TD><TD WIDTH="60" BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"></TD></TR>
-          <TR><TD BORDER="0" ALIGN="RIGHT">CHM13#0</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BORDER="0"></TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#8a5fb0">route 0</FONT></TD></TR>
+          <TR><TD BORDER="0" ALIGN="RIGHT">CHM13#0</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BORDER="0" CELLPADDING="0"><TABLE BORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD FIXEDSIZE="TRUE" HEIGHT="3" WIDTH="68" BGCOLOR="#8a5fb0"></TD></TR></TABLE></TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#8a5fb0">route 0</FONT></TD></TR>
           <TR><TD BORDER="0" ALIGN="RIGHT">HG002#1</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BGCOLOR="#fde6cf">5</TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"><FONT POINT-SIZE="11" COLOR="#c77a2b">route 1</FONT></TD></TR>
           <TR><TD BORDER="0" ALIGN="RIGHT">HG002#2</TD><TD BGCOLOR="#e8eef7">1</TD><TD BGCOLOR="#e8eef7">2</TD><TD BGCOLOR="#e8eef7">3</TD><TD BGCOLOR="#e8eef7">4</TD><TD BORDER="0" ALIGN="LEFT"></TD></TR>
           <!-- end rebuilt -->

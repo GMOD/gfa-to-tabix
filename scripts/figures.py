@@ -482,7 +482,9 @@ def splice(R, routes, first, last, choices):
             if len(interior) == skipped:
                 cells += [td(h[0], bg) for h in interior]
             elif not interior:
-                cells += [td(border=0) for _ in range(skipped)]
+                line = route_colors(routes[route_id])[-1]
+                bridge = f'<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD FIXEDSIZE="TRUE" HEIGHT="3" WIDTH="68" BGCOLOR="{line}"></TD></TR></TABLE>'
+                cells += [td(bridge, border=0, cellpadding=0) for _ in range(skipped)]
             else:
                 cells.append(td(" ".join(str(h[0]) for h in interior), bg, colspan=max(skipped, 1)))
             pos = R.index(exit_)
@@ -560,8 +562,8 @@ def walks_label(header, rows):
     grey = '<FONT POINT-SIZE="12" COLOR="#555555">'
     return [
         f'label=<<B>2. {PREFIX}.{REF}.walks.bed.gz</B><BR ALIGN="LEFT"/>'
-        f"{grey}per {chunk_size(header) // 1024} kb stretch of {contig}: {REF}'s path and each route off it, once each,</FONT>"
-        f'<BR ALIGN="LEFT"/>{grey}and the routes each haplotype takes</FONT><BR ALIGN="LEFT"/>>'
+        f"{grey}for each {chunk_size(header) // 1024} kb stretch of {contig}: {REF}'s path, each route off it, and the routes each haplotype takes</FONT>"
+        f'<BR ALIGN="LEFT"/>>'
     ]
 
 

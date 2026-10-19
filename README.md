@@ -23,7 +23,8 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ./gfa-to-tabix build ecoli.gfa.gz --reference K12 -o ecoli
 ```
 
-- `build` writes the index and everything else a JBrowse graph track reads
+- `build` writes the index and everything else a JBrowse graph track reads, including a track config for the assembly `--assembly` names
+- [Load the files in JBrowse](docs/jbrowse.md)
 - Without `build`, the tool writes only the index: `hprc.segs.bed.gz` and `hprc.links.bed.gz`, each with a `.tbi`
 - [Releases](https://github.com/GMOD/gfa-to-tabix/releases) also has a macOS binary for Apple silicon, and `cargo install gfa-to-tabix` builds one with Rust 1.91 or later
 
