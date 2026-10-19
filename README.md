@@ -4,12 +4,12 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 
 - **In:** a GFA from minigraph, Minigraph-Cactus, pggb, odgi or vg
 - **Out:** Tabix-indexed BED files, each line indexed by a reference interval:
-  - the graph's nodes and links, one row each
+  - the graph's nodes and links, one line each
   - or, with `--walks` on a base-level graph, every haplotype's path through it
 - **Why:** a browser fetches only the rows for a region, with HTTP range requests, and never downloads the whole graph
 - The [JBrowse 2](https://jbrowse.org) graph track reads the files. One static binary does the conversion, with no bgzip or tabix; `build` uses gfatools, when installed, for an rGFA's bubbles
 
-![A five-node graph, the lines of its node file, the lines a Tabix query for chr1:25-30 returns, and the nodes a browser draws from them](docs/figures/overview.svg)
+![A five-node graph, its node file's five lines, the two Tabix queries a browser runs to view chr1:25-30, and the four nodes it draws](docs/figures/overview.svg)
 
 gfa-to-tabix gives each allele, and each link that touches it, the reference interval from the node before its bubble to the node after it, so a query anywhere in that interval fetches every allele of the bubble.
 

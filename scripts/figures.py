@@ -428,8 +428,8 @@ def overview_graphs(segs, links):
 
 
 def overview_svg(segs, links):
-    """The README figure: the graph, the lines of its node file, the lines a
-    Tabix query returns, and the nodes a browser draws from them."""
+    """The README figure: the graph, the lines of its node file, the two
+    Tabix queries a browser runs to view a window, and the nodes it draws."""
     seq, qstart, qend = QUERY
     width, ink, muted, line = 820, "#1f2328", "#57606a", "#8c959f"
     blue, blue_pale, orange, orange_pale = "#4a6fa5", "#e8eef7", "#c77a2b", "#fde6cf"
@@ -492,14 +492,14 @@ def overview_svg(segs, links):
             b = cx - box_w / 2 + box_w * (hi - start) / (end - start)
             y = cy + box_h / 2 + 8
             out.append(f'<path d="M{a:.1f},{y - 4} V{y} H{b:.1f} V{y - 4}" fill="none" stroke="{ink}" stroke-width="1.2"/>')
-            say((a + b) / 2, y + 14, f"{seq}:{qstart}-{qend}", 11, ink, "middle")
+            say((a + b) / 2, y + 14, f"view {seq}:{qstart}-{qend}", 11, ink, "middle")
 
     top = 200
     say(24, top, f"2. gfa-to-tabix writes {PREFIX}.segs.bed.gz, one line per node", 14, weight="bold")
     cols = [[r[i] for i in range(8)] for r in segs]
     char, x0 = 8.4, 48
     widths = [max(len(c[i]) for c in cols) for i in range(8)]
-    labels = {0: "the interval Tabix searches", 3: "node", 4: "rank", 5: "the node's own position"}
+    labels = {0: "the interval Tabix searches", 3: "node", 4: f"rank (0 = on {seq})", 5: "the node's own position"}
     xs = [x0]
     for i, w in enumerate(widths[:-1], 1):
         start = max(k for k in labels if k < i)
@@ -518,8 +518,8 @@ def overview_svg(segs, links):
         if r[4] != "0":
             into = next(a for a, b in edges if b == r[3])
             out_ = next(b for a, b in edges if a == r[3])
-            say(end + 24, y - 7, f"{r[3]} is not on {seq}, so gfa-to-tabix gives its", 12, muted)
-            say(end + 24, y + 8, f"line {coordinate(*r[0:3])}, from the start of {into}", 12, muted)
+            say(end + 24, y - 7, f"{r[3]} is not on {seq}, so gfa-to-tabix gives its line", 12, muted)
+            say(end + 24, y + 8, f"the interval {coordinate(*r[0:3])}, from the start of {into}", 12, muted)
             say(end + 24, y + 23, f"to the end of {out_}, the nodes it connects to", 12, muted)
 
     top += 54 + len(segs) * 24 + 20
@@ -529,14 +529,17 @@ def overview_svg(segs, links):
     say(24, top, f"3. To show {region}, a browser runs two queries", 14, weight="bold")
     queries = [
         (f"tabix {PREFIX}.segs.bed.gz {region}", f"the highlighted lines, {fetched}"),
-        (f"tabix {PREFIX}.links.bed.gz {region}", f"the links that touch {fetched}, which lead to {far}"),
+        (f"tabix {PREFIX}.links.bed.gz {region}",
+         f"{'all ' if len(q['hits']) == len(links) else ''}{len(q['hits'])} link lines; "
+         f"the browser keeps the {len(q['kept'])} that touch {fetched.replace(' and ', ' or ')}"),
     ]
     arrow_x = 48 + 7.9 * max(len(c) for c, _ in queries) + 12
     for i, (command, result) in enumerate(queries):
         y = top + 26 + i * 22
         say(48, y, command, 13, font=mono)
         say(arrow_x, y, f"→ {result}", 12, muted)
-    say(24, top + 26 + 2 * 22 + 4, f"It draws {fetched}, and {far}, shown here in grey.", 12, muted)
+    say(24, top + 26 + 2 * 22 + 4, f"The browser draws {fetched}, and also {far} (grey), whose positions it "
+        "reads from those link lines.", 12, muted)
     graph(top + 120, sorted(q["returned"] | q["far"]), pale=q["far"])
     height = top + 120 + 70 + 34
     head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
