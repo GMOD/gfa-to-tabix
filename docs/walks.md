@@ -50,14 +50,41 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
   to that chunk. A window can then list a path and lack the steps `--stay`
   filed under the piece's chunk. The default, 311 bp, is the `-k 311` minimum
   match of the HPRC pggb graphs
-- In a segmental duplication, a haplotype can step onto the reference nodes of
-  a distant paralog and back. The steps after the jump take the paralog's
-  chunk, so a window at the haplotype's own locus shows the haplotype in more
-  pieces and leaves out some of its inserted nodes. Before `--stay`, on HPRC
-  v2.1 chr22 the tool filed under 0.1% of steps away from their locus, in at
-  most 74 of 1,130 paths, nearly all in the 22q11 low-copy repeats
 - A path that visits no node of a reference has no rows under it, and the tool
   counts these on stderr
+
+## Paralogs and collapsed repeats
+
+[ADR 0001](adr/0001-step-placement.md) gives the placement rules, the
+alternatives tried and every measurement below.
+
+- **Paralog jumps:** in a segmental duplication, a haplotype can step onto the
+  reference nodes of a distant paralog and back. The steps after the jump take
+  the paralog's chunk, so a window at the haplotype's own locus shows the
+  haplotype in more pieces and leaves out some of its inserted nodes. Before
+  `--stay`, on HPRC v2.1 Minigraph-Cactus chr22 the tool filed under 0.1% of
+  steps away from their locus, in at most 74 of 1,130 paths, nearly all in the
+  22q11 low-copy repeats
+- **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes,
+  so the reference path passes those nodes more than once, often megabases
+  apart. On HPRC release 2's pggb chr22, 28% of GRCh38's steps and 74% of
+  CHM13's land on such a node. Minigraph-Cactus's GRCh38 has none
+- **Nearest pass:** a step on such a node takes the pass nearest the offset the
+  path's last placed step predicts. Filing every step at the node's first pass
+  gave pggb chr22's GRCh38 file 95 M walk rows (1.65 GB), against 253 k for
+  Minigraph-Cactus, because each hop between passes started a new piece
+- **Stay:** `--stay` then keeps short runs elsewhere in the current piece. On
+  a graph whose reference passes no node twice, such as Minigraph-Cactus, the
+  default stay of 311 changes the rows that versions without `--stay` wrote,
+  and `--stay 0` keeps them. The ADR records the default as open
+- **Coverage on pggb chr22:** at the file's lookback, a window shows 97.3–98.3%
+  of the (haplotype, chunk) pairs whose bases align there in impg's alignments. The GRCh38
+  satellite (43–46%) and the CHM13 short arm (74–76%) stay weak at a one-chunk
+  lookback
+- **Cost on pggb chr22 at stay 311:** 31 GRCh38 windows and 174 CHM13 windows
+  fetch over 8 MB gzipped. The costliest, chr22:12.6–13.0M on GRCh38, fetches
+  205 MB, and the CHM13 short arm exceeds 32 M steps in 516 windows, because
+  filing moves no steps out of a chunk
 
 ## Scale
 

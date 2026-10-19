@@ -17,6 +17,9 @@ taken flipped.
 
 ## Chunks and pieces
 
+[ADR 0001](adr/0001-step-placement.md) gives the reasons for these rules and
+their measurements on pggb and Minigraph-Cactus.
+
 - The tool cuts each reference sequence into chunks of `chunk` bp (default
   65536) and files every row under its chunk's first base, `seq cs cs+1`, so a
   query on a window returns whole chunks. A row spanning the whole chunk would

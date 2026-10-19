@@ -27,6 +27,12 @@ The input may be gzipped, and `-` reads stdin.
   other path in file order, summing node lengths. A node takes the path name
   and position of the first path to reach it, at rank 0 on the reference and
   rank 1 elsewhere
+- **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes
+  the reference passes more than once. Such a node has one row, at its first
+  pass. A window over a later pass returns no row for the node, only its links,
+  which the tool files under an interval covering both passes, so they can span
+  megabases ([wide intervals](#wide-intervals)). [Walk files](walks.md#paralogs-and-collapsed-repeats)
+  place each haplotype step at the nearest pass instead
 - **Blunt graphs only:** summing node lengths gives the path coordinate only
   when nodes abut, so a plain GFA needs overlaps `*` or `0M`
 - **Orientation:** when the first path to reach a node reads it reversed, the
