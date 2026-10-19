@@ -88,8 +88,8 @@ The Minigraph-Cactus GRCh38 graph: 139.5 M nodes, 464 haplotypes.
   nodes and back, the walk files file the steps after the jump under the
   paralog's chunk, so a window at the haplotype's own locus shows it in more
   pieces and misses some of its inserted nodes. gbz-base reaches those nodes by
-  graph distance. On chr22 the walk files file under 0.1% of steps away from
-  their locus, in at most 74 of 1,130 paths, nearly all in 22q11
+  graph distance. On chr22 the walk files file fewer than 0.1% of steps away from
+  their locus, in at most 74 of the 1,130 paths besides GRCh38's, nearly all in 22q11
 - **Bases:** the database always holds every node's bases
 - **Zoomed-out haplotypes:** the index's overview draws every haplotype over a
   whole chromosome in about a dozen requests. Walk files have no coarse tier

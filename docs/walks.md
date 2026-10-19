@@ -63,7 +63,7 @@ alternatives tried and the pggb measurements below.
   the paralog's chunk, so a window at the haplotype's own locus shows the
   haplotype in more pieces and leaves out some of its inserted nodes. Before
   `--stay`, on HPRC v2.1 Minigraph-Cactus chr22 the tool filed fewer than 0.1%
-  of steps away from their locus, in at most 74 of 1,130 paths, nearly all in
+  of steps away from their locus, in at most 74 of the 1,130 paths besides GRCh38's, nearly all in
   the 22q11 low-copy repeats, counted from chr22's W lines
 - **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes,
   so the reference path passes those nodes more than once, often megabases
