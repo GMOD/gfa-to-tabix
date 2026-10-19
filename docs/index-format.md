@@ -1,6 +1,8 @@
 # The node and link index
 
-How `gfa-to-tabix` gives every node a coordinate, files it, and what the rows hold.
+- **In:** an rGFA, or a plain GFA with paths; see [inputs](inputs.md)
+- **Out:** `<prefix>.segs.bed.gz`, one row per node, and `<prefix>.links.bed.gz`, one row per link, each with a `.tbi`
+- **Filing:** the tool files each row under a reference interval, so one region query on each file returns the nodes and links a browser draws there
 
 ```bash
 gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc
@@ -17,64 +19,58 @@ The input may be gzipped, and `-` reads stdin.
 
 ## Where the coordinates come from
 
-A GFA lists nodes (S lines) and links (L lines) in no positional order. The tool
-gives every node a coordinate one of two ways.
-
-**rGFA.** Every S line has three tags: `SN`, the sequence the node lies on;
-`SO`, its offset on that sequence; and `SR`, its rank, 0 for the reference and
-higher for a node another assembly contributed. The tool copies them out. It
-takes this route when every S line has an `SN` tag and no `--reference` is given.
-
-**Plain GFA.** The P and W lines list the nodes each assembly passes through.
-The tool walks every path of the reference assembly first, then every other
-path in file order, adding node lengths as it goes. A node takes the path name
-and position of the first path to reach it, at rank 0 on the reference and
-rank 1 elsewhere. The graph must be blunt (overlaps `*` or `0M`), because
-summing node lengths gives the path coordinate only when nodes abut.
-
-A node that path reads reversed is turned to read forward there before anything
-is written: every link end on it takes the other strand. The index then reads
-the reference forward, as an rGFA's does, and only a haplotype that reads
-against the reference shows as an inversion.
+- **rGFA:** the tool copies each S line's `SN` (sequence), `SO` (offset) and
+  `SR` (rank: 0 for the reference, higher for a node another assembly
+  contributed). [Inputs](inputs.md#how-the-tool-tells-them-apart) lists when
+  the tool takes this route
+- **Plain GFA:** the tool walks every path of the reference first, then every
+  other path in file order, summing node lengths. A node takes the path name
+  and position of the first path to reach it, at rank 0 on the reference and
+  rank 1 elsewhere
+- **Blunt graphs only:** summing node lengths gives the path coordinate only
+  when nodes abut, so a plain GFA needs overlaps `*` or `0M`
+- **Orientation:** when the first path to reach a node reads it reversed, the
+  tool turns the node to read forward before writing anything, and every link end on it
+  takes the other strand. The index then reads the reference forward, as an
+  rGFA's does, and only a haplotype that reads against the reference shows as
+  an inversion
 
 ## Layouts
 
-A reference query has to return the alternate alleles at a locus, and their
-nodes do not lie on the reference. The tool files each row under an interval
-chosen so that they come back.
+A reference query has to return the alternate alleles at a locus, though their
+nodes lie off the reference. The tool files each row under an interval chosen
+so that they come back, and `--layout` sets how it chooses.
 
-**`anchored`** (default). A reference node, rank 0, is filed under its
-coordinate. Every other node is filed under the reference interval its bubble
-hangs from: the nodes joined to it without passing through the reference form
-one component, and the component's interval runs from the first to the last
-reference node it links to. One query on each file then returns the whole graph
-under a region, however deeply alleles nest. A window inside a large bubble
-returns all of that bubble.
+**`anchored`** (default):
 
-A link is filed under the interval that covers what both of its nodes reach: a
-component's interval for a node in one, and for a reference node its
-coordinate, the components hanging from it and the reference nodes it links
-to. A region query on the link file therefore returns every link with a node
-under the region and every link between the nodes those lead to. It also
-returns links of neither kind, so a reader keeps a link when one of its nodes
-came back from the node file, or when both are far ends of links it kept.
+- The tool files a reference node (rank 0) under its coordinate
+- It files every other node under the reference interval its bubble hangs
+  from. The nodes joined to it without passing through the reference form one
+  component, whose interval runs from the first to the last reference node it
+  links to
+- One query on each file then returns the whole graph under a region, however
+  deeply alleles nest. A window inside a large bubble returns all of that bubble
+- It files a link under the interval that covers what both of its nodes reach:
+  a component's interval for a node in one, and for a reference node its
+  coordinate, the components hanging from it and the reference nodes it links to
+- A region query on the link file returns every link with a node under the
+  region and every link between the nodes those lead to. It also returns links
+  of neither kind, so a reader keeps a link when one of its nodes came back from
+  the node file, or when both are far ends of links it kept
+- A link between two reference nodes on opposite sides of the region, such as a
+  deletion that spans it, touches no node under the region. The query returns
+  it all the same, and a reader that wants it drawn keeps it too
+- A component that links to two reference sequences gets a row under each. A
+  component that links to none keeps its coordinates
+- The tool files a zero-length node under one base, since a region query skips
+  a row whose interval is empty; its coordinate in the later columns stays exact
 
 ![A five-node graph, its node and link rows, a region query on both files, and the bubble a browser draws from the rows it keeps](figures/overview-detail.svg)
 
-A link between two reference nodes on opposite sides of the region, such as a
-deletion that spans it, touches no node under the region. The query returns
-it all the same, and a reader that wants it drawn keeps it too.
-
-A component that links to two reference sequences gets a row under each. A
-component that links to none keeps its coordinates.
-
-A zero-length node is filed under one base, since a region query skips a row
-whose interval is empty; its coordinate in the later columns stays exact.
-
-**`contig`**. Every node is filed under its coordinate, as version 0.1.0
-did. A reader has to follow links from the reference onto other contigs, one
-round of queries per step, and the index covers every contig in the graph. Use
-it to browse the graph from a non-reference assembly's coordinates.
+**`contig`**: the tool files every node under its own coordinate, as version
+0.1.0 did. A reader has to follow links from the reference onto other contigs,
+one round of queries per step, and the index covers every contig in the graph.
+Use it to browse the graph from a non-reference assembly's coordinates.
 
 ## What the files hold
 
@@ -99,23 +95,24 @@ seq start end  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtStart 
 Anchored, a link has one row per reference sequence. By contig, it has two rows,
 one under each node's coordinate.
 
-Rows are sorted by sequence name in byte order, then by start.
+The tool sorts rows by sequence name in byte order, then by start.
 
 ## Scale
 
-The tool holds the whole graph in memory. On HPRC release 2's
-`hprc-v2.1-mc-grch38.sv.gfa.gz` (759,223 nodes, 1,107,199 links, 841 MB
-gzipped) it runs in about 12 s and peaks at 0.9 GB on a laptop; `--layout contig`
-takes about 20 s and 2.1 GB. The two anchored indexes total 0.5 MB; the
-`contig` layout's total 9 MB and inflate to 635 MB each, because a Tabix index
-spends 8 bytes per 16 kb of every contig.
+The tool holds the whole graph in memory. On a laptop, with HPRC release 2's
+`hprc-v2.1-mc-grch38.sv.gfa.gz` (759,223 nodes, 1,107,199 links, 841 MB gzipped):
 
-A base-level graph of a human chromosome has millions of nodes and one path
-step per node per haplotype; memory grows with the total path length. For
-graphs that size, use [`--walks`](walks.md).
+| Layout     | Time   | Peak memory | Both `.tbi` files                 |
+| ---------- | ------ | ----------- | --------------------------------- |
+| `anchored` | ~12 s  | 0.9 GB      | 0.5 MB                            |
+| `contig`   | ~20 s  | 2.1 GB      | 9 MB, inflating to 635 MB each    |
 
-A Tabix index holds coordinates up to 512 Mb, so a longer reference sequence
-cannot be indexed.
+- A Tabix index spends 8 bytes per 16 kb of every contig, which makes the
+  `contig` indexes large
+- Memory grows with total path length, so for a base-level graph of a human
+  chromosome use [`--walks`](walks.md)
+- A Tabix index holds coordinates up to 512 Mb, so the tool cannot index a
+  longer reference sequence
 
 ## Wide intervals
 
