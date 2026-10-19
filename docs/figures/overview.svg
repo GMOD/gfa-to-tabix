@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="820" height="568" viewBox="0 0 820 568" font-family="Helvetica, Arial, sans-serif"><rect width="820" height="568" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="618" viewBox="0 0 820 618" font-family="Helvetica, Arial, sans-serif"><rect width="820" height="618" fill="white"/>
 <defs><marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8c959f"/></marker></defs>
-<text x="24.0" y="28.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="bold">1. A graph: chr1 in blue, and s5, an HG002 allele in place of s3, in orange</text>
+<text x="24.0" y="28.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="bold">1. A graph. The blue nodes are chr1. The orange node, s5, is an HG002 allele that replaces s3.</text>
 <line x1="148.0" y1="122.0" x2="202.0" y2="122.0" stroke="#8c959f" stroke-width="1.5" marker-end="url(#head)"/>
 <line x1="298.0" y1="122.0" x2="352.0" y2="122.0" stroke="#8c959f" stroke-width="1.5" marker-end="url(#head)"/>
 <line x1="274.0" y1="103.0" x2="352.0" y2="52.0" stroke="#c77a2b" stroke-width="1.5" marker-end="url(#head)"/>
@@ -21,72 +21,80 @@
 <rect x="502.0" y="103.0" width="96" height="38" rx="8" fill="#e8eef7" stroke="#4a6fa5" stroke-width="1.2"/>
 <text x="550.0" y="120.0" font-size="13" fill="#1f2328" text-anchor="middle" font-weight="bold">s4</text>
 <text x="550.0" y="134.0" font-size="10" fill="#1f2328" text-anchor="middle" font-weight="normal">chr1:30-40</text>
+<path d="M400.0,145.0 V149.0 H448.0 V145.0" fill="none" stroke="#1f2328" stroke-width="1.2"/>
+<text x="424.0" y="163.0" font-size="11" fill="#1f2328" text-anchor="middle" font-weight="normal">chr1:25-30</text>
 <text x="24.0" y="200.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="bold">2. gfa-to-tabix writes graph.segs.bed.gz, one line per node</text>
-<text x="48.0" y="228.0" font-size="11" fill="#57606a" text-anchor="start" font-weight="normal">where Tabix files the line</text>
-<text x="224.4" y="228.0" font-size="11" fill="#57606a" text-anchor="start" font-weight="normal">where the node's sequence is</text>
+<text x="48.0" y="228.0" font-size="11" fill="#57606a" text-anchor="start" font-weight="normal">the interval Tabix searches</text>
+<text x="227.4" y="228.0" font-size="11" fill="#57606a" text-anchor="start" font-weight="normal">node</text>
+<text x="264.2" y="228.0" font-size="11" fill="#57606a" text-anchor="start" font-weight="normal">rank</text>
+<text x="301.0" y="228.0" font-size="11" fill="#57606a" text-anchor="start" font-weight="normal">the node's own position</text>
 <line x1="48" y1="233" x2="148.8" y2="233" stroke="#8c959f"/>
-<line x1="224.4" y1="233" x2="333.6" y2="233" stroke="#8c959f"/>
+<line x1="301.0" y1="233" x2="410.2" y2="233" stroke="#8c959f"/>
 <text x="48.0" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
 <text x="98.4" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
 <text x="132.0" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
-<text x="165.6" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s1</text>
-<text x="199.2" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
-<text x="224.4" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
-<text x="283.2" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
-<text x="316.8" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
+<text x="227.4" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s1</text>
+<text x="264.2" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
+<text x="301.0" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
+<text x="359.8" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
+<text x="393.4" y="254.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
 <text x="48.0" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
 <text x="98.4" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
 <text x="132.0" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">20</text>
-<text x="165.6" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s2</text>
-<text x="199.2" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
-<text x="224.4" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
-<text x="283.2" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
-<text x="316.8" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">20</text>
-<rect x="40" y="286" width="301.6" height="22" fill="#fff3b0"/>
-<text x="48.0" y="302.0" font-size="14" fill="#a15f1c" text-anchor="start" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
-<text x="98.4" y="302.0" font-size="14" fill="#a15f1c" text-anchor="start" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
-<text x="132.0" y="302.0" font-size="14" fill="#a15f1c" text-anchor="start" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">40</text>
-<text x="165.6" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s5</text>
-<text x="199.2" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">1</text>
-<text x="224.4" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">HG002</text>
-<text x="283.2" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
-<text x="316.8" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">25</text>
-<text x="357.6" y="302.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">s5 is not on chr1, so its line takes the chr1</text>
-<text x="357.6" y="317.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">span from s2 to s4, the nodes it joins</text>
-<rect x="40" y="310" width="301.6" height="22" fill="#fff3b0"/>
+<text x="227.4" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s2</text>
+<text x="264.2" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
+<text x="301.0" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
+<text x="359.8" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
+<text x="393.4" y="278.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">20</text>
+<rect x="40" y="286" width="378.2" height="22" fill="#fff3b0"/>
+<text x="48.0" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
+<text x="98.4" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
+<text x="132.0" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">40</text>
+<text x="227.4" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s5</text>
+<text x="264.2" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">1</text>
+<text x="301.0" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">HG002</text>
+<text x="359.8" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">10</text>
+<text x="393.4" y="302.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">25</text>
+<text x="434.2" y="295.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">s5 is not on chr1, so gfa-to-tabix gives its</text>
+<text x="434.2" y="310.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">line chr1:10-40, from the start of s2</text>
+<text x="434.2" y="325.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">to the end of s4, the nodes it connects to</text>
+<rect x="40" y="310" width="378.2" height="22" fill="#fff3b0"/>
 <text x="48.0" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
 <text x="98.4" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">20</text>
 <text x="132.0" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">30</text>
-<text x="165.6" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s3</text>
-<text x="199.2" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
-<text x="224.4" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
-<text x="283.2" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">20</text>
-<text x="316.8" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">30</text>
+<text x="227.4" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s3</text>
+<text x="264.2" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
+<text x="301.0" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
+<text x="359.8" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">20</text>
+<text x="393.4" y="326.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">30</text>
 <text x="48.0" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
 <text x="98.4" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">30</text>
 <text x="132.0" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">40</text>
-<text x="165.6" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s4</text>
-<text x="199.2" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
-<text x="224.4" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
-<text x="283.2" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">30</text>
-<text x="316.8" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">40</text>
-<text x="24.0" y="394.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="bold">3. A browser showing chr1:25-30 runs</text>
-<text x="298.4" y="394.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">tabix graph.segs.bed.gz chr1:25-30</text>
-<text x="24.0" y="416.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">and gets the highlighted lines, s3 and s5. It draws those nodes, and adds their neighbours s2 and s4, in grey, from graph.links.bed.gz</text>
-<line x1="298.0" y1="534.0" x2="352.0" y2="534.0" stroke="#8c959f" stroke-width="1.5" marker-end="url(#head)"/>
-<line x1="274.0" y1="515.0" x2="352.0" y2="464.0" stroke="#c77a2b" stroke-width="1.5" marker-end="url(#head)"/>
-<line x1="448.0" y1="534.0" x2="502.0" y2="534.0" stroke="#8c959f" stroke-width="1.5" marker-end="url(#head)"/>
-<line x1="448.0" y1="464.0" x2="526.0" y2="515.0" stroke="#c77a2b" stroke-width="1.5" marker-end="url(#head)"/>
-<rect x="202.0" y="515.0" width="96" height="38" rx="8" fill="white" stroke="#b6c3d6" stroke-width="1.2"/>
-<text x="250.0" y="532.0" font-size="13" fill="#57606a" text-anchor="middle" font-weight="bold">s2</text>
-<text x="250.0" y="546.0" font-size="10" fill="#57606a" text-anchor="middle" font-weight="normal">chr1:10-20</text>
-<rect x="352.0" y="515.0" width="96" height="38" rx="8" fill="#e8eef7" stroke="#4a6fa5" stroke-width="1.2"/>
-<text x="400.0" y="532.0" font-size="13" fill="#1f2328" text-anchor="middle" font-weight="bold">s3</text>
-<text x="400.0" y="546.0" font-size="10" fill="#1f2328" text-anchor="middle" font-weight="normal">chr1:20-30</text>
-<rect x="502.0" y="515.0" width="96" height="38" rx="8" fill="white" stroke="#b6c3d6" stroke-width="1.2"/>
-<text x="550.0" y="532.0" font-size="13" fill="#57606a" text-anchor="middle" font-weight="bold">s4</text>
-<text x="550.0" y="546.0" font-size="10" fill="#57606a" text-anchor="middle" font-weight="normal">chr1:30-40</text>
-<rect x="352.0" y="445.0" width="96" height="38" rx="8" fill="#fde6cf" stroke="#c77a2b" stroke-width="1.2"/>
-<text x="400.0" y="462.0" font-size="13" fill="#1f2328" text-anchor="middle" font-weight="bold">s5</text>
-<text x="400.0" y="476.0" font-size="10" fill="#1f2328" text-anchor="middle" font-weight="normal">HG002:10-25</text>
+<text x="227.4" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">s4</text>
+<text x="264.2" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">0</text>
+<text x="301.0" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">chr1</text>
+<text x="359.8" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">30</text>
+<text x="393.4" y="350.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">40</text>
+<text x="24.0" y="394.0" font-size="14" fill="#1f2328" text-anchor="start" font-weight="bold">3. To show chr1:25-30, a browser runs two queries</text>
+<text x="48.0" y="420.0" font-size="13" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">tabix graph.segs.bed.gz chr1:25-30</text>
+<text x="336.5" y="420.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">→ the highlighted lines, s3 and s5</text>
+<text x="48.0" y="442.0" font-size="13" fill="#1f2328" text-anchor="start" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace">tabix graph.links.bed.gz chr1:25-30</text>
+<text x="336.5" y="442.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">→ the links that touch s3 and s5, which lead to s2 and s4</text>
+<text x="24.0" y="468.0" font-size="12" fill="#57606a" text-anchor="start" font-weight="normal">It draws s3 and s5, and s2 and s4, shown here in grey.</text>
+<line x1="298.0" y1="584.0" x2="352.0" y2="584.0" stroke="#8c959f" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="274.0" y1="565.0" x2="352.0" y2="514.0" stroke="#c77a2b" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="448.0" y1="584.0" x2="502.0" y2="584.0" stroke="#8c959f" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="448.0" y1="514.0" x2="526.0" y2="565.0" stroke="#c77a2b" stroke-width="1.5" marker-end="url(#head)"/>
+<rect x="202.0" y="565.0" width="96" height="38" rx="8" fill="white" stroke="#b6c3d6" stroke-width="1.2"/>
+<text x="250.0" y="582.0" font-size="13" fill="#57606a" text-anchor="middle" font-weight="bold">s2</text>
+<text x="250.0" y="596.0" font-size="10" fill="#57606a" text-anchor="middle" font-weight="normal">chr1:10-20</text>
+<rect x="352.0" y="565.0" width="96" height="38" rx="8" fill="#e8eef7" stroke="#4a6fa5" stroke-width="1.2"/>
+<text x="400.0" y="582.0" font-size="13" fill="#1f2328" text-anchor="middle" font-weight="bold">s3</text>
+<text x="400.0" y="596.0" font-size="10" fill="#1f2328" text-anchor="middle" font-weight="normal">chr1:20-30</text>
+<rect x="502.0" y="565.0" width="96" height="38" rx="8" fill="white" stroke="#b6c3d6" stroke-width="1.2"/>
+<text x="550.0" y="582.0" font-size="13" fill="#57606a" text-anchor="middle" font-weight="bold">s4</text>
+<text x="550.0" y="596.0" font-size="10" fill="#57606a" text-anchor="middle" font-weight="normal">chr1:30-40</text>
+<rect x="352.0" y="495.0" width="96" height="38" rx="8" fill="#fde6cf" stroke="#c77a2b" stroke-width="1.2"/>
+<text x="400.0" y="512.0" font-size="13" fill="#1f2328" text-anchor="middle" font-weight="bold">s5</text>
+<text x="400.0" y="526.0" font-size="10" fill="#1f2328" text-anchor="middle" font-weight="normal">HG002:10-25</text>
 </svg>

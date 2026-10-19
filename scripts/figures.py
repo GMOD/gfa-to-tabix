@@ -473,49 +473,72 @@ def overview_svg(segs, links):
             v = nodes[n]
             say(x, y - 2, n, 13, muted if dim else ink, "middle", "bold")
             say(x, y + 12, coordinate(v["seq"], v["start"], v["end"]), 10, muted if dim else ink, "middle")
+        return at, box_w, box_h
 
     out.append(f'<defs><marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
                f'<path d="M0,0 L8,4 L0,8 z" fill="{line}"/></marker></defs>')
 
-    say(24, 28, f"1. A graph: {seq} in blue, and s5, an HG002 allele in place of s3, in orange", 14, weight="bold")
-    graph(52, list(nodes))
+    alt = next(n for n in nodes if nodes[n]["alt"])
+    replaced = next(b for a, b in edges if a == next(a for a, b in edges if b == alt) and b in ref)
+    say(24, 28, f"1. A graph. The blue nodes are {seq}. The orange node, {alt}, is an "
+        f"{nodes[alt]['seq']} allele that replaces {replaced}.", 14, weight="bold")
+    at, box_w, box_h = graph(52, list(nodes))
+    for n in ref:
+        start, end = int(nodes[n]["start"]), int(nodes[n]["end"])
+        lo, hi = max(start, qstart), min(end, qend)
+        if lo < hi:
+            cx, cy = at[n]
+            a = cx - box_w / 2 + box_w * (lo - start) / (end - start)
+            b = cx - box_w / 2 + box_w * (hi - start) / (end - start)
+            y = cy + box_h / 2 + 8
+            out.append(f'<path d="M{a:.1f},{y - 4} V{y} H{b:.1f} V{y - 4}" fill="none" stroke="{ink}" stroke-width="1.2"/>')
+            say((a + b) / 2, y + 14, f"{seq}:{qstart}-{qend}", 11, ink, "middle")
 
     top = 200
     say(24, top, f"2. gfa-to-tabix writes {PREFIX}.segs.bed.gz, one line per node", 14, weight="bold")
     cols = [[r[i] for i in range(8)] for r in segs]
     char, x0 = 8.4, 48
     widths = [max(len(c[i]) for c in cols) for i in range(8)]
+    labels = {0: "the interval Tabix searches", 3: "node", 4: "rank", 5: "the node's own position"}
     xs = [x0]
-    for w in widths[:-1]:
-        xs.append(xs[-1] + (w + 2) * char)
+    for i, w in enumerate(widths[:-1], 1):
+        start = max(k for k in labels if k < i)
+        xs.append(max(xs[-1] + (w + 2) * char, xs[start] + 6.2 * len(labels[start]) + 12 if i in labels else 0))
     end = xs[-1] + widths[-1] * char
-    say(xs[0], top + 28, "where Tabix files the line", 11, muted)
-    say(xs[5], top + 28, "where the node's sequence is", 11, muted)
-    out.append(f'<line x1="{xs[0]}" y1="{top + 33}" x2="{xs[3] - 2 * char:.1f}" y2="{top + 33}" stroke="{line}"/>')
+    for i, label in labels.items():
+        say(xs[i], top + 28, label, 11, muted)
+    out.append(f'<line x1="{xs[0]}" y1="{top + 33}" x2="{xs[2] + widths[2] * char:.1f}" y2="{top + 33}" stroke="{line}"/>')
     out.append(f'<line x1="{xs[5]:.1f}" y1="{top + 33}" x2="{end:.1f}" y2="{top + 33}" stroke="{line}"/>')
     for i, (r, c) in enumerate(zip(segs, cols)):
         y = top + 54 + i * 24
         if r[3] in q["returned"]:
             out.append(f'<rect x="{x0 - 8}" y="{y - 16}" width="{end - x0 + 16:.1f}" height="22" fill="{HIGHLIGHT}"/>')
         for x, s in zip(xs, c):
-            alt = r[4] != "0" and x < xs[3]
-            say(x, y, s, 14, "#a15f1c" if alt else ink, weight="bold" if alt else "normal", font=mono)
+            say(x, y, s, 14, ink, font=mono)
         if r[4] != "0":
             into = next(a for a, b in edges if b == r[3])
             out_ = next(b for a, b in edges if a == r[3])
-            say(end + 24, y, f"{r[3]} is not on {seq}, so its line takes the {seq}", 12, muted)
-            say(end + 24, y + 15, f"span from {into} to {out_}, the nodes it joins", 12, muted)
+            say(end + 24, y - 7, f"{r[3]} is not on {seq}, so gfa-to-tabix gives its", 12, muted)
+            say(end + 24, y + 8, f"line {coordinate(*r[0:3])}, from the start of {into}", 12, muted)
+            say(end + 24, y + 23, f"to the end of {out_}, the nodes it connects to", 12, muted)
 
     top += 54 + len(segs) * 24 + 20
-    say(24, top, f"3. A browser showing {seq}:{qstart}-{qend} runs", 14, weight="bold")
-    command = f"tabix {PREFIX}.segs.bed.gz {seq}:{qstart}-{qend}"
-    say(24 + 7.4 * len(f"3. A browser showing {seq}:{qstart}-{qend} runs") + 8, top, command, 14, font=mono)
-    shown = sorted(q["returned"])
+    region = f"{seq}:{qstart}-{qend}"
+    fetched = " and ".join(sorted(q["returned"]))
     far = " and ".join(sorted(q["far"]))
-    say(24, top + 22, f"and gets the highlighted lines, {' and '.join(shown)}. It draws those nodes, and adds their "
-        f"neighbours {far}, in grey, from {PREFIX}.links.bed.gz", 12, muted)
-    graph(top + 70, sorted(q["returned"] | q["far"]), pale=q["far"])
-    height = top + 70 + 70 + 34
+    say(24, top, f"3. To show {region}, a browser runs two queries", 14, weight="bold")
+    queries = [
+        (f"tabix {PREFIX}.segs.bed.gz {region}", f"the highlighted lines, {fetched}"),
+        (f"tabix {PREFIX}.links.bed.gz {region}", f"the links that touch {fetched}, which lead to {far}"),
+    ]
+    arrow_x = 48 + 7.9 * max(len(c) for c, _ in queries) + 12
+    for i, (command, result) in enumerate(queries):
+        y = top + 26 + i * 22
+        say(48, y, command, 13, font=mono)
+        say(arrow_x, y, f"→ {result}", 12, muted)
+    say(24, top + 26 + 2 * 22 + 4, f"It draws {fetched}, and {far}, shown here in grey.", 12, muted)
+    graph(top + 120, sorted(q["returned"] | q["far"]), pale=q["far"])
+    height = top + 120 + 70 + 34
     head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
             f'font-family="Helvetica, Arial, sans-serif"><rect width="{width}" height="{height}" fill="white"/>')
     return head + "\n" + "\n".join(out) + "\n</svg>\n"
