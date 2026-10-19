@@ -19,7 +19,8 @@ taken flipped.
 
 - The tool cuts each reference sequence into chunks of `chunk` bp (default
   65536) and files every row under its chunk's first base, `seq cs cs+1`, so a
-  query on a window returns whole chunks
+  query on a window returns whole chunks. A row spanning the whole chunk would
+  share a Tabix bin with the next chunk, and a query would read both
 - A step on a reference node takes the chunk holding that node's position. A
   step on any other node takes the chunk of the last reference step before it,
   or of the first one after it for steps that lead the path
@@ -46,6 +47,9 @@ taken flipped.
 
 ## Header
 
+Header lines start with `#`: `tabix -H` prints them and region queries skip
+them.
+
 ```
 #walks	format:i:3	chunk:i:65536	maxnode:i:1024	stay:i:311
 #reference	GRCh38
@@ -57,10 +61,12 @@ taken flipped.
   and format 1 files have no `format` tag
 - `maxnode` is the longest node on the reference paths in bp. A reference node
   overlapping a window starts at most that far before it, so a reader queries
-  from `max(chunk, maxnode)` bp before the window, rounded down to a chunk start
+  from `max(chunk, maxnode)` bp before the window, rounded down to a chunk start.
+  vg chops nodes at 1,024 bp, so for its graphs that is one chunk back
 - `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
   A reader ignores it. A file without the tag predates nearest-pass placement
   and files every step on a revisited node under the reference's first pass
+- `#reference` names the reference sample
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
   `sample#haplotype`, once each in byte order
 
@@ -161,6 +167,8 @@ Minigraph-Cactus clips a haplotype. `piece`, `pv` and `nx` run within one line
 - The tool refuses two records of a contig that overlap or start at the same
   base, and a W line whose end column is not its start plus its nodes' lengths,
   since `ng` would then depend on which one to believe
+- The rows are the same for any order of the W lines, which `vg convert`
+  changes from run to run
 
 ## Decoding a walk row
 
