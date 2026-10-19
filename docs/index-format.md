@@ -2,6 +2,19 @@
 
 How `gfa-to-tabix` gives every node a coordinate, files it, and what the rows hold.
 
+```bash
+gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc
+gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
+```
+
+| Option                 | Effect                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| `--reference <name>`   | For a plain GFA: the PanSN sample, assembly or path to use as reference. Default the first path. |
+| `-o`, `--out <prefix>` | Output prefix. Default the input name without `.gfa[.gz]`.                              |
+| `--layout <layout>`    | `anchored` (default) or `contig`; see [layouts](#layouts).                              |
+
+The input may be gzipped, and `-` reads stdin.
+
 ## Where the coordinates come from
 
 A GFA lists nodes (S lines) and links (L lines) in no positional order. The tool

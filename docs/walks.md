@@ -29,6 +29,8 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
   GRCh38 downloads that file's index and no other
 - [walks-format.md](walks-format.md) describes the rows and how to decode them
 
+![Four haplotype paths through a bubble, the rows the GRCh38 file has for one 64 kb stretch of chr1, and the paths a reader rebuilds from those rows](figures/walks.svg)
+
 | Option            | Effect                                                                   |
 | ----------------- | ------------------------------------------------------------------------ |
 | `--refs <names>`  | Comma-separated PanSN samples, one file per sample. Required.            |

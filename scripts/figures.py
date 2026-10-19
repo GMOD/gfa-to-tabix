@@ -349,20 +349,22 @@ def bandage(nodes, edges, pad=36, width=14):
             f'<path d="M{x0:.1f},{y0:.1f} C{c0[0]:.1f},{c0[1]:.1f} {c1[0]:.1f},{c1[1]:.1f} {x1:.1f},{y1:.1f}" '
             f'fill="none" stroke="{color}" stroke-width="1.5"/>'
         )
+    halo = width + 12
+    for name, v in nodes.items():
+        if v["query"]:
+            body.insert(0, f'<path d="{polyline(portion(paths[name], *v["query"]))}" fill="none" stroke="{HIGHLIGHT}" stroke-width="{halo}"/>')
     for name, v in nodes.items():
         d = polyline(paths[name])
         dash = ' stroke-dasharray="5,2"' if v["far"] else ""
         body.append(f'<path d="{d}" fill="none" stroke="{v["line"]}" stroke-width="{width}"{dash}/>')
         body.append(f'<path d="{d}" fill="none" stroke="{v["fill"]}" stroke-width="{width - 3}"/>')
-        if v["query"]:
-            body.append(f'<path d="{polyline(portion(paths[name], *v["query"]))}" fill="none" stroke="{HIGHLIGHT}" stroke-width="{width - 3}"/>')
         mid = len(paths[name]) // 2
         (ax, ay), (mx, my), (bx, by) = paths[name][mid - 1 : mid + 2]
         nx, ny = ay - by, bx - ax
         if nx * (mx - cx) + ny * (my - cy) < 0:
             nx, ny = -nx, -ny
         d = math.hypot(nx, ny)
-        x, y = mx + nx / d * (width / 2 + 6), my + ny / d * (width / 2 + 6)
+        x, y = mx + nx / d * (halo / 2 + 4), my + ny / d * (halo / 2 + 4)
         if ny > 0:
             body += [text(x, y + 11, name, 12, bold=True), text(x, y + 23, v["label"], 10)]
         else:
