@@ -64,7 +64,7 @@ alternatives tried and the pggb measurements below.
   haplotype in more pieces and leaves out some of its inserted nodes. Before
   `--stay`, on HPRC v2.1 Minigraph-Cactus chr22 the tool filed fewer than 0.1%
   of steps away from their locus, in at most 74 of 1,130 paths, nearly all in
-  the 22q11 low-copy repeats ([measured for the gbz comparison](gbz-comparison.md))
+  the 22q11 low-copy repeats, counted from chr22's W lines
 - **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes,
   so the reference path passes those nodes more than once, often megabases
   apart. On HPRC release 2's pggb chr22, 28% of GRCh38's steps and 74% of
