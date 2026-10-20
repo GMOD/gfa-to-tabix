@@ -492,28 +492,57 @@ fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
     );
 }
 
-// D spends 12 bp on chunk 10-20's reference nodes before coming back to chunk
-// 0-10. --stay 12 keeps that stretch in D's first piece, as a route through
-// R's nodes of the other chunk; --stay 11 cuts it as above. D's later move to
-// 10-20 never comes back, so it starts a piece either way.
+// K takes walks-repeat.gfa's collapsed repeat three times. Placed nearest, its
+// steps fall in chunks 0 0 10 10 20 10 20 30: the 3 at 24 is a 6 bp stretch in
+// chunk 20-30 between two of chunk 10-20's steps, on a node R passes twice.
+// --stay 6 keeps that stretch in K's piece at 10-20, as a route through the 3
+// of chunk 20-30; --stay 5 cuts it into a piece of its own.
 #[test]
-fn a_short_stretch_elsewhere_stays_in_its_piece() {
-    let built = build("walks-two-refs.gfa", &["--stay", "12"]);
+fn a_short_stretch_over_a_revisited_node_stays_in_its_piece() {
+    let gfa = fs::read_to_string(fixture("walks-repeat.gfa")).unwrap()
+        + "W\tK\t1\tk\t0\t57\t>1>2>3>2>3>2>3>4\n";
+    let path = std::env::temp_dir().join(format!("walks-stay-{}.gfa", std::process::id()));
+    fs::write(&path, gfa).unwrap();
+    let kept = build(path.to_str().unwrap(), &["--refs", "R", "--stay", "6"]);
+    let cut = build(path.to_str().unwrap(), &["--refs", "R", "--stay", "5"]);
+    fs::remove_file(&path).unwrap();
     assert_eq!(
-        rows_of(&built.walks, "R#0#chr", "walk", "D#1#d"),
+        rows_of(kept.file("R"), "R#0#chr", "walk", "K#1#k"),
         tsv(&[
-            "R#0#chr 0 1 walk D#1#d 0 0 0 6 2 2 5 nx:i:10",
-            "R#0#chr 10 11 walk D#1#d 0 36 1 2 6 2 . pv:i:0 nx:i:20",
-            "R#0#chr 20 21 walk D#1#d 0 48 2 1 10 0 . pv:i:10",
+            "R#0#chr 0 1 walk K#1#k 0 0 0 2 2 2 . nx:i:10",
+            "R#0#chr 10 11 walk K#1#k 0 12 1 4 6 -2 0 pv:i:0 nx:i:20",
+            "R#0#chr 20 21 walk K#1#k 0 36 2 1 6 0 . pv:i:10 nx:i:30",
+            "R#0#chr 30 31 walk K#1#k 0 42 3 1 8 0 . pv:i:20",
         ])
     );
-    let cut = build("walks-two-refs.gfa", &["--stay", "11"]);
     assert_eq!(
-        rows_of(&cut.walks, "R#0#chr", "walk", "D#1#d")
+        rows_of(cut.file("R"), "R#0#chr", "walk", "K#1#k")
             .lines()
             .count(),
-        5
+        6
     );
+}
+
+// D spends 12 bp on chunk 10-20's reference nodes before coming back to chunk
+// 0-10, but R and Q pass each node once, so no stay keeps that stretch in D's
+// piece: every file of a reference that passes no node twice holds the rows
+// --stay 0 writes.
+#[test]
+fn a_stay_leaves_a_reference_that_passes_each_node_once_alone() {
+    for (gfa, refs) in [("walks-two-refs.gfa", "R,Q"), ("walks-records.gfa", "R")] {
+        for chunk in ["7", "10", "1000"] {
+            let none = build(gfa, &["--refs", refs, "--chunk", chunk, "--stay", "0"]);
+            let stay = build(gfa, &["--refs", refs, "--chunk", chunk, "--stay", "1000"]);
+            for sample in refs.split(',') {
+                let rows = |built: &Built| {
+                    let text = built.file(sample);
+                    text[text.find("\n#reference").unwrap()..].to_string()
+                };
+                assert!(!rows(&none).is_empty());
+                assert_eq!(rows(&none), rows(&stay), "{gfa} {sample} {chunk}");
+            }
+        }
+    }
 }
 
 // An insertion of 40 bp off both references leaves maxnode at 6, the longest

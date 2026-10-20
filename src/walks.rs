@@ -982,9 +982,9 @@ impl Builder {
 }
 
 // Files a run of steps away from the current piece's chunk under that chunk
-// when the path comes back to it and the run spends at most `stay` bp on
-// reference nodes. A run that does not come back, or holds more, moves the
-// piece on to the run's first chunk.
+// when the path comes back to it, the run spends at most `stay` bp on
+// reference nodes and one of those nodes is one the reference passes more
+// than once. Any other run moves the piece on to the run's first chunk.
 fn stay_home(
     chunk_of: &mut [u32],
     handles: &[u32],
@@ -1001,15 +1001,17 @@ fn stay_home(
             continue;
         }
         let mut content = 0u64;
+        let mut revisits = false;
         let mut j = i;
         while j < n && chunk_of[j] != home && content <= stay {
             let id = (handles[j] >> 1) as usize;
             if reference.on_reference(id) {
                 content += u64::from(lengths[id]);
+                revisits |= reference.revisited.get(id);
             }
             j += 1;
         }
-        if j < n && chunk_of[j] == home && content <= stay {
+        if j < n && chunk_of[j] == home && content <= stay && revisits {
             chunk_of[i..j].fill(home);
             i = j;
         } else {
