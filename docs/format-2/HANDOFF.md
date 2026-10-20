@@ -27,7 +27,8 @@ demo config and tutorials read them.
 
 HPRC v2.1, `hprc-v2.1-mc-grch38.W.gfa.gz` (53,150 paths, 38.4 G steps), built
 on ada with `--walks --refs GRCh38,CHM13` into `~/hprc-gbz/walks-f2/` and
-hosted as `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f2.{GRCh38,CHM13}`.
+hosted then as `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f2.{GRCh38,CHM13}`,
+since removed; jbrowse.org hosts only the format 4 set, `-f4`.
 The format-1 set compared is `hprc-v2.1-mc-grch38-w6` from gfa-to-tabix 0.6.0.
 
 | measure                                   | GRCh38            | CHM13             |

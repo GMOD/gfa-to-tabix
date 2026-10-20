@@ -16,13 +16,10 @@ the criteria, the measurements and the decision;
 
 ## Follow-ups
 
-1. **Readers of the hosted sets.** The `-f4` sets sit beside the `-f3` ones on
-   jbrowse.org. Move each consumer to graph-walks 3 and the `-f4` URLs: the
-   graph genome viewer plugin, BandageJS, ggbandage, ggtubemap, the tube map,
-   jb2hubs' `hprc-grch38.json`, and jbrowse-components'
-   `demos/hprc/config.json`, `demos/hprc/README.txt` and
-   `test_data/graphgenomeview/hprc.json`. ggbandage, jb2hubs and ggtubemap pin
-   exact versions. Remove the `-f3` sets once nothing names them
+1. **Readers of the hosted sets: done 2026-10-20.** Every reader pins
+   graph-walks 3.0.0 and names the `-f4` URLs, and jbrowse.org no longer
+   hosts the `-f2` or `-f3` sets. graph-walks refuses any walk file but
+   format 4
 2. **Giant windows.** pggb chr22 GRCh38 at 12.6–13.0 Mb peaks at about 200 MB
    gzipped under every stay, and CHM13's short arm has 516 windows over 32 M
    steps. Filing moves no steps out of a chunk, so this needs a different fix
