@@ -58,6 +58,21 @@ compressed bytes a reader fetches for one 64 kb window:
   - elsewhere: 99.96% → 98.87% of 4,684 pairs, also served
 - Build: 12:06 and 15.3 GB peak on ada
 
+## Alternatives
+
+A guard of 2 or 4 chunks, with a reader that reads as many back, on CHM13:
+
+| guard | strict recall | pericentromere | window median | windows over 8 MB |
+|---|---|---|---|---|
+| 1 (this) | 93.91% | 81.92% | 0.11 MB | 23 |
+| 2 | 94.22% | 83.29% | 0.17 MB | 44 |
+| 4 | 94.68% | 85.75% | 0.30 MB | 75 |
+| 1.2 file, 31 chunks back | 98.53% | 92.05% | 1.99 MB | 225 |
+
+The lost pairs sit in pieces filed more than 4 chunks from where they align,
+so a wider guard buys under a point of recall for up to three times the
+refused windows. GRCh38 moves the same way (97.25%, 97.32%, 97.41%).
+
 ## Consequences
 
 - The remaining giant windows hold satellite and rDNA arrays that pggb
