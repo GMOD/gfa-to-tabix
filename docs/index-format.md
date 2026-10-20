@@ -3,7 +3,7 @@
 - **In:** an rGFA, or a plain GFA with paths; see [inputs](inputs.md)
 - **Out:** `<prefix>.segs.bed.gz`, one row per node, and `<prefix>.links.bed.gz`, one row per link, each with a `.tbi`
 - **Filing:** the tool files each row under a reference interval, so one region query on each file returns the nodes and links a browser draws there
-- **Why two files:** every graph drawing reads both, but the graph track's flat `LinearBasicDisplay` reads only the node file. [ADR 0002](adr/0002-two-index-files.md) lists the readers and the measurements, and is under review
+- **Why two files:** every graph drawing reads both, and issues the two reads together. One file would save some bytes and an index load, so the merge waits for the next format change; [ADR 0002](adr/0002-two-index-files.md) has the readers and measurements
 
 ```bash
 gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc
@@ -82,8 +82,7 @@ Use it to browse the graph from a non-reference assembly's coordinates.
 
 ## What the files hold
 
-Every graph drawing reads both files; only the graph track's flat
-`LinearBasicDisplay` reads the node file alone ([ADR 0002](adr/0002-two-index-files.md)).
+Every graph drawing reads both files ([ADR 0002](adr/0002-two-index-files.md)).
 
 `<prefix>.segs.bed.gz` has one row per node:
 
