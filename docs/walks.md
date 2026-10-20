@@ -46,9 +46,10 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
   node takes the chunk of the last reference step before it. A query over a
   window therefore returns every path that visits a reference node in it
 - `--stay` keeps a piece in its chunk across a stretch elsewhere that returns
-  to that chunk, holds a node the reference passes more than once and lies
-  within the chunks a window reads back. The default, 311 bp of reference
-  nodes, is the `-k 311` minimum match of the HPRC pggb graphs
+  to that chunk and holds a node the reference passes more than once. Any
+  node in the stretch that the reference passes once has to lie within the
+  chunks a window reads back. The default, 311 bp of reference nodes, is the
+  `-k 311` minimum match of the HPRC pggb graphs
 - A path that visits no node of a reference has no rows under it, and the tool
   counts these on stderr
 

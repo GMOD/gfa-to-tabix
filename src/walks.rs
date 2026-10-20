@@ -1005,9 +1005,10 @@ impl Builder {
 // Files a run of steps away from the current piece's chunk under that chunk
 // when the path comes back to it, the run spends at most `stay` bp on
 // reference nodes, one of those nodes is one the reference passes more than
-// once, and a reader of each chunk the run visits also reads the piece's,
-// as `reaches` says. Any other run moves the piece on to the run's first
-// chunk.
+// once, and a reader of the chunk of each node it passes once also reads the
+// piece's, as `reaches` says. A step on a node the reference passes more than
+// once has no one true chunk, so it needs no reader. Any other run moves the
+// piece on to the run's first chunk.
 fn stay_home(
     chunk_of: &mut [u32],
     handles: &[u32],
@@ -1029,11 +1030,12 @@ fn stay_home(
         let mut seen = true;
         let mut j = i;
         while j < n && chunk_of[j] != home && content <= stay {
-            seen &= reaches(chunk_of[j], home);
             let id = (handles[j] >> 1) as usize;
             if reference.on_reference(id) {
                 content += u64::from(lengths[id]);
-                revisits |= reference.revisited.get(id);
+                let revisited = reference.revisited.get(id);
+                revisits |= revisited;
+                seen &= revisited || reaches(chunk_of[j], home);
             }
             j += 1;
         }

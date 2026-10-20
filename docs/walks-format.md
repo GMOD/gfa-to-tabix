@@ -45,12 +45,14 @@ their measurements on pggb and Minigraph-Cactus.
   - the path returns to the piece's chunk
   - the run holds at most `stay` bp of reference nodes, one of them a node the
     reference passes more than once
-  - each chunk the run visits lies on the piece's sequence, at most
-    `max(chunk, maxnode) / chunk` chunks (rounded down) after the piece's
+  - each node in the run that the reference passes once lies on the piece's
+    sequence, at most `max(chunk, maxnode) / chunk` chunks (rounded down)
+    after the piece's
 - Any other run starts a new piece, and the reference's own paths are exempt.
   A reference that passes each node once therefore gets the same rows at any
-  `stay`, and a window always reads the piece holding a step on its reference
-  nodes
+  `stay`. A window reads every piece with a step on a node in it that the
+  reference passes once; a step on a node it passes more than once can lie in
+  a piece of another window
 - A route can hold another chunk's reference nodes. A reader places a node at
   its reference position from a `ref` row of a chunk it read whenever one
   exists, from the row whose path sorts first, at its earliest start, when
