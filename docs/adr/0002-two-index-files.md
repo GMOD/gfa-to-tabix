@@ -26,12 +26,16 @@ What reads each file in the JBrowse plugin
 | Graph genome view: graph-walks `rgfaCut` | yes | yes |
 | graph track in a linear genome view, default `LinearGraphDisplay`: graph-walks `rgfaCut` | yes | yes |
 | coarse tier: the same code over the `fold` pair | yes | yes |
-| graph track, secondary `LinearBasicDisplay`, on graphs without walks: `segmentFeatures` in `src/RgfaTabixAdapter/RgfaTabixAdapter.ts` | yes | no |
-| `LinearBasicDisplay`'s size check: `getRegionByteSize` | yes | no |
+| carriage lane: a `FeatureTrack` on `RgfaTabixAdapter`, colored by `sampleCount` (jbrowse-components' E. coli demo, the pangenome_prepare_graph tutorial), through `segmentFeatures` | yes | no |
+| graph track, secondary `LinearBasicDisplay`: the same `segmentFeatures` | yes | no |
+| their size check: `getRegionByteSize` | yes | no |
 | reference names: `getRefNames`, from the node file's index header | yes | no, but a merged index names them too |
 
-- `LinearBasicDisplay` draws reference segments as flat features and drops
-  every allele row it downloads. It doesn't decide the format
+- `segmentFeatures` runs only on graphs without walks. It draws reference
+  segments as flat features and drops every allele row it downloads
+- The carriage lane is a documented feature, so a merge has to keep it
+  working, at the measured cost: 15–25% more bytes per window on HPRC and
+  2.4–3.5 × on a base-level graph
 - `LinearGraphDisplay` limits a window by its span in bp, not by bytes
 
 ## Evidence
