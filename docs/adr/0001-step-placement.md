@@ -1,6 +1,6 @@
 # ADR 0001: Where a walk file files a haplotype step
 
-- **Status:** proposed, 2026-10-18
+- **Status:** accepted, 2026-10-19
 - **Decides:** which reference chunk `--walks` files each step of a non-reference
   path under, when the reference passes the step's node more than once
 - **Measured by:** the [success criteria](#success-criteria) below, with
@@ -9,8 +9,9 @@
 
 ## Context
 
-- Format 3 gives each node one position, the reference's first visit, and
-  files a haplotype's step on a reference node under that position's chunk
+- Format 3 (gfa-to-tabix 1.1) gave each node one position, the reference's
+  first visit, and filed a haplotype's step on a reference node under that
+  position's chunk
 - A reference that passes a node twice, megabases apart, splits every
   haplotype through it into a piece per hop. On HPRC release 2's pggb chr22,
   whose references revisit short collapsed nodes, the GRCh38 file has 95.3 M
@@ -32,7 +33,7 @@ alignments of each assembly to the reference.
 | # | criterion | measure | pass |
 |---|---|---|---|
 | 1 | exact round trip | the encoder decodes every row it writes | build succeeds |
-| 2 | MC unchanged | files for a reference that revisits no node, built with `--stay 0` | rows byte-identical to main; the header gains `stay:i:` and `maxnode` counts reference nodes only |
+| 2 | MC unchanged | files for a reference that revisits no node, at the default stay | rows byte-identical to 1.1.0; the header gains `stay:i:` and `maxnode` counts reference nodes only |
 | 3 | strict recall | (haplotype, chunk) pairs with ≥300 aligned bp seen through a piece whose bases align there, at *L* = 1 | within 0.1 point of first-visit filing, overall and in LCR22A, LCR22B–D, the pericentromeric repeats and the control |
 | 4 | piece precision | pieces with aligned bases visible where filed, at *L* = 1 | ≥ 90% |
 | 5 | fragmentation | pieces per filed (haplotype, chunk) pair | ≤ 1.5 |
@@ -112,8 +113,8 @@ with the first-visit rows above (97.2% and 94.0%).
   reported for first visit
 - Criterion 7 passes at stay 311: 12:16 and 13.9 GB, against main's 14:51 and
   42.8 GB
-- Criterion 2 fails at the default stay: on a graph with no revisited node, a
-  stay of 311 absorbs runs and changes rows. It holds with `--stay 0`
+- Criterion 2 fails at either stay: on a graph with no revisited node, the
+  stay absorbs runs and changes rows. The [gated stay](#gated-stay) fixes this
 - Neither stay passes criteria 4, 5 or 6 on pggb. Stay 4 kb passed 4 and 5
   (see [Baseline](#baseline)) but hides real passages
 - Stay 1024 cuts the pieces of 311 by 50% on GRCh38 and 61% on CHM13, and
@@ -123,6 +124,40 @@ with the first-visit rows above (97.2% and 94.0%).
 - The costliest windows (chr22:12.6–13.0M on GRCh38, the short arm on CHM13)
   stay large under both stays: GRCh38 peaks at 205 MB gzipped, and CHM13 at
   75 MB (stay 311) or 65 MB (stay 1024)
+
+### Gated stay
+
+The sweep above absorbs any run. A gated stay absorbs a run only if it holds
+a node the reference passes more than once. A guard further requires that a
+window over each chunk the run visits reads the piece's chunk, either for
+every node in the run or only for the nodes the reference passes once.
+
+pggb chr22 at stay 311. Precision and the first recall column at *L* = 1, the
+second recall column at the file's lookback (16 and 31 chunks):
+
+| file | piece precision | strict recall, *L* = 1 | strict recall, file *L* | pieces per pair | MB | windows over 8 MB |
+|---|---|---|---|---|---|---|
+| GRCh38, stay 0 | 44.3% | 97.25% | 97.47% | 45.2 | 860 | 44 |
+| GRCh38, gate | 59.2% | 97.19% | 97.42% | 4.30 | 688 | 31 |
+| GRCh38, gate + guard on every node | 49.3% | 97.25% | 97.47% | 11.95 | 728 | 37 |
+| GRCh38, gate + guard on nodes passed once | 53.8% | 97.25% | 97.47% | 8.58 | 710 | 31 |
+| CHM13, stay 0 | 41.0% | 93.92% | 98.53% | 52.2 | 580 | 234 |
+| CHM13, gate | 51.1% | 93.80% | 98.37% | 6.95 | 317 | 177 |
+| CHM13, gate + guard on every node | 41.4% | 93.91% | 98.53% | 29.93 | 460 | 213 |
+| CHM13, gate + guard on nodes passed once | 44.7% | 93.89% | 98.50% | 16.78 | 386 | 183 |
+
+- The gate keeps nearly all of the ungated stay's reduction in pieces
+- Guarding every node restores stay 0's recall exactly, but triples the
+  gate's pieces on GRCh38 and quadruples them on CHM13. Of the runs that guard
+  turned away, across both references: 5% visit another sequence, 38% stay
+  within the lookback in either direction, 23% within twice the lookback, and
+  34% go farther
+- 57% of turned-away runs leave the lookback, a megabase or more, and come
+  back within 311 bp of reference nodes. Most likely each steps on a collapsed
+  node whose nearest pass lies far off, a step with no one true chunk.
+  Guarding only the nodes the reference passes once keeps recall within 0.03
+  point of stay 0, with 72% (GRCh38) and 56% (CHM13) of the pieces of guarding
+  every node
 
 ### Genome-wide MC
 
@@ -136,6 +171,19 @@ against nearest by chunk:
 | windows over 8 MB, GRCh38 / CHM13 | 0 / 2 | 0 / 2 |
 | windows over 32 M steps, GRCh38 / CHM13 | 4 / 3 | 4 / 3 |
 
+HPRC v2.1 MC at the decided rules, against stay 0 and the hosted 1.1.0
+files:
+
+| | stay 0 | stay 311, guard on every node | stay 311, guard on nodes passed once |
+|---|---|---|---|
+| GRCh38 rows | identical to 1.1.0, byte for byte | identical to 1.1.0 | identical to 1.1.0 |
+| CHM13 pieces | 24,252,423 | 24,189,995 | 23,696,899 |
+| CHM13 rows | 73,428,204 | 73,366,054 | 72,874,844 |
+| windows over 8 MB, GRCh38 / CHM13 | 0 / 2 | 0 / 2 | 0 / 2 |
+| windows over 32 M steps, GRCh38 / CHM13 | 4 / 3 | 4 / 3 | 4 / 3 |
+
+1.1.0's CHM13 file, filed by first visit, has 105,863,387 rows.
+
 ## Decision (proposed)
 
 1. **Nearest pass by predicted offset.** A step on a node the reference passes
@@ -144,21 +192,30 @@ against nearest by chunk:
    On genome-wide MC, nearest by chunk gives the same GRCh38 file and a CHM13
    file with 0.011% more pieces (see [Genome-wide MC](#genome-wide-mc)), so the
    rule the code implements stays
-2. **Stay.** A run of steps filed away from the current piece's chunk stays in
-   that piece when the path returns to exactly that chunk and the run holds at
-   most `--stay` bp on reference nodes (default 311, pggb's `-k 311` minimum
-   match; 0 turns it off). A run that never returns always starts a new piece,
-   and the reference's own paths keep filing by their own offsets. Absorbed
-   steps become route interior, so a route can hold another chunk's reference
-   nodes. The header records the value as `stay:i:`. The default is open: see
-   [Stay sweep](#stay-sweep)
+2. **Gated, guarded stay.** A run of steps filed away from the current piece's
+   chunk stays in that piece when all of these hold:
+   - the path returns to exactly that chunk
+   - the run holds at most `--stay` bp on reference nodes (default 311, pggb's
+     `-k 311` minimum match; 0 turns it off)
+   - one of those nodes is one the reference passes more than once
+   - each node in the run that the reference passes once lies on the piece's
+     sequence, at most `max(chunk, maxnode) / chunk` chunks after the piece's
+
+   A reference that passes each node once gets the same rows at any stay, and
+   a window reads every piece with a step on a node in it that the reference
+   passes once. A run that never returns always starts a new piece, and the
+   reference's own paths keep filing by their own offsets. Absorbed steps
+   become route interior, so a route can hold another chunk's reference nodes.
+   The header records the value as `stay:i:`. See [Gated stay](#gated-stay)
 3. **Readers place a node at the reference position from a `ref` row of a read
-   chunk** whenever one exists; other nodes take haplotype offsets.
-   graph-walks commit 79634c3 implements this, and it must ship before any file
-   written under rule 2
+   chunk** whenever one exists, from the row whose path sorts first, at its
+   earliest start, when several do; other nodes take haplotype offsets.
+   graph-walks implements this from 3.0
 4. **`maxnode` counts reference nodes only,** since only they span reference
    coordinates. pggb chr22's longest node, 5.8 Mb, is off both references, and
    the lookback falls from 89 chunks to 16 on GRCh38 and 31 on CHM13
+5. **Format 4.** Rules 2 and 3 make a format: the header says `format:i:4`,
+   and readers refuse every other format. Nothing reads format 3 any more
 
 ## Alternatives
 
@@ -169,6 +226,11 @@ against nearest by chunk:
 | nearest by chunk against nearest by predicted offset | within 0.3 point on every chr22 measure; genome-wide MC GRCh38 files identical and CHM13 within 0.011% of pieces; the offset rule stays because the code implements it and the measures do not separate them |
 | stay capped at 4 kb away | hides real passages: about 1,300–1,700 per reference between 312 bp and 4 kb align where they went |
 | stay without nearest pass | strict recall falls to 90% on CHM13 and 91% in GRCh38's LCR22B–D |
+| ungated stay | changes rows on references that pass each node once, and hides real short SVs from their own window |
+| gate without a guard | fewest pieces, but files a step on a node passed once where its window cannot read it |
+| guard on every node | restores stay 0's recall to the last pair, at three to four times the pieces of guarding only nodes passed once |
+| default stay 0, pggb opts in | pggb users get 45–52 pieces per pair unless they know the flag |
+| a format 4 marker only in files with an absorbed run | needless with no backward compatibility: every reader refuses format 3 |
 | excursion rows for paralog jumps | every lost (haplotype, chunk) pair is filed elsewhere, none absent, so the rows have nothing to add |
 | graph preprocessing (chop, unchop, GBZ) | keeps the collapsed repeats |
 | placement from impg alignments | a candidate for a later ADR, scored with the same criteria |
@@ -176,14 +238,12 @@ against nearest by chunk:
 
 ## Consequences
 
-- Row syntax is unchanged, so format 3 readers parse the new files. A reader
-  without rule 3 draws absorbed reference nodes at haplotype offsets
+- Row syntax is unchanged, but format 3 readers refuse the new files, and
+  graph-walks 3 refuses format 3. Hosted files have to be rebuilt
 - A window no longer lists a haplotype whose only presence there is a run of
-  311 bp or less of reference nodes
-- A window can list a haplotype and still lack its absorbed steps: the stay
-  files them under the piece's chunk, and the lookback reaches only backward
-- Rebuilding a hosted MC file at the default stay changes its rows, and the
-  genome-wide MC comparison above ran without a stay
+  311 bp or less over nodes the reference passes more than once
+- A step on a node the reference passes more than once can lie in a piece
+  filed beyond the window's lookback; a step on a node it passes once cannot
 - pggb's CHM13 short arm still exceeds the step budget in hundreds of windows
   (516 over 32 M steps at stay 311 and 1024), because filing moves no steps
   out of a chunk

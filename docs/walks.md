@@ -104,4 +104,4 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
   the tube map read through @jbrowse/graph-walks
 - jbrowse.org hosts HPRC v2.1's files as
-  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f3.{GRCh38,CHM13}.walks.bed.gz`
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f4.{GRCh38,CHM13}.walks.bed.gz`
