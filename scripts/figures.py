@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """figures.py <gfa-to-tabix binary> [--check]
 
-Runs the tool on docs/figures/*.gfa, writes the rows it outputs into the
-marked regions of docs/figures/*.dot and redraws the SVGs with Graphviz.
-With --check, exits 1 if a .dot file or a drawn panel differs from what the
-tool writes now.
+Runs the tool on docs/figures/*.gfa and redraws docs/figures/*.svg from the
+lines it writes. The script draws the overview figures itself, and the walks
+figures by filling the marked regions of their .dot files for Graphviz.
+With --check, exits 1 if a figure differs from what the tool writes now.
 """
 
 import difflib
 import gzip
-import math
 import subprocess
 import sys
 import tempfile
@@ -20,14 +19,10 @@ FIGURES = Path(__file__).resolve().parent.parent / "docs" / "figures"
 PREFIX = "graph"
 REF = "GRCh38"
 QUERY = ("chr1", 25, 30)
-BP_PER_CELL = 2.5
-TICK_BP = 10
 
 BLUE = ("#e8eef7", "#a9bfe2", "#4a6fa5")
 ORANGE = ("#fde6cf", "#f3c08f", "#c77a2b")
 PURPLE = ("#ede4f5", "#8a5fb0")
-GREY = "#e4e4e4"
-KEPT = "#c4c4c4"
 HIGHLIGHT = "#fff3b0"
 
 
@@ -58,113 +53,9 @@ def caption(cols, text, width, color="#555555"):
     return tr([td(f'<FONT POINT-SIZE="12" COLOR="{color}">{lines}</FONT>', border=0, cellpadding=8, colspan=cols, align="LEFT", balign="LEFT")])
 
 
-def link_ends(row):
-    return tuple(
-        {"name": row[i][:-1], "seq": row[j], "start": row[j + 1], "end": row[j + 2], "rank": row[j + 3]}
-        for i, j in ((3, 5), (4, 9))
-    )
-
-
-def segs_caption(segs, links):
-    off = next(r for r in segs if r[4] != "0")
-    name, seq, start, end = off[3], off[0], off[1], off[2]
-    attached = []
-    for end_a, end_b in (link_ends(row) for row in links):
-        for this, other in ((end_a, end_b), (end_b, end_a)):
-            if this["name"] == name and other["rank"] == "0":
-                attached.append((int(other["start"]), other["name"]))
-    attached.sort()
-    first, last = attached[0][1], attached[-1][1]
-    text = f"{name} lies off {seq}, so the tool files it under the reference span it hangs from: {first} to {last}, {coordinate(seq, start, end)}."
-    return [caption(4, text, 64, "#a15f1c")]
-
-
-def segs_table(segs):
-    rows = []
-    for row in segs:
-        off = row[4] != "0"
-        cells = [td(coordinate(*row[0:3]), bold=off), td(row[3]), td(row[4]), td(coordinate(*row[5:8]))]
-        rows.append(tr(cells, ORANGE[0] if off else BLUE[0]))
-    return rows
-
-
-def links_table(links):
-    rows = []
-    for row in links:
-        ends = [td(coordinate(*row[i:i + 3]), ORANGE[0] if row[i + 3] != "0" else None) for i in (5, 9)]
-        rows.append(tr([td(coordinate(*row[0:3])), td(f"{row[3]} → {row[4]}"), *ends], "#f2f2f2"))
-    return rows
-
-
-def cell(bp):
-    return int(int(bp) / BP_PER_CELL)
-
-
-def lanes(segs, links):
-    seq, qstart, qend = QUERY
-    cells = cell(max(int(r[2]) for r in segs + links))
-    query = range(cell(qstart), cell(qend))
-
-    def bars(start, end, color):
-        fills = []
-        for i in range(cells):
-            fills.append(color if cell(start) <= i < cell(end) else HIGHLIGHT if i in query else None)
-        runs, i = [], 0
-        while i < cells:
-            j = i
-            while j < cells and fills[j] == fills[i]:
-                j += 1
-            runs.append(td(bg=fills[i], **({"colspan": j - i} if j > i + 1 else {})))
-            i = j
-        return "".join(runs)
-
-    def lane(label, start, end, color, note, shown):
-        text = f"<B>{label}</B>" if shown else f'<FONT COLOR="#999999">{label}</FONT>'
-        note = f'<FONT POINT-SIZE="12" COLOR="#777777">  {note}</FONT>' if note else ""
-        gap = "".join(td(bg=HIGHLIGHT if i in query else None) for i in range(cells))
-        return [
-            f'<TR><TD HEIGHT="5"></TD><TD></TD>{gap}<TD></TD><TD></TD></TR>',
-            f'<TR><TD ALIGN="RIGHT" HEIGHT="18">{text}  </TD><TD></TD>{bars(start, end, color)}<TD></TD><TD ALIGN="LEFT">{note}</TD></TR>',
-        ]
-
-    def heading(text):
-        return f'<TR><TD COLSPAN="{cells + 4}" ALIGN="LEFT" HEIGHT="26" VALIGN="BOTTOM"><I>{text}</I></TD></TR>'
-
-    tick_cells = cell(TICK_BP)
-    ticks = [
-        f'<TD COLSPAN="2"><FONT POINT-SIZE="10" COLOR="#777777">{bp}</FONT></TD>'
-        for bp in range(0, int(cells * BP_PER_CELL) + 1, TICK_BP)
-    ]
-    rows = [
-        tr([td(), td(width=16), *[td(width=16) for _ in range(cells)], td(width=16), td()]),
-        tr([td(), td(colspan=tick_cells - 2).join(ticks), td()]),
-        tr([td(height=1), td(), td(bg="#999999", colspan=cells), td(), td()]),
-    ]
-    rows += lane(coordinate(seq, qstart, qend), qstart, qend, "#555555", "the window", True)
-
-    q = run_query(segs, links)
-    rows.append(heading(f"{PREFIX}.segs.bed.gz"))
-    for row in segs:
-        hit = row[3] in q["returned"]
-        color = (ORANGE if row[4] != "0" else BLUE)[1] if hit else GREY
-        rows += lane(row[3], row[1], row[2], color, "fetched" if hit else "", hit)
-
-    hits = q["hits"]
-    count = "all" if len(hits) == len(links) else f"{len(hits)} of"
-    rows.append(heading(f"{PREFIX}.links.bed.gz: {count} {len(links)} rows return"))
-    for i, row in enumerate(hits):
-        keep = i in q["kept"]
-        rows += lane(link_label(row), row[1], row[2], KEPT if keep else GREY, "kept" if keep else "dropped", keep)
-    return rows
-
-
 def overlaps(row):
     seq, qstart, qend = QUERY
     return row[0] == seq and int(row[1]) < qend and int(row[2]) > qstart
-
-
-def link_label(row):
-    return f"{row[3][:-1]}→{row[4][:-1]}"
 
 
 def run_query(segs, links):
@@ -175,16 +66,6 @@ def run_query(segs, links):
     far = {n for i in kept for n in ends[i]} - returned
     kept |= {i for i, (a, b) in enumerate(ends) if a in far and b in far}
     return {"returned": returned, "hits": hits, "ends": ends, "kept": kept, "far": far}
-
-
-def keep_caption(segs, links):
-    q = run_query(segs, links)
-    text = "The reader keeps a link when the node file fetched one of its nodes, or when both its nodes are far ends of links it kept."
-    for i, row in enumerate(q["hits"]):
-        if i not in q["kept"]:
-            loose = next(n for n in q["ends"][i] if n not in q["returned"] | q["far"])
-            text += f" {link_label(row)} fails both tests, since no kept link ends at {loose}."
-    return [caption(20, text, 92)]
 
 
 def bubble(prefix, ref, labels, edges):
@@ -226,210 +107,11 @@ def coordinate(seq, start, end):
     return f"{seq}:{start}-{end}"
 
 
-def coordinates(nodes):
-    return {n: coordinate(v["seq"], v["start"], v["end"]) for n, v in nodes.items()}
-
-
-def ref_order(nodes):
-    return sorted((n for n in nodes if nodes[n]["rank"] == "0"), key=lambda n: int(nodes[n]["start"]))
-
-
-def force_layout(lengths, seeds, edges, px_per_bp=8, bp_per_point=5, steps=800):
-    """Lays out each node as a chain of points, as Bandage does. Springs hold
-    chains and links together, and points of different nodes repel."""
-    pts, chains, springs, owner = [], {}, [], []
-    for name, bp in lengths.items():
-        n = max(2, round(bp / bp_per_point))
-        step = bp * px_per_bp / n
-        x, y = seeds[name]
-        chains[name] = list(range(len(pts), len(pts) + n + 1))
-        pts += [[x + k * step, y] for k in range(n + 1)]
-        owner += [name] * (n + 1)
-        springs += [(a, b, step, 1.0) for a, b in zip(chains[name], chains[name][1:])]
-        springs += [(a, b, 2 * step, 1.0) for a, b in zip(chains[name], chains[name][2:])]
-    springs += [(chains[a][-1], chains[b][0], 10, 1.0) for a, b in edges]
-
-    def push(disp, i, j, f, dx, dy, d):
-        disp[i][0] += f * dx / d
-        disp[i][1] += f * dy / d
-        disp[j][0] -= f * dx / d
-        disp[j][1] -= f * dy / d
-
-    for it in range(steps):
-        disp = [[0.0, 0.0] for _ in pts]
-        for i in range(len(pts)):
-            for j in range(i + 1, len(pts)):
-                if owner[i] == owner[j]:
-                    continue
-                dx, dy = pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]
-                d2 = max(dx * dx + dy * dy, 1.0)
-                push(disp, i, j, 1600 / d2, dx, dy, math.sqrt(d2))
-        for a, b, rest, k in springs:
-            dx, dy = pts[a][0] - pts[b][0], pts[a][1] - pts[b][1]
-            d = max(math.hypot(dx, dy), 0.01)
-            push(disp, a, b, -k * (d - rest), dx, dy, d)
-        cap = 6 * (1 - it / steps) + 0.1
-        for p, (dx, dy) in zip(pts, disp):
-            scale = min(0.3, cap / max(math.hypot(dx, dy), 1e-9))
-            p[0] += dx * scale
-            p[1] += dy * scale
-    return {name: [tuple(pts[i]) for i in chain] for name, chain in chains.items()}
-
-
-def catmull_rom(points, per=8):
-    p = [points[0], *points, points[-1]]
-    out = [points[0]]
-    for a, b, c, d in zip(p, p[1:], p[2:], p[3:]):
-        for k in range(1, per + 1):
-            t = k / per
-            out.append(tuple(
-                0.5 * (2 * b[i] + (c[i] - a[i]) * t + (2 * a[i] - 5 * b[i] + 4 * c[i] - d[i]) * t * t
-                       + (3 * b[i] - a[i] - 3 * c[i] + d[i]) * t * t * t)
-                for i in (0, 1)
-            ))
-    return out
-
-
-def polyline(points):
-    return "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in points)
-
-
-def portion(points, f0, f1):
-    cuts = [0.0]
-    for a, b in zip(points, points[1:]):
-        cuts.append(cuts[-1] + math.dist(a, b))
-
-    def at(f):
-        s = f * cuts[-1]
-        i = next(i for i in range(len(points) - 1) if s <= cuts[i + 1])
-        t = (s - cuts[i]) / (cuts[i + 1] - cuts[i])
-        (ax, ay), (bx, by) = points[i], points[i + 1]
-        return i, (ax + t * (bx - ax), ay + t * (by - ay))
-
-    (i0, p0), (i1, p1) = at(f0), at(f1)
-    return [p0, *points[i0 + 1 : i1 + 1], p1]
-
-
-def text(x, y, label, size, bold=False, color=None, anchor="middle"):
-    weight = ' font-weight="bold"' if bold else ""
-    fill = f' fill="{color}"' if color else ""
-    return f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}" font-family="Helvetica,sans-Serif" font-size="{size}"{weight}{fill}>{label}</text>'
-
-
-def bandage(nodes, edges, pad=36, width=14):
-    """Draws nodes as tubes as long as their sequence, as Bandage and the
-    JBrowse graph view do."""
-    paths = force_layout({n: v["bp"] for n, v in nodes.items()}, {n: v["seed"] for n, v in nodes.items()}, edges)
-    xs = [x for p in paths.values() for x, _ in p]
-    ys = [y for p in paths.values() for _, y in p]
-    left, top = min(xs) - pad - 20, min(ys) - pad
-    paths = {n: catmull_rom([(x - left, y - top) for x, y in p]) for n, p in paths.items()}
-    cx, cy = (max(xs) + min(xs)) / 2 - left, (max(ys) + min(ys)) / 2 - top
-    body, trace = [], []
-    for a, b in edges:
-        (ax, ay), (x0, y0) = paths[a][-2:]
-        (x1, y1), (bx, by) = paths[b][:2]
-        reach = math.dist((x0, y0), (x1, y1)) / 4
-        u0, u1 = reach / math.dist((ax, ay), (x0, y0)), reach / math.dist((bx, by), (x1, y1))
-        c0 = (x0 + (x0 - ax) * u0, y0 + (y0 - ay) * u0)
-        c1 = (x1 + (x1 - bx) * u1, y1 + (y1 - by) * u1)
-        alt = nodes[a]["alt"] or nodes[b]["alt"]
-        d = f"M{x0:.1f},{y0:.1f} C{c0[0]:.1f},{c0[1]:.1f} {c1[0]:.1f},{c1[1]:.1f} {x1:.1f},{y1:.1f}"
-        body.append(f'<path d="{d}" fill="none" stroke="{ORANGE[2] if alt else "#555555"}" stroke-width="1.5"/>')
-        if not alt:
-            trace.append(d)
-    halo = width + 12
-    for name, v in nodes.items():
-        if v["query"]:
-            body.insert(0, f'<path d="{polyline(portion(paths[name], *v["query"]))}" fill="none" stroke="{HIGHLIGHT}" stroke-width="{halo}"/>')
-    for name, v in nodes.items():
-        d = polyline(paths[name])
-        body.append(f'<path d="{d}" fill="none" stroke="{v["line"]}" stroke-width="{width}"/>')
-        body.append(f'<path d="{d}" fill="none" stroke="{v["fill"]}" stroke-width="{width - 3}"/>')
-        if not v["alt"]:
-            trace.append(d)
-        mid = len(paths[name]) // 2
-        (ax, ay), (mx, my), (bx, by) = paths[name][mid - 1 : mid + 2]
-        nx, ny = ay - by, bx - ax
-        if nx * (mx - cx) + ny * (my - cy) < 0:
-            nx, ny = -nx, -ny
-        d = math.hypot(nx, ny)
-        x, y = mx + nx / d * (halo / 2 + 4), my + ny / d * (halo / 2 + 4)
-        color = "#999999" if v["far"] else None
-        if ny > 0:
-            body += [text(x, y + 11, name, 12, bold=not v["far"], color=color), text(x, y + 23, v["label"], 10, color=color)]
-        else:
-            body += [text(x, y - 14, name, 12, bold=not v["far"], color=color), text(x, y - 2, v["label"], 10, color=color)]
-    ref = sorted((n for n in nodes if not nodes[n]["alt"]), key=lambda n: paths[n][0][0])
-    (sx, sy), (ex, ey) = paths[ref[0]][0], paths[ref[-1]][-1]
-    body += [f'<path d="{d}" fill="none" stroke="{BLUE[2]}" stroke-width="1.5"/>' for d in trace]
-    body += [
-        f'<path d="M{ex:.1f},{ey:.1f} l8,0" stroke="{BLUE[2]}" stroke-width="1.5" marker-end="url(#ref-arrow)"/>',
-        f'<defs><marker id="ref-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="{BLUE[2]}"/></marker></defs>',
-        text(sx - 8, sy + 4, "chr1 path", 11, color=BLUE[2], anchor="end"),
-    ]
-    first, last = nodes[ref[0]], nodes[ref[-1]]
-    extent = coordinate(first["seq"], first["start"], last["end"])
-    by = max(ys) - top + pad + 22
-    body += [
-        f'<path d="M{sx:.1f},{by - 6} V{by} H{ex:.1f} V{by - 6}" fill="none" stroke="#555555" stroke-width="1.2"/>',
-        text((sx + ex) / 2, by + 16, f"viewing {coordinate(*QUERY)} fetches the bubble out to {extent}", 11, color="#555555"),
-    ]
-    w, h = max(xs) - left + pad + 20, by + 26
-    return w, h, "\n".join(body)
-
-
-def overview_graphs(segs, links):
-    nodes = {r[3]: {"seq": r[5], "start": r[6], "end": r[7], "rank": r[4]} for r in segs}
-    graph, graph_bottom = bubble("", ref_order(nodes), coordinates(nodes), [(r[3][:-1], r[4][:-1]) for r in links])
-
-    q = run_query(segs, links)
-    drawn = {n: nodes[n] for n in nodes if n in q["returned"]}
-    for i in sorted(q["kept"]):
-        for end in link_ends(q["hits"][i]):
-            drawn.setdefault(end["name"], end)
-    edges = [q["ends"][i] for i in sorted(q["kept"])]
-    far = set(drawn) - q["returned"]
-
-    seq, qstart, qend = QUERY
-    ref = ref_order(drawn)
-    seeds = {n: (80 * i, 0) for i, n in enumerate(ref)}
-    for n in drawn:
-        if n not in ref:
-            linked = [seeds[e][0] for edge in edges if n in edge for e in edge if e in ref]
-            seeds[n] = (sum(linked) / len(linked), -40)
-    tubes = {}
-    for n, v in drawn.items():
-        start, end = int(v["start"]), int(v["end"])
-        lo, hi = max(start, qstart), min(end, qend)
-        alt = v["rank"] != "0"
-        tubes[n] = {
-            "bp": end - start,
-            "seq": v["seq"],
-            "start": start,
-            "end": end,
-            "seed": seeds[n],
-            "label": coordinate(v["seq"], start, end),
-            "alt": alt,
-            "far": n in far,
-            "line": "#9fb3d1" if n in far else (ORANGE if alt else BLUE)[2],
-            "fill": BLUE[0] if n in far else (ORANGE if alt else BLUE)[1],
-            "query": ((lo - start) / (end - start), (hi - start) / (end - start)) if v["seq"] == seq and lo < hi else None,
-        }
-    w, h, panel = bandage(tubes, edges)
-    drawn = [f'drawn [shape=box, style="", color=transparent, label="", fixedsize=true, width={w / 72:.2f}, height={h / 72:.2f}]']
-
-    detail = [
-        arrow((graph_bottom, "cluster_graph"), ("rows", "cluster_files"), f"gfa-to-tabix {PREFIX}.gfa"),
-        arrow(("rows", "cluster_files"), ("hits", "cluster_query"), f"a browser queries\n{coordinate(seq, qstart, qend)}"),
-        arrow(("hits", "cluster_query"), ("drawn", "cluster_drawn"), "kept rows"),
-    ]
-    return graph, drawn, detail, panel
-
-
-def overview_svg(segs, links):
+def overview_svg(segs, links, detail=False):
     """The README figure: the graph, the lines of its node file, the two
-    Tabix queries a browser runs to view a window, and the nodes it draws."""
+    Tabix queries a browser runs to view a window, and the nodes it draws.
+    The detail figure adds the lines of the link file and how the browser
+    picks among them."""
     seq, qstart, qend = QUERY
     width, ink, muted, line = 820, "#1f2328", "#57606a", "#8c959f"
     blue, blue_pale, orange, orange_pale = "#4a6fa5", "#e8eef7", "#c77a2b", "#fde6cf"
@@ -475,11 +157,35 @@ def overview_svg(segs, links):
             say(x, y + 12, coordinate(v["seq"], v["start"], v["end"]), 10, muted if dim else ink, "middle")
         return at, box_w, box_h
 
+    def lines(top, rows, labels, marked):
+        char, x0 = 8.4, 48
+        widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
+        xs = [x0]
+        for i, w in enumerate(widths[:-1], 1):
+            start = max(k for k in labels if k < i)
+            xs.append(max(xs[-1] + (w + 2) * char, xs[start] + 6.2 * len(labels[start]) + 12 if i in labels else 0))
+        end = xs[-1] + widths[-1] * char
+        bounds = sorted(labels) + [len(widths)]
+        for i, j in zip(bounds, bounds[1:]):
+            say(xs[i], top + 28, labels[i], 11, muted)
+            if j - i > 1:
+                out.append(f'<line x1="{xs[i]:.1f}" y1="{top + 33}" x2="{xs[j - 1] + widths[j - 1] * char:.1f}" '
+                           f'y2="{top + 33}" stroke="{line}"/>')
+        for i, r in enumerate(rows):
+            y = top + 54 + i * 24
+            if marked(i):
+                out.append(f'<rect x="{x0 - 8}" y="{y - 16}" width="{end - x0 + 16:.1f}" height="22" fill="{HIGHLIGHT}"/>')
+            for x, s in zip(xs, r):
+                say(x, y, s, 14, ink, font=mono)
+        return end, top + 54 + len(rows) * 24
+
     out.append(f'<defs><marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
                f'<path d="M0,0 L8,4 L0,8 z" fill="{line}"/></marker></defs>')
 
     alt = next(n for n in nodes if nodes[n]["alt"])
-    replaced = next(b for a, b in edges if a == next(a for a, b in edges if b == alt) and b in ref)
+    into = next(a for a, b in edges if b == alt)
+    out_ = next(b for a, b in edges if a == alt)
+    replaced = next(b for a, b in edges if a == into and b in ref)
     say(24, 28, f"1. A graph. The blue nodes are {seq}. The orange node, {alt}, is an "
         f"{nodes[alt]['seq']} allele that replaces {replaced}.", 14, weight="bold")
     at, box_w, box_h = graph(52, list(nodes))
@@ -496,52 +202,53 @@ def overview_svg(segs, links):
 
     top = 200
     say(24, top, f"2. gfa-to-tabix writes {PREFIX}.segs.bed.gz, one line per node", 14, weight="bold")
-    cols = [[r[i] for i in range(8)] for r in segs]
-    char, x0 = 8.4, 48
-    widths = [max(len(c[i]) for c in cols) for i in range(8)]
     labels = {0: "the interval Tabix searches", 3: "node", 4: f"rank (0 = on {seq})", 5: "the node's own position"}
-    xs = [x0]
-    for i, w in enumerate(widths[:-1], 1):
-        start = max(k for k in labels if k < i)
-        xs.append(max(xs[-1] + (w + 2) * char, xs[start] + 6.2 * len(labels[start]) + 12 if i in labels else 0))
-    end = xs[-1] + widths[-1] * char
-    for i, label in labels.items():
-        say(xs[i], top + 28, label, 11, muted)
-    out.append(f'<line x1="{xs[0]}" y1="{top + 33}" x2="{xs[2] + widths[2] * char:.1f}" y2="{top + 33}" stroke="{line}"/>')
-    out.append(f'<line x1="{xs[5]:.1f}" y1="{top + 33}" x2="{end:.1f}" y2="{top + 33}" stroke="{line}"/>')
-    for i, (r, c) in enumerate(zip(segs, cols)):
-        y = top + 54 + i * 24
-        if r[3] in q["returned"]:
-            out.append(f'<rect x="{x0 - 8}" y="{y - 16}" width="{end - x0 + 16:.1f}" height="22" fill="{HIGHLIGHT}"/>')
-        for x, s in zip(xs, c):
-            say(x, y, s, 14, ink, font=mono)
-        if r[4] != "0":
-            into = next(a for a, b in edges if b == r[3])
-            out_ = next(b for a, b in edges if a == r[3])
-            say(end + 24, y - 7, f"{r[3]} is not on {seq}, so gfa-to-tabix gives its line", 12, muted)
-            say(end + 24, y + 8, f"the interval {coordinate(*r[0:3])}, from the start of {into}", 12, muted)
-            say(end + 24, y + 23, f"to the end of {out_}, the nodes it connects to", 12, muted)
+    end, bottom = lines(top, [r[:8] for r in segs], labels, lambda i: segs[i][3] in q["returned"])
+    y = top + 54 + next(i for i, r in enumerate(segs) if r[3] == alt) * 24
+    alt_row = next(r for r in segs if r[3] == alt)
+    say(end + 24, y - 7, f"{alt} is not on {seq}, so gfa-to-tabix gives its line", 12, muted)
+    say(end + 24, y + 8, f"the interval {coordinate(*alt_row[0:3])}, from the start of {into}", 12, muted)
+    say(end + 24, y + 23, f"to the end of {out_}, the nodes it connects to", 12, muted)
+    top = bottom + 20
 
-    top += 54 + len(segs) * 24 + 20
+    hits = q["hits"]
+    if detail:
+        say(24, top, f"3. gfa-to-tabix writes {PREFIX}.links.bed.gz, one line per link", 14, weight="bold")
+        labels = {0: "the interval Tabix searches", 3: "link", 5: "source node: position, rank", 9: "target node: position, rank"}
+        _, bottom = lines(top, links, labels, lambda i: links[i] in hits and hits.index(links[i]) in q["kept"])
+        say(24, bottom + 6, f"A line's interval covers both its nodes, their neighbours on {seq} and any allele hanging off "
+            f"them, so a query anywhere", 12, muted)
+        say(24, bottom + 22, f"from {into} to {out_} returns every link of the bubble.", 12, muted)
+        top = bottom + 52
+
     region = f"{seq}:{qstart}-{qend}"
     fetched = " and ".join(sorted(q["returned"]))
     far = " and ".join(sorted(q["far"]))
-    say(24, top, f"3. To show {region}, a browser runs two queries", 14, weight="bold")
+    say(24, top, f"{4 if detail else 3}. To show {region}, a browser runs two queries", 14, weight="bold")
+    kept = f"the {len(q['kept'])} {'highlighted ones' if detail else 'that touch ' + fetched.replace(' and ', ' or ')}"
     queries = [
         (f"tabix {PREFIX}.segs.bed.gz {region}", f"the highlighted lines, {fetched}"),
         (f"tabix {PREFIX}.links.bed.gz {region}",
-         f"{'all ' if len(q['hits']) == len(links) else ''}{len(q['hits'])} link lines; "
-         f"the browser keeps the {len(q['kept'])} that touch {fetched.replace(' and ', ' or ')}"),
+         f"{'all ' if len(hits) == len(links) else ''}{len(hits)} link lines; the browser keeps {kept}"),
     ]
     arrow_x = 48 + 7.9 * max(len(c) for c, _ in queries) + 12
     for i, (command, result) in enumerate(queries):
         y = top + 26 + i * 22
         say(48, y, command, 13, font=mono)
         say(arrow_x, y, f"→ {result}", 12, muted)
-    say(24, top + 26 + 2 * 22 + 4, f"The browser draws {fetched}, and also {far} (grey), whose positions it "
-        "reads from those link lines.", 12, muted)
-    graph(top + 120, sorted(q["returned"] | q["far"]), pale=q["far"])
-    height = top + 120 + 70 + 34
+    notes = []
+    if detail:
+        dropped = [f"{a}→{b}" for i, (a, b) in enumerate(q["ends"]) if i not in q["kept"]]
+        notes += [
+            "The browser keeps a link when the node file returned one of its nodes, or when both its nodes are far ends",
+            f"of links it kept. {' and '.join(dropped)} {'passes neither test, so the browser drops it' if len(dropped) == 1 else 'pass neither test, so the browser drops them'}.",
+        ]
+    notes.append(f"The browser draws {fetched}, and also {far} (grey), whose positions it reads from those link lines.")
+    for i, note in enumerate(notes):
+        say(24, top + 74 + i * 16, note, 12, muted)
+    graph_top = top + 120 + (len(notes) - 1) * 16
+    graph(graph_top, sorted(q["returned"] | q["far"]), pale=q["far"])
+    height = graph_top + 70 + 34
     head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
             f'font-family="Helvetica, Arial, sans-serif"><rect width="{width}" height="{height}" fill="white"/>')
     return head + "\n" + "\n".join(out) + "\n</svg>\n"
@@ -750,20 +457,6 @@ def splice_regions(text, regions, name):
     return "\n".join(lines)
 
 
-def inject(svg, body):
-    node = svg.index("<title>drawn</title>")
-    points = svg[svg.index('points="', node) + 8 :].split('"', 1)[0]
-    xs, ys = zip(*(map(float, p.split(",")) for p in points.split()))
-    close = svg.index("</g>", node) + len("</g>")
-    group = f'\n<!-- begin bandage -->\n<g transform="translate({min(xs)},{min(ys)})">\n{body}\n</g>\n<!-- end bandage -->'
-    return svg[:close] + group + svg[close:]
-
-
-def drawn_panel(svg):
-    begin, end = svg.find("<!-- begin bandage -->"), svg.find("<!-- end bandage -->")
-    return "\n".join(svg[begin:end].split("\n")[2:-2]) if begin >= 0 else None
-
-
 def generate(binary):
     with tempfile.TemporaryDirectory() as tmp:
         out = f"{tmp}/{PREFIX}"
@@ -776,20 +469,9 @@ def generate(binary):
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, simple, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
-    graph, drawn, arrows, panel = overview_graphs(segs, links)
     return {
         "overview": overview_svg(segs, links),
-        "overview-detail": {
-            "graph": graph,
-            "segs": segs_table(segs),
-            "segs-caption": segs_caption(segs, links),
-            "links": links_table(links),
-            "lanes": lanes(segs, links),
-            "keep-caption": keep_caption(segs, links),
-            "drawn": drawn,
-            "arrows": arrows,
-            "svg": panel,
-        },
+        "overview-detail": overview_svg(segs, links, detail=True),
         "walks": {
             "graph": walks_nodes,
             "label": walks_label(header, walk_rows),
@@ -822,13 +504,9 @@ def main():
                 stale = True
                 print(f"{svg}: differs from the tool's output")
             continue
-        panel = regions.pop("svg", None)
         old = dot.read_text()
         new = splice_regions(old, regions, dot.name)
         if check:
-            if panel is not None and drawn_panel(svg.read_text()) != panel:
-                stale = True
-                print(f"{svg}: the drawn panel differs from the tool's output")
             if new != old:
                 stale = True
                 sys.stdout.writelines(difflib.unified_diff(
@@ -836,7 +514,7 @@ def main():
             continue
         dot.write_text(new)
         drawing = subprocess.run(["dot", "-Tsvg", dot], check=True, capture_output=True, text=True).stdout
-        svg.write_text(inject(drawing, panel) if panel is not None else drawing)
+        svg.write_text(drawing)
     if stale:
         sys.exit("figures.py: docs/figures is stale; run scripts/figures.py <binary> to redraw it")
 
