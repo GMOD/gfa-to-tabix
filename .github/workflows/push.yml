@@ -29,6 +29,7 @@ jobs:
       - run: cargo clippy --all-targets --locked -- -D warnings
       - run: cargo test --release --locked
       - run: python3 scripts/figures.py target/release/gfa-to-tabix --check
+      - run: python3 scripts/check-links.py
 
   parity:
     name: Byte parity with the JBrowse scripts and bandage-fold
