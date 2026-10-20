@@ -49,8 +49,13 @@ compressed bytes a reader fetches for one 64 kb window:
 | file | 728 MB → 745 MB | 460 MB → 422 MB |
 
 - Read one chunk back, the 1.2 file scores the same strict recall as this one
-  on both references. CHM13's lost 4.6 points are pieces only a 31-chunk read
-  saw, mostly in the short arm, where the 1.2 reader refused most windows
+  on both references: the lost points are pieces only a 31-chunk read saw
+- CHM13's loss by region, 1.2 → this:
+  - short arm: 94.55% → 76.85% of 1,486 pairs, about three quarters of the
+    loss. The 1.2 reader refuses 186 of its 190 windows over the byte budget
+  - pericentromere: 92.05% → 81.92% of 365 pairs, in windows the 1.2 reader
+    served
+  - elsewhere: 99.96% → 98.87% of 4,684 pairs, also served
 - Build: 12:06 and 15.3 GB peak on ada
 
 ## Consequences
