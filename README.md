@@ -4,7 +4,7 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 
 - **In:** a GFA from minigraph, Minigraph-Cactus, pggb, odgi or vg
 - **Out:** Tabix-indexed BED files, each line indexed by a reference interval:
-  - the graph's nodes and links, one line each
+  - the graph's nodes and links, one line each, in two files: the linear track reads only the nodes ([ADR 0002](docs/adr/0002-two-index-files.md))
   - or, with `--walks` on a base-level graph, every haplotype's path through it
 - **Why:** a browser fetches only the rows for a region, with HTTP range requests, and never downloads the whole graph
 - The [JBrowse 2](https://jbrowse.org) graph track reads the files. One static binary does the conversion, with no bgzip or tabix; `build` uses gfatools, when installed, for an rGFA's bubbles
@@ -49,6 +49,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - [Subcommands](docs/subcommands.md): `build`, `alleles`, `bubbles`, `fold`, `paths`
 - [Walks](docs/walks.md) and [the walks row format](docs/walks-format.md)
 - [JBrowse configuration](docs/jbrowse.md)
+- Decisions: [ADR 0001](docs/adr/0001-step-placement.md), where a walk file files a step; [ADR 0002](docs/adr/0002-two-index-files.md), why nodes and links are two files
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when they go stale
 

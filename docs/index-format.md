@@ -3,6 +3,7 @@
 - **In:** an rGFA, or a plain GFA with paths; see [inputs](inputs.md)
 - **Out:** `<prefix>.segs.bed.gz`, one row per node, and `<prefix>.links.bed.gz`, one row per link, each with a `.tbi`
 - **Filing:** the tool files each row under a reference interval, so one region query on each file returns the nodes and links a browser draws there
+- **Two files on purpose:** the JBrowse linear track reads only the node file, so merging the files would make it download every link row. Keep them apart while any reader reads nodes without links; [ADR 0002](adr/0002-two-index-files.md) lists the readers and the measurements
 
 ```bash
 gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc
@@ -80,6 +81,9 @@ one round of queries per step, and the index covers every contig in the graph.
 Use it to browse the graph from a non-reference assembly's coordinates.
 
 ## What the files hold
+
+The graph view reads both files; the linear track reads only the node file
+([ADR 0002](adr/0002-two-index-files.md)).
 
 `<prefix>.segs.bed.gz` has one row per node:
 
