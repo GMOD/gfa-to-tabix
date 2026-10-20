@@ -58,37 +58,41 @@
 - A viewer draws an abridged haplotype as a labelled block, such as
   `HG00097#1: 140 k steps, 2.1 Mb off reference`. Clicking the block loads the
   detail
-- The step budget counts interior steps, and the reader keeps R's stretches as
-  ranges. After abridging, some p-arm windows still hold 32–65 M steps along R,
-  which decode in about 3 s
+- graph-walks' read budget counts a step along R as a quarter, as the writer
+  does
 
 ## Evidence
 
-The writer was simulated on the long311 builds (ADR 0003 rules) and on HPRC
-v2.1 Minigraph-Cactus genome-wide (`mcu311`). A window is chunks c−1 and c,
-plus the `#long` lookback, as graph-walks 3.1 reads it. Bytes are the chunk's
-rows compressed in 64 kB blocks, as bgzip does.
+Built with gfa-to-tabix 1.4 from HPRC pggb chr22, `--stay 311`, at the default
+budget. A window is chunks c−1 and c, plus the `#long` lookback, as graph-walks
+reads it, and its cost is the compressed bytes its Tabix index points at.
 
-| measure | pggb CHM13 | pggb GRCh38 |
+| measure | GRCh38: 1.3 → 1.4 | CHM13: 1.3 → 1.4 |
 |---|---|---|
-| windows over 8 MB, before → after | 21 → 0 | 25 → 0 |
-| largest window, before → after | 43 → 6.2 MB | 166 → 7.8 MB |
-| most interior steps in a window, before → after | 57 M → 1.7 M | 267 M → 1.9 M |
-| chunks abridged | 53 of 739 | 29 of 610 |
-| (haplotype, chunk) pairs left with no kept piece | 259 of 324 k | 1,357 of 274 k |
+| windows over 8 MB | 25 → 0 | 21 → 0 |
+| largest window | 166 → 1.6 MB | 43 → 3.0 MB |
+| windows reading over 32 M steps | 22 → 0 | 47 → 0 |
+| paths abridged | 17,098 | 33,634 |
 
-- On Minigraph-Cactus the writer abridges 107 of 43,475 CHM13 chunks and 176 of
-  47,440 GRCh38 chunks, in the chr2, chr9 and chr14 repeat windows. CHM13
-  windows over 8 MB go from 2 to 0. These figures come from a run that measured
-  bytes as one zlib stream
-- The writer leaves every other chunk's rows byte-identical
-- The largest moved piece, in GRCh38 chunk 12648448, has 1.14 M steps. Encoded
-  alone it is 0.99 MB gzipped, and graph-walks decodes it in 0.5 s using
-  180 MB
+graph-walks 4 cutting CHM13 windows for every haplotype in Node, as walk rows:
 
-The scripts and outputs are on ada: `~/giant-review/design-fable/` (`abridge3b.py`,
-`summarize.py`, `v3b.pggb.*.tsv`), and the five reviews' directories under
-`~/giant-review/design-*/`.
+| window | 1.3 rows, budgets raised | 1.4 |
+|---|---|---|
+| satellite, 2359296 | 87 s (the 12.6 MB window) | 3.5 s |
+| p-arm, 5636096 | 77 s (weighted at a 40th) | 4.8 s |
+| costliest, 6881280 | | 8.6 s |
+| ordinary, 30015488 | 0.7 s | 0.7 s |
+
+- Expanding HG00097#1 in the satellite window reads its 284 k steps from the
+  detail records, in 3.7 s for the whole cut
+- A graph cut of the satellite windows asks to zoom in to about 20 kb, which
+  fits
+- The build takes 18 min and 19 GB, against 12 min and 15 GB. The files grow
+  from 745 to 1,409 MB (GRCh38) and from 422 to 704 MB (CHM13), since each
+  holds its detail records
+- The simulations that chose the design are on ada in
+  `~/giant-review/design-fable/`, and the five reviews' work in
+  `~/giant-review/design-*/`. The build and costs are in `~/giant-review/f5/`
 
 ## Consequences
 
@@ -97,10 +101,8 @@ The scripts and outputs are on ada: `~/giant-review/design-fable/` (`abridge3b.p
   each path is one click away
 - Recall as `walks-truth.py` scores it can fall only by the pairs left with no
   kept piece, at most 0.5%. Not yet rescored
-- Not yet measured:
-  - how long the JBrowse plugin takes to open the p-arm windows that hold
-    32–65 M steps along R
-  - the detail tier's total size
+- Not yet measured: Minigraph-Cactus at 1.4's weighting, and open times in
+  the JBrowse plugin
 
 ## Alternatives rejected
 
