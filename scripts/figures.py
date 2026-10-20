@@ -127,9 +127,36 @@ def overview_svg(segs, links, detail=False):
         out.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
                    f'font-weight="{weight}"{family}>{s}</text>')
 
+    box_w, box_h, step, left = 126, 38, 150, 170
+
+    def x_of(bp):
+        for i, n in enumerate(ref):
+            start, end = int(nodes[n]["start"]), int(nodes[n]["end"])
+            if bp <= end or i == len(ref) - 1:
+                return left + i * step - step / 2 + step * (bp - start) / (end - start)
+
+    def reference_path(top, shown, label):
+        """The reference path under a graph drawn from `top`: an axis at its
+        coordinates, and the window as a band down to it."""
+        row = top + 70
+        axis = row + box_h / 2 + 24
+        on = [n for n in ref if n in shown]
+        lo, hi = int(nodes[on[0]]["start"]), int(nodes[on[-1]]["end"])
+        a, b = x_of(qstart), x_of(qend)
+        out.append(f'<rect x="{a:.1f}" y="{row - box_h / 2 - 10:.1f}" width="{b - a:.1f}" '
+                   f'height="{axis - row + box_h / 2 + 10:.1f}" fill="{HIGHLIGHT}"/>')
+        out.append(f'<line x1="{x_of(lo):.1f}" y1="{axis}" x2="{x_of(hi) + 10:.1f}" y2="{axis}" stroke="{blue}" '
+                   f'stroke-width="2" marker-end="url(#ref)"/>')
+        say(x_of(lo) - 10, axis + 4, label, 12, blue, "end", "bold")
+        for n in on:
+            for bp in {int(nodes[n]["start"]), int(nodes[n]["end"])}:
+                out.append(f'<line x1="{x_of(bp):.1f}" y1="{axis - 4}" x2="{x_of(bp):.1f}" y2="{axis + 4}" stroke="{blue}"/>')
+                say(x_of(bp), axis + 17, bp, 10, blue, "middle")
+        say((a + b) / 2, axis + 31, f"window {seq}:{qstart}-{qend}", 11, ink, "middle", "bold")
+        return axis
+
     def graph(top, shown, pale=()):
-        box_w, box_h, step = 96, 38, 150
-        at = {n: (100 + i * step, top + 70) for i, n in enumerate(ref)}
+        at = {n: (left + i * step, top + 70) for i, n in enumerate(ref)}
         for n in nodes:
             if nodes[n]["alt"]:
                 into = next(a for a, b in edges if b == n)
@@ -180,7 +207,9 @@ def overview_svg(segs, links, detail=False):
         return end, top + 54 + len(rows) * 24
 
     out.append(f'<defs><marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
-               f'<path d="M0,0 L8,4 L0,8 z" fill="{line}"/></marker></defs>')
+               f'<path d="M0,0 L8,4 L0,8 z" fill="{line}"/></marker>'
+               f'<marker id="ref" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
+               f'<path d="M0,0 L8,4 L0,8 z" fill="{blue}"/></marker></defs>')
 
     alt = next(n for n in nodes if nodes[n]["alt"])
     into = next(a for a, b in edges if b == alt)
@@ -188,19 +217,10 @@ def overview_svg(segs, links, detail=False):
     replaced = next(b for a, b in edges if a == into and b in ref)
     say(24, 28, f"1. A graph. The blue nodes are {seq}. The orange node, {alt}, is an "
         f"{nodes[alt]['seq']} allele that replaces {replaced}.", 14, weight="bold")
-    at, box_w, box_h = graph(52, list(nodes))
-    for n in ref:
-        start, end = int(nodes[n]["start"]), int(nodes[n]["end"])
-        lo, hi = max(start, qstart), min(end, qend)
-        if lo < hi:
-            cx, cy = at[n]
-            a = cx - box_w / 2 + box_w * (lo - start) / (end - start)
-            b = cx - box_w / 2 + box_w * (hi - start) / (end - start)
-            y = cy + box_h / 2 + 8
-            out.append(f'<path d="M{a:.1f},{y - 4} V{y} H{b:.1f} V{y - 4}" fill="none" stroke="{ink}" stroke-width="1.2"/>')
-            say((a + b) / 2, y + 14, f"view {seq}:{qstart}-{qend}", 11, ink, "middle")
+    reference_path(52, list(nodes), f"{seq} path")
+    graph(52, list(nodes))
 
-    top = 200
+    top = 240
     say(24, top, f"2. gfa-to-tabix writes {PREFIX}.segs.bed.gz, one line per node", 14, weight="bold")
     labels = {0: "the interval Tabix searches", 3: "node", 4: f"rank (0 = on {seq})", 5: "the node's own position"}
     end, bottom = lines(top, [r[:8] for r in segs], labels, lambda i: segs[i][3] in q["returned"])
@@ -243,12 +263,19 @@ def overview_svg(segs, links, detail=False):
             "The browser keeps a link when the node file returned one of its nodes, or when both its nodes are far ends",
             f"of links it kept. {' and '.join(dropped)} {'passes neither test, so the browser drops it' if len(dropped) == 1 else 'pass neither test, so the browser drops them'}.",
         ]
-    notes.append(f"The browser draws {fetched}, and also {far} (grey), whose positions it reads from those link lines.")
+    notes += [
+        f"The browser draws {fetched}, which the node query returned, and also {far}, outside the window (pale),",
+        "at the positions the link lines give, so the bubble shows whole.",
+    ]
     for i, note in enumerate(notes):
         say(24, top + 74 + i * 16, note, 12, muted)
     graph_top = top + 120 + (len(notes) - 1) * 16
-    graph(graph_top, sorted(q["returned"] | q["far"]), pale=q["far"])
-    height = graph_top + 70 + 34
+    shown = sorted(q["returned"] | q["far"])
+    axis = reference_path(graph_top, shown, f"{seq} path")
+    at, _, _ = graph(graph_top, shown, pale=q["far"])
+    for n in sorted(q["far"]):
+        say(at[n][0], axis + 31, "outside the window", 10, muted, "middle")
+    height = int(axis + 48)
     head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
             f'font-family="Helvetica, Arial, sans-serif"><rect width="{width}" height="{height}" fill="white"/>')
     return head + "\n" + "\n".join(out) + "\n</svg>\n"
