@@ -18,7 +18,7 @@ from pathlib import Path
 FIGURES = Path(__file__).resolve().parent.parent / "docs" / "figures"
 PREFIX = "graph"
 REF = "GRCh38"
-QUERY = ("chr1", 32, 38)
+QUERY = ("chr1", 12, 18)
 
 BLUE = ("#e8eef7", "#a9bfe2", "#4a6fa5")
 ORANGE = ("#fde6cf", "#f3c08f", "#c77a2b")
@@ -114,21 +114,21 @@ def listing(names):
 
 def overview_svg(segs, links):
     """The two Tabix queries a browser runs for a window, the lines they
-    return, and the graph it draws from those lines alone."""
+    return, and the graph it draws from them, coloured by the file each
+    part came from."""
     seq, qstart, qend = QUERY
-    ink, muted, line, faint, grey = "#1f2328", "#57606a", "#8c959f", "#b6c3d6", "#9aa3ad"
-    blue, blue_pale, orange, orange_pale = "#4a6fa5", "#e8eef7", "#c77a2b", "#fde6cf"
+    ink, muted, line, grey = "#1f2328", "#57606a", "#8c959f", "#9aa3ad"
+    node_pale, node_ink = "#dafbe1", "#1a7f37"
+    link_pale, link_ink = "#f3e8ff", "#8250df"
     mono = "Menlo, Consolas, DejaVu Sans Mono, monospace"
     q = run_query(segs, links)
     kept = [q["hits"][i] for i in sorted(q["kept"])]
-    dropped = [r for r in q["hits"] if r not in kept]
     nodes = {r[3]: {"seq": r[5], "start": r[6], "end": r[7], "alt": r[4] != "0"} for r in segs}
     ref = sorted((n for n in nodes if not nodes[n]["alt"]), key=lambda n: int(nodes[n]["start"]))
     edges = [(r[3][:-1], r[4][:-1]) for r in kept]
     alt = next(n for n in nodes if nodes[n]["alt"])
     into = next(a for a, b in edges if b == alt)
     out_ = next(b for a, b in edges if a == alt)
-    drawn = q["returned"] | q["far"]
     lo, hi = int(nodes[ref[0]]["start"]), int(nodes[ref[-1]]["end"])
     region = f"{seq}:{qstart + 1}-{qend}"
     out = []
@@ -138,61 +138,49 @@ def overview_svg(segs, links):
         out.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
                    f'font-weight="{weight}"{family}>{s}</text>')
 
-    def rect(x, y, w, h, fill, stroke="none", rx=0, dash=False):
-        dashes = ' stroke-dasharray="4 3"' if dash else ""
+    def rect(x, y, w, h, fill, stroke="none", rx=0):
         out.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="{fill}" '
-                   f'stroke="{stroke}"{dashes}/>')
+                   f'stroke="{stroke}"/>')
 
-    def style(n):
-        return (orange_pale, orange) if nodes[n]["alt"] else (blue_pale, blue)
-
-    track, track_w, x0 = 48, 132, 208
+    track, track_w, x0 = 48, 120, 196
 
     def t_of(bp):
         return track + track_w * (bp - lo) / (hi - lo)
 
-    def table(top, command, rows, labels, state, chips):
+    def table(top, command, about, rows, labels, returned, pale, dark):
         """Each line with a bar at the interval Tabix searches; the window
-        crosses the bars of the lines the query returns. `chips` gives the
-        cells to box in the style of the node they draw."""
+        crosses the bars of the lines the query returns."""
         say(track, top, command, 13, font=mono, weight="bold")
-        top += 30
+        say(track, top + 19, about, 12, muted)
+        top += 50
         char = 7.2
         widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
         xs = [x0]
         for i, w in enumerate(widths[:-1], 1):
             start = max(k for k in labels if k < i)
             xs.append(max(xs[-1] + (w + 1.5) * char, xs[start] + 5.6 * len(labels[start]) + 14 if i in labels else 0))
-        bounds = sorted(labels) + [len(widths)]
-        for i, j in zip(bounds, bounds[1:]):
+        end = xs[-1] + widths[-1] * char
+        for i in labels:
             say(xs[i], top, labels[i], 11, muted)
         first, last = top + 24, top + 24 + (len(rows) - 1) * 20
+        for i, r in enumerate(rows):
+            if returned(r):
+                rect(x0 - 6, first + i * 20 - 14, end - x0 + 12, 19, pale)
         rect(t_of(qstart), top - 10, t_of(qend) - t_of(qstart), last - top + 16, HIGHLIGHT)
         for bp in range(lo, hi + 1, 10):
             out.append(f'<line x1="{t_of(bp):.1f}" y1="{top - 3}" x2="{t_of(bp):.1f}" y2="{top + 1}" stroke="{muted}"/>')
-            if (bp - lo) % 20 == 0:
-                say(t_of(bp), top - 6, bp, 9, muted, "middle")
+            say(t_of(bp), top - 6, bp, 9, muted, "middle")
         for i, r in enumerate(rows):
             y = first + i * 20
-            s = state(r)
-            on_alt = alt in (r[3], r[3][:-1], r[4][:-1])
-            fill, stroke = (orange_pale, orange) if on_alt else (blue_pale, blue)
+            hit = returned(r)
             a, b = t_of(int(r[1])), t_of(int(r[2]))
-            rect(a + 1, y - 10, b - a - 2, 10, fill if s == "kept" else "white", stroke if s != "skipped" else faint, 2)
-            for c0, c1, n in chips(r) if s == "kept" else ():
-                fill_, stroke_ = style(n)
-                dim = n not in q["returned"]
-                rect(xs[c0] - 4, y - 14, xs[c1] + widths[c1] * char - xs[c0] + 8, 19,
-                     "white" if dim else fill_, stroke_, 4, dim)
-            color, weight = {"kept": (ink, "bold"), "dropped": (muted, "normal"), "skipped": (grey, "normal")}[s]
+            rect(a + 1, y - 10, b - a - 2, 10, pale if hit else "white", dark if hit else grey, 2)
             for x, cell in zip(xs, r):
-                say(x, y, cell, 12, color, font=mono, weight=weight)
-            if s == "dropped":
-                say(xs[-1] + widths[-1] * char + 14, y, "← returned, not drawn", 11, muted)
+                say(x, y, cell, 12, ink if hit else grey, font=mono, weight="bold" if hit else "normal")
         return last
 
     def graph(top):
-        left, step, box_w, box_h = 96, 110, 92, 38
+        left, step, box_w, box_h = 96, 150, 120, 38
         at = {n: (left + (i + 0.5) * step, top + 70) for i, n in enumerate(ref)}
         at[alt] = ((at[into][0] + at[out_][0]) / 2, top)
 
@@ -209,59 +197,48 @@ def overview_svg(segs, links):
                 ax, ay, bx = ax + box_w / 4, ay - box_h / 2, bx - box_w / 2
             else:
                 ax, bx, by = ax + box_w / 2, bx - box_w / 4, by - box_h / 2
-            color = orange if alt in (a, b) else line
-            out.append(f'<line x1="{ax:.1f}" y1="{ay:.1f}" x2="{bx:.1f}" y2="{by:.1f}" stroke="{color}" '
-                       f'stroke-width="1.5" marker-end="url(#head)"/>')
-        for n in sorted(drawn):
+            out.append(f'<line x1="{ax:.1f}" y1="{ay:.1f}" x2="{bx:.1f}" y2="{by:.1f}" stroke="{link_ink}" '
+                       f'stroke-width="2" marker-end="url(#head)"/>')
+        for n in sorted(q["returned"] | q["far"]):
             x, y = at[n]
-            fill, stroke = style(n)
-            dim = n not in q["returned"]
-            rect(x - box_w / 2, y - box_h / 2, box_w, box_h, "white" if dim else fill, stroke, 8, dim)
+            fill, stroke = (node_pale, node_ink) if n in q["returned"] else (link_pale, link_ink)
+            rect(x - box_w / 2, y - box_h / 2, box_w, box_h, fill, stroke, 8)
             v = nodes[n]
             say(x, y - 3, n, 13, ink, "middle", "bold")
             say(x, y + 11, coordinate(v["seq"], v["start"], v["end"]), 10, ink, "middle")
-        out.append(f'<line x1="{x_of(lo):.1f}" y1="{axis}" x2="{x_of(hi) + 10:.1f}" y2="{axis}" stroke="{blue}" '
-                   f'stroke-width="2" marker-end="url(#ref)"/>')
-        say(x_of(lo) - 8, axis + 4, seq, 12, blue, "end", "bold")
+        out.append(f'<line x1="{x_of(lo):.1f}" y1="{axis}" x2="{x_of(hi) + 10:.1f}" y2="{axis}" stroke="{muted}" '
+                   f'stroke-width="1.5" marker-end="url(#axis)"/>')
+        say(x_of(lo) - 8, axis + 4, f"{seq} path", 12, muted, "end", "bold")
         for bp in range(lo, hi + 1, 10):
-            out.append(f'<line x1="{x_of(bp):.1f}" y1="{axis - 4}" x2="{x_of(bp):.1f}" y2="{axis + 4}" stroke="{blue}"/>')
-            say(x_of(bp), axis + 16, bp, 10, blue, "middle")
+            out.append(f'<line x1="{x_of(bp):.1f}" y1="{axis - 4}" x2="{x_of(bp):.1f}" y2="{axis + 4}" stroke="{muted}"/>')
+            say(x_of(bp), axis + 16, bp, 10, muted, "middle")
         say((x_of(qstart) + x_of(qend)) / 2, axis + 30, f"window {region}", 11, ink, "middle", "bold")
         return axis + 30
 
     out.append(f'<defs><marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
-               f'<path d="M0,0 L8,4 L0,8 z" fill="{line}"/></marker>'
-               f'<marker id="ref" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
-               f'<path d="M0,0 L8,4 L0,8 z" fill="{blue}"/></marker></defs>')
+               f'<path d="M0,0 L8,4 L0,8 z" fill="{link_ink}"/></marker>'
+               f'<marker id="axis" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
+               f'<path d="M0,0 L8,4 L0,8 z" fill="{muted}"/></marker></defs>')
 
-    say(24, 28, f"1. To show {region}, a browser queries the two files gfa-to-tabix writes", 14, weight="bold")
-    say(24, 47, "Bold lines come back from the query; grey ones don't.", 12, muted)
+    say(24, 28, f"1. To show {region}, a browser queries both files gfa-to-tabix writes", 14, weight="bold")
     labels = {0: "interval Tabix searches", 3: "node", 4: f"rank (0 = {seq})", 5: "the node's own position"}
-    bottom = table(82, f"tabix {PREFIX}.segs.bed.gz {region}", [r[:8] for r in segs], labels,
-                   lambda r: "kept" if r[3] in q["returned"] else "skipped", lambda r: [(3, 3, r[3])])
     alt_row = next(r for r in segs if r[3] == alt)
-    say(track, bottom + 28, f"{alt} is not on {seq}, so its line spans {coordinate(*alt_row[0:3])}, "
-        f"from {into} to {out_}, the nodes it connects to.", 12, muted)
+    bottom = table(62, f"tabix {PREFIX}.segs.bed.gz {region}",
+                   f"One line per node. {alt} is an {nodes[alt]['seq']} allele, so its line spans "
+                   f"{coordinate(*alt_row[0:3])}, from {into} to {out_}.",
+                   [r[:8] for r in segs], labels, lambda r: r[3] in q["returned"], node_pale, node_ink)
     labels = {0: "interval Tabix searches", 3: "link", 5: "source: position, rank", 9: "target: position, rank"}
+    bottom = table(bottom + 50, f"tabix {PREFIX}.links.bed.gz {region}",
+                   "One line per link, with the positions of both its nodes.",
+                   links, labels, lambda r: r in kept, link_pale, link_ink)
 
-    def ends(r):
-        return [(c, c + 2, n) for c, n in ((5, r[3][:-1]), (9, r[4][:-1])) if n in q["far"]]
-
-    def link_state(r):
-        return "kept" if r in kept else "dropped" if r in dropped else "skipped"
-
-    bottom = table(bottom + 72, f"tabix {PREFIX}.links.bed.gz {region}", links, labels, link_state, ends)
-    notes = [f"Dashed boxes: the positions of {listing(q['far'])}, which the node query didn't return."]
-    if dropped:
-        names = listing(f"{r[3]} {r[4]}" for r in dropped)
-        notes.append(f"The browser draws a link only when it draws both its nodes, so it drops {names}.")
-    for i, note in enumerate(notes):
-        say(track, bottom + 28 + i * 17, note, 12, muted)
-
-    top = bottom + 28 + (len(notes) - 1) * 17 + 46
-    say(24, top, "2. It draws the graph from those lines alone", 14, weight="bold")
-    say(24, top + 19, "Solid nodes come from node lines; dashed ones from positions in link lines.", 12, muted)
-    end = graph(top + 60)
+    top = bottom + 54
+    say(24, top, "2. It draws the graph from the returned lines", 14, weight="bold")
+    rect(24, top + 12, 22, 14, node_pale, node_ink, 3)
+    say(54, top + 23, f"from {PREFIX}.segs.bed.gz: {listing(q['returned'])}", 12, muted)
+    rect(330, top + 12, 22, 14, link_pale, link_ink, 3)
+    say(360, top + 23, f"from {PREFIX}.links.bed.gz: every edge, and {listing(q['far'])}", 12, muted)
+    end = graph(top + 80)
 
     width, height = 820, int(end + 20)
     head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
