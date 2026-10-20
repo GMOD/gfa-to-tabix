@@ -18,7 +18,7 @@ from pathlib import Path
 FIGURES = Path(__file__).resolve().parent.parent / "docs" / "figures"
 PREFIX = "graph"
 REF = "GRCh38"
-QUERY = ("chr1", 25, 30)
+QUERY = ("chr1", 12, 18)
 
 BLUE = ("#e8eef7", "#a9bfe2", "#4a6fa5")
 ORANGE = ("#fde6cf", "#f3c08f", "#c77a2b")
@@ -107,6 +107,11 @@ def coordinate(seq, start, end):
     return f"{seq}:{start}-{end}"
 
 
+def listing(names):
+    names = sorted(names)
+    return " and ".join(names) if len(names) < 3 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
 def overview_svg(segs, links, detail=False):
     """The README figure: the graph, the lines of its node file, the two
     Tabix queries a browser runs to view a window, and the nodes it draws.
@@ -184,6 +189,24 @@ def overview_svg(segs, links, detail=False):
             say(x, y + 12, coordinate(v["seq"], v["start"], v["end"]), 10, muted if dim else ink, "middle")
         return at, box_w, box_h
 
+    def intervals(top, label):
+        """One bar per line of the node file at the interval Tabix searches,
+        crossed by the window: the bars it overlaps are the lines it returns."""
+        rows = sorted(segs, key=lambda r: (int(r[1]), int(r[2])))
+        a, b = x_of(qstart), x_of(qend)
+        say(x_of(0), top, label, 11, muted)
+        bottom = top + 24 + len(rows) * 18
+        out.append(f'<rect x="{a:.1f}" y="{top + 8}" width="{b - a:.1f}" height="{bottom - top - 8}" fill="{HIGHLIGHT}"/>')
+        for i, r in enumerate(rows):
+            y = top + 26 + i * 18
+            hit, alt_ = r[3] in q["returned"], r[4] != "0"
+            fill, stroke = (orange_pale, orange) if alt_ else (blue_pale, blue)
+            x1, x2 = x_of(int(r[1])), x_of(int(r[2]))
+            out.append(f'<rect x="{x1 + 1:.1f}" y="{y - 10}" width="{x2 - x1 - 2:.1f}" height="13" rx="3" '
+                       f'fill="{fill if hit else "white"}" stroke="{stroke if hit else "#b6c3d6"}"/>')
+            say(x1 + 6, y, f"{r[3]}  {coordinate(*r[0:3])}", 10, ink if hit else muted, weight="bold" if hit else "normal")
+        return bottom
+
     def lines(top, rows, labels, marked):
         char, x0 = 8.4, 48
         widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
@@ -242,34 +265,40 @@ def overview_svg(segs, links, detail=False):
         top = bottom + 52
 
     region = f"{seq}:{qstart}-{qend}"
-    fetched = " and ".join(sorted(q["returned"]))
-    far = " and ".join(sorted(q["far"]))
+    fetched = listing(q["returned"])
+    far = listing(q["far"])
     say(24, top, f"{4 if detail else 3}. To show {region}, a browser runs two queries", 14, weight="bold")
-    kept = f"the {len(q['kept'])} {'highlighted ones' if detail else 'that touch ' + fetched.replace(' and ', ' or ')}"
+    found = f"{'all ' if len(hits) == len(links) else ''}{len(hits)} link lines"
+    if not detail:
+        found += ", each with the positions of both its nodes"
+    elif len(q["kept"]) < len(hits):
+        found += f"; the browser keeps the {len(q['kept'])} highlighted ones"
     queries = [
-        (f"tabix {PREFIX}.segs.bed.gz {region}", f"the highlighted lines, {fetched}"),
-        (f"tabix {PREFIX}.links.bed.gz {region}",
-         f"{'all ' if len(hits) == len(links) else ''}{len(hits)} link lines; the browser keeps {kept}"),
+        (f"tabix {PREFIX}.segs.bed.gz {region}", f"the lines of {fetched}, the bars the window crosses below"),
+        (f"tabix {PREFIX}.links.bed.gz {region}", found),
     ]
     arrow_x = 48 + 7.9 * max(len(c) for c, _ in queries) + 12
     for i, (command, result) in enumerate(queries):
         y = top + 26 + i * 22
         say(48, y, command, 13, font=mono)
         say(arrow_x, y, f"→ {result}", 12, muted)
+    top = intervals(top + 70, f"the interval Tabix searches, one bar per line of {PREFIX}.segs.bed.gz") + 12
     notes = []
     if detail:
         dropped = [f"{a}→{b}" for i, (a, b) in enumerate(q["ends"]) if i not in q["kept"]]
-        notes += [
-            "The browser keeps a link when the node file returned one of its nodes, or when both its nodes are far ends",
-            f"of links it kept. {' and '.join(dropped)} {'passes neither test, so the browser drops it' if len(dropped) == 1 else 'pass neither test, so the browser drops them'}.",
-        ]
+        notes.append("The browser keeps a link when the node file returned one of its nodes, or when both its nodes are far ends")
+        if dropped:
+            verb = "passes neither test, so the browser drops it" if len(dropped) == 1 else "pass neither test, so the browser drops them"
+            notes.append(f"of links it kept. {listing(dropped)} {verb}.")
+        else:
+            notes.append("of links it kept.")
     notes += [
-        f"The browser draws {fetched}, which the node query returned, and also {far}, outside the window (pale),",
-        "at the positions the link lines give, so the bubble shows whole.",
+        f"The node file has no line for {far} here, but the link lines give their positions, so the browser draws",
+        f"them too (pale) and the bubble shows whole. The reference allele, {replaced}, comes back only this way.",
     ]
     for i, note in enumerate(notes):
-        say(24, top + 74 + i * 16, note, 12, muted)
-    graph_top = top + 120 + (len(notes) - 1) * 16
+        say(24, top + 16 + i * 16, note, 12, muted)
+    graph_top = top + 62 + (len(notes) - 1) * 16
     shown = sorted(q["returned"] | q["far"])
     axis = reference_path(graph_top, shown, f"{seq} path")
     at, _, _ = graph(graph_top, shown, pale=q["far"])
