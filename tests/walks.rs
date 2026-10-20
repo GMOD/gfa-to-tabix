@@ -523,6 +523,49 @@ fn a_short_stretch_over_a_revisited_node_stays_in_its_piece() {
     );
 }
 
+// R walks 1 2 3 4 3 5 on chr, passing 3 at 12 and 24, and 8 9 8 on chrU. A
+// window reads one chunk before its own, since node 5 is 15 bp. F leaves 4 at
+// 18 for the 3 at 24 and comes back, so a reader of chunk 20-30 finds F's piece
+// at 10-20. B leaves 5 for the 3 at 12, a chunk before its piece, and G for
+// chrU, so no reader of the chunk they visit reads their piece's chunk. With
+// node 6 after 4, F's 3 lies at 30, two chunks on, and stays out until node 5
+// grows to 20 bp and windows read two chunks back.
+#[test]
+fn a_stay_absorbs_only_a_run_the_window_lookback_reaches() {
+    let nodes = "S\t1\tAAAAAA\nS\t2\tCCCCCC\nS\t3\tGGGGGG\nS\t4\tTTTTTT\nS\t6\tAAAAAA\n";
+    let cases = [
+        (
+            "S\t5\tACGTACGTACGTACG\nS\t8\tAAAAAA\nS\t9\tCCCCCC\n\
+             W\tR\t0\tchr\t0\t45\t>1>2>3>4>3>5\nW\tR\t0\tchrU\t0\t18\t>8>9>8\n\
+             W\tB\t1\tb\t0\t36\t>5>3>5\nW\tF\t1\tf\t0\t18\t>4>3>4\nW\tG\t1\tg\t0\t18\t>4>8>4\n",
+            vec![("B#1#b", 3), ("F#1#f", 1), ("G#1#g", 3)],
+        ),
+        (
+            "S\t5\tACGTACGTACGTACG\nW\tR\t0\tchr\t0\t51\t>1>2>3>4>6>3>5\nW\tF\t1\tf\t0\t18\t>4>3>4\n",
+            vec![("F#1#f", 3)],
+        ),
+        (
+            "S\t5\tACGTACGTACGTACGTACGT\nW\tR\t0\tchr\t0\t56\t>1>2>3>4>6>3>5\nW\tF\t1\tf\t0\t18\t>4>3>4\n",
+            vec![("F#1#f", 1)],
+        ),
+    ];
+    for (k, (rest, expected)) in cases.into_iter().enumerate() {
+        let path = std::env::temp_dir().join(format!("walks-reach-{}-{k}.gfa", std::process::id()));
+        fs::write(&path, format!("H\tVN:Z:1.1\n{nodes}{rest}")).unwrap();
+        let built = build(path.to_str().unwrap(), &["--refs", "R", "--stay", "6"]);
+        fs::remove_file(&path).unwrap();
+        assert!(built.output.status.success(), "case {k}");
+        for (name, pieces) in expected {
+            let rows = built
+                .file("R")
+                .lines()
+                .filter(|line| line.split('\t').skip(3).take(2).eq(["walk", name]))
+                .count();
+            assert_eq!(rows, pieces, "case {k}: {name}");
+        }
+    }
+}
+
 // D spends 12 bp on chunk 10-20's reference nodes before coming back to chunk
 // 0-10, but R and Q pass each node once, so no stay keeps that stretch in D's
 // piece: every file of a reference that passes no node twice holds the rows
