@@ -2,9 +2,13 @@ S	s1	AAAAAAAAAA	LN:i:10	SN:Z:chr1	SO:i:0	SR:i:0
 S	s2	AAAAAAAAAA	LN:i:10	SN:Z:chr1	SO:i:10	SR:i:0
 S	s3	AAAAAAAAAA	LN:i:10	SN:Z:chr1	SO:i:20	SR:i:0
 S	s4	AAAAAAAAAA	LN:i:10	SN:Z:chr1	SO:i:30	SR:i:0
-S	s5	AAAAAAAAAAAAAAA	LN:i:15	SN:Z:HG002	SO:i:10	SR:i:1
+S	s5	AAAAAAAAAA	LN:i:10	SN:Z:chr1	SO:i:40	SR:i:0
+S	s6	AAAAAAAAAA	LN:i:10	SN:Z:chr1	SO:i:50	SR:i:0
+S	s7	AAAAAAAAAAAAAAA	LN:i:15	SN:Z:HG002	SO:i:10	SR:i:1
 L	s1	+	s2	+	0M
 L	s2	+	s3	+	0M
 L	s3	+	s4	+	0M
-L	s2	+	s5	+	0M
-L	s5	+	s4	+	0M
+L	s4	+	s5	+	0M
+L	s5	+	s6	+	0M
+L	s4	+	s7	+	0M
+L	s7	+	s6	+	0M

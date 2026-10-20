@@ -18,7 +18,7 @@ from pathlib import Path
 FIGURES = Path(__file__).resolve().parent.parent / "docs" / "figures"
 PREFIX = "graph"
 REF = "GRCh38"
-QUERY = ("chr1", 12, 18)
+QUERY = ("chr1", 32, 38)
 
 BLUE = ("#e8eef7", "#a9bfe2", "#4a6fa5")
 ORANGE = ("#fde6cf", "#f3c08f", "#c77a2b")
@@ -116,18 +116,21 @@ def overview_svg(segs, links):
     """The two Tabix queries a browser runs for a window, the lines they
     return, and the graph it draws from those lines alone."""
     seq, qstart, qend = QUERY
-    ink, muted, line, faint = "#1f2328", "#57606a", "#8c959f", "#b6c3d6"
+    ink, muted, line, faint, grey = "#1f2328", "#57606a", "#8c959f", "#b6c3d6", "#9aa3ad"
     blue, blue_pale, orange, orange_pale = "#4a6fa5", "#e8eef7", "#c77a2b", "#fde6cf"
     mono = "Menlo, Consolas, DejaVu Sans Mono, monospace"
     q = run_query(segs, links)
+    kept = [q["hits"][i] for i in sorted(q["kept"])]
+    dropped = [r for r in q["hits"] if r not in kept]
     nodes = {r[3]: {"seq": r[5], "start": r[6], "end": r[7], "alt": r[4] != "0"} for r in segs}
     ref = sorted((n for n in nodes if not nodes[n]["alt"]), key=lambda n: int(nodes[n]["start"]))
-    edges = [(r[3][:-1], r[4][:-1]) for r in links]
+    edges = [(r[3][:-1], r[4][:-1]) for r in kept]
     alt = next(n for n in nodes if nodes[n]["alt"])
     into = next(a for a, b in edges if b == alt)
     out_ = next(b for a, b in edges if a == alt)
+    drawn = q["returned"] | q["far"]
     lo, hi = int(nodes[ref[0]]["start"]), int(nodes[ref[-1]]["end"])
-    region = f"{seq}:{qstart}-{qend}"
+    region = f"{seq}:{qstart + 1}-{qend}"
     out = []
 
     def say(x, y, s, size=13, fill=ink, anchor="start", weight="normal", font=None):
@@ -140,16 +143,20 @@ def overview_svg(segs, links):
         out.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="{fill}" '
                    f'stroke="{stroke}"{dashes}/>')
 
-    track, track_w, x0 = 48, 120, 196
+    def style(n):
+        return (orange_pale, orange) if nodes[n]["alt"] else (blue_pale, blue)
+
+    track, track_w, x0 = 48, 132, 208
 
     def t_of(bp):
         return track + track_w * (bp - lo) / (hi - lo)
 
-    def table(top, command, rows, labels, returned):
+    def table(top, command, rows, labels, state, chips):
         """Each line with a bar at the interval Tabix searches; the window
-        crosses the bars of the lines the query returns."""
+        crosses the bars of the lines the query returns. `chips` gives the
+        cells to box in the style of the node they draw."""
         say(track, top, command, 13, font=mono, weight="bold")
-        top += 28
+        top += 30
         char = 7.2
         widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
         xs = [x0]
@@ -157,34 +164,40 @@ def overview_svg(segs, links):
             start = max(k for k in labels if k < i)
             xs.append(max(xs[-1] + (w + 1.5) * char, xs[start] + 5.6 * len(labels[start]) + 14 if i in labels else 0))
         bounds = sorted(labels) + [len(widths)]
-        say(track, top, f"{seq} {lo}-{hi}", 10, muted)
         for i, j in zip(bounds, bounds[1:]):
-            say(xs[i], top, labels[i], 10, muted)
-            out.append(f'<line x1="{xs[i]:.1f}" y1="{top + 4}" x2="{xs[j - 1] + widths[j - 1] * char:.1f}" '
-                       f'y2="{top + 4}" stroke="{line}"/>')
-        first, last = top + 22, top + 22 + (len(rows) - 1) * 20
-        rect(t_of(qstart), first - 14, t_of(qend) - t_of(qstart), last - first + 20, HIGHLIGHT)
+            say(xs[i], top, labels[i], 11, muted)
+        first, last = top + 24, top + 24 + (len(rows) - 1) * 20
+        rect(t_of(qstart), top - 10, t_of(qend) - t_of(qstart), last - top + 16, HIGHLIGHT)
+        for bp in range(lo, hi + 1, 10):
+            out.append(f'<line x1="{t_of(bp):.1f}" y1="{top - 3}" x2="{t_of(bp):.1f}" y2="{top + 1}" stroke="{muted}"/>')
+            if (bp - lo) % 20 == 0:
+                say(t_of(bp), top - 6, bp, 9, muted, "middle")
         for i, r in enumerate(rows):
-            y = top + 22 + i * 20
-            hit = returned(r)
+            y = first + i * 20
+            s = state(r)
             on_alt = alt in (r[3], r[3][:-1], r[4][:-1])
             fill, stroke = (orange_pale, orange) if on_alt else (blue_pale, blue)
             a, b = t_of(int(r[1])), t_of(int(r[2]))
-            rect(a + 1, y - 10, b - a - 2, 10, fill if hit else "white", stroke if hit else faint, 2)
-            for x, s in zip(xs, r):
-                say(x, y, s, 12, ink if hit else faint, font=mono, weight="bold" if hit else "normal")
+            rect(a + 1, y - 10, b - a - 2, 10, fill if s == "kept" else "white", stroke if s != "skipped" else faint, 2)
+            for c0, c1, n in chips(r) if s == "kept" else ():
+                fill_, stroke_ = style(n)
+                dim = n not in q["returned"]
+                rect(xs[c0] - 4, y - 14, xs[c1] + widths[c1] * char - xs[c0] + 8, 19,
+                     "white" if dim else fill_, stroke_, 4, dim)
+            color, weight = {"kept": (ink, "bold"), "dropped": (muted, "normal"), "skipped": (grey, "normal")}[s]
+            for x, cell in zip(xs, r):
+                say(x, y, cell, 12, color, font=mono, weight=weight)
+            if s == "dropped":
+                say(xs[-1] + widths[-1] * char + 14, y, "← returned, not drawn", 11, muted)
         return last
 
     def graph(top):
-        left, step, box_w, box_h = 96, 150, 120, 38
+        left, step, box_w, box_h = 96, 110, 92, 38
         at = {n: (left + (i + 0.5) * step, top + 70) for i, n in enumerate(ref)}
         at[alt] = ((at[into][0] + at[out_][0]) / 2, top)
 
         def x_of(bp):
-            for i, n in enumerate(ref):
-                start, end = int(nodes[n]["start"]), int(nodes[n]["end"])
-                if bp <= end or i == len(ref) - 1:
-                    return left + i * step + step * (bp - start) / (end - start)
+            return left + step * (bp - lo) / 10
 
         axis = top + 70 + box_h / 2 + 22
         rect(x_of(qstart), top + 70 - box_h / 2 - 8, x_of(qend) - x_of(qstart), axis - top - 70 + box_h / 2 + 8, HIGHLIGHT)
@@ -199,8 +212,9 @@ def overview_svg(segs, links):
             color = orange if alt in (a, b) else line
             out.append(f'<line x1="{ax:.1f}" y1="{ay:.1f}" x2="{bx:.1f}" y2="{by:.1f}" stroke="{color}" '
                        f'stroke-width="1.5" marker-end="url(#head)"/>')
-        for n, (x, y) in at.items():
-            fill, stroke = (orange_pale, orange) if nodes[n]["alt"] else (blue_pale, blue)
+        for n in sorted(drawn):
+            x, y = at[n]
+            fill, stroke = style(n)
             dim = n not in q["returned"]
             rect(x - box_w / 2, y - box_h / 2, box_w, box_h, "white" if dim else fill, stroke, 8, dim)
             v = nodes[n]
@@ -209,7 +223,7 @@ def overview_svg(segs, links):
         out.append(f'<line x1="{x_of(lo):.1f}" y1="{axis}" x2="{x_of(hi) + 10:.1f}" y2="{axis}" stroke="{blue}" '
                    f'stroke-width="2" marker-end="url(#ref)"/>')
         say(x_of(lo) - 8, axis + 4, seq, 12, blue, "end", "bold")
-        for bp in sorted({int(nodes[n][k]) for n in ref for k in ("start", "end")}):
+        for bp in range(lo, hi + 1, 10):
             out.append(f'<line x1="{x_of(bp):.1f}" y1="{axis - 4}" x2="{x_of(bp):.1f}" y2="{axis + 4}" stroke="{blue}"/>')
             say(x_of(bp), axis + 16, bp, 10, blue, "middle")
         say((x_of(qstart) + x_of(qend)) / 2, axis + 30, f"window {region}", 11, ink, "middle", "bold")
@@ -221,22 +235,33 @@ def overview_svg(segs, links):
                f'<path d="M0,0 L8,4 L0,8 z" fill="{blue}"/></marker></defs>')
 
     say(24, 28, f"1. To show {region}, a browser queries the two files gfa-to-tabix writes", 14, weight="bold")
-    labels = {0: "interval Tabix searches", 3: "node", 4: "rank", 5: "the node's own position"}
-    bottom = table(60, f"tabix {PREFIX}.segs.bed.gz {region}", [r[:8] for r in segs], labels,
-                   lambda r: r[3] in q["returned"])
+    say(24, 47, "Bold lines come back from the query; grey ones don't.", 12, muted)
+    labels = {0: "interval Tabix searches", 3: "node", 4: f"rank (0 = {seq})", 5: "the node's own position"}
+    bottom = table(82, f"tabix {PREFIX}.segs.bed.gz {region}", [r[:8] for r in segs], labels,
+                   lambda r: "kept" if r[3] in q["returned"] else "skipped", lambda r: [(3, 3, r[3])])
     alt_row = next(r for r in segs if r[3] == alt)
-    say(track, bottom + 26, f"{alt} is not on {seq}, so its line spans {coordinate(*alt_row[0:3])}, "
-        f"from {into} to {out_}, the nodes it connects to.", 11, muted)
+    say(track, bottom + 28, f"{alt} is not on {seq}, so its line spans {coordinate(*alt_row[0:3])}, "
+        f"from {into} to {out_}, the nodes it connects to.", 12, muted)
     labels = {0: "interval Tabix searches", 3: "link", 5: "source: position, rank", 9: "target: position, rank"}
-    bottom = table(bottom + 64, f"tabix {PREFIX}.links.bed.gz {region}", links, labels, lambda r: r in q["hits"])
-    say(track, bottom + 26, f"A link line's interval covers its nodes, their neighbours on {seq} and any allele "
-        f"off them.", 11, muted)
 
-    top = bottom + 66
-    say(24, top, "2. It draws the graph from the lines the queries returned", 14, weight="bold")
-    say(24, top + 20, f"Solid: {listing(q['returned'])}, from their node lines. Dashed: {listing(q['far'])}, "
-        f"from the positions in the link lines.", 11, muted)
-    end = graph(top + 58)
+    def ends(r):
+        return [(c, c + 2, n) for c, n in ((5, r[3][:-1]), (9, r[4][:-1])) if n in q["far"]]
+
+    def link_state(r):
+        return "kept" if r in kept else "dropped" if r in dropped else "skipped"
+
+    bottom = table(bottom + 72, f"tabix {PREFIX}.links.bed.gz {region}", links, labels, link_state, ends)
+    notes = [f"Dashed boxes: the positions of {listing(q['far'])}, which the node query didn't return."]
+    if dropped:
+        names = listing(f"{r[3]} {r[4]}" for r in dropped)
+        notes.append(f"The browser draws a link only when it draws both its nodes, so it drops {names}.")
+    for i, note in enumerate(notes):
+        say(track, bottom + 28 + i * 17, note, 12, muted)
+
+    top = bottom + 28 + (len(notes) - 1) * 17 + 46
+    say(24, top, "2. It draws the graph from those lines alone", 14, weight="bold")
+    say(24, top + 19, "Solid nodes come from node lines; dashed ones from positions in link lines.", 12, muted)
+    end = graph(top + 60)
 
     width, height = 820, int(end + 20)
     head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
