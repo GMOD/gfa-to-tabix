@@ -206,6 +206,15 @@ impl Reference {
         self.placement[id] & OFF_REFERENCE == 0
     }
 
+    // maxnode: the longest node on the reference paths, in bp
+    fn longest(&self, lengths: &[u32]) -> u32 {
+        (0..lengths.len())
+            .filter(|&id| self.on_reference(id))
+            .map(|id| lengths[id])
+            .max()
+            .unwrap_or(0)
+    }
+
     fn first_visit(&self, id: usize) -> Visit {
         Visit {
             name: self.placement[id],
@@ -764,6 +773,14 @@ impl Chunks {
     fn of(&self, name: u32, offset: u64) -> u32 {
         self.first[name as usize] + (offset / self.size) as u32
     }
+
+    // Whether a reader that reads `lookback` chunks before a window over
+    // `chunk` reads `home`.
+    fn reaches(&self, chunk: u32, home: u32, lookback: u32) -> bool {
+        home <= chunk
+            && chunk - home <= lookback
+            && self.starts[chunk as usize].0 == self.starts[home as usize].0
+    }
 }
 
 // Under one reference: the chunks a record's first and last pieces are filed
@@ -794,6 +811,8 @@ struct Builder {
     chunks: Chunks,
     stay: u64,
     references: Vec<Reference>,
+    // by reference: the chunks a reader reads before a window's own
+    lookback: Vec<u32>,
     rows: Sorter,
     // by record, then reference
     placed: Vec<Placed>,
@@ -916,12 +935,14 @@ impl Builder {
             }
         }
         if own.is_none() && self.stay > 0 {
+            let lookback = self.lookback[r];
             stay_home(
                 &mut self.chunk_of,
                 handles,
                 reference,
                 &self.graph.lengths,
                 self.stay,
+                |chunk, home| self.chunks.reaches(chunk, home, lookback),
             );
         }
         true
@@ -983,14 +1004,17 @@ impl Builder {
 
 // Files a run of steps away from the current piece's chunk under that chunk
 // when the path comes back to it, the run spends at most `stay` bp on
-// reference nodes and one of those nodes is one the reference passes more
-// than once. Any other run moves the piece on to the run's first chunk.
+// reference nodes, one of those nodes is one the reference passes more than
+// once, and a reader of each chunk the run visits also reads the piece's,
+// as `reaches` says. Any other run moves the piece on to the run's first
+// chunk.
 fn stay_home(
     chunk_of: &mut [u32],
     handles: &[u32],
     reference: &Reference,
     lengths: &[u32],
     stay: u64,
+    reaches: impl Fn(u32, u32) -> bool,
 ) {
     let n = chunk_of.len();
     let mut home = chunk_of[0];
@@ -1002,8 +1026,10 @@ fn stay_home(
         }
         let mut content = 0u64;
         let mut revisits = false;
+        let mut seen = true;
         let mut j = i;
         while j < n && chunk_of[j] != home && content <= stay {
+            seen &= reaches(chunk_of[j], home);
             let id = (handles[j] >> 1) as usize;
             if reference.on_reference(id) {
                 content += u64::from(lengths[id]);
@@ -1011,7 +1037,7 @@ fn stay_home(
             }
             j += 1;
         }
-        if j < n && chunk_of[j] == home && content <= stay && revisits {
+        if j < n && chunk_of[j] == home && content <= stay && revisits && seen {
             chunk_of[i..j].fill(home);
             i = j;
         } else {
@@ -1172,11 +1198,18 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         std::process::id()
     )));
     fs::create_dir_all(&temp.0).map_err(|e| format!("{}: {e}", temp.0.display()))?;
+    let lookback = references
+        .iter()
+        .map(|reference| {
+            (u64::from(reference.longest(&graph.lengths)).max(options.chunk) / options.chunk) as u32
+        })
+        .collect();
     let mut builder = Builder {
         graph,
         names,
         chunks,
         references,
+        lookback,
         rows: Sorter::new(&temp.0, "rows", SORT_BUDGET),
         placed: Vec::new(),
         paths: 0,
@@ -1224,11 +1257,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     for reference in &references {
         let path = format!("{prefix}.{}.walks.bed.gz", text(&reference.sample));
         let mut writer = bed::Writer::create(&path)?;
-        let longest = (0..graph.lengths.len())
-            .filter(|&id| reference.on_reference(id))
-            .map(|id| graph.lengths[id])
-            .max()
-            .unwrap_or(0);
+        let longest = reference.longest(&graph.lengths);
         let mut header = format!(
             "#walks\tformat:i:3\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\n#reference\t{}\n",
             chunks.size,
