@@ -1,4 +1,4 @@
-# Walk file format 4
+# Walk file format 5
 
 `gfa-to-tabix --walks` writes one file per reference sample,
 `<prefix>.<sample>.walks.bed.gz`, bgzipped and Tabix-indexed. It holds every
@@ -63,13 +63,13 @@ Header lines start with `#`: `tabix -H` prints them and region queries skip
 them.
 
 ```
-#walks	format:i:4	chunk:i:65536	maxnode:i:1024	stay:i:311
+#walks	format:i:5	chunk:i:65536	maxnode:i:1024	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
 ```
 
-- `format:i:4` marks this format. A reader refuses any other
+- `format:i:5` marks this format. A reader refuses any other
 - `maxnode` is the longest node on the reference paths in bp
 - `#long` gives each pass of the reference over a node longer than a chunk:
   sequence, start, end, as in `#long  GRCh38#0#chr22  10510000  11510000`. vg chops nodes at 1,024 bp, so its graphs have none;
@@ -80,6 +80,9 @@ them.
   gfa-to-tabix 1.2, needs `max(chunk, maxnode)` bp before the window instead
 - `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
   A reader ignores it
+- `abridge` and `abridgebytes` are the `--abridge-steps` and
+  `--abridge-bytes` budgets the file was written with; 0 means none. A reader
+  ignores them
 - `#reference` names the reference sample
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
   `sample#haplotype`, once each in byte order
@@ -87,7 +90,8 @@ them.
 ## Rows
 
 Every row starts `seq cs cs+1 kind`. A chunk lists its `ref` rows, then at
-most one `nodes` row, then its `route` rows, then its `walk` rows.
+most one `nodes` row, then its `route` rows, then its `walk` rows, then its
+`abridged` rows.
 
 A handle is `2 × id + r`, with `r` 1 for the reverse strand. A list of handles
 is written as delta tokens: each token is `2 × (id − previous id) + r`, and the
@@ -183,6 +187,44 @@ Minigraph-Cactus clips a haplotype. `piece`, `pv` and `nx` run within one line
   since `ng` would then depend on which one to believe
 - The rows are the same for any order of the W lines, which `vg convert`
   changes from run to run
+
+### abridged
+
+```
+seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start end detail [pv] [nx] [pg] [pr] [ng] [nr]
+```
+
+- One row per path whose pieces in the chunk the tool moved to a detail
+  record. See [Abridged chunks](#abridged-chunks)
+- `pieces` lists the piece numbers it stands for as deltas, the first from 0,
+  so `0,2` is pieces 0 and 2. `hapOffset` is where the first one starts
+- `nsteps` and `bp` count the steps of those pieces and their nodes' bp
+- `start` is the first piece's first handle on R and `end` the last piece's
+  last handle on R, both absolute
+- `detail` numbers the chunk's record that holds the pieces' rows
+- The `pv`, `pg` and `pr` tags come from the first piece, and `nx`, `ng` and
+  `nr` from the last
+
+## Abridged chunks
+
+[ADR 0004](adr/0004-abridged-detours.md) gives the reasons and measurements.
+
+- A piece costs a reader its routes' interior steps, each counted once per
+  use, plus its steps / 40, since graph-walks decodes a step along R about 40
+  times as fast as an interior step
+- When a chunk's pieces cost more than `abridge` interior steps, or its rows
+  would compress to more than `abridgebytes`, the tool moves whole paths out
+  of the chunk, costliest first, until the rest fit. A path's pieces in the
+  chunk move together
+- The chunk keeps its `ref` rows, its other pieces' `nodes`, `route` and `walk`
+  rows, encoded without the moved pieces, and an `abridged` row per moved path
+- The moved pieces' rows go to detail record `detail` of the chunk, under the
+  sequence `seq~cs` at position `detail × 16384`, so each record has a Tabix
+  leaf bin to itself and a query for one reads no other. A window query names
+  only `seq`, so it reads no record
+- A record holds a `nodes` row, `route` rows and `walk` rows. The tool numbers
+  its routes from 0 and chains their tokens from 0, as for a chunk of its own,
+  and its walk rows decode against the R of chunk `cs` of `seq`
 
 ## Decoding a walk row
 

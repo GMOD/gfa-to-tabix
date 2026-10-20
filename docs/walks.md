@@ -37,6 +37,8 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 | `--chunk <bp>`    | Chunk size. Default 65536.                                               |
 | `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
 | `--stay <bp>`     | Keep a piece in its chunk across a short stretch over nodes the reference passes twice. Default 311; 0 turns it off. |
+| `--abridge-steps <n>` | Move a chunk's costliest paths to its detail rows until the rest cost at most n interior steps. Default 1000000; 0 turns it off. |
+| `--abridge-bytes <bytes>` | ...and until the rest compress to at most this many bytes. Default 3000000; 0 turns it off. |
 
 ## Where a step is filed
 
@@ -72,10 +74,17 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 - **Stay:** `--stay` then keeps short runs over such nodes in the current
   piece. A reference that passes no node twice, such as Minigraph-Cactus's
   GRCh38, gets the same rows at any stay
+- **Abridged chunks:** in a satellite array, pggb gives each haplotype its own
+  long path through thousands of tiny nodes, and the tool files all of it in
+  the chunk where the haplotype leaves the reference. Past `--abridge-steps`
+  or `--abridge-bytes`, the tool moves the costliest paths' rows to detail
+  rows that a window query skips, and leaves a row per path with its steps,
+  bp and where it leaves and rejoins the reference. A viewer draws that row as
+  a labelled block and fetches the detail on request.
+  [Abridged chunks](walks-format.md#abridged-chunks) gives the rules
 - **What to expect on pggb:** a window shows nearly every haplotype whose
-  sequence aligns there, except in satellites and CHM13's short arm. Windows in
-  repeat-dense regions still fetch far more than Minigraph-Cactus windows do,
-  so they load slowly
+  sequence aligns there, except in satellites and CHM13's short arm, where
+  abridged paths show as blocks until opened
 - [ADR 0001](adr/0001-step-placement.md) gives the placement rules, the
   alternatives tried and the measurements behind these points
 
@@ -98,7 +107,7 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 
 ## Readers
 
-- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 3 reads format 4
+- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 4 reads format 5
   only, and asks for a rebuild of any other file
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
