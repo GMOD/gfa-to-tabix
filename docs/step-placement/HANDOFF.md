@@ -20,10 +20,12 @@ the criteria, the measurements and the decision;
    graph-walks 3.0.0 and names the `-f4` URLs, and jbrowse.org no longer
    hosts the `-f2` or `-f3` sets. graph-walks refuses any walk file but
    format 4
-2. **Giant windows.** pggb chr22 GRCh38 at 12.6–13.0 Mb peaks at about 200 MB
-   gzipped under every stay, and CHM13's short arm has 516 windows over 32 M
-   steps. Filing moves no steps out of a chunk, so this needs a different fix
-   (see the paralog-jump design memory)
+2. **Giant windows.** [ADR 0003](../adr/0003-long-node-lookback.md) removed
+   the ones `maxnode`'s lookback caused. What remains on pggb chr22 is 25
+   GRCh38 and 23 CHM13 windows over 8 MB, satellite and rDNA arrays pggb
+   collapses into looping nodes, at most 168 MB. Next: explain them in the
+   reader (what the region is, that zooming won't help, a way to load
+   anyway), then decide whether a format should summarize them
 3. **Fragmentation on pggb.** The guard turns away runs over nodes passed once
    that lie beyond the lookback; 38% of the runs a guard on every node turned
    away stayed within the lookback in the other direction. Filing a piece

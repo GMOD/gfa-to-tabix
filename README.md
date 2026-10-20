@@ -49,7 +49,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - [Subcommands](docs/subcommands.md): `build`, `alleles`, `bubbles`, `fold`, `paths`
 - [Walks](docs/walks.md) and [the walks row format](docs/walks-format.md)
 - [JBrowse configuration](docs/jbrowse.md)
-- Decisions: [ADR 0001](docs/adr/0001-step-placement.md), where a walk file files a step; [ADR 0002](docs/adr/0002-two-index-files.md), why nodes and links are two files
+- Decisions: [ADR 0001](docs/adr/0001-step-placement.md), where a walk file files a step; [ADR 0002](docs/adr/0002-two-index-files.md), why nodes and links are two files; [ADR 0003](docs/adr/0003-long-node-lookback.md), how far a walk reader reads back
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when they go stale
 
