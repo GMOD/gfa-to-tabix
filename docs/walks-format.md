@@ -210,8 +210,8 @@ seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start end detail 
 [ADR 0004](adr/0004-abridged-detours.md) gives the reasons and measurements.
 
 - A piece costs a reader its routes' interior steps, each counted once per
-  use, plus its steps / 40, since graph-walks decodes a step along R about 40
-  times as fast as an interior step
+  use, plus its steps along R / 4. graph-walks decodes a step along R faster,
+  but a cut still keeps and draws it
 - When a chunk's pieces cost more than `abridge` interior steps, or its rows
   would compress to more than `abridgebytes`, the tool moves whole paths out
   of the chunk, costliest first, until the rest fit. A path's pieces in the

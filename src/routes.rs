@@ -448,15 +448,16 @@ pub struct Counts {
 }
 
 // A chunk's most a reader decodes: `cost` in interior steps, counting a step
-// along R as a 40th of one, and `bytes` compressed. Zero leaves it unbounded.
+// along R as a quarter of one, and `bytes` compressed. Zero leaves it unbounded.
 #[derive(Clone, Copy, Default)]
 pub struct Budget {
     pub cost: u64,
     pub bytes: u64,
 }
 
-// graph-walks decodes steps along R about 40 times as fast as interior steps
-const STEPS_PER_INTERIOR: u64 = 40;
+// A step along R costs a viewer about a quarter of one off it: it decodes faster,
+// but the cut still keeps and draws it
+const STEPS_PER_INTERIOR: u64 = 4;
 
 // bgzip compresses a stream in blocks of this many bytes
 const BGZF_BLOCK: usize = 65280;

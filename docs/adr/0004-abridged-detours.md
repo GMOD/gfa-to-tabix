@@ -31,9 +31,10 @@
 
 **Writer**
 
-- A piece's cost is its routes' interior steps, plus its steps along R / 40.
-  graph-walks decodes interior steps at about 0.5 M/s and steps along R at
-  15–26 M/s
+- A piece's cost is its routes' interior steps, plus its steps along R / 4.
+  graph-walks decodes steps along R 30–50× faster than interior steps, but a
+  cut keeps and draws every one: weighted at a 40th, a CHM13 p-arm window
+  still held 91 M steps and took 77 s to cut
 - Each chunk gets a budget: 1 M cost units and 3 MB compressed. Over budget,
   the writer moves the costliest piece to the detail tier, then the next,
   until the chunk fits
