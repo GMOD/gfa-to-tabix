@@ -110,6 +110,10 @@ fn index(cli: Cli) -> Result<(), String> {
             chunk: cli.chunk.unwrap_or(65536),
             sequences: cli.sequences,
             stay: cli.stay.unwrap_or(311),
+            budget: routes::Budget {
+                cost: cli.abridge_steps.unwrap_or(1_000_000),
+                bytes: cli.abridge_bytes.unwrap_or(3_000_000),
+            },
         };
         return walks::run(&gfa, &prefix, &options);
     }

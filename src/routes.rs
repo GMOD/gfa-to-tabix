@@ -443,37 +443,53 @@ pub struct Counts {
     pub routes: u64,
     pub walks: u64,
     pub counted: u64,
+    pub abridged: u64,
+    pub detail_walks: u64,
 }
 
-// Writes the chunk's rows through `emit`, each without the anchor columns and
-// with its newline. `sequence` gives a node's bases with --sequences.
-pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
-    pieces: &[Piece],
-    lengths: &[u32],
-    sequence: Option<&S>,
+// A chunk's most a reader decodes: `cost` in interior steps, counting a step
+// along R as a 40th of one, and `bytes` compressed. Zero leaves it unbounded.
+#[derive(Clone, Copy, Default)]
+pub struct Budget {
+    pub cost: u64,
+    pub bytes: u64,
+}
+
+// graph-walks decodes steps along R about 40 times as fast as interior steps
+const STEPS_PER_INTERIOR: u64 = 40;
+
+// bgzip compresses a stream in blocks of this many bytes
+const BGZF_BLOCK: usize = 65280;
+
+// One record per Tabix leaf bin, so a query for one detail record reads no other
+pub const DETAIL_SPACING: u64 = 16384;
+
+// The rows a chunk files under its detail sequence, one record per abridged
+// path, each row without the anchor columns and with its newline
+pub type Details = Vec<Vec<Vec<u8>>>;
+
+struct Encoded<'p> {
+    routes: Routes,
+    walks: Vec<(&'p Piece, Walk)>,
+}
+
+fn encode_all<'p>(
+    path: &Path,
+    pieces: &[&'p Piece],
     counts: &mut Counts,
-    emit: &mut dyn FnMut(&[u8]) -> Result<(), String>,
-) -> Result<(), String> {
-    let mut references: Vec<&Piece> = pieces.iter().filter(|p| p.reference).collect();
-    references.sort_by_key(|p| p.offset);
-    let path = Path::new(
-        references
-            .iter()
-            .flat_map(|p| p.handles.iter().copied())
-            .collect(),
-    );
+) -> Result<Encoded<'p>, String> {
     let mut routes = Routes::default();
     let mut walks = Vec::new();
-    for piece in pieces.iter().filter(|p| !p.reference) {
-        let Some(mut walk) = encode(&path, &piece.handles, &mut routes) else {
+    for &piece in pieces {
+        let Some(mut walk) = encode(path, &piece.handles, &mut routes) else {
             return Err(format!(
                 "{}: a piece with no step on the reference path in its chunk",
                 String::from_utf8_lossy(&piece.name)
             ));
         };
-        if decode(&path, &walk, &routes.list, false).as_deref() != Some(&piece.handles[..]) {
+        if decode(path, &walk, &routes.list, false).as_deref() != Some(&piece.handles[..]) {
             walk.counted = true;
-            if decode(&path, &walk, &routes.list, true).as_deref() != Some(&piece.handles[..]) {
+            if decode(path, &walk, &routes.list, true).as_deref() != Some(&piece.handles[..]) {
                 return Err(format!(
                     "{}: the walk row does not decode to its steps",
                     String::from_utf8_lossy(&piece.name)
@@ -483,7 +499,263 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         }
         walks.push((piece, walk));
     }
+    Ok(Encoded { routes, walks })
+}
 
+fn compressed_len(text: &[u8]) -> u64 {
+    use flate2::Compression;
+    use flate2::write::DeflateEncoder;
+    use std::io::Write;
+    text.chunks(BGZF_BLOCK)
+        .map(|block| {
+            let mut encoder = DeflateEncoder::new(Vec::new(), Compression::new(6));
+            encoder.write_all(block).expect("writes to memory");
+            encoder.finish().expect("writes to memory").len() as u64
+        })
+        .sum()
+}
+
+fn piece_cost(enc: &Encoded, piece: &Piece, walk: &Walk) -> u64 {
+    piece.handles.len() as u64
+        + walk
+            .choices
+            .iter()
+            .map(|c| STEPS_PER_INTERIOR * enc.routes.list[c.route].interior.len() as u64)
+            .sum::<u64>()
+}
+
+// A path's pieces in the chunk, which abridging moves together
+struct Group {
+    pieces: Vec<usize>,
+    cost: u64,
+    raw: u64,
+    routes: Vec<usize>,
+}
+
+// The paths whose pieces leave the chunk, costliest first, until the rest fit
+// the budget. `raw` is the length of the chunk's rows, and `ratio` how far
+// they compress.
+fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64, ratio: f64) -> Vec<Group> {
+    let mut by_path: FastMap<(&[u8], u64), usize> = FastMap::default();
+    let mut groups: Vec<Group> = Vec::new();
+    for (k, (piece, walk)) in enc.walks.iter().enumerate() {
+        let g = *by_path
+            .entry((&piece.name[..], piece.frag))
+            .or_insert_with(|| {
+                groups.push(Group {
+                    pieces: Vec::new(),
+                    cost: 0,
+                    raw: 0,
+                    routes: Vec::new(),
+                });
+                groups.len() - 1
+            });
+        let group = &mut groups[g];
+        group.pieces.push(k);
+        group.cost += piece_cost(enc, piece, walk);
+        group.raw += 40 + 4 * walk.choices.len() as u64;
+        group.routes.extend(walk.choices.iter().map(|c| c.route));
+    }
+    let mut users = vec![0u32; enc.routes.list.len()];
+    for group in &mut groups {
+        group.routes.sort_unstable();
+        group.routes.dedup();
+        for &r in &group.routes {
+            users[r] += 1;
+        }
+    }
+    let route_raw = |r: usize| 8 + 6 * enc.routes.list[r].interior.len() as u64;
+    let over_cost = |cost: u64| budget.cost > 0 && cost > budget.cost * STEPS_PER_INTERIOR;
+    let over_bytes = |raw: u64| budget.bytes > 0 && raw as f64 * ratio > budget.bytes as f64;
+    let mut cost: u64 = groups.iter().map(|g| g.cost).sum();
+    let mut raw = raw;
+    groups.sort_by_key(|g| std::cmp::Reverse(g.cost));
+    let mut moved = Vec::new();
+    for group in groups {
+        if !over_cost(cost) && !over_bytes(raw) {
+            break;
+        }
+        cost -= group.cost;
+        raw = raw.saturating_sub(group.raw);
+        for &r in &group.routes {
+            users[r] -= 1;
+            if users[r] == 0 {
+                raw = raw.saturating_sub(route_raw(r));
+            }
+        }
+        moved.push(group);
+    }
+    moved
+}
+
+// Writes the chunk's rows through `emit`, each without the anchor columns and
+// with its newline. `sequence` gives a node's bases with --sequences. A chunk
+// over `budget` moves its costliest paths' rows to `details`, and leaves an
+// `abridged` row for each.
+pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
+    pieces: &[Piece],
+    lengths: &[u32],
+    sequence: Option<&S>,
+    budget: Budget,
+    counts: &mut Counts,
+    emit: &mut dyn FnMut(&[u8]) -> Result<(), String>,
+    details: &mut Details,
+) -> Result<(), String> {
+    let mut references: Vec<&Piece> = pieces.iter().filter(|p| p.reference).collect();
+    references.sort_by_key(|p| p.offset);
+    let path = Path::new(
+        references
+            .iter()
+            .flat_map(|p| p.handles.iter().copied())
+            .collect(),
+    );
+    let others: Vec<&Piece> = pieces.iter().filter(|p| !p.reference).collect();
+    let mut scratch = Counts::default();
+    let enc = encode_all(&path, &others, &mut scratch)?;
+    let mut text = Vec::new();
+    emit_rows(
+        &path,
+        &references,
+        &enc,
+        lengths,
+        sequence,
+        &mut scratch,
+        &mut |row| {
+            text.extend_from_slice(row);
+            Ok(())
+        },
+    )?;
+    let total: u64 = enc.walks.iter().map(|(p, w)| piece_cost(&enc, p, w)).sum();
+    let over_cost = budget.cost > 0 && total > budget.cost * STEPS_PER_INTERIOR;
+    let raw = text.len() as u64;
+    let over_bytes = budget.bytes > 0 && raw > budget.bytes;
+    if !over_cost && !over_bytes {
+        counts.routes += scratch.routes;
+        counts.walks += scratch.walks;
+        counts.counted += scratch.counted;
+        for row in text.split_inclusive(|&b| b == b'\n') {
+            emit(row)?;
+        }
+        return Ok(());
+    }
+    let ratio = if over_bytes {
+        compressed_len(&text) as f64 / raw as f64
+    } else {
+        1.0
+    };
+    drop(text);
+    let moved = abridged_groups(&enc, budget, raw, ratio);
+    let mut gone = vec![false; enc.walks.len()];
+    for group in &moved {
+        for &k in &group.pieces {
+            gone[k] = true;
+        }
+    }
+    let kept: Vec<&Piece> = enc
+        .walks
+        .iter()
+        .zip(&gone)
+        .filter(|(_, gone)| !**gone)
+        .map(|((piece, _), _)| *piece)
+        .collect();
+    let kept = encode_all(&path, &kept, counts)?;
+    emit_rows(&path, &references, &kept, lengths, sequence, counts, emit)?;
+    let mut detail_counts = Counts::default();
+    for (k, group) in moved.iter().enumerate() {
+        let mut members: Vec<(&Piece, &Walk)> = group
+            .pieces
+            .iter()
+            .map(|&i| (enc.walks[i].0, &enc.walks[i].1))
+            .collect();
+        members.sort_by_key(|(piece, _)| piece.offset);
+        emit(&summary_row(&members, lengths, k))?;
+        let pieces: Vec<&Piece> = members.iter().map(|(piece, _)| *piece).collect();
+        let alone = encode_all(&path, &pieces, &mut detail_counts)?;
+        let mut record = Vec::new();
+        emit_rows(
+            &path,
+            &[],
+            &alone,
+            lengths,
+            sequence,
+            &mut detail_counts,
+            &mut |row| {
+                record.push(row.to_vec());
+                Ok(())
+            },
+        )?;
+        details.push(record);
+        counts.abridged += 1;
+    }
+    counts.detail_walks += detail_counts.walks;
+    Ok(())
+}
+
+// The `abridged` row standing for a path's pieces `members`, in offset order,
+// whose rows are detail record `k`
+fn summary_row(members: &[(&Piece, &Walk)], lengths: &[u32], k: usize) -> Vec<u8> {
+    let (first, first_walk) = members[0];
+    let (last, last_walk) = members[members.len() - 1];
+    let steps: u64 = members.iter().map(|(p, _)| p.handles.len() as u64).sum();
+    let bp: u64 = members
+        .iter()
+        .flat_map(|(p, _)| p.handles.iter())
+        .map(|&h| u64::from(lengths[(h >> 1) as usize]))
+        .sum();
+    let mut line = b"abridged\t".to_vec();
+    line.extend_from_slice(&first.name);
+    for n in [first.frag, first.offset] {
+        line.push(b'\t');
+        line.extend_from_slice(n.to_string().as_bytes());
+    }
+    line.push(b'\t');
+    let mut previous = 0i64;
+    push_list(
+        &mut line,
+        members.iter().map(|(p, _)| {
+            let piece = i64::from(p.piece);
+            let d = piece - previous;
+            previous = piece;
+            d
+        }),
+    );
+    for n in [
+        steps,
+        bp,
+        u64::from(first_walk.start),
+        u64::from(last_walk.end),
+        k as u64,
+    ] {
+        line.push(b'\t');
+        line.extend_from_slice(n.to_string().as_bytes());
+    }
+    let mut tags = |piece: &Piece, keep: [&[u8]; 3]| {
+        for tag in piece.tags.split(|&b| b == b'\t') {
+            if keep.iter().any(|k| tag.starts_with(k)) {
+                line.push(b'\t');
+                line.extend_from_slice(tag);
+            }
+        }
+    };
+    tags(first, [b"pv:", b"pg:", b"pr:"]);
+    tags(last, [b"nx:", b"ng:", b"nr:"]);
+    line.push(b'\n');
+    line
+}
+
+// The rows of encoded pieces: `references`' ref rows, then the nodes, route
+// and walk rows
+fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
+    path: &Path,
+    references: &[&Piece],
+    enc: &Encoded,
+    lengths: &[u32],
+    sequence: Option<&S>,
+    counts: &mut Counts,
+    emit: &mut dyn FnMut(&[u8]) -> Result<(), String>,
+) -> Result<(), String> {
+    let routes = &enc.routes;
+    let walks = &enc.walks;
     let anchor = |route: &Route| {
         [route.entry, route.exit]
             .iter()
@@ -525,7 +797,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         }
         line.push(b'\t');
     };
-    for p in &references {
+    for p in references {
         line.clear();
         piece_columns(&mut line, b"ref", p);
         push_list(&mut line, delta_steps(&p.handles, &mut 0));
@@ -588,7 +860,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         line.push(b'\n');
         emit(&line)?;
     }
-    for (p, walk) in &walks {
+    for (p, walk) in walks {
         line.clear();
         piece_columns(&mut line, b"walk", p);
         push_i64(&mut line, i64::from(walk.start));

@@ -244,20 +244,26 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
 // Every path's steps rebuilt from a walk file, joining its pieces in order.
 fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
     let mut chunks: BTreeMap<(String, u64), Vec<Vec<&str>>> = BTreeMap::new();
+    let mut details: BTreeMap<(String, u64, u64), Vec<Vec<&str>>> = BTreeMap::new();
     for line in text.lines().filter(|l| !l.starts_with('#')) {
         let cols: Vec<&str> = line.split('\t').collect();
-        chunks
-            .entry((cols[0].to_string(), cols[1].parse().unwrap()))
-            .or_default()
-            .push(cols);
+        match cols[0].split_once('~') {
+            Some((seq, cs)) => details
+                .entry((
+                    seq.to_string(),
+                    cs.parse().unwrap(),
+                    cols[1].parse::<u64>().unwrap() / 16384,
+                ))
+                .or_default()
+                .push(cols),
+            None => chunks
+                .entry((cols[0].to_string(), cols[1].parse().unwrap()))
+                .or_default()
+                .push(cols),
+        }
     }
     let mut pieces: BTreeMap<String, BTreeMap<u64, Vec<u32>>> = BTreeMap::new();
-    for rows in chunks.values() {
-        let mut refs: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "ref").collect();
-        refs.sort_by_key(|c| c[6].parse::<u64>().unwrap());
-        let path = RefPath {
-            handles: refs.iter().flat_map(|c| deltas(c[9], &mut 0)).collect(),
-        };
+    let mut decode_rows = |path: &RefPath, rows: &[Vec<&str>]| {
         let mut previous = 0i64;
         let routes: Vec<Route> = rows
             .iter()
@@ -269,17 +275,52 @@ fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
                 (entry, interior, exit)
             })
             .collect();
+        let mut decoded = Vec::new();
         for cols in rows {
             let steps = match cols[3] {
                 "ref" => deltas(cols[9], &mut 0),
-                "walk" => decode_walk(&path, &routes, cols),
+                "walk" => decode_walk(path, &routes, cols),
                 _ => continue,
             };
             assert_eq!(steps.len(), cols[8].parse::<usize>().unwrap(), "{cols:?}");
+            decoded.push((
+                format!("{}@{}", cols[4], cols[5]),
+                cols[7].parse::<i64>().unwrap(),
+                steps.len(),
+            ));
             pieces
                 .entry(format!("{}@{}", cols[4], cols[5]))
                 .or_default()
                 .insert(cols[7].parse().unwrap(), steps);
+        }
+        decoded
+    };
+    for ((seq, cs), rows) in &chunks {
+        let mut refs: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "ref").collect();
+        refs.sort_by_key(|c| c[6].parse::<u64>().unwrap());
+        let path = RefPath {
+            handles: refs.iter().flat_map(|c| deltas(c[9], &mut 0)).collect(),
+        };
+        decode_rows(&path, rows);
+        for cols in rows.iter().filter(|c| c[3] == "abridged") {
+            let record = &details[&(seq.clone(), *cs, cols[12].parse().unwrap())];
+            assert!(record.iter().all(|c| c[3] != "ref" && c[3] != "abridged"));
+            let decoded = decode_rows(&path, record);
+            let name = format!("{}@{}", cols[4], cols[5]);
+            assert!(decoded.iter().all(|(n, _, _)| *n == name), "{cols:?}");
+            let mut previous = 0;
+            let listed: Vec<i64> = cols[7]
+                .split(',')
+                .map(|d| {
+                    previous += d.parse::<i64>().unwrap();
+                    previous
+                })
+                .collect();
+            let mut held: Vec<i64> = decoded.iter().map(|(_, piece, _)| *piece).collect();
+            held.sort_unstable();
+            assert_eq!(held, listed, "{cols:?}");
+            let steps: usize = decoded.iter().map(|(_, _, n)| n).sum();
+            assert_eq!(steps.to_string(), cols[8], "{cols:?}");
         }
     }
     pieces
@@ -346,6 +387,62 @@ fn every_path_rebuilds_from_its_rows() {
     }
 }
 
+// Past a byte budget of 1, every path in a chunk leaves for its detail rows
+#[test]
+fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
+    for (gfa, refs) in [
+        ("walks-two-refs.gfa", "R,Q"),
+        ("walks-repeat.gfa", "R"),
+        ("walks-loop.gfa", "R"),
+        ("walks-records.gfa", "R"),
+    ] {
+        let built = build(gfa, &["--refs", refs, "--abridge-bytes", "1"]);
+        assert!(built.output.status.success(), "{gfa}");
+        for &sample in &refs.split(',').collect::<Vec<_>>() {
+            let text = built.file(sample);
+            assert!(
+                text.lines()
+                    .any(|l| l.split('\t').nth(3) == Some("abridged")),
+                "{gfa}"
+            );
+            assert!(
+                !text
+                    .lines()
+                    .any(|l| l.split('\t').nth(3) == Some("walk") && !l.contains('~'))
+            );
+        }
+        let samples: Vec<&str> = refs.split(',').collect();
+        assert_rebuilds(&fs::read_to_string(fixture(gfa)).unwrap(), &built, &samples);
+    }
+}
+
+// D#1#d's pieces 0 and 2 lie in chunk 0, with piece 1 in chunk 10, so its
+// row lists both and takes its pv from piece 0 and its nx from piece 2
+#[test]
+fn an_abridged_row_lists_its_pieces_and_keeps_its_ends_neighbours() {
+    let built = build("walks-two-refs.gfa", &["--abridge-bytes", "1"]);
+    let r = built.file("R");
+    assert_eq!(
+        rows_of(r, "R#0#chr", "abridged", "D#1#d"),
+        tsv(&[
+            "R#0#chr 0 1 abridged D#1#d 0 0 0,2 4 24 2 4 1 nx:i:10",
+            "R#0#chr 10 11 abridged D#1#d 0 12 1,2 4 24 6 8 1 pv:i:0 nx:i:20",
+            "R#0#chr 20 21 abridged D#1#d 0 48 4 1 6 10 10 0 pv:i:10",
+        ])
+    );
+    assert_eq!(
+        under(r, "R#0#chr~0")
+            .lines()
+            .filter(|l| l.contains("\tD#1#d\t"))
+            .map(|l| l.to_string() + "\n")
+            .collect::<String>(),
+        tsv(&[
+            "R#0#chr~0 16384 16385 walk D#1#d 0 0 0 2 2 2 . nx:i:10",
+            "R#0#chr~0 16384 16385 walk D#1#d 0 24 2 2 2 2 . pv:i:10 nx:i:10",
+        ])
+    );
+}
+
 #[test]
 fn each_reference_has_one_file_holding_only_its_rows() {
     let built = build("walks-two-refs.gfa", &[]);
@@ -368,7 +465,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         assert_eq!(
             header(built.file(sample)),
             tsv(&[
-                "#walks format:i:4 chunk:i:10 maxnode:i:6 stay:i:311",
+                "#walks format:i:5 chunk:i:10 maxnode:i:6 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",
@@ -428,7 +525,7 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     assert!(built.output.status.success());
     let walks = built.file("R");
     assert!(
-        header(walks).starts_with("#walks\tformat:i:4\tchunk:i:10\tmaxnode:i:15\tstay:i:311\n")
+        header(walks).starts_with("#walks\tformat:i:5\tchunk:i:10\tmaxnode:i:15\tstay:i:311\t")
     );
     assert_eq!(
         rows_of(walks, "R#0#chr", "ref", "R#0#chr"),
@@ -621,7 +718,7 @@ fn maxnode_counts_the_reference_nodes() {
     let built = build(path.to_str().unwrap(), &[]);
     fs::remove_file(&path).unwrap();
     assert!(built.output.status.success());
-    assert!(header(built.file("R")).starts_with("#walks\tformat:i:4\tchunk:i:10\tmaxnode:i:6\t"));
+    assert!(header(built.file("R")).starts_with("#walks\tformat:i:5\tchunk:i:10\tmaxnode:i:6\t"));
 }
 
 #[test]
@@ -789,7 +886,7 @@ fn a_record_names_the_gap_to_the_records_beside_it_on_its_contig() {
     let built = build("walks-records.gfa", &["--refs", "R"]);
     assert!(built.output.status.success());
     let walks = built.file("R");
-    assert!(header(walks).starts_with("#walks\tformat:i:4\t"));
+    assert!(header(walks).starts_with("#walks\tformat:i:5\t"));
     assert_eq!(
         rows_of(walks, "R#0#chr", "walk", "H#1#h"),
         tsv(&[

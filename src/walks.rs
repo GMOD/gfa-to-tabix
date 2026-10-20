@@ -7,8 +7,8 @@
 // reference and the haplotypes.
 
 use std::collections::{BTreeSet, HashMap};
-use std::fs;
-use std::io::Read;
+use std::fs::{self, File};
+use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -27,6 +27,7 @@ pub struct Options {
     pub chunk: u64,
     pub sequences: bool,
     pub stay: u64,
+    pub budget: routes::Budget,
 }
 
 const NONE: u32 = u32::MAX;
@@ -1179,6 +1180,95 @@ impl Drop for TempDir {
 
 const SORT_BUDGET: usize = 512 << 20;
 
+// The detail records of a sequence's chunks, held on disk until its main rows
+// are written, since Tabix needs each sequence's rows together. Chunk `cs` of
+// sequence `seq` files its records as `seq~cs`, record k at k × DETAIL_SPACING.
+struct Details {
+    file: BufWriter<File>,
+    path: PathBuf,
+    sequence: Option<Vec<u8>>,
+    any: bool,
+}
+
+impl Details {
+    fn create(dir: &std::path::Path, n: usize) -> Result<Details, String> {
+        let path = dir.join(format!("details{n}"));
+        let file = File::create(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+        Ok(Details {
+            file: BufWriter::new(file),
+            path,
+            sequence: None,
+            any: false,
+        })
+    }
+
+    fn add(&mut self, start: u64, records: &routes::Details) -> Result<(), String> {
+        let path = &self.path;
+        let io = |e: std::io::Error| format!("{}: {e}", path.display());
+        for (k, record) in records.iter().enumerate() {
+            for row in record {
+                self.file.write_all(&start.to_le_bytes()).map_err(io)?;
+                self.file.write_all(&(k as u64).to_le_bytes()).map_err(io)?;
+                self.file
+                    .write_all(&(row.len() as u64).to_le_bytes())
+                    .map_err(io)?;
+                self.file.write_all(row).map_err(io)?;
+                self.any = true;
+            }
+        }
+        Ok(())
+    }
+
+    // Writes the held records under the current sequence and empties the file
+    fn flush(&mut self, writer: &mut bed::Writer) -> Result<u64, String> {
+        let Some(sequence) = self.sequence.as_deref() else {
+            return Ok(0);
+        };
+        if !self.any {
+            return Ok(0);
+        }
+        let path = &self.path;
+        let io = |e: std::io::Error| format!("{}: {e}", path.display());
+        self.file.flush().map_err(io)?;
+        let mut reader = BufReader::new(File::open(path).map_err(io)?);
+        let (mut word, mut row, mut line, mut name) =
+            ([0u8; 8], Vec::new(), Vec::new(), Vec::new());
+        let mut rows = 0;
+        let mut read_u64 = |reader: &mut BufReader<File>| -> Result<Option<u64>, String> {
+            match reader.read_exact(&mut word) {
+                Ok(()) => Ok(Some(u64::from_le_bytes(word))),
+                Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => Ok(None),
+                Err(e) => Err(io(e)),
+            }
+        };
+        while let Some(start) = read_u64(&mut reader)? {
+            let k = read_u64(&mut reader)?.ok_or("a detail record ends early")?;
+            let len = read_u64(&mut reader)?.ok_or("a detail record ends early")?;
+            row.resize(len as usize, 0);
+            reader.read_exact(&mut row).map_err(io)?;
+            name.clear();
+            name.extend_from_slice(sequence);
+            name.push(b'~');
+            push_u64(&mut name, start);
+            let at = k * routes::DETAIL_SPACING;
+            line.clear();
+            line.extend_from_slice(&name);
+            line.push(b'\t');
+            push_u64(&mut line, at);
+            line.push(b'\t');
+            push_u64(&mut line, at + 1);
+            line.push(b'\t');
+            line.extend_from_slice(&row);
+            writer.push(&name, at, at + 1, &line)?;
+            rows += 1;
+        }
+        let file = File::create(path).map_err(io)?;
+        self.file = BufWriter::new(file);
+        self.any = false;
+        Ok(rows)
+    }
+}
+
 pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     if gfa == "-" {
         return Err("--walks reads the GFA twice, so it needs a file, not stdin".into());
@@ -1275,9 +1365,11 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let mut writer = bed::Writer::create(&path)?;
         let longest = reference.longest(&graph.lengths);
         let mut header = format!(
-            "#walks\tformat:i:4\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\n#reference\t{}\n",
+            "#walks\tformat:i:5\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
             chunks.size,
             options.stay,
+            options.budget.cost,
+            options.budget.bytes,
             text(&reference.sample)
         )
         .into_bytes();
@@ -1299,12 +1391,13 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             header.push(b'\n');
         }
         writer.header(&header)?;
-        writers.push((writer, path, 0u64, routes::Counts::default()));
+        let details = Details::create(&temp.0, writers.len())?;
+        writers.push((writer, path, 0u64, routes::Counts::default(), details));
     }
     let sequence_of = |id: usize| graph.sequence(id);
     let sequence = options.sequences.then_some(&sequence_of);
     // Chunks encode in parallel, a batch at a time, and are written in order.
-    type Encoded = Result<(Vec<u8>, Vec<usize>, routes::Counts), String>;
+    type Encoded = Result<(Vec<u8>, Vec<usize>, routes::Counts, routes::Details), String>;
     let refs = references.len();
     // the gap to the record before or after a piece's on its contig, and the
     // chunk that record's nearest piece is filed under
@@ -1339,18 +1432,21 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         }
         let (mut lines, mut ends) = (Vec::new(), Vec::new());
         let mut counts = routes::Counts::default();
+        let mut details = routes::Details::new();
         routes::write_chunk(
             &pieces,
             &graph.lengths,
             sequence,
+            options.budget,
             &mut counts,
             &mut |rest| {
                 lines.extend_from_slice(rest);
                 ends.push(lines.len());
                 Ok(())
             },
+            &mut details,
         )?;
-        Ok((lines, ends, counts))
+        Ok((lines, ends, counts, details))
     };
     let mut line = Vec::new();
     let mut write_batch = |batch: &mut Vec<(u32, Vec<Vec<u8>>)>| -> Result<(), String> {
@@ -1372,15 +1468,23 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         for ((chunk, _), slot) in batch.iter().zip(encoded) {
             let (name, start) = chunks.starts[*chunk as usize];
             let name_text = &names[name as usize];
-            let (lines, ends, chunk_counts) = slot
+            let (lines, ends, chunk_counts, chunk_details) = slot
                 .into_inner()
                 .unwrap()
                 .expect("every chunk of the batch is encoded")
                 .map_err(|e| format!("{}:{start}: {e}", text(name_text)))?;
-            let (writer, _, rows, counts) = &mut writers[chunks.owner[name as usize] as usize];
+            let (writer, _, rows, counts, details) =
+                &mut writers[chunks.owner[name as usize] as usize];
+            if details.sequence.as_deref() != Some(name_text.as_slice()) {
+                *rows += details.flush(writer)?;
+                details.sequence = Some(name_text.clone());
+            }
+            details.add(start, &chunk_details)?;
             counts.routes += chunk_counts.routes;
             counts.walks += chunk_counts.walks;
             counts.counted += chunk_counts.counted;
+            counts.abridged += chunk_counts.abridged;
+            counts.detail_walks += chunk_counts.detail_walks;
             let mut from = 0;
             for end in ends {
                 line.clear();
@@ -1417,14 +1521,17 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     })?;
     write_batch(&mut batch)?;
     drop(write_batch);
-    for (writer, path, rows, counts) in writers {
+    for (mut writer, path, mut rows, counts, mut details) in writers {
+        rows += details.flush(&mut writer)?;
         writer.finish()?;
         eprintln!(
-            "{} {rows} rows -> {path} (+ .tbi): {} routes, {} walk rows, {} with step counts",
+            "{} {rows} rows -> {path} (+ .tbi): {} routes, {} walk rows, {} with step counts; {} paths abridged to {} detail walk rows",
             elapsed(),
             counts.routes,
             counts.walks,
-            counts.counted
+            counts.counted,
+            counts.abridged,
+            counts.detail_walks
         );
     }
     Ok(())
