@@ -529,9 +529,9 @@ fn a_short_stretch_over_a_revisited_node_stays_in_its_piece() {
 // stretches stay in the piece wherever they lie. C's stretch also visits 2,
 // which R passes once, a chunk before C's piece, and K's visits chrU's 9; no
 // reader of those chunks reads the piece, so each starts pieces of its own.
-// With R walking 1 2 3 4 6 7 3 5, F's stretch visits 7 two chunks on, and
-// stays in its piece only once node 5 grows to 20 bp and windows read two
-// chunks back.
+// With R walking 1 2 3 4 6 7 3 5, F's stretch visits 7 two chunks on, so it
+// starts pieces of its own, and still does once node 5 grows to 20 bp: a long
+// node widens only the windows it overlaps, which the `#long` line lists.
 #[test]
 fn a_stay_absorbs_a_node_the_reference_passes_once_only_where_its_window_reads_back() {
     let nodes = "S\t1\tAAAAAA\nS\t2\tCCCCCC\nS\t3\tGGGGGG\nS\t4\tTTTTTT\nS\t6\tAAAAAA\n\
@@ -543,24 +543,33 @@ fn a_stay_absorbs_a_node_the_reference_passes_once_only_where_its_window_reads_b
              W\tB\t1\tb\t0\t36\t>5>3>5\nW\tC\t1\tc\t0\t42\t>5>2>3>5\n\
              W\tG\t1\tg\t0\t18\t>4>8>4\nW\tK\t1\tk\t0\t24\t>4>9>8>4\n",
             vec![("B#1#b", 1), ("C#1#c", 4), ("G#1#g", 1), ("K#1#k", 4)],
+            vec!["#long\tR#0#chr\t30\t45"],
         ),
         (
             "S\t5\tACGTACGTACGTACG\n\
              W\tR\t0\tchr\t0\t57\t>1>2>3>4>6>7>3>5\nW\tF\t1\tf\t0\t30\t>4>6>7>3>4\n",
             vec![("F#1#f", 4)],
+            vec!["#long\tR#0#chr\t42\t57"],
         ),
         (
             "S\t5\tACGTACGTACGTACGTACGT\n\
              W\tR\t0\tchr\t0\t62\t>1>2>3>4>6>7>3>5\nW\tF\t1\tf\t0\t30\t>4>6>7>3>4\n",
-            vec![("F#1#f", 1)],
+            vec![("F#1#f", 4)],
+            vec!["#long\tR#0#chr\t42\t62"],
         ),
     ];
-    for (k, (rest, expected)) in cases.into_iter().enumerate() {
+    for (k, (rest, expected, long)) in cases.into_iter().enumerate() {
         let path = std::env::temp_dir().join(format!("walks-reach-{}-{k}.gfa", std::process::id()));
         fs::write(&path, format!("H\tVN:Z:1.1\n{nodes}{rest}")).unwrap();
         let built = build(path.to_str().unwrap(), &["--refs", "R", "--stay", "30"]);
         fs::remove_file(&path).unwrap();
         assert!(built.output.status.success(), "case {k}");
+        let header: Vec<&str> = built
+            .file("R")
+            .lines()
+            .filter(|l| l.starts_with("#long"))
+            .collect();
+        assert_eq!(header, long, "case {k}");
         for (name, pieces) in expected {
             let rows = built
                 .file("R")

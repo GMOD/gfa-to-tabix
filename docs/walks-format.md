@@ -46,8 +46,7 @@ their measurements on pggb and Minigraph-Cactus.
   - the run holds at most `stay` bp of reference nodes, one of them a node the
     reference passes more than once
   - each node in the run that the reference passes once lies on the piece's
-    sequence, at most `max(chunk, maxnode) / chunk` chunks (rounded down)
-    after the piece's
+    sequence, in the piece's chunk or the next
 - Any other run starts a new piece, and the reference's own paths are exempt.
   A reference that passes each node once therefore gets the same rows at any
   `stay`. A window reads every piece with a step on a node in it that the
@@ -71,10 +70,14 @@ them.
 ```
 
 - `format:i:4` marks this format. A reader refuses any other
-- `maxnode` is the longest node on the reference paths in bp. A reference node
-  overlapping a window starts at most that far before it, so a reader queries
-  from `max(chunk, maxnode)` bp before the window, rounded down to a chunk start.
-  vg chops nodes at 1,024 bp, so for its graphs that is one chunk back
+- `maxnode` is the longest node on the reference paths in bp
+- `#long` gives each pass of the reference over a node longer than a chunk:
+  sequence, start, end, as in `#long  GRCh38#0#chr22  10510000  11510000`. vg chops nodes at 1,024 bp, so its graphs have none;
+  pggb's N runs and unaligned stretches are the usual ones
+- A reader queries from the chunk before the window's first, and from the
+  chunk before each `#long` pass that overlaps the window, whichever is
+  earlier. A file with no `#long` lines but `maxnode` over a chunk, from
+  gfa-to-tabix 1.2, needs `max(chunk, maxnode)` bp before the window instead
 - `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
   A reader ignores it
 - `#reference` names the reference sample

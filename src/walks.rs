@@ -215,6 +215,30 @@ impl Reference {
             .unwrap_or(0)
     }
 
+    // Every pass of the reference's paths over a node longer than `chunk`, as
+    // (name id, start, end), for the `#long` header lines
+    fn long_passes(&self, lengths: &[u32], chunk: u64) -> Vec<(u32, u64, u64)> {
+        let mut passes = Vec::new();
+        for id in
+            (0..lengths.len()).filter(|&id| self.on_reference(id) && u64::from(lengths[id]) > chunk)
+        {
+            let length = u64::from(lengths[id]);
+            if self.revisited.get(id) {
+                let (from, to) = self.visits_of[&(id as u32)];
+                for v in &self.visits[from as usize..to as usize] {
+                    passes.push((v.name, v.offset, v.offset + length));
+                }
+            } else {
+                passes.push((
+                    self.placement[id],
+                    self.offset[id],
+                    self.offset[id] + length,
+                ));
+            }
+        }
+        passes
+    }
+
     fn first_visit(&self, id: usize) -> Visit {
         Visit {
             name: self.placement[id],
@@ -774,11 +798,11 @@ impl Chunks {
         self.first[name as usize] + (offset / self.size) as u32
     }
 
-    // Whether a reader that reads `lookback` chunks before a window over
-    // `chunk` reads `home`.
-    fn reaches(&self, chunk: u32, home: u32, lookback: u32) -> bool {
+    // Whether a reader of a window over `chunk`, which reads the chunk before
+    // it too, reads `home`.
+    fn reaches(&self, chunk: u32, home: u32) -> bool {
         home <= chunk
-            && chunk - home <= lookback
+            && chunk - home <= 1
             && self.starts[chunk as usize].0 == self.starts[home as usize].0
     }
 }
@@ -811,8 +835,6 @@ struct Builder {
     chunks: Chunks,
     stay: u64,
     references: Vec<Reference>,
-    // by reference: the chunks a reader reads before a window's own
-    lookback: Vec<u32>,
     rows: Sorter,
     // by record, then reference
     placed: Vec<Placed>,
@@ -935,14 +957,13 @@ impl Builder {
             }
         }
         if own.is_none() && self.stay > 0 {
-            let lookback = self.lookback[r];
             stay_home(
                 &mut self.chunk_of,
                 handles,
                 reference,
                 &self.graph.lengths,
                 self.stay,
-                |chunk, home| self.chunks.reaches(chunk, home, lookback),
+                |chunk, home| self.chunks.reaches(chunk, home),
             );
         }
         true
@@ -1200,18 +1221,11 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         std::process::id()
     )));
     fs::create_dir_all(&temp.0).map_err(|e| format!("{}: {e}", temp.0.display()))?;
-    let lookback = references
-        .iter()
-        .map(|reference| {
-            (u64::from(reference.longest(&graph.lengths)).max(options.chunk) / options.chunk) as u32
-        })
-        .collect();
     let mut builder = Builder {
         graph,
         names,
         chunks,
         references,
-        lookback,
         rows: Sorter::new(&temp.0, "rows", SORT_BUDGET),
         placed: Vec::new(),
         paths: 0,
@@ -1267,6 +1281,18 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             text(&reference.sample)
         )
         .into_bytes();
+        let mut long: Vec<(&[u8], u64, u64)> = reference
+            .long_passes(&graph.lengths, chunks.size)
+            .into_iter()
+            .map(|(name, start, end)| (names[name as usize].as_slice(), start, end))
+            .collect();
+        long.sort_unstable();
+        long.dedup();
+        for (name, start, end) in long {
+            header.extend_from_slice(b"#long\t");
+            header.extend_from_slice(name);
+            header.extend_from_slice(format!("\t{start}\t{end}\n").as_bytes());
+        }
         for name in &reference.haplotypes {
             header.extend_from_slice(b"#haplotype\t");
             header.extend_from_slice(name);
