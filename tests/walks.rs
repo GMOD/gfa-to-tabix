@@ -368,7 +368,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         assert_eq!(
             header(built.file(sample)),
             tsv(&[
-                "#walks format:i:3 chunk:i:10 maxnode:i:6 stay:i:311",
+                "#walks format:i:4 chunk:i:10 maxnode:i:6 stay:i:311",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",
@@ -428,7 +428,7 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     assert!(built.output.status.success());
     let walks = built.file("R");
     assert!(
-        header(walks).starts_with("#walks\tformat:i:3\tchunk:i:10\tmaxnode:i:15\tstay:i:311\n")
+        header(walks).starts_with("#walks\tformat:i:4\tchunk:i:10\tmaxnode:i:15\tstay:i:311\n")
     );
     assert_eq!(
         rows_of(walks, "R#0#chr", "ref", "R#0#chr"),
@@ -606,7 +606,7 @@ fn maxnode_counts_the_reference_nodes() {
     let built = build(path.to_str().unwrap(), &[]);
     fs::remove_file(&path).unwrap();
     assert!(built.output.status.success());
-    assert!(header(built.file("R")).starts_with("#walks\tformat:i:3\tchunk:i:10\tmaxnode:i:6\t"));
+    assert!(header(built.file("R")).starts_with("#walks\tformat:i:4\tchunk:i:10\tmaxnode:i:6\t"));
 }
 
 #[test]
@@ -774,7 +774,7 @@ fn a_record_names_the_gap_to_the_records_beside_it_on_its_contig() {
     let built = build("walks-records.gfa", &["--refs", "R"]);
     assert!(built.output.status.success());
     let walks = built.file("R");
-    assert!(header(walks).starts_with("#walks\tformat:i:3\t"));
+    assert!(header(walks).starts_with("#walks\tformat:i:4\t"));
     assert_eq!(
         rows_of(walks, "R#0#chr", "walk", "H#1#h"),
         tsv(&[

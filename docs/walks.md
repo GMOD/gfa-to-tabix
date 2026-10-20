@@ -5,8 +5,7 @@
 - **Out:** one Tabix-indexed file per reference sample, holding every
   haplotype's path cut into pieces filed under 64 kb chunks of that reference
 - A region query returns the rows a reader needs to rebuild every path through
-  the region, except steps [`--stay`](#where-a-step-is-filed) files under the
-  piece's chunk
+  the region
 - [walks-format.md](walks-format.md) describes the rows and how to decode them
 
 ```bash
@@ -37,7 +36,7 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 | `--refs <names>`  | Comma-separated PanSN samples, one file per sample. Required.            |
 | `--chunk <bp>`    | Chunk size. Default 65536.                                               |
 | `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
-| `--stay <bp>`     | Keep a piece in its chunk across a stretch elsewhere of at most this many bp of reference nodes. Default 311; 0 turns it off. |
+| `--stay <bp>`     | Keep a piece in its chunk across a short stretch over nodes the reference passes twice. Default 311; 0 turns it off. |
 
 ## Where a step is filed
 
@@ -47,9 +46,9 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
   node takes the chunk of the last reference step before it. A query over a
   window therefore returns every path that visits a reference node in it
 - `--stay` keeps a piece in its chunk across a stretch elsewhere that returns
-  to that chunk. A window can then list a path and lack the steps `--stay`
-  filed under the piece's chunk. The default, 311 bp, is the `-k 311` minimum
-  match of the HPRC pggb graphs
+  to that chunk, holds a node the reference passes more than once and lies
+  within the chunks a window reads back. The default, 311 bp of reference
+  nodes, is the `-k 311` minimum match of the HPRC pggb graphs
 - A path that visits no node of a reference has no rows under it, and the tool
   counts these on stderr
 
@@ -69,10 +68,9 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
   path's last placed step predicts. Filing every step at the node's first pass
   instead split each haplotype into a piece per hop and made pggb walk files
   dozens of times larger than Minigraph-Cactus's
-- **Stay:** `--stay` then keeps short runs elsewhere in the current piece. On
-  a graph whose reference passes no node twice, such as Minigraph-Cactus on
-  GRCh38, the default stay changes the rows that versions without `--stay`
-  wrote, and `--stay 0` keeps them. The default is still open
+- **Stay:** `--stay` then keeps short runs over such nodes in the current
+  piece. A reference that passes no node twice, such as Minigraph-Cactus's
+  GRCh38, gets the same rows at any stay
 - **What to expect on pggb:** a window shows nearly every haplotype whose
   sequence aligns there, except in satellites and CHM13's short arm. Windows in
   repeat-dense regions still fetch far more than Minigraph-Cactus windows do,
@@ -99,8 +97,8 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 
 ## Readers
 
-- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 2 reads format 3
-  only, and asks for a rebuild of a file from gfa-to-tabix 1.0 or earlier
+- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 3 reads format 4
+  only, and asks for a rebuild of any other file
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
   the tube map read through @jbrowse/graph-walks

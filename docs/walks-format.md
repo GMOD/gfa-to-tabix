@@ -1,4 +1,4 @@
-# Walk file format 3
+# Walk file format 4
 
 `gfa-to-tabix --walks` writes one file per reference sample,
 `<prefix>.<sample>.walks.bed.gz`, bgzipped and Tabix-indexed. It holds every
@@ -41,12 +41,20 @@ their measurements on pggb and Minigraph-Cactus.
   (or on any reference node when there is none) and runs outward in both
   directions
 - A run of steps that the rules above file in other chunks stays in the current
-  piece when the path returns to that piece's chunk and the run holds at most
-  `stay` bp of reference nodes. The run joins the piece's routes, which can then
-  hold another chunk's reference nodes. A run that never returns starts a new
-  piece, and the reference's own paths are exempt
-- A reader places a node at its reference position from a `ref` row of a chunk
-  it read whenever one exists. Other nodes take haplotype offsets
+  piece, joining its routes, when:
+  - the path returns to the piece's chunk
+  - the run holds at most `stay` bp of reference nodes, one of them a node the
+    reference passes more than once
+  - each chunk the run visits lies on the piece's sequence, at most
+    `max(chunk, maxnode) / chunk` chunks (rounded down) after the piece's
+- Any other run starts a new piece, and the reference's own paths are exempt.
+  A reference that passes each node once therefore gets the same rows at any
+  `stay`, and a window always reads the piece holding a step on its reference
+  nodes
+- A route can hold another chunk's reference nodes. A reader places a node at
+  its reference position from a `ref` row of a chunk it read whenever one
+  exists, from the row whose path sorts first, at its earliest start, when
+  several do. Other nodes take haplotype offsets
 
 ## Header
 
@@ -54,21 +62,19 @@ Header lines start with `#`: `tabix -H` prints them and region queries skip
 them.
 
 ```
-#walks	format:i:3	chunk:i:65536	maxnode:i:1024	stay:i:311
+#walks	format:i:4	chunk:i:65536	maxnode:i:1024	stay:i:311
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
 ```
 
-- `format:i:3` marks this format. Format 2 files lack the [record tags](#records),
-  and format 1 files have no `format` tag
+- `format:i:4` marks this format. A reader refuses any other
 - `maxnode` is the longest node on the reference paths in bp. A reference node
   overlapping a window starts at most that far before it, so a reader queries
   from `max(chunk, maxnode)` bp before the window, rounded down to a chunk start.
   vg chops nodes at 1,024 bp, so for its graphs that is one chunk back
 - `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
-  A reader ignores it. A file without the tag predates nearest-pass placement
-  and files every step on a revisited node under the reference's first pass
+  A reader ignores it
 - `#reference` names the reference sample
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
   `sample#haplotype`, once each in byte order
