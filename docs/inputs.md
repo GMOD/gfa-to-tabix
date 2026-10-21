@@ -1,6 +1,6 @@
 # Inputs
 
-`gfa-to-tabix` reads GFA text, gzipped or not. What the file's lines say decides how the tool coordinates it.
+`gfa-to-tabix` reads a GFA file, plain or gzipped; it recognizes gzip by the file's first two bytes, whatever the name. The tool takes coordinates from rGFA tags or from a reference path, depending on which lines the file has; see [how the tool tells them apart](#how-the-tool-tells-them-apart).
 
 ## rGFA
 
