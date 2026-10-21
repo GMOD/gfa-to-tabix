@@ -22,8 +22,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ./gfa-to-tabix build ecoli.gfa.gz --reference K12 -o ecoli
 ```
 
-- `build` writes the index and everything else a JBrowse graph track reads, including a track config for the assembly `--assembly` names
-- [Load the files in JBrowse](docs/jbrowse.md)
+- `build` writes the index and everything else a JBrowse graph track reads, including a [track config](docs/subcommands.md#the-jbrowse-config) for the assembly `--assembly` names
 - `./gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc`, without `build`, writes only the index: `hprc.segs.bed.gz` and `hprc.links.bed.gz`, each with a `.tbi`
 - [Releases](https://github.com/GMOD/gfa-to-tabix/releases) also has a macOS binary for Apple silicon, and `cargo install gfa-to-tabix` builds one with Rust 1.91 or later
 
@@ -42,9 +41,8 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ## Docs
 
 - [The node and link index](docs/index-format.md): inputs (rGFA, plain GFA, choosing a reference), options, coordinates, layouts, columns, scale
-- [Subcommands](docs/subcommands.md): `build`, `alleles`, `bubbles`, `fold`, `paths`
+- [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `alleles`, `bubbles`, `fold`, `paths`
 - [Walk files](docs/walks-format.md): options, placement rules, the row format 5 and its readers
-- [JBrowse configuration](docs/jbrowse.md)
 - Decisions:
   - [ADR 0001](docs/adr/0001-step-placement.md): which chunk a walk file files each step under
   - [ADR 0002](docs/adr/0002-two-index-files.md): why nodes and links are two files

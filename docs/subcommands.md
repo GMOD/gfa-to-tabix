@@ -26,8 +26,8 @@ gfa-to-tabix build ecoli.gfa.gz --reference K12 --snarls ecoli.snarls.vcf -o eco
 | `hprc.fold10000.segs/links.bed.gz` | the coarse tier ([fold](#fold))                    |
 | `hprc.alleles.bed.gz`              | the allele inventory ([alleles](#alleles))         |
 | `hprc.bubbles.bed.gz`              | the bubbles ([bubbles](#bubbles))                  |
-| `hprc.graph.json`                  | the manifest                                       |
-| `hprc.config.json`                 | the tracks, ready to merge into a JBrowse config   |
+| `hprc.graph.json`                  | the [manifest](#the-manifest)                      |
+| `hprc.config.json`                 | the tracks ([JBrowse config](#the-jbrowse-config)) |
 
 Each `.bed.gz` gets a `.tbi`.
 
@@ -42,12 +42,13 @@ Each `.bed.gz` gets a `.tbi`.
   alongside its own parse. Without it, `build` writes no bubble file and says so
 - A plain GFA's bubbles come from `--snarls`, a `vg deconstruct -a` snarl VCF;
   without one there is no bubble file
-- The config's coarse slot is `{ "uri": "hprc.fold10000", "foldBelowBp": 10000 }`
 - `zstd -dc graph.gfa.zst | gfa-to-tabix build - -o graph` reads other
   compression
 - `build` replaced JBrowse's retired `build_pangenome_graph.sh`, which read the
   graph four times. `build` parses it once and writes the files concurrently,
   about three times faster on a chr22 SV rGFA
+
+### The manifest
 
 The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 `null` for one not written, so it works wherever the set is hosted:
@@ -68,6 +69,55 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
   `GRCh38#0#chr1`), `null` when the backbone names have no sample
 - `index`, `contig`, `tier.prefix`: prefixes of `.segs.bed.gz` and
   `.links.bed.gz` pairs
+
+### The JBrowse config
+
+`<prefix>.config.json` is ready to merge into a JBrowse config. It loads the
+[graph genome viewer plugin](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer)
+and holds a graph track, an alleles track and, with a bubble file, two bubble
+tracks. A graph track written by hand lists the node file, the link file and
+the index of each:
+
+```json
+{
+  "type": "GraphTrack",
+  "trackId": "hprc_graph",
+  "name": "HPRC graph",
+  "assemblyNames": ["hg38"],
+  "adapter": {
+    "type": "RgfaTabixAdapter",
+    "segmentsLocation": { "uri": "https://example.org/hprc.segs.bed.gz" },
+    "segmentsIndex": {
+      "location": { "uri": "https://example.org/hprc.segs.bed.gz.tbi" }
+    },
+    "linksLocation": { "uri": "https://example.org/hprc.links.bed.gz" },
+    "linksIndex": {
+      "location": { "uri": "https://example.org/hprc.links.bed.gz.tbi" }
+    },
+    "assemblyNameToPanSN": { "hg38": "GRCh38" }
+  }
+}
+```
+
+- `assemblyNameToPanSN` maps the JBrowse assembly name to the sample name the
+  graph uses, when the two differ
+- When the four files sit side by side under the names the tool gave them, the
+  prefix alone is enough, as in the config `build` writes:
+
+  ```json
+  "adapter": {
+    "type": "RgfaTabixAdapter",
+    "uri": "https://example.org/hprc",
+    "assemblyNameToPanSN": { "hg38": "GRCh38" },
+    "coarse": {
+      "uri": "https://example.org/hprc.fold10000",
+      "foldBelowBp": 10000
+    }
+  }
+  ```
+
+- `coarse` names the coarse tier ([fold](#fold))
+- Walk files take `walksUri`; see [readers](walks-format.md#readers)
 
 ## alleles
 
