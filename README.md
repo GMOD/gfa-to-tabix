@@ -2,16 +2,13 @@
 
 gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fetch the subgraph for any region.
 
-- **In:** a GFA from minigraph, Minigraph-Cactus, pggb, odgi or vg
-- **Out:** Tabix-indexed BED files, each line indexed by a reference interval:
-  - the graph's nodes and links, one line each, in two files ([why](docs/adr/0002-two-index-files.md))
-  - or, with `--walks` on a base-level graph, every haplotype's path through it
-- **Why:** a browser fetches only the rows for a region, with HTTP range requests, and never downloads the whole graph
-- The [JBrowse 2](https://jbrowse.org) graph track reads the files. One static binary does the conversion, with no bgzip or tabix; `build` uses gfatools, when installed, for an rGFA's bubbles
+- **In:** a GFA file (`.gfa` or `.gfa.gz`): an rGFA from minigraph or Minigraph-Cactus (`*.sv.gfa.gz`), or a plain GFA with P or W lines from pggb, odgi or `vg convert -f`
+- **Out:** `<prefix>.segs.bed.gz` and `<prefix>.links.bed.gz`, one line per node and per link, each with a `.tbi` ([why two files](docs/adr/0002-two-index-files.md))
+- **Out, with `--walks --refs GRCh38`:** `<prefix>.GRCh38.walks.bed.gz` and its `.tbi`, every haplotype's path through a base-level graph, which [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) reads
+- A browser fetches the rows for a region with HTTP range requests and never downloads the whole graph
+- The [JBrowse 2](https://jbrowse.org) graph track reads the node and link files. The tool is one static binary and needs no bgzip or tabix; `build` runs gfatools, when installed, for an rGFA's bubbles
 
 ![The two Tabix queries a browser runs to view chr1:13-18, the node and link lines each returns, and the graph it draws from them, with each node and edge coloured by the file it came from](docs/figures/overview.svg)
-
-gfa-to-tabix files each non-reference allele under the reference interval from the node before its bubble to the node after it, and each link under an interval wide enough that a query anywhere in a bubble returns all of the bubble's links. The node file returns the nodes the window covers, and the link lines give the positions of the rest.
 
 ## Quick start
 
@@ -36,9 +33,9 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ./gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
 ```
 
-- **In:** a base-level graph with W or P lines, such as `vg convert -f` writes from a GBZ
-- **Out:** one file per reference, here `chr22.GRCh38.walks.bed.gz` and `chr22.CHM13.walks.bed.gz`
-- A region query returns the rows a reader needs to rebuild every haplotype's path through that region
+- `chr22.gfa` is a base-level GFA with integer node ids and W or P lines, as `vg convert -f chr22.gbz > chr22.gfa` writes
+- The command writes one file per `--refs` sample, here `chr22.GRCh38.walks.bed.gz` and `chr22.CHM13.walks.bed.gz`, each with a `.tbi`
+- A region query returns the rows a reader needs to rebuild every haplotype's path through that region. [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) rebuilds them, and BandageJS and the JBrowse graph plugin draw through it
 
 ![Four haplotype paths through a bubble, the rows the GRCh38 file has for one 64 kb stretch of chr1, and the paths a reader rebuilds from those rows](docs/figures/walks.svg)
 
@@ -49,9 +46,13 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - [Subcommands](docs/subcommands.md): `build`, `alleles`, `bubbles`, `fold`, `paths`
 - [Walks](docs/walks.md) and [the walks row format](docs/walks-format.md)
 - [JBrowse configuration](docs/jbrowse.md)
-- Decisions: [ADR 0001](docs/adr/0001-step-placement.md), where a walk file files a step; [ADR 0002](docs/adr/0002-two-index-files.md), why nodes and links are two files; [ADR 0003](docs/adr/0003-long-node-lookback.md), how far a walk reader reads back
+- Decisions:
+  - [ADR 0001](docs/adr/0001-step-placement.md): which chunk a walk file files each step under
+  - [ADR 0002](docs/adr/0002-two-index-files.md): why nodes and links are two files
+  - [ADR 0003](docs/adr/0003-long-node-lookback.md): how far a walk reader reads back
+  - [ADR 0004](docs/adr/0004-abridged-detours.md): moving a chunk's costliest paths to detail rows
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
-- `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when they go stale
+- `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when a figure differs from that output
 
 ## See also
 
