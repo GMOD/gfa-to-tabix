@@ -20,8 +20,8 @@ region, and the JBrowse graph genome viewer plugin reads both:
 ## Choosing
 
 - An rGFA, a pggb graph or any graph without a GBZ: gfa-to-tabix
-- HPRC v2.1: the walk files jbrowse.org hosts; [readers](walks-format.md#readers)
-  gives their URLs
+- HPRC v2.1: the walk files jbrowse.org hosts;
+  [readers](walks-format.md#readers) gives their URLs
 - A `graph.gbz.db` someone already hosts: gbz-haplotype-index, which works
   beside it and leaves the database as it is
 - Thousands of haplotypes: gbz-base

@@ -36,8 +36,8 @@ Each `.bed.gz` gets a `.tbi`.
   graph's reference sample, else `reference`; the config maps it onto the
   sample with `assemblyNameToPanSN`
 - `build` tells an rGFA from a plain GFA as
-  [the index does](index-format.md#how-the-tool-tells-them-apart), and `--snarls`
-  makes it a plain GFA
+  [the index does](index-format.md#how-the-tool-tells-them-apart), and
+  `--snarls` makes it a plain GFA
 - An rGFA's bubbles need `gfatools` on PATH; `build` runs it on the text
   alongside its own parse. Without it, `build` writes no bubble file and says so
 - A plain GFA's bubbles come from `--snarls`, a `vg deconstruct -a` snarl VCF;

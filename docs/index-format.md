@@ -26,7 +26,8 @@ gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
 The tool reads a GFA file, plain or gzipped, and recognizes gzip by the file's
 first two bytes, whatever the name. `-` reads stdin, given `-o`. The tool takes
 coordinates from rGFA tags or from a reference path, depending on which lines
-the file has; see [how the tool tells them apart](#how-the-tool-tells-them-apart).
+the file has; see
+[how the tool tells them apart](#how-the-tool-tells-them-apart).
 
 ### rGFA
 
