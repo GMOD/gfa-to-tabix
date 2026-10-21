@@ -107,6 +107,8 @@ The Minigraph-Cactus GRCh38 graph: 139.5 M nodes, 464 haplotypes.
 ## Choosing
 
 - An rGFA, a pggb graph or any graph without a GBZ: gfa-to-tabix
-- A graph whose `graph.gbz.db` someone already hosts, such as HPRC's:
-  gbz-haplotype-index, which leaves the database as it is
+- HPRC v2.1: the walk files jbrowse.org hosts,
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f5.{GRCh38,CHM13}.walks.bed.gz`
+- gbz-haplotype-index works beside a `graph.gbz.db` someone already hosts, and
+  leaves the database as it is
 - Thousands of haplotypes: gbz-base
