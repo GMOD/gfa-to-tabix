@@ -36,7 +36,7 @@ Each `.bed.gz` gets a `.tbi`.
   graph's reference sample, else `reference`; the config maps it onto the
   sample with `assemblyNameToPanSN`
 - `build` tells an rGFA from a plain GFA as
-  [the index does](inputs.md#how-the-tool-tells-them-apart), and `--snarls`
+  [the index does](index-format.md#how-the-tool-tells-them-apart), and `--snarls`
   makes it a plain GFA
 - An rGFA's bubbles need `gfatools` on PATH; `build` runs it on the text
   alongside its own parse. Without it, `build` writes no bubble file and says so
@@ -111,7 +111,7 @@ gfa-to-tabix bubbles --snarls graph.snarls.vcf -o graph
   inversion, shortest, longest, three `.`, and the segment ids, the first
   qualified by its reference start (`544433@3943363`)
 - `build` knows which segments it turned forward
-  ([plain GFA](index-format.md#where-the-coordinates-come-from)), so a segment
+  ([plain GFA](index-format.md#plain-gfa-with-paths)), so a segment
   the reference reads reversed is no inversion. `bubbles` alone has no graph to
   say which turned, and takes every `<` as reverse
 

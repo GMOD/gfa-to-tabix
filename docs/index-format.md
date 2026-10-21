@@ -1,9 +1,14 @@
 # The node and link index
 
-- **In:** an rGFA, or a plain GFA with paths; see [inputs](inputs.md)
-- **Out:** `<prefix>.segs.bed.gz`, one row per node, and `<prefix>.links.bed.gz`, one row per link, each with a `.tbi`
-- **Filing:** the tool files each row under a reference interval, so one region query on each file returns the nodes and links a browser draws there
-- **Why two files:** every graph drawing reads both, and issues the two reads together. One file would save some bytes and an index load, so the merge waits for the next format change; [ADR 0002](adr/0002-two-index-files.md) has the readers and measurements
+- **In:** an rGFA, or a plain GFA with paths; see [inputs](#inputs)
+- **Out:** `<prefix>.segs.bed.gz`, one row per node, and
+  `<prefix>.links.bed.gz`, one row per link, each with a `.tbi`
+- **Filing:** the tool files each row under a reference interval, so one region
+  query on each file returns the nodes and links a browser draws there
+- **Why two files:** every graph drawing reads both, and issues the two reads
+  together. One file would save some bytes and an index load, so the merge
+  waits for the next format change;
+  [ADR 0002](adr/0002-two-index-files.md) has the readers and measurements
 
 ```bash
 gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc
@@ -16,31 +21,71 @@ gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
 | `-o`, `--out <prefix>` | Output prefix. Default the input name without `.gfa[.gz]`.                              |
 | `--layout <layout>`    | `anchored` (default) or `contig`; see [layouts](#layouts).                              |
 
-The input may be gzipped, and `-` reads stdin.
+## Inputs
 
-## Where the coordinates come from
+The tool reads a GFA file, plain or gzipped, and recognizes gzip by the file's
+first two bytes, whatever the name. `-` reads stdin, given `-o`. The tool takes
+coordinates from rGFA tags or from a reference path, depending on which lines
+the file has; see [how the tool tells them apart](#how-the-tool-tells-them-apart).
 
-- **rGFA:** the tool copies each S line's `SN` (sequence), `SO` (offset) and
-  `SR` (rank: 0 for the reference, higher for a node another assembly
-  contributed). [Inputs](inputs.md#how-the-tool-tells-them-apart) lists when
-  the tool takes this route
-- **Plain GFA:** the tool walks every path of the reference first, then every
+### rGFA
+
+- An rGFA has `SN`, `SO` and `SR` tags on every S line. The tool copies each
+  S line's `SN` (sequence), `SO` (offset) and `SR` (rank: 0 for the reference,
+  higher for a node another assembly contributed)
+- Written by: minigraph (`-cxggs`), and the minigraph stage of
+  Minigraph-Cactus (`*.sv.gfa.gz`)
+- Command: `gfa-to-tabix graph.gfa.gz -o prefix`
+- Bubbles need `gfatools` on PATH; see [build](subcommands.md#build)
+
+### Plain GFA with paths
+
+- Written by: pggb (`*.smooth.final.gfa`), `odgi view -i graph.og -g`,
+  `vg convert -f graph.gbz`, and base-level Minigraph-Cactus (`*.gfa.gz`, or
+  the GBZ through `vg convert -f`)
+- Paths are P lines or W lines, named `sample#haplotype#contig` (PanSN) where
+  possible
+- Command: `gfa-to-tabix graph.gfa.gz --reference K12 -o prefix`
+- `--reference` takes a PanSN sample, an assembly or a path name; without it
+  the first path is the reference
+- **Coordinates:** the tool walks every path of the reference first, then every
   other path in file order, summing node lengths. A node takes the path name
   and position of the first path to reach it, at rank 0 on the reference and
   rank 1 elsewhere
+- **Blunt graphs only:** summing node lengths gives the path coordinate only
+  when nodes abut, so a plain GFA needs overlaps `*` or `0M`
+- **Orientation:** when the first path to reach a node reads it reversed, the
+  tool turns the node to read forward before writing anything, and every link
+  end on it takes the other strand. The index then reads the reference forward,
+  as an rGFA's does, and only a haplotype that reads against the reference
+  shows as an inversion
 - **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes
   the reference passes more than once. Such a node has one row, at its first
   pass. A window over a later pass returns no row for the node, only its links,
   which the tool files under an interval covering both passes, so they can span
-  megabases ([wide intervals](#wide-intervals)). [Walk files](walks-format.md#paralogs-and-collapsed-repeats)
-  place each haplotype step at the nearest pass instead
-- **Blunt graphs only:** summing node lengths gives the path coordinate only
-  when nodes abut, so a plain GFA needs overlaps `*` or `0M`
-- **Orientation:** when the first path to reach a node reads it reversed, the
-  tool turns the node to read forward before writing anything, and every link end on it
-  takes the other strand. The index then reads the reference forward, as an
-  rGFA's does, and only a haplotype that reads against the reference shows as
-  an inversion
+  megabases ([wide intervals](#wide-intervals)).
+  [Walk files](walks-format.md#paralogs-and-collapsed-repeats) place each
+  haplotype step at the nearest pass instead
+- Bubbles come from a `vg deconstruct -a` VCF; see
+  [bubbles](subcommands.md#bubbles)
+
+### How the tool tells them apart
+
+- Every S line has an `SN` tag, and no `--reference`: rGFA
+- Some S lines have `SN` tags and the graph has no P or W lines: rGFA, which
+  leaves out the untagged segments
+- Anything else: plain GFA
+
+### Errors
+
+The tool stops before writing anything on these:
+
+- `--reference NOPE matches no path; have: K12#0#chr`: the name matches no
+  path. The message lists the paths the graph has
+- `link 1->2 has a non-blunt overlap (5M)`: the graph's nodes overlap. The
+  message says to blunt the graph first, or use an rGFA
+- `no P or W lines, and the S lines carry no rGFA tags`: the file has neither
+  coordinate source
 
 ## Layouts
 
@@ -82,8 +127,6 @@ Use it to browse the graph from a non-reference assembly's coordinates.
 
 ## What the files hold
 
-Every graph drawing reads both files ([ADR 0002](adr/0002-two-index-files.md)).
-
 `<prefix>.segs.bed.gz` has one row per node:
 
 ```
@@ -114,8 +157,9 @@ The tool sorts rows by sequence name in byte order, then by start.
   twice that with `contig`
 - The `contig` indexes are much larger than the `anchored` ones, because a
   Tabix index spends 8 bytes per 16 kb of every contig
-- Memory grows with total path length, so for a base-level graph of a human
-  chromosome use [`--walks`](walks-format.md)
+- Memory grows with total path length, and a base-level graph of a human
+  chromosome has millions of nodes, so for one use
+  [`--walks`](walks-format.md)
 - A Tabix index holds coordinates up to 512 Mb, so the tool cannot index a
   longer reference sequence
 
