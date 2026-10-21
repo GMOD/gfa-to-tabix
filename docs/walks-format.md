@@ -1,14 +1,42 @@
-# Walk file format 5
+# Walk files
 
-`gfa-to-tabix --walks` writes one file per reference sample,
-`<prefix>.<sample>.walks.bed.gz`, bgzipped and Tabix-indexed. It holds every
-path of the graph, cut into pieces filed under fixed chunks of that reference.
+- **In:** a base-level GFA with integer node ids and W or P lines, such as
+  `vg convert -f` writes from a Minigraph-Cactus GBZ
+- **Out:** one bgzipped, Tabix-indexed file per reference sample,
+  `<prefix>.<sample>.walks.bed.gz`, holding every path of the graph cut into
+  pieces filed under fixed chunks of that reference
+- A region query returns the rows a reader needs to rebuild every step of
+  every path through the region exactly
+- gfa-to-tabix 1.4 and later write walk format 5, which this page describes
 
-- **In:** a base-level GFA with integer node ids and W or P lines
-- **Out:** for each window, the reference's path through it, each distinct way
-  a haplotype leaves that path (a route), and each haplotype's piece as the
-  routes it takes
-- A reader rebuilds every step of every piece exactly from these rows
+```bash
+vg convert -f chr22.gbz > chr22.gfa
+gfa-to-tabix chr22.gfa --walks --refs GRCh38,CHM13 -o chr22
+```
+
+The command writes a file and its index for each sample in `--refs`:
+
+```
+chr22.GRCh38.walks.bed.gz  chr22.GRCh38.walks.bed.gz.tbi
+chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
+```
+
+- A chunk holds the reference's path through it once, each distinct route a
+  haplotype takes off that path once, and every other path's piece as the list
+  of routes it takes
+- Every file lists the same paths, including those of the `--refs` samples.
+  Rows in `chr22.GRCh38.walks.bed.gz` have GRCh38 coordinates, so a reader on
+  GRCh38 downloads that file's index and no other
+- A reader lists the haplotypes from the header without reading any rows
+
+| Option            | Effect                                                                   |
+| ----------------- | ------------------------------------------------------------------------ |
+| `--refs <names>`  | Comma-separated PanSN samples, one file per sample. Required.            |
+| `--chunk <bp>`    | Chunk size. Default 65536.                                               |
+| `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
+| `--stay <bp>`     | Keep a piece in its chunk across a short stretch over nodes the reference passes twice. Default 311, the `-k 311` minimum match of the HPRC pggb graphs; 0 turns it off. |
+| `--abridge-steps <n>` | Move a chunk's costliest paths to its detail rows until the rest cost at most n interior steps. Default 1000000; 0 turns it off. |
+| `--abridge-bytes <bytes>` | ...and until the rest compress to at most this many bytes. Default 3000000; 0 turns it off. |
 
 ![Four haplotype paths through a bubble, the walk rows for their chunk, and the paths a reader rebuilds from them](figures/walks-detail.svg)
 
@@ -17,13 +45,13 @@ taken flipped.
 
 ## Chunks and pieces
 
-[ADR 0001](adr/0001-step-placement.md) gives the reasons for these rules and
-their measurements on pggb and Minigraph-Cactus.
+[ADR 0001](adr/0001-step-placement.md) gives the reasons for these rules, the
+alternatives tried and their measurements on pggb and Minigraph-Cactus.
 
-- The tool cuts each reference sequence into chunks of `chunk` bp (default
-  65536) and files every row under its chunk's first base, `seq cs cs+1`, so a
-  query on a window returns whole chunks. A row spanning the whole chunk would
-  share a Tabix bin with the next chunk, and a query would read both
+- The tool cuts each reference sequence into chunks of `chunk` bp and files
+  every row under its chunk's first base, `seq cs cs+1`, so a query on a window
+  returns whole chunks. A row spanning the whole chunk would share a Tabix bin
+  with the next chunk, and a query would read both
 - A step on a reference node takes the chunk holding that node's position. A
   step on any other node takes the chunk of the last reference step before it,
   or of the first one after it for steps that lead the path
@@ -31,6 +59,8 @@ their measurements on pggb and Minigraph-Cactus.
   where the reference passes a node twice each pass lies where it is
 - A piece is a run of a path's steps in one chunk. `piece` numbers the pieces
   along the path, so a reader joins consecutive pieces back into one walk
+- A path that visits no node of a reference has no rows in that reference's
+  file, and the tool counts these paths on stderr
 - A node the reference passes once has that pass as its position. For a node
   it passes more than once, the path's last placed step predicts an offset: the
   step's own offset plus the bp the path has walked since, in the direction
@@ -57,6 +87,29 @@ their measurements on pggb and Minigraph-Cactus.
   exists, from the row whose path sorts first, at its earliest start, when
   several do. Other nodes take haplotype offsets
 
+## Paralogs and collapsed repeats
+
+- **Paralog jumps:** in a segmental duplication, a haplotype can step onto the
+  reference nodes of a distant paralog and back. The steps after the jump take
+  the paralog's chunk, so a window at the haplotype's own locus shows the
+  haplotype in more pieces and leaves out some of its inserted nodes. On
+  Minigraph-Cactus graphs this is rare and sits almost entirely in low-copy
+  repeats such as 22q11's
+- **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes,
+  so the reference path passes those nodes more than once, often megabases
+  apart. pggb graphs have many such nodes; Minigraph-Cactus's GRCh38 path has
+  none. Filing every step at the node's first pass, as format 3 did, split each
+  haplotype into a piece per hop and made pggb walk files dozens of times
+  larger than Minigraph-Cactus's; the nearest pass and `stay` above replace it
+- **Satellite arrays:** pggb gives each haplotype a separate long path through
+  thousands of tiny nodes, and the tool files all of it in the chunk where the
+  haplotype leaves the reference. [Abridged chunks](#abridged-chunks) moves the
+  costliest of these paths to detail rows, and a viewer draws each as a
+  labelled block until the user opens it
+- **What to expect on pggb:** a window shows nearly every haplotype whose
+  sequence aligns there, except in satellites and CHM13's short arm, where
+  abridged paths show as blocks until opened
+
 ## Header
 
 Header lines start with `#`: `tabix -H` prints them and region queries skip
@@ -72,12 +125,14 @@ them.
 - `format:i:5` marks this format. A reader refuses any other
 - `maxnode` is the longest node on the reference paths in bp
 - `#long` gives each pass of the reference over a node longer than a chunk:
-  sequence, start, end, as in `#long  GRCh38#0#chr22  10510000  11510000`. vg chops nodes at 1,024 bp, so its graphs have none;
-  pggb's N runs and unaligned stretches are the usual ones
+  sequence, start, end, as in `#long  GRCh38#0#chr22  10510000  11510000`. vg
+  chops nodes at 1,024 bp, so its graphs have none; pggb's N runs and
+  unaligned stretches are the usual ones
 - A reader queries from the chunk before the window's first, and from the
   chunk before each `#long` pass that overlaps the window, whichever is
-  earlier. A file with no `#long` lines but `maxnode` over a chunk, from
-  gfa-to-tabix 1.2, needs `max(chunk, maxnode)` bp before the window instead
+  earlier ([ADR 0003](adr/0003-long-node-lookback.md)). A file with no `#long`
+  lines but `maxnode` over a chunk, from gfa-to-tabix 1.2, needs
+  `max(chunk, maxnode)` bp before the window instead
 - `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
   A reader ignores it
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
@@ -182,9 +237,10 @@ Minigraph-Cactus clips a haplotype. `piece`, `pv` and `nx` run within one line
   neighbours get `ng` and `pg` but no `nr` or `pr`
 - A last piece with neither `nx` nor `ng` ends the contig's last record in the
   graph. The contig itself may go on
-- The tool refuses two records of a contig that overlap or start at the same
-  base, and a W line whose end column is not its start plus its nodes' lengths,
-  since `ng` would then depend on which one to believe
+- On its first read of the GFA, the tool refuses two records of a contig that
+  overlap or start at the same base, and a W line whose end column is not its
+  start plus its nodes' lengths, since `ng` would then depend on which one to
+  believe. A malformed file therefore fails before the slow second read
 - The rows are the same for any order of the W lines, which `vg convert`
   changes from run to run
 
@@ -218,10 +274,11 @@ seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start end detail 
   chunk move together
 - The chunk keeps its `ref` rows, its other pieces' `nodes`, `route` and `walk`
   rows, encoded without the moved pieces, and an `abridged` row per moved path
+  with its steps, bp and where it leaves and rejoins the reference
 - The moved pieces' rows go to detail record `detail` of the chunk, under the
   sequence `seq~cs` at position `detail × 16384`, so each record has a Tabix
   leaf bin to itself and a query for one reads no other. A window query names
-  only `seq`, so it reads no record
+  only `seq`, so it reads no record, and a viewer fetches a record on request
 - A record holds a `nodes` row, `route` rows and `walk` rows. The tool numbers
   its routes from 0 and chains their tokens from 0, as for a chunk of its own,
   and its walk rows decode against the R of chunk `cs` of `seq`
@@ -270,3 +327,42 @@ R#0#chr  0  1  walk   Q#0#chr  0    0    0  2  2  0  1  nx:i:10
   route 0 flipped, `>1 >6` with no exit: its steps are `>1 >6`
 - H's piece starts on `>1`, ends on `>2` (`end` 2), and takes no route: its
   steps are `>1 >2`
+
+## Scale
+
+- The tool reads the GFA twice, so it takes a file path and refuses stdin;
+  gzip input works
+- The tool holds about 16 bytes per node, 24 more per node for each reference,
+  and with `--sequences` the graph's bases
+- Pieces wait for an external sort in up to 512 MB of memory and then in
+  compressed runs in a temporary directory beside the output. The sort's merge
+  encodes the chunks on every core
+- A Minigraph-Cactus chromosome with two references takes minutes and a few GB
+  of memory on a laptop
+- The header fits in the file's first BGZF block, and a window reads two
+  chunks, so a reader fetches a small fraction of a megabyte per window
+  (`docs/format-2/scripts/window_sizes.py` measures it)
+
+## Readers
+
+- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 4 reads format 5
+  only, and asks for a rebuild of any other file
+- The graph genome viewer plugin,
+  [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
+  the tube map read through @jbrowse/graph-walks
+- jbrowse.org hosts HPRC v2.1's files as
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f5.{GRCh38,CHM13}.walks.bed.gz`
+
+In a JBrowse graph track, `walksUri` takes the prefix up to the reference
+sample, so a track on hg38 reads the GRCh38 file and a track on hs1 would name
+the CHM13 one. `defaultHaplotypes` lists the haplotypes the track draws until
+the user picks others:
+
+```json
+"adapter": {
+  "type": "RgfaTabixAdapter",
+  "walksUri": "https://example.org/hprc-v2.1-mc-grch38.GRCh38",
+  "assemblyNameToPanSN": { "hg38": "GRCh38" },
+  "defaultHaplotypes": ["HG002", "HG00733"]
+}
+```

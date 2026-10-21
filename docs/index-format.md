@@ -32,7 +32,7 @@ The input may be gzipped, and `-` reads stdin.
   the reference passes more than once. Such a node has one row, at its first
   pass. A window over a later pass returns no row for the node, only its links,
   which the tool files under an interval covering both passes, so they can span
-  megabases ([wide intervals](#wide-intervals)). [Walk files](walks.md#paralogs-and-collapsed-repeats)
+  megabases ([wide intervals](#wide-intervals)). [Walk files](walks-format.md#paralogs-and-collapsed-repeats)
   place each haplotype step at the nearest pass instead
 - **Blunt graphs only:** summing node lengths gives the path coordinate only
   when nodes abut, so a plain GFA needs overlaps `*` or `0M`
@@ -115,7 +115,7 @@ The tool sorts rows by sequence name in byte order, then by start.
 - The `contig` indexes are much larger than the `anchored` ones, because a
   Tabix index spends 8 bytes per 16 kb of every contig
 - Memory grows with total path length, so for a base-level graph of a human
-  chromosome use [`--walks`](walks.md)
+  chromosome use [`--walks`](walks-format.md)
 - A Tabix index holds coordinates up to 512 Mb, so the tool cannot index a
   longer reference sequence
 

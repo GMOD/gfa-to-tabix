@@ -44,7 +44,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - [Inputs](docs/inputs.md): rGFA, plain GFA, base-level graphs, and choosing a reference
 - [The node and link index](docs/index-format.md): options, coordinates, layouts, columns, scale
 - [Subcommands](docs/subcommands.md): `build`, `alleles`, `bubbles`, `fold`, `paths`
-- [Walks](docs/walks.md) and [the walks row format](docs/walks-format.md)
+- [Walk files](docs/walks-format.md): options, placement rules, the row format 5 and its readers
 - [JBrowse configuration](docs/jbrowse.md)
 - Decisions:
   - [ADR 0001](docs/adr/0001-step-placement.md): which chunk a walk file files each step under

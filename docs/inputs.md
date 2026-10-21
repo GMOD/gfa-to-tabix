@@ -23,7 +23,7 @@ A plain GFA has no coordinate tags. The tool takes coordinates from the paths of
 
 ## Large base-level graphs
 
-A base-level graph of a human chromosome has millions of nodes, and the node and link index's memory grows with total path length. `--walks` files every haplotype's path by reference chunk; see [walks](walks.md). It needs integer node ids and W or P lines, as `vg convert -f` writes.
+A base-level graph of a human chromosome has millions of nodes, and the node and link index's memory grows with total path length. `--walks` files every haplotype's path by reference chunk; see [walks](walks-format.md). It needs integer node ids and W or P lines, as `vg convert -f` writes.
 
 ## How the tool tells them apart
 
