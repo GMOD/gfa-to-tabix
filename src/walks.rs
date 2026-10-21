@@ -1,6 +1,6 @@
 // The --walks mode: every path of a base-level GFA cut into pieces filed under
 // fixed chunks of each reference's coordinate, written as one Tabix-indexed
-// BED file per reference in format 4 (`routes.rs` writes a chunk's rows). A
+// BED file per reference in walk format 5 (`routes.rs` writes a chunk's rows). A
 // row's interval is the first base of its chunk: a full-chunk interval would
 // share a Tabix bin with the next chunk, and a query would pull both. Header
 // lines give the format, the chunk size and the longest node, then the
