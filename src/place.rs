@@ -1,4 +1,7 @@
-use crate::gfa::{Graph, blunt_error, text};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use crate::gfa::{Graph, blunt_error, split_path_name, text};
 use crate::intern::Interner;
 
 pub struct Node {
@@ -7,8 +10,9 @@ pub struct Node {
     pub start: u64,
     pub end: u64,
     pub rank: i64,
-    // assemblies whose paths visit the node, as an SM:Z: tag; None for rGFA
-    pub carriers: Option<Vec<u8>>,
+    // assemblies whose paths visit the node, as an SM:Z: tag shared by every
+    // node with the same ones; None for rGFA
+    pub carriers: Option<Arc<[u8]>>,
 }
 
 pub struct Placed {
@@ -66,6 +70,11 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         return Err(format!("{} Or use an rGFA.", blunt_error(overlap)));
     }
     let paths = &graph.paths;
+    if paths.is_empty() && graph.has_tags() {
+        return Err("--reference needs P or W lines, and this graph has none; \
+                    without --reference, its rGFA tags give the coordinates"
+            .into());
+    }
     if paths.is_empty() {
         return Err("no P or W lines, and the S lines carry no rGFA tags: \
                     nothing gives this graph coordinates"
@@ -73,18 +82,23 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
     }
     let reference_path = match reference {
         None => 0,
-        Some(wanted) => {
-            let wanted = wanted.as_bytes();
+        Some(given) => {
+            let (wanted, _) = split_path_name(given.as_bytes());
             let prefix = [wanted, b"#"].concat();
             paths
                 .iter()
                 .position(|p| p.name == wanted || p.name.starts_with(&prefix))
                 .ok_or_else(|| {
-                    let names: Vec<String> = paths.iter().map(|p| text(&p.name)).collect();
+                    let mut names: Vec<&[u8]> = paths.iter().map(|p| p.name.as_slice()).collect();
+                    names.dedup();
+                    let shown: Vec<String> = names.iter().take(20).map(|n| text(n)).collect();
+                    let more = match names.len().saturating_sub(20) {
+                        0 => String::new(),
+                        n => format!(" and {n} more"),
+                    };
                     format!(
-                        "--reference {} matches no path; have: {}",
-                        text(wanted),
-                        names.join(", ")
+                        "--reference {given} matches no path; have: {}{more}",
+                        shown.join(", ")
                     )
                 })?
         }
@@ -174,21 +188,26 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
 
     let mut sequences = Interner::default();
     let sequence_of: Vec<u32> = paths.iter().map(|p| sequences.id(&p.name)).collect();
+    let mut tags: HashMap<Vec<u32>, Arc<[u8]>> = HashMap::new();
     let nodes = first_visit
         .iter()
+        .zip(carriers)
         .enumerate()
-        .map(|(node, visit)| {
+        .map(|(node, (visit, carriers))| {
             visit.map(|(path, start, rank)| {
-                let names: Vec<&[u8]> = carriers[node]
-                    .iter()
-                    .map(|&id| assembly_names[id as usize].as_slice())
-                    .collect();
+                let tag = tags.entry(carriers).or_insert_with_key(|ids| {
+                    let names: Vec<&[u8]> = ids
+                        .iter()
+                        .map(|&id| assembly_names[id as usize].as_slice())
+                        .collect();
+                    [b"SM:Z:".as_slice(), &names.join(&b',')].concat().into()
+                });
                 Node {
                     sequence: sequence_of[path],
                     start,
                     end: start + graph.lengths[node].unwrap_or(0),
                     rank,
-                    carriers: Some([b"SM:Z:".as_slice(), &names.join(&b',')].concat()),
+                    carriers: Some(tag.clone()),
                 }
             })
         })

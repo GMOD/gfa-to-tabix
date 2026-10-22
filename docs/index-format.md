@@ -47,8 +47,9 @@ the file has; see
 - Paths are P lines or W lines, named `sample#haplotype#contig` (PanSN) where
   possible
 - Command: `gfa-to-tabix graph.gfa.gz --reference K12 -o prefix`
-- `--reference` takes a PanSN sample, an assembly or a path name; without it
-  the first path is the reference
+- `--reference` takes a PanSN sample, an assembly or a path name, with or
+  without the `:start-end` range pggb appends; without it the first path is
+  the reference
 - **Coordinates:** the tool walks every path of the reference first, then every
   other path in file order, summing node lengths. A node takes the path name
   and position of the first path to reach it, at rank 0 on the reference and
@@ -124,7 +125,9 @@ so that they come back, and `--layout` sets how it chooses.
 **`contig`**: the tool files every node under its own coordinate, as version
 0.1.0 did. A reader has to follow links from the reference onto other contigs,
 one round of queries per step, and the index covers every contig in the graph.
-Use it to browse the graph from a non-reference assembly's coordinates.
+Use it to browse the graph from a non-reference assembly's coordinates. A
+zero-length node keeps its empty interval, as the JBrowse scripts wrote it, so
+a region query never returns it.
 
 ## What the files hold
 

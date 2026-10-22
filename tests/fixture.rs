@@ -144,6 +144,25 @@ fn an_unknown_reference_lists_the_paths() {
 }
 
 #[test]
+fn a_reference_named_with_a_range_matches_its_path() {
+    let (named, nodes, _) = run("paths.gfa", &["--reference", "alt#1#ctg"]);
+    let (ranged, ranged_nodes, _) = run("paths.gfa", &["--reference", "alt#1#ctg:0-8"]);
+    assert!(named.status.success() && ranged.status.success());
+    assert_eq!(ranged_nodes, nodes);
+}
+
+#[test]
+fn a_reference_on_an_rgfa_without_paths_says_the_tags_suffice() {
+    let (output, _, _) = run("rgfa.gfa", &["--reference", "chr1"]);
+    assert_eq!(output.status.code(), Some(1));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("--reference needs P or W lines"),
+        "{stderr}"
+    );
+}
+
+#[test]
 fn anchored_files_an_allele_under_the_reference_it_hangs_from() {
     let (output, nodes, links) = run("rgfa.gfa", &["--layout", "anchored"]);
     assert!(output.status.success());
