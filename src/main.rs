@@ -130,8 +130,8 @@ fn write_index(
     prefix: &str,
 ) -> Result<(Vec<bed::Row>, Vec<bed::Row>), String> {
     let spans = match layout {
-        Layout::Anchored => anchor::anchored(graph, &placed.nodes),
-        Layout::Contig => anchor::by_contig(&placed.nodes),
+        Layout::Anchored => anchor::anchored(graph, placed),
+        Layout::Contig => anchor::by_contig(placed),
     };
     let mut nodes = bed::node_rows(graph, &placed.nodes, &spans, layout);
     let (mut links, skipped) = bed::link_rows(graph, &placed.nodes, &spans, layout);

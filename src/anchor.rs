@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 use crate::gfa::Graph;
-use crate::intern::Interner;
-use crate::place::Node;
+use crate::place::Placed;
 
 // (sequence, start, end): an interval a row is filed under
 pub type Span = (u32, u64, u64);
@@ -15,27 +14,22 @@ pub struct Spans {
     pub links: Vec<Vec<Span>>,
 }
 
-fn own_spans(nodes: &[Option<Node>]) -> (Vec<Option<Span>>, Vec<Vec<u8>>) {
-    let mut sequences = Interner::default();
-    let own = nodes
+fn own_spans(placed: &Placed) -> Vec<Option<Span>> {
+    placed
+        .nodes
         .iter()
-        .map(|node| {
-            node.as_ref()
-                .map(|n| (sequences.id(&n.sequence), n.start, n.end))
-        })
-        .collect();
-    (own, sequences.into_names())
+        .map(|node| node.as_ref().map(|n| (n.sequence, n.start, n.end)))
+        .collect()
 }
 
 // Every node under its coordinate.
-pub fn by_contig(nodes: &[Option<Node>]) -> Spans {
-    let (own, sequences) = own_spans(nodes);
-    let nodes: Vec<Vec<Span>> = own
+pub fn by_contig(placed: &Placed) -> Spans {
+    let nodes: Vec<Vec<Span>> = own_spans(placed)
         .into_iter()
         .map(|span| span.into_iter().collect())
         .collect();
     Spans {
-        sequences,
+        sequences: placed.sequences.clone(),
         links: nodes.clone(),
         nodes,
     }
@@ -74,11 +68,11 @@ pub fn widen(spans: &mut Vec<Span>, span: Span) {
 // to, along with others the reader drops: it keeps a link when one of its
 // nodes came back from the node file, or when both are far ends of links it
 // kept.
-pub fn anchored(graph: &Graph, nodes: &[Option<Node>]) -> Spans {
-    let (own, sequences) = own_spans(nodes);
+pub fn anchored(graph: &Graph, placed: &Placed) -> Spans {
+    let nodes = &placed.nodes;
     // A reader's region query skips a row whose interval is empty, so a
     // zero-length node is filed under one base.
-    let own: Vec<Option<Span>> = own
+    let own: Vec<Option<Span>> = own_spans(placed)
         .into_iter()
         .map(|span| span.map(|(sequence, start, end)| (sequence, start, end.max(start + 1))))
         .collect();
@@ -145,7 +139,7 @@ pub fn anchored(graph: &Graph, nodes: &[Option<Node>]) -> Spans {
         }
     }
     Spans {
-        sequences,
+        sequences: placed.sequences.clone(),
         nodes: filed,
         links,
     }

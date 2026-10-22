@@ -78,7 +78,12 @@ pub fn node_rows(graph: &Graph, nodes: &[Option<Node>], spans: &Spans, layout: L
         push_fields(&mut rest, &[id, rank.as_bytes()]);
         if layout == Layout::Anchored {
             rest.push(b'\t');
-            push_coordinates(&mut rest, &node.sequence, node.start, node.end);
+            push_coordinates(
+                &mut rest,
+                &spans.sequences[node.sequence as usize],
+                node.start,
+                node.end,
+            );
         }
         if let Some(carriers) = &node.carriers {
             push_fields(&mut rest, &[b"", carriers]);
@@ -116,9 +121,10 @@ pub fn link_rows(
             rest.push(strand(reversed));
             rest.push(b'\t');
         }
-        push_coordinates(&mut rest, &a.sequence, a.start, a.end);
+        let name = |node: &Node| spans.sequences[node.sequence as usize].as_slice();
+        push_coordinates(&mut rest, name(a), a.start, a.end);
         write!(rest, "\t{}\t", a.rank).expect("a Vec takes every write");
-        push_coordinates(&mut rest, &b.sequence, b.start, b.end);
+        push_coordinates(&mut rest, name(b), b.start, b.end);
         write!(rest, "\t{}", b.rank).expect("a Vec takes every write");
         if let (Some(a), Some(b)) = (&a.carriers, &b.carriers) {
             push_fields(&mut rest, &[b"", a, b]);

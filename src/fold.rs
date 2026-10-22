@@ -294,7 +294,7 @@ pub fn fold(graph: &Graph, placed: &Placed, below: i64) -> Vec<u8> {
             compact[i] = Some(nodes.len());
             nodes.push(Node {
                 name: &graph.node_ids[i],
-                sequence: &node.sequence,
+                sequence: &placed.sequences[node.sequence as usize],
                 start: node.start as i64,
                 length: (node.end - node.start) as i64,
                 rank: node.rank,

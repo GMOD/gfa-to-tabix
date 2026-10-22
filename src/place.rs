@@ -1,7 +1,9 @@
 use crate::gfa::{Graph, blunt_error, text};
+use crate::intern::Interner;
 
 pub struct Node {
-    pub sequence: Vec<u8>,
+    // an index into `Placed::sequences`
+    pub sequence: u32,
     pub start: u64,
     pub end: u64,
     pub rank: i64,
@@ -10,6 +12,7 @@ pub struct Node {
 }
 
 pub struct Placed {
+    pub sequences: Vec<Vec<u8>>,
     pub nodes: Vec<Option<Node>>,
     // segments the path that placed them reads reversed, which `flip` turns
     // to read forward there
@@ -26,7 +29,7 @@ pub fn from_tags(graph: &Graph) -> Placed {
         .zip(&graph.lengths)
         .map(|(tagged, length)| {
             tagged.as_ref().map(|p| Node {
-                sequence: graph.sequences[p.sequence as usize].clone(),
+                sequence: p.sequence,
                 start: p.start,
                 end: p.start + length.unwrap_or(0),
                 rank: p.rank,
@@ -35,6 +38,7 @@ pub fn from_tags(graph: &Graph) -> Placed {
         })
         .collect();
     Placed {
+        sequences: graph.sequences.to_vec(),
         nodes,
         flipped: vec![false; graph.node_ids.len()],
         from_tags: true,
@@ -74,9 +78,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
             let prefix = [wanted, b"#"].concat();
             paths
                 .iter()
-                .position(|p| {
-                    sample(&p.name) == wanted || p.name == wanted || p.name.starts_with(&prefix)
-                })
+                .position(|p| p.name == wanted || p.name.starts_with(&prefix))
                 .ok_or_else(|| {
                     let names: Vec<String> = paths.iter().map(|p| text(&p.name)).collect();
                     format!(
@@ -170,6 +172,8 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         }
     }
 
+    let mut sequences = Interner::default();
+    let sequence_of: Vec<u32> = paths.iter().map(|p| sequences.id(&p.name)).collect();
     let nodes = first_visit
         .iter()
         .enumerate()
@@ -180,7 +184,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
                     .map(|&id| assembly_names[id as usize].as_slice())
                     .collect();
                 Node {
-                    sequence: paths[path].name.clone(),
+                    sequence: sequence_of[path],
                     start,
                     end: start + graph.lengths[node].unwrap_or(0),
                     rank,
@@ -190,6 +194,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         })
         .collect();
     Ok(Placed {
+        sequences: sequences.into_names(),
         nodes,
         flipped,
         from_tags: false,
