@@ -489,7 +489,7 @@ fn first_pass(
     let mut walks = vec![0u64; options.refs.len()];
     let mut handles = Vec::new();
     let mut ids = Vec::new();
-    let mut samples: Vec<Vec<u8>> = Vec::new();
+    let mut samples = Interner::default();
     let mut stable = Stable::default();
     let mut records: Vec<Record> = Vec::new();
     // paths that reach a node before its S line, by line number and record,
@@ -551,9 +551,7 @@ fn first_pass(
                 let Some(path) = path_line(line)? else {
                     return Ok(());
                 };
-                if !samples.iter().any(|s| s == path.sample) {
-                    samples.push(path.sample.to_vec());
-                }
+                samples.id(path.sample);
                 parse_steps(&path, &mut handles)?;
                 let name = names.id(&path.name);
                 ids.clear();
@@ -626,11 +624,15 @@ fn first_pass(
     }
     for (reference, count) in walks.iter().enumerate() {
         if *count == 0 {
-            let samples: Vec<String> = samples.iter().map(|s| text(s)).collect();
+            let shown: Vec<String> = samples.iter().take(20).map(|s| text(s)).collect();
+            let more = match samples.len().saturating_sub(20) {
+                0 => String::new(),
+                n => format!(" and {n} more"),
+            };
             return Err(format!(
-                "--refs {} matches no path's sample; have: {}",
+                "--refs {} matches no path's sample; have: {}{more}",
                 options.refs[reference],
-                samples.join(", ")
+                shown.join(", ")
             ));
         }
     }
