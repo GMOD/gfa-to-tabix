@@ -6,7 +6,8 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 - **Out:** `<prefix>.segs.bed.gz` and `<prefix>.links.bed.gz`, one line per node and per link, each with a `.tbi` ([why two files](docs/adr/0002-two-index-files.md))
 - **Out, with `--walks --refs GRCh38`:** `<prefix>.GRCh38.walks.bed.gz` and its `.tbi`, every haplotype's path through a base-level graph, which [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) reads
 - A browser fetches the rows for a region with HTTP range requests and never downloads the whole graph
-- The [JBrowse 2](https://jbrowse.org) graph track reads the node and link files. The tool is one static binary and needs no bgzip or tabix; `build` runs gfatools, when installed, for an rGFA's bubbles
+- The [JBrowse 2](https://jbrowse.org) graph track reads the node and link files
+- The tool is one static binary and needs no bgzip or tabix; `build` runs gfatools, when installed, for an rGFA's bubbles
 
 ![The two Tabix queries a browser runs to view chr1:13-18, the node and link lines each returns, and the graph it draws from them, with each node and edge coloured by the file it came from](docs/figures/overview.svg)
 
@@ -37,6 +38,68 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - A region query returns the rows a reader needs to rebuild every haplotype's path through that region. [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) rebuilds them, and BandageJS and the JBrowse graph plugin draw through it
 
 ![Four haplotype paths through a bubble, the rows the GRCh38 file has for one 64 kb stretch of chr1, and the paths a reader rebuilds from those rows](docs/figures/walks.svg)
+
+## FAQ
+
+### What does gfa-to-tabix add to an rGFA?
+
+- An rGFA, as minigraph writes it, gives every node a place on a genome in
+  three tags: `SN` names the sequence, `SO` the offset and `SR` the rank, 0 for
+  the reference and higher for a node another assembly contributed
+- An rGFA has no index, so a program that shows one region parses the whole
+  file first. `gfatools view -R chr1:101-200` cuts a region out of a local
+  rGFA that way
+- gfa-to-tabix writes the nodes and links as Tabix-indexed BED, so a browser
+  fetches one region's rows over HTTP from a static host
+- A node of rank 1 or more has `SN` and `SO` on the assembly that contributed
+  it, such as `HG002#1#chr1`, so a GRCh38 query by tag coordinates misses it.
+  The default layout files such a node under the GRCh38 interval its bubble
+  hangs from, and `--layout contig` keeps the tag coordinates
+  ([layouts](docs/index-format.md#layouts))
+
+### Can I index a GFA without rGFA tags?
+
+- Yes, when it has P or W lines, as pggb, odgi and `vg convert -f` write
+- The tool walks the reference's paths and gives each node the values an
+  rGFA's tags would hold: the path name, the offset along it, and rank 0 on the
+  reference or 1 elsewhere
+- `--reference` names the reference, a PanSN sample such as `GRCh38`, an
+  assembly such as `HG002#1` or a path; the default is the first path
+- The tool sums node lengths along a path, so it refuses an L or P line with
+  an overlap other than `*` or `0M`; blunt the graph first
+- [Plain GFA with paths](docs/index-format.md#plain-gfa-with-paths) has the
+  rules for collapsed repeats and reversed nodes
+
+### What differs between an rGFA and a plain GFA in the output?
+
+|                           | rGFA                                                          | Plain GFA                                      |
+| ------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| Written by                | minigraph, Minigraph-Cactus `*.sv.gfa.gz`                     | pggb, odgi, `vg convert -f`                    |
+| Node coordinates from     | the `SN`, `SO` and `SR` tags                                  | the reference's P or W lines                   |
+| Assemblies with each node | not in the index                                              | an `SM:Z:` column on every row                 |
+| `build`'s bubbles         | `gfatools bubble`, when on PATH                               | a `vg deconstruct -a` VCF, given as `--snarls` |
+| `build --tier` default    | 10000 bp                                                      | 50 bp                                          |
+| Walk files (`--walks`)    | minigraph writes no paths and names nodes `s1`, `s2`, so none | from a base-level graph with integer node ids  |
+
+### Which output do I need?
+
+- The node and link index holds the nodes and links a graph track draws at a
+  locus, for any input graph. `build` writes it with the coarse tier, alleles,
+  bubbles and a JBrowse config
+- The walk files hold each haplotype's path through a base-level graph, which a
+  viewer needs to draw haplotypes
+- [gbz-comparison.md](docs/gbz-comparison.md) compares the walk files with
+  gbz-base, which serves a GBZ from SQLite
+
+### How large a graph does it handle?
+
+- For the node and link index, the tool holds the whole graph in memory:
+  HPRC's whole-genome SV rGFA indexes in seconds on a laptop, in about a
+  gigabyte
+- `--walks` streams the paths from disk, reading the GFA twice; HPRC v2.1's
+  Minigraph-Cactus graph took 29 minutes and 13 GB on 24 cores
+- A Tabix index holds coordinates up to 512 Mb, so neither output can index a
+  longer reference sequence
 
 ## Docs
 
