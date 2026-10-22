@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::gfa::{Graph, blunt_error, split_path_name, text};
@@ -133,18 +133,8 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         }
     }
 
-    let mut assembly_ids: Vec<u32> = Vec::with_capacity(paths.len());
-    let mut assembly_names: Vec<&Vec<u8>> = Vec::new();
-    for name in &assemblies {
-        let id = match assembly_names.iter().position(|n| *n == name) {
-            Some(id) => id,
-            None => {
-                assembly_names.push(name);
-                assembly_names.len() - 1
-            }
-        };
-        assembly_ids.push(id as u32);
-    }
+    let mut assembly_names = Interner::default();
+    let assembly_ids: Vec<u32> = assemblies.iter().map(|a| assembly_names.id(a)).collect();
 
     // Reference paths walk first, so they claim their nodes at rank 0 before
     // any other path reaches them.
@@ -179,7 +169,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
                 first_visit[node] = Some((i, offset, rank));
                 flipped[node] = step.reversed();
             }
-            if !carriers[node].contains(&assembly_ids[i]) {
+            if carriers[node].last() != Some(&assembly_ids[i]) {
                 carriers[node].push(assembly_ids[i]);
             }
             offset += length;
@@ -188,6 +178,11 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
 
     let mut sequences = Interner::default();
     let sequence_of: Vec<u32> = paths.iter().map(|p| sequences.id(&p.name)).collect();
+    let mut seen = HashSet::new();
+    for ids in &mut carriers {
+        seen.clear();
+        ids.retain(|&id| seen.insert(id));
+    }
     let mut tags: HashMap<Vec<u32>, Arc<[u8]>> = HashMap::new();
     let nodes = first_visit
         .iter()
@@ -298,5 +293,16 @@ mod tests {
     fn an_rgfa_flips_nothing() {
         let graph = Graph::read("S\ta\t*\tLN:i:4\tSN:Z:chr\tSO:i:0\tSR:i:0\n".as_bytes()).unwrap();
         assert_eq!(from_tags(&graph).flipped, [false]);
+    }
+
+    #[test]
+    fn an_assembly_lists_once_however_many_of_its_paths_visit() {
+        let graph = Graph::read(
+            "S\ta\t*\tLN:i:4\nP\tA#1#c1\ta+,a+\t*\nP\tB#1#c\ta+\t*\nP\tA#1#c2\ta+\t*\n".as_bytes(),
+        )
+        .unwrap();
+        let placed = from_paths(&graph, None).unwrap();
+        let carriers = placed.nodes[0].as_ref().unwrap().carriers.as_deref();
+        assert_eq!(carriers, Some(b"SM:Z:A.1,B.1".as_slice()));
     }
 }
