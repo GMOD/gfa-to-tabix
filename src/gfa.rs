@@ -160,9 +160,13 @@ impl Graph {
                 Some(b"SN:Z:") => name = Some(&tag[5..]),
                 Some(b"SO:i:") => offset = Some(parse_u64(&tag[5..], "SO tag")?),
                 Some(b"SR:i:") => {
-                    rank = std::str::from_utf8(&tag[5..])
+                    let parsed = std::str::from_utf8(&tag[5..])
                         .ok()
-                        .and_then(|s| s.parse::<i64>().ok())
+                        .and_then(|s| s.parse::<i64>().ok());
+                    rank =
+                        Some(parsed.ok_or_else(|| {
+                            format!("SR tag: {} is not an integer", text(&tag[5..]))
+                        })?);
                 }
                 Some(b"LN:i:") => ln = Some(parse_u64(&tag[5..], "LN tag")?),
                 _ => {}

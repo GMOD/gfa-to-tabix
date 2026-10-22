@@ -112,9 +112,9 @@ pub fn run(prefix: &str, files: &[String]) -> Result<(), String> {
 
     let strip = format!("{reference}#");
     let mut rows: Vec<Line> = Vec::new();
-    for (strain, calls) in &samples {
+    for ((strain, calls), file) in samples.iter().zip(files) {
         for (i, call) in calls.iter().enumerate() {
-            let (start, end) = (number(strain, &call.start)?, number(strain, &call.end)?);
+            let (start, end) = (number(file, &call.start)?, number(file, &call.end)?);
             let ref_span = end as i64 - start as i64;
             let parts: Vec<&str> = call.field.split(':').collect();
             let strand = if call.field == "." || parts.get(2).is_none_or(|s| s.is_empty()) {
@@ -137,7 +137,7 @@ pub fn run(prefix: &str, files: &[String]) -> Result<(), String> {
                 let given = parts.get(1).copied().unwrap_or("");
                 path_len = given.parse::<i64>().map_err(|_| {
                     format!(
-                        "{strain}: pathLen {given:?} in {:?} is not a number",
+                        "{file}: pathLen {given:?} in {:?} is not a number",
                         call.field
                     )
                 })?;

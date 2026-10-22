@@ -1269,6 +1269,15 @@ impl Details {
     }
 }
 
+// One reference's walk file as the rows reach it
+struct Output {
+    writer: bed::Writer,
+    path: String,
+    rows: u64,
+    counts: routes::Counts,
+    details: Details,
+}
+
 pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     if gfa == "-" {
         return Err("--walks reads the GFA twice, so it needs a file, not stdin".into());
@@ -1392,7 +1401,13 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         }
         writer.header(&header)?;
         let details = Details::create(&temp.0, writers.len())?;
-        writers.push((writer, path, 0u64, routes::Counts::default(), details));
+        writers.push(Output {
+            writer,
+            path,
+            rows: 0,
+            counts: routes::Counts::default(),
+            details,
+        });
     }
     let sequence_of = |id: usize| graph.sequence(id);
     let sequence = options.sequences.then_some(&sequence_of);
@@ -1473,18 +1488,13 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                 .unwrap()
                 .expect("every chunk of the batch is encoded")
                 .map_err(|e| format!("{}:{start}: {e}", text(name_text)))?;
-            let (writer, _, rows, counts, details) =
-                &mut writers[chunks.owner[name as usize] as usize];
-            if details.sequence.as_deref() != Some(name_text.as_slice()) {
-                *rows += details.flush(writer)?;
-                details.sequence = Some(name_text.clone());
+            let out = &mut writers[chunks.owner[name as usize] as usize];
+            if out.details.sequence.as_deref() != Some(name_text.as_slice()) {
+                out.rows += out.details.flush(&mut out.writer)?;
+                out.details.sequence = Some(name_text.clone());
             }
-            details.add(start, &chunk_details)?;
-            counts.routes += chunk_counts.routes;
-            counts.walks += chunk_counts.walks;
-            counts.counted += chunk_counts.counted;
-            counts.abridged += chunk_counts.abridged;
-            counts.detail_walks += chunk_counts.detail_walks;
+            out.details.add(start, &chunk_details)?;
+            out.counts += chunk_counts;
             let mut from = 0;
             for end in ends {
                 line.clear();
@@ -1495,8 +1505,8 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                 push_u64(&mut line, start + 1);
                 line.push(b'\t');
                 line.extend_from_slice(&lines[from..end]);
-                writer.push(name_text, start, start + 1, &line)?;
-                *rows += 1;
+                out.writer.push(name_text, start, start + 1, &line)?;
+                out.rows += 1;
                 from = end;
             }
         }
@@ -1521,9 +1531,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     })?;
     write_batch(&mut batch)?;
     drop(write_batch);
-    for (mut writer, path, mut rows, counts, mut details) in writers {
-        rows += details.flush(&mut writer)?;
-        writer.finish()?;
+    for mut out in writers {
+        let rows = out.rows + out.details.flush(&mut out.writer)?;
+        out.writer.finish()?;
+        let (path, counts) = (out.path, out.counts);
         eprintln!(
             "{} {rows} rows -> {path} (+ .tbi): {} routes, {} walk rows, {} with step counts; {} paths abridged to {} detail walk rows",
             elapsed(),

@@ -236,17 +236,19 @@ impl Writer {
         })
     }
 
-    fn write(&mut self, data: &[u8]) -> Result<StreamPos, String> {
+    // Returns where the data ends, and whether blocks were written.
+    fn write(&mut self, data: &[u8]) -> Result<(StreamPos, bool), String> {
         let sink = self.sink.as_mut().expect("writer is open until finish");
-        sink.write(data)
+        let wrote = sink
+            .write(data)
             .map_err(|e| format!("{}: {e}", self.path))?;
-        Ok(sink.position())
+        Ok((sink.position(), wrote))
     }
 
     // A line before the rows. It starts with `#`, the index's comment prefix,
     // so Tabix readers return it as the header.
     pub fn header(&mut self, line: &[u8]) -> Result<(), String> {
-        self.before = self.write(line)?;
+        self.before = self.write(line)?.0;
         Ok(())
     }
 
@@ -258,7 +260,7 @@ impl Writer {
         end: u64,
         line: &[u8],
     ) -> Result<(), String> {
-        let after = self.write(line)?;
+        let (after, wrote) = self.write(line)?;
         let sequence = match self.pending.back() {
             Some(last) if last.sequence.as_bytes() == sequence => last.sequence.clone(),
             _ => Rc::from(String::from_utf8_lossy(sequence)),
@@ -271,7 +273,7 @@ impl Writer {
             to: after,
         });
         self.before = after;
-        self.index_written()
+        if wrote { self.index_written() } else { Ok(()) }
     }
 
     // Indexes the pending rows whose blocks are written.

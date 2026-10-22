@@ -1,4 +1,4 @@
-// Format 2's rows for one chunk of a reference. The reference's pieces in
+// The walk-format rows for one chunk of a reference. The reference's pieces in
 // the chunk become `ref` rows, and concatenated in offset order they are the
 // chunk's reference path R. Every other piece becomes a `walk` row that lists
 // the routes it takes off R: a route is an entry handle on R, the steps off R
@@ -447,6 +447,16 @@ pub struct Counts {
     pub detail_walks: u64,
 }
 
+impl std::ops::AddAssign for Counts {
+    fn add_assign(&mut self, other: Counts) {
+        self.routes += other.routes;
+        self.walks += other.walks;
+        self.counted += other.counted;
+        self.abridged += other.abridged;
+        self.detail_walks += other.detail_walks;
+    }
+}
+
 // A chunk's most a reader decodes: `cost` in interior steps, counting a step
 // along R as a quarter of one, and `bytes` compressed. Zero leaves it unbounded.
 #[derive(Clone, Copy, Default)]
@@ -631,9 +641,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     let raw = text.len() as u64;
     let over_bytes = budget.bytes > 0 && raw > budget.bytes;
     if !over_cost && !over_bytes {
-        counts.routes += scratch.routes;
-        counts.walks += scratch.walks;
-        counts.counted += scratch.counted;
+        *counts += scratch;
         for row in text.split_inclusive(|&b| b == b'\n') {
             emit(row)?;
         }
