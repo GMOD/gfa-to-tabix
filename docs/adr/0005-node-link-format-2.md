@@ -4,11 +4,46 @@
 - **Decides:** the changes the next node and link format makes. [ADR
   0002](0002-two-index-files.md) defers merging the two files until a format
   change happens for another reason, and this ADR lists those reasons
-- **Measured by:** `scripts/synthetic-gfa.py` and `scripts/anchored-windows.mjs`.
-  The numbers below come from synthetic graphs. Rerun both scripts on HPRC's
-  pggb chr22 before deciding
+- **Measured by:** HPRC release 2's pggb chrY
+  (`20251014_hprc25272.p98-k311.chrY.gfa.zst`: 4.1 M nodes, 7.7 M links,
+  1,053 paths) on GRCh38, and synthetic graphs from `scripts/synthetic-gfa.py`,
+  measured with `scripts/anchored-windows.mjs`. Rerun on pggb chr22, which this
+  machine lacks the memory for, before deciding
 
 ## Context
+
+### Giant components swallow the anchored layout
+
+- The anchored layout files every node of a component under the reference
+  interval between its first and last attachment, so a window inside a bubble
+  reads every node of it
+- On pggb chrY, the index takes 3 minutes and 14.5 GB, and writes 86 MB of
+  nodes and 378 MB of links. Rows overlapping a 10 kb window:
+
+| window on GRCh38 chrY | node rows | link rows | link text |
+|---|---|---|---|
+| 5.00-5.01 Mb | 122 | 239 | 0.4 MB |
+| 20.00-20.01 Mb | 203,863 | 359,712 | 584 MB |
+| 40.00-40.01 Mb | 3,708,710 | 7,098,863 | 9.4 GB |
+
+- One component of 3.5 M nodes fills GRCh38's Yq12 gap, 26.6-56.8 Mb, and one
+  of 203 k spans 12.5-56.9 Mb. Three components over 10,000 nodes hold 97% of
+  the graph's 3.86 M nodes off the reference
+- @gmod/tabix estimates a median window at 74 MB of nodes and 349 MB of links,
+  and its gzip decoder failed on one window with `RuntimeError: unreachable`
+- Off-reference node rows per 10 kb window, by which components keep the
+  anchored filing:
+
+| components anchored | moved | median | p99 | max |
+|---|---|---|---|---|
+| all | 0 | 3,708,709 | 3,708,709 | 3,712,505 |
+| those spanning at most 1 Mb | 331 | 0 | 975 | 35,120 |
+| those of at most 10,000 nodes | 3 | 0 | 9,682 | 10,432 |
+
+- More than half of GRCh38 chrY lies in the Yq12 gap, which holds no reference
+  node, so the median window reads no node once the gap's component moves
+- A node count picks out the cost better than a span: 330 components wider
+  than 1 Mb hold at most 10,000 nodes each and cost a window little
 
 ### Collapsed repeats break the anchored layout
 
@@ -53,6 +88,9 @@
 - The synthetic graph's alternate alleles have random carriers, which compress
   worse than real haplotypes' would, while all 401 assemblies carry every
   reference node, which compresses better
+- On pggb chrY, whose nodes have fewer carriers, the lists are 64% of the node
+  file's raw bytes, and the node file bgzips to 86 MB with them and 53 MB
+  without
 
 ### No header
 
@@ -63,6 +101,24 @@
   walk file from different builds without noticing
 
 ## Proposal
+
+**Giant components**, available now as `--max-component N`, off by default
+
+- A component of more than N nodes keeps its own coordinates, as a component
+  attached to no reference node does. A window inside it reads only the links
+  that enter it, and existing readers draw the allele's ends as stubs
+- The component's rows stay in the same file under its own sequence, so a
+  reader can expand a stub with one more query on that sequence's coordinates,
+  as graph-walks expands an abridged walk from its detail record. graph-walks'
+  `rgfaCut` reads an anchored file once today, so the expansion is a reader
+  change
+- `--max-component 10000` moves only chrY's three giants and caps a window's
+  off-reference rows near 10,000, by the table above. The capped chrY index
+  wasn't measured end to end: the build, at 14.5 GB, was stopped for memory.
+  Measure it, and the HPRC SV rGFA, before making the limit the default
+- On the synthetic repeat graph, a limit cuts the node bytes a window reads
+  from 1.49 to 0.20 MB but leaves the links at 2.84 MB, which only per-pass
+  filing fixes
 
 **Filing**
 
@@ -119,7 +175,7 @@
 ## Before deciding
 
 - Rerun `anchored-windows.mjs` on HPRC pggb chr22 and on the HPRC v2.1 SV rGFA,
-  and measure the carrier columns there
+  with and without `--max-component`, and measure the carrier columns there
 - One row per pass gives a node id several coordinates. graph-walks' `rgfaCut`
   keeps one segment per id, `anchoredCut`'s `side()` needs a link's pass
   coordinate, and `fold` needs one coordinate per node; check each against the

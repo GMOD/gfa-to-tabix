@@ -6,7 +6,7 @@
 // lines give the format, the chunk size and the longest node, then the
 // reference and the haplotypes.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fs::{self, File};
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
@@ -1048,7 +1048,10 @@ impl Builder {
     // SKIP_CHUNKS chunks: `skip path fragStart piece from to refStart refEnd`,
     // where `piece` numbers the piece before the jump, `from` and `to` are the
     // chunks the two pieces are filed under, and refStart-refEnd is the
-    // reference between the passes either side of the jump.
+    // reference between the passes either side of the jump. A chunk gets one
+    // skip row per path, from its first jump over the chunk, and none where
+    // the path has a piece: in a collapsed repeat a path hops over the same
+    // chunks again and again.
     fn write_skips(
         &mut self,
         r: usize,
@@ -1058,6 +1061,7 @@ impl Builder {
     ) -> Result<(), String> {
         let lengths = &self.graph.lengths;
         let pass = &self.pass;
+        let mut covered: HashSet<u32> = pieces.iter().map(|&(a, _)| self.chunk_of[a]).collect();
         let span = |i: usize| {
             let (name, start) = pass[i];
             (
@@ -1109,7 +1113,10 @@ impl Builder {
                 push_u64(&mut line, n);
             }
             line.push(b'\n');
-            for chunk in (first..=last).filter(|&chunk| chunk != from && chunk != to) {
+            for chunk in first..=last {
+                if !covered.insert(chunk) {
+                    continue;
+                }
                 self.rows.push(chunk, |out| {
                     out.push(SKIP_ROW);
                     out.extend_from_slice(&line);

@@ -40,7 +40,7 @@ region, and the JBrowse graph genome viewer plugin reads both:
 | Zoomed out      | `build` writes a coarse tier, alleles and bubbles; walk files have none | the index draws every haplotype over a whole chromosome in about a dozen requests, at several zoom levels |
 | N haplotypes    | routes grow as N^0.36 and choices as N^0.86, about 20 GB genome-wide at 10,000 | the GBWT grows sublinearly, because haplotypes share runs |
 | Paralog jumps   | the steps after a jump take the paralog's chunk ([details](walks-format.md#paralogs-and-collapsed-repeats)); on chr22, fewer than 0.1% of steps, in at most 74 of the 1,130 paths besides GRCh38's, nearly all in 22q11 | reaches those nodes by graph distance |
-| Misses          | a haplotype that leaves the reference before a window and rejoins it after has no row in the window's chunks ([ADR 0006](adr/0006-walks-skip-rows.md) proposes rows for it) | the snarl extension once turned a 100 kbp query into 10 Mbp, 75 s and 9 GiB |
+| Misses          | a haplotype that leaves the reference before a window and rejoins it after has only a `skip` row in the window's chunks, which graph-walks doesn't draw yet ([ADR 0006](adr/0006-walks-skip-rows.md)) | the snarl extension once turned a 100 kbp query into 10 Mbp, 75 s and 9 GiB |
 
 The index's keep route, which names a few chosen haplotypes, has a
 [proof](https://github.com/GMOD/gbz-haplotype-index/blob/main/docs/proof.md)

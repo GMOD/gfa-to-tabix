@@ -273,8 +273,8 @@ seq cs cs+1 skip path fragStart piece from to refStart refEnd
 
 - A path of another sample that leaves the reference and rejoins it on the
   same sequence, leaving out `refStart`-`refEnd`, has a `skip` row in each
-  chunk that stretch touches, other than the chunks its two pieces are filed
-  under
+  chunk that stretch touches. A path has at most one in a chunk, from its first
+  jump over it, and none in a chunk where it has a piece
 - `piece` numbers the piece before the jump, and `from` and `to` give the
   chunks the two pieces are filed under, so a reader draws the haplotype across
   the window as a deletion and can fetch either side

@@ -20,6 +20,7 @@ gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
 | `--reference <name>`   | For a plain GFA: the PanSN sample, assembly or path to use as reference. Default the first path. |
 | `-o`, `--out <prefix>` | Output prefix. Default the input name without `.gfa[.gz]`.                              |
 | `--layout <layout>`    | `anchored` (default) or `contig`; see [layouts](#layouts).                              |
+| `--max-component <n>`  | Anchored: a component of more than n nodes keeps its own coordinates; see [wide intervals](#wide-intervals). Default no limit. |
 
 ## Inputs
 
@@ -181,6 +182,11 @@ and each costs a reader a compressed block.
   A reference node's links share the interval of its deletion link
 - **Minigraph-Cactus and rGFA graphs:** the reference passes each node once, and
   wide intervals are few
+- **Reference gaps:** on HPRC's pggb chrY, one component of 3.5 M nodes fills
+  GRCh38's 30 Mb Yq12 gap, so a 10 kb window there overlaps 3.7 M node rows
+  and 7.1 M link rows. `--max-component 10000` leaves the three components over
+  10,000 nodes on their own coordinates, so a window reads only the links that
+  enter them ([ADR 0005](adr/0005-node-link-format-2.md))
 - **pggb graphs:** a node the reference passes several times has one
   coordinate, its first pass, so its links and the alleles beside it span
   every pass. A synthetic 20 Mb graph with repeats at pggb's density has 15% of
