@@ -4,6 +4,21 @@ use crate::bed::Layout;
 
 const WALKS: &str = "Walks (a base-level GFA with integer node ids and W or P lines)";
 
+// The most nodes an off-reference component may hold and still file under the
+// reference interval it hangs from; None files every component there.
+#[derive(Clone, Copy)]
+pub struct ComponentLimit(pub Option<u64>);
+
+fn component_limit(value: &str) -> Result<ComponentLimit, String> {
+    if value == "none" {
+        return Ok(ComponentLimit(None));
+    }
+    value
+        .parse()
+        .map(|n| ComponentLimit(Some(n)))
+        .map_err(|_| format!("expected a node count or `none`, got `{value}`"))
+}
+
 /// Index a pangenome graph's GFA by genome coordinate: write its nodes and
 /// links as two bgzip-compressed, Tabix-indexed BED files, which a JBrowse
 /// graph track reads by region. https://github.com/GMOD/gfa-to-tabix
@@ -41,11 +56,13 @@ pub struct Cli {
     #[arg(long, value_enum, conflicts_with = "walks")]
     pub layout: Option<Layout>,
 
-    /// anchored: the nodes off the reference that link to each other form one
-    /// component; one of more than N nodes keeps its own coordinates, so a
-    /// window inside it reads only the links that enter it (default: no limit)
-    #[arg(long, value_name = "N", conflicts_with = "walks")]
-    pub max_component: Option<u64>,
+    /// anchored: nodes off the reference that link to each other form a
+    /// component. One of more than N nodes keeps its own coordinates, so a
+    /// window under it reads only the links into it, which a graph track draws
+    /// as stubs. `none` files every component under the reference; the README
+    /// says when to change it
+    #[arg(long, value_name = "N", default_value = "10000", value_parser = component_limit, conflicts_with = "walks")]
+    pub max_component: ComponentLimit,
 
     /// Write PREFIX.segs.bed.gz and PREFIX.links.bed.gz, each with a .tbi;
     /// default the input name without .gfa[.gz]
@@ -155,6 +172,10 @@ pub enum Command {
         /// rGFA, 50 for a plain GFA
         #[arg(long, value_name = "BP", value_parser = value_parser!(i64).range(1..))]
         tier: Option<i64>,
+        /// A component of more than N nodes keeps its own coordinates, as for
+        /// the index
+        #[arg(long, value_name = "N", default_value = "10000", value_parser = component_limit)]
+        max_component: ComponentLimit,
     },
     #[command(about = "Write the allele inventory from an index's two files", long_about = ALLELES_ABOUT, args_override_self = true)]
     Alleles {
@@ -195,6 +216,9 @@ pub enum Command {
         /// The fine index's layout
         #[arg(long, value_enum, default_value = "anchored")]
         layout: Layout,
+        /// The fine index's --max-component
+        #[arg(long, value_name = "N", default_value = "10000", value_parser = component_limit)]
+        max_component: ComponentLimit,
         /// Output prefix
         #[arg(short, long = "out", value_name = "PREFIX")]
         out: String,

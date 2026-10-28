@@ -12,6 +12,10 @@ pub struct Spans {
     pub nodes: Vec<Vec<Span>>,
     // what each node contributes to the interval its links are filed under
     pub links: Vec<Vec<Span>>,
+    // the components past the limit, which keep their own coordinates: each
+    // one's node count and the first interval it would have filed under,
+    // largest first
+    pub moved: Vec<(u64, Span)>,
 }
 
 fn own_spans(placed: &Placed) -> Vec<Option<Span>> {
@@ -32,6 +36,7 @@ pub fn by_contig(placed: &Placed) -> Spans {
         sequences: placed.sequences.clone(),
         links: nodes.clone(),
         nodes,
+        moved: Vec::new(),
     }
 }
 
@@ -118,12 +123,20 @@ pub fn anchored(graph: &Graph, placed: &Placed, max_nodes: Option<u64>) -> Spans
     for spans in anchors.values_mut() {
         spans.sort_unstable();
     }
+    let mut moved = Vec::new();
     if let Some(max) = max_nodes {
         let mut size: HashMap<u32, u64> = HashMap::new();
         for n in (0..nodes.len() as u32).filter(|&n| allele(n)) {
             *size.entry(find(&mut parent, n)).or_default() += 1;
         }
-        anchors.retain(|component, _| size[component] <= max);
+        anchors.retain(|component, spans| {
+            let keep = size[component] <= max;
+            if !keep {
+                moved.push((size[component], spans[0]));
+            }
+            keep
+        });
+        moved.sort_unstable_by(|a, b| b.cmp(a));
     }
     let filed: Vec<Vec<Span>> = (0..nodes.len() as u32)
         .map(|n| match own[n as usize] {
@@ -153,5 +166,6 @@ pub fn anchored(graph: &Graph, placed: &Placed, max_nodes: Option<u64>) -> Spans
         sequences: placed.sequences.clone(),
         nodes: filed,
         links,
+        moved,
     }
 }

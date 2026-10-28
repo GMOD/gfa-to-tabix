@@ -211,6 +211,11 @@ fn anchored_leaves_a_component_over_max_component_on_its_own_coordinates() {
         &["--layout", "anchored", "--max-component", "0"],
     );
     assert!(output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("1 component, of 1 nodes under chr1:0-13, is over --max-component 0"),
+        "{stderr}"
+    );
     assert_eq!(
         nodes,
         tsv(&[
@@ -229,6 +234,18 @@ fn anchored_leaves_a_component_over_max_component_on_its_own_coordinates() {
             "chr1 0 13 s3- s2+ b#1#c 100 103 1 chr1 8 13 0",
         ])
     );
+}
+
+#[test]
+fn max_component_none_files_every_component_under_the_reference() {
+    let (_, default_nodes, default_links) = run("rgfa.gfa", &[]);
+    let (output, nodes, links) = run("rgfa.gfa", &["--max-component", "none"]);
+    assert!(output.status.success());
+    assert_eq!((nodes, links), (default_nodes, default_links));
+    let (output, _, _) = run("rgfa.gfa", &["--max-component", "all"]);
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("a node count or `none`"), "{stderr}");
 }
 
 #[test]

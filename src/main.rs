@@ -121,7 +121,7 @@ fn index(cli: Cli) -> Result<(), String> {
     let (mut graph, placed) = load_placed(&gfa, cli.reference.as_deref())?;
     // The rows need no paths, which hold most of a pggb graph's memory.
     graph.paths = Vec::new();
-    write_index(&graph, &placed, layout, cli.max_component, &prefix).map(drop)
+    write_index(&graph, &placed, layout, cli.max_component.0, &prefix).map(drop)
 }
 
 // Returns the rows written: the nodes', then the links'.
@@ -154,6 +154,29 @@ fn write_index(
     if skipped > 0 {
         eprintln!("{skipped} links left out: a node with no coordinate");
     }
+    if let (Some(max), [(largest, (sequence, start, end)), ..]) =
+        (max_component, spans.moved.as_slice())
+    {
+        let place = format!(
+            "{}:{start}-{end}",
+            String::from_utf8_lossy(&spans.sequences[*sequence as usize])
+        );
+        let message = match spans.moved.len() {
+            1 => format!(
+                "1 component, of {largest} nodes under {place}, is over --max-component \
+                 {max}, so it keeps its own coordinates and a graph track draws it as stubs. \
+                 --max-component none files it under the reference"
+            ),
+            n => format!(
+                "{n} components, of {} nodes, are over --max-component {max}, so they keep \
+                 their own coordinates and a graph track draws them as stubs. The largest has \
+                 {largest} nodes under {place}. --max-component none files them under the \
+                 reference",
+                spans.moved.iter().map(|(nodes, _)| nodes).sum::<u64>()
+            ),
+        };
+        eprintln!("{message}");
+    }
     let unplaced = graph.segment_count() - placed_nodes;
     if unplaced > 0 {
         eprintln!("{unplaced} nodes left out: no path visits them, or no SN tag");
@@ -166,6 +189,7 @@ fn write_tier(
     placed: &place::Placed,
     below: i64,
     layout: Layout,
+    max_component: Option<u64>,
     prefix: &str,
 ) -> Result<(), String> {
     let folded = Graph::read(io::Cursor::new(fold::fold(graph, placed, below)))?;
@@ -174,7 +198,14 @@ fn write_tier(
         graph.segment_count(),
         graph.links.len()
     );
-    write_index(&folded, &place::from_tags(&folded), layout, None, prefix).map(drop)
+    write_index(
+        &folded,
+        &place::from_tags(&folded),
+        layout,
+        max_component,
+        prefix,
+    )
+    .map(drop)
 }
 
 fn run(cli: Cli) -> Result<(), String> {
@@ -189,6 +220,7 @@ fn run(cli: Cli) -> Result<(), String> {
             assembly,
             snarls,
             tier,
+            max_component,
         } => build::run(&build::Options {
             graph: gfa,
             prefix: out,
@@ -196,6 +228,7 @@ fn run(cli: Cli) -> Result<(), String> {
             assembly,
             snarls,
             tier,
+            max_component: max_component.0,
         }),
         Command::Alleles { prefix } => alleles::run(&prefix),
         Command::Bubbles {
@@ -209,10 +242,11 @@ fn run(cli: Cli) -> Result<(), String> {
             below,
             reference,
             layout,
+            max_component,
             out,
         } => {
             let (graph, placed) = load_placed(&gfa, reference.as_deref())?;
-            write_tier(&graph, &placed, below, layout, &out)
+            write_tier(&graph, &placed, below, layout, max_component.0, &out)
         }
     }
 }

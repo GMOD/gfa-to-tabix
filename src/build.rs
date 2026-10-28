@@ -21,6 +21,7 @@ pub struct Options {
     pub assembly: Option<String>,
     pub snarls: Option<String>,
     pub tier: Option<i64>,
+    pub max_component: Option<u64>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -470,8 +471,14 @@ pub fn run(options: &Options) -> Result<(), String> {
     let (sample, bubbles) = thread::scope(|scope| {
         let bubbles = scope.spawn(move || bubble_file(route, gfatools, snarls, flipped, prefix));
         let fine = scope.spawn(|| {
-            crate::write_index(graph, placed, Layout::Anchored, None, prefix)
-                .map(|(nodes, _)| reference_sample(&nodes))
+            crate::write_index(
+                graph,
+                placed,
+                Layout::Anchored,
+                options.max_component,
+                prefix,
+            )
+            .map(|(nodes, _)| reference_sample(&nodes))
         });
         let contig = scope.spawn(|| {
             let contig = format!("{prefix}.contig");
@@ -485,7 +492,14 @@ pub fn run(options: &Options) -> Result<(), String> {
         });
         let coarse = scope.spawn(|| {
             let tier_prefix = format!("{prefix}.fold{tier}");
-            crate::write_tier(graph, placed, tier, Layout::Anchored, &tier_prefix)
+            crate::write_tier(
+                graph,
+                placed,
+                tier,
+                Layout::Anchored,
+                options.max_component,
+                &tier_prefix,
+            )
         });
         let sample = joined(fine)?;
         joined(contig)?;
