@@ -7,8 +7,8 @@
 - **Measured by:** HPRC release 2's pggb chrY
   (`20251014_hprc25272.p98-k311.chrY.gfa.zst`: 4.1 M nodes, 7.7 M links,
   1,053 paths) on GRCh38, and synthetic graphs from `scripts/synthetic-gfa.py`,
-  measured with `scripts/anchored-windows.mjs`. Rerun on pggb chr22, which this
-  machine lacks the memory for, before deciding
+  measured with `scripts/anchored-windows.mjs` and htslib's `tabix`. Rerun on
+  pggb chr22 before deciding
 
 ## Context
 
@@ -88,9 +88,13 @@
 - The synthetic graph's alternate alleles have random carriers, which compress
   worse than real haplotypes' would, while all 401 assemblies carry every
   reference node, which compresses better
-- On pggb chrY, whose nodes have fewer carriers, the lists are 64% of the node
-  file's raw bytes, and the node file bgzips to 86 MB with them and 53 MB
-  without
+- On pggb chrY, whose nodes have fewer carriers, bgzipped:
+
+| | node file | link file |
+|---|---|---|
+| lists' share of the raw text | 64% of 0.97 GB | 90% of 10.5 GB |
+| with `SM:Z:` lists | 86 MB | 378 MB |
+| without them | 54 MB | 122 MB |
 
 ### No header
 
@@ -107,18 +111,30 @@
 - A component of more than N nodes keeps its own coordinates, as a component
   attached to no reference node does. A window inside it reads only the links
   that enter it, and existing readers draw the allele's ends as stubs
-- The component's rows stay in the same file under its own sequence, so a
-  reader can expand a stub with one more query on that sequence's coordinates,
-  as graph-walks expands an abridged walk from its detail record. graph-walks'
-  `rgfaCut` reads an anchored file once today, so the expansion is a reader
-  change
-- `--max-component 10000` moves only chrY's three giants and caps a window's
-  off-reference rows near 10,000, by the table above. The capped chrY index
-  wasn't measured end to end: the build, at 14.5 GB, was stopped for memory.
-  Measure it, and the HPRC SV rGFA, before making the limit the default
-- On the synthetic repeat graph, a limit cuts the node bytes a window reads
-  from 1.49 to 0.20 MB but leaves the links at 2.84 MB, which only per-pass
-  filing fixes
+- `--max-component 10000` on pggb chrY, 50 windows of 10 kb through htslib's
+  `tabix`:
+
+| per window | median | p90 | max |
+|---|---|---|---|
+| node rows | 141 | 3,631 | 10,182 |
+| link rows | 220 | 44,139 | 69,413 |
+
+- The limit caps node rows near 10,000, as the table in the context predicts,
+  but not link rows. In the costliest window, 63,887 of 69,413 link rows join
+  two reference nodes, and 15,367 of those join nodes over 1 Mb apart. Such a
+  link jumps between repeat copies, and only per-pass filing files it narrowly.
+  The synthetic repeat graph showed the same, with node bytes per window
+  falling from 1.49 to 0.20 MB and links staying at 2.84 MB
+- A moved component doesn't stay on one sequence. Each of its nodes keeps the
+  coordinate of the path that placed it, so chrY's three giants spread over
+  823 haplotype contigs, and 96% of their links join two contigs and get a row
+  on each. The link file grows from 378 to 682 MB, and the build's peak memory
+  from 17.4 to 26.2 GB
+- The spread also means one query can't fetch a moved component to expand its
+  stubs. The writer would first have to give each component a single
+  sequence's coordinates
+- The limit stays off by default, because it fixes node rows and enlarges the
+  link file
 
 **Filing**
 
@@ -169,8 +185,10 @@
   bandage-core's `carriedSamples` and the plugin's carriage lane parse `SM:Z:`
   as a list of names
 - **Fix the reader only:** a @gmod/tabix change that clamps each chunk's start
-  to the linear index halves bytes on files without wide rows and saves nothing
-  on these. The wide rows overlap the window, so every reader has to fetch them
+  to the linear index ([tabix-js#158](https://github.com/GMOD/tabix-js/pull/158))
+  saves 15-17% of a cold window's bytes on HPRC's MC links and a gene GFF3, and
+  nothing on these files. The wide rows overlap the window, so every reader has
+  to fetch them
 
 ## Before deciding
 

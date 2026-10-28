@@ -185,8 +185,9 @@ and each costs a reader a compressed block.
 - **Reference gaps:** on HPRC's pggb chrY, one component of 3.5 M nodes fills
   GRCh38's 30 Mb Yq12 gap, so a 10 kb window there overlaps 3.7 M node rows
   and 7.1 M link rows. `--max-component 10000` leaves the three components over
-  10,000 nodes on their own coordinates, so a window reads only the links that
-  enter them ([ADR 0005](adr/0005-node-link-format-2.md))
+  10,000 nodes on their own coordinates, which caps a window's node rows near
+  10,000. A window's link rows still reach 69,000, from chrY's repeats, and the
+  link file grows from 378 to 682 MB ([ADR 0005](adr/0005-node-link-format-2.md))
 - **pggb graphs:** a node the reference passes several times has one
   coordinate, its first pass, so its links and the alleles beside it span
   every pass. A synthetic 20 Mb graph with repeats at pggb's density has 15% of
