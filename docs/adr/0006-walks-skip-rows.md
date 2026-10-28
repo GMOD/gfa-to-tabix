@@ -1,12 +1,11 @@
 # ADR 0006: Mark a haplotype that jumps over a window in the walk files
 
-- **Status:** accepted for the writer, 2026-10-28. graph-walks doesn't draw
-  `skip` rows yet
+- **Status:** accepted, 2026-10-28
 - **Decides:** what a walk file holds for a window that a haplotype's deletion
   spans
 - **Measured by:** HPRC release 2's pggb chrY
   (`20251014_hprc25272.p98-k311.chrY.gfa.zst`, 1,053 paths) on GRCh38 and
-  CHM13
+  CHM13, and HPRC v2.1's Minigraph-Cactus chr22 on GRCh38
 
 ## Context
 
@@ -61,27 +60,29 @@ pggb chrY, built with `--refs GRCh38,CHM13`:
 | `skip` rows bgzipped | under 0.05 MB | 0.3 MB |
 | walk file | 179.8 MB | 117.4 MB |
 
+- HPRC v2.1's Minigraph-Cactus chr22 on GRCh38 writes 2,218 `skip` rows from
+  487 jumps, 0.12% of its 1.9 M rows and under 0.05 MB bgzipped. 486 of the
+  jumps go forward along the reference, as deletions do, where 247 of pggb
+  chrY's 693 go backward between repeat copies. The median stretch is 492 kb
+
 - Writing a row per jump put 891,275 of GRCh38's 910,123 rows in a chunk the
   same path had already skipped: in chrY's collapsed ampliconic repeats, a
   haplotype hops back and forth over the same chunks
 - One row per path and chunk costs under 0.3% of the file
 - No stretch is under 10 kb, since a row needs a chunk the path doesn't touch
 
+## Consequences
+
+- A window inside a haplotype's deletion now holds a row saying so
+- graph-walks 4.2 ignores `skip` rows, so it draws no crossing there until it
+  reads them ([open problems](../open-problems.md#walk-files))
+
 ## Alternatives rejected
 
 - **One row under the jump's whole interval:** Tabix returns it for every
   window inside, but files it in a coarse bin, so every query there reads it,
   as with the node and link index's wide intervals
-  ([ADR 0005](0005-node-link-format-2.md))
+  ([wide intervals](../index-format.md#wide-intervals))
 - **Follow `nx` tags further in the reader:** the window's chunks hold no row of
   the haplotype to follow from
 - **A row per jump:** 76 to 186 times the rows on chrY, for the same chunks
-
-## Still open
-
-- The chrY numbers don't separate deletions from hops between repeat copies.
-  Score the jumps against impg's alignments, as ADR 0001 scores placement
-- Count the rows on HPRC v2.1's Minigraph-Cactus graph, where jumps are mostly
-  real deletions
-- graph-walks: draw a `skip` row as the haplotype crossing the window, and
-  count it against the window's budgets

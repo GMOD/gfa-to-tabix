@@ -100,9 +100,7 @@ graph-walks 4 cutting CHM13 windows for every haplotype in Node, as walk rows:
   by default in 29–53 chunks per reference, which they can't open today, and
   each path is one click away
 - Recall as `walks-truth.py` scores it can fall only by the pairs left with no
-  kept piece, at most 0.5%. Not yet rescored
-- Not yet measured: Minigraph-Cactus at 1.4's weighting, and open times in
-  the JBrowse plugin
+  kept piece, at most 0.5%
 
 ## Alternatives rejected
 

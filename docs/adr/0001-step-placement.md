@@ -4,8 +4,8 @@
 - **Decides:** which reference chunk `--walks` files each step of a non-reference
   path under, when the reference passes the step's node more than once
 - **Measured by:** the [success criteria](#success-criteria) below, with
-  `scripts/walks-truth.py`. A later proposal that replaces this one reports the
-  same table on the same data
+  `scripts/walks-truth.py`. An ADR that replaces this one reports the same
+  table on the same data
 
 ## Context
 
@@ -184,7 +184,7 @@ files:
 
 1.1.0's CHM13 file, filed by first visit, has 105,863,387 rows.
 
-## Decision (proposed)
+## Decision
 
 1. **Nearest pass by predicted offset.** A step on a node the reference passes
    more than once takes the pass on the same reference sequence nearest the

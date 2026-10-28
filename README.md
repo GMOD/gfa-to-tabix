@@ -126,10 +126,11 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 | HPRC SV rGFA, whole genome | 1, of 22,501 nodes | under that bubble, chr1:2.70 Mb | 22,690 and 34,015 (6.4 MB) | 189 and 291 (53 KB) |
 | HPRC pggb chrY | 3, of 3.74 M nodes | in the Yq12 gap, 40.00 Mb | 3.7 M and 7.1 M (10 GB) | 1 and 4 |
 | HPRC pggb chr22 | 4, of 2.53 M nodes | median of 50 | 2.5 M and 3.9 M | 438 and 626 |
+| HPRC v2.1 Minigraph-Cactus chr22 | 14, the largest 208,833 nodes | p90 of 50 | 22,827 and 31,583 | 1,006 and 1,445 |
 
 **When to change it**
 
-- **Keep the default** for pggb graphs and other plain GFAs of human
+- **Keep the default** for pggb and Minigraph-Cactus graphs of human
   chromosomes
 - **Raise it** to draw a moved bubble whole. In the chrY list above, the third
   component is a 120 kb bubble, while the first two span 30 and 44 Mb.
@@ -150,8 +151,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   pggb chrY's link file grows from 378 to 682 MB, while chr22's shrinks from
   3.9 to 1.6 GB
 - No reader yet expands a stub into the moved component
-  ([ADR 0005](docs/adr/0005-node-link-format-2.md) has the measurements and
-  the open questions)
+  ([ADR 0005](docs/adr/0005-giant-components.md) has the measurements)
 
 ### Which output do I need?
 
@@ -185,8 +185,9 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   - [ADR 0002](docs/adr/0002-two-index-files.md): why nodes and links are two files
   - [ADR 0003](docs/adr/0003-long-node-lookback.md): how far a walk reader reads back
   - [ADR 0004](docs/adr/0004-abridged-detours.md): moving a chunk's costliest paths to detail rows
-  - [ADR 0005](docs/adr/0005-node-link-format-2.md), proposed: node and link format 2, for pggb's collapsed repeats, carrier lists and a header
+  - [ADR 0005](docs/adr/0005-giant-components.md): a giant component keeps its own coordinates (`--max-component`)
   - [ADR 0006](docs/adr/0006-walks-skip-rows.md): `skip` rows for a haplotype whose deletion spans the window
+- [Open problems](docs/open-problems.md): measured but undecided, such as pggb's collapsed repeats and carrier lists
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when a figure differs from that output
 
