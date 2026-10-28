@@ -94,11 +94,11 @@
   reference node, which compresses better
 - On pggb's chromosomes, bgzipped:
 
-| | chrY nodes | chrY links | chr22 nodes |
-|---|---|---|---|
-| lists' share of the raw text | 64% of 0.97 GB | 90% of 10.5 GB | 94% of 22 GB |
-| with `SM:Z:` lists | 86 MB | 378 MB | 1.29 GB |
-| without them | 54 MB | 122 MB | 154 MB |
+| | chrY nodes | chrY links | chr22 nodes | chr22 links |
+|---|---|---|---|---|
+| lists' share of the raw text | 64% of 0.97 GB | 90% of 10.5 GB | 94% of 22 GB | 95% of 77 GB |
+| with `SM:Z:` lists | 86 MB | 378 MB | 1.29 GB | 3.9 GB |
+| without them | 54 MB | 122 MB | 154 MB | 346 MB |
 
 ### No header
 
