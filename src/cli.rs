@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand, value_parser};
 
-use crate::bed::Layout;
+use crate::bed::{Format, Layout};
 
 const WALKS: &str = "Walks (a base-level GFA with integer node ids and W or P lines)";
 
@@ -63,6 +63,12 @@ pub struct Cli {
     /// says when to change it
     #[arg(long, value_name = "N", default_value = "10000", value_parser = component_limit, conflicts_with = "walks")]
     pub max_component: ComponentLimit,
+
+    /// 1 writes PREFIX.segs.bed.gz and PREFIX.links.bed.gz. 2 writes
+    /// PREFIX.graph.bed.gz, nodes and links in one file with a plain GFA's
+    /// carriers as bits, which readers don't take yet; see docs/index-format.md
+    #[arg(long, value_enum, default_value = "1", conflicts_with = "walks")]
+    pub format: Format,
 
     /// Write PREFIX.segs.bed.gz and PREFIX.links.bed.gz, each with a .tbi;
     /// default the input name without .gfa[.gz]

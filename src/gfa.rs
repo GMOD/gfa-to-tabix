@@ -299,6 +299,26 @@ impl Graph {
     pub fn segment_count(&self) -> usize {
         self.declared.iter().filter(|&&d| d).count()
     }
+
+    // FNV-1a of each segment's id and length, summed, so the order of the S
+    // lines doesn't change it
+    pub fn content_hash(&self) -> u64 {
+        self.node_ids
+            .iter()
+            .zip(&self.lengths)
+            .zip(&self.declared)
+            .filter(|(_, declared)| **declared)
+            .map(|((id, length), _)| {
+                let length = length.unwrap_or(u64::MAX).to_le_bytes();
+                id.iter()
+                    .chain(&[0xff])
+                    .chain(&length)
+                    .fold(0xcbf29ce484222325u64, |h, &b| {
+                        (h ^ b as u64).wrapping_mul(0x100000001b3)
+                    })
+            })
+            .fold(0, u64::wrapping_add)
+    }
 }
 
 #[cfg(test)]

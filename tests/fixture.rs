@@ -2,6 +2,7 @@
 //
 // rgfa.gfa: s1 (8 bp) and s2 (5 bp, length from LN) lie on chr1 at rank 0, and
 // s3 (3 bp) on b#1#c at 100, rank 1.
+// rgfa_reordered.gfa lists the same segments in reverse.
 // island.gfa adds s4 and s5 on d#1#x, linked to each other and to nothing else.
 // paths.gfa: ref#1#chr walks 1 2 4 and alt#1#ctg walks 1 3 4; node lengths are
 // 4, 2, 1, 3. walks.gfa says the same in W lines, alt first, starting at 10.
@@ -16,6 +17,14 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use flate2::read::MultiGzDecoder;
 
 fn run(fixture: &str, args: &[&str]) -> (Output, String, String) {
+    let (output, mut files) = run_files(fixture, args, &["segs", "links"]);
+    let links = files.pop().unwrap();
+    (output, files.pop().unwrap(), links)
+}
+
+// Runs the tool and reads back out.KIND.bed.gz for each of `kinds`, empty
+// where the tool wrote none.
+fn run_files(fixture: &str, args: &[&str], kinds: &[&str]) -> (Output, Vec<String>) {
     static RUNS: AtomicUsize = AtomicUsize::new(0);
     let dir = std::env::temp_dir().join(format!(
         "gfa-to-tabix-{}-{}",
@@ -48,9 +57,9 @@ fn run(fixture: &str, args: &[&str]) -> (Output, String, String) {
         }
         text
     };
-    let (nodes, links) = (read("segs"), read("links"));
+    let files = kinds.iter().map(|kind| read(kind)).collect();
     fs::remove_dir_all(&dir).unwrap();
-    (output, nodes, links)
+    (output, files)
 }
 
 fn tsv(rows: &[&str]) -> String {
@@ -289,4 +298,48 @@ fn anchored_files_a_zero_length_node_under_one_base() {
         tsv(&["chr1 10 11 y 1 alt 0 4", "chr1 10 11 z 0 chr1 10 10"])
     );
     assert_eq!(links, tsv(&["chr1 10 11 z+ y+ chr1 10 10 0 alt 0 4 1"]));
+}
+
+// Format 2 holds format 1's rows in one file, each with its kind after the
+// interval, the node rows' carriers as bits over #samples (alt.1 is bit 0,
+// ref.1 bit 1), and no carriers on link rows.
+#[test]
+fn format_2_writes_nodes_and_links_to_one_file_with_carrier_bits() {
+    let (output, files) = run_files(
+        "paths.gfa",
+        &["--layout", "contig", "--format", "2"],
+        &["graph", "segs"],
+    );
+    assert!(output.status.success());
+    assert_eq!(files[1], "", "format 2 writes no node file");
+    let graph = &files[0];
+    let header_end = graph.match_indices('\n').nth(1).unwrap().0 + 1;
+    let (header, rows) = graph.split_at(header_end);
+    assert!(
+        header.starts_with("#gfa-to-tabix\tformat:i:2\tlayout:Z:contig\tgraph:Z:"),
+        "{header}"
+    );
+    assert!(header.ends_with("\n#samples\talt.1,ref.1\n"), "{header}");
+    assert!(rows.contains(&tsv(&["alt#1#ctg 4 5 N 3 1 SB:H:1"])));
+    assert!(rows.contains(&tsv(&["ref#1#chr 0 4 N 1 0 SB:H:3"])));
+    assert!(rows.contains(&tsv(&["ref#1#chr 4 6 N 2 0 SB:H:2"])));
+    assert!(rows.contains(&tsv(&[
+        "ref#1#chr 0 4 L 1+ 3+ ref#1#chr 0 4 0 alt#1#ctg 4 5 1"
+    ])));
+    let (_, nodes, links) = run("paths.gfa", &["--layout", "contig"]);
+    assert_eq!(
+        rows.lines().count(),
+        nodes.lines().count() + links.lines().count()
+    );
+}
+
+// The hash covers each segment's id and length, not the order of the S lines.
+#[test]
+fn format_2_names_the_graph_whatever_order_its_segments_come_in() {
+    let header = |fixture: &str| {
+        let (_, files) = run_files(fixture, &["--format", "2"], &["graph"]);
+        files[0].lines().next().unwrap().to_string()
+    };
+    assert_eq!(header("rgfa.gfa"), header("rgfa_reordered.gfa"));
+    assert_ne!(header("rgfa.gfa"), header("island.gfa"));
 }

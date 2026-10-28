@@ -511,7 +511,8 @@ mod tests {
 
     fn folded(text: &str, below: i64) -> String {
         let graph = Graph::read(text.as_bytes()).unwrap();
-        let (graph, placed) = crate::place_graph("test", graph, None).unwrap();
+        let (graph, placed) =
+            crate::place_graph("test", graph, None, crate::place::CarrierTag::Names).unwrap();
         String::from_utf8(fold(&graph, &placed, below)).unwrap()
     }
 

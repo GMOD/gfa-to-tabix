@@ -25,6 +25,17 @@ pub enum Layout {
     Contig,
 }
 
+// 1 writes nodes and links to two files, a plain GFA's carriers named in
+// SM:Z: on both. 2 writes one file, each row's kind after its interval, and
+// carriers as SB:H: bits on node rows only.
+#[derive(Clone, Copy, PartialEq, clap::ValueEnum)]
+pub enum Format {
+    #[value(name = "1")]
+    One,
+    #[value(name = "2")]
+    Two,
+}
+
 // A row's text stops before its carrier lists, which rows share rather than
 // copy: on pggb chrY the lists are 90% of the link rows' text.
 pub struct Row {
@@ -89,12 +100,21 @@ fn row(
 // coordinate: `sequence start end id rank [carriers]`. Anchored, the interval
 // leads and the node's coordinate follows the rank:
 // `anchorSequence anchorStart anchorEnd id rank sequence start end [carriers]`.
-pub fn node_rows(graph: &Graph, nodes: &[Option<Node>], spans: &Spans, layout: Layout) -> Vec<Row> {
+pub fn node_rows(
+    graph: &Graph,
+    nodes: &[Option<Node>],
+    spans: &Spans,
+    layout: Layout,
+    format: Format,
+) -> Vec<Row> {
     let mut rows = Vec::new();
     for ((id, node), filed) in graph.node_ids.iter().zip(nodes).zip(&spans.nodes) {
         let Some(node) = node else { continue };
         let rank = node.rank.to_string();
         let mut rest = Vec::new();
+        if format == Format::Two {
+            rest.extend_from_slice(b"N\t");
+        }
         push_fields(&mut rest, &[id, rank.as_bytes()]);
         if layout == Layout::Anchored {
             rest.push(b'\t');
@@ -121,6 +141,7 @@ pub fn link_rows(
     nodes: &[Option<Node>],
     spans: &Spans,
     layout: Layout,
+    format: Format,
 ) -> (Vec<Row>, usize) {
     let mut rows = Vec::new();
     let mut skipped = 0;
@@ -131,6 +152,9 @@ pub fn link_rows(
             continue;
         };
         let mut rest = Vec::new();
+        if format == Format::Two {
+            rest.extend_from_slice(b"L\t");
+        }
         for (id, reversed) in [
             (source, link.source_reversed),
             (target, link.target_reversed),
@@ -144,8 +168,8 @@ pub fn link_rows(
         write!(rest, "\t{}\t", a.rank).expect("a Vec takes every write");
         push_coordinates(&mut rest, name(b), b.start, b.end);
         write!(rest, "\t{}", b.rank).expect("a Vec takes every write");
-        let carriers = match (&a.carriers, &b.carriers) {
-            (Some(a), Some(b)) => [Some(a.clone()), Some(b.clone())],
+        let carriers = match (format, &a.carriers, &b.carriers) {
+            (Format::One, Some(a), Some(b)) => [Some(a.clone()), Some(b.clone())],
             _ => [None, None],
         };
         let ends = spans.links[source].iter().chain(&spans.links[target]);
@@ -181,10 +205,18 @@ fn compressor(file: File) -> bgzf::io::Writer<File> {
         .build_from_writer(file)
 }
 
-// Writes the rows and their index beside each other, under temporary names
-// until both are complete. Returns the index's extension.
-pub fn write(path: &str, rows: &[Row], spans: &Spans) -> Result<&'static str, String> {
+// Writes `header`, then the rows, and their index beside them, under
+// temporary names until both are complete. Returns the index's extension.
+pub fn write(
+    path: &str,
+    header: &[u8],
+    rows: &[Row],
+    spans: &Spans,
+) -> Result<&'static str, String> {
     let mut writer = Writer::create(path)?;
+    if !header.is_empty() {
+        writer.header(header)?;
+    }
     let mut line = Vec::new();
     for row in rows {
         line.clear();
