@@ -118,7 +118,9 @@ fn index(cli: Cli) -> Result<(), String> {
         return walks::run(&gfa, &prefix, &options);
     }
     let layout = cli.layout.unwrap_or(Layout::Anchored);
-    let (graph, placed) = load_placed(&gfa, cli.reference.as_deref())?;
+    let (mut graph, placed) = load_placed(&gfa, cli.reference.as_deref())?;
+    // The rows need no paths, which hold most of a pggb graph's memory.
+    graph.paths = Vec::new();
     write_index(&graph, &placed, layout, cli.max_component, &prefix).map(drop)
 }
 

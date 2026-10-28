@@ -3,6 +3,7 @@ use std::fs::{self, File};
 use std::io::{self, Write};
 use std::mem;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use flate2::read::MultiGzDecoder;
 
@@ -24,16 +25,29 @@ pub enum Layout {
     Contig,
 }
 
+// A row's text stops before its carrier lists, which rows share rather than
+// copy: on pggb chrY the lists are 90% of the link rows' text.
 pub struct Row {
     sequence: u32,
     start: u64,
     end: u64,
     line: Vec<u8>,
+    carriers: [Option<Arc<[u8]>>; 2],
 }
 
 impl Row {
+    fn write_line(&self, out: &mut Vec<u8>) {
+        out.extend_from_slice(&self.line);
+        for carriers in self.carriers.iter().flatten() {
+            out.push(b'\t');
+            out.extend_from_slice(carriers);
+        }
+    }
+
     pub fn text(&self) -> String {
-        String::from_utf8_lossy(self.line.strip_suffix(b"\n").unwrap_or(&self.line)).into_owned()
+        let mut line = Vec::new();
+        self.write_line(&mut line);
+        String::from_utf8_lossy(&line).into_owned()
     }
 }
 
@@ -51,18 +65,23 @@ fn push_coordinates(line: &mut Vec<u8>, sequence: &[u8], start: u64, end: u64) {
     write!(line, "\t{start}\t{end}").expect("a Vec takes every write");
 }
 
-fn row(spans: &Spans, (sequence, start, end): Span, rest: &[u8]) -> Row {
+fn row(
+    spans: &Spans,
+    (sequence, start, end): Span,
+    rest: &[u8],
+    carriers: &[Option<Arc<[u8]>>; 2],
+) -> Row {
     let name = &spans.sequences[sequence as usize];
-    let mut line = Vec::with_capacity(name.len() + 44 + rest.len());
+    let mut line = Vec::with_capacity(name.len() + 43 + rest.len());
     push_coordinates(&mut line, name, start, end);
     line.push(b'\t');
     line.extend_from_slice(rest);
-    line.push(b'\n');
     Row {
         sequence,
         start,
         end,
         line,
+        carriers: carriers.clone(),
     }
 }
 
@@ -86,10 +105,8 @@ pub fn node_rows(graph: &Graph, nodes: &[Option<Node>], spans: &Spans, layout: L
                 node.end,
             );
         }
-        if let Some(carriers) = &node.carriers {
-            push_fields(&mut rest, &[b"", carriers]);
-        }
-        rows.extend(filed.iter().map(|&span| row(spans, span, &rest)));
+        let carriers = [node.carriers.clone(), None];
+        rows.extend(filed.iter().map(|&span| row(spans, span, &rest, &carriers)));
     }
     rows
 }
@@ -127,18 +144,23 @@ pub fn link_rows(
         write!(rest, "\t{}\t", a.rank).expect("a Vec takes every write");
         push_coordinates(&mut rest, name(b), b.start, b.end);
         write!(rest, "\t{}", b.rank).expect("a Vec takes every write");
-        if let (Some(a), Some(b)) = (&a.carriers, &b.carriers) {
-            push_fields(&mut rest, &[b"", a, b]);
-        }
+        let carriers = match (&a.carriers, &b.carriers) {
+            (Some(a), Some(b)) => [Some(a.clone()), Some(b.clone())],
+            _ => [None, None],
+        };
         let ends = spans.links[source].iter().chain(&spans.links[target]);
         match layout {
-            Layout::Contig => rows.extend(ends.map(|&span| row(spans, span, &rest))),
+            Layout::Contig => rows.extend(ends.map(|&span| row(spans, span, &rest, &carriers))),
             Layout::Anchored => {
                 let mut covering: Vec<Span> = Vec::new();
                 for &span in ends {
                     widen(&mut covering, span);
                 }
-                rows.extend(covering.into_iter().map(|span| row(spans, span, &rest)));
+                rows.extend(
+                    covering
+                        .into_iter()
+                        .map(|span| row(spans, span, &rest, &carriers)),
+                );
             }
         }
     }
@@ -146,6 +168,8 @@ pub fn link_rows(
 }
 
 // The order `LC_ALL=C sort -k1,1 -k2,2n` gives, whole line as the tiebreak.
+// The text before the carrier lists names the node or link, so it settles
+// every tie the lists could.
 pub fn sort(rows: &mut [Row], spans: &Spans) {
     let name = |row: &Row| spans.sequences[row.sequence as usize].as_slice();
     rows.sort_unstable_by(|a, b| (name(a), a.start, &a.line).cmp(&(name(b), b.start, &b.line)));
@@ -161,12 +185,16 @@ fn compressor(file: File) -> bgzf::io::Writer<File> {
 // until both are complete. Returns the index's extension.
 pub fn write(path: &str, rows: &[Row], spans: &Spans) -> Result<&'static str, String> {
     let mut writer = Writer::create(path)?;
+    let mut line = Vec::new();
     for row in rows {
+        line.clear();
+        row.write_line(&mut line);
+        line.push(b'\n');
         writer.push(
             &spans.sequences[row.sequence as usize],
             row.start,
             row.end,
-            &row.line,
+            &line,
         )?;
     }
     writer.finish()
