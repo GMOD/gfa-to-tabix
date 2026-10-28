@@ -51,9 +51,11 @@ the file has; see
   without the `:start-end` range pggb appends; without it the first path is
   the reference
 - **Coordinates:** the tool walks every path of the reference first, then every
-  other path in file order, summing node lengths. A node takes the path name
-  and position of the first path to reach it, at rank 0 on the reference and
-  rank 1 elsewhere
+  other path, each group in byte order of name and then start, summing node
+  lengths. A node takes the path name and position of the first path to reach
+  it, at rank 0 on the reference and rank 1 elsewhere. The rows are the same
+  for any order of the P and W lines, which `vg convert` changes from run to
+  run
 - **Blunt graphs only:** summing node lengths gives the path coordinate only
   when nodes abut, so a plain GFA needs overlaps `*` or `0M`
 - **Orientation:** when the first path to reach a node reads it reversed, the

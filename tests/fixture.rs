@@ -5,6 +5,8 @@
 // island.gfa adds s4 and s5 on d#1#x, linked to each other and to nothing else.
 // paths.gfa: ref#1#chr walks 1 2 4 and alt#1#ctg walks 1 3 4; node lengths are
 // 4, 2, 1, 3. walks.gfa says the same in W lines, alt first, starting at 10.
+// order.gfa: ref#1#chr walks 1 2 4, then b#1#ctg walks 4 3 1 reversed from 100
+// and a#1#ctg walks 1 3 4 from 10.
 
 use std::fs;
 use std::io::Read;
@@ -129,6 +131,22 @@ fn w_lines_carry_their_own_start() {
             "ref#1#chr 6 9 4 0 SM:Z:ref.1,alt.1",
         ])
     );
+}
+
+#[test]
+fn the_path_whose_name_sorts_first_places_a_node_whatever_the_line_order() {
+    let (output, nodes, links) = run("order.gfa", &["--reference", "ref"]);
+    assert!(output.status.success());
+    assert_eq!(
+        nodes,
+        tsv(&[
+            "a#1#ctg 14 15 3 1 SM:Z:a.1,b.1",
+            "ref#1#chr 0 4 1 0 SM:Z:ref.1,a.1,b.1",
+            "ref#1#chr 4 6 2 0 SM:Z:ref.1",
+            "ref#1#chr 6 9 4 0 SM:Z:ref.1,a.1,b.1",
+        ])
+    );
+    assert!(links.contains("\t1+\t3+\t"), "{links}");
 }
 
 #[test]

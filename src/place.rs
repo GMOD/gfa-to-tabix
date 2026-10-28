@@ -137,10 +137,17 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
     let assembly_ids: Vec<u32> = assemblies.iter().map(|a| assembly_names.id(a)).collect();
 
     // Reference paths walk first, so they claim their nodes at rank 0 before
-    // any other path reaches them.
-    let order = (0..paths.len())
-        .filter(|&i| is_reference[i])
-        .chain((0..paths.len()).filter(|&i| !is_reference[i]));
+    // any other path reaches them. Within each group paths walk in name and
+    // start order, as the walk files place nodes, so the rows don't depend on
+    // the order of the lines, which `vg convert` changes from run to run.
+    let mut order: Vec<usize> = (0..paths.len()).collect();
+    order.sort_by(|&a, &b| {
+        (!is_reference[a], &paths[a].name, paths[a].start).cmp(&(
+            !is_reference[b],
+            &paths[b].name,
+            paths[b].start,
+        ))
+    });
     let mut first_visit: Vec<Option<(usize, u64, i64)>> = vec![None; graph.node_ids.len()];
     let mut flipped = vec![false; graph.node_ids.len()];
     let mut carriers: Vec<Vec<u32>> = vec![Vec::new(); graph.node_ids.len()];
