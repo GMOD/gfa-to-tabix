@@ -114,6 +114,8 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   - [ADR 0002](docs/adr/0002-two-index-files.md): why nodes and links are two files
   - [ADR 0003](docs/adr/0003-long-node-lookback.md): how far a walk reader reads back
   - [ADR 0004](docs/adr/0004-abridged-detours.md): moving a chunk's costliest paths to detail rows
+  - [ADR 0005](docs/adr/0005-node-link-format-2.md), proposed: node and link format 2, for pggb's collapsed repeats, carrier lists and a header
+  - [ADR 0006](docs/adr/0006-walks-skip-rows.md), proposed: walk rows for a haplotype whose deletion spans the window
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when a figure differs from that output
 

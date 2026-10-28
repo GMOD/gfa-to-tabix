@@ -172,20 +172,29 @@ The tool sorts rows by sequence name in byte order, then by start.
 
 ## Wide intervals
 
-A Tabix query reads every row filed in the bins above the window, overlapping
-or not. A component with a wide interval adds its rows to every query inside its
-bin, and the added bytes grow with the component's node count.
+A row with a wide interval overlaps every window inside it, so every query
+there reads it. Rows sort by start, so wide rows lie scattered through the file
+and each costs a reader a compressed block.
 
-- **Effect on chr22:** wide intervals are few and hold few rows. A window still
-  fetches several times the bytes of the rows it overlaps, mostly because
-  Tabix's smallest bin spans 16 kb
-- **Unmeasured:** genome-wide HPRC, and compressed bytes
 - **Cause:** `widen` in `src/anchor.rs` keeps one minimum and maximum per
   reference sequence, so a component attached at 1 Mb and 40 Mb files as 1-40 Mb.
   A reference node's links share the interval of its deletion link
-- **Fix if the genome-wide tail is heavy:** file a component once per cluster of
-  attachments, split where the gap exceeds a threshold, and file a deletion
-  link under its span only
+- **Minigraph-Cactus and rGFA graphs:** the reference passes each node once, and
+  wide intervals are few
+- **pggb graphs:** a node the reference passes several times has one
+  coordinate, its first pass, so its links and the alleles beside it span
+  every pass. A synthetic 20 Mb graph with repeats at pggb's density has 15% of
+  link rows over 1 Mb. A 10 kb window reads 2.8 MB of links and 1.5 MB of nodes
+  through @gmod/tabix, against 0.21 and 0.12 MB without the repeats, and
+  graph-walks' cut keeps a median of 3,808 nodes, 3,285 of them over 100 kb
+  outside the window. [ADR 0005](adr/0005-node-link-format-2.md) proposes the
+  fix
+- **Graphs without wide rows:** a 10 kb window still reads 0.12 MB of nodes
+  through @gmod/tabix 3.10 to 3.12, where htslib's `tabix` reads 0.012 MB.
+  htslib and noodles both fold every bin under 64 KB compressed into its parent,
+  so the index holds a whole 1 Mb bin as one chunk. htslib reads that chunk from
+  the window's linear-index entry and stops at the first row past the window;
+  @gmod/tabix reads it whole
 
 ## Matching the JBrowse scripts
 
