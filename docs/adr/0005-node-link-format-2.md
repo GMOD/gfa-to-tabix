@@ -6,9 +6,9 @@
   change happens for another reason, and this ADR lists those reasons
 - **Measured by:** HPRC release 2's pggb chrY
   (`20251014_hprc25272.p98-k311.chrY.gfa.zst`: 4.1 M nodes, 7.7 M links,
-  1,053 paths) on GRCh38, and synthetic graphs from `scripts/synthetic-gfa.py`,
-  measured with `scripts/anchored-windows.mjs` and htslib's `tabix`. Rerun on
-  pggb chr22 before deciding
+  1,053 paths) and chr22 (4.8 M nodes, 7.2 M links, 1,773 paths) on GRCh38,
+  HPRC's SV rGFA, and synthetic graphs from `scripts/synthetic-gfa.py`,
+  measured with `scripts/anchored-windows.mjs` and htslib's `tabix`
 
 ## Context
 
@@ -17,7 +17,7 @@
 - The anchored layout files every node of a component under the reference
   interval between its first and last attachment, so a window inside a bubble
   reads every node of it
-- On pggb chrY, the index takes 3 minutes and 14.5 GB, and writes 86 MB of
+- On pggb chrY, the index takes a minute and 5.2 GB, and writes 86 MB of
   nodes and 378 MB of links. Rows overlapping a 10 kb window:
 
 | window on GRCh38 chrY | node rows | link rows | link text |
@@ -44,6 +44,10 @@
   node, so the median window reads no node once the gap's component moves
 - A node count picks out the cost better than a span: 330 components wider
   than 1 Mb hold at most 10,000 nodes each and cost a window little
+- pggb chr22 is worse throughout. Its index takes 6.5 minutes and 18.7 GB, and
+  writes 1.3 GB of nodes and 3.9 GB of links. A median 10 kb window reads 2.48
+  M node rows and 3.93 M link rows, 11 GB of link text, because 54% of the
+  node rows on GRCh38 chr22 span over 1 Mb
 
 ### Collapsed repeats break the anchored layout
 
@@ -88,13 +92,13 @@
 - The synthetic graph's alternate alleles have random carriers, which compress
   worse than real haplotypes' would, while all 401 assemblies carry every
   reference node, which compresses better
-- On pggb chrY, whose nodes have fewer carriers, bgzipped:
+- On pggb's chromosomes, bgzipped:
 
-| | node file | link file |
-|---|---|---|
-| lists' share of the raw text | 64% of 0.97 GB | 90% of 10.5 GB |
-| with `SM:Z:` lists | 86 MB | 378 MB |
-| without them | 54 MB | 122 MB |
+| | chrY nodes | chrY links | chr22 nodes |
+|---|---|---|---|
+| lists' share of the raw text | 64% of 0.97 GB | 90% of 10.5 GB | 94% of 22 GB |
+| with `SM:Z:` lists | 86 MB | 378 MB | 1.29 GB |
+| without them | 54 MB | 122 MB | 154 MB |
 
 ### No header
 
@@ -111,30 +115,40 @@
 - A component of more than N nodes keeps its own coordinates, as a component
   attached to no reference node does. A window inside it reads only the links
   that enter it, and existing readers draw the allele's ends as stubs
-- `--max-component 10000` on pggb chrY, 50 windows of 10 kb through htslib's
-  `tabix`:
+- `--max-component 10000`, 50 windows of 10 kb through htslib's `tabix`:
 
-| per window | median | p90 | max |
-|---|---|---|---|
-| node rows | 141 | 3,631 | 10,182 |
-| link rows | 220 | 44,139 | 69,413 |
+| graph | rows per window | median | p90 | max |
+|---|---|---|---|---|
+| pggb chrY | node | 141 | 3,631 | 10,182 |
+| pggb chrY | link | 220 | 44,139 | 69,413 |
+| pggb chr22 | node | 438 | 4,830 | 12,567 |
+| pggb chr22 | link | 626 | 22,004 | 83,041 |
 
-- The limit caps node rows near 10,000, as the table in the context predicts,
-  but not link rows. In the costliest window, 63,887 of 69,413 link rows join
-  two reference nodes, and 15,367 of those join nodes over 1 Mb apart. Such a
-  link jumps between repeat copies, and only per-pass filing files it narrowly.
-  The synthetic repeat graph showed the same, with node bytes per window
-  falling from 1.49 to 0.20 MB and links staying at 2.84 MB
+- On both pggb graphs the limit takes a median window from millions of rows to
+  hundreds, and caps node rows near 10,000, as the table in the context
+  predicts. A median chr22 window still reads 4.4 MB of link text, most of it
+  carrier lists
+- In chrY's costliest window, 63,887 of 69,413 link rows join two reference
+  nodes, and 15,367 of those join nodes over 1 Mb apart. Such a link jumps
+  between repeat copies, and only per-pass filing files it narrowly. The
+  synthetic repeat graph showed the same, with node bytes per window falling
+  from 1.49 to 0.20 MB and links staying at 2.84 MB
 - A moved component doesn't stay on one sequence. Each of its nodes keeps the
   coordinate of the path that placed it, so chrY's three giants spread over
   823 haplotype contigs, and 96% of their links join two contigs and get a row
-  on each. The link file grows from 378 to 682 MB, and the build's peak memory
-  from 17.4 to 26.2 GB
+  on each. chrY's link file grows from 378 to 682 MB
+- chr22's files shrink instead, from 1.3 to 0.45 GB of nodes and 3.9 to 1.6 GB
+  of links. Without the limit its giants attach to several GRCh38 sequences
+  and file a row under each: 14.7 M node rows for 4.8 M nodes
 - The spread also means one query can't fetch a moved component to expand its
   stubs. The writer would first have to give each component a single
   sequence's coordinates
-- The limit stays off by default, because it fixes node rows and enlarges the
-  link file
+- On HPRC's SV rGFA the limit moves one component, a 22,501-node bubble at
+  GRCh38 chr1:2.65-2.78 Mb. A 10 kb window there reads 22,690 node rows and
+  34,015 link rows, 6.4 MB of text, and 480 rows and 53 KB with the limit. The
+  link file grows by 2%
+- The limit stays off by default, because a reader draws a moved component's
+  alleles as stubs and none expands them yet
 
 **Filing**
 
@@ -192,8 +206,9 @@
 
 ## Before deciding
 
-- Rerun `anchored-windows.mjs` on HPRC pggb chr22 and on the HPRC v2.1 SV rGFA,
-  with and without `--max-component`, and measure the carrier columns there
+- Measure a Minigraph-Cactus graph with and without `--max-component`
+- Choose whether a reader expands a moved component, which first needs the
+  writer to place the component on one sequence
 - One row per pass gives a node id several coordinates. graph-walks' `rgfaCut`
   keeps one segment per id, `anchoredCut`'s `side()` needs a link's pass
   coordinate, and `fold` needs one coordinate per node; check each against the

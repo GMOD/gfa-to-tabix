@@ -164,9 +164,9 @@ The tool sorts rows by sequence name in byte order, then by start.
   twice that with `contig`
 - The `contig` indexes are much larger than the `anchored` ones, because a
   Tabix index spends 8 bytes per 16 kb of every contig
-- Memory grows with total path length, and a base-level graph of a human
-  chromosome has millions of nodes, so for one use
-  [`--walks`](walks-format.md)
+- Memory grows with total path length. HPRC's pggb chrY, 7.7 GB of GFA,
+  indexes in a minute and 5.2 GB, and pggb chr22, 27 GB, in 6.5 minutes and
+  18.7 GB. For a larger graph use [`--walks`](walks-format.md)
 - A Tabix index holds coordinates up to 512 Mb. A file with a row past that
   gets a `.csi` index instead, which holds up to 34 Gb, and every other file
   keeps its `.tbi`
@@ -187,7 +187,9 @@ and each costs a reader a compressed block.
   and 7.1 M link rows. `--max-component 10000` leaves the three components over
   10,000 nodes on their own coordinates, which caps a window's node rows near
   10,000. A window's link rows still reach 69,000, from chrY's repeats, and the
-  link file grows from 378 to 682 MB ([ADR 0005](adr/0005-node-link-format-2.md))
+  link file grows from 378 to 682 MB. On pggb chr22, where giant components
+  span the whole chromosome, the limit takes a median window from 3.9 M link
+  rows to 626 ([ADR 0005](adr/0005-node-link-format-2.md))
 - **pggb graphs:** a node the reference passes several times has one
   coordinate, its first pass, so its links and the alleles beside it span
   every pass. A synthetic 20 Mb graph with repeats at pggb's density has 15% of
