@@ -34,6 +34,8 @@ Tabix index holds. The config then sets `"csi": true` on each track whose
 files have one.
 
 - `--tier N` folds under N bp: default 10000 for an rGFA, 50 for a plain GFA
+- `--max-component N` applies to the fine index and the coarse tier, as for
+  the index; default 10000
 - `--assembly` sets the JBrowse assembly the tracks sit on. Default the
   graph's reference sample, else `reference`; the config maps it onto the
   sample with `assemblyNameToPanSN`
@@ -181,8 +183,9 @@ gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
 - It keeps the backbone, every allele whose own length or the reference it
   replaces reaches `bp`, and the shortest way from each one's ends back to the
   backbone. The reference between kept alleles becomes one segment
-- `--layout` should match the fine index's, so a tier window returns what a fine
-  window does. `--reference` takes a plain GFA's backbone path, as for the index
+- `--layout` and `--max-component` should match the fine index's, so a tier
+  window returns what a fine window does. `--reference` takes a plain GFA's
+  backbone path, as for the index
 - The graph track folds each cut it draws the same way, at ten of the linear
   view's pixels. A tier folded at N and handed over at N / 10 bp per pixel
   draws close to what the fine cut drew just below the handover:

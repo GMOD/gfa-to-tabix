@@ -82,6 +82,69 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 | `build --tier` default    | 10000 bp                                                      | 50 bp                                          |
 | Walk files (`--walks`)    | minigraph writes no paths and names nodes `s1`, `s2`, so none | from a base-level graph with integer node ids  |
 
+### Why does the graph track draw some bubbles as stubs? (`--max-component`)
+
+**What the option does**
+
+- The default layout files each node off the reference under the reference
+  interval its bubble hangs from, so one query for a region returns the whole
+  bubble
+- Nodes off the reference that link to each other without passing through it
+  form a component, which is usually one bubble's alleles
+- The tool files a component of more than `--max-component` nodes, default
+  10,000, under its own coordinates instead. Each of its nodes sits at its
+  position on the first haplotype path that reaches it
+
+**What you see in JBrowse**
+
+- At a locus under a moved component, the graph track draws the reference and a
+  dead-end node at each place the component joins it. The rest of the
+  component is missing from the view
+- The tool names each moved component as it writes the index, such as
+  `1 component, of 22501 nodes under GRCh38#0#chr1:2650330-2776935, is over
+  --max-component 10000`
+- The walk files (`--walks`) and `--layout contig` have no limit, so a
+  haplotype view still draws every path through the region
+
+**Why the default is on**
+
+- Every query under a component reads all of it. pggb grows components of
+  millions of nodes across reference gaps and repeat arrays: on HPRC's pggb
+  chr22, one of 2.48 M nodes hangs from 10.5 to 50.8 Mb, nearly the whole
+  chromosome, and a browser can't load the rows a window there returns
+- Node and link rows a 10 kb window reads, without the limit and with it:
+
+| graph | components moved | window | without | with |
+|---|---|---|---|---|
+| HPRC SV rGFA, whole genome | 1, of 22,501 nodes | under that bubble, chr1:2.70 Mb | 22,690 and 34,015 (6.4 MB) | 189 and 291 (53 KB) |
+| HPRC pggb chrY | 3, of 3.74 M nodes | in the Yq12 gap, 40.00 Mb | 3.7 M and 7.1 M (10 GB) | 1 and 4 |
+| HPRC pggb chr22 | 4, of 2.53 M nodes | median of 50 | 2.5 M and 3.9 M | 438 and 626 |
+
+**When to change it**
+
+- **Keep the default** for pggb graphs and other plain GFAs of human
+  chromosomes
+- **Raise it** to draw a moved bubble whole, such as the SV rGFA's bubble
+  above. Pick a limit above that bubble's node count and below the giants the
+  tool reports, and a window under the bubble reads all of its rows again
+- **`--max-component none`** files every component under the reference, as
+  earlier versions did. Use it when you want every component the tool reports
+  drawn whole and accept what a window under each one reads
+- **Lower it** when windows still load slowly. A window reads about N node
+  rows at most, plus their links, so a lower N lowers that cap and turns more
+  bubbles into stubs
+- `build` and `fold` take the same option and apply it to the coarse tier too
+
+**Side effects**
+
+- A moved component's nodes spread over the contigs of the assemblies whose
+  paths reach them first, and a link between two contigs gets a row on each.
+  pggb chrY's link file grows from 378 to 682 MB, while chr22's shrinks from
+  3.9 to 1.6 GB
+- No reader yet expands a stub into the moved component
+  ([ADR 0005](docs/adr/0005-node-link-format-2.md) has the measurements and
+  the open questions)
+
 ### Which output do I need?
 
 - The node and link index holds the nodes and links a graph track draws at a

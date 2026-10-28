@@ -154,28 +154,26 @@ fn write_index(
     if skipped > 0 {
         eprintln!("{skipped} links left out: a node with no coordinate");
     }
-    if let (Some(max), [(largest, (sequence, start, end)), ..]) =
-        (max_component, spans.moved.as_slice())
+    if let Some(max) = max_component
+        && !spans.moved.is_empty()
     {
-        let place = format!(
-            "{}:{start}-{end}",
-            String::from_utf8_lossy(&spans.sequences[*sequence as usize])
-        );
-        let message = match spans.moved.len() {
-            1 => format!(
-                "1 component, of {largest} nodes under {place}, is over --max-component \
-                 {max}, so it keeps its own coordinates and a graph track draws it as stubs. \
-                 --max-component none files it under the reference"
-            ),
-            n => format!(
-                "{n} components, of {} nodes, are over --max-component {max}, so they keep \
-                 their own coordinates and a graph track draws them as stubs. The largest has \
-                 {largest} nodes under {place}. --max-component none files them under the \
-                 reference",
-                spans.moved.iter().map(|(nodes, _)| nodes).sum::<u64>()
-            ),
+        let n = spans.moved.len();
+        let (are, they) = if n == 1 {
+            ("is", "it")
+        } else {
+            ("are", "them")
         };
-        eprintln!("{message}");
+        eprintln!(
+            "{n} of the graph's components {are} over --max-component {max}, so a graph track \
+             draws {they} as stubs; --max-component none files {they} under the reference:"
+        );
+        for (nodes, (sequence, start, end)) in spans.moved.iter().take(10) {
+            let sequence = String::from_utf8_lossy(&spans.sequences[*sequence as usize]);
+            eprintln!("  {nodes} nodes under {sequence}:{start}-{end}");
+        }
+        if n > 10 {
+            eprintln!("  and {} more", n - 10);
+        }
     }
     let unplaced = graph.segment_count() - placed_nodes;
     if unplaced > 0 {

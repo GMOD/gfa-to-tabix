@@ -213,7 +213,8 @@ fn anchored_leaves_a_component_over_max_component_on_its_own_coordinates() {
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("1 component, of 1 nodes under chr1:0-13, is over --max-component 0"),
+        stderr.contains("1 of the graph's components is over --max-component 0")
+            && stderr.contains("  1 nodes under chr1:0-13\n"),
         "{stderr}"
     );
     assert_eq!(

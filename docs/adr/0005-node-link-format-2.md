@@ -110,7 +110,7 @@
 
 ## Proposal
 
-**Giant components**, available now as `--max-component N`, off by default
+**Giant components**, available now as `--max-component N`, default 10,000
 
 - A component of more than N nodes keeps its own coordinates, as a component
   attached to no reference node does. A window inside it reads only the links
@@ -147,8 +147,9 @@
   GRCh38 chr1:2.65-2.78 Mb. A 10 kb window there reads 22,690 node rows and
   34,015 link rows, 6.4 MB of text, and 480 rows and 53 KB with the limit. The
   link file grows by 2%
-- The limit stays off by default, because a reader draws a moved component's
-  alleles as stubs and none expands them yet
+- The limit is on by default, since it cuts window cost on every graph
+  measured. A reader draws a moved component's alleles as stubs, and none
+  expands them yet
 
 **Filing**
 
