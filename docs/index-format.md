@@ -6,9 +6,9 @@
 - **Filing:** the tool files each row under a reference interval, so one region
   query on each file returns the nodes and links a browser draws there
 - **Why two files:** every graph drawing reads both, and issues the two reads
-  together. One file would save some bytes and an index load, so the merge
-  waits for the next format change;
-  [ADR 0002](adr/0002-two-index-files.md) has the readers and measurements
+  together. [Format 2](#format-2) merges them, with carriers as bits, once
+  readers take it; [ADR 0002](adr/0002-two-index-files.md) has the readers and
+  measurements
 
 ```bash
 gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc
@@ -20,6 +20,7 @@ gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
 | `--reference <name>`   | For a plain GFA: the PanSN sample, assembly or path to use as reference. Default the first path. |
 | `-o`, `--out <prefix>` | Output prefix. Default the input name without `.gfa[.gz]`.                              |
 | `--layout <layout>`    | `anchored` (default) or `contig`; see [layouts](#layouts).                              |
+| `--format <1\|2>`      | `1` (default) writes the two files below; `2` writes [one file](#format-2), which graph-walks and the JBrowse plugin don't read yet. |
 | `--max-component <n>`  | Anchored: a component of more than n nodes keeps its own coordinates, and a graph track draws it as stubs; `none` files every component under the reference. Default 10000; see the [README](../README.md#why-does-the-graph-track-draw-some-bubbles-as-stubs---max-component). |
 
 ## Inputs
@@ -156,6 +157,30 @@ Anchored, a link has one row per reference sequence. By contig, it has two rows,
 one under each node's coordinate.
 
 The tool sorts rows by sequence name in byte order, then by start.
+
+### Format 2
+
+`--format 2` writes `<prefix>.graph.bed.gz` instead of the two files
+([ADR 0007](adr/0007-node-link-format-2.md)):
+
+```
+#gfa-to-tabix  format:i:2  layout:Z:anchored  graph:Z:6f8a0816aa66e2d6
+#samples  alt.1,ref.1
+ref#1#chr  0  4  N  1  0  ref#1#chr  0  4  SB:H:3
+ref#1#chr  0  9  L  1+  3+  ref#1#chr  0  4  0  alt#1#ctg  4  5  1
+```
+
+- The first line names the format, the layout, and the graph by a hash of its
+  segments' ids and lengths that ignores their order
+- A plain GFA adds a `#samples` line listing its assemblies in byte order
+- Each row's fourth column says whether it is a node (`N`) or a link (`L`),
+  and the rest of the row is format 1's
+- A node row's `SB:H:` replaces `SM:Z:`: hex digit i / 4, counted from the
+  left, holds the assembly numbered i in `#samples` as bit i % 4, and the tool
+  drops trailing zero digits. Above, `3` sets both assemblies and `1` alt.1
+  alone
+- Link rows carry no carriers; a reader takes them from the node rows of the
+  same query
 
 ## Scale
 
