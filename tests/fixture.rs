@@ -202,6 +202,35 @@ fn anchored_files_an_allele_under_the_reference_it_hangs_from() {
     );
 }
 
+// With --max-component 0, s3's one-node component keeps its coordinates, and
+// each link to it gets a row there beside the one under the reference.
+#[test]
+fn anchored_leaves_a_component_over_max_component_on_its_own_coordinates() {
+    let (output, nodes, links) = run(
+        "rgfa.gfa",
+        &["--layout", "anchored", "--max-component", "0"],
+    );
+    assert!(output.status.success());
+    assert_eq!(
+        nodes,
+        tsv(&[
+            "b#1#c 100 103 s3 1 b#1#c 100 103",
+            "chr1 0 8 s1 0 chr1 0 8",
+            "chr1 8 13 s2 0 chr1 8 13",
+        ])
+    );
+    assert_eq!(
+        links,
+        tsv(&[
+            "b#1#c 100 103 s1+ s3- chr1 0 8 0 b#1#c 100 103 1",
+            "b#1#c 100 103 s3- s2+ b#1#c 100 103 1 chr1 8 13 0",
+            "chr1 0 13 s1+ s2+ chr1 0 8 0 chr1 8 13 0",
+            "chr1 0 13 s1+ s3- chr1 0 8 0 b#1#c 100 103 1",
+            "chr1 0 13 s3- s2+ b#1#c 100 103 1 chr1 8 13 0",
+        ])
+    );
+}
+
 #[test]
 fn anchored_leaves_a_component_off_the_reference_on_its_own_coordinates() {
     let (_, nodes, links) = run("island.gfa", &["--layout", "anchored"]);

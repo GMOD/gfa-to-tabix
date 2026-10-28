@@ -68,7 +68,11 @@ pub fn widen(spans: &mut Vec<Span>, span: Span) {
 // to, along with others the reader drops: it keeps a link when one of its
 // nodes came back from the node file, or when both are far ends of links it
 // kept.
-pub fn anchored(graph: &Graph, placed: &Placed) -> Spans {
+//
+// A component of more than `max_nodes` nodes keeps its own coordinates too, so
+// a window inside it, such as a reference gap that assemblies fill with
+// millions of nodes, reads only the links that enter it.
+pub fn anchored(graph: &Graph, placed: &Placed, max_nodes: Option<u64>) -> Spans {
     let nodes = &placed.nodes;
     // A reader's region query skips a row whose interval is empty, so a
     // zero-length node is filed under one base.
@@ -114,6 +118,13 @@ pub fn anchored(graph: &Graph, placed: &Placed) -> Spans {
     for spans in anchors.values_mut() {
         spans.sort_unstable();
     }
+    if let Some(max) = max_nodes {
+        let mut size: HashMap<u32, u64> = HashMap::new();
+        for n in (0..nodes.len() as u32).filter(|&n| allele(n)) {
+            *size.entry(find(&mut parent, n)).or_default() += 1;
+        }
+        anchors.retain(|component, _| size[component] <= max);
+    }
     let filed: Vec<Vec<Span>> = (0..nodes.len() as u32)
         .map(|n| match own[n as usize] {
             None => Vec::new(),
@@ -126,7 +137,7 @@ pub fn anchored(graph: &Graph, placed: &Placed) -> Spans {
         .collect();
     let mut links = filed.clone();
     for &(component, reference_end) in &attachments {
-        for &span in &anchors[&component] {
+        for &span in anchors.get(&component).into_iter().flatten() {
             widen(&mut links[reference_end as usize], span);
         }
     }

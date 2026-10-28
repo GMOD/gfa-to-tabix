@@ -119,7 +119,7 @@ fn index(cli: Cli) -> Result<(), String> {
     }
     let layout = cli.layout.unwrap_or(Layout::Anchored);
     let (graph, placed) = load_placed(&gfa, cli.reference.as_deref())?;
-    write_index(&graph, &placed, layout, &prefix).map(drop)
+    write_index(&graph, &placed, layout, cli.max_component, &prefix).map(drop)
 }
 
 // Returns the rows written: the nodes', then the links'.
@@ -127,10 +127,11 @@ fn write_index(
     graph: &Graph,
     placed: &place::Placed,
     layout: Layout,
+    max_component: Option<u64>,
     prefix: &str,
 ) -> Result<(Vec<bed::Row>, Vec<bed::Row>), String> {
     let spans = match layout {
-        Layout::Anchored => anchor::anchored(graph, placed),
+        Layout::Anchored => anchor::anchored(graph, placed, max_component),
         Layout::Contig => anchor::by_contig(placed),
     };
     let mut nodes = bed::node_rows(graph, &placed.nodes, &spans, layout);
@@ -171,7 +172,7 @@ fn write_tier(
         graph.segment_count(),
         graph.links.len()
     );
-    write_index(&folded, &place::from_tags(&folded), layout, prefix).map(drop)
+    write_index(&folded, &place::from_tags(&folded), layout, None, prefix).map(drop)
 }
 
 fn run(cli: Cli) -> Result<(), String> {

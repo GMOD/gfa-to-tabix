@@ -41,6 +41,12 @@ pub struct Cli {
     #[arg(long, value_enum, conflicts_with = "walks")]
     pub layout: Option<Layout>,
 
+    /// anchored: the nodes off the reference that link to each other form one
+    /// component; one of more than N nodes keeps its own coordinates, so a
+    /// window inside it reads only the links that enter it (default: no limit)
+    #[arg(long, value_name = "N", conflicts_with = "walks")]
+    pub max_component: Option<u64>,
+
     /// Write PREFIX.segs.bed.gz and PREFIX.links.bed.gz, each with a .tbi;
     /// default the input name without .gfa[.gz]
     #[arg(short, long = "out", value_name = "PREFIX")]

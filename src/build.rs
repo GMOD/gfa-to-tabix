@@ -470,12 +470,12 @@ pub fn run(options: &Options) -> Result<(), String> {
     let (sample, bubbles) = thread::scope(|scope| {
         let bubbles = scope.spawn(move || bubble_file(route, gfatools, snarls, flipped, prefix));
         let fine = scope.spawn(|| {
-            crate::write_index(graph, placed, Layout::Anchored, prefix)
+            crate::write_index(graph, placed, Layout::Anchored, None, prefix)
                 .map(|(nodes, _)| reference_sample(&nodes))
         });
         let contig = scope.spawn(|| {
             let contig = format!("{prefix}.contig");
-            let (segs, links) = crate::write_index(graph, placed, Layout::Contig, &contig)?;
+            let (segs, links) = crate::write_index(graph, placed, Layout::Contig, None, &contig)?;
             alleles::from_rows(
                 &contig,
                 segs.iter().map(Row::text),
