@@ -379,6 +379,7 @@ fn every_path_rebuilds_from_its_rows() {
         ("walks-loop.gfa", "R", "10"),
         ("walks-loop.gfa", "R", "1000"),
         ("walks-records.gfa", "R", "10"),
+        ("walks-skip.gfa", "R,Q", "10"),
     ] {
         let built = build(gfa, &["--refs", refs, "--chunk", chunk]);
         assert!(built.output.status.success(), "{gfa} {chunk}");
@@ -455,6 +456,33 @@ fn each_reference_has_one_file_holding_only_its_rows() {
     }
 }
 
+// walks-skip.gfa: R#0#chr and Q#0#chr walk 1 2 3 4 5, at 0, 10, 20, 60 and 70,
+// node 3 being 40 bp. D#1#d deletes 3 and 4 on the forward strand, B#1#b on
+// the reverse, so each leaves out 20-70 and has a skip row in the five chunks
+// from 20 to 60. Each reference crosses node 3 in the other's file, a jump from
+// chunk 20 to 60 that leaves nothing out, so it has none.
+#[test]
+fn a_path_that_jumps_over_the_reference_has_a_skip_row_in_each_chunk_between() {
+    let built = build("walks-skip.gfa", &[]);
+    for sample in ["R", "Q"] {
+        let skips: String = built
+            .file(sample)
+            .lines()
+            .filter(|line| line.split('\t').nth(3) == Some("skip"))
+            .map(|line| line.to_string() + "\n")
+            .collect();
+        let expected: Vec<String> = (20..=60)
+            .step_by(10)
+            .flat_map(|cs| {
+                ["B#1#b 0 0 70 10", "D#1#d 0 1 10 70"]
+                    .map(|jump| format!("{sample}#0#chr {cs} {} skip {jump} 20 70", cs + 1))
+            })
+            .collect();
+        let expected: Vec<&str> = expected.iter().map(String::as_str).collect();
+        assert_eq!(skips, tsv(&expected), "{sample}");
+    }
+}
+
 // U#1#u visits no reference node, so it has no rows and no line. Each walk
 // file lists the other reference among its haplotypes, since its walk has
 // rows there.
@@ -465,7 +493,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         assert_eq!(
             header(built.file(sample)),
             tsv(&[
-                "#walks format:i:5 chunk:i:10 maxnode:i:6 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000",
+                "#walks format:i:5 chunk:i:10 maxnode:i:6 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000 skip:i:32",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",

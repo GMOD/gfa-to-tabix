@@ -31,6 +31,12 @@ pub struct Options {
 }
 
 const NONE: u32 = u32::MAX;
+// The most chunks a path's jump over the reference files `skip` rows in; a
+// farther jump is a paralog's
+const SKIP_CHUNKS: u64 = 32;
+// The first byte of a `skip` row in the sort, after a chunk's pieces, which
+// start 0 (the reference's) or 1
+const SKIP_ROW: u8 = 2;
 // Set on a placement taken from a path off the reference: rank 1.
 const OFF_REFERENCE: u32 = 1 << 31;
 
@@ -198,6 +204,7 @@ struct Reference {
     visits_of: FastMap<u32, (u32, u32)>,
     path_ends: HashMap<u32, u64>,
     pieces: u64,
+    skips: u64,
     unplaced: u64,
     haplotypes: BTreeSet<Vec<u8>>,
 }
@@ -653,6 +660,7 @@ fn first_pass(
             visits_of: FastMap::default(),
             path_ends: HashMap::new(),
             pieces: 0,
+            skips: 0,
             unplaced: 0,
             haplotypes: BTreeSet::new(),
         })
@@ -846,6 +854,9 @@ struct Builder {
     handles: Vec<u32>,
     before: Vec<u64>,
     chunk_of: Vec<u32>,
+    // by step of a path off the reference: the reference pass a step on a
+    // reference node takes, as (name id, offset); NONE for any other step
+    pass: Vec<(u32, u64)>,
     pieces: Vec<(usize, usize)>,
 }
 
@@ -908,7 +919,10 @@ impl Builder {
                 pieces: self.pieces.len() as u32,
             });
             let pieces = std::mem::take(&mut self.pieces);
-            let result = self.write_pieces(r, path, handles, record, &pieces);
+            let mut result = self.write_pieces(r, path, handles, record, &pieces);
+            if own.is_none() && result.is_ok() {
+                result = self.write_skips(r, path, handles, &pieces);
+            }
             self.pieces = pieces;
             result?;
         }
@@ -937,6 +951,9 @@ impl Builder {
             None => {
                 let chunks = &self.chunks;
                 let chunk_of = &mut self.chunk_of;
+                let pass = &mut self.pass;
+                pass.clear();
+                pass.resize(handles.len(), (NONE, 0));
                 visits_along(
                     reference,
                     handles,
@@ -944,6 +961,7 @@ impl Builder {
                     &self.graph.lengths,
                     |i, v| {
                         chunk_of[i] = chunks.of(v.name, v.offset);
+                        pass[i] = (v.name, v.offset);
                     },
                 );
             }
@@ -1021,6 +1039,83 @@ impl Builder {
                     },
                 )
             })?;
+        }
+        Ok(())
+    }
+
+    // Writes a `skip` row into each chunk a path jumps over between two of its
+    // pieces on one reference sequence, when the jump spans at most
+    // SKIP_CHUNKS chunks: `skip path fragStart piece from to refStart refEnd`,
+    // where `piece` numbers the piece before the jump, `from` and `to` are the
+    // chunks the two pieces are filed under, and refStart-refEnd is the
+    // reference between the passes either side of the jump.
+    fn write_skips(
+        &mut self,
+        r: usize,
+        path: &PathLine,
+        handles: &[u32],
+        pieces: &[(usize, usize)],
+    ) -> Result<(), String> {
+        let lengths = &self.graph.lengths;
+        let pass = &self.pass;
+        let span = |i: usize| {
+            let (name, start) = pass[i];
+            (
+                name,
+                start,
+                start + u64::from(lengths[(handles[i] >> 1) as usize]),
+            )
+        };
+        let mut line = Vec::new();
+        for (k, pair) in pieces.windows(2).enumerate() {
+            let ((a, b), (_, c)) = (pair[0], pair[1]);
+            let (Some(i), Some(j)) = (
+                (a..b).rev().find(|&i| pass[i].0 != NONE),
+                (b..c).find(|&j| pass[j].0 != NONE),
+            ) else {
+                continue;
+            };
+            let ((name, i_start, i_end), (other, j_start, j_end)) = (span(i), span(j));
+            let (gap_start, gap_end) = match () {
+                _ if name != other => continue,
+                _ if i_end < j_start => (i_end, j_start),
+                _ if j_end < i_start => (j_end, i_start),
+                _ => continue,
+            };
+            let (first, last) = (
+                self.chunks.of(name, gap_start),
+                self.chunks.of(name, gap_end - 1),
+            );
+            let (from, to) = (self.chunk_of[a], self.chunk_of[b]);
+            let starts = &self.chunks.starts;
+            if u64::from(last - first) >= SKIP_CHUNKS
+                || starts[from as usize].0 != name
+                || starts[to as usize].0 != name
+            {
+                continue;
+            }
+            line.clear();
+            line.extend_from_slice(b"skip\t");
+            line.extend_from_slice(&path.name);
+            for n in [
+                path.start,
+                k as u64,
+                starts[from as usize].1,
+                starts[to as usize].1,
+                gap_start,
+                gap_end,
+            ] {
+                line.push(b'\t');
+                push_u64(&mut line, n);
+            }
+            line.push(b'\n');
+            for chunk in (first..=last).filter(|&chunk| chunk != from && chunk != to) {
+                self.rows.push(chunk, |out| {
+                    out.push(SKIP_ROW);
+                    out.extend_from_slice(&line);
+                })?;
+                self.references[r].skips += 1;
+            }
         }
         Ok(())
     }
@@ -1334,6 +1429,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         handles: Vec::new(),
         before: Vec::new(),
         chunk_of: Vec::new(),
+        pass: Vec::new(),
         pieces: Vec::new(),
         stay: options.stay,
     };
@@ -1352,9 +1448,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     );
     for reference in &builder.references {
         eprintln!(
-            "{}: {} pieces, {} paths visit no {} node and are left out",
+            "{}: {} pieces, {} skip rows, {} paths visit no {} node and are left out",
             text(&reference.sample),
             reference.pieces,
+            reference.skips,
             reference.unplaced,
             text(&reference.sample)
         );
@@ -1376,7 +1473,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let mut writer = bed::Writer::create(&path)?;
         let longest = reference.longest(&graph.lengths);
         let mut header = format!(
-            "#walks\tformat:i:5\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
+            "#walks\tformat:i:5\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\tskip:i:{SKIP_CHUNKS}\n#reference\t{}\n",
             chunks.size,
             options.stay,
             options.budget.cost,
@@ -1443,6 +1540,8 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         }
     };
     let encode = |chunk: u32, raw: &[Vec<u8>]| -> Encoded {
+        let (skips, raw): (Vec<&Vec<u8>>, Vec<&Vec<u8>>) =
+            raw.iter().partition(|r| r[0] == SKIP_ROW);
         let mut pieces: Vec<Piece> = raw.iter().map(|r| Piece::read(r)).collect();
         for piece in &mut pieces {
             record_tags(piece, chunk);
@@ -1463,6 +1562,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             },
             &mut details,
         )?;
+        for skip in skips {
+            lines.extend_from_slice(&skip[1..]);
+            ends.push(lines.len());
+        }
         Ok((lines, ends, counts, details))
     };
     let mut line = Vec::new();

@@ -116,7 +116,7 @@ Header lines start with `#`: `tabix -H` prints them and region queries skip
 them.
 
 ```
-#walks	format:i:5	chunk:i:65536	maxnode:i:1024	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000
+#walks	format:i:5	chunk:i:65536	maxnode:i:1024	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	skip:i:32
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
@@ -138,6 +138,9 @@ them.
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
   `--abridge-bytes` budgets the file was written with; 0 means none. A reader
   ignores them
+- `skip` is the most chunks a jump has [skip rows](#skip) in. A file without it
+  has no skip rows, so a reader can't tell a jump over the window from a
+  haplotype absent there
 - `#reference` names the reference sample
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
   `sample#haplotype`, once each in byte order
@@ -146,7 +149,8 @@ them.
 
 Every row starts `seq cs cs+1 kind`. A chunk lists its `ref` rows, then at
 most one `nodes` row, then its `route` rows, then its `walk` rows, then its
-`abridged` rows.
+`abridged` rows, then its `skip` rows. A reader skips a kind of row it doesn't
+know.
 
 A handle is `2 × id + r`, with `r` 1 for the reverse strand. A list of handles
 is written as delta tokens: each token is `2 × (id − previous id) + r`, and the
@@ -260,6 +264,23 @@ seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start end detail 
 - `detail` numbers the chunk's record that holds the pieces' rows
 - The `pv`, `pg` and `pr` tags come from the first piece, and `nx`, `ng` and
   `nr` from the last
+
+### skip
+
+```
+seq cs cs+1 skip path fragStart piece from to refStart refEnd
+```
+
+- A path of another sample that leaves the reference and rejoins it on the
+  same sequence, leaving out `refStart`-`refEnd`, has a `skip` row in each
+  chunk that stretch touches, other than the chunks its two pieces are filed
+  under
+- `piece` numbers the piece before the jump, and `from` and `to` give the
+  chunks the two pieces are filed under, so a reader draws the haplotype across
+  the window as a deletion and can fetch either side
+- A jump over more than `skip` chunks, such as one onto a distant paralog, has
+  no skip rows
+- [ADR 0006](adr/0006-walks-skip-rows.md) gives the reasons
 
 ## Abridged chunks
 
