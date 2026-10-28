@@ -177,9 +177,9 @@ pub fn run(prefix: &str, files: &[String]) -> Result<(), String> {
     }
 
     let out = format!("{prefix}.bed.gz");
-    bed::write_lines(&out, HEADER.as_bytes(), &mut rows)?;
+    let index = bed::write_lines(&out, HEADER.as_bytes(), &mut rows)?;
     eprintln!(
-        "{} rows ({} bubbles x {} samples) -> {out} (+ .tbi)",
+        "{} rows ({} bubbles x {} samples) -> {out} (+ .{index})",
         rows.len(),
         bubbles,
         samples.len()

@@ -29,7 +29,9 @@ gfa-to-tabix build ecoli.gfa.gz --reference K12 --snarls ecoli.snarls.vcf -o eco
 | `hprc.graph.json`                  | the [manifest](#the-manifest)                      |
 | `hprc.config.json`                 | the tracks ([JBrowse config](#the-jbrowse-config)) |
 
-Each `.bed.gz` gets a `.tbi`.
+Each `.bed.gz` gets a `.tbi`, or a `.csi` when a row lies past the 512 Mb a
+Tabix index holds. The config then sets `"csi": true` on each track whose
+files have one.
 
 - `--tier N` folds under N bp: default 10000 for an rGFA, 50 for a plain GFA
 - `--assembly` sets the JBrowse assembly the tracks sit on. Default the

@@ -166,8 +166,9 @@ The tool sorts rows by sequence name in byte order, then by start.
 - Memory grows with total path length, and a base-level graph of a human
   chromosome has millions of nodes, so for one use
   [`--walks`](walks-format.md)
-- A Tabix index holds coordinates up to 512 Mb, so the tool cannot index a
-  longer reference sequence
+- A Tabix index holds coordinates up to 512 Mb. A file with a row past that
+  gets a `.csi` index instead, which holds up to 34 Gb, and every other file
+  keeps its `.tbi`
 
 ## Wide intervals
 

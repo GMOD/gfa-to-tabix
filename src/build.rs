@@ -182,7 +182,8 @@ impl Bubbler {
     }
 }
 
-fn write_bubbles(text: &[u8], out: &str) -> Result<usize, String> {
+// Returns the rows written and the index's extension.
+fn write_bubbles(text: &[u8], out: &str) -> Result<(usize, &'static str), String> {
     let mut rows: Vec<Line> = Vec::new();
     for line in text.split(|&b| b == b'\n').filter(|l| !l.is_empty()) {
         let fields: Vec<&[u8]> = line.splitn(4, |&b| b == b'\t').collect();
@@ -205,8 +206,8 @@ fn write_bubbles(text: &[u8], out: &str) -> Result<usize, String> {
             text: [line, b"\n"].concat(),
         });
     }
-    bed::write_lines(out, b"", &mut rows)?;
-    Ok(rows.len())
+    let index = bed::write_lines(out, b"", &mut rows)?;
+    Ok((rows.len(), index))
 }
 
 // `gfatools` is the bubbler, or the note that says why there is none.
@@ -220,8 +221,8 @@ fn bubble_file(
     let path = format!("{prefix}.bubbles.bed.gz");
     match (route, gfatools, snarls) {
         (Route::Rgfa, Ok(bubbler), _) => {
-            let count = write_bubbles(&bubbler.finish()?, &path)?;
-            eprintln!("{count} bubbles from gfatools -> {path} (+ .tbi)");
+            let (count, index) = write_bubbles(&bubbler.finish()?, &path)?;
+            eprintln!("{count} bubbles from gfatools -> {path} (+ .{index})");
             Ok(true)
         }
         (Route::Rgfa, Err(note), _) => {
@@ -252,12 +253,25 @@ fn basename(prefix: &str) -> &str {
     prefix.rsplit('/').next().unwrap_or(prefix)
 }
 
+// Which files the tracks read have a `.csi` index rather than a `.tbi`
+struct Csi {
+    graph: bool,
+    coarse: bool,
+    alleles: bool,
+    bubbles: bool,
+}
+
+fn has_csi(path: &str) -> bool {
+    std::path::Path::new(&format!("{path}.csi")).exists()
+}
+
 struct Built<'a> {
     base: &'a str,
     sample: Option<String>,
     assembly: String,
     tier: i64,
     bubbles: bool,
+    csi: Csi,
 }
 
 impl Built<'_> {
@@ -302,15 +316,18 @@ impl Built<'_> {
                 ("displayId", text(format!("{stem}_graph-{kind}"))),
             ])
         };
+        let csi = |on: bool| on.then_some(("csi", Json::Bool(true)));
         let mut graph_adapter = vec![("type", text("RgfaTabixAdapter")), ("uri", text(base))];
+        graph_adapter.extend(csi(self.csi.graph));
         graph_adapter.extend(pansn());
-        graph_adapter.push((
-            "coarse",
-            object([
-                ("uri", text(format!("{base}.fold{}", self.tier))),
-                ("foldBelowBp", Json::Number(self.tier)),
-            ]),
-        ));
+        let mut coarse = vec![
+            ("uri", text(format!("{base}.fold{}", self.tier))),
+            ("foldBelowBp", Json::Number(self.tier)),
+        ];
+        if self.csi.coarse != self.csi.graph {
+            coarse.push(("csi", Json::Bool(self.csi.coarse)));
+        }
+        graph_adapter.push(("coarse", object(coarse)));
         let mut tracks = vec![
             object([
                 ("type", text("GraphTrack")),
@@ -334,10 +351,14 @@ impl Built<'_> {
                 ("assemblyNames", assembly()),
                 (
                     "adapter",
-                    object([
-                        ("type", text("BedTabixAdapter")),
-                        ("uri", text(format!("{base}.alleles.bed.gz"))),
-                    ]),
+                    object(
+                        [
+                            ("type", text("BedTabixAdapter")),
+                            ("uri", text(format!("{base}.alleles.bed.gz"))),
+                        ]
+                        .into_iter()
+                        .chain(csi(self.csi.alleles)),
+                    ),
                 ),
             ]),
         ];
@@ -347,6 +368,7 @@ impl Built<'_> {
                     ("type", text("MinigraphBubbleAdapter")),
                     ("uri", text(format!("{base}.bubbles.bed.gz"))),
                 ];
+                fields.extend(csi(self.csi.bubbles));
                 fields.extend(pansn());
                 object(fields)
             };
@@ -481,6 +503,12 @@ pub fn run(options: &Options) -> Result<(), String> {
         sample,
         tier,
         bubbles,
+        csi: Csi {
+            graph: has_csi(&format!("{prefix}.segs.bed.gz")),
+            coarse: has_csi(&format!("{prefix}.fold{tier}.segs.bed.gz")),
+            alleles: has_csi(&format!("{prefix}.alleles.bed.gz")),
+            bubbles: has_csi(&format!("{prefix}.bubbles.bed.gz")),
+        },
     };
     write_json(&format!("{prefix}.graph.json"), &built.manifest())?;
     write_json(&format!("{prefix}.config.json"), &built.config())?;

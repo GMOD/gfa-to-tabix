@@ -279,6 +279,9 @@ seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start end detail 
   sequence `seq~cs` at position `detail × 16384`, so each record has a Tabix
   leaf bin to itself and a query for one reads no other. A window query names
   only `seq`, so it reads no record, and a viewer fetches a record on request
+- A chunk with more than 32,768 records puts the last ones past the 512 Mb a
+  Tabix index holds, and the file then gets a `.csi` index in place of its
+  `.tbi`
 - A record holds a `nodes` row, `route` rows and `walk` rows. The tool numbers
   its routes from 0 and chains their tokens from 0, as for a chunk of its own,
   and its walk rows decode against the R of chunk `cs` of `seq`

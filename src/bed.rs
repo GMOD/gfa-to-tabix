@@ -8,8 +8,9 @@ use flate2::read::MultiGzDecoder;
 
 use noodles_bgzf::{self as bgzf, io::writer::CompressionLevel};
 use noodles_core::Position;
-use noodles_csi::binning_index::index::header::Builder;
-use noodles_csi::binning_index::index::reference_sequence::bin::Chunk;
+use noodles_csi::binning_index::index::header::ReferenceSequenceNames;
+use noodles_csi::binning_index::index::reference_sequence::{bin::Chunk, index::BinnedIndex};
+use noodles_csi::{self as csi, binning_index::index::header::Builder};
 use noodles_tabix as tabix;
 
 use crate::anchor::{Span, Spans, widen};
@@ -157,8 +158,8 @@ fn compressor(file: File) -> bgzf::io::Writer<File> {
 }
 
 // Writes the rows and their index beside each other, under temporary names
-// until both are complete.
-pub fn write(path: &str, rows: &[Row], spans: &Spans) -> Result<(), String> {
+// until both are complete. Returns the index's extension.
+pub fn write(path: &str, rows: &[Row], spans: &Spans) -> Result<&'static str, String> {
     let mut writer = Writer::create(path)?;
     for row in rows {
         writer.push(
@@ -180,7 +181,8 @@ pub struct Line {
 }
 
 // Sorts the lines as `sort` does the rows, then writes them after `header`.
-pub fn write_lines(path: &str, header: &[u8], lines: &mut [Line]) -> Result<(), String> {
+// Returns the index's extension.
+pub fn write_lines(path: &str, header: &[u8], lines: &mut [Line]) -> Result<&'static str, String> {
     lines.sort_unstable_by(|a, b| (&a.chrom, a.start, &a.text).cmp(&(&b.chrom, b.start, &b.text)));
     let mut writer = Writer::create(path)?;
     writer.header(header)?;
@@ -190,15 +192,23 @@ pub fn write_lines(path: &str, header: &[u8], lines: &mut [Line]) -> Result<(), 
     writer.finish()
 }
 
-// A bgzip-compressed BED file and its Tabix index, written row by row in
-// sorted order. Until `finish`, both sit under `.partial` names, which a
+// A Tabix index holds coordinates up to 2^29; a CSI index with this depth
+// holds them up to 2^35
+const CSI_DEPTH: u8 = 7;
+
+// A bgzip-compressed BED file and its index, written row by row in sorted
+// order. The index is Tabix's `.tbi` while every row fits under 512 Mb and a
+// `.csi` otherwise. Until `finish`, both sit under `.partial` names, which a
 // writer dropped unfinished removes.
 pub struct Writer {
     path: String,
     partial: String,
     partial_index: String,
     sink: Option<parallel_bgzf::Writer>,
-    indexer: tabix::index::Indexer,
+    // None from the first row past what a Tabix index holds
+    tbi: Option<tabix::index::Indexer>,
+    csi: csi::binning_index::Indexer<BinnedIndex>,
+    csi_names: ReferenceSequenceNames,
     before: StreamPos,
     // rows written whose virtual positions are not known yet
     pending: VecDeque<Pending>,
@@ -223,15 +233,17 @@ impl Writer {
         let sink = File::create(&partial)
             .map(|file| parallel_bgzf::Writer::new(file, flate2::Compression::new(6), threads))
             .map_err(|e| format!("{path}: {e}"))?;
-        let mut indexer = tabix::index::Indexer::default();
-        indexer.set_header(Builder::bed().build());
+        let mut tbi = tabix::index::Indexer::default();
+        tbi.set_header(Builder::bed().build());
         Ok(Writer {
             path: path.to_string(),
-            partial_index: format!("{path}.tbi.partial"),
+            partial_index: format!("{path}.index.partial"),
             partial,
             before: sink.position(),
             sink: Some(sink),
-            indexer,
+            tbi: Some(tbi),
+            csi: csi::binning_index::Indexer::new(14, CSI_DEPTH).expect("a valid CSI scheme"),
+            csi_names: ReferenceSequenceNames::default(),
             pending: VecDeque::new(),
         })
     }
@@ -288,20 +300,26 @@ impl Writer {
                 Position::try_from(n as usize).map_err(|e| format!("{path}: coordinate {n}: {e}"))
             };
             let (sequence, start, end) = (&row.sequence, row.start, row.end);
-            self.indexer
-                .add_record(sequence, position(start + 1)?, position(end.max(start + 1))?, Chunk::new(from, to))
-                .map_err(|e| {
-                    format!(
-                        "{path}: cannot index {sequence}:{start}-{end}: {e}. A Tabix index holds coordinates up to 512 Mb"
-                    )
-                })?;
+            let (first, last) = (position(start + 1)?, position(end.max(start + 1))?);
+            let chunk = Chunk::new(from, to);
+            if let Some(tbi) = &mut self.tbi
+                && tbi.add_record(sequence, first, last, chunk).is_err()
+            {
+                self.tbi = None;
+            }
+            let (id, _) = self.csi_names.insert_full(sequence.as_ref().into());
+            self.csi
+                .add_record(Some((id, first, last, true)), chunk)
+                .map_err(|e| format!("{path}: cannot index {sequence}:{start}-{end}: {e}"))?;
             self.pending.pop_front();
         }
         sink.forget_before(self.pending.front().map_or(self.before.0, |row| row.from.0));
         Ok(())
     }
 
-    pub fn finish(mut self) -> Result<(), String> {
+    // Returns the index's extension, `tbi` or `csi`, and removes an index of
+    // the other kind an earlier run left beside the file.
+    pub fn finish(mut self) -> Result<&'static str, String> {
         let path = self.path.clone();
         let fail = |e: std::io::Error| format!("{path}: {e}");
         self.sink
@@ -315,11 +333,28 @@ impl Writer {
         if !self.pending.is_empty() {
             return Err(format!("{path}: rows left unindexed"));
         }
-        let indexer = mem::take(&mut self.indexer);
+        let (kind, stale, compressed) = match self.tbi.take() {
+            Some(tbi) => {
+                let mut writer = tabix::io::Writer::new(Vec::new());
+                writer.write_index(&tbi.build()).map_err(fail)?;
+                ("tbi", "csi", writer.into_inner().finish().map_err(fail)?)
+            }
+            None => {
+                let mut header = Builder::bed().build();
+                *header.reference_sequence_names_mut() = mem::take(&mut self.csi_names);
+                let count = header.reference_sequence_names().len();
+                let indexer = mem::replace(
+                    &mut self.csi,
+                    csi::binning_index::Indexer::new(14, CSI_DEPTH).expect("a valid CSI scheme"),
+                );
+                let mut writer = csi::io::Writer::new(Vec::new());
+                writer
+                    .write_index(&indexer.set_header(header).build(count))
+                    .map_err(fail)?;
+                ("csi", "tbi", writer.into_inner().finish().map_err(fail)?)
+            }
+        };
         // A reader downloads the whole index, so recompress it at the best level.
-        let mut default_level = tabix::io::Writer::new(Vec::new());
-        default_level.write_index(&indexer.build()).map_err(fail)?;
-        let compressed = default_level.into_inner().finish().map_err(fail)?;
         let mut index_writer = File::create(&self.partial_index)
             .map(compressor)
             .map_err(fail)?;
@@ -329,12 +364,16 @@ impl Writer {
         )
         .map_err(fail)?;
         index_writer.finish().map_err(fail)?;
-        let index_path = format!("{path}.tbi");
+        let index_path = format!("{path}.{kind}");
         fs::rename(&self.partial, &path).map_err(fail)?;
         fs::rename(&self.partial_index, &index_path).map_err(|e| format!("{index_path}: {e}"))?;
         self.partial.clear();
         self.partial_index.clear();
-        Ok(())
+        let stale = format!("{path}.{stale}");
+        match fs::remove_file(&stale) {
+            Err(e) if e.kind() != io::ErrorKind::NotFound => Err(format!("{stale}: {e}")),
+            _ => Ok(kind),
+        }
     }
 }
 

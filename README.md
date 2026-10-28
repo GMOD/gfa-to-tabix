@@ -99,8 +99,10 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   gigabyte
 - `--walks` streams the paths from disk, reading the GFA twice; HPRC v2.1's
   Minigraph-Cactus graph took 29 minutes and 13 GB on 24 cores
-- A Tabix index holds coordinates up to 512 Mb, so neither output can index a
-  longer reference sequence
+- A Tabix index holds coordinates up to 512 Mb, so a file with a row past that,
+  such as one on wheat's 830 Mb chromosome 3B, gets a `.csi` index instead,
+  which holds up to 34 Gb. htslib and JBrowse read both, and JBrowse needs
+  `"csi": true` in the track's adapter
 
 ## Docs
 

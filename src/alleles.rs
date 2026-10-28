@@ -403,7 +403,7 @@ fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
     if dangling > 0 {
         eprintln!("note: {dangling} walk(s) reached no backbone link and were dropped");
     }
-    bed::write_lines(out, HEADER.as_bytes(), &mut rows)?;
+    let index = bed::write_lines(out, HEADER.as_bytes(), &mut rows)?;
 
     fn column(line: &Line, n: usize) -> Option<&[u8]> {
         line.text.split(|&b| b == b'\t').nth(n)
@@ -415,7 +415,7 @@ fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
     };
     let nested = rows.iter().filter(|r| column(r, 16) == Some(b"1")).count();
     eprintln!(
-        "{} alleles -> {out} (+ .tbi): {} ins, {} del, {} sub; {nested} nested",
+        "{} alleles -> {out} (+ .{index}): {} ins, {} del, {} sub; {nested} nested",
         rows.len(),
         count("ins"),
         count("del"),

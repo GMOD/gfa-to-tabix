@@ -173,9 +173,9 @@ pub fn run(
         );
         writer.push(b.chrom.as_bytes(), b.start, b.end, line.as_bytes())?;
     }
-    writer.finish()?;
+    let index = writer.finish()?;
     eprintln!(
-        "{total} records, {top} top level, {} bubbles -> {out} (+ .tbi){}",
+        "{total} records, {top} top level, {} bubbles -> {out} (+ .{index}){}",
         kept.len(),
         if dropped > 0 {
             format!(", {dropped} dropped as overlapping")

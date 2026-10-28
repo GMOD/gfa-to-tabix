@@ -428,6 +428,46 @@ fn a_plain_gfa_needs_no_gfatools() {
     fs::remove_dir_all(&dir).unwrap();
 }
 
+#[test]
+fn a_reference_past_512_mb_gets_csi_indexes_and_tracks_that_read_them() {
+    let dir = scratch();
+    let gfa = dir.join("big.gfa");
+    fs::write(
+        &gfa,
+        "S\t1\t*\tLN:i:600000000\nS\t2\tACGT\nL\t1\t+\t2\t+\t0M\nP\tref#1#chr\t1+,2+\t*\n",
+    )
+    .unwrap();
+    let output = build(
+        &dir,
+        &[
+            gfa.to_str().unwrap(),
+            "-o",
+            dir.join("out").to_str().unwrap(),
+        ],
+        None,
+    );
+    assert!(output.status.success(), "{output:?}");
+    for file in ["segs", "links", "contig.segs", "fold50.segs"] {
+        assert!(
+            dir.join(format!("out.{file}.bed.gz.csi")).exists(),
+            "{file}"
+        );
+        assert!(
+            !dir.join(format!("out.{file}.bed.gz.tbi")).exists(),
+            "{file}"
+        );
+    }
+    // no allele reaches past 512 Mb, so the allele file keeps a .tbi
+    assert!(dir.join("out.alleles.bed.gz.tbi").exists());
+    let config = read(&dir.join("out.config.json"));
+    assert!(
+        config.contains("\"uri\": \"out\",\n        \"csi\": true,"),
+        "{config}"
+    );
+    assert_eq!(config.matches("\"csi\"").count(), 1, "{config}");
+    fs::remove_dir_all(&dir).unwrap();
+}
+
 // The first untagged S line comes after 100,000 tagged ones, past where an
 // earlier version stopped looking and took the graph for an rGFA.
 #[test]

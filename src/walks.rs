@@ -1535,10 +1535,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     drop(write_batch);
     for mut out in writers {
         let rows = out.rows + out.details.flush(&mut out.writer)?;
-        out.writer.finish()?;
+        let index = out.writer.finish()?;
         let (path, counts) = (out.path, out.counts);
         eprintln!(
-            "{} {rows} rows -> {path} (+ .tbi): {} routes, {} walk rows, {} with step counts; {} paths abridged to {} detail walk rows",
+            "{} {rows} rows -> {path} (+ .{index}): {} routes, {} walk rows, {} with step counts; {} paths abridged to {} detail walk rows",
             elapsed(),
             counts.routes,
             counts.walks,

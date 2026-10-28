@@ -2,6 +2,7 @@
 
 pub enum Json {
     Null,
+    Bool(bool),
     Number(i64),
     Text(String),
     List(Vec<Json>),
@@ -56,6 +57,7 @@ impl Json {
         let indent = |out: &mut String, depth: usize| out.push_str(&"  ".repeat(depth));
         match self {
             Json::Null => out.push_str("null"),
+            Json::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
             Json::Number(n) => out.push_str(&n.to_string()),
             Json::Text(s) => quote(out, s),
             Json::List(items) if items.is_empty() => out.push_str("[]"),

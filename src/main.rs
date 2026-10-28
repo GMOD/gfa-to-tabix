@@ -139,13 +139,13 @@ fn write_index(
     bed::sort(&mut links, &spans);
     let nodes_path = format!("{prefix}.segs.bed.gz");
     let links_path = format!("{prefix}.links.bed.gz");
-    bed::write(&nodes_path, &nodes, &spans)?;
+    let index = bed::write(&nodes_path, &nodes, &spans)?;
     bed::write(&links_path, &links, &spans)?;
 
     let placed_nodes = placed.nodes.iter().flatten().count();
     eprintln!("{}", placed.summary);
     eprintln!(
-        "{placed_nodes} nodes, {} links -> {nodes_path}, {links_path} (+ .tbi)",
+        "{placed_nodes} nodes, {} links -> {nodes_path}, {links_path} (+ .{index})",
         graph.links.len() - skipped
     );
     if skipped > 0 {
