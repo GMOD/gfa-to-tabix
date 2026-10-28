@@ -100,18 +100,25 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - At a locus under a moved component, the graph track draws the reference and a
   dead-end node at each place the component joins it. The rest of the
   component is missing from the view
-- The tool names each moved component as it writes the index, such as
-  `1 component, of 22501 nodes under GRCh38#0#chr1:2650330-2776935, is over
-  --max-component 10000`
+- The tool lists each moved component and the reference interval it would
+  have filed under, here for HPRC's pggb chrY:
+
+```
+3 of the graph's components are over --max-component 10000, so a graph track draws them as stubs; --max-component none files them under the reference:
+  3506022 nodes under GRCh38#0#chrY:26640509-56821961
+  202687 nodes under GRCh38#0#chrY:12508026-56887902
+  31798 nodes under GRCh38#0#chrY:11531191-11650765
+```
+
 - The walk files (`--walks`) and `--layout contig` have no limit, so a
   haplotype view still draws every path through the region
 
 **Why the default is on**
 
 - Every query under a component reads all of it. pggb grows components of
-  millions of nodes across reference gaps and repeat arrays: on HPRC's pggb
+  millions of nodes across reference gaps and repeat arrays. On HPRC's pggb
   chr22, one of 2.48 M nodes hangs from 10.5 to 50.8 Mb, nearly the whole
-  chromosome, and a browser can't load the rows a window there returns
+  chromosome, and a browser can't load the rows a window under it returns
 - Node and link rows a 10 kb window reads, without the limit and with it:
 
 | graph | components moved | window | without | with |
@@ -124,9 +131,10 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 
 - **Keep the default** for pggb graphs and other plain GFAs of human
   chromosomes
-- **Raise it** to draw a moved bubble whole, such as the SV rGFA's bubble
-  above. Pick a limit above that bubble's node count and below the giants the
-  tool reports, and a window under the bubble reads all of its rows again
+- **Raise it** to draw a moved bubble whole. In the chrY list above, the third
+  component is a 120 kb bubble, while the first two span 30 and 44 Mb.
+  `--max-component 50000` draws the bubble whole, and every window under it
+  reads its 31,798 nodes, while the two giants stay moved
 - **`--max-component none`** files every component under the reference, as
   earlier versions did. Use it when you want every component the tool reports
   drawn whole and accept what a window under each one reads
