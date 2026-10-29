@@ -112,10 +112,13 @@ def listing(names):
     return " and ".join(names) if len(names) < 3 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
-def overview_svg(segs, links):
-    """The two Tabix queries a browser runs for a window, the lines they
-    return, and the graph it draws from them, coloured by the file each
-    part came from."""
+def overview_svg(node_lines, link_lines):
+    """The Tabix query a browser runs for a window, the node and link lines
+    it returns, and the graph it draws from them, coloured by the kind of
+    line each part came from."""
+    # the lines without their kind column, N or L
+    segs = [r[:3] + r[4:] for r in node_lines]
+    links = [r[:3] + r[4:] for r in link_lines]
     seq, qstart, qend = QUERY
     ink, muted, line, grey = "#1f2328", "#57606a", "#8c959f", "#9aa3ad"
     node_pale, node_ink = "#dafbe1", "#1a7f37"
@@ -147,14 +150,14 @@ def overview_svg(segs, links):
     def t_of(bp):
         return track + track_w * (bp - lo) / (hi - lo)
 
-    def table(top, command, about, rows, labels, returned, pale, dark):
+    def table(top, command, about, rows, shown, labels, returned, pale, dark):
         """Each line with a bar at the interval Tabix searches; the window
         crosses the bars of the lines the query returns."""
         say(track, top, command, 13, font=mono, weight="bold")
         say(track, top + 19, about, 12, muted)
         top += 50
         char = 7.2
-        widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
+        widths = [max(len(r[i]) for r in shown) for i in range(len(shown[0]))]
         xs = [x0]
         for i, w in enumerate(widths[:-1], 1):
             start = max(k for k in labels if k < i)
@@ -175,7 +178,7 @@ def overview_svg(segs, links):
             hit = returned(r)
             a, b = t_of(int(r[1])), t_of(int(r[2]))
             rect(a + 1, y - 10, b - a - 2, 10, pale if hit else "white", dark if hit else grey, 2)
-            for x, cell in zip(xs, r):
+            for x, cell in zip(xs, shown[i]):
                 say(x, y, cell, 12, ink if hit else grey, font=mono, weight="bold" if hit else "normal")
         return last
 
@@ -220,24 +223,24 @@ def overview_svg(segs, links):
                f'<marker id="axis" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
                f'<path d="M0,0 L8,4 L0,8 z" fill="{muted}"/></marker></defs>')
 
-    say(24, 28, f"1. To show {region}, a browser queries both files gfa-to-tabix writes", 14, weight="bold")
-    labels = {0: "interval Tabix searches", 3: "node", 4: f"rank (0 = {seq})", 5: "the node's own position"}
+    say(24, 28, f"1. To show {region}, a browser queries the file gfa-to-tabix writes", 14, weight="bold")
+    labels = {0: "interval Tabix searches", 3: "kind", 4: "node", 5: f"rank (0 = {seq})", 6: "the node's own position"}
     alt_row = next(r for r in segs if r[3] == alt)
-    bottom = table(62, f"tabix {PREFIX}.segs.bed.gz {region}",
-                   f"One line per node. {alt} is an {nodes[alt]['seq']} allele, so its line spans "
+    bottom = table(62, f"tabix {PREFIX}.graph.bed.gz {region}",
+                   f"N lines, one per node. {alt} is an {nodes[alt]['seq']} allele, so its line spans "
                    f"{coordinate(*alt_row[0:3])}, from {into} to {out_}.",
-                   [r[:8] for r in segs], labels, lambda r: r[3] in q["returned"], node_pale, node_ink)
-    labels = {0: "interval Tabix searches", 3: "link", 5: "source: position, rank", 9: "target: position, rank"}
-    bottom = table(bottom + 50, f"tabix {PREFIX}.links.bed.gz {region}",
-                   "One line per link, with the positions of both its nodes.",
-                   links, labels, lambda r: r in kept, link_pale, link_ink)
+                   segs, [r[:9] for r in node_lines], labels, lambda r: r[3] in q["returned"], node_pale, node_ink)
+    labels = {0: "interval Tabix searches", 3: "kind", 4: "link", 6: "source: position, rank", 10: "target: position, rank"}
+    bottom = table(bottom + 50, "",
+                   "L lines from the same query, one per link, with the positions of both its nodes.",
+                   links, link_lines, labels, lambda r: r in kept, link_pale, link_ink)
 
     top = bottom + 54
     say(24, top, "2. It draws the graph from the returned lines", 14, weight="bold")
     rect(24, top + 12, 22, 14, node_pale, node_ink, 3)
-    say(54, top + 23, f"from {PREFIX}.segs.bed.gz: {listing(q['returned'])}", 12, muted)
+    say(54, top + 23, f"from N lines: {listing(q['returned'])}", 12, muted)
     rect(330, top + 12, 22, 14, link_pale, link_ink, 3)
-    say(360, top + 23, f"from {PREFIX}.links.bed.gz: every edge, and {listing(q['far'])}", 12, muted)
+    say(360, top + 23, f"from L lines: every edge, and {listing(q['far'])}", 12, muted)
     end = graph(top + 80)
 
     width, height = 820, int(end + 20)
@@ -454,7 +457,8 @@ def generate(binary):
         out = f"{tmp}/{PREFIX}"
         quiet = dict(check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run([binary, FIGURES / "overview.gfa", "-o", out], **quiet)
-        segs, links = read_rows(f"{out}.segs.bed.gz"), read_rows(f"{out}.links.bed.gz")
+        rows = read_rows(f"{out}.graph.bed.gz")
+        segs, links = [r for r in rows if r[3] == "N"], [r for r in rows if r[3] == "L"]
         subprocess.run([binary, FIGURES / "walks.gfa", "--walks", "--refs", REF, "-o", out], **quiet)
         walk_file = f"{out}.{REF}.walks.bed.gz"
         walk_rows, header = read_rows(walk_file), read_header(walk_file)

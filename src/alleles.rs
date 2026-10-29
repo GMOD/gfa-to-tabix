@@ -349,12 +349,52 @@ fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<Line> {
     }))
 }
 
+// Format 2's one file split into format 1's node and link rows, each without
+// its kind column
+fn read_graph(path: &str) -> Result<(Vec<String>, Vec<String>), String> {
+    let (mut nodes, mut links) = (Vec::new(), Vec::new());
+    for line in read_lines(path)? {
+        let line = line?;
+        if line.starts_with('#') {
+            if line.contains("\tlayout:Z:anchored") {
+                return Err(format!(
+                    "{path} is in the anchored layout: index the graph again with --layout contig"
+                ));
+            }
+            continue;
+        }
+        let mut columns: Vec<&str> = line.split('\t').collect();
+        if columns.len() < 4 {
+            return Err(format!("{path}: a row has {} columns", columns.len()));
+        }
+        let kind = columns.remove(3);
+        match kind {
+            "N" => nodes.push(columns.join("\t")),
+            "L" => links.push(columns.join("\t")),
+            _ => return Err(format!("{path}: row kind {kind:?} is neither N nor L")),
+        }
+    }
+    Ok((nodes, links))
+}
+
 pub fn run(prefix: &str) -> Result<(), String> {
+    let graph = format!("{prefix}.graph.bed.gz");
+    if std::fs::metadata(&graph).is_ok_and(|m| m.len() > 0) {
+        let (nodes, links) = read_graph(&graph)?;
+        return from_rows(
+            &graph,
+            nodes.into_iter(),
+            links.into_iter(),
+            &format!("{prefix}.alleles.bed.gz"),
+        );
+    }
     let segs = format!("{prefix}.segs.bed.gz");
     let links_path = format!("{prefix}.links.bed.gz");
     for path in [&segs, &links_path] {
         if std::fs::metadata(path).map_or(true, |m| m.len() == 0) {
-            return Err(format!("missing {path}: index the graph first"));
+            return Err(format!(
+                "missing {prefix}.graph.bed.gz and {path}: index the graph first"
+            ));
         }
     }
     let (segments, index) = read_segments(&segs, read_lines(&segs)?)?;

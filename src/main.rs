@@ -261,6 +261,7 @@ fn write_tier(
     below: i64,
     layout: Layout,
     max_component: Option<u64>,
+    format: Format,
     prefix: &str,
 ) -> Result<(), String> {
     let folded = Graph::read(io::Cursor::new(fold::fold(graph, placed, below)))?;
@@ -269,14 +270,11 @@ fn write_tier(
         graph.segment_count(),
         graph.links.len()
     );
-    write_index(
-        &folded,
-        &place::from_tags(&folded),
-        layout,
-        max_component,
-        prefix,
-    )
-    .map(drop)
+    let placed = place::from_tags(&folded);
+    match format {
+        Format::One => write_index(&folded, &placed, layout, max_component, prefix).map(drop),
+        Format::Two => write_graph(&folded, &placed, layout, max_component, prefix),
+    }
 }
 
 fn run(cli: Cli) -> Result<(), String> {
@@ -292,6 +290,7 @@ fn run(cli: Cli) -> Result<(), String> {
             snarls,
             tier,
             max_component,
+            format,
         } => build::run(&build::Options {
             graph: gfa,
             prefix: out,
@@ -300,6 +299,7 @@ fn run(cli: Cli) -> Result<(), String> {
             snarls,
             tier,
             max_component: max_component.0,
+            format,
         }),
         Command::Alleles { prefix } => alleles::run(&prefix),
         Command::Bubbles {
@@ -314,10 +314,19 @@ fn run(cli: Cli) -> Result<(), String> {
             reference,
             layout,
             max_component,
+            format,
             out,
         } => {
             let (graph, placed) = load_placed(&gfa, reference.as_deref())?;
-            write_tier(&graph, &placed, below, layout, max_component.0, &out)
+            write_tier(
+                &graph,
+                &placed,
+                below,
+                layout,
+                max_component.0,
+                format,
+                &out,
+            )
         }
     }
 }

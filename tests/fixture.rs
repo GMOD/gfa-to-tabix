@@ -46,6 +46,11 @@ fn run_files(fixture: &str, args: &[&str], kinds: &[&str]) -> (Output, Vec<Strin
         } else {
             vec!["--layout", "contig"]
         })
+        .args(if args.contains(&"--format") {
+            vec![]
+        } else {
+            vec!["--format", "1"]
+        })
         .output()
         .unwrap();
     let read = |kind: &str| {

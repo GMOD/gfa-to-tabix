@@ -7,7 +7,7 @@ use std::io::{self, BufReader, Read, Write};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::thread::{self, JoinHandle};
 
-use crate::bed::{self, Layout, Line, Row};
+use crate::bed::{self, Format, Layout, Line, Row};
 use crate::gfa::Graph;
 use crate::json::{Json, object, text};
 use crate::{alleles, bubbles};
@@ -22,6 +22,7 @@ pub struct Options {
     pub snarls: Option<String>,
     pub tier: Option<i64>,
     pub max_component: Option<u64>,
+    pub format: Format,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -262,6 +263,13 @@ struct Csi {
     bubbles: bool,
 }
 
+fn index_suffix(format: Format) -> &'static str {
+    match format {
+        Format::One => ".segs.bed.gz",
+        Format::Two => ".graph.bed.gz",
+    }
+}
+
 fn has_csi(path: &str) -> bool {
     std::path::Path::new(&format!("{path}.csi")).exists()
 }
@@ -270,6 +278,7 @@ struct Built<'a> {
     base: &'a str,
     sample: Option<String>,
     assembly: String,
+    format: Format,
     tier: i64,
     bubbles: bool,
     csi: Csi,
@@ -280,9 +289,11 @@ impl Built<'_> {
         let base = self.base;
         let tier = self.tier;
         let file = |present: bool, name: String| if present { text(name) } else { Json::Null };
+        let format = || Json::Number(self.format_number());
         object([
             ("schema", Json::Number(1)),
             ("reference", self.sample.clone().map_or(Json::Null, text)),
+            ("format", format()),
             ("index", text(base)),
             ("contig", text(format!("{base}.contig"))),
             (
@@ -290,6 +301,7 @@ impl Built<'_> {
                 object([
                     ("prefix", text(format!("{base}.fold{tier}"))),
                     ("foldBelowBp", Json::Number(tier)),
+                    ("format", format()),
                 ]),
             ),
             (
@@ -298,6 +310,13 @@ impl Built<'_> {
             ),
             ("alleles", text(format!("{base}.alleles.bed.gz"))),
         ])
+    }
+
+    fn format_number(&self) -> i64 {
+        match self.format {
+            Format::One => 1,
+            Format::Two => 2,
+        }
     }
 
     fn tracks(&self) -> Vec<Json> {
@@ -318,13 +337,16 @@ impl Built<'_> {
             ])
         };
         let csi = |on: bool| on.then_some(("csi", Json::Bool(true)));
+        let format = || (self.format == Format::Two).then_some(("format", Json::Number(2)));
         let mut graph_adapter = vec![("type", text("RgfaTabixAdapter")), ("uri", text(base))];
+        graph_adapter.extend(format());
         graph_adapter.extend(csi(self.csi.graph));
         graph_adapter.extend(pansn());
         let mut coarse = vec![
             ("uri", text(format!("{base}.fold{}", self.tier))),
             ("foldBelowBp", Json::Number(self.tier)),
         ];
+        coarse.extend(format());
         if self.csi.coarse != self.csi.graph {
             coarse.push(("csi", Json::Bool(self.csi.coarse)));
         }
@@ -470,16 +492,25 @@ pub fn run(options: &Options) -> Result<(), String> {
     let flipped = &flipped;
     let (sample, bubbles) = thread::scope(|scope| {
         let bubbles = scope.spawn(move || bubble_file(route, gfatools, snarls, flipped, prefix));
-        let fine = scope.spawn(|| {
-            crate::write_index(
+        let fine = scope.spawn(|| match options.format {
+            Format::One => crate::write_index(
                 graph,
                 placed,
                 Layout::Anchored,
                 options.max_component,
                 prefix,
             )
-            .map(|(nodes, _)| reference_sample(&nodes))
+            .map(drop),
+            Format::Two => crate::write_graph(
+                graph,
+                placed,
+                Layout::Anchored,
+                options.max_component,
+                prefix,
+            ),
         });
+        // The allele inventory reads format 1's rows, so the contig pair stays
+        // format 1.
         let contig = scope.spawn(|| {
             let contig = format!("{prefix}.contig");
             let (segs, links) = crate::write_index(graph, placed, Layout::Contig, None, &contig)?;
@@ -488,7 +519,8 @@ pub fn run(options: &Options) -> Result<(), String> {
                 segs.iter().map(Row::text),
                 links.iter().map(Row::text),
                 &format!("{prefix}.alleles.bed.gz"),
-            )
+            )?;
+            Ok::<_, String>(reference_sample(&segs))
         });
         let coarse = scope.spawn(|| {
             let tier_prefix = format!("{prefix}.fold{tier}");
@@ -498,11 +530,12 @@ pub fn run(options: &Options) -> Result<(), String> {
                 tier,
                 Layout::Anchored,
                 options.max_component,
+                options.format,
                 &tier_prefix,
             )
         });
-        let sample = joined(fine)?;
-        joined(contig)?;
+        joined(fine)?;
+        let sample = joined(contig)?;
         joined(coarse)?;
         Ok::<_, String>((sample, joined(bubbles)?))
     })?;
@@ -515,11 +548,15 @@ pub fn run(options: &Options) -> Result<(), String> {
             .or_else(|| sample.clone())
             .unwrap_or_else(|| "reference".into()),
         sample,
+        format: options.format,
         tier,
         bubbles,
         csi: Csi {
-            graph: has_csi(&format!("{prefix}.segs.bed.gz")),
-            coarse: has_csi(&format!("{prefix}.fold{tier}.segs.bed.gz")),
+            graph: has_csi(&format!("{prefix}{}", index_suffix(options.format))),
+            coarse: has_csi(&format!(
+                "{prefix}.fold{tier}{}",
+                index_suffix(options.format)
+            )),
             alleles: has_csi(&format!("{prefix}.alleles.bed.gz")),
             bubbles: has_csi(&format!("{prefix}.bubbles.bed.gz")),
         },

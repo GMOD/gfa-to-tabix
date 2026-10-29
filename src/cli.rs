@@ -64,14 +64,15 @@ pub struct Cli {
     #[arg(long, value_name = "N", default_value = "10000", value_parser = component_limit, conflicts_with = "walks")]
     pub max_component: ComponentLimit,
 
-    /// 1 writes PREFIX.segs.bed.gz and PREFIX.links.bed.gz. 2 writes
-    /// PREFIX.graph.bed.gz, nodes and links in one file with a plain GFA's
-    /// carriers as bits, which readers don't take yet; see docs/index-format.md
-    #[arg(long, value_enum, default_value = "1", conflicts_with = "walks")]
+    /// 2 writes PREFIX.graph.bed.gz, nodes and links in one file with a plain
+    /// GFA's carriers as bits. 1 writes PREFIX.segs.bed.gz and
+    /// PREFIX.links.bed.gz, which readers before graph-walks 4.4 and the
+    /// JBrowse plugin 8.2 need
+    #[arg(long, value_enum, default_value = "2", conflicts_with = "walks")]
     pub format: Format,
 
-    /// Write PREFIX.segs.bed.gz and PREFIX.links.bed.gz, each with a .tbi;
-    /// default the input name without .gfa[.gz]
+    /// Write PREFIX.graph.bed.gz and its .tbi; default the input name without
+    /// .gfa[.gz]
     #[arg(short, long = "out", value_name = "PREFIX")]
     pub out: Option<String>,
 
@@ -182,6 +183,9 @@ pub enum Command {
         /// the index
         #[arg(long, value_name = "N", default_value = "10000", value_parser = component_limit)]
         max_component: ComponentLimit,
+        /// The fine index's and coarse tier's format, as for the index
+        #[arg(long, value_enum, default_value = "2")]
+        format: Format,
     },
     #[command(about = "Write the allele inventory from an index's two files", long_about = ALLELES_ABOUT, args_override_self = true)]
     Alleles {
@@ -225,6 +229,9 @@ pub enum Command {
         /// The fine index's --max-component
         #[arg(long, value_name = "N", default_value = "10000", value_parser = component_limit)]
         max_component: ComponentLimit,
+        /// The fine index's format
+        #[arg(long, value_enum, default_value = "2")]
+        format: Format,
         /// Output prefix
         #[arg(short, long = "out", value_name = "PREFIX")]
         out: String,

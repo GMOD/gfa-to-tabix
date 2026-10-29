@@ -18,8 +18,8 @@ while read -r gfa reference; do
     for layout in contig anchored; do
       npx -y -p "@jbrowse/bandage-core@$version" bandage-fold "$data/$gfa" --below "$below" \
         ${reference:+--reference "$reference"} 2>/dev/null |
-        "$binary" - --layout "$layout" -o "$work/js" > /dev/null 2>&1
-      "$binary" fold "$data/$gfa" --below "$below" --layout "$layout" \
+        "$binary" - --layout "$layout" --format 1 -o "$work/js" > /dev/null 2>&1
+      "$binary" fold "$data/$gfa" --below "$below" --layout "$layout" --format 1 \
         ${reference:+--reference "$reference"} -o "$work/rs" > /dev/null 2>&1
       for kind in segs links; do
         if ! cmp -s <(gzip -dc "$work/js.$kind.bed.gz") <(gzip -dc "$work/rs.$kind.bed.gz"); then

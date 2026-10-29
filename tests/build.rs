@@ -69,6 +69,20 @@ fn read(path: &Path) -> String {
     fs::read_to_string(path).unwrap()
 }
 
+// A format 2 file's rows of one kind, N or L, each without its kind column
+fn rows(graph: &str, kind: &str) -> String {
+    graph
+        .lines()
+        .filter_map(|line| {
+            let mut columns: Vec<&str> = line.split('\t').collect();
+            (!line.starts_with('#') && columns[3] == kind).then(|| {
+                columns.remove(3);
+                columns.join("\t") + "\n"
+            })
+        })
+        .collect()
+}
+
 fn gunzip(path: &Path) -> String {
     let mut text = String::new();
     MultiGzDecoder::new(fs::File::open(path).unwrap())
@@ -110,11 +124,13 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
         r#"{
   "schema": 1,
   "reference": "ref",
+  "format": 2,
   "index": "my-graph.v1",
   "contig": "my-graph.v1.contig",
   "tier": {
     "prefix": "my-graph.v1.fold50",
-    "foldBelowBp": 50
+    "foldBelowBp": 50,
+    "format": 2
   },
   "bubbles": "my-graph.v1.bubbles.bed.gz",
   "alleles": "my-graph.v1.alleles.bed.gz"
@@ -144,12 +160,14 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
       "adapter": {{
         "type": "RgfaTabixAdapter",
         "uri": "my-graph.v1",
+        "format": 2,
         "assemblyNameToPanSN": {{
           "hg": "ref"
         }},
         "coarse": {{
           "uri": "my-graph.v1.fold50",
-          "foldBelowBp": 50
+          "foldBelowBp": 50,
+          "format": 2
         }}
       }},
       "displayDefaults": {{
@@ -208,12 +226,10 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
         "ref#1#chr\t4\t6\t4\t2\t0\t1\t2\t.\t.\t.\t1@4,4\n"
     );
     for kind in [
-        "segs",
-        "links",
+        "graph",
         "contig.segs",
         "contig.links",
-        "fold50.segs",
-        "fold50.links",
+        "fold50.graph",
         "alleles",
     ] {
         assert!(dir.join(format!("my-graph.v1.{kind}.bed.gz.tbi")).exists());
@@ -243,7 +259,7 @@ fn a_segment_the_reference_reads_reversed_is_written_forward() {
         None,
     );
     assert!(output.status.success(), "{output:?}");
-    let links = gunzip(&dir.join("out.links.bed.gz"));
+    let links = rows(&gunzip(&dir.join("out.graph.bed.gz")), "L");
     assert!(links.contains("\t1+\t2+\t"), "{links}");
     assert!(links.contains("\t2+\t4+\t"), "{links}");
     assert!(!links.contains('-'), "{links}");
@@ -253,7 +269,7 @@ fn a_segment_the_reference_reads_reversed_is_written_forward() {
         "ref#1#chr\t4\t6\t4\t2\t0\t1\t2\t.\t.\t.\t1@4,4\n"
     );
     assert_eq!(
-        gunzip(&dir.join("out.fold50.segs.bed.gz")),
+        rows(&gunzip(&dir.join("out.fold50.graph.bed.gz")), "N"),
         "ref#1#chr\t0\t9\t1\t0\tref#1#chr\t0\t9\n"
     );
     fs::remove_dir_all(&dir).unwrap();
@@ -277,11 +293,13 @@ fn without_gfatools_an_rgfa_from_stdin_builds_with_no_bubbles() {
         r#"{
   "schema": 1,
   "reference": null,
+  "format": 2,
   "index": "out",
   "contig": "out.contig",
   "tier": {
     "prefix": "out.fold10000",
-    "foldBelowBp": 10000
+    "foldBelowBp": 10000,
+    "format": 2
   },
   "bubbles": null,
   "alleles": "out.alleles.bed.gz"
@@ -305,9 +323,11 @@ fn without_gfatools_an_rgfa_from_stdin_builds_with_no_bubbles() {
       "adapter": {{
         "type": "RgfaTabixAdapter",
         "uri": "out",
+        "format": 2,
         "coarse": {{
           "uri": "out.fold10000",
-          "foldBelowBp": 10000
+          "foldBelowBp": 10000,
+          "format": 2
         }}
       }},
       "displayDefaults": {{
@@ -342,7 +362,7 @@ fn without_gfatools_an_rgfa_from_stdin_builds_with_no_bubbles() {
         )
     );
     assert_eq!(
-        gunzip(&dir.join("out.segs.bed.gz")),
+        rows(&gunzip(&dir.join("out.graph.bed.gz")), "N"),
         "chr1\t0\t13\ts3\t1\tb#1#c\t100\t103\n\
          chr1\t0\t8\ts1\t0\tchr1\t0\t8\n\
          chr1\t8\t13\ts2\t0\tchr1\t8\t13\n"
@@ -447,7 +467,7 @@ fn a_reference_past_512_mb_gets_csi_indexes_and_tracks_that_read_them() {
         None,
     );
     assert!(output.status.success(), "{output:?}");
-    for file in ["segs", "links", "contig.segs", "fold50.segs"] {
+    for file in ["graph", "contig.segs", "fold50.graph"] {
         assert!(
             dir.join(format!("out.{file}.bed.gz.csi")).exists(),
             "{file}"
@@ -461,7 +481,7 @@ fn a_reference_past_512_mb_gets_csi_indexes_and_tracks_that_read_them() {
     assert!(dir.join("out.alleles.bed.gz.tbi").exists());
     let config = read(&dir.join("out.config.json"));
     assert!(
-        config.contains("\"uri\": \"out\",\n        \"csi\": true,"),
+        config.contains("\"uri\": \"out\",\n        \"format\": 2,\n        \"csi\": true,"),
         "{config}"
     );
     assert_eq!(config.matches("\"csi\"").count(), 1, "{config}");

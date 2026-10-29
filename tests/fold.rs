@@ -18,7 +18,9 @@ fn fold(below: &str) -> (bool, String, String) {
     fs::create_dir_all(&dir).unwrap();
     let gfa = format!("{}/tests/data/fold.gfa", env!("CARGO_MANIFEST_DIR"));
     let output = Command::new(BINARY)
-        .args(["fold", &gfa, "--below", below, "--layout", "contig", "-o"])
+        .args([
+            "fold", &gfa, "--below", below, "--layout", "contig", "--format", "1", "-o",
+        ])
         .arg(dir.join("out"))
         .output()
         .unwrap();
