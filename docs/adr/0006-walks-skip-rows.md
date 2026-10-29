@@ -74,8 +74,9 @@ pggb chrY, built with `--refs GRCh38,CHM13`:
 ## Consequences
 
 - A window inside a haplotype's deletion now holds a row saying so
-- graph-walks 4.2 ignores `skip` rows, so it draws no crossing there until it
-  reads them ([open problems](../open-problems.md#walk-files))
+- graph-walks 4.3 names each haplotype that jumps over a window, and the JBrowse
+  plugin 8.1 draws it as a deletion row. Earlier readers skip the rows, so a
+  window inside a deletion draws no crossing there
 
 ## Alternatives rejected
 

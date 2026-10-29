@@ -60,10 +60,8 @@ nothing decided.
 
 ## Stubs for a component over `--max-component`
 
-- A graph track draws a moved component as dead-end nodes where it joins the
-  reference ([ADR 0005](adr/0005-giant-components.md)).
-  [graph-walks#1](https://github.com/GMOD/graph-walks/pull/1) tags those nodes
-  and [bandage-core#2](https://github.com/GMOD/bandage-core/pull/2) fades them
+- The JBrowse plugin draws a moved component as faded dead-end nodes where it
+  joins the reference ([ADR 0005](adr/0005-giant-components.md))
 - A reader can't fetch the component with one more query, because its nodes
   sit on whichever haplotype contig placed each one, and pggb chrY's three
   giants spread over 823 contigs
@@ -72,11 +70,6 @@ nothing decided.
 
 ## Walk files
 
-- graph-walks 4.2 ignores `skip` rows ([ADR 0006](adr/0006-walks-skip-rows.md)),
-  so a window inside a haplotype's deletion draws no crossing.
-  [graph-walks#1](https://github.com/GMOD/graph-walks/pull/1) reads them and
-  [bandage-core#2](https://github.com/GMOD/bandage-core/pull/2) draws each as a
-  deletion row
 - pggb chrY's skip rows don't separate deletions from hops between repeat
   copies. Scoring the jumps against impg's alignments, as ADR 0001 scores
   placement, would
@@ -84,13 +77,3 @@ nothing decided.
   `walks-truth.py`, which can lose at most the 0.5% of pairs left with no kept
   piece, nor timed in the JBrowse plugin, nor measured on Minigraph-Cactus at
   1.4's weighting
-
-## bandage-fold places paths in file order
-
-- `gfa-to-tabix` places a plain GFA's nodes walking reference paths first,
-  then the rest in byte order of name. bandage-core's `bandage-fold` walks them
-  in file order, so the two place an off-reference node on different paths
-  when a GFA's paths aren't in name order
-- `scripts/parity-fold.sh` passes because its pggb fixture lists paths in name
-  order. [bandage-core#1](https://github.com/GMOD/bandage-core/pull/1) adopts
-  the same rule

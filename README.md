@@ -98,8 +98,9 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 **What you see in JBrowse**
 
 - At a locus under a moved component, the graph track draws the reference and a
-  dead-end node at each place the component joins it. The rest of the
-  component is missing from the view
+  faded dead-end node at each place the component joins it, whose hover says
+  the component is too large to draw there. The rest of the component is
+  missing from the view (graph-walks 4.3, the plugin 8.1)
 - The tool lists each moved component and the reference interval it would
   have filed under, here for HPRC's pggb chrY:
 
