@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
+use crate::bed::Format;
 use crate::gfa::{Graph, blunt_error, split_path_name, text};
 use crate::intern::Interner;
 
@@ -10,16 +11,17 @@ pub struct Node {
     pub start: u64,
     pub end: u64,
     pub rank: i64,
-    // assemblies whose paths visit the node, as a tag shared by every node
-    // with the same ones: SM:Z: names them, SB:H: sets their bits in
-    // `Placed::samples`. None for rGFA
-    pub carriers: Option<Arc<[u8]>>,
+    // assemblies whose paths visit the node, shared by every node with the
+    // same ones; None for rGFA
+    pub carriers: Option<Arc<Carriers>>,
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum CarrierTag {
-    Names,
-    Bits,
+// Indexes into `Placed::assemblies`, and the tags each format writes for them,
+// rendered once for the first row that asks
+pub struct Carriers {
+    ids: Box<[u32]>,
+    names: OnceLock<Arc<[u8]>>,
+    bits: OnceLock<Arc<[u8]>>,
 }
 
 pub struct Placed {
@@ -29,10 +31,40 @@ pub struct Placed {
     // to read forward there
     pub flipped: Vec<bool>,
     pub from_tags: bool,
-    // the assemblies in byte order, which SB:H: numbers from 0; empty for rGFA
+    // assembly names in the order paths first reach them, the order SM:Z:
+    // lists them in; empty for rGFA
+    pub assemblies: Vec<Vec<u8>>,
+    // the same in byte order, which SB:H: numbers from 0
     pub samples: Vec<Vec<u8>>,
+    // each assembly's place in `samples`
+    bit_of: Vec<u32>,
     pub summary: String,
     pub notes: Vec<String>,
+}
+
+impl Placed {
+    // SM:Z: for format 1, SB:H: for format 2
+    pub fn carrier_tag(&self, carriers: &Carriers, format: Format) -> Arc<[u8]> {
+        match format {
+            Format::One => carriers.names.get_or_init(|| {
+                let names: Vec<&[u8]> = carriers
+                    .ids
+                    .iter()
+                    .map(|&id| self.assemblies[id as usize].as_slice())
+                    .collect();
+                [b"SM:Z:".as_slice(), &names.join(&b',')].concat().into()
+            }),
+            Format::Two => carriers.bits.get_or_init(|| {
+                [
+                    b"SB:H:".as_slice(),
+                    &carrier_bits(&carriers.ids, &self.bit_of),
+                ]
+                .concat()
+                .into()
+            }),
+        }
+        .clone()
+    }
 }
 
 pub fn from_tags(graph: &Graph) -> Placed {
@@ -55,7 +87,9 @@ pub fn from_tags(graph: &Graph) -> Placed {
         nodes,
         flipped: vec![false; graph.node_ids.len()],
         from_tags: true,
+        assemblies: Vec::new(),
         samples: Vec::new(),
+        bit_of: Vec::new(),
         summary: "rGFA: coordinates from SN/SO/SR tags".into(),
         notes: Vec::new(),
     }
@@ -95,11 +129,7 @@ fn carrier_bits(ids: &[u32], bit_of: &[u32]) -> Vec<u8> {
         .collect()
 }
 
-pub fn from_paths(
-    graph: &Graph,
-    reference: Option<&str>,
-    carrier_tag: CarrierTag,
-) -> Result<Placed, String> {
+pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, String> {
     if let Some(overlap) = &graph.overlap {
         return Err(format!("{} Or use an rGFA.", blunt_error(overlap)));
     }
@@ -217,16 +247,12 @@ pub fn from_paths(
         }
     }
 
-    let mut samples: Vec<Vec<u8>> = (0..assembly_names.len())
-        .map(|id| assembly_names[id].clone())
-        .collect();
+    let assemblies = assembly_names.into_names();
+    let mut samples = assemblies.clone();
     samples.sort();
-    let bit_of: Vec<u32> = (0..assembly_names.len())
-        .map(|id| {
-            samples
-                .binary_search(&assembly_names[id])
-                .expect("a listed assembly") as u32
-        })
+    let bit_of: Vec<u32> = assemblies
+        .iter()
+        .map(|name| samples.binary_search(name).expect("a listed assembly") as u32)
         .collect();
     let mut sequences = Interner::default();
     let sequence_of: Vec<u32> = paths.iter().map(|p| sequences.id(&p.name)).collect();
@@ -235,33 +261,26 @@ pub fn from_paths(
         seen.clear();
         ids.retain(|&id| seen.insert(id));
     }
-    let mut tags: HashMap<Vec<u32>, Arc<[u8]>> = HashMap::new();
+    let mut shared: HashMap<Vec<u32>, Arc<Carriers>> = HashMap::new();
     let nodes = first_visit
         .iter()
         .zip(carriers)
         .enumerate()
         .map(|(node, (visit, carriers))| {
             visit.map(|(path, start, rank)| {
-                let tag = tags
-                    .entry(carriers)
-                    .or_insert_with_key(|ids| match carrier_tag {
-                        CarrierTag::Names => {
-                            let names: Vec<&[u8]> = ids
-                                .iter()
-                                .map(|&id| assembly_names[id as usize].as_slice())
-                                .collect();
-                            [b"SM:Z:".as_slice(), &names.join(&b',')].concat().into()
-                        }
-                        CarrierTag::Bits => [b"SB:H:".as_slice(), &carrier_bits(ids, &bit_of)]
-                            .concat()
-                            .into(),
-                    });
+                let carriers = shared.entry(carriers).or_insert_with_key(|ids| {
+                    Arc::new(Carriers {
+                        ids: ids.as_slice().into(),
+                        names: OnceLock::new(),
+                        bits: OnceLock::new(),
+                    })
+                });
                 Node {
                     sequence: sequence_of[path],
                     start,
                     end: start + graph.lengths[node].unwrap_or(0),
                     rank,
-                    carriers: Some(tag.clone()),
+                    carriers: Some(carriers.clone()),
                 }
             })
         })
@@ -271,7 +290,9 @@ pub fn from_paths(
         nodes,
         flipped,
         from_tags: false,
+        assemblies,
         samples,
+        bit_of,
         summary: format!(
             "plain GFA: coordinates from paths, reference {} ({} of {} paths)",
             text(&reference_assembly),
@@ -316,14 +337,14 @@ mod tests {
     #[test]
     fn the_path_that_places_a_segment_says_whether_it_is_flipped() {
         let graph = Graph::read(GFA.as_bytes()).unwrap();
-        let placed = from_paths(&graph, Some("ref"), CarrierTag::Names).unwrap();
+        let placed = from_paths(&graph, Some("ref")).unwrap();
         assert_eq!(placed.flipped, [false, true, true]);
     }
 
     #[test]
     fn a_flip_turns_every_link_end_and_step_on_a_flipped_segment() {
         let mut graph = Graph::read(GFA.as_bytes()).unwrap();
-        let placed = from_paths(&graph, Some("ref"), CarrierTag::Names).unwrap();
+        let placed = from_paths(&graph, Some("ref")).unwrap();
         flip(&mut graph, &placed.flipped);
         let links: Vec<String> = graph
             .links
@@ -361,8 +382,11 @@ mod tests {
             "S\ta\t*\tLN:i:4\nP\tA#1#c1\ta+,a+\t*\nP\tB#1#c\ta+\t*\nP\tA#1#c2\ta+\t*\n".as_bytes(),
         )
         .unwrap();
-        let placed = from_paths(&graph, None, CarrierTag::Names).unwrap();
-        let carriers = placed.nodes[0].as_ref().unwrap().carriers.as_deref();
-        assert_eq!(carriers, Some(b"SM:Z:A.1,B.1".as_slice()));
+        let placed = from_paths(&graph, None).unwrap();
+        let carriers = placed.nodes[0].as_ref().unwrap().carriers.as_ref().unwrap();
+        assert_eq!(
+            &*placed.carrier_tag(carriers, Format::One),
+            b"SM:Z:A.1,B.1".as_slice()
+        );
     }
 }

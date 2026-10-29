@@ -64,26 +64,21 @@ fn default_prefix(gfa: &str) -> Result<String, String> {
 
 // The graph and each segment's place on a genome: from the rGFA's tags, or from
 // its paths for a plain GFA or when a reference is named
-fn load_placed(
-    gfa: &str,
-    reference: Option<&str>,
-    carrier_tag: place::CarrierTag,
-) -> Result<(Graph, place::Placed), String> {
-    place_graph(gfa, Graph::read(open_input(gfa)?)?, reference, carrier_tag)
+fn load_placed(gfa: &str, reference: Option<&str>) -> Result<(Graph, place::Placed), String> {
+    place_graph(gfa, Graph::read(open_input(gfa)?)?, reference)
 }
 
 fn place_graph(
     gfa: &str,
     mut graph: Graph,
     reference: Option<&str>,
-    carrier_tag: place::CarrierTag,
 ) -> Result<(Graph, place::Placed), String> {
     if graph.segment_count() == 0 {
         return Err(format!("{gfa}: no S lines"));
     }
     let use_paths = reference.is_some() || (!graph.is_rgfa() && !graph.paths.is_empty());
     let placed = if use_paths || !graph.has_tags() {
-        place::from_paths(&graph, reference, carrier_tag)?
+        place::from_paths(&graph, reference)?
     } else {
         place::from_tags(&graph)
     };
@@ -123,11 +118,7 @@ fn index(cli: Cli) -> Result<(), String> {
         return walks::run(&gfa, &prefix, &options);
     }
     let layout = cli.layout.unwrap_or(Layout::Anchored);
-    let carrier_tag = match cli.format {
-        Format::One => place::CarrierTag::Names,
-        Format::Two => place::CarrierTag::Bits,
-    };
-    let (mut graph, placed) = load_placed(&gfa, cli.reference.as_deref(), carrier_tag)?;
+    let (mut graph, placed) = load_placed(&gfa, cli.reference.as_deref())?;
     // The rows need no paths, which hold most of a pggb graph's memory.
     graph.paths = Vec::new();
     match cli.format {
@@ -147,8 +138,8 @@ fn index_rows(
         Layout::Anchored => anchor::anchored(graph, placed, max_component),
         Layout::Contig => anchor::by_contig(placed),
     };
-    let nodes = bed::node_rows(graph, &placed.nodes, &spans, layout, format);
-    let (links, skipped) = bed::link_rows(graph, &placed.nodes, &spans, layout, format);
+    let nodes = bed::node_rows(graph, placed, &spans, layout, format);
+    let (links, skipped) = bed::link_rows(graph, placed, &spans, layout, format);
     (spans, nodes, links, skipped)
 }
 
@@ -325,8 +316,7 @@ fn run(cli: Cli) -> Result<(), String> {
             max_component,
             out,
         } => {
-            let (graph, placed) =
-                load_placed(&gfa, reference.as_deref(), place::CarrierTag::Names)?;
+            let (graph, placed) = load_placed(&gfa, reference.as_deref())?;
             write_tier(&graph, &placed, below, layout, max_component.0, &out)
         }
     }

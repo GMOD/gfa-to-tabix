@@ -17,7 +17,7 @@ use noodles_tabix as tabix;
 use crate::anchor::{Span, Spans, widen};
 use crate::gfa::{Graph, strand};
 use crate::parallel_bgzf;
-use crate::place::Node;
+use crate::place::{Node, Placed};
 
 #[derive(Clone, Copy, PartialEq, clap::ValueEnum)]
 pub enum Layout {
@@ -102,13 +102,13 @@ fn row(
 // `anchorSequence anchorStart anchorEnd id rank sequence start end [carriers]`.
 pub fn node_rows(
     graph: &Graph,
-    nodes: &[Option<Node>],
+    placed: &Placed,
     spans: &Spans,
     layout: Layout,
     format: Format,
 ) -> Vec<Row> {
     let mut rows = Vec::new();
-    for ((id, node), filed) in graph.node_ids.iter().zip(nodes).zip(&spans.nodes) {
+    for ((id, node), filed) in graph.node_ids.iter().zip(&placed.nodes).zip(&spans.nodes) {
         let Some(node) = node else { continue };
         let rank = node.rank.to_string();
         let mut rest = Vec::new();
@@ -125,7 +125,11 @@ pub fn node_rows(
                 node.end,
             );
         }
-        let carriers = [node.carriers.clone(), None];
+        let tag = node
+            .carriers
+            .as_ref()
+            .map(|c| placed.carrier_tag(c, format));
+        let carriers = [tag, None];
         rows.extend(filed.iter().map(|&span| row(spans, span, &rest, &carriers)));
     }
     rows
@@ -138,11 +142,12 @@ pub fn node_rows(
 // because a node has no coordinate.
 pub fn link_rows(
     graph: &Graph,
-    nodes: &[Option<Node>],
+    placed: &Placed,
     spans: &Spans,
     layout: Layout,
     format: Format,
 ) -> (Vec<Row>, usize) {
+    let nodes = &placed.nodes;
     let mut rows = Vec::new();
     let mut skipped = 0;
     for link in &graph.links {
@@ -168,8 +173,11 @@ pub fn link_rows(
         write!(rest, "\t{}\t", a.rank).expect("a Vec takes every write");
         push_coordinates(&mut rest, name(b), b.start, b.end);
         write!(rest, "\t{}", b.rank).expect("a Vec takes every write");
-        let carriers = match (format, &a.carriers, &b.carriers) {
-            (Format::One, Some(a), Some(b)) => [Some(a.clone()), Some(b.clone())],
+        let carriers = match (&a.carriers, &b.carriers) {
+            (Some(a), Some(b)) => [
+                Some(placed.carrier_tag(a, format)),
+                Some(placed.carrier_tag(b, format)),
+            ],
             _ => [None, None],
         };
         let ends = spans.links[source].iter().chain(&spans.links[target]);

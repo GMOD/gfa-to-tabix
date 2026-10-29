@@ -301,8 +301,7 @@ fn anchored_files_a_zero_length_node_under_one_base() {
 }
 
 // Format 2 holds format 1's rows in one file, each with its kind after the
-// interval, the node rows' carriers as bits over #samples (alt.1 is bit 0,
-// ref.1 bit 1), and no carriers on link rows.
+// interval and carriers as bits over #samples: alt.1 is bit 0, ref.1 bit 1.
 #[test]
 fn format_2_writes_nodes_and_links_to_one_file_with_carrier_bits() {
     let (output, files) = run_files(
@@ -324,7 +323,7 @@ fn format_2_writes_nodes_and_links_to_one_file_with_carrier_bits() {
     assert!(rows.contains(&tsv(&["ref#1#chr 0 4 N 1 0 SB:H:3"])));
     assert!(rows.contains(&tsv(&["ref#1#chr 4 6 N 2 0 SB:H:2"])));
     assert!(rows.contains(&tsv(&[
-        "ref#1#chr 0 4 L 1+ 3+ ref#1#chr 0 4 0 alt#1#ctg 4 5 1"
+        "ref#1#chr 0 4 L 1+ 3+ ref#1#chr 0 4 0 alt#1#ctg 4 5 1 SB:H:3 SB:H:1"
     ])));
     let (_, nodes, links) = run("paths.gfa", &["--layout", "contig"]);
     assert_eq!(
