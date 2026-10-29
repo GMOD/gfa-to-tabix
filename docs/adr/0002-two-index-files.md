@@ -1,6 +1,8 @@
 # ADR 0002: Nodes and links in two files
 
-- **Status:** accepted, 2026-10-20
+- **Status:** accepted, 2026-10-20; superseded by
+  [ADR 0007](0007-node-link-format-2.md), whose format 2 puts nodes and links
+  in one file, on 2026-10-28. `--format 1` still writes two
 - **Decides:** whether the node and link index is one Tabix file or two,
   `<prefix>.segs.bed.gz` and `<prefix>.links.bed.gz`
 - **Decision:** two files for now. Merge into one when the node and link

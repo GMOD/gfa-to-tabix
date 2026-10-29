@@ -21,9 +21,9 @@ gfa-to-tabix build ecoli.gfa.gz --reference K12 --snarls ecoli.snarls.vcf -o eco
 
 | File                               | Holds                                              |
 | ---------------------------------- | -------------------------------------------------- |
-| `hprc.segs/links.bed.gz`           | the fine index, anchored layout                    |
-| `hprc.contig.segs/links.bed.gz`    | the contig layout                                  |
-| `hprc.fold10000.segs/links.bed.gz` | the coarse tier ([fold](#fold))                    |
+| `hprc.graph.bed.gz`                | the fine index, anchored layout                    |
+| `hprc.contig.segs/links.bed.gz`    | the contig layout, format 1, for `alleles`         |
+| `hprc.fold10000.graph.bed.gz`      | the coarse tier ([fold](#fold))                    |
 | `hprc.alleles.bed.gz`              | the allele inventory ([alleles](#alleles))         |
 | `hprc.bubbles.bed.gz`              | the bubbles ([bubbles](#bubbles))                  |
 | `hprc.graph.json`                  | the [manifest](#the-manifest)                      |
@@ -61,9 +61,10 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 {
   "schema": 1,
   "reference": "GRCh38",
+  "format": 2,
   "index": "hprc",
   "contig": "hprc.contig",
-  "tier": { "prefix": "hprc.fold10000", "foldBelowBp": 10000 },
+  "tier": { "prefix": "hprc.fold10000", "foldBelowBp": 10000, "format": 2 },
   "bubbles": "hprc.bubbles.bed.gz",
   "alleles": "hprc.alleles.bed.gz"
 }
@@ -71,16 +72,16 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 
 - `reference`: the PanSN sample of the first reference segment (`GRCh38` from
   `GRCh38#0#chr1`), `null` when the backbone names have no sample
-- `index`, `contig`, `tier.prefix`: prefixes of `.segs.bed.gz` and
-  `.links.bed.gz` pairs
+- `index`, `tier.prefix`: prefixes of `.graph.bed.gz` files, or of
+  `.segs.bed.gz` and `.links.bed.gz` pairs where `format` is 1
+- `contig`: the prefix of a `.segs.bed.gz` and `.links.bed.gz` pair
 
 ### The JBrowse config
 
 `<prefix>.config.json` is ready to merge into a JBrowse config. It loads the
 [graph genome viewer plugin](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer)
 and holds a graph track, an alleles track and, with a bubble file, two bubble
-tracks. A graph track written by hand lists the node file, the link file and
-the index of each:
+tracks. A graph track written by hand names the file and its index:
 
 ```json
 {
@@ -90,13 +91,9 @@ the index of each:
   "assemblyNames": ["hg38"],
   "adapter": {
     "type": "RgfaTabixAdapter",
-    "segmentsLocation": { "uri": "https://example.org/hprc.segs.bed.gz" },
-    "segmentsIndex": {
-      "location": { "uri": "https://example.org/hprc.segs.bed.gz.tbi" }
-    },
-    "linksLocation": { "uri": "https://example.org/hprc.links.bed.gz" },
-    "linksIndex": {
-      "location": { "uri": "https://example.org/hprc.links.bed.gz.tbi" }
+    "graphLocation": { "uri": "https://example.org/hprc.graph.bed.gz" },
+    "graphIndex": {
+      "location": { "uri": "https://example.org/hprc.graph.bed.gz.tbi" }
     },
     "assemblyNameToPanSN": { "hg38": "GRCh38" }
   }
@@ -125,8 +122,8 @@ the index of each:
 
 ## alleles
 
-- **In:** `<prefix>.segs.bed.gz` and `<prefix>.links.bed.gz`, indexed with
-  `--layout contig`. The command needs no graph, so a hosted pair works
+- **In:** `<prefix>.graph.bed.gz`, or a format 1 pair, indexed with
+  `--layout contig`. The command needs no graph, so a hosted index works
 - **Out:** `<prefix>.alleles.bed.gz` and its index, one row per allele the graph
   holds, anchored on the reference, with a CIGAR that states its size
 

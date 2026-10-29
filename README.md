@@ -3,13 +3,13 @@
 gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fetch the subgraph for any region.
 
 - **In:** a GFA file (`.gfa` or `.gfa.gz`): an rGFA from minigraph or Minigraph-Cactus (`*.sv.gfa.gz`), or a plain GFA with P or W lines from pggb, odgi or `vg convert -f`
-- **Out:** `<prefix>.segs.bed.gz` and `<prefix>.links.bed.gz`, one line per node and per link, each with a `.tbi` ([why two files](docs/adr/0002-two-index-files.md))
+- **Out:** `<prefix>.graph.bed.gz` and its `.tbi`, one line per node and per link ([format](docs/index-format.md#what-the-file-holds)); `--format 1` writes the `.segs.bed.gz` and `.links.bed.gz` pair that readers before graph-walks 4.4 and the JBrowse plugin 8.2 need
 - **Out, with `--walks --refs GRCh38`:** `<prefix>.GRCh38.walks.bed.gz` and its `.tbi`, every haplotype's path through a base-level graph, which [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) reads
 - A browser fetches the rows for a region with HTTP range requests and never downloads the whole graph
-- The [JBrowse 2](https://jbrowse.org) graph track reads the node and link files
+- The [JBrowse 2](https://jbrowse.org) graph track reads the file
 - The tool is one static binary and needs no bgzip or tabix; `build` runs gfatools, when installed, for an rGFA's bubbles
 
-![The two Tabix queries a browser runs to view chr1:13-18, the node and link lines each returns, and the graph it draws from them, with each node and edge coloured by the file it came from](docs/figures/overview.svg)
+![The Tabix query a browser runs to view chr1:13-18, the node and link lines it returns, and the graph it draws from them, with each node and edge coloured by the kind of line it came from](docs/figures/overview.svg)
 
 ## Quick start
 
@@ -25,7 +25,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ```
 
 - `build` writes the index and everything else a JBrowse graph track reads, including a [track config](docs/subcommands.md#the-jbrowse-config) for the assembly `--assembly` names
-- `./gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc`, without `build`, writes only the index: `hprc.segs.bed.gz` and `hprc.links.bed.gz`, each with a `.tbi`
+- `./gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc`, without `build`, writes only the index: `hprc.graph.bed.gz` and its `.tbi`
 - [Releases](https://github.com/GMOD/gfa-to-tabix/releases) also has a macOS binary for Apple silicon, and `cargo install gfa-to-tabix` builds one with Rust 1.91 or later
 
 ## Haplotype paths
@@ -77,7 +77,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 | ------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
 | Written by                | minigraph, Minigraph-Cactus `*.sv.gfa.gz`                     | pggb, odgi, `vg convert -f`                    |
 | Node coordinates from     | the `SN`, `SO` and `SR` tags                                  | the reference's P or W lines                   |
-| Assemblies with each node | not in the index                                              | an `SM:Z:` column on every row                 |
+| Assemblies with each node | not in the index                                              | an `SB:H:` bitmask on every row                |
 | `build`'s bubbles         | `gfatools bubble`, when on PATH                               | a `vg deconstruct -a` VCF, given as `--snarls` |
 | `build --tier` default    | 10000 bp                                                      | 50 bp                                          |
 | Walk files (`--walks`)    | minigraph writes no paths and names nodes `s1`, `s2`, so none | from a base-level graph with integer node ids  |
@@ -149,8 +149,8 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 
 - A moved component's nodes spread over the contigs of the assemblies whose
   paths reach them first, and a link between two contigs gets a row on each.
-  pggb chrY's link file grows from 378 to 682 MB, while chr22's shrinks from
-  3.9 to 1.6 GB
+  pggb chrY's format 1 link file grows from 378 to 682 MB, while chr22's
+  shrinks from 3.9 to 1.6 GB
 - No reader yet expands a stub into the moved component
   ([ADR 0005](docs/adr/0005-giant-components.md) has the measurements)
 
@@ -183,12 +183,12 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - [Walk files](docs/walks-format.md): options, placement rules, the row format 5 and its readers
 - Decisions:
   - [ADR 0001](docs/adr/0001-step-placement.md): which chunk a walk file files each step under
-  - [ADR 0002](docs/adr/0002-two-index-files.md): why nodes and links are two files
+  - [ADR 0002](docs/adr/0002-two-index-files.md): why format 1 keeps nodes and links in two files
   - [ADR 0003](docs/adr/0003-long-node-lookback.md): how far a walk reader reads back
   - [ADR 0004](docs/adr/0004-abridged-detours.md): moving a chunk's costliest paths to detail rows
   - [ADR 0005](docs/adr/0005-giant-components.md): a giant component keeps its own coordinates (`--max-component`)
   - [ADR 0006](docs/adr/0006-walks-skip-rows.md): `skip` rows for a haplotype whose deletion spans the window
-  - [ADR 0007](docs/adr/0007-node-link-format-2.md): node and link format 2, one file with carriers as bits (`--format 2`)
+  - [ADR 0007](docs/adr/0007-node-link-format-2.md): node and link format 2, one file with carriers as bits
 - [Open problems](docs/open-problems.md): measured but undecided, such as pggb's collapsed repeats
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when a figure differs from that output

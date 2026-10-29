@@ -1,14 +1,13 @@
 # The node and link index
 
 - **In:** an rGFA, or a plain GFA with paths; see [inputs](#inputs)
-- **Out:** `<prefix>.segs.bed.gz`, one row per node, and
-  `<prefix>.links.bed.gz`, one row per link, each with a `.tbi`
+- **Out:** `<prefix>.graph.bed.gz` and its `.tbi`, one row per node and one
+  per link
 - **Filing:** the tool files each row under a reference interval, so one region
   query on each file returns the nodes and links a browser draws there
-- **Why two files:** every graph drawing reads both, and issues the two reads
-  together. [Format 2](#format-2) merges them, with carriers as bits, once
-  readers take it; [ADR 0002](adr/0002-two-index-files.md) has the readers and
-  measurements
+- **One file:** every graph drawing reads nodes and links together, so one
+  query returns both ([ADR 0007](adr/0007-node-link-format-2.md));
+  `--format 1` writes them as two files, as before 2.0
 
 ```bash
 gfa-to-tabix hprc-v2.1-mc-grch38.sv.gfa.gz -o hprc
@@ -20,7 +19,7 @@ gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
 | `--reference <name>`   | For a plain GFA: the PanSN sample, assembly or path to use as reference. Default the first path. |
 | `-o`, `--out <prefix>` | Output prefix. Default the input name without `.gfa[.gz]`.                              |
 | `--layout <layout>`    | `anchored` (default) or `contig`; see [layouts](#layouts).                              |
-| `--format <1\|2>`      | `1` (default) writes the two files below; `2` writes [one file](#format-2), which graph-walks and the JBrowse plugin don't read yet. |
+| `--format <1\|2>`      | `2` (default) writes the [one file](#what-the-file-holds); `1` writes [two](#format-1), for readers before graph-walks 4.4 and the JBrowse plugin 8.2. |
 | `--max-component <n>`  | Anchored: a component of more than n nodes keeps its own coordinates, and a graph track draws it as stubs; `none` files every component under the reference. Default 10000; see the [README](../README.md#why-does-the-graph-track-draw-some-bubbles-as-stubs---max-component). |
 
 ## Inputs
@@ -109,13 +108,13 @@ so that they come back, and `--layout` sets how it chooses.
 - The tool files a link under the interval that covers what both of its nodes
   reach: a component's interval for a node in one, and for a reference node its
   coordinate, the components hanging from it and the reference nodes it links to
-- One query on each file then returns the whole graph under a region, however
+- One region query then returns the whole graph under a region, however
   deeply alleles nest. A window inside a large bubble returns every allele of
   that bubble
-- A region query on the link file returns every link with a node under the
-  region and every link between the nodes those lead to. It also returns links
-  of neither kind, so a reader keeps a link when one of its nodes came back from
-  the node file, or when both are far ends of links it kept
+- The query returns every link with a node under the region and every link
+  between the nodes those lead to. It also returns links of neither kind, so a
+  reader keeps a link when one of its nodes came back as a node row, or when
+  both are far ends of links it kept
 - A link between two reference nodes on opposite sides of the region, such as a
   deletion that spans it, touches no node under the region. The query returns
   it all the same, and a reader that wants it drawn keeps it too
@@ -133,54 +132,54 @@ Use it to browse the graph from a non-reference assembly's coordinates. A
 zero-length node keeps its empty interval, as the JBrowse scripts wrote it, so
 a region query never returns it.
 
-## What the files hold
+## What the file holds
 
-`<prefix>.segs.bed.gz` has one row per node:
-
-```
-anchored:  anchorSeq anchorStart anchorEnd  nodeId  rank  sequence start end  [SM:Z:assembly,...]
-contig:    sequence start end  nodeId  rank  [SM:Z:assembly,...]
-```
-
-`sequence start end` is the node's own coordinate. The last column appears for a
-plain GFA only, and lists the assemblies whose paths visit the node, written
-`sample.haplotype`.
-
-`<prefix>.links.bed.gz` states both nodes of a link in full after the interval
-the row is filed under:
-
-```
-seq start end  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtStart tgtEnd tgtRank  [srcSM tgtSM]
-```
-
-Anchored, a link has one row per reference sequence. By contig, it has two rows,
-one under each node's coordinate.
-
-The tool sorts rows by sequence name in byte order, then by start.
-
-### Format 2
-
-`--format 2` writes `<prefix>.graph.bed.gz` instead of the two files
-([ADR 0007](adr/0007-node-link-format-2.md)):
+`<prefix>.graph.bed.gz`, here for `tests/data/paths.gfa`:
 
 ```
 #gfa-to-tabix  format:i:2  layout:Z:anchored  graph:Z:6f8a0816aa66e2d6
 #samples  alt.1,ref.1
 ref#1#chr  0  4  N  1  0  ref#1#chr  0  4  SB:H:3
-ref#1#chr  0  9  L  1+  3+  ref#1#chr  0  4  0  alt#1#ctg  4  5  1
+ref#1#chr  0  9  L  1+  3+  ref#1#chr  0  4  0  alt#1#ctg  4  5  1  SB:H:3  SB:H:1
+ref#1#chr  0  9  N  3  1  alt#1#ctg  4  5  SB:H:1
 ```
 
 - The first line names the format, the layout, and the graph by a hash of its
   segments' ids and lengths that ignores their order
-- A plain GFA adds a `#samples` line listing its assemblies in byte order
-- Each row's fourth column says whether it is a node (`N`) or a link (`L`),
-  and the rest of the row is format 1's
-- A node row's `SB:H:` replaces `SM:Z:`: hex digit i / 4, counted from the
-  left, holds the assembly numbered i in `#samples` as bit i % 4, and the tool
-  drops trailing zero digits. Above, `3` sets both assemblies and `1` alt.1
-  alone
-- Link rows carry no carriers; a reader takes them from the node rows of the
-  same query
+- A plain GFA adds a `#samples` line listing its assemblies, written
+  `sample.haplotype`, in byte order
+- Each row's fourth column says whether it is a node (`N`) or a link (`L`)
+- `SB:H:` lists the assemblies whose paths visit a node: hex digit i / 4,
+  counted from the left, holds the assembly numbered i in `#samples` as bit
+  i % 4, and the tool drops trailing zero digits. Above, `3` sets both
+  assemblies and `1` alt.1 alone. An rGFA's rows have none
+
+A node row, then its coordinate as the node's own:
+
+```
+anchored:  anchorSeq anchorStart anchorEnd  N  nodeId  rank  sequence start end  [SB:H:bits]
+contig:    sequence start end  N  nodeId  rank  [SB:H:bits]
+```
+
+A link row states both nodes in full after the interval it is filed under:
+
+```
+seq start end  L  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtStart tgtEnd tgtRank  [srcSB tgtSB]
+```
+
+- Anchored, a link has one row per reference sequence. By contig, it has two
+  rows, one under each node's coordinate
+- The tool writes both nodes' bits on a link row, because a link can reach a
+  node no node row of the query returns, such as a repeat copy megabases away
+  on a pggb graph
+- The tool sorts rows by sequence name in byte order, then by start
+
+### Format 1
+
+`--format 1` writes the same rows in two files without the kind column, as
+before 2.0: `<prefix>.segs.bed.gz` holds the node rows and
+`<prefix>.links.bed.gz` the link rows, each with a `.tbi`. Rows name their
+assemblies in `SM:Z:assembly,...` in place of `SB:H:`, and there is no header.
 
 ## Scale
 
