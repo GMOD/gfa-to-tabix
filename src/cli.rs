@@ -123,8 +123,8 @@ accepted; - reads stdin):
   PREFIX.config.json                 the JBrowse tracks, ready to merge into a config
 --format 1 writes each of the three indexes as a .segs.bed.gz and .links.bed.gz
 pair instead. Each file gets a .tbi, or a .csi when a row lies past 512 Mb. An
-rGFA's bubbles need gfatools on PATH; without it the build notes so and writes
-no bubble file.";
+rGFA's bubbles need gfatools on PATH; when it is missing, fails or crashes, the
+build notes why and writes no bubble file.";
 
 const ALLELES_ABOUT: &str =
     "Read PREFIX.graph.bed.gz, or the PREFIX.segs.bed.gz and PREFIX.links.bed.gz

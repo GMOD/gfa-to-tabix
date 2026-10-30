@@ -44,7 +44,10 @@ row lies past the 512 Mb a Tabix index holds. The config then sets
   [the index does](index-format.md#how-the-tool-tells-them-apart), and
   `--snarls` makes it a plain GFA
 - An rGFA's bubbles need `gfatools` on PATH; `build` runs it on the text
-  alongside its own parse. Without it, `build` writes no bubble file and says so
+  alongside its own parse
+- When `gfatools` is missing, exits non-zero or crashes, `build` notes why,
+  with the exit status or signal and the end of its stderr, and writes the
+  rest with no bubble file
 - A plain GFA's bubbles come from `--snarls`, a `vg deconstruct -a` snarl VCF;
   without one there is no bubble file
 - `zstd -dc graph.gfa.zst | gfa-to-tabix build - -o graph` reads other

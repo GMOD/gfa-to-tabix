@@ -32,6 +32,7 @@ enum Route {
 }
 
 const SN_TAG: &[u8] = b"\tSN:Z:";
+const NO_BUBBLES: &str = "so no bubble file or bubble tracks for this graph";
 
 // Copies the GFA to `tee` as it passes through, until an S line with no SN tag
 // shows the graph is no rGFA, which `gfatools bubble` needs. A
@@ -164,15 +165,25 @@ impl Bubbler {
         ))
     }
 
+    // The bubbles, or the note that says why there are none
     fn finish(mut self) -> Result<Vec<u8>, String> {
-        let fail = |e: io::Error| format!("gfatools bubble: {e}");
+        let fail = |e: io::Error| format!("gfatools bubble: {e}, {NO_BUBBLES}");
         let status = self.child.wait().map_err(fail)?;
         let stdout = join(self.stdout).map_err(fail)?;
         let stderr = join(self.stderr).map_err(fail)?;
         if !status.success() {
+            let stderr = String::from_utf8_lossy(&stderr);
+            let lines: Vec<&str> = stderr
+                .lines()
+                .map(str::trim)
+                .filter(|l| !l.is_empty())
+                .collect();
+            let said = match lines[lines.len().saturating_sub(3)..].join("; ") {
+                tail if tail.is_empty() => tail,
+                tail => format!(": {tail}"),
+            };
             return Err(format!(
-                "gfatools bubble failed ({status}): {}",
-                String::from_utf8_lossy(&stderr).trim()
+                "gfatools bubble failed ({status}){said}, {NO_BUBBLES}"
             ));
         }
         Ok(stdout)
@@ -221,9 +232,9 @@ fn bubble_file(
     prefix: &str,
 ) -> Result<bool, String> {
     let path = format!("{prefix}.bubbles.bed.gz");
-    match (route, gfatools, snarls) {
-        (Route::Rgfa, Ok(bubbler), _) => {
-            let (count, index) = write_bubbles(&bubbler.finish()?, &path)?;
+    match (route, gfatools.and_then(Bubbler::finish), snarls) {
+        (Route::Rgfa, Ok(text), _) => {
+            let (count, index) = write_bubbles(&text, &path)?;
             eprintln!("{count} bubbles from gfatools -> {path} (+ .{index})");
             Ok(true)
         }
@@ -233,7 +244,7 @@ fn bubble_file(
         }
         (Route::Paths, _, Some(snarls)) => bubbles::run(snarls, prefix, 2, flipped).map(|()| true),
         (Route::Paths, _, None) => {
-            eprintln!("note: no --snarls given, so no bubble file or bubble tracks for this graph");
+            eprintln!("note: no --snarls given, {NO_BUBBLES}");
             Ok(false)
         }
     }
@@ -442,7 +453,6 @@ fn write_json(path: &str, value: &Json) -> Result<(), String> {
 pub fn run(options: &Options) -> Result<(), String> {
     let prefix = options.prefix.as_str();
     let forced = options.reference.is_some() || options.snarls.is_some();
-    let no_bubbles = "so no bubble file or bubble tracks for this graph";
     let (bubbler, tee) = match (!forced).then(Bubbler::spawn) {
         Some(Ok((bubbler, tee))) => (Ok(bubbler), Some(tee)),
         spawned => {
@@ -451,7 +461,7 @@ pub fn run(options: &Options) -> Result<(), String> {
                 _ => "gfatools is not on PATH".into(),
             };
             let install = "Install it from https://github.com/lh3/gfatools";
-            (Err(format!("{why}, {no_bubbles}. {install}")), None)
+            (Err(format!("{why}, {NO_BUBBLES}. {install}")), None)
         }
     };
     let mut sniffer = Sniffer::new(crate::open_input(&options.graph)?, tee);
@@ -471,7 +481,7 @@ pub fn run(options: &Options) -> Result<(), String> {
         Ok(bubbler) => {
             bubbler.cancel();
             Err(format!(
-                "not every S line has an SN tag, which gfatools bubble needs, {no_bubbles}"
+                "not every S line has an SN tag, which gfatools bubble needs, {NO_BUBBLES}"
             ))
         }
         Err(why) => Err(why),

@@ -401,10 +401,10 @@ fn gfatools_reads_the_graph_and_its_bubbles_are_sorted() {
     fs::remove_dir_all(&dir).unwrap();
 }
 
-#[test]
-fn a_failing_gfatools_fails_the_build() {
+// A failed gfatools costs the bubbles only, as a missing one does.
+fn build_past_failing_gfatools(script: &str) -> String {
     let dir = scratch();
-    fake_gfatools(&dir, "echo 'bad graph' >&2; exit 3");
+    fake_gfatools(&dir, script);
     let output = build(
         &dir,
         &[
@@ -414,11 +414,37 @@ fn a_failing_gfatools_fails_the_build() {
         ],
         None,
     );
-    assert_eq!(output.status.code(), Some(1));
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("gfatools bubble failed"), "{stderr}");
-    assert!(stderr.contains("bad graph"), "{stderr}");
+    assert!(output.status.success(), "{output:?}");
+    assert!(!dir.join("out.bubbles.bed.gz").exists());
+    assert!(read(&dir.join("out.graph.json")).contains("\"bubbles\": null"));
+    assert!(!read(&dir.join("out.config.json")).contains("MinigraphBubbleAdapter"));
     fs::remove_dir_all(&dir).unwrap();
+    String::from_utf8_lossy(&output.stderr).into_owned()
+}
+
+#[test]
+fn a_failing_gfatools_leaves_a_note_and_no_bubbles() {
+    let stderr = build_past_failing_gfatools("echo 'reading' >&2; echo 'bad graph' >&2; exit 3");
+    assert!(
+        stderr.contains(
+            "note: gfatools bubble failed (exit status: 3): reading; bad graph, \
+             so no bubble file or bubble tracks for this graph"
+        ),
+        "{stderr}"
+    );
+}
+
+#[test]
+fn a_crashing_gfatools_leaves_a_note_naming_the_signal() {
+    let stderr = build_past_failing_gfatools("echo 'about to crash' >&2; kill -SEGV $$");
+    assert!(
+        stderr.contains("note: gfatools bubble failed (signal: 11 (SIGSEGV)"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("about to crash, so no bubble file"),
+        "{stderr}"
+    );
 }
 
 #[test]
