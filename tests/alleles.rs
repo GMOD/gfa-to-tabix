@@ -78,6 +78,7 @@ mod shapes {
     use std::fs;
     use std::io::{Read, Write};
     use std::process::Command;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     use flate2::Compression;
     use flate2::read::MultiGzDecoder;
@@ -90,7 +91,11 @@ mod shapes {
     const O: &str = "O157#1#chr";
 
     // id, chrom, start, end, rank
-    const SEGMENTS: [(&str, &str, u32, u32, u32); 26] = [
+    type Segment = (&'static str, &'static str, u32, u32, u32);
+    type Link = (&'static str, &'static str, &'static str, &'static str);
+    type Row = HashMap<&'static str, String>;
+
+    const SEGMENTS: [Segment; 26] = [
         ("s1", K, 0, 100, 0),
         ("s2", K, 100, 200, 0),
         ("s3", K, 200, 300, 0),
@@ -119,7 +124,7 @@ mod shapes {
         ("k4", S, 7030, 7040, 1),
     ];
 
-    const LINKS: [(&str, &str, &str, &str); 27] = [
+    const LINKS: [Link; 27] = [
         ("s1", "+", "a1", "+"), // an insertion
         ("a1", "+", "s2", "+"),
         ("s2", "+", "s4", "+"), // a clean skip of s3
@@ -157,7 +162,18 @@ mod shapes {
         out.finish().unwrap();
     }
 
-    fn run() -> Vec<HashMap<&'static str, String>> {
+    // the same link, stated from its other end
+    fn flip((src, so, tgt, to): Link) -> Link {
+        let other = |o| if o == "+" { "-" } else { "+" };
+        (tgt, other(to), src, other(so))
+    }
+
+    fn run() -> Vec<Row> {
+        run_with(&SEGMENTS, &LINKS)
+    }
+
+    fn run_with(segments: &[Segment], links_in: &[Link]) -> Vec<Row> {
+        static RUNS: AtomicUsize = AtomicUsize::new(0);
         const COLUMNS: [&str; 18] = [
             "chrom",
             "start",
@@ -178,16 +194,20 @@ mod shapes {
             "nested",
             "segments",
         ];
-        let dir = std::env::temp_dir().join(format!("gfa-to-tabix-shapes-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!(
+            "gfa-to-tabix-shapes-{}-{}",
+            std::process::id(),
+            RUNS.fetch_add(1, Ordering::Relaxed)
+        ));
         fs::create_dir_all(&dir).unwrap();
-        let by_id: HashMap<&str, _> = SEGMENTS.iter().map(|s| (s.0, s)).collect();
-        let segs: Vec<String> = SEGMENTS
+        let by_id: HashMap<&str, _> = segments.iter().map(|s| (s.0, s)).collect();
+        let segs: Vec<String> = segments
             .iter()
             .map(|(id, chrom, start, end, rank)| format!("{chrom}\t{start}\t{end}\t{id}\t{rank}"))
             .collect();
         // one row per link per endpoint, as the indexer writes it
         let mut links = Vec::new();
-        for (src, so, tgt, to) in LINKS {
+        for &(src, so, tgt, to) in links_in {
             let (a, b) = (by_id[src], by_id[tgt]);
             let rest = format!(
                 "{src}{so}\t{tgt}{to}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
@@ -226,16 +246,13 @@ mod shapes {
             .collect()
     }
 
-    fn pick<'a>(
-        rows: &'a [HashMap<&'static str, String>],
-        want: &[(&str, &str)],
-    ) -> Vec<&'a HashMap<&'static str, String>> {
+    fn pick<'a>(rows: &'a [Row], want: &[(&str, &str)]) -> Vec<&'a Row> {
         rows.iter()
             .filter(|r| want.iter().all(|(k, v)| r[k] == *v))
             .collect()
     }
 
-    fn show(rows: &[&HashMap<&'static str, String>], keys: &[&str]) -> Vec<Vec<String>> {
+    fn show(rows: &[&Row], keys: &[&str]) -> Vec<Vec<String>> {
         rows.iter()
             .map(|r| keys.iter().map(|k| r[k].clone()).collect())
             .collect()
@@ -335,8 +352,138 @@ mod shapes {
             [["1801", "+", ">k1>k2>k3"], ["1900", "-", "<k3<k4"]]
         );
 
-        // the branch g1 -> g3 is a route of g1's allele, not an allele of its own
-        assert!(pick(&rows, &[("segments", "<g3<g1")]).is_empty());
+        // the walk in from s7 takes the other route, by g3, written in the
+        // same direction as g1 g2
+        assert_eq!(
+            show(
+                &pick(&rows, &[("start", "700"), ("class", "del")]),
+                &["segments"]
+            ),
+            [["."], [">g1>g2"], [">g1>g3"]]
+        );
+    }
+
+    fn all(rows: &[Row], keys: &[&str]) -> Vec<Vec<String>> {
+        show(&rows.iter().collect::<Vec<_>>(), keys)
+    }
+
+    fn sorted(rows: &[Row]) -> Vec<Vec<(&str, &str)>> {
+        let mut lines: Vec<Vec<(&str, &str)>> = rows
+            .iter()
+            .map(|r| {
+                let mut line: Vec<(&str, &str)> = r.iter().map(|(k, v)| (*k, v.as_str())).collect();
+                line.sort();
+                line
+            })
+            .collect();
+        lines.sort();
+        lines
+    }
+
+    #[test]
+    fn neither_link_direction_nor_order_changes_the_rows() {
+        let flipped: Vec<Link> = LINKS.iter().rev().copied().map(flip).collect();
+        assert_eq!(sorted(&run()), sorted(&run_with(&SEGMENTS, &flipped)));
+    }
+
+    // a1 branches to b and c, which meet again at a4. Before canonical walks,
+    // stating one of these links the other way round changed the row count.
+    const BRANCH: [Segment; 6] = [
+        ("s1", K, 0, 100, 0),
+        ("s2", K, 100, 200, 0),
+        ("a1", S, 0, 10, 1),
+        ("b", "T#1#chr", 0, 30, 2),
+        ("c", "U#1#chr", 0, 50, 2),
+        ("a4", S, 60, 70, 1),
+    ];
+    const BRANCH_LINKS: [Link; 6] = [
+        ("s1", "+", "a1", "+"),
+        ("a1", "+", "b", "+"),
+        ("a1", "+", "c", "+"),
+        ("b", "+", "a4", "+"),
+        ("c", "+", "a4", "+"),
+        ("a4", "+", "s2", "+"),
+    ];
+
+    #[test]
+    fn every_choice_of_link_directions_gives_the_same_rows() {
+        let rows = run_with(&BRANCH, &BRANCH_LINKS);
+        assert_eq!(
+            all(&rows, &["start", "end", "segments"]),
+            [["100", "101", ">a1>b>a4"]]
+        );
+        for mask in 1..1 << BRANCH_LINKS.len() {
+            let links: Vec<Link> = BRANCH_LINKS
+                .iter()
+                .enumerate()
+                .map(|(i, &l)| if mask & 1 << i != 0 { flip(l) } else { l })
+                .collect();
+            assert_eq!(
+                sorted(&run_with(&BRANCH, &links)),
+                sorted(&rows),
+                "flipped {mask:06b}"
+            );
+        }
+    }
+
+    #[test]
+    fn each_backbone_exit_at_the_stop_node_is_an_allele() {
+        let segments = [
+            ("s1", K, 0, 10, 0),
+            ("s2", K, 10, 20, 0),
+            ("s3", K, 20, 30, 0),
+            ("x1", S, 0, 16, 1),
+        ];
+        for exit in [("x1", "+", "s3", "+"), ("s3", "-", "x1", "-")] {
+            let links = [("s1", "+", "x1", "+"), ("x1", "+", "s2", "+"), exit];
+            assert_eq!(
+                all(
+                    &run_with(&segments, &links),
+                    &["start", "end", "name", "segments"]
+                ),
+                [["10", "11", "+16", ">x1"], ["10", "20", "+6", ">x1"]]
+            );
+        }
+    }
+
+    #[test]
+    fn a_walk_goes_past_another_sequences_backbone() {
+        let segments = [
+            ("t1", K, 0, 10, 0),
+            ("t2", K, 10, 20, 0),
+            ("u1", "K12#1#plasmid", 0, 10, 0),
+            ("m1", S, 0, 5, 1),
+            ("m2", S, 5, 12, 1),
+        ];
+        let links = [
+            ("t1", "+", "m1", "+"),
+            ("m1", "+", "u1", "+"),
+            ("m1", "+", "m2", "+"),
+            ("m2", "+", "t2", "+"),
+        ];
+        assert_eq!(
+            all(
+                &run_with(&segments, &links),
+                &["chrom", "start", "end", "altLen", "segments"]
+            ),
+            [["chr", "10", "11", "12", ">m1>m2"]]
+        );
+    }
+
+    // a duplication of s1, like a backbone link back to an earlier node
+    #[test]
+    fn leaving_and_returning_to_one_node_is_no_deletion() {
+        let segments = [
+            ("s1", K, 0, 100, 0),
+            ("s2", K, 100, 200, 0),
+            ("a1", S, 0, 10, 1),
+        ];
+        let links = [
+            ("s1", "+", "s2", "+"),
+            ("s1", "+", "a1", "+"),
+            ("s1", "-", "a1", "-"),
+        ];
+        assert!(run_with(&segments, &links).is_empty());
     }
 
     #[test]

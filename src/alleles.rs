@@ -1,12 +1,14 @@
 // An allele inventory read out of the segment and link rows `gfa-to-tabix`
 // writes, with no GFA: one row per allele the graph holds, anchored on the
-// reference. Ports jbrowse-components' build_rgfa_alleles.sh.
+// reference.
 //
 // A link from a backbone (rank 0) node forward to a later one is a deletion.
-// A link between a backbone node and a rank > 0 one enters an allele, read in
-// whichever direction leaves the backbone; the walk goes on bidirected until
-// it arrives on a backbone node, which is the exit. It tests the arrival,
-// because the file states only one of an L-line's two equivalent directions.
+// Each link between a backbone node and a rank > 0 one starts a walk off the
+// backbone, whichever of the L line's two equivalent directions the file
+// states. The walk stops at the first node with a link back onto the backbone
+// of the sequence it left, and each such link is an allele. Successors go in
+// segment order and rows are keyed on the route in a canonical direction, so
+// neither the L lines' order nor their direction changes the output.
 
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
@@ -132,12 +134,13 @@ fn sample(name: &str) -> &str {
 
 struct Entry {
     state: State,
-    // the backbone segment the allele leaves
-    from: u32,
+    // the backbone state the walk leaves, and where it leaves it
+    side: State,
     chrom: String,
     at: u64,
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct Deletion {
     chrom: String,
     start: u64,
@@ -146,11 +149,12 @@ struct Deletion {
 
 struct Links {
     successors: HashMap<State, Vec<State>>,
-    // links stated from the backbone, then those stated toward it
     entries: Vec<Entry>,
-    entries_toward: Vec<Entry>,
     deletions: Vec<Deletion>,
 }
+
+// (backbone side left, route, backbone side reached)
+type Key = (State, Vec<State>, State);
 
 fn read_links(
     path: &str,
@@ -161,7 +165,6 @@ fn read_links(
     let mut links = Links {
         successors: HashMap::new(),
         entries: Vec::new(),
-        entries_toward: Vec::new(),
         deletions: Vec::new(),
     };
     let mut seen: HashSet<(String, String)> = HashSet::new();
@@ -220,20 +223,33 @@ fn read_links(
         } else if a.rank == 0 && b.rank > 0 {
             links.entries.push(Entry {
                 state: target,
-                from: source.0,
+                side: source,
                 chrom: f[5].clone(),
                 at: source_at,
             });
         } else if a.rank > 0 && b.rank == 0 {
-            links.entries_toward.push(Entry {
+            links.entries.push(Entry {
                 state: (source.0, !source.1),
-                from: target.0,
+                side: (target.0, !target.1),
                 chrom: f[9].clone(),
                 at: target_at,
             });
         }
     }
-    links.entries_toward.sort_by_key(|e| !e.state.1);
+    // segment order, not file order, picks the route at a branch, and a GFA
+    // may state a link in both directions
+    for next in links.successors.values_mut() {
+        next.sort_unstable();
+        next.dedup();
+    }
+    links
+        .entries
+        .sort_by(|a, b| (&a.chrom, a.at, a.side, a.state).cmp(&(&b.chrom, b.at, b.side, b.state)));
+    links
+        .entries
+        .dedup_by(|a, b| (a.side, a.state) == (b.side, b.state));
+    links.deletions.sort();
+    links.deletions.dedup();
     Ok(links)
 }
 
@@ -283,90 +299,110 @@ fn row(a: Allele) -> Line {
     }
 }
 
-// The allele's row, its states in walk order and the backbone segment it
-// exits onto
-fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<(Line, Vec<State>, u32)> {
+// Each allele's key and row; None when the walk never reaches the backbone of
+// the sequence it left
+fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<Vec<(Key, Line)>> {
     let mut visited: HashSet<State> = HashSet::new();
     let mut states = Vec::new();
     let mut current = entry.state;
-    let mut path = String::new();
-    let (mut alt_len, mut min_rank, mut donor) = (0u64, None::<i64>, "");
-    let (mut nested, mut exit_at) = (false, None::<(u64, u32)>);
+    let mut nested = false;
+    let mut exits = Vec::new();
     while visited.insert(current) {
         states.push(current);
         let segment = &segments[current.0 as usize];
-        path.push(if current.1 { '>' } else { '<' });
-        path.push_str(&segment.id);
-        alt_len += segment.end - segment.start;
-        if min_rank.is_none_or(|m| segment.rank < m) {
-            min_rank = Some(segment.rank);
-            donor = &segment.chrom;
-        }
-        let mut pick: Option<State> = None;
-        let mut out = 0;
-        for &next in links
+        let next = links
             .successors
             .get(&current)
-            .map_or(&[][..], Vec::as_slice)
-        {
-            out += 1;
-            let next_segment = &segments[next.0 as usize];
-            // arriving back on the backbone is the exit, whichever of the two
-            // equivalent L-line directions the file stated it in
+            .map_or(&[][..], Vec::as_slice);
+        nested |= next.len() > 1;
+        // at a branch, stay on the contig the allele came in on, so a nested
+        // bubble leaves the walk on the same haplotype
+        let mut pick: Option<State> = None;
+        for &state in next {
+            let next_segment = &segments[state.0 as usize];
             if next_segment.rank == 0 {
-                if exit_at.is_none() || next_segment.chrom == entry.chrom {
-                    let at = if next.1 {
-                        next_segment.start
-                    } else {
-                        next_segment.end
-                    };
-                    exit_at = Some((at, next.0));
+                if next_segment.chrom == entry.chrom {
+                    exits.push(state);
                 }
-                continue;
-            }
-            // at a branch, stay on the contig the allele came in on, so a
-            // nested bubble leaves the walk on the same haplotype
-            let held = pick.map(|p| &segments[p.0 as usize].chrom);
-            if pick.is_none()
-                || (next_segment.chrom == segment.chrom && held != Some(&segment.chrom))
-            {
-                pick = Some(next);
+            } else if pick.is_none_or(|p| {
+                segments[p.0 as usize].chrom != segment.chrom && next_segment.chrom == segment.chrom
+            }) {
+                pick = Some(state);
             }
         }
-        if out > 1 {
-            nested = true;
-        }
-        if exit_at.is_some() {
+        if !exits.is_empty() {
             break;
         }
-        let Some(next) = pick else { break };
-        current = next;
+        current = pick?;
     }
-    let (exit_at, exit_to) = exit_at?;
-    let (start, end) = (entry.at.min(exit_at), entry.at.max(exit_at));
-    let ref_len = end - start;
-    let delta = alt_len as i64 - ref_len as i64;
-    let (class, label) = match delta {
-        1.. => ("ins", format!("+{}", commify(delta))),
-        0 => ("sub", format!("{} sub", commify(alt_len as i64))),
-        _ => ("del", commify(delta)),
-    };
-    let line = row(Allele {
-        chrom: &entry.chrom,
-        start,
-        end: if end > start { end } else { start + 1 },
-        label,
-        strand: if entry.state.1 { "+" } else { "-" },
-        class,
-        delta,
-        alt_len,
-        ref_len,
-        rank: min_rank.unwrap_or(0).to_string(),
-        first_seen_in: sample(donor),
-        nested,
-        segments: &path,
-    });
-    Some((line, states, exit_to))
+    if exits.is_empty() {
+        return None;
+    }
+    let alt_len: u64 = states
+        .iter()
+        .map(|s| segments[s.0 as usize].end - segments[s.0 as usize].start)
+        .sum();
+    let reversed: Vec<State> = states.iter().rev().map(|&(id, fwd)| (id, !fwd)).collect();
+    let forward = entry.side.1;
+    let mut rows = Vec::new();
+    for exit in exits {
+        let to = &segments[exit.0 as usize];
+        let exit_at = if exit.1 { to.start } else { to.end };
+        // an exit behind the entry repeats the reference between them, a
+        // duplication the inventory leaves out
+        if exit.1 == forward
+            && (if forward {
+                exit_at < entry.at
+            } else {
+                exit_at > entry.at
+            })
+        {
+            continue;
+        }
+        let key: Key = (entry.side, states.clone(), exit);
+        let back: Key = (
+            (exit.0, !exit.1),
+            reversed.clone(),
+            (entry.side.0, !entry.side.1),
+        );
+        let key = key.min(back);
+        let mut path = String::new();
+        let (mut min_rank, mut donor) = (None::<i64>, "");
+        for &(id, fwd) in &key.1 {
+            let segment = &segments[id as usize];
+            path.push(if fwd { '>' } else { '<' });
+            path.push_str(&segment.id);
+            if min_rank.is_none_or(|m| segment.rank < m) {
+                min_rank = Some(segment.rank);
+                donor = &segment.chrom;
+            }
+        }
+        let (start, end) = (entry.at.min(exit_at), entry.at.max(exit_at));
+        let ref_len = end - start;
+        let delta = alt_len as i64 - ref_len as i64;
+        let (class, label) = match delta {
+            1.. => ("ins", format!("+{}", commify(delta))),
+            0 => ("sub", format!("{} sub", commify(alt_len as i64))),
+            _ => ("del", commify(delta)),
+        };
+        let line = row(Allele {
+            chrom: &entry.chrom,
+            start,
+            end: if end > start { end } else { start + 1 },
+            label,
+            strand: if key.1[0].1 { "+" } else { "-" },
+            class,
+            delta,
+            alt_len,
+            ref_len,
+            rank: min_rank.unwrap_or(0).to_string(),
+            first_seen_in: sample(donor),
+            nested,
+            segments: &path,
+        });
+        rows.push((key, line));
+    }
+    Some(rows)
 }
 
 // Format 2's rows split into format 1's node and link rows, each without its
@@ -456,31 +492,18 @@ fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
             segments: ".",
         }));
     }
-    // A walk that retraces a written allele backwards, between the same two
-    // backbone segments, is the same allele. A walk from a link stated
-    // toward the backbone counts only when it meets no node an allele
-    // written so far visits.
-    let mut written: HashSet<(u32, Vec<State>, u32)> = HashSet::new();
-    let mut visited: HashSet<u32> = HashSet::new();
+    let mut written: HashSet<Key> = HashSet::new();
     let mut dangling = 0;
-    let toward = links.entries_toward.iter().map(|e| (e, true));
-    for (entry, is_toward) in links.entries.iter().map(|e| (e, false)).chain(toward) {
-        if is_toward && visited.contains(&entry.state.0) {
-            continue;
-        }
-        let Some((r, states, exit_to)) = walk(links, segments, entry) else {
+    for entry in &links.entries {
+        let Some(found) = walk(links, segments, entry) else {
             dangling += 1;
             continue;
         };
-        let reversed: Vec<State> = states.iter().rev().map(|&(id, fwd)| (id, !fwd)).collect();
-        if written.contains(&(exit_to, reversed, entry.from))
-            || (is_toward && states.iter().any(|s| visited.contains(&s.0)))
-        {
-            continue;
+        for (key, line) in found {
+            if written.insert(key) {
+                rows.push(line);
+            }
         }
-        rows.push(r);
-        visited.extend(states.iter().map(|s| s.0));
-        written.insert((entry.from, states, exit_to));
     }
     if dangling > 0 {
         eprintln!("note: {dangling} walk(s) reached no backbone link and were dropped");

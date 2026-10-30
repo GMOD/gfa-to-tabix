@@ -136,11 +136,16 @@ gfa-to-tabix alleles hprc
 
 - A link from a backbone node forward to a later one is a deletion. A link back
   to an earlier one is a duplication, which the inventory leaves out
-- A link between a backbone node and an off-backbone one enters an allele,
-  whichever node the L line names first; the walk follows links until it
-  arrives back on the backbone
-- The walk in from an allele's other end retraces it, so the allele gets one
-  row
+- `alleles` walks off the backbone from each link between a backbone node and
+  an off-backbone one, in whichever direction the L line names them. At a
+  branch it follows the first node in segment order on the same contig, else
+  the first
+- The walk ends at the first node linked to the backbone of the sequence it
+  left, and writes one allele per such link. It passes links to another
+  sequence's backbone, and leaves out an exit behind the entry, a duplication
+- `alleles` writes a route walked from both ends once, with `segments` in the
+  direction that sorts first, so neither the order of the L lines nor their
+  direction changes the rows
 - A walk that never rejoins the backbone is dropped, and the count goes to
   stderr
 - Columns: `#chrom start end name score strand thickStart thickEnd itemRgb class

@@ -233,8 +233,8 @@ and each costs a reader a compressed block.
 
 ## Matching the JBrowse scripts
 
-The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`,
-and `alleles` reproduces `build_rgfa_alleles.sh`, from the
+The `contig` layout reproduces `build_rgfa_tabix.sh` and `build_pggb_tabix.sh`
+from the
 [JBrowse repository](https://github.com/GMOD/jbrowse-components/tree/c87a58557c2a74b6b770f34994350b69e842ace9/scripts),
 where they ran `gfatools gfa2bed`, awk, Python, `sort`, `bgzip` and `tabix`.
 JBrowse has since dropped them for this tool.
@@ -243,3 +243,6 @@ JBrowse has since dropped them for this tool.
 - `scripts/parity.sh` runs both from a checkout of that commit and compares the
   rows and the answers htslib's `tabix` gives from each index
 - `bubbles` matches `snarls_to_bubble_bed.py` as of the same commit
+- `alleles` started as a port of `build_rgfa_alleles.sh` and no longer
+  matches it. The script writes different rows when an L line names its
+  nodes in the other direction, and `alleles` writes the same rows for either
