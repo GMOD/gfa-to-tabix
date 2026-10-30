@@ -89,7 +89,7 @@ mod shapes {
     const S: &str = "Sakai#1#chr";
 
     // id, chrom, start, end, rank
-    const SEGMENTS: [(&str, &str, u32, u32, u32); 17] = [
+    const SEGMENTS: [(&str, &str, u32, u32, u32); 20] = [
         ("s1", K, 0, 100, 0),
         ("s2", K, 100, 200, 0),
         ("s3", K, 200, 300, 0),
@@ -99,6 +99,8 @@ mod shapes {
         ("s7", K, 800, 900, 0),
         ("s8", K, 1000, 1100, 0),
         ("s9", K, 1200, 1300, 0),
+        ("s10", K, 1400, 1500, 0),
+        ("s11", K, 1500, 1600, 0),
         ("a1", S, 1000, 1500, 1),
         ("c1", S, 2000, 2100, 1),
         ("d1", S, 3000, 3050, 1),
@@ -107,9 +109,10 @@ mod shapes {
         ("g1", S, 5000, 5010, 1),
         ("g2", S, 5010, 5040, 1),
         ("g3", S, 5040, 5050, 1),
+        ("h1", S, 6000, 6020, 1),
     ];
 
-    const LINKS: [(&str, &str, &str, &str); 19] = [
+    const LINKS: [(&str, &str, &str, &str); 21] = [
         ("s1", "+", "a1", "+"), // an insertion
         ("a1", "+", "s2", "+"),
         ("s2", "+", "s4", "+"), // a clean skip of s3
@@ -120,6 +123,8 @@ mod shapes {
         ("s7", "-", "s6", "-"), // the skip written backwards
         ("s8", "+", "s9", "-"), // mixed orientation
         ("s9", "+", "s8", "+"), // a back-link: a tandem duplication
+        ("h1", "-", "s10", "-"), // an insertion stated toward the backbone
+        ("h1", "+", "s11", "+"),
         ("s3", "-", "s4", "-"), // a back-link written backwards
         ("s5", "+", "f1", "+"),
         ("f1", "+", "f2", "+"),
@@ -287,13 +292,28 @@ mod shapes {
         );
 
         // `L s5 - d1 -` leaves nothing departing d1 toward the backbone, so
-        // only testing the arrival finds the exit
-        let mut rejoin = show(
-            &pick(&rows, &[("class", "ins"), ("start", "400")]),
-            &["start", "end", "class", "altLen"],
+        // only testing the arrival finds the exit, and the walk in from s5
+        // retraces it, so the allele has one row
+        assert_eq!(
+            show(
+                &pick(&rows, &[("class", "ins"), ("start", "400")]),
+                &["start", "end", "class", "altLen", "segments"],
+            ),
+            [["400", "401", "ins", "50", ">d1"]]
         );
-        rejoin.dedup();
-        assert_eq!(rejoin, [["400", "401", "ins", "50"]]);
+
+        // both of h1's links leave it for the backbone
+        assert_eq!(
+            show(
+                &pick(&rows, &[("segments", ">h1")]),
+                &["start", "end", "class", "altLen"],
+            ),
+            [["1500", "1501", "ins", "20"]]
+        );
+        assert!(pick(&rows, &[("segments", "<h1")]).is_empty());
+
+        // the branch g1 -> g3 is a route of g1's allele, not an allele of its own
+        assert!(pick(&rows, &[("segments", "<g3<g1")]).is_empty());
     }
 
     #[test]
