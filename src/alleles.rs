@@ -349,11 +349,14 @@ fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<Line> {
     }))
 }
 
-// Format 2's one file split into format 1's node and link rows, each without
-// its kind column
-fn read_graph(path: &str) -> Result<(Vec<String>, Vec<String>), String> {
+// Format 2's rows split into format 1's node and link rows, each without its
+// kind column
+pub fn split_graph(
+    path: &str,
+    lines: impl Iterator<Item = Result<String, String>>,
+) -> Result<(Vec<String>, Vec<String>), String> {
     let (mut nodes, mut links) = (Vec::new(), Vec::new());
-    for line in read_lines(path)? {
+    for line in lines {
         let line = line?;
         if line.starts_with('#') {
             if line.contains("\tlayout:Z:anchored") {
@@ -380,7 +383,7 @@ fn read_graph(path: &str) -> Result<(Vec<String>, Vec<String>), String> {
 pub fn run(prefix: &str) -> Result<(), String> {
     let graph = format!("{prefix}.graph.bed.gz");
     if std::fs::metadata(&graph).is_ok_and(|m| m.len() > 0) {
-        let (nodes, links) = read_graph(&graph)?;
+        let (nodes, links) = split_graph(&graph, read_lines(&graph)?)?;
         return from_rows(
             &graph,
             nodes.into_iter(),

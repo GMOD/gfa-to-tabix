@@ -22,16 +22,17 @@ gfa-to-tabix build ecoli.gfa.gz --reference K12 --snarls ecoli.snarls.vcf -o eco
 | File                               | Holds                                              |
 | ---------------------------------- | -------------------------------------------------- |
 | `hprc.graph.bed.gz`                | the fine index, anchored layout                    |
-| `hprc.contig.segs/links.bed.gz`    | the contig layout, format 1, for `alleles`         |
+| `hprc.contig.graph.bed.gz`         | the contig layout, which `alleles` reads           |
 | `hprc.fold10000.graph.bed.gz`      | the coarse tier ([fold](#fold))                    |
 | `hprc.alleles.bed.gz`              | the allele inventory ([alleles](#alleles))         |
 | `hprc.bubbles.bed.gz`              | the bubbles ([bubbles](#bubbles))                  |
 | `hprc.graph.json`                  | the [manifest](#the-manifest)                      |
 | `hprc.config.json`                 | the tracks ([JBrowse config](#the-jbrowse-config)) |
 
-Each `.bed.gz` gets a `.tbi`, or a `.csi` when a row lies past the 512 Mb a
-Tabix index holds. The config then sets `"csi": true` on each track whose
-files have one.
+`--format 1` writes each of the three indexes as a `.segs.bed.gz` and
+`.links.bed.gz` pair instead. Each `.bed.gz` gets a `.tbi`, or a `.csi` when a
+row lies past the 512 Mb a Tabix index holds. The config then sets
+`"csi": true` on each track whose files have one.
 
 - `--tier N` folds under N bp: default 10000 for an rGFA, 50 for a plain GFA
 - `--max-component N` applies to the fine index and the coarse tier, as for
@@ -72,9 +73,10 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 
 - `reference`: the PanSN sample of the first reference segment (`GRCh38` from
   `GRCh38#0#chr1`), `null` when the backbone names have no sample
-- `index`, `tier.prefix`: prefixes of `.graph.bed.gz` files, or of
-  `.segs.bed.gz` and `.links.bed.gz` pairs where `format` is 1
-- `contig`: the prefix of a `.segs.bed.gz` and `.links.bed.gz` pair
+- `index`, `contig`, `tier.prefix`: prefixes of `.graph.bed.gz` files, or of
+  `.segs.bed.gz` and `.links.bed.gz` pairs where the format is 1
+- `format` gives the format of `index` and `contig`, `tier.format` that of
+  the tier
 
 ### The JBrowse config
 

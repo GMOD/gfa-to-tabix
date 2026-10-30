@@ -123,7 +123,7 @@ fn index(cli: Cli) -> Result<(), String> {
     graph.paths = Vec::new();
     match cli.format {
         Format::One => write_index(&graph, &placed, layout, cli.max_component.0, &prefix).map(drop),
-        Format::Two => write_graph(&graph, &placed, layout, cli.max_component.0, &prefix),
+        Format::Two => write_graph(&graph, &placed, layout, cli.max_component.0, &prefix).map(drop),
     }
 }
 
@@ -172,14 +172,14 @@ fn write_index(
 
 // Format 2: nodes and links in one file, each row's kind after its interval,
 // under a header naming the format, layout, graph and, for a plain GFA, the
-// assemblies that SB:H: numbers.
+// assemblies that SB:H: numbers. Returns the rows written.
 fn write_graph(
     graph: &Graph,
     placed: &place::Placed,
     layout: Layout,
     max_component: Option<u64>,
     prefix: &str,
-) -> Result<(), String> {
+) -> Result<Vec<bed::Row>, String> {
     let (spans, mut rows, links, skipped) =
         index_rows(graph, placed, layout, max_component, Format::Two);
     rows.extend(links);
@@ -208,7 +208,7 @@ fn write_graph(
         skipped,
         &format!("{path} (+ .{index})"),
     );
-    Ok(())
+    Ok(rows)
 }
 
 fn report(
@@ -273,7 +273,7 @@ fn write_tier(
     let placed = place::from_tags(&folded);
     match format {
         Format::One => write_index(&folded, &placed, layout, max_component, prefix).map(drop),
-        Format::Two => write_graph(&folded, &placed, layout, max_component, prefix),
+        Format::Two => write_graph(&folded, &placed, layout, max_component, prefix).map(drop),
     }
 }
 

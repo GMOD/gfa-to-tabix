@@ -239,12 +239,11 @@ fn bubble_file(
     }
 }
 
-// The PanSN sample of the first reference segment in the fine index, as
-// `GRCh38` from `GRCh38#0#chr1`; None for a bare name.
-fn reference_sample(nodes: &[Row]) -> Option<String> {
+// The PanSN sample of the first reference segment among format 1's node rows,
+// as `GRCh38` from `GRCh38#0#chr1`; None for a bare name.
+fn reference_sample(nodes: &[String]) -> Option<String> {
     let text = nodes
         .iter()
-        .map(Row::text)
         .find(|line| line.split('\t').nth(4) == Some("0"))?;
     let name = text.split('\t').next()?;
     let parts: Vec<&str> = name.split('#').collect();
@@ -507,20 +506,31 @@ pub fn run(options: &Options) -> Result<(), String> {
                 Layout::Anchored,
                 options.max_component,
                 prefix,
-            ),
+            )
+            .map(drop),
         });
-        // The allele inventory reads format 1's rows, so the contig pair stays
-        // format 1.
         let contig = scope.spawn(|| {
             let contig = format!("{prefix}.contig");
-            let (segs, links) = crate::write_index(graph, placed, Layout::Contig, None, &contig)?;
+            let (nodes, links) = match options.format {
+                Format::One => {
+                    let (nodes, links) =
+                        crate::write_index(graph, placed, Layout::Contig, None, &contig)?;
+                    let text = |rows: Vec<Row>| rows.iter().map(Row::text).collect();
+                    (text(nodes), text(links))
+                }
+                Format::Two => {
+                    let rows = crate::write_graph(graph, placed, Layout::Contig, None, &contig)?;
+                    alleles::split_graph(&contig, rows.iter().map(|row| Ok(row.text())))?
+                }
+            };
+            let sample = reference_sample(&nodes);
             alleles::from_rows(
                 &contig,
-                segs.iter().map(Row::text),
-                links.iter().map(Row::text),
+                nodes.into_iter(),
+                links.into_iter(),
                 &format!("{prefix}.alleles.bed.gz"),
             )?;
-            Ok::<_, String>(reference_sample(&segs))
+            Ok::<_, String>(sample)
         });
         let coarse = scope.spawn(|| {
             let tier_prefix = format!("{prefix}.fold{tier}");

@@ -225,13 +225,7 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
         gunzip(&dir.join("my-graph.v1.bubbles.bed.gz")),
         "ref#1#chr\t4\t6\t4\t2\t0\t1\t2\t.\t.\t.\t1@4,4\n"
     );
-    for kind in [
-        "graph",
-        "contig.segs",
-        "contig.links",
-        "fold50.graph",
-        "alleles",
-    ] {
+    for kind in ["graph", "contig.graph", "fold50.graph", "alleles"] {
         assert!(dir.join(format!("my-graph.v1.{kind}.bed.gz.tbi")).exists());
     }
     fs::remove_dir_all(&dir).unwrap();
@@ -263,7 +257,7 @@ fn a_segment_the_reference_reads_reversed_is_written_forward() {
     assert!(links.contains("\t1+\t2+\t"), "{links}");
     assert!(links.contains("\t2+\t4+\t"), "{links}");
     assert!(!links.contains('-'), "{links}");
-    assert!(!gunzip(&dir.join("out.contig.links.bed.gz")).contains('-'));
+    assert!(!rows(&gunzip(&dir.join("out.contig.graph.bed.gz")), "L").contains('-'));
     assert_eq!(
         gunzip(&dir.join("out.bubbles.bed.gz")),
         "ref#1#chr\t4\t6\t4\t2\t0\t1\t2\t.\t.\t.\t1@4,4\n"
@@ -467,7 +461,7 @@ fn a_reference_past_512_mb_gets_csi_indexes_and_tracks_that_read_them() {
         None,
     );
     assert!(output.status.success(), "{output:?}");
-    for file in ["graph", "contig.segs", "fold50.graph"] {
+    for file in ["graph", "contig.graph", "fold50.graph"] {
         assert!(
             dir.join(format!("out.{file}.bed.gz.csi")).exists(),
             "{file}"
@@ -548,6 +542,66 @@ fn a_partly_tagged_graph_with_no_paths_skips_gfatools() {
     );
     assert!(read(&dir.join("out.graph.json")).contains("\"bubbles\": null"));
     fs::remove_dir_all(&dir).unwrap();
+}
+
+fn index(dir: &Path, gfa: &str, prefix: &str, format: &str) {
+    let output = Command::new(BINARY)
+        .args([gfa, "--layout", "contig", "--format", format, "-o"])
+        .arg(dir.join(prefix))
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+}
+
+#[test]
+fn the_contig_index_takes_the_build_format_and_the_alleles_do_not_change() {
+    for gfa in [
+        "alleles.gfa",
+        "paths.gfa",
+        "rgfa.gfa",
+        "cactus.gfa",
+        "ecoli_pggb_subgraph.gfa",
+        "ecoli_rgfa_slice.gfa",
+    ] {
+        let dir = scratch();
+        let gfa = fixture(gfa);
+        for format in ["1", "2"] {
+            let prefix = dir.join(format!("f{format}"));
+            let output = build(
+                &dir,
+                &[&gfa, "-o", prefix.to_str().unwrap(), "--format", format],
+                None,
+            );
+            assert!(output.status.success(), "{gfa}: {output:?}");
+            index(&dir, &gfa, &format!("index{format}"), format);
+        }
+        for file in ["segs", "links"] {
+            assert_eq!(
+                fs::read(dir.join(format!("f1.contig.{file}.bed.gz"))).unwrap(),
+                fs::read(dir.join(format!("index1.{file}.bed.gz"))).unwrap(),
+                "{gfa}"
+            );
+        }
+        assert_eq!(
+            fs::read(dir.join("f2.contig.graph.bed.gz")).unwrap(),
+            fs::read(dir.join("index2.graph.bed.gz")).unwrap(),
+            "{gfa}"
+        );
+        assert!(!dir.join("f1.contig.graph.bed.gz").exists(), "{gfa}");
+        assert!(!dir.join("f2.contig.segs.bed.gz").exists(), "{gfa}");
+        let alleles =
+            |format: &str| fs::read(dir.join(format!("f{format}.alleles.bed.gz"))).unwrap();
+        let inventory = gunzip(&dir.join("f1.alleles.bed.gz"));
+        assert!(inventory.lines().any(|row| !row.starts_with('#')), "{gfa}");
+        assert_eq!(alleles("1"), alleles("2"), "{gfa}");
+        let manifest = |format: &str| {
+            read(&dir.join(format!("f{format}.graph.json")))
+                .replace(&format!("f{format}"), "f")
+                .replace("\"format\": 1", "\"format\": 2")
+        };
+        assert_eq!(manifest("1"), manifest("2"), "{gfa}");
+        fs::remove_dir_all(&dir).unwrap();
+    }
 }
 
 #[test]

@@ -42,9 +42,10 @@
   ends on a link row
 - Readers refuse a format they don't know and skip header lines and tags they
   don't know. A file with no `#gfa-to-tabix` line is format 1
-- `build` writes its fine index and coarse tier as format 2 and says so in
-  `graph.json` and the track config. Its contig pair, which the allele
-  inventory reads, stays format 1
+- `build` writes its fine index, contig index and coarse tier as format 2 and
+  sets `"format": 2` in `graph.json` and the track config. The allele inventory splits
+  the contig index's rows back into format 1's. Before 2.1.0, `build` wrote
+  the contig index as a format 1 pair
 
 ## Evidence
 

@@ -113,21 +113,23 @@ pub struct Cli {
 const BUILD_ABOUT: &str =
     "Write everything a JBrowse graph track reads, from one read of the graph (gz
 accepted; - reads stdin):
-  PREFIX.segs/links.bed.gz           the fine index, anchored layout
-  PREFIX.contig.segs/links.bed.gz    the contig layout
-  PREFIX.foldBP.segs/links.bed.gz    the coarse tier, as `fold` writes it
+  PREFIX.graph.bed.gz                the fine index, anchored layout
+  PREFIX.contig.graph.bed.gz         the contig layout
+  PREFIX.foldBP.graph.bed.gz         the coarse tier, as `fold` writes it
   PREFIX.alleles.bed.gz              the allele inventory, as `alleles` writes it
   PREFIX.bubbles.bed.gz              `gfatools bubble` for an rGFA, --snarls for a plain GFA
   PREFIX.graph.json                  a manifest naming the files above
   PREFIX.config.json                 the JBrowse tracks, ready to merge into a config
-Each file gets a .tbi. An rGFA's bubbles need gfatools on PATH; without it the
-build notes so and writes no bubble file.";
+--format 1 writes each of the three indexes as a .segs.bed.gz and .links.bed.gz
+pair instead. Each file gets a .tbi. An rGFA's bubbles need gfatools on PATH;
+without it the build notes so and writes no bubble file.";
 
 const ALLELES_ABOUT: &str =
-    "Read PREFIX.segs.bed.gz and PREFIX.links.bed.gz, as this tool writes them with
---layout contig, and write PREFIX.alleles.bed.gz (+ .tbi): one row per allele
-the graph holds, anchored on the reference, with a CIGAR that states its size.
-The two files are all it needs, so a hosted pair works without the graph.";
+    "Read PREFIX.graph.bed.gz, or the PREFIX.segs.bed.gz and PREFIX.links.bed.gz
+pair, as this tool writes them with --layout contig, and write
+PREFIX.alleles.bed.gz (+ .tbi): one row per allele the graph holds, anchored on
+the reference, with a CIGAR that states its size. The index is all it needs, so
+a hosted index works without the graph.";
 
 const BUBBLES_ABOUT: &str =
     "Write PREFIX.bubbles.bed.gz (+ .tbi) from a `vg deconstruct` snarl VCF (gz
@@ -183,11 +185,11 @@ pub enum Command {
         /// the index
         #[arg(long, value_name = "N", default_value = "10000", value_parser = component_limit)]
         max_component: ComponentLimit,
-        /// The fine index's and coarse tier's format, as for the index
+        /// The format of every index it writes, as for the index
         #[arg(long, value_enum, default_value = "2")]
         format: Format,
     },
-    #[command(about = "Write the allele inventory from an index's two files", long_about = ALLELES_ABOUT, args_override_self = true)]
+    #[command(about = "Write the allele inventory from a contig-layout index", long_about = ALLELES_ABOUT, args_override_self = true)]
     Alleles {
         /// The index's prefix
         prefix: String,
