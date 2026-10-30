@@ -4,71 +4,47 @@ Each section is a problem measured but not yet decided, with the fix it
 suggests. A fix that gets built gets an ADR in [adr/](adr/); this page holds
 nothing decided.
 
-## One placement engine
+## Walk files in place of the index for path graphs
 
-- The node and link index and the walk files each place a path graph's nodes
-  on the reference, two ways. The walk files place a step at the nearest pass
-  of a repeated node and keep short detours in their chunk
-  ([ADR 0001](adr/0001-step-placement.md)); the index gives a repeated node
-  one coordinate and widens its links
-  ([collapsed repeats](#collapsed-repeats-in-pggb-graphs))
-- Four reviews agreed the walk files' placement should be the only one, and
-  that the index stays as it is for an rGFA, which has no paths
-- They split on how to get there:
-  - **Walks replace the index for path graphs:** the plugin draws a pggb or
-    Minigraph-Cactus graph from its walk files, and the index serves rGFA
-    only. Needs a zoomed-out walk tier first, since the coarse tier, alleles
-    and bubbles exist only for the index
-  - **The index adopts the walks' placement:** one node row per pass, in a
-    format 3 that also renames the carrier tags. Needs graph-walks,
-    bandage-core and the plugin to change, and every hosted index rebuilt
-- On chr22, the plugin draws the same graph from format 2 walk files as from
-  the index in 49 of 50 windows; the 50th, in 22q11, lacks 3,111 nodes off the
-  reference ([gbz-comparison.md](gbz-comparison.md))
+- [ADR 0008](adr/0008-index-keeps-its-placement.md) keeps the index's
+  placement and its role for path graphs. Its measurement, graph-walks' own
+  cuts over 80 to 100 windows per graph, is the baseline here
+  ([docs/placement/](placement/))
+- On GRCh38's chr22, off segmental duplications, a graph track drawing from
+  walk files loses nothing a user needs and reads about a third of the bytes
+- Four things stand in the way:
+  - **The reader drops alleles:** on Minigraph-Cactus chr22, 82% of the
+    allele nodes the walk view loses in segmental duplications lie on the
+    haplotype's own steps in chunks graph-walks already read
+  - **pggb's paralog jumps:** on pggb, 80-86% of lost (node, haplotype) pairs
+    lie outside the chunks the cut read and those its skip rows name, where a
+    haplotype's jump to a paralog filed them. A row marking a crossing without
+    reference steps would sit in the window's chunk and draw none of them
+  - **Zoomed out:** the coarse tier, alleles and bubbles exist only for the
+    index
+  - **Carriers:** a walk-drawn graph colours no node by its samples, so the
+    hosted `ecoli_pggb_carriage` track has no walk-file source
+- Suggested next steps: find where graph-walks drops Minigraph-Cactus's
+  alleles, land its fix for placing a node at the reference's earliest pass,
+  and rerun `docs/placement/scripts` on both
+- An earlier rule tested whether the walk file held the index's nodes anywhere
+  in the file. Any node of a path that touches the reference passes that test,
+  so its verdict, that walk files replace the index on both pggb graphs, no
+  longer stands. `scripts/placement-crux.py` still counts untraversed links:
+  19 of 7.2 M, 23 of 7.7 M and 0 of 4.7 M on pggb chr22, pggb chrY and
+  Minigraph-Cactus chr22, near zero because pggb and `vg convert` derive links
+  from paths
 
-**Decision rule**
+## Chromosome-wide rows in a CHM13-anchored pggb index
 
-- Walks replace the index if a path graph's L lines that no path traverses
-  are under 0.1%, and windows outside abridged chunks lose no node the index
-  cut keeps
-- Otherwise the index adopts the walks' placement
-- `scripts/placement-crux.py` measures both: `edges` counts untraversed L
-  lines in a GFA, and `windows` compares, window by window, the nodes and
-  edges an index query keeps with those the walk chunks hold
-
-**Measured, 2026-10-30**
-
-`placement-crux.py` on HPRC's pggb chr22 and chrY and on HPRC v2.1's
-Minigraph-Cactus chr22, each against its GRCh38 walk file, over 50 windows of
-10 kb:
-
-| | pggb chr22 | pggb chrY | Minigraph-Cactus chr22 |
-|---|---|---|---|
-| L lines no path traverses | 19 of 7,174,759 | 23 of 7,685,990 | 0 of 4,737,114 |
-| windows whose chunks hold every node the index cut keeps | 33 | 0 | 43 |
-| windows whose walk file holds every such node somewhere | 50 | 50 | 49 |
-
-- Untraversed links fall far under the rule's 0.1% on all three graphs
-- Nearly every index node a window's walk chunks lack, the walk file files in
-  another chunk. On pggb that fits the collapsed repeats below, whose wide
-  links pull far passes into a window, against the nearest pass the walk
-  files keep; on Minigraph-Cactus chr22, 3,882 such nodes sit in the
-  immunoglobulin lambda window at 22.8 Mb, which fits the paralog jumps
-  [walks-format.md](walks-format.md#paralogs-and-collapsed-repeats)
-  describes. This run checks neither cause
-- The walk file holds nowhere only 6 of the index's nodes, all in that window:
-  1 and 2 bp alleles on NA18960#2's 5.5 kb fragment
-  `CM101570.1:20688610-20694142`, whose 783 nodes include none of GRCh38's.
-  `--walks` leaves out a path that never touches the reference, and the index
-  files the fragment only because its component links to GRCh38 through other
-  haplotypes' nodes
-- By the rule, walk files replace the index on both pggb graphs, and miss on
-  Minigraph-Cactus chr22 by those 6 nodes, which no GRCh38-anchored file can
-  place. The measurement gives the index no reason to adopt the walks'
-  placement
-- Before the plugin draws path graphs from walk files alone, the walk files
-  need a zoomed-out tier, since the coarse tier, alleles and bubbles exist only
-  for the index today
+- pggb chr22 indexed on CHM13 files 2,383 node rows and about 5,150 link rows
+  under CHM13 0-51.3 Mb, so 92 of 100 windows read 30-42 MB: a median 0.9 s in
+  control windows and 12.4 s on the short arm
+- The same graph on GRCh38 reads 0.58 MB a window
+- Suggested next step: trace whether these rows belong to the 1.4 M-node
+  component the tool moves, or to a smaller one whose first and last
+  attachments span the chromosome; the second would make a cap on a
+  component's span worth measuring
 
 ## Collapsed repeats in pggb graphs
 
@@ -94,41 +70,22 @@ Minigraph-Cactus chr22, each against its GRCh38 walk file, over 50 windows of
   link rows reaching 69,413. In that window 63,887 link rows join two
   reference nodes, and 15,367 of those join nodes over 1 Mb apart
 - Minigraph-Cactus and rGFA graphs have no such nodes
-- `build` points a pggb graph's track and coarse tier at the anchored layout
-  all the same. On a synthetic 5 Mb graph with 500 repeats, 12.8% of its link
-  rows and 93% of the 50 bp tier's span over 1 Mb, and the contig layout has
-  none. The hosted E. coli config switches by hand
-- The fix waits on [one placement engine](#one-placement-engine): if walk
-  files replace the index for path graphs, nothing reads these rows
-
-**Candidate fix: file by pass**
-
-- A node the reference passes several times gets one node row per pass, each
-  stating that pass's coordinate
-- A link the reference path takes files under the pass where it takes it, and
-  each link row states its nodes' coordinates at that pass
-- A link the reference never takes, such as a deletion or a jump between
-  repeat copies, files under the span between the nearest passes of its two
-  nodes
-- A component attaches to the pass of each repeated node nearest its
-  attachments on nodes the reference passes once, as the walk files' nearest
-  pass does
-- Every link files under the intervals of both its nodes
-- A component that hangs from repeated nodes only, such as a SNP between
-  paralogs, has no pass to prefer, so it needs rows at every pass. Filed
-  under one, it shows as a moved-component stub at the others
-- `side()` in graph-walks' `anchoredCut` reads whatever coordinates a link
-  row states, so it needs no change
-- The plugin keys a segment by id (`uniqueId: segment.id`), so two passes in
-  one window draw as one feature, and every reader keeps one coordinate per
-  id, which collapses tandem copies in one window
-- `fold` places nodes by rGFA tags, one `SO` per node, so the coarse tier
-  stays on first passes unless its output changes shape
-- A model of the fix on a 2 Mb synthetic graph cut a 10 kb window's link rows
-  from 1,187 to 72, against 88 for the same graph without repeats
+- On HPRC's real pggb chr22, 1.06% of the fine index's link rows span over
+  1 Mb, 4.3% of the 50 bp coarse tier's and 9.8% of the 10 kb tier's, against
+  93% of the 50 bp tier's on a synthetic 5 Mb graph. A 1 Mb window reads a mean
+  1.2 MB from the 50 bp tier and 19 MB from the fine index; the tiers are
+  heaviest at 10.5-13.6 Mb, at 4.3-5.8 MB a window
+- The hosted E. coli config points its pggb track at the contig layout by hand
+- Suggested next step: have `build` point a graph's track at the contig
+  layout when its reference passes a node more than once, as that config
+  does, and measure what the contig layout draws in LCR22 against the anchored
+  one
 
 **Ruled out**
 
+- **File by pass:** one node row per pass in a format 3.
+  [ADR 0008](adr/0008-index-keeps-its-placement.md) keeps the index's placement,
+  and puts placement work into the walk files instead
 - **File a wide link under its reference end only:** links fall from 2.84 to
   0.17 MB, but each cut gets a median 367 nodes with no link, so "every link
   with a node under the region" no longer holds

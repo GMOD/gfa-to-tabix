@@ -1,0 +1,114 @@
+# mc22: haplotypes HG00097#1,HG00099#1,HG00128#1,HG00133#1,HG01109#1,HG01123#1,HG01960#1,HG02055#1
+# pggb22: haplotypes HG00097#1,HG00099#1,HG00128#1,HG00133#1,HG01109#1,HG01123#1,HG01960#1,HG02055#1
+# pggbY: haplotypes HG01109#1,HG02055#1,CHM13#0,HG00126#1,HG00140#1,HG002#1,HG00280#1,HG00290#1
+graph	mode	stratum	win	err	idx_n	walk_n	idx_only	c1	c1v	c2v	c2o	c3	c3walked	c3skip	c3none	c4	c5	walk_only	idxonly_links_both_drawn	clean	no_loss	max_lost	idx_ms	walk_ms	idx_kB	walk_kB
+mc22	all	IGL	10	0	6208	968	5563	0.0	0.0	0.0	36	5528	5052	94	0.0	0.0	0.0	120	0.0	1/10	2/10	506	242	804	698	110
+mc22	all	LCR22A	10	0	1579	587	92	10	0.0	0.0	4.5	78	40	20	4.0	0.0	0.0	81	0.0	1/10	1/10	5192	124	1060	900	285
+mc22	all	LCR22B-D	10	0	534	646	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	110	0.0	6/10	8/10	0	144	1413	314	116
+mc22	all	arm	50	0	457	548	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	93	0.0	43/50	44/50	277	40	500	287	94
+mc22	all	control	10	0	408	518	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	98	0.0	10/10	10/10	0	56	749	262	80
+mc22	all	pericentromeric	10	0	688	799	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	112	0.0	7/10	9/10	2	128	1736	315	103
+mc22	all	ALL	100	0	518	572	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	100	0.0	68/100	74/100	5192	65	769	309	103
+mc22	allrows	IGL	10	0	6208	968	5563	0.0	0.0	0.0	36	5528	5052	94	0.0	0.0	0.0	120	0.0	1/10	2/10	506	242	960	698	110
+mc22	allrows	LCR22A	10	0	1579	587	92	10	0.0	0.0	4.5	78	40	20	4.0	0.0	0.0	81	0.0	1/10	1/10	5192	124	1218	900	285
+mc22	allrows	LCR22B-D	10	0	534	646	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	110	0.0	6/10	8/10	0	144	1142	314	116
+mc22	allrows	arm	50	0	457	548	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	93	0.0	43/50	44/50	277	40	499	287	94
+mc22	allrows	control	10	0	408	518	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	98	0.0	10/10	10/10	0	56	748	262	80
+mc22	allrows	pericentromeric	10	0	688	799	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	112	0.0	7/10	9/10	2	128	1558	315	103
+mc22	allrows	ALL	100	0	518	572	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	100	0.0	68/100	74/100	5192	65	724	309	103
+mc22	hap8	IGL	10	0	6208	562	5725	0.0	0.0	0.0	38	2390	2390	0.0	0.0	3300	0.0	78	0.0	1/10	9/10	0	242	107	698	106
+mc22	hap8	LCR22A	10	0	1579	468	508	10	0.0	0.0	4.5	33	24	8.0	0.0	478	0.0	55	0.0	1/10	2/10	3061	124	206	900	285
+mc22	hap8	LCR22B-D	10	0	534	484	150	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	148	0.0	72	0.0	6/10	8/10	10	144	181	314	116
+mc22	hap8	arm	50	0	457	394	123	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	123	0.0	65	0.0	40/50	47/50	11	40	57	287	94
+mc22	hap8	control	10	0	408	373	113	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	113	0.0	65	0.0	9/10	10/10	0	56	80	262	80
+mc22	hap8	pericentromeric	10	0	688	581	186	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	186	0.0	84	0.0	7/10	9/10	7	128	264	315	103
+mc22	hap8	ALL	100	0	518	416	134	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	129	0.0	66	0.0	64/100	85/100	3061	65	80	309	102
+mc22	hap8rows	IGL	10	0	6208	562	5725	0.0	0.0	0.0	38	2390	2390	0.0	0.0	3300	0.0	78	0.0	1/10	9/10	0	242	82	698	106
+mc22	hap8rows	LCR22A	10	0	1579	468	508	10	0.0	0.0	4.5	33	24	8.0	0.0	478	0.0	55	0.0	1/10	2/10	3061	124	280	900	285
+mc22	hap8rows	LCR22B-D	10	0	534	484	150	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	148	0.0	72	0.0	6/10	8/10	10	144	242	314	116
+mc22	hap8rows	arm	50	0	457	394	123	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	123	0.0	65	0.0	42/50	47/50	11	40	50	287	94
+mc22	hap8rows	control	10	0	408	373	113	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	113	0.0	65	0.0	9/10	10/10	0	56	85	262	80
+mc22	hap8rows	pericentromeric	10	0	688	581	186	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	186	0.0	84	0.0	7/10	9/10	7	128	146	315	103
+mc22	hap8rows	ALL	100	0	518	416	133	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	129	0.0	66	0.0	66/100	85/100	3061	65	78	309	102
+pggb22	all	IGL	10	1	3144	914	2492	314	0	0	203	1961	1947	0	0	0	0	128	0	0/9	3/9	696	462	2013	2556	291
+pggb22	all	LCR22A	10	0	9230	3589	8214	1004	0.0	0.0	3424	3384	3175	0.0	13	0.0	0.0	2425	20	1/10	1/10	3372	544	6293	2423	2726
+pggb22	all	LCR22B-D	10	0	9080	647	8594	2991	0.0	0.0	1231	4372	4372	0.0	0.0	0.0	0.0	110	0.0	0/10	6/10	61	582	1708	3087	389
+pggb22	all	arm	50	1	520	598	0	0	0	0	0	0	0	0	0	0	0	109	0	29/49	41/49	392	140	1065	346	132
+pggb22	all	control	10	0	412	557	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	100	0.0	10/10	10/10	0	32	334	288	90
+pggb22	all	pericentromeric	10	1	1550	936	534	0	0	0	494	49	47	0	0	0	0	188	0	1/9	5/9	2	74	1146	428	255
+pggb22	all	ALL	100	3	1045	688	9	0	0	0	2	3	0	0	0	0	0	110	0	41/97	66/97	3372	169	1198	582	174
+pggb22	allrows	IGL	10	0	3178	2004	2490	307	0.0	0.0	203	1954	1946	0.5	0.0	0.0	0.0	990	0.5	0/10	3/10	696	462	1801	2556	291
+pggb22	allrows	LCR22A	10	0	9230	3589	8214	1004	0.0	0.0	3424	3384	3175	0.0	13	0.0	0.0	2425	20	1/10	1/10	3372	544	5922	2423	2726
+pggb22	allrows	LCR22B-D	10	0	9080	647	8594	2991	0.0	0.0	1231	4372	4372	0.0	0.0	0.0	0.0	110	0.0	0/10	6/10	61	582	1678	3087	389
+pggb22	allrows	arm	50	0	522	602	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	109	0.0	29/50	41/50	392	140	1176	346	132
+pggb22	allrows	control	10	0	412	557	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	100	0.0	10/10	10/10	0	32	314	288	90
+pggb22	allrows	pericentromeric	10	0	1548	1083	454	0.0	0.0	0.0	253	44	44	0.0	0.0	0.0	0.0	204	0.0	1/10	5/10	2	74	1068	428	255
+pggb22	allrows	ALL	100	0	1108	718	11	0.0	0.0	0.0	2.0	5.5	1.5	0.0	0.0	0.0	0.0	113	0.0	41/100	66/100	3372	169	1207	582	174
+pggb22	hap8	IGL	10	0	3178	649	2684	307	0.0	0.0	203	1242	1240	0.0	0.0	882	0.0	93	0.0	0/10	5/10	1239	462	230	2556	221
+pggb22	hap8	LCR22A	10	0	9230	967	8590	1004	0.0	0.0	3637	958	776	0.0	0.0	2392	0.0	115	5.5	1/10	2/10	996	544	1322	2423	1944
+pggb22	hap8	LCR22B-D	10	0	9080	484	8720	2991	0.0	0.0	1231	2066	2064	0.0	0.0	2434	0.0	72	0.0	0/10	7/10	1292	582	326	3087	389
+pggb22	hap8	arm	50	0	522	411	129	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	126	0.0	67	0.0	28/50	43/50	1376	140	150	346	132
+pggb22	hap8	control	10	0	412	374	116	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	115	0.0	64	0.0	8/10	10/10	0	32	42	288	90
+pggb22	hap8	pericentromeric	10	0	1548	748	758	0.0	0.0	0.0	253	10	9.0	0.0	0.0	204	0.0	136	0.0	1/10	5/10	2	74	132	428	255
+pggb22	hap8	ALL	100	0	1108	452	246	0.0	0.0	0.0	8.0	0.5	0.0	0.0	0.0	164	0.0	72	0.0	38/100	72/100	1376	169	150	582	167
+pggb22	hap8rows	IGL	10	0	3178	649	2684	307	0.0	0.0	203	1242	1240	0.0	0.0	882	0.0	93	0.0	0/10	5/10	1239	462	248	2556	221
+pggb22	hap8rows	LCR22A	10	0	9230	967	8590	1004	0.0	0.0	3637	956	776	0.0	0.0	2392	0.0	115	6.0	1/10	1/10	996	544	1393	2423	2003
+pggb22	hap8rows	LCR22B-D	10	0	9080	484	8720	2991	0.0	0.0	1231	2065	2065	0.0	0.0	2434	0.0	72	0.0	0/10	7/10	4	582	490	3087	415
+pggb22	hap8rows	arm	50	0	522	411	129	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	126	0.0	67	0.0	28/50	43/50	4	140	126	346	132
+pggb22	hap8rows	control	10	0	412	374	116	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	115	0.0	64	0.0	8/10	10/10	0	32	30	288	90
+pggb22	hap8rows	pericentromeric	10	0	1548	748	640	0.0	0.0	0.0	253	10	9.0	0.0	0.0	204	0.0	136	0.0	1/10	5/10	2	74	122	428	255
+pggb22	hap8rows	ALL	100	0	1108	452	246	0.0	0.0	0.0	8.0	0.5	0.0	0.0	0.0	164	0.0	72	0.0	38/100	71/100	1239	169	142	582	167
+pggbY	all	Yp11	10	1	161	91	70	8	0	0	5	59	59	0	1	0	0	17	0	0/9	4/9	7	365	36	1510	22
+pggbY	all	Yq11	10	0	14114	100	14028	13454	0.0	0.0	1.0	765	588	0.0	7.0	0.0	0.0	21	0.0	1/10	1/10	9656	1062	44	2437	46
+pggbY	all	Yq12-het	10	0	3.0	1.0	2.0	0.0	0.0	0.0	2.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0/10	10/10	0	3.0	5.0	21	61
+pggbY	all	arm	50	0	3.0	1.0	2.0	0.0	0.0	0.0	2.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0/50	31/50	8249	7.0	6.0	24	61
+pggbY	all	ALL	80	1	112	1	45	2	0	0	2	42	0	0	0	0	0	0	0	1/79	46/79	9656	27	22	245	61
+pggbY	allrows	Yp11	10	0	5128	95	5049	1566	0.0	0.0	294	338	335	0.0	1.0	0.0	0.0	18	0.0	0/10	4/10	404	365	42	1510	22
+pggbY	allrows	Yq11	10	0	14114	100	14028	13454	0.0	0.0	1.0	765	588	0.0	7.0	0.0	0.0	21	0.0	1/10	1/10	9656	1062	70	2437	46
+pggbY	allrows	Yq12-het	10	0	3.0	1.0	2.0	0.0	0.0	0.0	2.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0/10	10/10	0	3.0	3.0	21	61
+pggbY	allrows	arm	50	0	3.0	1.0	2.0	0.0	0.0	0.0	2.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0/50	31/50	8249	7.0	9.0	24	61
+pggbY	allrows	ALL	80	0	114	1.0	45	2.0	0.0	0.0	2.0	42	0.0	0.0	0.0	0.0	0.0	0.0	0.0	1/80	46/80	9656	27	20	245	61
+pggbY	hap8	Yp11	10	0	5128	64	5072	1566	0.0	0.0	294	116	116	0.0	0.0	252	0.0	9.5	0.0	0/10	9/10	590	365	9.5	1510	22
+pggbY	hap8	Yq11	10	0	14114	68	14054	13454	0.0	0.0	3.0	168	167	0.0	0.0	594	0.0	12	0.0	1/10	8/10	7716	1062	22	2437	46
+pggbY	hap8	Yq12-het	10	0	3.0	1.0	2.0	0.0	0.0	0.0	2.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0/10	10/10	0	3.0	3.0	21	61
+pggbY	hap8	arm	50	0	3.0	1.0	2.0	0.0	0.0	0.0	2.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0/50	44/50	7007	7.0	6.5	24	61
+pggbY	hap8	ALL	80	0	114	1.0	67	2.0	0.0	0.0	2.0	29	0.0	0.0	0.0	35	0.0	0.0	0.0	1/80	71/80	7716	27	9.0	245	61
+pggbY	hap8rows	Yp11	10	0	5128	64	5072	1566	0.0	0.0	294	116	116	0.0	0.0	252	0.0	9.5	0.0	0/10	9/10	590	365	13	1510	22
+pggbY	hap8rows	Yq11	10	0	14114	68	14054	13454	0.0	0.0	3.0	168	167	0.0	0.0	594	0.0	12	0.0	1/10	8/10	7716	1062	20	2437	46
+pggbY	hap8rows	Yq12-het	10	0	3.0	1.0	2.0	0.0	0.0	0.0	2.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0/10	10/10	0	3.0	3.5	21	61
+pggbY	hap8rows	arm	50	0	3.0	1.0	2.0	0.0	0.0	0.0	2.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0/50	44/50	7007	7.0	6.0	24	61
+pggbY	hap8rows	ALL	80	0	114	1.0	67	2.0	0.0	0.0	2.0	29	0.0	0.0	0.0	35	0.0	0.0	0.0	1/80	71/80	7716	27	10	245	61
+
+# worst windows, hap8: by nodes lost
+mc22 LCR22A 18451108: idx 5232 walk 13 lost 3061 (c1v 0 c2v 0 c2o 17 c3 3061 [walked 0 skip 33 none 3028] c3? 0 c5 0; bp {'3': 40522, '2': 81}) places {'3:beyond': 24, '3:reach': 9, '2:reach': 7, '2:read': 9, '2:beyond': 1, '3:read': 3028} maxdist 29 abridged 0 skips 4 open 0 followed False links-lost-between-drawn 0
+mc22 LCR22A 18538885: idx 5395 walk 126 lost 3039 (c1v 0 c2v 0 c2o 11 c3 3061 [walked 22 skip 2457 none 582] c3? 0 c5 0; bp {'3': 40522, '2': 34}) places {'3:beyond': 24, '3:reach': 97, '2:reach': 9, '2:read': 2, '3:read': 2940} maxdist 27 abridged 0 skips 6 open 0 followed False links-lost-between-drawn 0
+mc22 LCR22A 18275554: idx 96 walk 13 lost 33 (c1v 0 c2v 0 c2o 4 c3 33 [walked 0 skip 33 none 0] c3? 0 c5 0; bp {'3': 355, '2': 9}) places {'3:beyond': 24, '3:read': 9, '2:read': 3, '2:beyond': 1} maxdist 31 abridged 0 skips 6 open 0 followed False links-lost-between-drawn 0
+mc22 arm 18722440: idx 3276 walk 36770 lost 11 (c1v 0 c2v 0 c2o 4 c3 33 [walked 25 skip 8 none 0] c3? 0 c5 3; bp {'3': 355, '2': 9, '5': 209}) places {'3:beyond': 33, '2:beyond': 3, '2:reach': 1} maxdist 25 abridged 0 skips 2 open 2 followed True links-lost-between-drawn 9
+pggb22 arm 20366928: idx 10978 walk 671 lost 1376 (c1v 0 c2v 0 c2o 1964 c3 2077 [walked 701 skip 0 none 1376] c3? 0 c5 0; bp {'3': 70449, '2': 3440}) places {'3:beyond': 1788, '3:read': 282, '3:other-seq': 1, '2:read': 53, '2:beyond': 1911, '3:detail': 6} maxdist 35 abridged 1 skips 0 open 30 followed False links-lost-between-drawn 6
+pggb22 LCR22B-D 20354444: idx 11470 walk 835 lost 1292 (c1v 0 c2v 0 c2o 2047 c3 2098 [walked 806 skip 0 none 1292] c3? 0 c5 0; bp {'3': 70520, '2': 3495}) places {'3:beyond': 1793, '3:read': 291, '3:other-seq': 3, '2:read': 142, '2:beyond': 1905, '3:detail': 11} maxdist 35 abridged 3 skips 0 open 14 followed False links-lost-between-drawn 43
+pggb22 IGL 22593328: idx 3144 walk 482 lost 1239 (c1v 0 c2v 0 c2o 203 c3 1244 [walked 5 skip 0 none 1239] c3? 0 c5 0; bp {'3': 54076, '2': 531}) places {'3:reach': 5, '3:beyond': 1, '2:beyond': 20, '2:reach': 182, '2:read': 1, '3:read': 1236, '3:detail': 2} maxdist 20 abridged 0 skips 0 open 0 followed False links-lost-between-drawn 0
+pggb22 LCR22A 18275554: idx 8850 walk 1 lost 996 (c1v 0 c2v 0 c2o 4776 c3 996 [walked 0 skip 0 none 996] c3? 0 c5 0; bp {'3': 27111, '2': 123967}) places {'3:read': 373, '3:beyond': 331, '3:reach': 277, '2:read': 3510, '2:reach': 661, '2:beyond': 605, '3:detail': 12, '3:other-seq': 3} maxdist 46 abridged 0 skips 0 open 0 followed False links-lost-between-drawn 0
+pggbY Yq11 24935552: idx 12642 walk 0 lost 7716 (c1v 0 c2v 0 c2o 2042 c3 7716 [walked 0 skip 652 none 7064] c3? 0 c5 0; bp {'3': 780310, '2': 85161}) places {'3:beyond': 6653, '3:reach': 1060, '2:beyond': 1604, '2:reach': 434, '2:read': 4, '3:read': 3} maxdist 22 abridged 0 skips 3 open 0 followed True links-lost-between-drawn 0
+pggbY arm 23734884: idx 11098 walk 910 lost 7007 (c1v 0 c2v 0 c2o 692 c3 7091 [walked 84 skip 6982 none 25] c3? 0 c5 0; bp {'3': 782584, '2': 8804}) places {'3:beyond': 658, '3:reach': 1799, '3:read': 4634, '2:reach': 13, '2:read': 675, '2:beyond': 4} maxdist 39 abridged 0 skips 3 open 3 followed True links-lost-between-drawn 53
+pggbY arm 9411016: idx 23516 walk 1 lost 2564 (c1v 0 c2v 0 c2o 2946 c3 2564 [walked 0 skip 0 none 2564] c3? 0 c5 0; bp {'3': 52647, '2': 20493}) places {'3:beyond': 602, '3:read': 947, '3:reach': 694, '2:read': 29, '2:reach': 2593, '2:beyond': 324, '3:detail': 321} maxdist 255 abridged 0 skips 0 open 1 followed False links-lost-between-drawn 0
+pggbY arm 10512852: idx 15075 walk 1 lost 737 (c1v 0 c2v 0 c2o 26 c3 737 [walked 0 skip 674 none 63] c3? 0 c5 0; bp {'3': 4626305, '2': 2761}) places {'3:read': 532, '3:beyond': 196, '2:read': 17, '2:reach': 9, '3:reach': 9} maxdist 238 abridged 0 skips 4 open 1 followed False links-lost-between-drawn 0
+
+# worst windows, all: by nodes lost
+mc22 LCR22A 18451108: idx 5232 walk 13 lost 5192 (c1v 0 c2v 0 c2o 17 c3 5192 [walked 0 skip 2935 none 2257] c3? 0 c5 0; bp {'3': 147591, '2': 81}) places {'3:beyond': 49, '3:reach': 49, '2:reach': 7, '2:read': 9, '2:beyond': 1, '3:read': 5090, '3:detail': 4} maxdist 29 abridged 0 skips 265 open 0 followed False links-lost-between-drawn 0
+mc22 LCR22A 18538885: idx 5395 walk 196 lost 1517 (c1v 0 c2v 0 c2o 11 c3 5193 [walked 3676 skip 1353 none 164] c3? 0 c5 0; bp {'3': 147592, '2': 34}) places {'3:beyond': 49, '3:reach': 753, '2:reach': 9, '2:read': 2, '3:read': 4386, '3:detail': 5} maxdist 27 abridged 1 skips 395 open 2 followed False links-lost-between-drawn 0
+mc22 IGL 22692216: idx 7585 walk 4107 lost 506 (c1v 0 c2v 0 c2o 39 c3 5529 [walked 5023 skip 484 none 22] c3? 0 c5 0; bp {'2': 498, '3': 108143}) places {'2:beyond': 5, '2:reach': 33, '2:read': 1, '3:reach': 4397, '3:read': 1050, '3:beyond': 76, '3:absent': 6} maxdist 10 abridged 0 skips 18 open 0 followed False links-lost-between-drawn 0
+mc22 IGL 22593328: idx 6139 walk 1686 lost 484 (c1v 0 c2v 0 c2o 39 c3 5529 [walked 5045 skip 484 none 0] c3? 0 c5 0; bp {'2': 498, '3': 108143}) places {'2:beyond': 21, '2:reach': 18, '3:beyond': 2324, '3:reach': 3199, '3:absent': 6} maxdist 8 abridged 0 skips 18 open 0 followed True links-lost-between-drawn 0
+pggb22 LCR22A 18275554: idx 8850 walk 1 lost 3372 (c1v 0 c2v 0 c2o 4776 c3 3372 [walked 0 skip 1247 none 2125] c3? 0 c5 0; bp {'3': 865150, '2': 123967}) places {'3:read': 801, '3:beyond': 1186, '3:reach': 822, '3:detail': 542, '2:read': 3510, '2:reach': 661, '2:beyond': 605, '3:other-seq': 21} maxdist 46 abridged 0 skips 8 open 0 followed False links-lost-between-drawn 0
+pggb22 LCR22A 18451108: idx 7950 walk 1 lost 3140 (c1v 0 c2v 0 c2o 4040 c3 3140 [walked 0 skip 780 none 2360] c3? 0 c5 0; bp {'3': 1186454, '2': 73823}) places {'3:read': 1106, '3:reach': 654, '3:beyond': 851, '3:detail': 508, '3:other-seq': 21, '2:reach': 1091, '2:read': 2606, '2:beyond': 343} maxdist 44 abridged 0 skips 2 open 1 followed False links-lost-between-drawn 0
+pggb22 IGL 22593328: idx 3144 walk 739 lost 696 (c1v 0 c2v 0 c2o 203 c3 2016 [walked 1320 skip 172 none 524] c3? 0 c5 0; bp {'3': 798634, '2': 531}) places {'3:reach': 71, '3:beyond': 5, '2:beyond': 20, '2:reach': 182, '2:read': 1, '3:read': 1930, '3:detail': 9, '3:other-seq': 1} maxdist 20 abridged 0 skips 33 open 0 followed False links-lost-between-drawn 0
+pggb22 LCR22A 18626662: idx 10648 walk 4993 lost 598 (c1v 0 c2v 0 c2o 3474 c3 3710 [walked 3112 skip 361 none 237] c3? 0 c5 0; bp {'3': 986054, '2': 69756}) places {'3:read': 1373, '3:beyond': 742, '3:reach': 529, '3:detail': 1045, '3:other-seq': 21, '2:beyond': 283, '2:read': 2982, '2:reach': 209} maxdist 41 abridged 23 skips 160 open 35 followed True links-lost-between-drawn 44
+pggbY Yq11 24935552: idx 12642 walk 0 lost 9656 (c1v 0 c2v 0 c2o 2042 c3 9656 [walked 0 skip 8785 none 871] c3? 0 c5 0; bp {'3': 1494119, '2': 85161}) places {'3:beyond': 8452, '3:reach': 1179, '2:beyond': 1604, '2:reach': 434, '2:read': 4, '3:read': 25} maxdist 264 abridged 0 skips 78 open 0 followed True links-lost-between-drawn 0
+pggbY arm 23734884: idx 11098 walk 965 lost 8249 (c1v 0 c2v 0 c2o 692 c3 8841 [walked 592 skip 8083 none 166] c3? 0 c5 0; bp {'3': 2316487, '2': 8804}) places {'3:beyond': 1924, '3:reach': 2049, '2:reach': 13, '2:read': 675, '2:beyond': 4, '3:read': 4868} maxdist 246 abridged 0 skips 55 open 70 followed True links-lost-between-drawn 59
+pggbY arm 9411016: idx 23516 walk 1 lost 3534 (c1v 0 c2v 0 c2o 2946 c3 3534 [walked 0 skip 2581 none 953] c3? 0 c5 0; bp {'3': 530842, '2': 20493}) places {'3:beyond': 1062, '3:read': 1028, '3:reach': 819, '2:read': 29, '2:reach': 2593, '2:beyond': 324, '3:detail': 625} maxdist 256 abridged 0 skips 4 open 1 followed False links-lost-between-drawn 0
+pggbY arm 10512852: idx 15075 walk 1 lost 1591 (c1v 0 c2v 0 c2o 26 c3 1591 [walked 0 skip 1290 none 301] c3? 0 c5 0; bp {'3': 70788314, '2': 2761}) places {'3:read': 883, '3:beyond': 607, '2:read': 17, '2:reach': 9, '3:reach': 92, '3:detail': 9} maxdist 239 abridged 0 skips 69 open 1 followed False links-lost-between-drawn 0
+
+# budget errors
+pggb22	all	1	NodeLimitError: Zoom in to about 3.99Kbp, or choose fewer haplotypes, to see the graph
+pggb22	all	1	NodeLimitError: Zoom in to about 5.48Kbp, or choose fewer haplotypes, to see the graph
+pggb22	all	1	NodeLimitError: Zoom in to about 9.1Kbp, or choose fewer haplotypes, to see the graph
+pggbY	all	1	NodeLimitError: Zoom in to about 3.85Kbp, or choose fewer haplotypes, to see the graph

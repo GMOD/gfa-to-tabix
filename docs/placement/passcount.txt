@@ -1,0 +1,20 @@
+# mc22
+all {"chunks":776,"crossMedian":0,"crossMax":380,"beyondSkipMedian":0,"beyondSkipMax":1,"skipRowsMedian":0,"skipRowsMax":380}
+LCR22A {"chunks":13,"crossMedian":110,"crossMax":380,"beyondSkipMedian":0,"beyondSkipMax":0,"skipRowsMedian":110,"skipRowsMax":380}
+LCR22B-D {"chunks":22,"crossMedian":0,"crossMax":21,"beyondSkipMedian":0,"beyondSkipMax":1,"skipRowsMedian":0,"skipRowsMax":22}
+IGL {"chunks":15,"crossMedian":5,"crossMax":29,"beyondSkipMedian":0,"beyondSkipMax":0,"skipRowsMedian":5,"skipRowsMax":29}
+control {"chunks":62,"crossMedian":0,"crossMax":0,"beyondSkipMedian":0,"beyondSkipMax":0,"skipRowsMedian":0,"skipRowsMax":0}
+
+# pggb22
+all {"chunks":776,"crossMedian":2,"crossMax":776,"beyondSkipMedian":2,"beyondSkipMax":173,"skipRowsMedian":0,"skipRowsMax":776}
+LCR22A {"chunks":13,"crossMedian":4,"crossMax":174,"beyondSkipMedian":3,"beyondSkipMax":173,"skipRowsMedian":2,"skipRowsMax":172}
+LCR22B-D {"chunks":22,"crossMedian":23,"crossMax":24,"beyondSkipMedian":23,"beyondSkipMax":23,"skipRowsMedian":16,"skipRowsMax":18}
+IGL {"chunks":15,"crossMedian":20,"crossMax":159,"beyondSkipMedian":11,"beyondSkipMax":23,"skipRowsMedian":18,"skipRowsMax":157}
+control {"chunks":62,"crossMedian":2,"crossMax":2,"beyondSkipMedian":2,"beyondSkipMax":2,"skipRowsMedian":0,"skipRowsMax":0}
+
+# pggbY
+all {"chunks":869,"crossMedian":114,"crossMax":258,"beyondSkipMedian":114,"beyondSkipMax":255,"skipRowsMedian":0,"skipRowsMax":211}
+TSPY {"chunks":9,"crossMedian":140,"crossMax":145,"beyondSkipMedian":140,"beyondSkipMax":145,"skipRowsMedian":0,"skipRowsMax":4}
+Yp11 {"chunks":114,"crossMedian":8,"crossMax":146,"beyondSkipMedian":8,"beyondSkipMax":146,"skipRowsMedian":0,"skipRowsMax":6}
+Yq11 {"chunks":228,"crossMedian":153,"crossMax":213,"beyondSkipMedian":146,"beyondSkipMax":196,"skipRowsMedian":0,"skipRowsMax":211}
+
