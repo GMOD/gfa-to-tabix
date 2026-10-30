@@ -68,8 +68,45 @@ nothing decided.
 - Expanding stubs needs the writer to place each moved component on one
   sequence, and a reader change in graph-walks
 
+## Format 2's carrier tags
+
+- The tool writes two tags named `SB:H:` on a link row, the source's then the
+  target's. A reader that collects a row's tags by name keeps only one
+- `SB:H:` doesn't parse as the SAM/GFA `H` type, which wants uppercase hex in
+  whole bytes: the tool writes `SB:H:3`, odd lengths and lowercase, with the
+  lowest-numbered assembly in the first digit's lowest bit. A strict tag
+  parser refuses it
+- The tool spends n / 4 characters of a tag on n assemblies, even for a node
+  one assembly carries, if that assembly sorts last. HPRC's 470 cost up to 118 per tag;
+  thousands would cost more than the rest of a link row
+- `graph:Z:` hashes only segment ids and lengths, so two graphs with the same
+  segments and different links share a hash
+
+**Candidate fix, in a format 3**
+
+- Name the target's bits `TB`, and type both `Z`, so no reader takes them for
+  `H`
+- Write a short list of assembly numbers when it's shorter than the bitmask
+- Fold the link set into the hash, or document it as naming the segments only
+- graph-walks, bandage-core and the JBrowse plugin parse `SB:H:` today, so the
+  change waits on all three
+
+## Choosing a plain GFA's reference
+
+- Without `--reference`, the first P or W line in the file names the reference.
+  `vg convert` orders W lines differently from run to run, so two runs on one
+  GBZ can anchor on GRCh38 or on CHM13 and differ in every row
+- Choosing the first path in byte order would make the rows depend on the
+  graph alone, but would change the reference of a hosted index rebuilt
+  without `--reference`
+
 ## Walk files
 
+- Given `--refs HG002`, the tool treats each of the sample's haplotypes as its
+  own reference. It writes `ref` rows for HG002#2 and no walk for it in
+  HG002#1's chunks. A node both haplotypes pass counts as passed twice, which turns off the
+  rules for nodes passed once. Refusing a sample with two haplotypes, or
+  taking `--refs HG002#1`, would make each file list every path
 - pggb chrY's skip rows don't separate deletions from hops between repeat
   copies. Scoring the jumps against impg's alignments, as ADR 0001 scores
   placement, would
