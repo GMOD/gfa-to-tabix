@@ -76,7 +76,8 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus.
   - the run holds at most `stay` bp of reference nodes, one of them a node the
     reference passes more than once
   - each node in the run that the reference passes once lies on the piece's
-    sequence, in the piece's chunk or the next
+    sequence, from its first base to its last in the piece's chunk or the
+    next; a node longer than a chunk only has to start there
 - Any other run starts a new piece, and the reference's own paths are exempt.
   A reference that passes each node once therefore gets the same rows at any
   `stay`. A window reads every piece with a step on a node in it that the

@@ -653,7 +653,9 @@ fn a_short_stretch_over_a_revisited_node_stays_in_its_piece() {
 // the 3 at 12 and G leaves 4 for chrU's 8: R passes both nodes twice, so their
 // stretches stay in the piece wherever they lie. C's stretch also visits 2,
 // which R passes once, a chunk before C's piece, and K's visits chrU's 9; no
-// reader of those chunks reads the piece, so each starts pieces of its own.
+// reader of those chunks reads the piece, so each starts pieces of its own. N's
+// stretch visits 4 at 18-24, which starts in the chunk after N's piece but
+// ends in the one after that, whose reader doesn't read the piece.
 // With R walking 1 2 3 4 6 7 3 5, F's stretch visits 7 two chunks on, so it
 // starts pieces of its own, and still does once node 5 grows to 20 bp: a long
 // node widens only the windows it overlaps, which the `#long` line lists.
@@ -666,8 +668,15 @@ fn a_stay_absorbs_a_node_the_reference_passes_once_only_where_its_window_reads_b
             "S\t5\tACGTACGTACGTACG\n\
              W\tR\t0\tchr\t0\t45\t>1>2>3>4>3>5\nW\tR\t0\tchrU\t0\t18\t>8>9>8\n\
              W\tB\t1\tb\t0\t36\t>5>3>5\nW\tC\t1\tc\t0\t42\t>5>2>3>5\n\
-             W\tG\t1\tg\t0\t18\t>4>8>4\nW\tK\t1\tk\t0\t24\t>4>9>8>4\n",
-            vec![("B#1#b", 1), ("C#1#c", 4), ("G#1#g", 1), ("K#1#k", 4)],
+             W\tG\t1\tg\t0\t18\t>4>8>4\nW\tK\t1\tk\t0\t24\t>4>9>8>4\n\
+             W\tN\t1\tn\t0\t24\t>1>4>3>2\n",
+            vec![
+                ("B#1#b", 1),
+                ("C#1#c", 4),
+                ("G#1#g", 1),
+                ("K#1#k", 4),
+                ("N#1#n", 4),
+            ],
             vec!["#long\tR#0#chr\t30\t45"],
         ),
         (

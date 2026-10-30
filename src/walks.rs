@@ -809,12 +809,18 @@ impl Chunks {
         self.first[name as usize] + (offset / self.size) as u32
     }
 
-    // Whether a reader of a window over `chunk`, which reads the chunk before
-    // it too, reads `home`.
-    fn reaches(&self, chunk: u32, home: u32) -> bool {
-        home <= chunk
-            && chunk - home <= 1
-            && self.starts[chunk as usize].0 == self.starts[home as usize].0
+    // Whether a reader of every window over a pass of `length` bp at `start`
+    // reads `home`. A reader reads the chunk before the window, or before a
+    // `#long` pass it overlaps, so a pass longer than a chunk needs only its
+    // first chunk to reach.
+    fn reaches(&self, name: u32, start: u64, length: u64, home: u32) -> bool {
+        let first = self.of(name, start);
+        let last = if length > self.size {
+            first
+        } else {
+            self.of(name, start + length.max(1) - 1)
+        };
+        home <= first && last - home <= 1 && self.starts[home as usize].0 == name
     }
 }
 
@@ -984,7 +990,14 @@ impl Builder {
                 reference,
                 &self.graph.lengths,
                 self.stay,
-                |chunk, home| self.chunks.reaches(chunk, home),
+                |id, home| {
+                    self.chunks.reaches(
+                        reference.placement[id],
+                        reference.offset[id],
+                        u64::from(self.graph.lengths[id]),
+                        home,
+                    )
+                },
             );
         }
         true
@@ -1131,17 +1144,17 @@ impl Builder {
 // Files a run of steps away from the current piece's chunk under that chunk
 // when the path comes back to it, the run spends at most `stay` bp on
 // reference nodes, one of those nodes is one the reference passes more than
-// once, and a reader of the chunk of each node it passes once also reads the
-// piece's, as `reaches` says. A step on a node the reference passes more than
-// once has no one true chunk, so it needs no reader. Any other run moves the
-// piece on to the run's first chunk.
+// once, and a reader of each window over a node it passes once also reads
+// the piece's chunk, as `reaches` says. A step on a node the reference passes
+// more than once has no one true chunk, so it needs no reader. Any other run
+// moves the piece on to the run's first chunk.
 fn stay_home(
     chunk_of: &mut [u32],
     handles: &[u32],
     reference: &Reference,
     lengths: &[u32],
     stay: u64,
-    reaches: impl Fn(u32, u32) -> bool,
+    reaches: impl Fn(usize, u32) -> bool,
 ) {
     let n = chunk_of.len();
     let mut home = chunk_of[0];
@@ -1161,7 +1174,7 @@ fn stay_home(
                 content += u64::from(lengths[id]);
                 let revisited = reference.revisited.get(id);
                 revisits |= revisited;
-                seen &= revisited || reaches(chunk_of[j], home);
+                seen &= revisited || reaches(id, home);
             }
             j += 1;
         }
