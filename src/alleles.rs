@@ -456,30 +456,31 @@ fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
             segments: ".",
         }));
     }
-    // A walk in from an allele's far end retraces it, so the far end is
-    // skipped. A walk from a link stated toward the backbone counts only when
-    // it meets no node an allele written so far visits.
-    let mut retraced: HashSet<(State, u32)> = HashSet::new();
+    // A walk that retraces a written allele backwards, between the same two
+    // backbone segments, is the same allele. A walk from a link stated
+    // toward the backbone counts only when it meets no node an allele
+    // written so far visits.
+    let mut written: HashSet<(u32, Vec<State>, u32)> = HashSet::new();
     let mut visited: HashSet<u32> = HashSet::new();
     let mut dangling = 0;
     let toward = links.entries_toward.iter().map(|e| (e, true));
     for (entry, is_toward) in links.entries.iter().map(|e| (e, false)).chain(toward) {
-        if retraced.contains(&(entry.state, entry.from))
-            || (is_toward && visited.contains(&entry.state.0))
-        {
+        if is_toward && visited.contains(&entry.state.0) {
             continue;
         }
         let Some((r, states, exit_to)) = walk(links, segments, entry) else {
             dangling += 1;
             continue;
         };
-        if is_toward && states.iter().any(|s| visited.contains(&s.0)) {
+        let reversed: Vec<State> = states.iter().rev().map(|&(id, fwd)| (id, !fwd)).collect();
+        if written.contains(&(exit_to, reversed, entry.from))
+            || (is_toward && states.iter().any(|s| visited.contains(&s.0)))
+        {
             continue;
         }
         rows.push(r);
-        let last = states[states.len() - 1];
-        retraced.insert(((last.0, !last.1), exit_to));
         visited.extend(states.iter().map(|s| s.0));
+        written.insert((entry.from, states, exit_to));
     }
     if dangling > 0 {
         eprintln!("note: {dangling} walk(s) reached no backbone link and were dropped");

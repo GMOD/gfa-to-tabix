@@ -87,9 +87,10 @@ mod shapes {
 
     const K: &str = "K12#1#chr";
     const S: &str = "Sakai#1#chr";
+    const O: &str = "O157#1#chr";
 
     // id, chrom, start, end, rank
-    const SEGMENTS: [(&str, &str, u32, u32, u32); 20] = [
+    const SEGMENTS: [(&str, &str, u32, u32, u32); 26] = [
         ("s1", K, 0, 100, 0),
         ("s2", K, 100, 200, 0),
         ("s3", K, 200, 300, 0),
@@ -101,6 +102,8 @@ mod shapes {
         ("s9", K, 1200, 1300, 0),
         ("s10", K, 1400, 1500, 0),
         ("s11", K, 1500, 1600, 0),
+        ("s12", K, 1700, 1800, 0),
+        ("s13", K, 1800, 1900, 0),
         ("a1", S, 1000, 1500, 1),
         ("c1", S, 2000, 2100, 1),
         ("d1", S, 3000, 3050, 1),
@@ -110,9 +113,13 @@ mod shapes {
         ("g2", S, 5010, 5040, 1),
         ("g3", S, 5040, 5050, 1),
         ("h1", S, 6000, 6020, 1),
+        ("k1", S, 7000, 7010, 1),
+        ("k2", O, 0, 10, 1),
+        ("k3", S, 7020, 7030, 1),
+        ("k4", S, 7030, 7040, 1),
     ];
 
-    const LINKS: [(&str, &str, &str, &str); 21] = [
+    const LINKS: [(&str, &str, &str, &str); 27] = [
         ("s1", "+", "a1", "+"), // an insertion
         ("a1", "+", "s2", "+"),
         ("s2", "+", "s4", "+"), // a clean skip of s3
@@ -125,6 +132,12 @@ mod shapes {
         ("s9", "+", "s8", "+"),  // a back-link: a tandem duplication
         ("h1", "-", "s10", "-"), // an insertion stated toward the backbone
         ("h1", "+", "s11", "+"),
+        ("s12", "+", "k1", "+"), // k1 k2 k3 leaves s12 and returns to it
+        ("k1", "+", "k2", "+"),
+        ("k2", "+", "k3", "+"),
+        ("s12", "+", "k3", "-"), // in at k3's far end, a second route by k4
+        ("k4", "+", "k3", "+"),
+        ("k4", "-", "s13", "-"),
         ("s3", "-", "s4", "-"), // a back-link written backwards
         ("s5", "+", "f1", "+"),
         ("f1", "+", "f2", "+"),
@@ -311,6 +324,16 @@ mod shapes {
             [["1500", "1501", "ins", "20"]]
         );
         assert!(pick(&rows, &[("segments", "<h1")]).is_empty());
+
+        // the walk in at k3's far end takes another route, so it is another
+        // allele, not k1 k2 k3 retraced
+        assert_eq!(
+            show(
+                &pick(&rows, &[("start", "1800")]),
+                &["end", "strand", "segments"],
+            ),
+            [["1801", "+", ">k1>k2>k3"], ["1900", "-", "<k3<k4"]]
+        );
 
         // the branch g1 -> g3 is a route of g1's allele, not an allele of its own
         assert!(pick(&rows, &[("segments", "<g3<g1")]).is_empty());
