@@ -65,5 +65,6 @@ Follow-ups on lost class 3 nodes:
 Results in docs/placement/:
   summary-grch38.txt   python3 analyze.py mc22 pggb22 pggbY
   summary-chm13.txt    python3 analyze.py pggb22chm13
+  summary-*-placement-fix.txt   the same, with graph-walks after 4.4
   *.windows.tsv.gz     out/G.windows.tsv, gzipped
   passcount.txt        out/G.passcount.txt for mc22, pggb22 and pggbY

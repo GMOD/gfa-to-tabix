@@ -24,9 +24,15 @@ nothing decided.
     index
   - **Carriers:** a walk-drawn graph colours no node by its samples, so the
     hosted `ecoli_pggb_carriage` track has no walk-file source
-- Suggested next steps: find where graph-walks drops Minigraph-Cactus's
-  alleles, land its fix for placing a node at the reference's earliest pass,
-  and rerun `docs/placement/scripts` on both
+- graph-walks after 4.4 places a node at the reference's pass over the window,
+  and every window now draws all of its reference nodes. Rerun with that
+  reader, the windows that lose nothing move by at most one per stratum:
+  85, 71, 71 and 59 against 4.4's 85, 72, 71 and 59 on Minigraph-Cactus
+  chr22, pggb chr22, pggb chrY and pggb chr22 on CHM13
+  (`docs/placement/summary-*-placement-fix.txt`). The allele losses above
+  stand
+- Suggested next step: find where graph-walks drops Minigraph-Cactus's
+  alleles from chunks it already read
 - An earlier rule tested whether the walk file held the index's nodes anywhere
   in the file. Any node of a path that touches the reference passes that test,
   so its verdict, that walk files replace the index on both pggb graphs, no
@@ -34,6 +40,23 @@ nothing decided.
   19 of 7.2 M, 23 of 7.7 M and 0 of 4.7 M on pggb chr22, pggb chrY and
   Minigraph-Cactus chr22, near zero because pggb and `vg convert` derive links
   from paths
+
+## A rejoin stretches a walk cut across repeat copies
+
+- When a kept haplotype steps from the window to a distant copy of a repeat
+  and rejoins the reference there, graph-walks' `walkCut` stretches the drawn
+  reference out to the rejoin. At CHM13 chr22 11.45 Mb, HG00133#1's jump to
+  11,279,936 pulls in 178 kb, and the window draws 32,731 nodes against the
+  index's 8,718; GRCh38 chr22 at 21.28 Mb draws 22,953 against 6,079
+- graph-walks 4.4 hid this in repeat windows by placing the window's nodes
+  at an earlier pass, off the window. Its fix for that placement, in
+  graph-walks after 4.4, shows the stretch
+- With every haplotype kept, the stretch pushes CHM13 chr22's 10 kb windows
+  at 12.88 Mb and 19.11 Mb just past graph-walks' budget, which asks for a
+  window of 9.4 and 9.6 kb instead
+- Suggested next step: measure a cap on how far a rejoin stretches the
+  reference, such as the window plus a few chunks, on both repeat and
+  ordinary windows, since the cap changes ordinary windows too
 
 ## Chromosome-wide rows in a CHM13-anchored pggb index
 

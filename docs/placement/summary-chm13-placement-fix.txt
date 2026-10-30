@@ -1,0 +1,49 @@
+graph	mode	stratum	win	err	idx_n	walk_n	idx_only	c1	c1v	c2v	c2o	c3	c3walked	c3skip	c3none	c4	c5	walk_only	idxonly_links_both_drawn	clean	no_loss	max_lost	idx_ms	walk_ms	idx_kB	walk_kB
+pggb22chm13	all	LCR22A	10	1	7821	882	4202	405	0	0	263	3533	3511	0	0	0	0	120	0	0/9	4/9	220	1840	2470	33584	1736
+pggb22chm13	all	LCR22B-D	10	0	9224	768	8736	2597	0.0	0.0	1085	5054	5054	0.0	0.0	0.0	0.0	123	0.0	0/10	6/10	114	2168	586	34422	277
+pggb22chm13	all	arm	50	2	3228	586	2443	57	0.0	0.0	1.5	2384	2383	0.0	0.0	0.0	0.0	88	0.0	0/48	29/48	48193	1326	698	31696	210
+pggb22chm13	all	control	10	0	2831	469	2440	57	0.0	0.0	0.0	2383	2383	0.0	0.0	0.0	0.0	77	0.0	0/10	10/10	0	1082	276	31514	99
+pggb22chm13	all	p-arm	10	1	105540	8234	102536	56195	0	0	6664	37437	19213	853	793	0	0	5230	216	0/9	0/9	48193	12088	1888	35718	1120
+pggb22chm13	all	pericentromeric	10	2	4910	632	4908	1424	0.0	0.0	162	3196	2416	130	22	0.0	0.0	139	0.0	0/8	4/8	3196	1181	592	35496	240
+pggb22chm13	all	ALL	100	6	4788	614	4032	213	0.0	0.0	5.0	2880	2383	0.0	0.0	0.0	0.0	105	0.0	0/94	53/94	48193	1522	661	32128	228
+pggb22chm13	allrows	LCR22A	10	0	11742	8193	8207	794	0.0	0.0	348	6692	6680	0.0	0.0	0.0	0.0	5377	56	0/10	4/10	220	1840	2418	33584	1736
+pggb22chm13	allrows	LCR22B-D	10	0	9224	768	8736	2597	0.0	0.0	1085	5054	5054	0.0	0.0	0.0	0.0	123	0.0	0/10	6/10	114	2168	582	34422	277
+pggb22chm13	allrows	arm	50	0	3284	594	2456	57	0.0	0.0	2.5	2386	2383	0.0	0.0	0.0	0.0	95	0.0	0/50	29/50	48193	1326	738	31696	210
+pggb22chm13	allrows	control	10	0	2831	469	2440	57	0.0	0.0	0.0	2383	2383	0.0	0.0	0.0	0.0	77	0.0	0/10	10/10	0	1082	360	31514	99
+pggb22chm13	allrows	p-arm	10	0	85534	13716	82781	41303	0.0	0.0	5444	29802	12142	760	618	0.0	1.0	8020	286	0/10	0/10	48193	12088	1547	35718	1120
+pggb22chm13	allrows	pericentromeric	10	0	5266	930	4909	1142	0.0	0.0	441	3196	2689	1.5	72	0.0	0.0	162	0.0	0/10	4/10	3196	1181	597	35496	240
+pggb22chm13	allrows	ALL	100	0	4910	622	4900	462	0.0	0.0	9.0	3196	2385	0.0	0.0	0.0	0.0	110	0.0	0/100	53/100	48193	1522	655	32128	228
+pggb22chm13	hap8	LCR22A	10	0	11742	7965	8458	816	0.0	0.0	354	1914	1908	0.0	0.0	5038	0.0	5333	42	0/10	5/10	67	1840	456	33584	1736
+pggb22chm13	hap8	LCR22B-D	10	0	9224	579	8868	2597	0.0	0.0	1085	1639	1639	0.0	0.0	3548	0.0	90	0.0	0/10	7/10	57	2168	96	34422	277
+pggb22chm13	hap8	arm	50	0	3284	442	2714	57	0.0	0.0	2.5	195	195	0.0	0.0	2362	0.0	63	0.0	0/50	33/50	21341	1326	92	31696	210
+pggb22chm13	hap8	control	10	0	2831	333	2538	57	0.0	0.0	0.0	195	195	0.0	0.0	2286	0.0	54	0.0	0/10	10/10	0	1082	41	31514	99
+pggb22chm13	hap8	p-arm	10	0	85534	4156	83606	41618	0.0	0.0	5470	10506	3501	0.0	44	19388	1.0	2229	151	0/10	0/10	21341	12088	344	35718	1120
+pggb22chm13	hap8	pericentromeric	10	0	5266	666	5003	1142	0.0	0.0	441	298	236	0.0	10	2998	0.0	94	0.0	0/10	4/10	298	1181	52	35496	202
+pggb22chm13	hap8	ALL	100	0	4910	459	4909	474	0.0	0.0	16	298	195	0.0	0.0	2898	0.0	76	0.0	0/100	59/100	21341	1522	92	32128	218
+pggb22chm13	hap8rows	LCR22A	10	0	11742	7977	8418	810	0.0	0.0	353	1888	1888	0.0	0.0	5038	0.0	5334	46	0/10	5/10	8	1840	409	33584	1822
+pggb22chm13	hap8rows	LCR22B-D	10	0	9224	579	8868	2597	0.0	0.0	1085	1639	1639	0.0	0.0	3548	0.0	90	0.0	0/10	7/10	0	2168	76	34422	277
+pggb22chm13	hap8rows	arm	50	0	3284	442	2714	57	0.0	0.0	2.5	195	195	0.0	0.0	2362	0.0	63	0.0	0/50	33/50	21341	1326	70	31696	210
+pggb22chm13	hap8rows	control	10	0	2831	333	2538	57	0.0	0.0	0.0	195	195	0.0	0.0	2286	0.0	54	0.0	0/10	10/10	0	1082	38	31514	99
+pggb22chm13	hap8rows	p-arm	10	0	85534	8164	82131	41124	0.0	0.0	5470	10358	3537	26	24	19388	1.0	5890	320	0/10	0/10	21341	12088	471	35718	1435
+pggb22chm13	hap8rows	pericentromeric	10	0	5266	666	5003	1142	0.0	0.0	441	298	236	11	18	2998	0.0	94	0.0	0/10	4/10	298	1181	44	35496	202
+pggb22chm13	hap8rows	ALL	100	0	4910	459	4909	469	0.0	0.0	16	298	195	0.0	0.0	2898	0.0	76	0.0	0/100	59/100	21341	1522	70	32128	218
+
+# worst windows, hap8: by nodes lost
+pggb22chm13 arm 3121836: idx 124146 walk 1 lost 21341 (c1v 0 c2v 0 c2o 8901 c3 21341 [walked 0 skip 17551 none 3790] c3? 0 c5 0; bp {'2': 13930, '3': 173850}) places {'2:beyond': 8691, '2:read': 208, '2:reach': 2, '3:beyond': 16501, '3:detail': 4832, '3:read': 8} maxdist 736 abridged 0 skips 2 open 1 followed False links-lost-between-drawn 0
+pggb22chm13 p-arm 3220000: idx 124146 walk 1 lost 21341 (c1v 0 c2v 0 c2o 8885 c3 21341 [walked 0 skip 21208 none 133] c3? 0 c5 0; bp {'2': 15385, '3': 173850}) places {'2:beyond': 8116, '2:read': 209, '2:reach': 560, '3:beyond': 16419, '3:detail': 4832, '3:read': 8, '3:reach': 82} maxdist 734 abridged 0 skips 6 open 1 followed False links-lost-between-drawn 0
+pggb22chm13 arm 8324896: idx 107961 walk 636 lost 10648 (c1v 0 c2v 0 c2o 9989 c3 19395 [walked 8747 skip 10648 none 0] c3? 0 c5 0; bp {'2': 20000, '3': 199176}) places {'2:beyond': 7723, '2:reach': 2266, '3:beyond': 13662, '3:reach': 1685, '3:detail': 4048} maxdist 656 abridged 0 skips 12 open 0 followed False links-lost-between-drawn 0
+pggb22chm13 p-arm 8050000: idx 107212 walk 935 lost 10648 (c1v 0 c2v 0 c2o 6706 c3 19396 [walked 8748 skip 10474 none 174] c3? 0 c5 0; bp {'2': 15719, '3': 199177}) places {'2:beyond': 2796, '2:reach': 1804, '2:read': 2106, '3:beyond': 14745, '3:reach': 266, '3:detail': 4048, '3:read': 337} maxdist 661 abridged 0 skips 6 open 0 followed True links-lost-between-drawn 0
+
+# worst windows, all: by nodes lost
+pggb22chm13 arm 3121836: idx 124146 walk 1 lost 48193 (c1v 0 c2v 0 c2o 8901 c3 48193 [walked 0 skip 40893 none 7300] c3? 0 c5 0; bp {'2': 13930, '3': 8284734}) places {'2:beyond': 8691, '2:read': 208, '2:reach': 2, '3:beyond': 31702, '3:detail': 16469, '3:read': 22} maxdist 736 abridged 0 skips 185 open 1 followed False links-lost-between-drawn 0
+pggb22chm13 p-arm 3220000: idx 124146 walk 1 lost 48193 (c1v 0 c2v 0 c2o 8885 c3 48193 [walked 0 skip 44937 none 3256] c3? 0 c5 0; bp {'2': 15385, '3': 8284734}) places {'2:beyond': 8116, '2:read': 209, '2:reach': 560, '3:beyond': 31455, '3:detail': 16469, '3:read': 22, '3:reach': 247} maxdist 734 abridged 0 skips 392 open 1 followed False links-lost-between-drawn 0
+pggb22chm13 arm 8324896: idx 107961 walk 928 lost 9340 (c1v 0 c2v 0 c2o 9989 c3 42819 [walked 33479 skip 9160 none 180] c3? 0 c5 0; bp {'2': 20000, '3': 3426181}) places {'2:beyond': 7723, '2:reach': 2266, '3:beyond': 26988, '3:reach': 2799, '3:detail': 13022, '3:absent': 10} maxdist 656 abridged 0 skips 565 open 0 followed False links-lost-between-drawn 0
+pggb22chm13 p-arm 8050000: idx 107212 walk 4040 lost 8393 (c1v 0 c2v 0 c2o 6664 c3 42529 [walked 34136 skip 6325 none 2068] c3? 0 c5 0; bp {'2': 15285, '3': 3243575}) places {'2:beyond': 2796, '2:reach': 1804, '2:read': 2064, '3:beyond': 28619, '3:reach': 373, '3:detail': 13023, '3:read': 504, '3:absent': 10} maxdist 661 abridged 0 skips 301 open 0 followed True links-lost-between-drawn 0
+
+# budget errors
+pggb22chm13	all	1	NodeLimitError: Zoom in to about 3.24Kbp, or choose fewer haplotypes, to see the graph
+pggb22chm13	all	1	NodeLimitError: Zoom in to about 4.05Kbp, or choose fewer haplotypes, to see the graph
+pggb22chm13	all	1	NodeLimitError: Zoom in to about 4.12Kbp, or choose fewer haplotypes, to see the graph
+pggb22chm13	all	1	NodeLimitError: Zoom in to about 7.56Kbp, or choose fewer haplotypes, to see the graph
+pggb22chm13	all	1	NodeLimitError: Zoom in to about 9.36Kbp, or choose fewer haplotypes, to see the graph
+pggb22chm13	all	1	NodeLimitError: Zoom in to about 9.59Kbp, or choose fewer haplotypes, to see the graph
