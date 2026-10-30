@@ -147,7 +147,9 @@ ref#1#chr  0  9  N  3  1  alt#1#ctg  4  5  SB:H:1
 ```
 
 - The first line names the format, the layout, and the graph by a hash of its
-  segments' ids and lengths that ignores their order
+  segments' ids and lengths that ignores their order. The hash names the
+  segment set only: two graphs with the same segments and different links,
+  paths or reference share it
 - A plain GFA adds a `#samples` line listing its assemblies, written
   `sample.haplotype`, in byte order
 - Each row's fourth column says whether it is a node (`N`) or a link (`L`)
@@ -155,6 +157,9 @@ ref#1#chr  0  9  N  3  1  alt#1#ctg  4  5  SB:H:1
   counted from the left, holds the assembly numbered i in `#samples` as bit
   i % 4, and the tool drops trailing zero digits. Above, `3` sets both
   assemblies and `1` alt.1 alone. An rGFA's rows have none
+- The `H` in `SB:H:` names this encoding, not SAM's byte array: the tool
+  writes lowercase digits, any number of them, lowest bit first, so a SAM tag
+  parser misreads or refuses it
 
 A node row, then its coordinate as the node's own:
 
@@ -174,6 +179,8 @@ seq start end  L  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtSta
 - The tool writes both nodes' bits on a link row, because a link can reach a
   node no node row of the query returns, such as a repeat copy megabases away
   on a pggb graph
+- Both are named `SB:H:`, so a reader takes them by position, the source's
+  then the target's, never by name
 - The tool sorts rows by sequence name in byte order, then by start
 
 ### Format 1

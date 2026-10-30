@@ -4,6 +4,39 @@ Each section is a problem measured but not yet decided, with the fix it
 suggests. A fix that gets built gets an ADR in [adr/](adr/); this page holds
 nothing decided.
 
+## One placement engine
+
+- The node and link index and the walk files each place a path graph's nodes
+  on the reference, two ways. The walk files place a step at the nearest pass
+  of a repeated node and keep short detours in their chunk
+  ([ADR 0001](adr/0001-step-placement.md)); the index gives a repeated node
+  one coordinate and widens its links
+  ([collapsed repeats](#collapsed-repeats-in-pggb-graphs))
+- Four reviews agreed the walk files' placement should be the only one, and
+  that the index stays as it is for an rGFA, which has no paths
+- They split on how to get there:
+  - **Walks replace the index for path graphs:** the plugin draws a pggb or
+    Minigraph-Cactus graph from its walk files, and the index serves rGFA
+    only. Needs a zoomed-out walk tier first, since the coarse tier, alleles
+    and bubbles exist only for the index
+  - **The index adopts the walks' placement:** one node row per pass, in a
+    format 3 that also renames the carrier tags. Needs graph-walks,
+    bandage-core and the plugin to change, and every hosted index rebuilt
+- On chr22, the plugin draws the same graph from format 2 walk files as from
+  the index in 49 of 50 windows; the 50th, in 22q11, lacks 3,111 nodes off the
+  reference ([gbz-comparison.md](gbz-comparison.md))
+
+**Decision rule**
+
+- Walks replace the index if a path graph's L lines that no path traverses
+  are under 0.1%, and windows outside abridged chunks lose no node the index
+  cut keeps
+- Otherwise the index adopts the walks' placement
+- `scripts/placement-crux.py` measures both: `edges` counts untraversed L
+  lines in a GFA, and `windows` compares, window by window, the nodes and
+  edges an index query keeps with those the walk chunks hold. Run it on HPRC's
+  pggb chr22 and chrY and on Minigraph-Cactus chr22, which ada holds
+
 ## Collapsed repeats in pggb graphs
 
 - `place.rs` gives a node the reference passes several times one coordinate,
@@ -28,6 +61,12 @@ nothing decided.
   link rows reaching 69,413. In that window 63,887 link rows join two
   reference nodes, and 15,367 of those join nodes over 1 Mb apart
 - Minigraph-Cactus and rGFA graphs have no such nodes
+- `build` points a pggb graph's track and coarse tier at the anchored layout
+  all the same. On a synthetic 5 Mb graph with 500 repeats, 12.8% of its link
+  rows and 93% of the 50 bp tier's span over 1 Mb, and the contig layout has
+  none. The hosted E. coli config switches by hand
+- The fix waits on [one placement engine](#one-placement-engine): if walk
+  files replace the index for path graphs, nothing reads these rows
 
 **Candidate fix: file by pass**
 
@@ -42,9 +81,18 @@ nothing decided.
   attachments on nodes the reference passes once, as the walk files' nearest
   pass does
 - Every link files under the intervals of both its nodes
-- Blocked on readers: graph-walks' `rgfaCut` keeps one segment per id,
-  `anchoredCut`'s `side()` needs a link's pass coordinate, and `fold` needs one
-  coordinate per node
+- A component that hangs from repeated nodes only, such as a SNP between
+  paralogs, has no pass to prefer, so it needs rows at every pass. Filed
+  under one, it shows as a moved-component stub at the others
+- `side()` in graph-walks' `anchoredCut` reads whatever coordinates a link
+  row states, so it needs no change
+- The plugin keys a segment by id (`uniqueId: segment.id`), so two passes in
+  one window draw as one feature, and every reader keeps one coordinate per
+  id, which collapses tandem copies in one window
+- `fold` places nodes by rGFA tags, one `SO` per node, so the coarse tier
+  stays on first passes unless its output changes shape
+- A model of the fix on a 2 Mb synthetic graph cut a 10 kb window's link rows
+  from 1,187 to 72, against 88 for the same graph without repeats
 
 **Ruled out**
 
@@ -67,29 +115,33 @@ nothing decided.
   giants spread over 823 contigs
 - Expanding stubs needs the writer to place each moved component on one
   sequence, and a reader change in graph-walks
+- The smallest writer change files the moved components' rows under a
+  sibling sequence, such as `GRCh38#0#chrY~moved`, which a window query never
+  names, as walk files file their detail records. A reader expands a stub by
+  querying the same window there
+- The stubs stay as they are: pggb chrY's three giants are satellite tangles
+  no budget could draw, and `--max-component` already draws mid-size
+  components whole
 
 ## Format 2's carrier tags
 
-- The tool writes two tags named `SB:H:` on a link row, the source's then the
-  target's. A reader that collects a row's tags by name keeps only one
-- `SB:H:` doesn't parse as the SAM/GFA `H` type, which wants uppercase hex in
-  whole bytes: the tool writes `SB:H:3`, odd lengths and lowercase, with the
-  lowest-numbered assembly in the first digit's lowest bit. A strict tag
-  parser refuses it
-- The tool spends n / 4 characters of a tag on n assemblies, even for a node
-  one assembly carries, if that assembly sorts last. HPRC's 470 cost up to 118 per tag;
-  thousands would cost more than the rest of a link row
-- `graph:Z:` hashes only segment ids and lengths, so two graphs with the same
-  segments and different links share a hash
+- The tool writes a link row's two carrier tags under one name, `SB:H:`, with
+  values that aren't SAM `H` hex
+  ([what the file holds](index-format.md#what-the-file-holds))
+- Today's readers cope. graph-walks, the only one that parses `SB`, takes the
+  two tags by column (`rgfaBed.ts` `parseGraphRow`), and bandage-core gets
+  carriers as `SM:Z:` from graph-walks
+- Renaming the target's tag within format 2 would break graph-walks, which
+  rewrites only columns that start `SB:H:`, so the far ends would lose their
+  carriers
+- A list of assembly numbers, where shorter than the bitmask, saves 12% of
+  node tag text and 7% of link tag text on pggb chrY's 151 assemblies, and
+  nothing after gzip
 
-**Candidate fix, in a format 3**
+**Candidate fix, with the next format change**
 
-- Name the target's bits `TB`, and type both `Z`, so no reader takes them for
-  `H`
-- Write a short list of assembly numbers when it's shorter than the bitmask
-- Fold the link set into the hash, or document it as naming the segments only
-- graph-walks, bandage-core and the JBrowse plugin parse `SB:H:` today, so the
-  change waits on all three
+- Name the target's bits `TB`, type both `Z`, and write the shorter of the
+  bitmask and a list. Measure the list again at HPRC's 470 assemblies first
 
 ## Choosing a plain GFA's reference
 
@@ -104,13 +156,17 @@ nothing decided.
 
 - Given `--refs HG002`, the tool treats each of the sample's haplotypes as its
   own reference. It writes `ref` rows for HG002#2 and no walk for it in
-  HG002#1's chunks. A node both haplotypes pass counts as passed twice, which turns off the
-  rules for nodes passed once. Refusing a sample with two haplotypes, or
-  taking `--refs HG002#1`, would make each file list every path
+  HG002#1's chunks. A node both haplotypes pass counts as passed twice, which
+  turns off the rules for nodes passed once
+- If the tool took `--refs HG002#1`, the file name would need a spelling
+  without `#`, which starts a URL fragment. The plugin's `walkFileSample` reads
+  the sample from the text after the file name's last dot, so `HG002.1` reads
+  as sample `1`: the plugin has to read `#reference` from the header first
 - pggb chrY's skip rows don't separate deletions from hops between repeat
-  copies. Scoring the jumps against impg's alignments, as ADR 0001 scores
-  placement, would
-- [ADR 0004](adr/0004-abridged-detours.md)'s abridging hasn't been rescored by
-  `walks-truth.py`, which can lose at most the 0.5% of pairs left with no kept
-  piece, nor timed in the JBrowse plugin, nor measured on Minigraph-Cactus at
-  1.4's weighting
+  copies. Counting the jumps with an end on a node the reference passes more
+  than once needs only the graph; scoring them against impg's alignments, as
+  ADR 0001 scores placement, comes after
+- [ADR 0004](adr/0004-abridged-detours.md)'s abridging hasn't been timed in
+  the JBrowse plugin, nor counted on Minigraph-Cactus at 1.4's weighting. Its
+  recall needs no rescoring: by construction it loses at most the 0.5% of
+  pairs left with no kept piece
