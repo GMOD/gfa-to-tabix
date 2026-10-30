@@ -422,20 +422,23 @@ fn push_list(out: &mut Vec<u8>, items: impl Iterator<Item = i64>) {
     }
 }
 
-// Each handle after the first as twice the id change plus the reverse bit.
-fn delta_steps(handles: &[u32], previous: &mut i64) -> impl Iterator<Item = i64> {
-    let mut previous_id = *previous;
-    let deltas: Vec<i64> = handles
-        .iter()
-        .map(|&h| {
-            let id = i64::from(h >> 1);
-            let d = 2 * (id - previous_id) + i64::from(h & 1);
-            previous_id = id;
-            d
-        })
-        .collect();
-    *previous = previous_id;
-    deltas.into_iter()
+// Each value as its change from the one before, `previous` before the first.
+fn differences<'a>(
+    values: impl IntoIterator<Item = i64> + 'a,
+    previous: &'a mut i64,
+) -> impl Iterator<Item = i64> + 'a {
+    values.into_iter().map(move |v| {
+        let d = v - *previous;
+        *previous = v;
+        d
+    })
+}
+
+// Each handle as twice the id change plus the reverse bit.
+fn delta_steps<'a>(handles: &'a [u32], previous: &'a mut i64) -> impl Iterator<Item = i64> + 'a {
+    differences(handles.iter().map(|&h| i64::from(h >> 1)), previous)
+        .zip(handles)
+        .map(|(d, &h)| 2 * d + i64::from(h & 1))
 }
 
 #[derive(Default)]
@@ -718,15 +721,9 @@ fn summary_row(members: &[(&Piece, &Walk)], lengths: &[u32], k: usize) -> Vec<u8
         line.extend_from_slice(n.to_string().as_bytes());
     }
     line.push(b'\t');
-    let mut previous = 0i64;
     push_list(
         &mut line,
-        members.iter().map(|(p, _)| {
-            let piece = i64::from(p.piece);
-            let d = piece - previous;
-            previous = piece;
-            d
-        }),
+        differences(members.iter().map(|(p, _)| i64::from(p.piece)), &mut 0),
     );
     for n in [
         steps,
@@ -832,15 +829,9 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     if !interior.is_empty() {
         line.clear();
         line.extend_from_slice(b"nodes\t");
-        let mut previous = 0i64;
         push_list(
             &mut line,
-            interior.iter().map(|&h| {
-                let id = i64::from(h >> 1);
-                let d = id - previous;
-                previous = id;
-                d
-            }),
+            differences(interior.iter().map(|&h| i64::from(h >> 1)), &mut 0),
         );
         line.push(b'\t');
         push_list(
@@ -883,14 +874,16 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         if walk.choices.is_empty() {
             line.push(b'.');
         }
-        let mut previous = 0i64;
-        for (k, c) in walk.choices.iter().enumerate() {
+        let mut previous = 0;
+        let routes = differences(
+            walk.choices.iter().map(|c| id[c.route] as i64),
+            &mut previous,
+        );
+        for (k, (d, c)) in routes.zip(&walk.choices).enumerate() {
             if k > 0 {
                 line.push(b',');
             }
-            let r = id[c.route] as i64;
-            push_i64(&mut line, 2 * (r - previous) + i64::from(c.flip));
-            previous = r;
+            push_i64(&mut line, 2 * d + i64::from(c.flip));
             if walk.counted {
                 line.push(b':');
                 push_i64(&mut line, i64::from(c.implied));
