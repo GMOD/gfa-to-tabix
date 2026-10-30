@@ -131,9 +131,7 @@ them.
   unaligned stretches are the usual ones
 - A reader queries from the chunk before the window's first, and from the
   chunk before each `#long` pass that overlaps the window, whichever is
-  earlier ([ADR 0003](adr/0003-long-node-lookback.md)). A file with no `#long`
-  lines but `maxnode` over a chunk, from gfa-to-tabix 1.2, needs
-  `max(chunk, maxnode)` bp before the window instead
+  earlier ([ADR 0003](adr/0003-long-node-lookback.md))
 - `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
   A reader ignores it
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
@@ -157,6 +155,10 @@ A handle is `2 × id + r`, with `r` 1 for the reverse strand. A list of handles
 is written as delta tokens: each token is `2 × (id − previous id) + r`, and the
 first token's previous id is 0 unless a row says otherwise. An empty list is
 `.`.
+
+A difference can be negative, so a reader splits a token `t` by rounding down,
+taking the difference as `t >> 1` and `r` as `t & 1`. The token `-5` is a difference
+of −3 on the reverse strand; dividing toward zero would read −2.
 
 ### ref
 
@@ -184,7 +186,8 @@ seq cs cs+1 nodes ids lengths [SQ:Z:bases]
   their lengths in bp
 - With `--sequences`, `SQ:Z:` holds their bases joined in the same order, as
   the S lines give them. On a `ref` row it holds the steps' nodes' bases in
-  step order
+  step order, each forward as its S line gives it, whatever the step's strand
+- `--sequences` refuses a graph with a segment whose sequence is `*`
 
 ### route
 
@@ -288,7 +291,8 @@ seq cs cs+1 skip path fragStart piece from to refStart refEnd
 [ADR 0004](adr/0004-abridged-detours.md) gives the reasons and measurements.
 
 - A piece costs a reader its routes' interior steps, each counted once per
-  use, plus its steps along R / 4. graph-walks decodes a step along R faster,
+  use, plus a quarter of all its steps, interior ones included. graph-walks
+  decodes a step along R faster,
   but a cut still keeps and draws it
 - When a chunk's pieces cost more than `abridge` interior steps, or its rows
   would compress to more than `abridgebytes`, the tool moves whole paths out
@@ -303,7 +307,7 @@ seq cs cs+1 skip path fragStart piece from to refStart refEnd
   only `seq`, so it reads no record, and a viewer fetches a record on request
 - A chunk with more than 32,768 records puts the last ones past the 512 Mb a
   Tabix index holds, and the file then gets a `.csi` index in place of its
-  `.tbi`
+  `.tbi`, as it does for a reference contig longer than 512 Mb
 - A record holds a `nodes` row, `route` rows and `walk` rows. The tool numbers
   its routes from 0 and chains their tokens from 0, as for a chunk of its own,
   and its walk rows decode against the R of chunk `cs` of `seq`

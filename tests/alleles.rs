@@ -120,9 +120,9 @@ mod shapes {
         ("c1", "+", "s4", "+"),
         ("s4", "+", "d1", "+"), // a rejoin stated backbone to allele
         ("s5", "-", "d1", "-"),
-        ("s7", "-", "s6", "-"), // the skip written backwards
-        ("s8", "+", "s9", "-"), // mixed orientation
-        ("s9", "+", "s8", "+"), // a back-link: a tandem duplication
+        ("s7", "-", "s6", "-"),  // the skip written backwards
+        ("s8", "+", "s9", "-"),  // mixed orientation
+        ("s9", "+", "s8", "+"),  // a back-link: a tandem duplication
         ("h1", "-", "s10", "-"), // an insertion stated toward the backbone
         ("h1", "+", "s11", "+"),
         ("s3", "-", "s4", "-"), // a back-link written backwards

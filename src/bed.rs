@@ -27,7 +27,7 @@ pub enum Layout {
 
 // 1 writes nodes and links to two files, a plain GFA's carriers named in
 // SM:Z: on both. 2 writes one file, each row's kind after its interval, and
-// carriers as SB:H: bits on node rows only.
+// carriers as SB:H: bits, a link row's for both its nodes.
 #[derive(Clone, Copy, PartialEq, clap::ValueEnum)]
 pub enum Format {
     #[value(name = "1")]

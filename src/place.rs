@@ -31,8 +31,7 @@ pub struct Placed {
     // to read forward there
     pub flipped: Vec<bool>,
     pub from_tags: bool,
-    // assembly names in the order paths first reach them, the order SM:Z:
-    // lists them in; empty for rGFA
+    // assembly names in the order of the P and W lines; empty for rGFA
     pub assemblies: Vec<Vec<u8>>,
     // the same in byte order, which SB:H: numbers from 0
     pub samples: Vec<Vec<u8>>,
@@ -149,9 +148,9 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         Some(given) => {
             let (wanted, _) = split_path_name(given.as_bytes());
             let prefix = [wanted, b"#"].concat();
-            paths
-                .iter()
-                .position(|p| p.name == wanted || p.name.starts_with(&prefix))
+            (0..paths.len())
+                .filter(|&i| paths[i].name == wanted || paths[i].name.starts_with(&prefix))
+                .min_by_key(|&i| (assembly(&paths[i].name), i))
                 .ok_or_else(|| {
                     let mut names: Vec<&[u8]> = paths.iter().map(|p| p.name.as_slice()).collect();
                     names.dedup();

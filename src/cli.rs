@@ -20,7 +20,7 @@ fn component_limit(value: &str) -> Result<ComponentLimit, String> {
 }
 
 /// Index a pangenome graph's GFA by genome coordinate: write its nodes and
-/// links as two bgzip-compressed, Tabix-indexed BED files, which a JBrowse
+/// links as a bgzip-compressed, Tabix-indexed BED file, which a JBrowse
 /// graph track reads by region. https://github.com/GMOD/gfa-to-tabix
 ///
 /// An rGFA (minigraph, or the minigraph stage of Minigraph-Cactus) gives every
@@ -45,14 +45,15 @@ pub struct Cli {
     pub gfa: Option<String>,
 
     /// For a plain GFA, the reference: a PanSN sample (GRCh38), an assembly
-    /// (HG002#1) or a path name. Default: the first path in the file. Given
+    /// (HG002#1) or a path name; a sample anchors on its first haplotype in
+    /// byte order. Default: the first path in the file. Given
     /// with an rGFA, coordinates come from the paths, not the tags
     #[arg(long, conflicts_with = "walks")]
     pub reference: Option<String>,
 
     /// anchored (default) files every node under the reference interval its
-    /// bubble hangs from, so one query per file returns the whole graph under
-    /// a region. contig files every node under its coordinate, as 0.1.0 did
+    /// bubble hangs from, so one query returns the whole graph under a
+    /// region. contig files every node under its coordinate, as 0.1.0 did
     #[arg(long, value_enum, conflicts_with = "walks")]
     pub layout: Option<Layout>,
 
@@ -121,8 +122,9 @@ accepted; - reads stdin):
   PREFIX.graph.json                  a manifest naming the files above
   PREFIX.config.json                 the JBrowse tracks, ready to merge into a config
 --format 1 writes each of the three indexes as a .segs.bed.gz and .links.bed.gz
-pair instead. Each file gets a .tbi. An rGFA's bubbles need gfatools on PATH;
-without it the build notes so and writes no bubble file.";
+pair instead. Each file gets a .tbi, or a .csi when a row lies past 512 Mb. An
+rGFA's bubbles need gfatools on PATH; without it the build notes so and writes
+no bubble file.";
 
 const ALLELES_ABOUT: &str =
     "Read PREFIX.graph.bed.gz, or the PREFIX.segs.bed.gz and PREFIX.links.bed.gz
@@ -147,8 +149,8 @@ sample, and the reference's sample name gives the PanSN prefix the rows drop
 from their contigs. Every file must have the same lines, which minigraph writes.";
 
 const FOLD_ABOUT: &str =
-    "Write PREFIX.segs.bed.gz and PREFIX.links.bed.gz (+ .tbi) for the graph with
-every variant under BP folded into the reference: the coarse tier a graph track
+    "Write PREFIX.graph.bed.gz (+ .tbi), or with --format 1 PREFIX.segs.bed.gz and
+PREFIX.links.bed.gz, for the graph with every variant under BP folded into the reference: the coarse tier a graph track
 draws once zoomed out past the fine index. It keeps the backbone, every allele
 whose own length or the reference it replaces reaches BP, and the shortest way
 from each one's ends back to the backbone. The graph track folds each cut it

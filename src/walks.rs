@@ -531,13 +531,16 @@ fn first_pass(
                 }
                 lengths[id] = length as u32;
                 if options.sequences {
+                    if sequence == b"*" {
+                        return Err(format!(
+                            "segment {id} has no bases, so --sequences can't write them"
+                        ));
+                    }
                     if id >= sequence_at.len() {
                         sequence_at.resize(id + 1, u64::MAX);
                     }
-                    if sequence != b"*" {
-                        sequence_at[id] = bases.len() as u64;
-                        bases.extend_from_slice(sequence);
-                    }
+                    sequence_at[id] = bases.len() as u64;
+                    bases.extend_from_slice(sequence);
                 }
             }
             Some(b'L') if line.get(1) == Some(&b'\t') => {

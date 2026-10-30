@@ -49,14 +49,15 @@ the file has; see
   possible
 - Command: `gfa-to-tabix graph.gfa.gz --reference K12 -o prefix`
 - `--reference` takes a PanSN sample, an assembly or a path name, with or
-  without the `:start-end` range pggb appends; without it the first path is
-  the reference
+  without the `:start-end` range pggb appends. A sample with several
+  haplotypes anchors on the first in byte order, `HG002#1` before `HG002#2`.
+  Without `--reference`, the first path in the file is the reference
 - **Coordinates:** the tool walks every path of the reference first, then every
   other path, each group in byte order of name and then start, summing node
   lengths. A node takes the path name and position of the first path to reach
-  it, at rank 0 on the reference and rank 1 elsewhere. The rows are the same
-  for any order of the P and W lines, which `vg convert` changes from run to
-  run
+  it, at rank 0 on the reference and rank 1 elsewhere. Given `--reference`,
+  the rows are the same for any order of the P and W lines, which
+  `vg convert` changes from run to run
 - **Blunt graphs only:** summing node lengths gives the path coordinate only
   when nodes abut, so a plain GFA needs overlaps `*` or `0M`
 - **Orientation:** when the first path to reach a node reads it reversed, the
@@ -120,8 +121,9 @@ so that they come back, and `--layout` sets how it chooses.
   it all the same, and a reader that wants it drawn keeps it too
 - A component that links to two reference sequences gets a row under each. A
   component that links to none keeps its coordinates
-- The tool files a zero-length node under one base, since a region query skips
-  a row whose interval is empty; its coordinate in the later columns stays exact
+- The tool files a zero-length node under one base, since htslib's `tabix`
+  skips a row with an empty interval when the window starts at it; its
+  coordinate in the later columns stays exact
 
 ![The Tabix query a browser runs to view chr1:13-18, the node and link lines it returns, and the graph it draws from them, with each node and edge coloured by the kind of line it came from](figures/overview.svg)
 
@@ -130,7 +132,7 @@ so that they come back, and `--layout` sets how it chooses.
 one round of queries per step, and the index covers every contig in the graph.
 Use it to browse the graph from a non-reference assembly's coordinates. A
 zero-length node keeps its empty interval, as the JBrowse scripts wrote it, so
-a region query never returns it.
+a window that starts at the node misses it.
 
 ## What the file holds
 

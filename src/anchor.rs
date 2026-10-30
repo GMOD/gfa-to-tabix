@@ -79,7 +79,7 @@ pub fn widen(spans: &mut Vec<Span>, span: Span) {
 // millions of nodes, reads only the links that enter it.
 pub fn anchored(graph: &Graph, placed: &Placed, max_nodes: Option<u64>) -> Spans {
     let nodes = &placed.nodes;
-    // A reader's region query skips a row whose interval is empty, so a
+    // A window that starts at an empty interval skips its row, so a
     // zero-length node is filed under one base.
     let own: Vec<Option<Span>> = own_spans(placed)
         .into_iter()

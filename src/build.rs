@@ -457,7 +457,10 @@ pub fn run(options: &Options) -> Result<(), String> {
     let mut sniffer = Sniffer::new(crate::open_input(&options.graph)?, tee);
     let graph = Graph::read(BufReader::with_capacity(1 << 20, &mut sniffer))?;
     let tagged = sniffer.finish();
-    let (graph, placed) = crate::place_graph(&options.graph, graph, options.reference.as_deref())?;
+    let (mut graph, placed) =
+        crate::place_graph(&options.graph, graph, options.reference.as_deref())?;
+    // The rows need no paths, which hold most of a pggb graph's memory.
+    graph.paths = Vec::new();
     let route = if placed.from_tags && options.snarls.is_none() {
         Route::Rgfa
     } else {

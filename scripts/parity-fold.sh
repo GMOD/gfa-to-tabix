@@ -14,23 +14,38 @@ trap 'rm -rf "$work"' EXIT
 status=0
 
 while read -r gfa reference; do
+  failed=0
   for below in 1 5 50 1000 10000; do
     for layout in contig anchored; do
-      npx -y -p "@jbrowse/bandage-core@$version" bandage-fold "$data/$gfa" --below "$below" \
+      rm -f "$work"/*
+      case="$gfa $reference below $below $layout"
+      if ! npx -y -p "@jbrowse/bandage-core@$version" bandage-fold "$data/$gfa" --below "$below" \
         ${reference:+--reference "$reference"} 2>/dev/null |
-        "$binary" - --layout "$layout" --format 1 -o "$work/js" > /dev/null 2>&1
-      "$binary" fold "$data/$gfa" --below "$below" --layout "$layout" --format 1 \
-        ${reference:+--reference "$reference"} -o "$work/rs" > /dev/null 2>&1
+        "$binary" - --layout "$layout" --format 1 -o "$work/js" > /dev/null 2>&1; then
+        echo "FAIL bandage-fold $case"
+        failed=1
+        continue
+      fi
+      if ! "$binary" fold "$data/$gfa" --below "$below" --layout "$layout" --format 1 \
+        ${reference:+--reference "$reference"} -o "$work/rs" > /dev/null 2>&1; then
+        echo "FAIL gfa-to-tabix fold $case"
+        failed=1
+        continue
+      fi
       for kind in segs links; do
         if ! cmp -s <(gzip -dc "$work/js.$kind.bed.gz") <(gzip -dc "$work/rs.$kind.bed.gz"); then
-          echo "FAIL $kind $gfa $reference below $below $layout"
+          echo "FAIL $kind $case"
           diff <(gzip -dc "$work/js.$kind.bed.gz") <(gzip -dc "$work/rs.$kind.bed.gz") | head -4
-          status=1
+          failed=1
         fi
       done
     done
   done
-  [ $status -eq 0 ] && echo "ok   $gfa $reference"
+  if [ $failed -eq 0 ]; then
+    echo "ok   $gfa $reference"
+  else
+    status=1
+  fi
 done <<'CASES'
 rgfa.gfa
 ecoli_rgfa_slice.gfa
