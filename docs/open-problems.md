@@ -34,8 +34,41 @@ nothing decided.
 - Otherwise the index adopts the walks' placement
 - `scripts/placement-crux.py` measures both: `edges` counts untraversed L
   lines in a GFA, and `windows` compares, window by window, the nodes and
-  edges an index query keeps with those the walk chunks hold. Run it on HPRC's
-  pggb chr22 and chrY and on Minigraph-Cactus chr22, which ada holds
+  edges an index query keeps with those the walk chunks hold
+
+**Measured, 2026-10-30**
+
+`placement-crux.py` on HPRC's pggb chr22 and chrY and on HPRC v2.1's
+Minigraph-Cactus chr22, each against its GRCh38 walk file, over 50 windows of
+10 kb:
+
+| | pggb chr22 | pggb chrY | Minigraph-Cactus chr22 |
+|---|---|---|---|
+| L lines no path traverses | 19 of 7,174,759 | 23 of 7,685,990 | 0 of 4,737,114 |
+| windows whose chunks hold every node the index cut keeps | 33 | 0 | 43 |
+| windows whose walk file holds every such node somewhere | 50 | 50 | 49 |
+
+- Untraversed links fall far under the rule's 0.1% on all three graphs
+- Nearly every index node a window's walk chunks lack, the walk file files in
+  another chunk. On pggb that fits the collapsed repeats below, whose wide
+  links pull far passes into a window, against the nearest pass the walk
+  files keep; on Minigraph-Cactus chr22, 3,882 such nodes sit in the
+  immunoglobulin lambda window at 22.8 Mb, which fits the paralog jumps
+  [walks-format.md](walks-format.md#paralogs-and-collapsed-repeats)
+  describes. This run checks neither cause
+- The walk file holds nowhere only 6 of the index's nodes, all in that window:
+  1 and 2 bp alleles on NA18960#2's 5.5 kb fragment
+  `CM101570.1:20688610-20694142`, whose 783 nodes include none of GRCh38's.
+  `--walks` leaves out a path that never touches the reference, and the index
+  files the fragment only because its component links to GRCh38 through other
+  haplotypes' nodes
+- By the rule, walk files replace the index on both pggb graphs, and miss on
+  Minigraph-Cactus chr22 by those 6 nodes, which no GRCh38-anchored file can
+  place. The measurement gives the index no reason to adopt the walks'
+  placement
+- Before the plugin draws path graphs from walk files alone, the walk files
+  need a zoomed-out tier, since the coarse tier, alleles and bubbles exist only
+  for the index today
 
 ## Collapsed repeats in pggb graphs
 
