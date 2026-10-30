@@ -2,8 +2,9 @@
 """figures.py <gfa-to-tabix binary> [--check]
 
 Runs the tool on docs/figures/*.gfa and redraws docs/figures/*.svg from the
-lines it writes. The script draws the overview figures itself, and the walks
-figures by filling the marked regions of their .dot files for Graphviz.
+lines it writes. The script draws the overview figure itself, the walks
+figures by filling the marked regions of their .dot files for Graphviz, and
+the outputs figure from its .dot file as written.
 With --check, exits 1 if a figure differs from what the tool writes now.
 """
 
@@ -16,7 +17,7 @@ import textwrap
 from pathlib import Path
 
 FIGURES = Path(__file__).resolve().parent.parent / "docs" / "figures"
-PREFIX = "graph"
+PREFIX = "hprc"
 REF = "GRCh38"
 QUERY = ("chr1", 12, 18)
 
@@ -224,14 +225,14 @@ def overview_svg(node_lines, link_lines):
                f'<path d="M0,0 L8,4 L0,8 z" fill="{muted}"/></marker></defs>')
 
     say(24, 28, f"1. To show {region}, a browser queries the file gfa-to-tabix writes", 14, weight="bold")
-    labels = {0: "interval Tabix searches", 3: "kind", 4: "node", 5: f"rank (0 = {seq})", 6: "the node's own position"}
+    labels = {0: "interval Tabix searches", 3: "kind", 4: "node", 5: "rank (0 = reference)", 6: "the node's own position"}
     alt_row = next(r for r in segs if r[3] == alt)
     bottom = table(62, f"tabix {PREFIX}.graph.bed.gz {region}",
                    f"N lines, one per node. {alt} is an {nodes[alt]['seq']} allele, so its line spans "
                    f"{coordinate(*alt_row[0:3])}, from {into} to {out_}.",
                    segs, [r[:9] for r in node_lines], labels, lambda r: r[3] in q["returned"], node_pale, node_ink)
     labels = {0: "interval Tabix searches", 3: "kind", 4: "link", 6: "source: position, rank", 10: "target: position, rank"}
-    bottom = table(bottom + 50, "",
+    bottom = table(bottom + 24, "",
                    "L lines from the same query, one per link, with the positions of both its nodes.",
                    links, link_lines, labels, lambda r: r in kept, link_pale, link_ink)
 
@@ -466,6 +467,7 @@ def generate(binary):
     table, simple, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
     return {
+        "outputs": {},
         "overview": overview_svg(segs, links),
         "walks": {
             "graph": walks_nodes,

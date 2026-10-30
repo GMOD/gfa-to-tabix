@@ -9,6 +9,8 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 - The [JBrowse 2](https://jbrowse.org) graph track reads the file
 - The tool is one static binary and needs no bgzip or tabix; `build` runs gfatools, when installed, for an rGFA's bubbles
 
+![A pangenome GFA goes through gfa-to-tabix build to hprc.graph.bed.gz, which a JBrowse graph track queries by region, and through gfa-to-tabix --walks to hprc.GRCh38.walks.bed.gz, which @jbrowse/graph-walks queries to rebuild each haplotype's path](docs/figures/outputs.svg)
+
 ![The Tabix query a browser runs to view chr1:13-18, the node and link lines it returns, and the graph it draws from them, with each node and edge coloured by the kind of line it came from](docs/figures/overview.svg)
 
 ## Quick start

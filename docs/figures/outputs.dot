@@ -1,0 +1,23 @@
+// scripts/figures.py draws this figure
+digraph outputs {
+  bgcolor="white"
+  fontname="Helvetica"
+  rankdir=LR
+  nodesep=0.3
+  ranksep=0.5
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded", fillcolor="#e8eef7", color="#4a6fa5", margin="0.18,0.1"]
+  edge [fontname="Courier", fontsize=11, color="#555555", arrowsize=0.8, penwidth=1.5]
+
+  gfa [label=<<B>A pangenome GFA</B><BR/><BR/><FONT POINT-SIZE="11">rGFA: minigraph, Minigraph-Cactus<BR/>with paths: pggb, odgi, vg convert -f</FONT>>, fillcolor="#fafafa", color="#888888"]
+
+  index [label=<<B>hprc.graph.bed.gz</B><BR/><FONT POINT-SIZE="11">and its .tbi</FONT><BR/><BR/><FONT POINT-SIZE="11">a row per node and per link,<BR/>filed by GRCh38 coordinate</FONT>>, fillcolor="#dafbe1", color="#1a7f37"]
+  walks [label=<<B>hprc.GRCh38.walks.bed.gz</B><BR/><FONT POINT-SIZE="11">and its .tbi</FONT><BR/><BR/><FONT POINT-SIZE="11">each haplotype's path,<BR/>cut into 64 kb stretches of GRCh38</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
+
+  track [label=<<B>JBrowse graph track</B><BR/><BR/><FONT POINT-SIZE="11">draws the nodes and links<BR/>under the region in view</FONT>>]
+  reader [label=<<B>@jbrowse/graph-walks</B><BR/><BR/><FONT POINT-SIZE="11">rebuilds every haplotype's path<BR/>through the region, for JBrowse<BR/>and BandageJS to draw</FONT>>]
+
+  gfa -> index [label="  gfa-to-tabix build  "]
+  gfa -> walks [label="  gfa-to-tabix --walks  \n  --refs GRCh38  "]
+  index -> track [label=" a region query  "]
+  walks -> reader [label=" a region query  "]
+}

@@ -19,7 +19,7 @@
 <g id="clust4" class="cluster">
 <title>cluster_file</title>
 <path fill="#fafafa" stroke="#bbbbbb" d="M100,-238.64C100,-238.64 694,-238.64 694,-238.64 700,-238.64 706,-244.64 706,-250.64 706,-250.64 706,-511.28 706,-511.28 706,-517.28 700,-523.28 694,-523.28 694,-523.28 100,-523.28 100,-523.28 94,-523.28 88,-517.28 88,-511.28 88,-511.28 88,-250.64 88,-250.64 88,-244.64 94,-238.64 100,-238.64"/>
-<text xml:space="preserve" text-anchor="start" x="96" y="-506.98" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">2. graph.GRCh38.walks.bed.gz</text>
+<text xml:space="preserve" text-anchor="start" x="96" y="-506.98" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">2. hprc.GRCh38.walks.bed.gz</text>
 <text xml:space="preserve" text-anchor="start" x="96" y="-494.88" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">for each 64 kb stretch of chr1: GRCh38&#39;s path, each route off it, and the routes each haplotype takes</text>
 </g>
 <g id="clust5" class="cluster">

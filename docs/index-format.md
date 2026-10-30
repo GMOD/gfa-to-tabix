@@ -123,7 +123,7 @@ so that they come back, and `--layout` sets how it chooses.
 - The tool files a zero-length node under one base, since a region query skips
   a row whose interval is empty; its coordinate in the later columns stays exact
 
-![The two Tabix queries a browser runs to view chr1:13-18, the node and link lines each returns, and the graph it draws from them, with each node and edge coloured by the file it came from](figures/overview.svg)
+![The Tabix query a browser runs to view chr1:13-18, the node and link lines it returns, and the graph it draws from them, with each node and edge coloured by the kind of line it came from](figures/overview.svg)
 
 **`contig`**: the tool files every node under its own coordinate, as version
 0.1.0 did. A reader has to follow links from the reference onto other contigs,
