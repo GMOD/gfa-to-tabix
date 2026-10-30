@@ -1,0 +1,14 @@
+# graph-walks 4b064ec
+mc22: 33 pairs, 12817 lost nodes; in read chunks 10462 (82%), in skip chunks 49, elsewhere 2306 (18%)
+pggb22: 35 pairs, 12570 lost nodes; in read chunks 1807 (14%), in skip chunks 2, elsewhere 10761 (86%)
+pggbY: 37 pairs, 25993 lost nodes; in read chunks 7543 (29%), in skip chunks 11, elsewhere 18439 (71%)
+mc22: 12817 lost nodes; on the haplotype's steps in read chunks 10462: before 6235, open 4227; not on read steps 2355
+pggb22: 12570 lost nodes; on the haplotype's steps in read chunks 1947: open 1303, before 644; not on read steps 10623
+pggbY: 25993 lost nodes; on the haplotype's steps in read chunks 10570: open 7509, before 3061; not on read steps 15423
+# graph-walks 4.4
+mc22: 33 pairs, 12817 lost nodes; in read chunks 10462 (82%), in skip chunks 49, elsewhere 2306 (18%)
+pggb22: 35 pairs, 12570 lost nodes; in read chunks 1807 (14%), in skip chunks 2, elsewhere 10761 (86%)
+pggbY: 44 pairs, 38044 lost nodes; in read chunks 7728 (20%), in skip chunks 16, elsewhere 30300 (80%)
+mc22: 12817 lost nodes; on the haplotype's steps in read chunks 10462: before 6235, open 4227; not on read steps 2355
+pggb22: 12570 lost nodes; on the haplotype's steps in read chunks 1947: open 1303, before 644; not on read steps 10623
+pggbY: 38044 lost nodes; on the haplotype's steps in read chunks 11079: open 7611, before 3061, after 359, inside 48; not on read steps 26965

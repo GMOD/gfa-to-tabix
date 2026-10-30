@@ -27,8 +27,8 @@
 
 ## Decision
 
-- The index keeps format 2 and its first-pass placement. It gets no format 3
-  and no filing by pass
+- The index keeps format 2 and its first-pass placement. It gets no filing by
+  pass, and no format 3 for placement
 - Placement work for path graphs goes into the walk files and graph-walks
 - The index stays the product for an rGFA, the source of every coarse tier
   and of `alleles`, and the graph track's source for a path graph. Hosted
@@ -56,20 +56,27 @@ and Yq11 on chrY:
   window holds 3 index nodes, mostly N runs, and the walk view reads more
 - pggb's 5 failing pericentromeric windows lose at most 2 nodes each; 4 fail
   on links alone, up to 206 at 15.94 Mb
-- In segmental duplications the walk view loses alleles: a kept haplotype
-  shows as a skip row or not at all. At MC chr22 18.45 Mb that hides 3,061
-  nodes of 8 haplotypes, and at pggb chrY 23.73 Mb 783 kb of sequence. The
-  index draws them because it files a whole bubble under one interval, the
+- In segmental duplications the index draws kept haplotypes' alleles that
+  the walk view leaves out, showing the haplotype as a skip row or not at
+  all. The harness counts every such node lost, so the table's losses are an
+  upper bound: the index files a whole component under one interval, the
   same widening that draws 9,230 nodes a window in pggb's LCR22A against the
-  walk view's 967
-- The two graphs lose those alleles differently. On Minigraph-Cactus, 82% of
-  the lost nodes lie on the haplotype's own steps in chunks the walk reader
-  already read, 98% at 18.45 Mb, so the reader drops them. On pggb, 80-86% of
-  lost (node, haplotype) pairs lie outside the chunks the cut read and those
-  its skip rows name, where a haplotype's jump to a paralog filed them
+  walk view's 967, and so draws alleles the haplotype carries outside the
+  window. On Minigraph-Cactus 49% of the counted nodes lie on such stretches,
+  5% on pggb chr22 and 9% on pggb chrY. At MC chr22 18.45 Mb all 3,061 are a
+  32 kb insertion before the window, and the haplotypes carry a deletion
+  across it
+- The walk view does lose some alleles and deletions. graph-walks draws
+  nothing for a haplotype in a window inside its replaced stretch, 33% of the
+  counted nodes on Minigraph-Cactus, 10% on pggb chr22 and 20% on pggb chrY.
+  A deletion across a window shows nowhere when the path has a piece in that
+  chunk, because `--walks` writes no skip row there and the reader keeps only
+  the piece's steps on the window. On pggb, 86% and 80% of the counted nodes
+  lie outside the chunks the cut read and those its skip rows name, where a
+  haplotype's jump to a paralog filed them
 - A row marking a path that crosses a chunk without stepping on the
-  reference would not draw pggb's lost alleles, which lie outside every chunk
-  such a row would sit in
+  reference would not draw pggb's far-filed alleles, which lie outside every
+  chunk such a row would sit in
 - On CHM13 neither reader serves the short arm. The walk view loses up to
   23,534 nodes a window there, and the index draws a median 85,534
 - On CHM13 the index reads 30-42 MB in 92 of 100 windows, control included,
@@ -88,8 +95,9 @@ and Yq11 on chrY:
   stay as [open problems](../open-problems.md) records them
 - [Open problems](../open-problems.md) keeps the question of walk files
   replacing the index for path graphs, with this measurement as its
-  baseline. The question waits on the reader's dropped alleles, pggb's
-  paralog jumps, a zoomed-out walk tier, and carriers on a walk-drawn graph
+  baseline. The question waits on detours spanning the window, deletions
+  across it, pggb's paralog jumps, a zoomed-out walk tier, and carriers on a
+  walk-drawn graph
 - The CHM13-anchored pggb index's chromosome-wide rows are an open problem
 
 ## Alternatives rejected
@@ -97,7 +105,8 @@ and Yq11 on chrY:
 - **The index adopts the walks' placement, format 3:** three readers and
   every hosted index change, and the plugin keys a segment by id, so two
   passes in one window draw as one
-- **Walk files replace the index for path graphs now:** the walk view loses
-  segmental duplications' alleles, and walk files have no coarse tier
+- **Walk files replace the index for path graphs now:** the walk view drops
+  detours spanning a window and deletions across one, loses pggb's
+  far-filed alleles, and walk files have no coarse tier
 - **Develop both placements:** two engines to improve, for the one question
   of where a repeated node's steps go
