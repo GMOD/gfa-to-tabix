@@ -143,15 +143,6 @@ nothing decided.
 - Name the target's bits `TB`, type both `Z`, and write the shorter of the
   bitmask and a list. Measure the list again at HPRC's 470 assemblies first
 
-## Choosing a plain GFA's reference
-
-- Without `--reference`, the first P or W line in the file names the reference.
-  `vg convert` orders W lines differently from run to run, so two runs on one
-  GBZ can anchor on GRCh38 or on CHM13 and differ in every row
-- Choosing the first path in byte order would make the rows depend on the
-  graph alone, but would change the reference of a hosted index rebuilt
-  without `--reference`
-
 ## Walk files
 
 - Given `--refs HG002`, the tool treats each of the sample's haplotypes as its

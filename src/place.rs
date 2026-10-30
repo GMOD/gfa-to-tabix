@@ -108,6 +108,15 @@ fn assembly(name: &[u8]) -> Vec<u8> {
     }
 }
 
+// An assembly as --reference names it: HG002#1#chr1 -> HG002#1
+fn typed(name: &[u8]) -> &[u8] {
+    let mut hashes = memchr::memchr_iter(b'#', name);
+    match (hashes.next(), hashes.next()) {
+        (Some(_), Some(second)) => &name[..second],
+        _ => sample(name),
+    }
+}
+
 // The hex digit i / 4 holds the assembly numbered i as bit i % 4, digits
 // counted from the left, and trailing zero digits are dropped.
 fn carrier_bits(ids: &[u32], bit_of: &[u32]) -> Vec<u8> {
@@ -128,6 +137,15 @@ fn carrier_bits(ids: &[u32], bit_of: &[u32]) -> Vec<u8> {
         .collect()
 }
 
+// The first 20 names, and how many more there are
+fn listed(names: &[&[u8]]) -> String {
+    let shown: Vec<String> = names.iter().take(20).map(|n| text(n)).collect();
+    match names.len().saturating_sub(20) {
+        0 => shown.join(", "),
+        n => format!("{} and {n} more", shown.join(", ")),
+    }
+}
+
 pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, String> {
     if let Some(overlap) = &graph.overlap {
         return Err(format!("{} Or use an rGFA.", blunt_error(overlap)));
@@ -143,58 +161,82 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
                     nothing gives this graph coordinates"
             .into());
     }
-    let reference_path = match reference {
-        None => 0,
-        Some(given) => {
-            let (wanted, _) = split_path_name(given.as_bytes());
-            let prefix = [wanted, b"#"].concat();
-            (0..paths.len())
-                .filter(|&i| paths[i].name == wanted || paths[i].name.starts_with(&prefix))
-                .min_by_key(|&i| (assembly(&paths[i].name), i))
-                .ok_or_else(|| {
-                    let mut names: Vec<&[u8]> = paths.iter().map(|p| p.name.as_slice()).collect();
-                    names.dedup();
-                    let shown: Vec<String> = names.iter().take(20).map(|n| text(n)).collect();
-                    let more = match names.len().saturating_sub(20) {
-                        0 => String::new(),
-                        n => format!(" and {n} more"),
-                    };
-                    format!(
-                        "--reference {given} matches no path; have: {}{more}",
-                        shown.join(", ")
-                    )
-                })?
-        }
-    };
     let assemblies: Vec<Vec<u8>> = paths.iter().map(|p| assembly(&p.name)).collect();
-    let reference_assembly = assemblies[reference_path].clone();
-    let is_reference: Vec<bool> = assemblies
-        .iter()
-        .map(|a| *a == reference_assembly)
-        .collect();
-    let reference_paths = is_reference.iter().filter(|&&r| r).count();
-
+    let mut references: Vec<&[u8]> = Vec::new();
     let mut notes = Vec::new();
-    if !reference.unwrap_or("").contains('#') {
-        let reference_sample = sample(&paths[reference_path].name);
-        let mut others: Vec<&Vec<u8>> = paths
-            .iter()
-            .zip(&assemblies)
-            .filter(|(p, a)| sample(&p.name) == reference_sample && **a != reference_assembly)
-            .map(|(_, a)| a)
-            .collect();
-        others.sort();
-        others.dedup();
-        if !others.is_empty() {
-            let others: Vec<String> = others.iter().map(|a| text(a)).collect();
-            notes.push(format!(
-                "note: reference assembly {}; {} of the same sample stay rank 1. \
-                 Name one of them to anchor on it instead.",
-                text(&reference_assembly),
-                others.join(", ")
-            ));
+    match reference {
+        None => {
+            let mut distinct: Vec<&[u8]> = paths.iter().map(|p| typed(&p.name)).collect();
+            distinct.sort();
+            distinct.dedup();
+            if distinct.len() > 1 {
+                return Err(format!(
+                    "the paths name {} assemblies; pick the reference with \
+                     --reference, comma-separated for several: {}",
+                    distinct.len(),
+                    listed(&distinct)
+                ));
+            }
+            references.push(&assemblies[0]);
+        }
+        Some(given) => {
+            let mut chosen = Vec::new();
+            for item in given.split(',').filter(|item| !item.is_empty()) {
+                let (wanted, _) = split_path_name(item.as_bytes());
+                let prefix = [wanted, b"#"].concat();
+                let path = (0..paths.len())
+                    .filter(|&i| paths[i].name == wanted || paths[i].name.starts_with(&prefix))
+                    .min_by_key(|&i| (&assemblies[i], i))
+                    .ok_or_else(|| {
+                        let mut names: Vec<&[u8]> =
+                            paths.iter().map(|p| p.name.as_slice()).collect();
+                        names.dedup();
+                        format!(
+                            "--reference {item} matches no path; have: {}",
+                            listed(&names)
+                        )
+                    })?;
+                references.push(&assemblies[path]);
+                if !item.contains('#') {
+                    chosen.push(path);
+                }
+            }
+            if references.is_empty() {
+                return Err(format!("--reference {given} names no path"));
+            }
+            for path in chosen {
+                let reference_sample = sample(&paths[path].name);
+                let mut others: Vec<&[u8]> = paths
+                    .iter()
+                    .zip(&assemblies)
+                    .filter(|(p, a)| {
+                        sample(&p.name) == reference_sample && !references.contains(&a.as_slice())
+                    })
+                    .map(|(_, a)| a.as_slice())
+                    .collect();
+                others.sort();
+                others.dedup();
+                if !others.is_empty() {
+                    let others: Vec<String> = others.iter().map(|a| text(a)).collect();
+                    notes.push(format!(
+                        "note: reference assembly {}; {} of the same sample stay rank 1. \
+                         Name one of them to anchor on it instead.",
+                        text(&assemblies[path]),
+                        others.join(", ")
+                    ));
+                }
+            }
         }
     }
+    references.sort();
+    references.dedup();
+    let is_reference: Vec<bool> = assemblies
+        .iter()
+        .map(|a| references.binary_search(&a.as_slice()).is_ok())
+        .collect();
+    let reference_paths = is_reference.iter().filter(|&&r| r).count();
+    let reference_names: Vec<String> = references.iter().map(|a| text(a)).collect();
+    let reference_names = reference_names.join(", ");
 
     let mut assembly_names = Interner::default();
     let assembly_ids: Vec<u32> = assemblies.iter().map(|a| assembly_names.id(a)).collect();
@@ -294,7 +336,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         bit_of,
         summary: format!(
             "plain GFA: coordinates from paths, reference {} ({} of {} paths)",
-            text(&reference_assembly),
+            reference_names,
             reference_paths,
             paths.len()
         ),
@@ -381,7 +423,7 @@ mod tests {
             "S\ta\t*\tLN:i:4\nP\tA#1#c1\ta+,a+\t*\nP\tB#1#c\ta+\t*\nP\tA#1#c2\ta+\t*\n".as_bytes(),
         )
         .unwrap();
-        let placed = from_paths(&graph, None).unwrap();
+        let placed = from_paths(&graph, Some("A#1")).unwrap();
         let carriers = placed.nodes[0].as_ref().unwrap().carriers.as_ref().unwrap();
         assert_eq!(
             &*placed.carrier_tag(carriers, Format::One),

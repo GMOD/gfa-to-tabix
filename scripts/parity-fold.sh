@@ -49,7 +49,7 @@ while read -r gfa reference; do
 done <<'CASES'
 rgfa.gfa
 ecoli_rgfa_slice.gfa
-cactus.gfa
+cactus.gfa GI262359905
 fold.gfa
 ecoli_pggb_subgraph.gfa K12
 paths.gfa ref

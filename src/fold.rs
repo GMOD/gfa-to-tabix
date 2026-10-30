@@ -510,8 +510,12 @@ mod tests {
     }
 
     fn folded(text: &str, below: i64) -> String {
+        folded_on(text, below, None)
+    }
+
+    fn folded_on(text: &str, below: i64, reference: Option<&str>) -> String {
         let graph = Graph::read(text.as_bytes()).unwrap();
-        let (graph, placed) = crate::place_graph("test", graph, None).unwrap();
+        let (graph, placed) = crate::place_graph("test", graph, reference).unwrap();
         String::from_utf8(fold(&graph, &placed, below)).unwrap()
     }
 
@@ -700,9 +704,12 @@ mod tests {
             "P ref a+,b-,c+ *",
             "P alt a+,x+,c+ *",
         ]);
-        assert_eq!(folded(&g, 1000), written(&[("a", 300, "ref", 0, 0)], &[]));
         assert_eq!(
-            folded(&g, 75),
+            folded_on(&g, 1000, Some("ref")),
+            written(&[("a", 300, "ref", 0, 0)], &[])
+        );
+        assert_eq!(
+            folded_on(&g, 75, Some("ref")),
             written(
                 &[
                     ("a", 100, "ref", 0, 0),
@@ -730,7 +737,7 @@ mod tests {
             "P alt a+,x+,y-,c+ *",
         ]);
         assert_eq!(
-            folded(&g, 1000),
+            folded_on(&g, 1000, Some("ref")),
             written(
                 &[
                     ("a", 100, "ref", 0, 0),

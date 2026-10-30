@@ -111,6 +111,8 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
             &fixture("paths.gfa"),
             "-o",
             prefix.to_str().unwrap(),
+            "--reference",
+            "ref",
             "--assembly",
             "hg",
             "--snarls",
@@ -247,6 +249,8 @@ fn a_segment_the_reference_reads_reversed_is_written_forward() {
             &fixture("reversed.gfa"),
             "-o",
             prefix.to_str().unwrap(),
+            "--reference",
+            "ref",
             "--snarls",
             snarls.to_str().unwrap(),
         ],
@@ -447,14 +451,22 @@ fn a_crashing_gfatools_leaves_a_note_naming_the_signal() {
     );
 }
 
+// One assembly's paths, so no --reference, which would keep gfatools from
+// starting
 #[test]
 fn a_plain_gfa_needs_no_gfatools() {
     let dir = scratch();
     fake_gfatools(&dir, "echo 'should not finish' >&2; exit 3");
+    let gfa = dir.join("one.gfa");
+    fs::write(
+        &gfa,
+        read(Path::new(&fixture("paths.gfa"))).replace("alt#1#ctg", "ref#1#ctg"),
+    )
+    .unwrap();
     let output = build(
         &dir,
         &[
-            &fixture("paths.gfa"),
+            gfa.to_str().unwrap(),
             "-o",
             dir.join("out").to_str().unwrap(),
         ],
@@ -570,10 +582,11 @@ fn a_partly_tagged_graph_with_no_paths_skips_gfatools() {
     fs::remove_dir_all(&dir).unwrap();
 }
 
-fn index(dir: &Path, gfa: &str, prefix: &str, format: &str) {
+fn index(dir: &Path, gfa: &str, reference: &[&str], prefix: &str, format: &str) {
     let output = Command::new(BINARY)
         .args([gfa, "--layout", "contig", "--format", format, "-o"])
         .arg(dir.join(prefix))
+        .args(reference)
         .output()
         .unwrap();
     assert!(output.status.success(), "{output:?}");
@@ -581,25 +594,29 @@ fn index(dir: &Path, gfa: &str, prefix: &str, format: &str) {
 
 #[test]
 fn the_contig_index_takes_the_build_format_and_the_alleles_do_not_change() {
-    for gfa in [
-        "alleles.gfa",
-        "paths.gfa",
-        "rgfa.gfa",
-        "cactus.gfa",
-        "ecoli_pggb_subgraph.gfa",
-        "ecoli_rgfa_slice.gfa",
+    for (gfa, reference) in [
+        ("alleles.gfa", &[][..]),
+        ("paths.gfa", &["--reference", "ref#1"]),
+        ("rgfa.gfa", &[]),
+        ("cactus.gfa", &["--reference", "GI262359905"]),
+        ("ecoli_pggb_subgraph.gfa", &["--reference", "K12#1"]),
+        ("ecoli_rgfa_slice.gfa", &[]),
     ] {
         let dir = scratch();
         let gfa = fixture(gfa);
         for format in ["1", "2"] {
             let prefix = dir.join(format!("f{format}"));
-            let output = build(
-                &dir,
-                &[&gfa, "-o", prefix.to_str().unwrap(), "--format", format],
-                None,
-            );
+            let mut args = vec![
+                gfa.as_str(),
+                "-o",
+                prefix.to_str().unwrap(),
+                "--format",
+                format,
+            ];
+            args.extend(reference);
+            let output = build(&dir, &args, None);
             assert!(output.status.success(), "{gfa}: {output:?}");
-            index(&dir, &gfa, &format!("index{format}"), format);
+            index(&dir, &gfa, reference, &format!("index{format}"), format);
         }
         for file in ["segs", "links"] {
             assert_eq!(

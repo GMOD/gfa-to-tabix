@@ -16,7 +16,7 @@ gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
 
 | Option                 | Effect                                                                                  |
 | ---------------------- | --------------------------------------------------------------------------------------- |
-| `--reference <name>`   | For a plain GFA: the PanSN sample, assembly or path to use as reference. Default the first path. |
+| `--reference <name>`   | For a plain GFA: the PanSN sample, assembly or path to use as reference, or a comma-separated list of them. Needed when the paths name more than one assembly. |
 | `-o`, `--out <prefix>` | Output prefix. Default the input name without `.gfa[.gz]`.                              |
 | `--layout <layout>`    | `anchored` (default) or `contig`; see [layouts](#layouts).                              |
 | `--format <1\|2>`      | `2` (default) writes the [one file](#what-the-file-holds); `1` writes [two](#format-1), for readers before graph-walks 4.4 and the JBrowse plugin 8.2. |
@@ -50,14 +50,19 @@ the file has; see
 - Command: `gfa-to-tabix graph.gfa.gz --reference K12 -o prefix`
 - `--reference` takes a PanSN sample, an assembly or a path name, with or
   without the `:start-end` range pggb appends. A sample with several
-  haplotypes anchors on the first in byte order, `HG002#1` before `HG002#2`.
-  Without `--reference`, the first path in the file is the reference
+  haplotypes anchors on the first in byte order, `HG002#1` before `HG002#2`
+- `--reference` also takes a comma-separated list, and every assembly an item
+  names is reference, at rank 0. A genome whose paths have no PanSN names
+  counts each path as an assembly, so `--reference chr1,chr2` anchors on both
+- Without `--reference`, the reference is the one assembly the paths name. A
+  graph with more than one stops with an error, since no line in a plain GFA
+  marks the reference
 - **Coordinates:** the tool walks every path of the reference first, then every
   other path, each group in byte order of name and then start, summing node
   lengths. A node takes the path name and position of the first path to reach
-  it, at rank 0 on the reference and rank 1 elsewhere. Given `--reference`,
-  the rows are the same for any order of the P and W lines, which
-  `vg convert` changes from run to run
+  it, at rank 0 on the reference and rank 1 elsewhere. The rows are the same
+  for any order of the P and W lines, which `vg convert` changes from run to
+  run
 - **Blunt graphs only:** summing node lengths gives the path coordinate only
   when nodes abut, so a plain GFA needs overlaps `*` or `0M`
 - **Orientation:** when the first path to reach a node reads it reversed, the
@@ -86,8 +91,11 @@ the file has; see
 
 The tool stops before writing anything on these:
 
-- `--reference NOPE matches no path; have: K12#0#chr`: the name matches no
-  path. The message lists the paths the graph has
+- `the paths name 5 assemblies; pick the reference with --reference, ...`:
+  a plain GFA with more than one assembly and no `--reference`. The message
+  lists the assemblies, the first 20 and a count of the rest
+- `--reference NOPE matches no path; have: K12#0#chr`: the name, or one item
+  of the list, matches no path. The message lists the paths the graph has
 - `link 1->2 has a non-blunt overlap (5M)`: the graph's nodes overlap. The
   message says to blunt the graph first, or use an rGFA
 - `no P or W lines, and the S lines carry no rGFA tags`: the file has neither

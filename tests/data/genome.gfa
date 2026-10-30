@@ -1,0 +1,7 @@
+H	VN:Z:1.0
+S	1	AAAA
+S	2	CC
+S	3	GGG
+L	1	+	2	+	0M
+P	chr1	1+,2+	*
+P	chr2	3+	*

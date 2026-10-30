@@ -8,6 +8,8 @@
 // 4, 2, 1, 3. walks.gfa says the same in W lines, alt first, starting at 10.
 // order.gfa: ref#1#chr walks 1 2 4, then b#1#ctg walks 4 3 1 reversed from 100
 // and a#1#ctg walks 1 3 4 from 10.
+// genome.gfa: one genome's chr1 walks 1 2 and chr2 walks 3, with no PanSN
+// names; haplotype.gfa names them HG002#1#chr1 and HG002#1#chr2.
 
 use std::fs;
 use std::io::Read;
@@ -101,8 +103,8 @@ fn each_link_has_a_row_under_both_of_its_nodes() {
 }
 
 #[test]
-fn paths_place_nodes_with_the_first_path_as_reference() {
-    let (output, nodes, links) = run("paths.gfa", &[]);
+fn paths_place_nodes_with_the_reference_walking_first() {
+    let (output, nodes, links) = run("paths.gfa", &["--reference", "ref"]);
     assert!(output.status.success());
     assert_eq!(
         nodes,
@@ -117,6 +119,50 @@ fn paths_place_nodes_with_the_first_path_as_reference() {
         "alt#1#ctg 4 5 1+ 3+ ref#1#chr 0 4 0 alt#1#ctg 4 5 1 SM:Z:ref.1,alt.1 SM:Z:alt.1"
     ])));
     assert_eq!(links.lines().count(), 8);
+}
+
+#[test]
+fn paths_of_several_assemblies_need_a_reference() {
+    let (output, nodes, _) = run("paths.gfa", &[]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(nodes.is_empty());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        "gfa-to-tabix: error: the paths name 2 assemblies; pick the reference \
+         with --reference, comma-separated for several: alt#1, ref#1\n"
+    );
+}
+
+#[test]
+fn one_assemblys_paths_name_the_reference() {
+    let (output, nodes, _) = run("haplotype.gfa", &[]);
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(
+        nodes,
+        tsv(&[
+            "HG002#1#chr1 0 4 1 0 SM:Z:HG002.1",
+            "HG002#1#chr1 4 6 2 0 SM:Z:HG002.1",
+            "HG002#1#chr2 0 3 3 0 SM:Z:HG002.1",
+        ])
+    );
+}
+
+#[test]
+fn a_reference_list_puts_every_named_path_at_rank_0() {
+    let (output, _, _) = run("genome.gfa", &[]);
+    assert_eq!(output.status.code(), Some(1));
+    let (output, nodes, _) = run("genome.gfa", &["--reference", "chr1,chr2"]);
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(
+        nodes,
+        tsv(&[
+            "chr1 0 4 1 0 SM:Z:chr1",
+            "chr1 4 6 2 0 SM:Z:chr1",
+            "chr2 0 3 3 0 SM:Z:chr2",
+        ])
+    );
+    let (_, nodes, _) = run("genome.gfa", &["--reference", "chr1"]);
+    assert!(nodes.contains(&tsv(&["chr2 0 3 3 1 SM:Z:chr2"])), "{nodes}");
 }
 
 #[test]
@@ -276,7 +322,7 @@ fn anchored_leaves_a_component_off_the_reference_on_its_own_coordinates() {
 
 #[test]
 fn anchored_keeps_the_carriers_column_last() {
-    let (_, nodes, _) = run("paths.gfa", &["--layout", "anchored"]);
+    let (_, nodes, _) = run("paths.gfa", &["--layout", "anchored", "--reference", "ref"]);
     assert_eq!(
         nodes,
         tsv(&[
@@ -311,7 +357,7 @@ fn anchored_files_a_zero_length_node_under_one_base() {
 fn format_2_writes_nodes_and_links_to_one_file_with_carrier_bits() {
     let (output, files) = run_files(
         "paths.gfa",
-        &["--layout", "contig", "--format", "2"],
+        &["--layout", "contig", "--format", "2", "--reference", "ref"],
         &["graph", "segs"],
     );
     assert!(output.status.success());
@@ -330,7 +376,7 @@ fn format_2_writes_nodes_and_links_to_one_file_with_carrier_bits() {
     assert!(rows.contains(&tsv(&[
         "ref#1#chr 0 4 L 1+ 3+ ref#1#chr 0 4 0 alt#1#ctg 4 5 1 SB:H:3 SB:H:1"
     ])));
-    let (_, nodes, links) = run("paths.gfa", &["--layout", "contig"]);
+    let (_, nodes, links) = run("paths.gfa", &["--layout", "contig", "--reference", "ref"]);
     assert_eq!(
         rows.lines().count(),
         nodes.lines().count() + links.lines().count()

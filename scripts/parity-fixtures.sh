@@ -13,9 +13,9 @@ while read -r route gfa reference; do
 done <<'CASES'
 rgfa rgfa.gfa
 rgfa ecoli_rgfa_slice.gfa
-paths paths.gfa
+paths paths.gfa ref
 paths paths.gfa alt
-paths walks.gfa
+paths walks.gfa alt
 paths walks.gfa ref#1
 paths cactus.gfa ref
 CASES

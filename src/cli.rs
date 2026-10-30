@@ -46,8 +46,9 @@ pub struct Cli {
 
     /// For a plain GFA, the reference: a PanSN sample (GRCh38), an assembly
     /// (HG002#1) or a path name; a sample anchors on its first haplotype in
-    /// byte order. Default: the first path in the file. Given
-    /// with an rGFA, coordinates come from the paths, not the tags
+    /// byte order. A comma-separated list (chr1,chr2) makes each named
+    /// assembly reference. Needed when the paths name more than one assembly.
+    /// Given with an rGFA, coordinates come from the paths, not the tags
     #[arg(long, conflicts_with = "walks")]
     pub reference: Option<String>,
 
@@ -169,7 +170,8 @@ pub enum Command {
         /// Output prefix
         #[arg(short, long = "out", value_name = "PREFIX")]
         out: String,
-        /// For a plain GFA, the backbone path, as for the index
+        /// For a plain GFA, the reference or a comma-separated list of them, as
+        /// for the index
         #[arg(long, value_name = "SAMPLE")]
         reference: Option<String>,
         /// The JBrowse assembly the tracks sit on. Default: the graph's
@@ -224,7 +226,8 @@ pub enum Command {
         /// The size to fold under
         #[arg(long, value_name = "BP", value_parser = value_parser!(i64).range(1..))]
         below: i64,
-        /// For a plain GFA, the backbone path, as for the index
+        /// For a plain GFA, the reference or a comma-separated list of them, as
+        /// for the index
         #[arg(long, value_name = "NAME")]
         reference: Option<String>,
         /// The fine index's layout

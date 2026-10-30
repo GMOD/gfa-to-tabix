@@ -67,7 +67,11 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   rGFA's tags would hold: the path name, the offset along it, and rank 0 on the
   reference or 1 elsewhere
 - `--reference` names the reference, a PanSN sample such as `GRCh38`, an
-  assembly such as `HG002#1` or a path; the default is the first path
+  assembly such as `HG002#1` or a path. A comma-separated list makes each
+  named assembly reference, as `--reference chr1,chr2` does for a genome
+  whose paths have no PanSN names
+- Without `--reference`, the tool takes the reference only from a graph whose
+  paths name one assembly, and otherwise stops and lists the assemblies
 - The tool sums node lengths along a path, so it refuses an L or P line with
   an overlap other than `*` or `0M`; blunt the graph first
 - [Plain GFA with paths](docs/index-format.md#plain-gfa-with-paths) has the

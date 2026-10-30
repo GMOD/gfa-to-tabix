@@ -75,7 +75,8 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 ```
 
 - `reference`: the PanSN sample of the first reference segment (`GRCh38` from
-  `GRCh38#0#chr1`), `null` when the backbone names have no sample
+  `GRCh38#0#chr1`), `null` when the backbone names have no sample. With a
+  `--reference` list naming several samples, the first in row order
 - `index`, `contig`, `tier.prefix`: prefixes of `.graph.bed.gz` files, or of
   `.segs.bed.gz` and `.links.bed.gz` pairs where the format is 1
 - `format` gives the format of `index` and `contig`, `tier.format` that of
@@ -195,7 +196,7 @@ gfa-to-tabix fold hprc.sv.gfa.gz --below 10000 -o hprc.fold10000
   backbone. The reference between kept alleles becomes one segment
 - `--layout` and `--max-component` should match the fine index's, so a tier
   window returns what a fine window does. `--reference` takes a plain GFA's
-  backbone path, as for the index
+  reference, as for the index
 - The graph track folds each cut it draws the same way, at ten of the linear
   view's pixels. A tier folded at N and handed over at N / 10 bp per pixel
   draws close to what the fine cut drew just below the handover:
