@@ -374,8 +374,8 @@ R#0#chr  0  1  walk   Q#0#chr  0    0    0  2  2  0  1  nx:i:10
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
   the tube map read through @jbrowse/graph-walks
-- jbrowse.org hosts HPRC v2.1's files as
-  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f5.{GRCh38,CHM13}.walks.bed.gz`
+- jbrowse.org hosts HPRC v2.1's files, skip rows included, as
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f5s.{GRCh38,CHM13}.walks.bed.gz`
 
 In a JBrowse graph track, `walksUri` takes the prefix up to the reference
 sample, so a track on hg38 reads the GRCh38 file and a track on hs1 would name
