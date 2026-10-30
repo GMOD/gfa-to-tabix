@@ -16,9 +16,11 @@ link index? See docs/open-problems.md, "One placement engine".
       Needs tabix on PATH. Node ids must match, as they do when both files
       come from one base-level GFA.
 
-A window's index-only nodes are what a walk-file view would miss there;
-walk-only nodes are steps the walk file files nearer the window than the
-index does.
+A window's index-only nodes are ones the walk file files elsewhere, in a
+detail record, or nowhere (`absent`). Only absent nodes are lost to a
+walk-file view: the index also keeps a collapsed repeat's nodes megabases
+from where the walk files place them. Walk-only nodes are steps the walk
+file files nearer the window than the index does.
 """
 
 import gzip
@@ -203,10 +205,26 @@ def walk_header(walks):
     return chunk, longs
 
 
+def every_walk_node(walks):
+    """Every node any chunk or detail record of the walk file holds."""
+    nodes, group, key = set(), [], None
+    with gzip.open(walks, "rt") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            r = line.rstrip("\n").split("\t")
+            if (r[0], r[1]) != key:
+                nodes |= chunk_graph(group)[0]
+                group, key = [], (r[0], r[1])
+            group.append(r)
+    return nodes | chunk_graph(group)[0]
+
+
 def windows(prefix, walks, seq, lo, hi, count, width=10000):
     header = walk_header(walks)
+    anywhere = every_walk_node(walks)
     step = (hi - lo - width) // max(count - 1, 1)
-    print("start\tindex_nodes\twalk_nodes\tindex_only\twalk_only\tdetail_only\tindex_edges\twalk_edges\tindex_only_edges")
+    print("start\tindex_nodes\twalk_nodes\tindex_only\twalk_only\tdetail_only\tabsent\tindex_edges\twalk_edges\tindex_only_edges")
     summary = defaultdict(list)
     for i in range(count):
         start = lo + i * step
@@ -220,6 +238,7 @@ def windows(prefix, walks, seq, lo, hi, count, width=10000):
             "index_only": len(in_nodes - wk_nodes),
             "walk_only": len(wk_nodes - in_nodes),
             "detail_only": len((in_nodes - wk_nodes) & detail),
+            "absent": len(in_nodes - anywhere),
             "index_edges": len(in_edges),
             "walk_edges": len(wk_edges),
             "index_only_edges": len(in_edges - wk_edges),
@@ -230,6 +249,9 @@ def windows(prefix, walks, seq, lo, hi, count, width=10000):
     print("median", *(statistics.median(v) for v in summary.values()), sep="\t")
     clean = sum(1 for v in summary["index_only"] if v == 0)
     print(f"# {clean} of {count} windows: the walk chunks hold every node the index cut keeps")
+    held = sum(1 for v in summary["absent"] if v == 0)
+    print(f"# {held} of {count} windows: the walk file holds every node the index cut keeps, somewhere")
+    print(f"# {len(anywhere)} nodes in the walk file")
 
 
 def main(argv):
