@@ -132,6 +132,8 @@ fn sample(name: &str) -> &str {
 
 struct Entry {
     state: State,
+    // the backbone segment the allele leaves
+    from: u32,
     chrom: String,
     at: u64,
 }
@@ -218,12 +220,14 @@ fn read_links(
         } else if a.rank == 0 && b.rank > 0 {
             links.entries.push(Entry {
                 state: target,
+                from: source.0,
                 chrom: f[5].clone(),
                 at: source_at,
             });
         } else if a.rank > 0 && b.rank == 0 {
             links.entries_toward.push(Entry {
                 state: (source.0, !source.1),
+                from: target.0,
                 chrom: f[9].clone(),
                 at: target_at,
             });
@@ -279,14 +283,15 @@ fn row(a: Allele) -> Line {
     }
 }
 
-// The allele's row, its states in walk order and the coordinate it exits at
-fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<(Line, Vec<State>, u64)> {
+// The allele's row, its states in walk order and the backbone segment it
+// exits onto
+fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<(Line, Vec<State>, u32)> {
     let mut visited: HashSet<State> = HashSet::new();
     let mut states = Vec::new();
     let mut current = entry.state;
     let mut path = String::new();
     let (mut alt_len, mut min_rank, mut donor) = (0u64, None::<i64>, "");
-    let (mut nested, mut exit_at) = (false, None::<u64>);
+    let (mut nested, mut exit_at) = (false, None::<(u64, u32)>);
     while visited.insert(current) {
         states.push(current);
         let segment = &segments[current.0 as usize];
@@ -306,16 +311,16 @@ fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<(Line, Vec
         {
             out += 1;
             let next_segment = &segments[next.0 as usize];
-            // arriving back on the entry's backbone sequence is the exit,
-            // whichever of the two equivalent L-line directions the file
-            // stated it in
+            // arriving back on the backbone is the exit, whichever of the two
+            // equivalent L-line directions the file stated it in
             if next_segment.rank == 0 {
-                if next_segment.chrom == entry.chrom {
-                    exit_at = Some(if next.1 {
+                if exit_at.is_none() || next_segment.chrom == entry.chrom {
+                    let at = if next.1 {
                         next_segment.start
                     } else {
                         next_segment.end
-                    });
+                    };
+                    exit_at = Some((at, next.0));
                 }
                 continue;
             }
@@ -337,7 +342,7 @@ fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<(Line, Vec
         let Some(next) = pick else { break };
         current = next;
     }
-    let exit_at = exit_at?;
+    let (exit_at, exit_to) = exit_at?;
     let (start, end) = (entry.at.min(exit_at), entry.at.max(exit_at));
     let ref_len = end - start;
     let delta = alt_len as i64 - ref_len as i64;
@@ -361,7 +366,7 @@ fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<(Line, Vec
         nested,
         segments: &path,
     });
-    Some((line, states, exit_at))
+    Some((line, states, exit_to))
 }
 
 // Format 2's rows split into format 1's node and link rows, each without its
@@ -454,17 +459,17 @@ fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
     // A walk in from an allele's far end retraces it, so the far end is
     // skipped. A walk from a link stated toward the backbone counts only when
     // it meets no node an allele written so far visits.
-    let mut retraced: HashSet<(State, &str, u64)> = HashSet::new();
+    let mut retraced: HashSet<(State, u32)> = HashSet::new();
     let mut visited: HashSet<u32> = HashSet::new();
     let mut dangling = 0;
     let toward = links.entries_toward.iter().map(|e| (e, true));
     for (entry, is_toward) in links.entries.iter().map(|e| (e, false)).chain(toward) {
-        if retraced.contains(&(entry.state, entry.chrom.as_str(), entry.at))
+        if retraced.contains(&(entry.state, entry.from))
             || (is_toward && visited.contains(&entry.state.0))
         {
             continue;
         }
-        let Some((r, states, exit_at)) = walk(links, segments, entry) else {
+        let Some((r, states, exit_to)) = walk(links, segments, entry) else {
             dangling += 1;
             continue;
         };
@@ -473,7 +478,7 @@ fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
         }
         rows.push(r);
         let last = states[states.len() - 1];
-        retraced.insert(((last.0, !last.1), entry.chrom.as_str(), exit_at));
+        retraced.insert(((last.0, !last.1), exit_to));
         visited.extend(states.iter().map(|s| s.0));
     }
     if dangling > 0 {

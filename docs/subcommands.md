@@ -138,7 +138,7 @@ gfa-to-tabix alleles hprc
   to an earlier one is a duplication, which the inventory leaves out
 - A link between a backbone node and an off-backbone one enters an allele,
   whichever node the L line names first; the walk follows links until it
-  arrives back on the backbone sequence it left
+  arrives back on the backbone
 - The walk in from an allele's other end retraces it, so the allele gets one
   row
 - A walk that never rejoins the backbone is dropped, and the count goes to

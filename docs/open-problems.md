@@ -100,6 +100,14 @@ nothing decided.
   graph alone, but would change the reference of a hosted index rebuilt
   without `--reference`
 
+## Alleles that leave one chromosome for another
+
+- When an allele's walk finds no exit on the sequence it entered from, it
+  takes an exit on another, and `alleles` writes the row from the entry's
+  coordinate to the exit's, though the two lie on different sequences
+- Dropping the walk would lose the allele, and writing it as a breakend needs a
+  row shape the allele track doesn't draw yet
+
 ## Walk files
 
 - Given `--refs HG002`, the tool treats each of the sample's haplotypes as its
