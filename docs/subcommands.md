@@ -75,8 +75,7 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 ```
 
 - `reference`: the PanSN sample of the first reference segment (`GRCh38` from
-  `GRCh38#0#chr1`), `null` when the backbone names have no sample. With a
-  `--reference` list naming several samples, the first in row order
+  `GRCh38#0#chr1`), `null` when the backbone names have no sample
 - `index`, `contig`, `tier.prefix`: prefixes of `.graph.bed.gz` files, or of
   `.segs.bed.gz` and `.links.bed.gz` pairs where the format is 1
 - `format` gives the format of `index` and `contig`, `tier.format` that of

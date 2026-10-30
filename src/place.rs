@@ -172,7 +172,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
             if distinct.len() > 1 {
                 return Err(format!(
                     "the paths name {} assemblies; pick the reference with \
-                     --reference, comma-separated for several: {}",
+                     --reference, comma-separated for one genome's paths: {}",
                     distinct.len(),
                     listed(&distinct)
                 ));
@@ -180,7 +180,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
             references.push(&assemblies[0]);
         }
         Some(given) => {
-            let mut chosen = Vec::new();
+            let (mut chosen, mut samples) = (Vec::new(), Vec::new());
             for item in given.split(',').filter(|item| !item.is_empty()) {
                 let (wanted, _) = split_path_name(item.as_bytes());
                 let prefix = [wanted, b"#"].concat();
@@ -200,9 +200,22 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
                 if !item.contains('#') {
                     chosen.push(path);
                 }
+                if paths[path].name.contains(&b'#') {
+                    samples.push(sample(&paths[path].name));
+                }
             }
             if references.is_empty() {
                 return Err(format!("--reference {given} names no path"));
+            }
+            samples.sort();
+            samples.dedup();
+            if samples.len() > 1 {
+                return Err(format!(
+                    "--reference {given} names {} samples, {}; a list names one \
+                     genome's paths, such as chr1,chr2",
+                    samples.len(),
+                    listed(&samples)
+                ));
             }
             for path in chosen {
                 let reference_sample = sample(&paths[path].name);

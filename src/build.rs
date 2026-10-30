@@ -195,8 +195,7 @@ impl Bubbler {
     }
 }
 
-// Returns the rows written and the index's extension.
-fn write_bubbles(text: &[u8], out: &str) -> Result<(usize, &'static str), String> {
+fn bubble_rows(text: &[u8]) -> Result<Vec<Line>, String> {
     let mut rows: Vec<Line> = Vec::new();
     for line in text.split(|&b| b == b'\n').filter(|l| !l.is_empty()) {
         let fields: Vec<&[u8]> = line.splitn(4, |&b| b == b'\t').collect();
@@ -219,8 +218,7 @@ fn write_bubbles(text: &[u8], out: &str) -> Result<(usize, &'static str), String
             text: [line, b"\n"].concat(),
         });
     }
-    let index = bed::write_lines(out, b"", &mut rows)?;
-    Ok((rows.len(), index))
+    Ok(rows)
 }
 
 // `gfatools` is the bubbler, or the note that says why there is none.
@@ -233,11 +231,20 @@ fn bubble_file(
 ) -> Result<bool, String> {
     let path = format!("{prefix}.bubbles.bed.gz");
     match (route, gfatools.and_then(Bubbler::finish), snarls) {
-        (Route::Rgfa, Ok(text), _) => {
-            let (count, index) = write_bubbles(&text, &path)?;
-            eprintln!("{count} bubbles from gfatools -> {path} (+ .{index})");
-            Ok(true)
-        }
+        (Route::Rgfa, Ok(text), _) => match bubble_rows(&text) {
+            Ok(mut rows) => {
+                let index = bed::write_lines(&path, b"", &mut rows)?;
+                eprintln!(
+                    "{} bubbles from gfatools -> {path} (+ .{index})",
+                    rows.len()
+                );
+                Ok(true)
+            }
+            Err(why) => {
+                eprintln!("note: {why}, {NO_BUBBLES}");
+                Ok(false)
+            }
+        },
         (Route::Rgfa, Err(note), _) => {
             eprintln!("note: {note}");
             Ok(false)

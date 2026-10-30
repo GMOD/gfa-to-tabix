@@ -53,7 +53,10 @@ the file has; see
   haplotypes anchors on the first in byte order, `HG002#1` before `HG002#2`
 - `--reference` also takes a comma-separated list, and every assembly an item
   names is reference, at rank 0. A genome whose paths have no PanSN names
-  counts each path as an assembly, so `--reference chr1,chr2` anchors on both
+  counts each path as an assembly, so `--reference chr1,chr2` anchors on both.
+  A list that names two PanSN samples, such as `GRCh38,CHM13`, stops with an
+  error: `alleles` drops the sample from a sequence's name, so both samples'
+  `chr1` would land on one
 - Without `--reference`, the reference is the one assembly the paths name. A
   graph with more than one stops with an error, since no line in a plain GFA
   marks the reference

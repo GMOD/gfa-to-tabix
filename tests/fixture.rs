@@ -129,7 +129,18 @@ fn paths_of_several_assemblies_need_a_reference() {
     assert_eq!(
         String::from_utf8_lossy(&output.stderr),
         "gfa-to-tabix: error: the paths name 2 assemblies; pick the reference \
-         with --reference, comma-separated for several: alt#1, ref#1\n"
+         with --reference, comma-separated for one genome's paths: alt#1, ref#1\n"
+    );
+}
+
+#[test]
+fn a_reference_list_names_one_sample() {
+    let (output, nodes, _) = run("paths.gfa", &["--reference", "ref,alt"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(nodes.is_empty());
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("names 2 samples, alt, ref"),
+        "{output:?}"
     );
 }
 

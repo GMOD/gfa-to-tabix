@@ -451,6 +451,18 @@ fn a_crashing_gfatools_leaves_a_note_naming_the_signal() {
     );
 }
 
+#[test]
+fn a_gfatools_that_writes_no_bubbles_leaves_a_note() {
+    let stderr = build_past_failing_gfatools("cat > /dev/null; echo 'not a bubble'");
+    assert!(
+        stderr.contains(
+            "note: gfatools bubble wrote a row with no coordinates: not a bubble, \
+             so no bubble file"
+        ),
+        "{stderr}"
+    );
+}
+
 // One assembly's paths, so no --reference, which would keep gfatools from
 // starting
 #[test]

@@ -11,8 +11,8 @@ link index? See docs/open-problems.md, "One placement engine".
       For COUNT windows of WIDTH bp (default 10000) spread over FROM-TO on
       SEQ, compares the nodes and edges an index query keeps
       (PREFIX.graph.bed.gz, format 2, anchored) with those the walk file's
-      chunks hold: their ref, nodes and route rows, from the chunk before
-      the window's first, and the chunk's detail records listed apart.
+      chunks hold: their ref, nodes and route rows, read back as far as a
+      reader reads, and the chunks' detail records listed apart.
       Needs tabix on PATH. Node ids must match, as they do when both files
       come from one base-level GFA.
 
@@ -166,8 +166,12 @@ def joins(ends):
     }
 
 
-def walk_cut(walks, seq, chunk, start, end):
-    first = max(start // chunk - 1, 0) * chunk
+def walk_cut(walks, seq, header, start, end):
+    """A reader queries from the chunk before the window's first, and from the
+    chunk before each #long pass that overlaps the window."""
+    chunk, longs = header
+    reach = min([start] + [s for name, s, e in longs if name == seq and s < end and e > start])
+    first = max(reach // chunk - 1, 0) * chunk
     rows = tabix(walks, f"{seq}:{first + 1}-{end}")
     by_chunk = defaultdict(list)
     for r in rows:
@@ -187,13 +191,20 @@ def walk_cut(walks, seq, chunk, start, end):
     return nodes, edges_ | joins(ends), detail_nodes - nodes
 
 
-def chunk_size(walks):
+def walk_header(walks):
+    """The chunk size and each #long pass: (sequence, start, end)."""
     header = subprocess.run(["tabix", "-H", walks], capture_output=True, text=True, check=True).stdout
-    return int(re.search(r"chunk:i:(\d+)", header).group(1))
+    chunk = int(re.search(r"chunk:i:(\d+)", header).group(1))
+    longs = []
+    for line in header.splitlines():
+        f = line.split("\t")
+        if f[0] == "#long":
+            longs.append((f[1], int(f[2]), int(f[3])))
+    return chunk, longs
 
 
 def windows(prefix, walks, seq, lo, hi, count, width=10000):
-    chunk = chunk_size(walks)
+    header = walk_header(walks)
     step = (hi - lo - width) // max(count - 1, 1)
     print("start\tindex_nodes\twalk_nodes\tindex_only\twalk_only\tdetail_only\tindex_edges\twalk_edges\tindex_only_edges")
     summary = defaultdict(list)
@@ -201,7 +212,7 @@ def windows(prefix, walks, seq, lo, hi, count, width=10000):
         start = lo + i * step
         end = start + width
         in_nodes, in_edges = index_cut(prefix, seq, start, end)
-        wk_nodes, wk_edges, detail = walk_cut(walks, seq, chunk, start, end)
+        wk_nodes, wk_edges, detail = walk_cut(walks, seq, header, start, end)
         in_edges, wk_edges = pairs(in_edges), pairs(wk_edges)
         row = {
             "index_nodes": len(in_nodes),

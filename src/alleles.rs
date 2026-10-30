@@ -300,14 +300,23 @@ fn row(a: Allele) -> Line {
 }
 
 // Each allele's key and row; None when the walk never reaches the backbone of
-// the sequence it left
-fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<Vec<(Key, Line)>> {
+// the sequence it left. A walk's next step depends only on its state and that
+// sequence, so `dead` holds the states from which a walk on it reaches none.
+fn walk<'a>(
+    links: &Links,
+    segments: &[Segment],
+    entry: &'a Entry,
+    dead: &mut HashSet<(State, &'a str)>,
+) -> Option<Vec<(Key, Line)>> {
     let mut visited: HashSet<State> = HashSet::new();
     let mut states = Vec::new();
     let mut current = entry.state;
     let mut nested = false;
     let mut exits = Vec::new();
     while visited.insert(current) {
+        if dead.contains(&(current, entry.chrom.as_str())) {
+            break;
+        }
         states.push(current);
         let segment = &segments[current.0 as usize];
         let next = links
@@ -333,9 +342,11 @@ fn walk(links: &Links, segments: &[Segment], entry: &Entry) -> Option<Vec<(Key, 
         if !exits.is_empty() {
             break;
         }
-        current = pick?;
+        let Some(next) = pick else { break };
+        current = next;
     }
     if exits.is_empty() {
+        dead.extend(states.iter().map(|&s| (s, entry.chrom.as_str())));
         return None;
     }
     let alt_len: u64 = states
@@ -493,9 +504,10 @@ fn write(segments: &[Segment], links: &Links, out: &str) -> Result<(), String> {
         }));
     }
     let mut written: HashSet<Key> = HashSet::new();
+    let mut dead = HashSet::new();
     let mut dangling = 0;
     for entry in &links.entries {
-        let Some(found) = walk(links, segments, entry) else {
+        let Some(found) = walk(links, segments, entry, &mut dead) else {
             dangling += 1;
             continue;
         };

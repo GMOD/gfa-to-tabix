@@ -69,7 +69,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - `--reference` names the reference, a PanSN sample such as `GRCh38`, an
   assembly such as `HG002#1` or a path. A comma-separated list makes each
   named assembly reference, as `--reference chr1,chr2` does for a genome
-  whose paths have no PanSN names
+  whose paths have no PanSN names. A list names one sample's paths at most
 - Without `--reference`, the tool takes the reference only from a graph whose
   paths name one assembly, and otherwise stops and lists the assemblies
 - The tool sums node lengths along a path, so it refuses an L or P line with

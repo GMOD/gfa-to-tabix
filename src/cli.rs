@@ -47,7 +47,8 @@ pub struct Cli {
     /// For a plain GFA, the reference: a PanSN sample (GRCh38), an assembly
     /// (HG002#1) or a path name; a sample anchors on its first haplotype in
     /// byte order. A comma-separated list (chr1,chr2) makes each named
-    /// assembly reference. Needed when the paths name more than one assembly.
+    /// assembly reference; it names one sample's paths at most. Needed when
+    /// the paths name more than one assembly.
     /// Given with an rGFA, coordinates come from the paths, not the tags
     #[arg(long, conflicts_with = "walks")]
     pub reference: Option<String>,
