@@ -4,6 +4,37 @@ Each section is a problem measured but not yet decided, with the fix it
 suggests. A fix that gets built gets an ADR in [adr/](adr/); this page holds
 nothing decided.
 
+## Regions where haplotypes leave the reference's order
+
+- Every hard window measured lies where a stretch of reference doesn't match
+  about the same stretch of each haplotype: segmental duplications (LCR22,
+  chrY's Yp11 and Yq11), hypervariable loci (IGL), satellites and tandem
+  arrays (pericentromeres, Yq12, CHM13's short arm), and pggb's collapsed
+  repeats. Off them, the walk view loses nothing in 43-47 of 50 arm windows
+  and 10 of 10 control windows; in segmental duplications it loses nothing in
+  14-19 of 30, and on CHM13's short arm in 0 of 10
+- Under 10 kb of reference there, a haplotype can carry 30-200 kb of its own
+  sequence, jump to a paralog megabases away, or pass a merged repeat many
+  times, so no file layout makes a complete view both small and faithful. The
+  index draws too much there; graph-walks before its crossing fix drew too
+  little, and after it draws 13,000-80,000 nodes in some LCR22A windows,
+  taking 3-15 s
+- Download size is not what limits it: walk-view windows there read 0.3-2 MB
+  and index windows 2-3 MB on GRCh38. Layout and drawing time and
+  readability are
+- Suggested next steps, in order:
+  1. **Fold long alleles:** draw an allele in full when it's short, and a
+     long one as a labelled bar, its length and where it leaves and rejoins
+     the reference, which expands on request. graph-walks' crossing cap,
+     65,536 bp by default, is the first part; the plugin's expand-on-click,
+     fetching the folded piece from walk files' chunks or detail records, is
+     the second
+  2. **Switch coordinates:** in a segmental duplication, offer the locus from
+     a haplotype that carries it, through walk files built for that
+     reference or `--layout contig`
+  3. **Pair with an alignment view:** show the copies as a dot plot or
+     synteny view, which JBrowse already draws, beside the graph
+
 ## Walk files in place of the index for path graphs
 
 - [ADR 0008](adr/0008-index-keeps-its-placement.md) keeps the index's
@@ -15,42 +46,40 @@ nothing decided.
 - The harness counts as lost every node of a kept haplotype that the index
   draws and the walk view doesn't, so its losses are an upper bound. With
   graph-walks 4b064ec, of the nodes it counts lost, the share the haplotype
-  carries on a stretch before
-  or after the window, which the index draws only because it files a whole
+  carries on a stretch before or after the window, which the index draws
+  only because it files a whole
   component under one interval, is 49% on Minigraph-Cactus chr22, 5% on pggb
   chr22 and 12% on pggb chrY. At Minigraph-Cactus chr22 18.45 Mb the 3,061
   nodes are a 32 kb insertion before the window, and the haplotypes carry a
   deletion across it
-- Five things stand in the way:
-  - **A detour spanning the window:** in a window inside a haplotype's
-    replaced stretch, graph-walks draws nothing for the haplotype. `walkCut`'s
-    `detourSpan` keeps only a run with a step on the window, and the cut
-    never fetches the chunk holding the detour's far side. Such stretches
-    hold 33% of the counted losses on Minigraph-Cactus chr22, 10% on pggb
-    chr22 and 29% on pggb chrY
-  - **A deletion across the window:** `--walks` writes no skip row in a chunk
-    where the path has a piece (`walks.rs` `write_skips`,
-    [ADR 0006](adr/0006-walks-skip-rows.md)), on the assumption that the
-    reader draws the piece. The reader keeps only steps on the window and its
-    context, so a deletion over 18,433,383-18,487,047 on Minigraph-Cactus
-    chr22 shows nowhere, and a jump inside one piece never gets a skip row
+- graph-walks 4.5.0 closes two gaps 4.4 had, in the reader alone:
+  - **A detour spanning the window:** a kept haplotype that leaves the
+    reference before the window and rejoins after it keeps the steps
+    between, and the reader fetches the far side within its 4-chunk follow
+    reach. A crossing over `crossingBp`, 65,536 bp off the reference by
+    default, comes back as a skip carrying `offBp`, `offSteps` and `chunks`
+  - **A deletion across the window:** a direct jump across it comes back as a
+    skip, though `--walks` writes no skip row in a chunk where the path has a
+    piece ([ADR 0006](adr/0006-walks-skip-rows.md))
+  - With 8 haplotypes, lost allele nodes fall from 6,180 to 2,150 on
+    Minigraph-Cactus chr22, 6,217 to 3,941 on pggb chr22 and 10,699 to 8,160
+    on pggb chrY; windows that lose nothing stay at 85, 71, 72 and 59. Every
+    window draws all its reference nodes, against 3, 1 and 7 that didn't on
+    pggb chr22, pggb chrY and CHM13 with 4.4
+- Four things still stand in the way:
+  - **The viewer:** bandage-core draws a skip only for a haplotype with no
+    walk in the cut, and draws every skip as a deletion, so a capped crossing
+    and a jump beside a fragment don't show
+    (`src/layout/walkRowRuns.ts:723-777`). The plugin also installs
+    graph-walks 4.4 until its next release
   - **Haplotypes jumping between repeat copies:** see the next section
   - **Zoomed out:** the coarse tier, alleles and bubbles exist only for the
     index
   - **Carriers:** a walk-drawn graph colours no node by its samples, so the
     hosted `ecoli_pggb_carriage` track has no walk-file source
-- graph-walks 4b064ec places a node at the reference's pass over the window.
-  With it, no window leaves a reference node undrawn, against 3, 1 and 7
-  windows on pggb chr22, pggb chrY and pggb chr22 on CHM13 with 4.4. The
-  windows that lose nothing move by at most one per stratum: 85 and 71 of
-  100, 71 of 80 and 59 of 100 on Minigraph-Cactus chr22, pggb chr22, pggb
-  chrY and pggb chr22 on CHM13, against 85, 72, 71 and 59
-  (`docs/placement/*-placement-fix*`). The plugin still installs graph-walks
-  4.4, so hosted tracks keep the old placement until a release
-- Suggested next steps: in graph-walks, draw a detour that spans the window
-  and follow it to its far side; in `--walks`, write skip rows by the
-  stretch a path jumps rather than by the chunks it has pieces in; count only
-  nodes the haplotype carries on the window in the harness; then rerun
+- Suggested next steps: release the plugin on graph-walks 4.5.0; draw skips
+  beside a walk and capped crossings as folded bars in bandage-core; count
+  only nodes a haplotype carries on the window in the harness, then rerun
   `docs/placement/scripts`
 
 ## Haplotypes jumping between repeat copies
