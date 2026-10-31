@@ -47,6 +47,9 @@ things are.
 
 ## Next, in order
 
+Format 6 is not urgent for Minigraph-Cactus users: format 5 mostly works
+there. The urgent part is the word on screen
+
 1. **Drop the word now, with no format change.** The false claim users see
    is the label, not the format:
    - bandage-core: `GAP_CAUSE_TEXT.deleted` ("deleted in this haplotype",
@@ -77,10 +80,12 @@ things are.
 ## Where things are
 
 - `docs/departures/`: the scripts and compact results ADR 0009 cites
-- `target/plan-review/` (gitignored): every review of this round. `plan*.md`
-  and `naming/` lead to `final/converged.md`; `final/confidence/report.md`
-  is the spike's report, with `filing/`, `reader/`, `pggb/` and `untangle/`
-  beside it
+- `target/plan-review/` (gitignored, deleted by `cargo clean`): every review
+  of this round. `plan*.md` and `naming/` lead to `final/converged.md`;
+  `final/confidence/report.md` is the spike's report, with `filing/`,
+  `reader/`, `pggb/` and `untangle/` beside it. Its texts and scripts are
+  copied to `~/notes/handoffs/2026-10-31-departures-reviews/`, with a README
+  giving the reading order
 - ada: `~/work/f6/` (the `bypass` prototype builds of MC chr22 and pggb
   chrY), `~/work/spike/` (spike builds, MC chrY cut for the agreement
   scores, alignments in `align/`)
