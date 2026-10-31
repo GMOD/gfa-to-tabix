@@ -55,6 +55,16 @@ graph-walks, on `main` and pushed:
   `chunks`; a viewer cuts again with a higher `crossingBp` to show it
 - Released as 4.5.0 (tag `v4.5.0`, c411255); CI publishes it to npm from the
   tag
+- 69a73ee, released as 4.6.0: a crossing fragment carries `crossing`, the
+  stretch of the reference it replaces and whether it runs it backwards.
+  Without it the plugin's synteny lanes dropped such a haplotype, which 4.4
+  drew as a deletion
+
+jbrowse-plugin-graphgenomeviewer, released as 8.6.0 and rehosted:
+
+- a33e999: takes graph-walks 4.6.0, and the synteny lanes draw a crossing
+  fragment as a `spansWindow` record of the stretch it replaces, its mate
+  the haplotype's own bp across it
 
 Hosted on jbrowse.org/demos, already live:
 
@@ -100,13 +110,14 @@ optional arrays
 
 ## Open threads, with the next action
 
-1. **Plugin release:** bump `@jbrowse/graph-walks` in
-   jbrowse-plugin-graphgenomeviewer's lockfile to 4.5.0, release
-   the plugin (`docs/developing.md`, "Releasing": push, let CI pass, `pnpm
-   version`), then `cd ~/src/jbrowse-plugin-list && pnpm dep && pnpm
-   invalidate`. Until then hosted tracks run graph-walks 4.4. On 2026-10-30
-   the plugin checkout held another session's unpushed commits and an
-   uncommitted `eslint.config.mjs`, so the release waits on that session
+1. **A crossing depends on the haplotypes kept:** in the plugin's
+   `walks5_skipfollow` fixture, HG005 crosses 2000-5000 through 500 bp of
+   its own. Cut with every haplotype kept, the reader reads chunk 1000 for
+   other walks and returns HG005 as a crossing fragment; cut with HG005
+   alone, it reads only the window's chunks and returns the file's skip row.
+   The synteny lanes draw both as the same deletion, but the walk view draws
+   node 99 in one and a deletion in the other. Decide whether a skip row
+   should send the reader to its near side's chunk
 2. **Show skips in bandage-core, then fold long alleles:** draw a skip beside
    a haplotype's walk, draw a capped crossing as a labelled bar from
    `offBp`, and re-cut with a higher `crossingBp` on click (see above)
