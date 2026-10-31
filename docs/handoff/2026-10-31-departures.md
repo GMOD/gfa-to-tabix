@@ -36,10 +36,9 @@ things are.
   open-problems (a4d51ee)
 - Nothing hosted has changed: users still read format 5 files through plugin
   8.6.0
-- Uncommitted in this worktree: `src/walks.rs` and `tests/walks.rs` hold a
-  superseded `bypass` prototype. It is saved as
-  `~/notes/handoffs/2026-10-31-bypass-prototype.patch`; revert the two files
-  before porting the writer
+- A superseded `bypass` prototype was reverted from `src/walks.rs` and
+  `tests/walks.rs`; it is saved as
+  `~/notes/handoffs/2026-10-31-bypass-prototype.patch`
 - The writer to port is the spike, saved as
   `~/notes/handoffs/2026-10-31-departures-spike.patch` (applies to a4d51ee;
   `write_departures`, `--fold`, `--alignments`, `--chain`). Its live copy is
