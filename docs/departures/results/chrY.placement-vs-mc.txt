@@ -1,0 +1,25 @@
+== MC chrY build
+[   3.1 s] reference GRCh38: 1 paths, 445420 nodes
+GRCh38: 35572 pieces, 16 paths visit no GRCh38 node and are left out; departures: 2756 between pieces, 290 inside a piece, 152 across record gaps, 7 one-ended (11 under fold), 0 over steps on another sequence, 4217 rows
+mcY walks: 6.37 s, 6672768 KB peak
+== out2/pggbY.GRCh38.walks.bed.gz vs MC
+513 pggb contigs with pieces, 257 also in MC, 256 not
+170515 pggb pieces with an MC position for their contig start; 61257 (35.9%) within 10000 bp of it
+  Yp11/Yq11: 59660 of 167353 (35.6%)
+  other: 1597 of 3162 (50.5%)
+1611673 departure records: both ends where MC puts them 5285 (0.3%), one 388258, neither 537504, no MC position 680626
+== align/pggbY-align.GRCh38.walks.bed.gz vs MC
+480 pggb contigs with pieces, 254 also in MC, 226 not
+44648 pggb pieces with an MC position for their contig start; 31814 (71.3%) within 10000 bp of it
+  Yp11/Yq11: 30854 of 43406 (71.1%)
+  other: 960 of 1242 (77.3%)
+145541 departure records: both ends where MC puts them 10775 (7.4%), one 13014, neither 57331, no MC position 64421
+== align/pggbY-primary.GRCh38.walks.bed.gz vs MC
+500 pggb contigs with pieces, 257 also in MC, 243 not
+35615 pggb pieces with an MC position for their contig start; 30929 (86.8%) within 10000 bp of it
+  Yp11/Yq11: 29867 of 34547 (86.5%)
+  other: 1062 of 1068 (99.4%)
+53255 departure records: both ends where MC puts them 6928 (13.0%), one 3751, neither 17118, no MC position 25458
+== chain/pggbY-c5k.GRCh38.walks.bed.gz missing
+== chain/pggbY-c20k.GRCh38.walks.bed.gz missing
+== chain/pggbY-c100k.GRCh38.walks.bed.gz missing

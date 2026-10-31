@@ -1,0 +1,26 @@
+== out2/pggb22.GRCh38.walks.bed.gz (ADR 0001 criteria, raw lift, lookback 1)
+  LCR22A           placement  47.78% once  60.98% | piece  22.51% of 5998 | recall listed 100.00% strict  93.50% of 123, lost elsewhere 8 | pieces 46.18 per pair
+  LCR22B-D         placement  86.27% once  92.54% | piece  52.58% of 5335 | recall listed  97.73% strict  97.73% of 264, lost elsewhere 6 | pieces 22.36 per pair
+  pericentromeric  placement  96.75% once  99.19% | piece  49.31% of 2324 | recall listed  97.87% strict  94.22% of 329, lost elsewhere 19 | pieces 8.82 per pair
+  satellite        placement  91.96% once  92.56% | piece  20.07% of 1131 | recall listed  52.67% strict  16.01% of 281, lost elsewhere 236 | pieces 42.32 per pair
+  control-30Mb     placement 100.00% once 100.00% | piece 100.00% of 744 | recall listed 100.00% strict 100.00% of 744, lost elsewhere 0 | pieces 1.00 per pair
+  random-733       placement 100.00% once 100.00% | piece 100.00% of 31 | recall listed  13.95% strict  13.95% of 43, lost elsewhere 37 | pieces 9.00 per pair
+  LCR22A           placement  47.78% once  60.98% | piece  22.51% of 5998 | recall listed 100.00% strict  93.50% of 123, lost elsewhere 8 | pieces 46.18 per pair
+  LCR22B-D         placement  86.27% once  92.54% | piece  52.58% of 5335 | recall listed  97.73% strict  97.73% of 264, lost elsewhere 6 | pieces 22.36 per pair
+  pericentromeric  placement  96.75% once  99.19% | piece  49.31% of 2324 | recall listed  97.87% strict  94.22% of 329, lost elsewhere 19 | pieces 8.82 per pair
+  p-arm            placement       - once       - | piece       - of 0 | recall listed       - strict       - of 0, lost elsewhere 0 | pieces 0.00 per pair
+  control-30Mb     placement 100.00% once 100.00% | piece 100.00% of 744 | recall listed 100.00% strict 100.00% of 744, lost elsewhere 0 | pieces 1.00 per pair
+  elsewhere        placement  93.53% once  94.00% | piece  32.84% of 25780 | recall listed  98.98% strict  98.90% of 5199, lost elsewhere 57 | pieces 17.92 per pair
+== align/pggb22-primary.GRCh38.walks.bed.gz (ADR 0001 criteria, raw lift, lookback 1)
+  LCR22A           placement  64.25% once  79.14% | piece  97.96% of 98 | recall listed  79.67% strict  71.54% of 123, lost elsewhere 35 | pieces 1.21 per pair
+  LCR22B-D         placement  90.98% once  96.82% | piece 100.00% of 250 | recall listed  97.73% strict  96.97% of 264, lost elsewhere 8 | pieces 1.06 per pair
+  pericentromeric  placement  98.45% once  99.65% | piece  94.54% of 366 | recall listed  95.74% strict  94.53% of 329, lost elsewhere 18 | pieces 1.20 per pair
+  satellite        placement  99.06% once  99.58% | piece  98.31% of 59 | recall listed  27.40% strict  19.57% of 281, lost elsewhere 226 | pieces 1.07 per pair
+  control-30Mb     placement 100.00% once 100.00% | piece 100.00% of 744 | recall listed 100.00% strict 100.00% of 744, lost elsewhere 0 | pieces 1.00 per pair
+  random-733       placement 100.00% once 100.00% | piece 100.00% of 11 | recall listed  51.16% strict  41.86% of 43, lost elsewhere 25 | pieces 1.00 per pair
+  LCR22A           placement  64.25% once  79.14% | piece  97.96% of 98 | recall listed  79.67% strict  71.54% of 123, lost elsewhere 35 | pieces 1.21 per pair
+  LCR22B-D         placement  90.98% once  96.82% | piece 100.00% of 250 | recall listed  97.73% strict  96.97% of 264, lost elsewhere 8 | pieces 1.06 per pair
+  pericentromeric  placement  98.45% once  99.65% | piece  94.54% of 366 | recall listed  95.74% strict  94.53% of 329, lost elsewhere 18 | pieces 1.20 per pair
+  p-arm            placement       - once       - | piece       - of 0 | recall listed       - strict       - of 0, lost elsewhere 0 | pieces 0.00 per pair
+  control-30Mb     placement 100.00% once 100.00% | piece 100.00% of 744 | recall listed 100.00% strict 100.00% of 744, lost elsewhere 0 | pieces 1.00 per pair
+  elsewhere        placement  93.22% once  93.93% | piece  93.87% of 5513 | recall listed  98.15% strict  97.90% of 5199, lost elsewhere 109 | pieces 1.05 per pair

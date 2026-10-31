@@ -1,0 +1,64 @@
+kept 419961 blocks, dropped 884754
+kept 683763 blocks, dropped 270040
+== out2/pggbY.GRCh38.walks.bed.gz against the primary projection
+566854	records on GRCh38#0#chrY with both ends
+247708	an end unaligned (43.7%); of them 0 own bp with a multi-pass end: 212147
+207835	neither end where the alignment puts it (36.7%); of them 0 own bp with a multi-pass end: 177743
+109623	one end where the alignment puts it (19.3%); of them 0 own bp with a multi-pass end: 101915
+1588	both ends where the alignment puts them (0.3%); of them 0 own bp with a multi-pass end: 54
+100	an end aligned to another sequence (0.0%); of them 0 own bp with a multi-pass end: 72
+per sampled window, all: median 114 p95 24018 max 173312 over 207 windows
+per sampled window, both ends where the alignment puts them: median 0 p95 5 max 111 over 207 windows
+out2/pggbY.GRCh38.walks.bed.gz: lookback 1 chunk(s); 36 haplotype paths scored; 0 without alignments hold 0 pieces; 59.75% of scored piece bp align
+  all              placement  56.28% once  56.32% | piece  48.60% of 18999 | recall listed  96.13% strict  95.38% of 4160, lost elsewhere 192 | pieces 6.58 per pair
+  elsewhere        placement  56.28% once  56.32% | piece  48.60% of 18999 | recall listed  96.13% strict  95.38% of 4160, lost elsewhere 192 | pieces 6.58 per pair
+== align/pggbY-align.GRCh38.walks.bed.gz against the primary projection
+81311	records on GRCh38#0#chrY with both ends
+63416	an end unaligned (78.0%); of them 0 own bp with a multi-pass end: 49212
+9864	one end where the alignment puts it (12.1%); of them 0 own bp with a multi-pass end: 8148
+5308	neither end where the alignment puts it (6.5%); of them 0 own bp with a multi-pass end: 4482
+2723	both ends where the alignment puts them (3.3%); of them 0 own bp with a multi-pass end: 696
+per sampled window, all: median 58 p95 391 max 23650 over 207 windows
+per sampled window, both ends where the alignment puts them: median 0 p95 20 max 126 over 207 windows
+align/pggbY-align.GRCh38.walks.bed.gz: lookback 1 chunk(s); 32 haplotype paths scored; 0 without alignments hold 0 pieces; 59.74% of scored piece bp align
+  all              placement  59.63% once  60.32% | piece  87.71% of 5109 | recall listed  96.04% strict  94.93% of 4143, lost elsewhere 210 | pieces 1.54 per pair
+  elsewhere        placement  59.63% once  60.32% | piece  87.71% of 5109 | recall listed  96.04% strict  94.93% of 4143, lost elsewhere 210 | pieces 1.54 per pair
+== align/pggbY-primary.GRCh38.walks.bed.gz against the primary projection
+35396	records on GRCh38#0#chrY with both ends
+25612	an end unaligned (72.4%); of them 0 own bp with a multi-pass end: 6758
+6227	one end where the alignment puts it (17.6%); of them 0 own bp with a multi-pass end: 5336
+3214	both ends where the alignment puts them (9.1%); of them 0 own bp with a multi-pass end: 876
+343	neither end where the alignment puts it (1.0%); of them 0 own bp with a multi-pass end: 191
+per sampled window, all: median 91 p95 265 max 1936 over 207 windows
+per sampled window, both ends where the alignment puts them: median 3 p95 43 max 139 over 207 windows
+align/pggbY-primary.GRCh38.walks.bed.gz: lookback 1 chunk(s); 35 haplotype paths scored; 0 without alignments hold 0 pieces; 59.62% of scored piece bp align
+  all              placement  61.05% once  61.75% | piece  96.69% of 4378 | recall listed  96.17% strict  95.86% of 4156, lost elsewhere 172 | pieces 1.12 per pair
+  elsewhere        placement  61.05% once  61.75% | piece  96.69% of 4378 | recall listed  96.17% strict  95.86% of 4156, lost elsewhere 172 | pieces 1.12 per pair
+== primary build
+alignment placement: 83967145 steps placed by the alignment, 5807580 aligned but no pass within tolerance (off), 63769211 unaligned placed by prediction, 22179083 unaligned outside the slack (off), 268 unaligned once-passed anchors placed, 14450 unaligned multi-pass with nothing to predict from (off)
+GRCh38: 46023 pieces, 542 paths visit no GRCh38 node and are left out; departures: 7240 between pieces, 28149 inside a piece, 0 across record gaps, 520 one-ended (151 under fold), 7 over steps on another sequence, 53775 rows
+pggbY-primary: 99.89 s, 4783500 KB peak
+183330860 bytes
+# departures
+35911	departures; 53775 rows; 1.50 rows per departure
+33793	an end on a node R passes more than once
+18518	same strand, back
+14835	same strand, forward along the haplotype
+13379	0 own bp
+2043	strand switch
+1240	own >= 100 kb
+515	one-ended
+451	stretch >= 32 chunks (prototype cap)
+254	empty stretch (own sequence between adjacent R steps)
+stretch bp median 289 p90 17312 p99 3460719 max 33347488
+own bp median 5 p90 27 p99 660405 max 46551966
+rows per departure: 1:25385 2:9472 3:123 4:225 5:61 6:115 7:46 8:123 9:29 10:26 11:40 12:20 13:8 14:23 15:1 17:4 18:3 19:117 20:1 21:89
+# coverage: (contig, chunk) inside the contig extent with no piece
+48284	absent (contig, chunk) pairs inside contig extents
+0	  with no departure block of that contig over the chunk
+# per-window cost of the departure query (tabix), 64 kb windows
+GRCh38#0#chrY: 218 windows; rows returned median 91 p95 265 max 1937; truly overlapping median 91 p95 265 max 1937; over-read rows median 0 p95 0 max 0; haplotypes with a record median 91 p95 123 max 175
+GRCh38#0#chrY_KI270740v1_random: 1 windows; rows returned median 16 p95 16 max 16; truly overlapping median 16 p95 16 max 16; over-read rows median 0 p95 0 max 0; haplotypes with a record median 9 p95 9 max 9
+== align2 (raw lift, tallies)
+alignment placement: 155057064 steps placed by the alignment, 8558088 aligned but no pass within tolerance (off), 9959485 unaligned placed by prediction, 2156145 unaligned outside the slack (off), 165 unaligned once-passed anchors placed, 6790 unaligned multi-pass with nothing to predict from (off)
+GRCh38: 64336 pieces, 547 paths visit no GRCh38 node and are left out; departures: 24205 between pieces, 57143 inside a piece, 0 across record gaps, 724 one-ended (133 under fold), 125 over steps on another sequence, 148704 rows

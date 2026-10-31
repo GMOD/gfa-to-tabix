@@ -1,0 +1,47 @@
+== pggb chr22 alignment-guided (primary projection)
+alignment placement: 744135443 steps placed by the alignment, 10384080 aligned but no pass within tolerance (off), 141880690 unaligned placed by prediction, 714815217 unaligned outside the slack (off), 1016 unaligned once-passed anchors placed, 134532 unaligned multi-pass with nothing to predict from (off)
+GRCh38: 378702 pieces, 93 paths visit no GRCh38 node and are left out; departures: 137535 between pieces, 158486 inside a piece, 0 across record gaps, 6985 one-ended (1532 under fold), 2822 over steps on another sequence, 722740 rows
+pggb22-primary: 349.22 s, 21295400 KB peak
+1659989316 bytes
+GRCh38#0#chr22: requests median 1 p95 1 max 1; bytes median 97250 p95 225511 max 786947 total 75423784
+GRCh38#0#chr22~departure: requests median 1 p95 4 max 4; bytes median 101789 p95 389481 max 1400577 total 117668533
+== vs MC chr22
+704 pggb contigs with pieces, 532 also in MC, 172 not
+253591 pggb pieces with an MC position for their contig start; 250142 (98.6%) within 10000 bp of it
+  Yp11/Yq11: 78243 of 81593 (95.9%)
+  other: 171899 of 171998 (99.9%)
+662279 departure records: both ends where MC puts them 68075 (10.3%), one 6388, neither 5352, no MC position 582464
+== vs MC chr22, nearest pass for contrast
+914 pggb contigs with pieces, 532 also in MC, 382 not
+922159 pggb pieces with an MC position for their contig start; 459708 (49.9%) within 10000 bp of it
+  Yp11/Yq11: 269904 of 708273 (38.1%)
+  other: 189804 of 213886 (88.7%)
+36110767 departure records: both ends where MC puts them 107557 (0.3%), one 3127086, neither 5241389, no MC position 27634735
+# departures
+303171	departures; 722740 rows; 2.38 rows per departure
+267369	an end on a node R passes more than once
+246346	0 own bp
+107398	same strand, forward along the haplotype
+104109	strand switch
+87336	same strand, back
+8769	own >= 100 kb
+4328	one-ended
+2241	empty stretch (own sequence between adjacent R steps)
+768	stretch >= 32 chunks (prototype cap)
+stretch bp median 118242 p90 475496 p99 841949 max 38259252
+own bp median 0 p90 1 p99 9606863 max 50679315
+rows per departure: 1:71248 2:139116 3:42091 4:31216 5:6600 6:7081 7:3419 8:1481 9:326 10:118 11:35 12:11 13:10 14:194 15:223 17:2
+# coverage: (contig, chunk) inside the contig extent with no piece
+31153	absent (contig, chunk) pairs inside contig extents
+0	  with no departure block of that contig over the chunk
+# per-window cost of the departure query (tabix), 64 kb windows
+GRCh38#0#chr22: 97 windows; rows returned median 7 p95 1416 max 130149; truly overlapping median 7 p95 1416 max 130149; over-read rows median 0 p95 0 max 0; haplotypes with a record median 6 p95 464 max 622
+GRCh38#0#chr22_KI270731v1_random: 1 windows; rows returned median 366 p95 366 max 366; truly overlapping median 366 p95 366 max 366; over-read rows median 0 p95 0 max 0; haplotypes with a record median 240 p95 240 max 240
+GRCh38#0#chr22_KI270732v1_random: 1 windows; rows returned median 932 p95 932 max 932; truly overlapping median 932 p95 932 max 932; over-read rows median 0 p95 0 max 0; haplotypes with a record median 466 p95 466 max 466
+GRCh38#0#chr22_KI270733v1_random: 1 windows; rows returned median 216 p95 216 max 216; truly overlapping median 216 p95 216 max 216; over-read rows median 0 p95 0 max 0; haplotypes with a record median 185 p95 185 max 185
+GRCh38#0#chr22_KI270734v1_random: 1 windows; rows returned median 411 p95 411 max 411; truly overlapping median 411 p95 411 max 411; over-read rows median 0 p95 0 max 0; haplotypes with a record median 331 p95 331 max 331
+GRCh38#0#chr22_KI270735v1_random: 1 windows; rows returned median 930 p95 930 max 930; truly overlapping median 930 p95 930 max 930; over-read rows median 0 p95 0 max 0; haplotypes with a record median 465 p95 465 max 465
+GRCh38#0#chr22_KI270736v1_random: 1 windows; rows returned median 0 p95 0 max 0; truly overlapping median 0 p95 0 max 0; over-read rows median 0 p95 0 max 0; haplotypes with a record median 0 p95 0 max 0
+GRCh38#0#chr22_KI270737v1_random: 1 windows; rows returned median 742 p95 742 max 742; truly overlapping median 742 p95 742 max 742; over-read rows median 0 p95 0 max 0; haplotypes with a record median 278 p95 278 max 278
+GRCh38#0#chr22_KI270738v1_random: 1 windows; rows returned median 600 p95 600 max 600; truly overlapping median 600 p95 600 max 600; over-read rows median 0 p95 0 max 0; haplotypes with a record median 474 p95 474 max 474
+GRCh38#0#chr22_KI270739v1_random: 1 windows; rows returned median 8528 p95 8528 max 8528; truly overlapping median 8528 p95 8528 max 8528; over-read rows median 0 p95 0 max 0; haplotypes with a record median 86 p95 86 max 86

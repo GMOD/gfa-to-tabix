@@ -1,0 +1,6 @@
+mc22-c20k: 84.43 s, 4071612 KB peak
+-rw-rw-r-- 1 cdiesh cdiesh 61457754 Oct 30 21:54 mc22-c20k.GRCh38.walks.bed.gz
+
+chain/build.pggbY-c100k.log: stopped unfinished after 2 h in the path pass
+chain/build.pggbY-c20k.log: stopped unfinished after 2 h in the path pass
+chain/build.pggbY-c5k.log: stopped unfinished after 2 h in the path pass

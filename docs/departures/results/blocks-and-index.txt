@@ -1,0 +1,19 @@
+Per-window cost from the Tabix index (tbiq.py), 64 kb windows, bytes in whole 64 KB blocks.
+Spike files under nearest-pass placement, per-sequence projection.
+
+MC chr22, walk chunks:          requests median 1 max 1; bytes median 91 KB p95 120 KB max 374 KB
+MC chr22, departures (64 kb):   requests median 1 max 1; bytes median 64 KB p95 84 KB max 126 KB
+MC chr22, departures (16 kb):   requests median 1 max 2; bytes median 64 KB p95 115 KB max 157 KB; rows 31,763 -> 104,468; file +1.0% -> +1.9%
+pggb chrY, walk chunks:         requests median 0 max 1; bytes median 0 p95 99 KB max 796 KB
+pggb chrY, departures (64 kb):  requests median 1 p95 3 max 5; bytes median 64 KB p95 598 KB max 1.6 MB
+pggb chrY, departures (16 kb):  requests median 1 p95 5 max 8; bytes median 64 KB p95 652 KB max 5.2 MB; rows 1,619,124 -> 3,564,045; file 198 -> 214 MB
+pggb chr22, walk chunks:        requests median 1 max 1; bytes median 98 KB p95 335 KB max 1.1 MB
+pggb chr22, departures (64 kb): requests median 2 p95 5 max 5; bytes median 131 KB p95 6.2 MB max 73.3 MB
+
+Leave piece chunk against the leave breakpoint's chunk (two-ended same-sequence departures):
+MC chr22:  25,185 departures; leave piece in chunk(leavePos) 5,241, in chunk(leavePos - 1) 314, elsewhere 19,630; rejoin piece in chunk(rejoinPos) 23,931
+pggb chrY: 562,263 departures; leave piece in chunk(leavePos) 351,200, elsewhere 211,058; rejoin piece in chunk(rejoinPos) 200,270
+
+Lifted alignment blocks overlapping another block of the same contig (HPRC release 2 all-vs-1 wfmash vs GRCh38):
+chrY:  3,444 contigs, 1,304,715 blocks, 959,326 (73.5%) overlap a previous block, 37.8% of aligned bp; primary.py keeps 419,961
+chr22: 10,715 contigs, 953,803 blocks, 203,323 (21.3%) overlap, 1.7% of aligned bp; primary.py keeps 683,763

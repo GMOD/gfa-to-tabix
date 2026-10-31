@@ -106,6 +106,64 @@ nothing decided.
   a rejoin stretches the reference, on repeat and ordinary windows alike;
   then score jumps against impg's alignments, as ADR 0001 scores placement
 
+## Placement of steps on nodes the reference passes more than once
+
+- [ADR 0009](adr/0009-departure-records.md) records every departure
+  exactly, and on pggb what it records under [ADR 0001](adr/0001-step-placement.md)'s
+  nearest-pass rule is mostly the rule: on chrY 97% of records have an end
+  on a node the reference passes more than once, 87% carry 0 own bp, one
+  haplotype has up to 2,065 records over one 64 kb window, and only 35.9%
+  of pieces land within 10 kb of where Minigraph-Cactus places the same
+  contig position (35.6% in Yp11 and Yq11); on chr22 a window can read
+  73 MB of departure rows. Measured in [docs/departures/](departures/)
+- No one publishes a rule for this: `odgi untangle` votes per segment with
+  no continuity term and ties identical copies, vg deconstruct assigns
+  alleles by a 10 kb context vote, and HPRC release 2 ships no projection
+  of its pggb graphs, only the wfmash all-vs-1 alignments
+- Those alignments are themselves ambiguous in repeats: 73.5% of chrY's
+  lifted blocks overlap another block of the same contig, since wfmash maps
+  every segment of an array to its best copy. `primary.py` chains each
+  contig's blocks into one co-linear projection first
+- Three placements were built on pggb chrY and chr22 and scored by
+  agreement with Minigraph-Cactus's placement of the same contigs
+  (`agree.py`, 10 kb), an independent projection:
+
+| | nearest pass | alignment-guided, raw blocks | alignment-guided, primary projection |
+|---|---|---|---|
+| chrY pieces agreeing with MC, Yp11/Yq11 / elsewhere | 35.6% / 50.5% | 71.1% / 77.3% | 86.5% / 99.4% |
+| chrY departures, rows | 572,051, 1,616,957 | 81,978, 146,299 | 35,911, 53,775 |
+| chrY rows per 64 kb window, median / p95 / max | 114 / 24,018 / 173,312 | 58 / 391 / 23,650 | 91 / 265 / 1,937 |
+| chr22 pieces agreeing with MC, 2.8-26.7 Mb / elsewhere | 38.1% / 88.7% | | 95.9% / 99.9% |
+| chr22 departures, rows | 12,458,636, 36,505,261 | | 303,171, 722,740 |
+| chr22 departure query bytes p95 / max | 6.2 MB / 73 MB | | 389 KB / 1.4 MB |
+| chr22 file over format 5 | +32.6% | | +17.8% |
+
+- Under ADR 0001's own criteria on chr22 (the raw lift as truth), the
+  primary projection takes piece precision from 32.8% to 93.9% and pieces
+  per pair from 17.9 to 1.05 outside the repeats, with strict recall
+  98.9% to 97.9%; in LCR22A precision goes 22.5% to 98.0% and strict recall
+  93.5% to 71.5%. The recall lost is sequence the raw alignments place at
+  several copies, which nearest pass shows at every copy by hopping and
+  the projection at one. Which a browser should show there is the open
+  choice; by MC's placement the one copy is right 95.9% of the time
+- The projection places 45% of chr22's steps on reference nodes off the
+  reference, as own sequence, where the contig's alignment does not cover
+  them (the chr22 community holds sequence of other acrocentric
+  chromosomes); an off step costs more to encode, hence +17.8%
+- A chaining rule inside the writer (`--chain` in the spike: stay on one
+  copy, pay a penalty per jump, place a step off R when keeping it would
+  force a hop and back) is exact on the fixtures and did not finish chrY
+  in two hours; it needs a formulation linear in passes before it can be
+  compared
+- Suggested next steps: decide the recall criterion for repeats (MC
+  agreement, or presence at every copy the raw alignments reach); then take
+  alignment-guided placement as an optional `--alignments` input, recorded
+  in the header with the alignment's name and checksum, nearest pass as
+  the fallback, and an ADR with the chr22 table above; ask the pggb
+  authors whether they would publish `odgi untangle` projections for
+  release 2 against GRCh38 and CHM13, and whether a chain-based projection
+  is what they would endorse for a browser
+
 ## Collapsed repeats in pggb graphs
 
 - `place.rs` gives a node the reference passes several times one coordinate,

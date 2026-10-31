@@ -1,0 +1,53 @@
+# header
+#walks	format:i:6	chunk:i:65536	maxnode:i:1024	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	fold:i:65536
+#reference	GRCh38
+# rows by kind
+2468	abridged
+31763	departure rows
+863620	detail rows
+565	nodes
+776	ref
+786690	route
+250281	walk
+59740336	file bytes
+4708533	departure text bytes of 440542994 (1.1%)
+59144351	baseline bytes; delta +595985 (+1.0%)
+# departures
+25234	departures; 31763 rows; 1.26 rows per departure
+24383	same strand, forward along the haplotype
+4601	0 own bp
+2482	empty stretch (own sequence between adjacent R steps)
+1580	own >= 100 kb
+766	strand switch
+455	own bp with no steps (sequence the graph lacks)
+294	stretch >= 32 chunks (prototype cap)
+49	one-ended
+36	same strand, back
+stretch bp median 1 p90 42787 p99 3188758 max 5532115
+own bp median 1 p90 33882 p99 5026796 max 15282146
+rows per departure: 1:22894 2:1587 3:83 4:151 5:209 6:14 7:1 8:6 10:11 11:30 12:6 13:242
+# coverage: (contig, chunk) inside the contig extent with no piece
+15698	absent (contig, chunk) pairs inside contig extents
+0	  with no departure block of that contig over the chunk
+# per-window cost of the departure query (tabix), 64 kb windows
+GRCh38#0#chr22: 776 windows; rows returned median 4 p95 310 max 893; truly overlapping median 4 p95 310 max 893; over-read rows median 0 p95 0 max 0; haplotypes with a record median 3 p95 285 max 464
+# cross-check against GFA-derived departures (informed-2 dep.rs)
+10032	ins
+2465	ins: match
+7567	ins: no record
+38060	jump
+414	jump: MISMATCH
+21748	jump: match
+15898	jump: no record
+   truth ['HG00126#1#JBHIKU010000006.1', '8719479', 'jump', '0:287', '0:286', '18759767', '18863160', '-', '103393', '0', '0', '12230768', '0', '1', '0']
+   spike {'seq': 'GRCh38#0#chr22', 'path': 'HG00126#1#JBHIKU010000006.1', 'frag': 8719479, 'hap_start': 12230768, 'own_bp': 0, 'own_steps': 0, 'leave': (18863181, 127229761, '+', 1), 'rejoin': (18759767, 127217304, '-', 1), 'tags': []}
+   truth ['HG00126#1#JBHIKU010000006.1', '8719479', 'jump', '0:280', '0:285', '18360006', '18732418', '+', '372412', '165158', '11929', '12513277', '1', '0', '0']
+   spike {'seq': 'GRCh38#0#chr22', 'path': 'HG00126#1#JBHIKU010000006.1', 'frag': 8719479, 'hap_start': 12513277, 'own_bp': 165158, 'own_steps': 11929, 'leave': (18359963, 127842783, '-', 1), 'rejoin': (18732418, 127207755, '+', 1), 'tags': []}
+   truth ['HG00126#1#JBHIKU010000006.1', '8719479', 'jump', '0:286', '0:287', '18759767', '18863160', '+', '103393', '0', '0', '12707315', '0', '1', '0']
+   spike {'seq': 'GRCh38#0#chr22', 'path': 'HG00126#1#JBHIKU010000006.1', 'frag': 8719479, 'hap_start': 12707315, 'own_bp': 0, 'own_steps': 0, 'leave': (18759767, 127217304, '+', 1), 'rejoin': (18863181, 127229761, '-', 1), 'tags': []}
+   truth ['HG00126#1#JBHIKU010000006.1', '8719479', 'jump', '0:286', '0:287', '18759789', '18863193', '+', '103404', '12', '3', '12812169', '1', '0', '0']
+   spike {'seq': 'GRCh38#0#chr22', 'path': 'HG00126#1#JBHIKU010000006.1', 'frag': 8719479, 'hap_start': 12812169, 'own_bp': 12, 'own_steps': 3, 'leave': (18759767, 127217305, '-', 1), 'rejoin': (18863193, 127842707, '+', 1), 'tags': []}
+   truth ['HG00128#1#JBHIKS010000009.1', '9183247', 'jump', '0:286', '0:287', '18759767', '18863160', '+', '103393', '0', '0', '12617683', '0', '1', '0']
+   spike {'seq': 'GRCh38#0#chr22', 'path': 'HG00128#1#JBHIKS010000009.1', 'frag': 9183247, 'hap_start': 12617683, 'own_bp': 0, 'own_steps': 0, 'leave': (18759767, 127217304, '+', 1), 'rejoin': (18863181, 127229761, '-', 1), 'tags': []}
+   truth ['HG00128#1#JBHIKS010000009.1', '9183247', 'jump', '0:286', '0:287', '18759789', '18863193', '+', '103404', '12', '3', '12722746', '1', '0', '0']
+   spike {'seq': 'GRCh38#0#chr22', 'path': 'HG00128#1#JBHIKS010000009.1', 'frag': 9183247, 'hap_start': 12722746, 'own_bp': 12, 'own_steps': 3, 'leave': (18759767, 127217305, '-', 1), 'rejoin': (18863193, 127842707, '+', 1), 'tags': []}

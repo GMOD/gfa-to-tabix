@@ -1,0 +1,29 @@
+# rows by kind
+708	abridged
+1616957	departure rows
+923410	detail rows
+363	nodes
+399	ref
+130603	route
+246593	walk
+198191706	file bytes
+216065569	departure text bytes of 1655753212 (13.0%)
+179774883	baseline bytes; delta +18416823 (+10.2%)
+# departures
+572051	departures; 1616957 rows; 2.83 rows per departure
+552386	an end on a node R passes more than once
+497789	0 own bp
+211704	same strand, back
+208895	same strand, forward along the haplotype
+150847	strand switch
+24629	stretch >= 32 chunks (prototype cap)
+1190	own >= 100 kb
+605	one-ended
+255	empty stretch (own sequence between adjacent R steps)
+stretch bp median 34741 p90 884679 p99 14884489 max 30158786
+own bp median 0 p90 1 p99 1513 max 46455186
+rows per departure: 1:145399 2:289858 3:28170 4:22283 5:12697 6:12745 7:17750 8:17213 9:7058 10:4011 11:4094 12:2601 13:735 14:1988 15:112 16:410 17:518 18:2481 19:1352 20:462 21:114
+# coverage: (contig, chunk) inside the contig extent with no piece
+92912	absent (contig, chunk) pairs inside contig extents
+0	  with no departure block of that contig over the chunk
+# per-window cost of the departure query (tabix), 64 kb windows
