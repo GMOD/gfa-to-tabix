@@ -155,14 +155,22 @@ nothing decided.
   force a hop and back) is exact on the fixtures and did not finish chrY
   in two hours; it needs a formulation linear in passes before it can be
   compared
-- Suggested next steps: decide the recall criterion for repeats (MC
-  agreement, or presence at every copy the raw alignments reach); then take
-  alignment-guided placement as an optional `--alignments` input, recorded
-  in the header with the alignment's name and checksum, nearest pass as
-  the fallback, and an ADR with the chr22 table above; ask the pggb
-  authors whether they would publish `odgi untangle` projections for
-  release 2 against GRCh38 and CHM13, and whether a chain-based projection
-  is what they would endorse for a browser
+- Working plan, not a closed choice: show one copy, by alignment-guided
+  placement as an optional `--alignments` input recorded in the header
+  with the alignment's name and checksum, nearest pass as the fallback,
+  and a viewer that says where a step is one of several copies, lists the
+  reference's other passes and offers the graph view. Before adopting it,
+  check that every path rebuilds from its rows under that placement; the
+  chaining spike was checked, the alignment-guided one was not
+- Showing every copy stays open: the HPRC pggb team may weigh in. ADR
+  0009's record needs no change for any placement, so other copies could
+  come later as a second placement over the same records, without a new
+  format
+- To ask the pggb authors: whether they would publish `odgi untangle`
+  projections of release 2 against GRCh38 and CHM13; whether a
+  chain-based single-copy projection is what they would endorse for a
+  browser; and how they would want sequence shown that matches several
+  copies
 
 ## Collapsed repeats in pggb graphs
 
