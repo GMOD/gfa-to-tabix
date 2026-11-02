@@ -62,14 +62,33 @@ there. The urgent part is the word on screen
    - BandageJS `src/view.ts:95` and ggbandage `R/walkrows.R:90` keep their own
      copies of the text; ggbandage's `tests/testthat/test-figure.R:647` asserts
      it, and its update-deps job stops on a failed check
-   - Not in scope: bandage-core's graph-view `deletionEdges`
-     (`src/deletionEdges.ts`) and the route nodes `withDeletionRoutes` gives
-     them (`src/layout/deletionRoutes.ts`). Changing them is a separate
-     layout decision, under review on 2026-11-02. Under FMMM a deletion link
-     without a route is a short spring that can bunch the backbone
-     (f637b74). The stress engine places the backbone straight by
-     construction, so there a route only shapes the arch and adds cost. The
-     legend's `deletionKey` text may change
+   - Done in bandage-core 1f53c24 (unreleased): the walk-row text now reads
+     "no step on the reference across 150 kb" and the key "no step on the
+     reference". `skipRowOf`'s `offReferenceBp: 0` is still to do
+   - Graph-view deletion edges, 2026-11-02. A measurement and five reviews
+     found pggb index cuts draw hundreds of false Mb-scale deletions per
+     segmental-duplication window: index cuts carry no path visits, so the
+     repeat checks never run. In bandage-core, unreleased:
+     - a69b585: each reference visit is judged by its own strand. A force
+       layout leaves out every link that joins no two neighbouring reference
+       visits, wherever the rest of the graph joins its ends
+     - 57d99c4: a deletion the layout must keep, its far end past the
+       window, keeps a route node as in 12.5.1. All routes together draw no
+       longer than the rest of the graph
+     - On a pggb LCR22A window, FMMM goes from 114 s to 6 s and stress from
+       55 s to 14 s. MC windows lay out as in 12.5.1 or flatter
+   - **Parked: the graph-view arc label** ("94.2 kb del", the legend's "(a
+     deletion)", the plugin's "Deletion" hover). Four wordings were rendered
+     side by side on real windows, published as the artifact "Deletion arc
+     wording". The user found none clear, because the picture doesn't show
+     what is skipped. Under a force layout the arc leaves the reference for
+     a stub and nothing marks the skipped stretch, often mostly outside the
+     window. Labels tried and rejected: "−94.2 kb", "skips 94.2 kb", "skips
+     94.2 kb of reference", "no GRCh38 step · 94.2 kb", "jumps 94.2 kb of
+     GRCh38", a bare reference range. Before choosing words, make the
+     drawing show the skipped stretch, for example by marking or dimming
+     the bypassed reference and saying when most of it lies outside the
+     window. Or drop the arc label and leave the facts to the hover
 2. **Format 6, Minigraph-Cactus first. Stop before starting: ask the
    user.** A review on 2026-11-01 found gaps in the evidence behind ADR
    0009, listed under its "Review after acceptance". Confirm the format
