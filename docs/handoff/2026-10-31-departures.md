@@ -58,25 +58,32 @@ there. The urgent part is the word on screen
      `offReferenceBp: 0` (`src/layout/walkRowRuns.ts:723-777`)
    - plugin: `type: 'deletion'` and the `windowDeletion` helper in
      `src/WalkTabixSyntenyAdapter/walkLanes.ts`, the legend's deletion rows
-   - jbrowse-components: `laneHeader.ts:196`, on its next beta
    - BandageJS `src/view.ts:95` and ggbandage `R/walkrows.R:90` keep their own
      copies of the text; ggbandage's `tests/testthat/test-figure.R:647` asserts
      it, and its update-deps job stops on a failed check
-   - Done in bandage-core 1f53c24 (unreleased): the walk-row text now reads
-     "no step on the reference across 150 kb" and the key "no step on the
-     reference". `skipRowOf`'s `offReferenceBp: 0` is still to do
+   - Done in bandage-core 1f53c24 (12.6.0): the walk-row text now reads "no
+     step on the reference across 150 kb" and the key "no step on the
+     reference". `skipRowOf`'s `offReferenceBp: 0` (`walkRowRuns.ts:747`) is
+     still to do
    - Graph-view deletion edges, 2026-11-02. A measurement and five reviews
      found pggb index cuts draw hundreds of false Mb-scale deletions per
      segmental-duplication window: index cuts carry no path visits, so the
-     repeat checks never run. In bandage-core, unreleased:
+     repeat checks never run. In bandage-core 12.6.0 to 12.6.2:
      - a69b585: each reference visit is judged by its own strand. A force
        layout leaves out every link that joins no two neighbouring reference
        visits, wherever the rest of the graph joins its ends
-     - 57d99c4: a deletion the layout must keep, its far end past the
-       window, keeps a route node as in 12.5.1. All routes together draw no
-       longer than the rest of the graph
+     - 57d99c4 (12.6.0) routed a deletion the layout must keep through a route
+       node, 0c34456 (12.6.1) arched it instead, and fffaf40 (12.6.2) lays
+       deletions out as bubbles again, keeping only the route budget
      - On a pggb LCR22A window, FMMM goes from 114 s to 6 s and stress from
        55 s to 14 s. MC windows lay out as in 12.5.1 or flatter
+   - jbrowse-components 9e63e0d5ba: the lane header reads "no step on the
+     reference across 150 kb", and the HPRC haplotypes tutorial follows. Its
+     header still lists CIGAR-derived changes as "30 kb deletion" (a different
+     path, `layoutMultiWay.ts`), not touched
+   - Plugin: a00b1af takes bandage-core 12.6.2 and types the synteny record
+     `skip`. `formRows.ts` keeps `deletion`, since typing stays in the Forms
+     track. The arc label, legend and hover below wait on the drawing
    - **Parked: the graph-view arc label** ("94.2 kb del", the legend's "(a
      deletion)", the plugin's "Deletion" hover). Four wordings were rendered
      side by side on real windows, published as the artifact "Deletion arc
