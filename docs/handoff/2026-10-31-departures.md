@@ -62,6 +62,12 @@ there. The urgent part is the word on screen
    - BandageJS `src/view.ts:95` and ggbandage `R/walkrows.R:90` keep their own
      copies of the text; ggbandage's `tests/testthat/test-figure.R:647` asserts
      it, and its update-deps job stops on a failed check
+   - Not in scope: bandage-core's graph-view `deletionEdges`
+     (`src/deletionEdges.ts`) and the route nodes `withDeletionRoutes` gives
+     them (`src/layout/deletionRoutes.ts`). The route nodes are what keep a
+     stress layout linear across a deletion; without them each link is a
+     short spring that bunches the backbone (f637b74). The legend's
+     `deletionKey` text may change; the edges and routes stay
 2. **Format 6, Minigraph-Cactus first. Stop before starting: ask the
    user.** A review on 2026-11-01 found gaps in the evidence behind ADR
    0009, listed under its "Review after acceptance". Confirm the format
