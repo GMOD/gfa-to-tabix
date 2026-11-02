@@ -5,7 +5,8 @@
 // rgfa_reordered.gfa lists the same segments in reverse.
 // island.gfa adds s4 and s5 on d#1#x, linked to each other and to nothing else.
 // paths.gfa: ref#1#chr walks 1 2 4 and alt#1#ctg walks 1 3 4; node lengths are
-// 4, 2, 1, 3. walks.gfa says the same in W lines, alt first, starting at 10.
+// 4, 2, 1, 3. diploid.gfa adds ref#2#chr walking 1 3 4. walks.gfa says the
+// same as paths.gfa in W lines, alt first, starting at 10.
 // order.gfa: ref#1#chr walks 1 2 4, then b#1#ctg walks 4 3 1 reversed from 100
 // and a#1#ctg walks 1 3 4 from 10.
 // genome.gfa: one genome's chr1 walks 1 2 and chr2 walks 3, with no PanSN
@@ -134,14 +135,19 @@ fn paths_of_several_assemblies_need_a_reference() {
 }
 
 #[test]
-fn a_reference_list_names_one_sample() {
-    let (output, nodes, _) = run("paths.gfa", &["--reference", "ref,alt"]);
-    assert_eq!(output.status.code(), Some(1));
-    assert!(nodes.is_empty());
-    assert!(
-        String::from_utf8_lossy(&output.stderr).contains("names 2 samples, alt, ref"),
-        "{output:?}"
-    );
+fn a_reference_list_names_one_assembly() {
+    for (list, named) in [
+        ("ref,alt", "names 2 assemblies, alt#1, ref#1"),
+        ("ref#1,ref#2", "names 2 assemblies, ref#1, ref#2"),
+    ] {
+        let (output, nodes, _) = run("diploid.gfa", &["--reference", list]);
+        assert_eq!(output.status.code(), Some(1));
+        assert!(nodes.is_empty());
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(named),
+            "{output:?}"
+        );
+    }
 }
 
 #[test]

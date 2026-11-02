@@ -180,7 +180,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
             references.push(&assemblies[0]);
         }
         Some(given) => {
-            let (mut chosen, mut samples) = (Vec::new(), Vec::new());
+            let (mut chosen, mut genomes) = (Vec::new(), Vec::new());
             for item in given.split(',').filter(|item| !item.is_empty()) {
                 let (wanted, _) = split_path_name(item.as_bytes());
                 let prefix = [wanted, b"#"].concat();
@@ -201,20 +201,20 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
                     chosen.push(path);
                 }
                 if paths[path].name.contains(&b'#') {
-                    samples.push(sample(&paths[path].name));
+                    genomes.push(typed(&paths[path].name));
                 }
             }
             if references.is_empty() {
                 return Err(format!("--reference {given} names no path"));
             }
-            samples.sort();
-            samples.dedup();
-            if samples.len() > 1 {
+            genomes.sort();
+            genomes.dedup();
+            if genomes.len() > 1 {
                 return Err(format!(
-                    "--reference {given} names {} samples, {}; a list names one \
+                    "--reference {given} names {} assemblies, {}; a list names one \
                      genome's paths, such as chr1,chr2",
-                    samples.len(),
-                    listed(&samples)
+                    genomes.len(),
+                    listed(&genomes)
                 ));
             }
             for path in chosen {
