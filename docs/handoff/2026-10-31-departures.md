@@ -78,7 +78,7 @@ there. The urgent part is the word on screen
        the layout is 12.5.1's, with a69b585 and the route budget kept
      - On a pggb LCR22A window, FMMM goes from 114 s to 7 s in 12.6.2 (stress
        55 s to 14 s was measured on 12.6.0). MC windows render as in 12.5.1
-   - jbrowse-components (local, unpushed): the lane header reads "no step on the
+   - jbrowse-components cfbebd84cf: the lane header reads "no step on the
      reference across 150 kb", and the HPRC haplotypes tutorial follows. Its
      header still lists CIGAR-derived changes as "30 kb deletion" (a different
      path, `layoutMultiWay.ts`), not touched
