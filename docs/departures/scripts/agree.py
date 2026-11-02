@@ -2,11 +2,16 @@
 # Scores a pggb walk file's placement against the Minigraph-Cactus walk file
 # of the same assemblies on the same reference, an independent projection:
 # for every pggb walk piece, where MC puts the same contig position on R.
-# A piece anchors at (hapOffset, R position of its `start` handle at the
-# pass nearest its chunk); MC's anchors are read the same way and a contig
-# position between two MC anchors is extrapolated from the earlier one.
-# Also scores each departure record's two ends the same way.
+# A piece anchors at (hapOffset, R position where the contig enters its
+# `start` handle at the pass nearest its chunk, and the direction the contig
+# runs along R there); MC's anchors are read the same way and a contig
+# position between two MC anchors is extrapolated from the earlier one in
+# its direction. Also scores each departure row's two ends the same way;
+# a departure with several rows counts once per row.
+# --stratum LABEL:START-END splits the piece scores by MC position; chrY
+# defaults to Yp11/Yq11 less 10-11 Mb, other sequences to no stratum.
 # Usage: agree.py mc.walks.bed.gz pggb.walks.bed.gz seq [--tol bp]
+#        [--stratum LABEL:START-END ...]
 import argparse
 import bisect
 import collections
@@ -18,8 +23,24 @@ ap.add_argument('pggb')
 ap.add_argument('seq')
 ap.add_argument('--tol', type=int, default=10000)
 ap.add_argument('--chunk', type=int, default=65536)
+ap.add_argument('--stratum', action='append', default=[])
 args = ap.parse_args()
 C = args.chunk
+
+
+def stratum(text):
+    label, span = text.rsplit(':', 1)
+    start, end = span.split('-')
+    return label, int(start), int(end)
+
+
+strata = [stratum(t) for t in args.stratum] or (
+    [('Yp11/Yq11', 2_781_480, 10_000_000), ('Yp11/Yq11', 11_000_000, 26_673_000)]
+    if args.seq.endswith('chrY') else [])
+
+
+def region_of(position):
+    return next((label for label, start, end in strata if start <= position < end), 'other')
 
 
 def read(path):
@@ -43,23 +64,24 @@ def read(path):
                 node = 0
                 for tok, length in zip(c[9].split(','), c[10].split(',')):
                     node += int(tok) >> 1
-                    passes[node].append(at)
+                    passes[node].append((at, int(length), int(tok) & 1))
                     at += int(length)
             elif c[3] == 'walk':
-                pieces[c[4]].append((int(c[6]), int(c[1]), int(c[9]) >> 1))
+                pieces[c[4]].append((int(c[6]), int(c[1]), int(c[9])))
     for v in passes.values():
         v.sort()
     anchors = {}
     for name, ps in pieces.items():
         ps.sort()
         rows = []
-        for hap, cs, node in ps:
-            offs = passes.get(node)
+        for hap, cs, handle in ps:
+            offs = passes.get(handle >> 1)
             if not offs:
                 continue
-            k = bisect.bisect_left(offs, cs)
-            near = min(offs[max(0, k - 1):k + 1], key=lambda o: abs(o - cs))
-            rows.append((hap, near))
+            k = bisect.bisect_left(offs, (cs,))
+            at, length, strand = min(offs[max(0, k - 1):k + 1], key=lambda o: abs(o[0] - cs))
+            along = (handle & 1) == strand
+            rows.append((hap, at if along else at + length, 1 if along else -1))
         if rows:
             anchors[name] = rows
     return anchors, records
@@ -76,10 +98,10 @@ def mc_position(name, x):
     k = bisect.bisect_right(rows, (x, float('inf'))) - 1
     if k < 0:
         return None
-    hap, r = rows[k]
+    hap, r, direction = rows[k]
     if x - hap > 4 * C:
         return None
-    return r + (x - hap)
+    return r + direction * (x - hap)
 
 
 shared = 0
@@ -92,14 +114,14 @@ for name, rows in pg_anchors.items():
         no_mc += 1
         continue
     shared += 1
-    for hap, r in rows:
+    for hap, r, _ in rows:
         m = mc_position(name, hap)
         if m is None:
             continue
         checked += 1
         ok = abs(m - r) <= args.tol
         agree += ok
-        region = 'Yp11/Yq11' if 2_781_480 <= m < 26_673_000 and not (10_000_000 <= m < 11_000_000) else 'other'
+        region = region_of(m)
         by_region[region][0] += 1
         by_region[region][1] += ok
 print(f'{len(pg_anchors)} pggb contigs with pieces, {shared} also in MC, {no_mc} not')
@@ -122,4 +144,4 @@ for name, hap_start, own_bp, lbp, rbp in pg_records:
     else:
         none += 1
 n = len(pg_records)
-print(f'{n} departure records: both ends where MC puts them {both} ({100 * both / max(n, 1):.1f}%), one {one}, neither {none}, no MC position {unknown}')
+print(f'{n} departure rows: both ends where MC puts them {both} ({100 * both / max(n, 1):.1f}%), one {one}, neither {none}, no MC position {unknown}')
