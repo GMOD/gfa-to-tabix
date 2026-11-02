@@ -58,9 +58,9 @@ there. The urgent part is the word on screen
      `offReferenceBp: 0` (`src/layout/walkRowRuns.ts:723-777`)
    - plugin: `type: 'deletion'` and the `windowDeletion` helper in
      `src/WalkTabixSyntenyAdapter/walkLanes.ts`, the legend's deletion rows
-   - BandageJS `src/view.ts:95` and ggbandage `R/walkrows.R:90` keep their own
-     copies of the text; ggbandage's `tests/testthat/test-figure.R:647` asserts
-     it, and its update-deps job stops on a failed check
+   - BandageJS `src/view.ts` (5c229dd3) and ggbandage `R/walkrows.R` (73bb0c6,
+     bundling bandage-core 12.6.2, tests green) carry the new text; both keep
+     their own copy of it, so a later wording change needs both
    - Done in bandage-core 1f53c24 (12.6.0): the walk-row text now reads "no
      step on the reference across 150 kb" and the key "no step on the
      reference". `skipRowOf`'s `offReferenceBp: 0` (`walkRowRuns.ts:747`) is
