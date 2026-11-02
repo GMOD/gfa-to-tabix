@@ -182,6 +182,31 @@ The spike under nearest-pass placement:
   pggb chr22 window would read up to 73 MB of departure rows. Nothing hosted
   changes for users until the readers move
 
+## Review after acceptance
+
+A review on 2026-11-01 found these gaps. Settle each, or confirm with the
+user that it doesn't matter, before format 6 is ported:
+
+- The sizes and byte costs above come from the spike's record. That record
+  lacks `missingBp`, `leaveChunk` and `rejoinChunk`, so it understates
+  format 6
+- "The record needs no change for any placement rule" holds for one copy
+  per step. Showing every copy as a second placement would need a placement
+  key on the ends, the blocks and the walk rows' links
+- Under alignment-guided placement, the working plan for pggb, 88% of
+  pggb chr22's 303,171 records still have an end on a node the reference
+  passes more than once, and 81% carry 0 own bp. MC chr22 has 25,234
+  records
+- 63% of those records are back jumps or strand switches. Filing them only
+  at their ends was never weighed against filing them over the stretch,
+  which the synteny lanes' mate spans use
+- The chrY rows per window (114 / 23,452 / 173,357) and the 2,065 records
+  per window aren't in [docs/departures/results/](../departures/results/):
+  `pggbY.audit.txt` is cut short. "Every window" for pggb chr22 means 97
+  sampled windows. The `dep.rs` cross-check left out 414 mismatches
+- The placement comparison in open-problems has its own caveats, listed
+  there
+
 ## Alternatives rejected
 
 - **A type or direction column:** derivable from the ends, and the

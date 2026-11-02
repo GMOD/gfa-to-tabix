@@ -62,7 +62,10 @@ there. The urgent part is the word on screen
    - BandageJS `src/view.ts:95` and ggbandage `R/walkrows.R:90` keep their own
      copies of the text; ggbandage's `tests/testthat/test-figure.R:647` asserts
      it, and its update-deps job stops on a failed check
-2. **Format 6, Minigraph-Cactus first.** Port the spike's writer and its
+2. **Format 6, Minigraph-Cactus first. Stop before starting: ask the
+   user.** A review on 2026-11-01 found gaps in the evidence behind ADR
+   0009, listed under its "Review after acceptance". Confirm the format
+   with the user before porting anything. Port the spike's writer and its
    tests, with ADR 0009's field names (`leavePos`/`rejoinPos`), into
    gfa-to-tabix 3.0; rebuild the hosted MC walk files on ada under new names
    (keep the format 5 files: graph-walks 4.x refuses format 6); then

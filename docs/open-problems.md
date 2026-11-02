@@ -138,6 +138,30 @@ nothing decided.
 | chr22 departure query bytes p95 / max | 6.2 MB / 73 MB | | 389 KB / 1.4 MB |
 | chr22 file over format 5 | +32.6% | | +17.8% |
 
+- Caveats from a review on 2026-11-01. Until these are fixed and the
+  scores rerun, don't quote the agreement figures as the gap between the
+  two placements:
+  - The agreement rows count pieces. Nearest pass hops between copies and
+    makes 922,159 scored pieces on chr22 to the projection's 253,591. By
+    bp outside the repeats, ADR 0001's placement score is 93.53% for
+    nearest pass and 93.22% for the projection
+    (`chr22.adr0001-scores.txt`)
+  - `agree.py` extrapolates an MC position forward only. That is wrong on
+    reverse-strand contigs past 5 kb from an anchor, and it hits nearest
+    pass's mid-chunk pieces more than the projection's
+  - The "2.8-26.7 Mb" stratum is chrY's Yp11/Yq11 bounds reused on chr22,
+    with a hole at 10-11 Mb, not chr22's repeats
+  - The precision gain under ADR 0001's criteria is scored against the
+    alignments that guided the projection. The chrY primary build scores
+    61% bp placement against its own guide, likely because the scorer ran
+    with a lookback of 1 chunk where the header's maxnode implies 16
+  - `agree.py`'s departure lines count rows, not records.
+    `walks-truth.py`'s "lost elsewhere" counts every strict miss, including
+    bases in no piece
+  - MC also picks one copy per contig in repeats, so agreeing with it there
+    isn't proof that either placement is right. The UCSC hg38-to-hs1 chain,
+    scored on the graph's CHM13 path, would be a more independent check
+
 - Under ADR 0001's own criteria on chr22 (the raw lift as truth), the
   primary projection takes piece precision from 32.8% to 93.9% and pieces
   per pair from 17.9 to 1.05 outside the repeats, with strict recall
@@ -145,7 +169,8 @@ nothing decided.
   93.5% to 71.5%. The recall lost is sequence the raw alignments place at
   several copies, which nearest pass shows at every copy by hopping and
   the projection at one. Which a browser should show there is the open
-  choice; by MC's placement the one copy is right 95.9% of the time
+  choice. The 95.9% agreement with MC is over the whole 2.8-26.7 Mb
+  stratum, not LCR22A
 - The projection places 45% of chr22's steps on reference nodes off the
   reference, as own sequence, where the contig's alignment does not cover
   them (the chr22 community holds sequence of other acrocentric
@@ -284,6 +309,17 @@ nothing decided.
   samples
 - Suggested next step: keep the sample in the name when the graph's reference
   spans more than one, and check the allele track draws it
+
+## Alleles that leave one sequence for another
+
+- Since 8db395f an allele's walk stops only at the backbone of the sequence
+  it entered from, so an allele whose only exit is onto another sequence
+  gets no row. 7a505f0 had kept those exits because dropping them loses
+  alleles minigraph graphs hold; before it, the row ran from the entry's
+  coordinate to the exit's, though the two lie on different sequences
+- How many alleles this drops on a minigraph rGFA is unmeasured
+- Suggested next step: count them on HPRC's minigraph graph, and if they
+  matter, write them as breakends once the allele track can draw one
 
 ## gfatools crashes
 
