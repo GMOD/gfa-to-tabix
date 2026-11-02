@@ -69,15 +69,16 @@ there. The urgent part is the word on screen
      found pggb index cuts draw hundreds of false Mb-scale deletions per
      segmental-duplication window: index cuts carry no path visits, so the
      repeat checks never run. In bandage-core 12.6.0 to 12.6.2:
-     - a69b585: each reference visit is judged by its own strand. A force
-       layout leaves out every link that joins no two neighbouring reference
-       visits, wherever the rest of the graph joins its ends
+     - a69b585 (12.6.0): each reference visit is judged by its own strand,
+       so an inverted repeat copy read backwards no longer draws a false
+       deletion. This stays in 12.6.2
      - 57d99c4 (12.6.0) routed a deletion the layout must keep through a route
-       node, 0c34456 (12.6.1) arched it instead, and fffaf40 (12.6.2) lays
-       deletions out as bubbles again, keeping only the route budget
-     - On a pggb LCR22A window, FMMM goes from 114 s to 6 s and stress from
-       55 s to 14 s. MC windows lay out as in 12.5.1 or flatter
-   - jbrowse-components 9e63e0d5ba: the lane header reads "no step on the
+       node, within a budget. 0c34456 (12.6.1) arched the deletions the layout
+       had left out, and fffaf40 (12.6.2) lays deletions out as bubbles again:
+       the layout is 12.5.1's, with a69b585 and the route budget kept
+     - On a pggb LCR22A window, FMMM goes from 114 s to 7 s in 12.6.2 (stress
+       55 s to 14 s was measured on 12.6.0). MC windows render as in 12.5.1
+   - jbrowse-components (local, unpushed): the lane header reads "no step on the
      reference across 150 kb", and the HPRC haplotypes tutorial follows. Its
      header still lists CIGAR-derived changes as "30 kb deletion" (a different
      path, `layoutMultiWay.ts`), not touched
