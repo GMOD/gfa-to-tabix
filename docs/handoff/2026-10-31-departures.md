@@ -100,16 +100,14 @@ there. The urgent part is the word on screen
 2. **Format 6, Minigraph-Cactus first. Stop before starting: ask the
    user.** A review on 2026-11-01 found gaps in the evidence behind ADR
    0009, listed under its "Review after acceptance". Six more reviews on
-   2026-11-03 amended the format, and two more that day amended it again:
-   the ADR's "Amendments of 2026-11-03, second round" gives the current
-   list of what is open before the port, chiefly a rebuild on ada with the
-   amended record and filing, and the first round lists the fixes that need
-   no format change. Do those first, and confirm the format with the user
-   before porting anything. The spike's writer is not a plain port: its
-   steps take the placement rule's pass, not the decoded one, its blocks
-   follow the chunk size and cover whole stretches, and it has no `passes`
-   rows. A `start@k` in walk rows, if the rebuild's count calls for it, is
-   a walk-row format change: ask the user. Port the spike's writer and its
+   2026-11-03 and eleven more that day amended it in three rounds; walk
+   rows now name the copy (`@k`), a walk-row change the user agreed to
+   write up. The ADR's "Open before the port" is the current list, chiefly
+   a rebuild on ada with the amended record, filing and positions. Do that
+   first, and confirm the format with the user before porting anything.
+   The spike's writer is not a plain port: it has no `@k`, `mp`, `crowd`
+   rows or pages, its blocks follow the chunk size and cover whole
+   stretches, and its stay is unbounded. Port the spike's writer and its
    tests, with ADR 0009's field names (`leavePos`/`rejoinPos`), into
    gfa-to-tabix 3.0; rebuild the hosted MC walk files on ada under new names
    (keep the format 5 files: graph-walks 4.x refuses format 6); then

@@ -188,9 +188,8 @@ nothing decided.
   check that every path rebuilds from its rows under that placement; the
   chaining spike was checked, the alignment-guided one was not
 - Showing every copy stays open: the HPRC pggb team may weigh in. ADR
-  0009's record needs no change for any placement, so other copies could
-  come later as a second placement over the same records, without a new
-  format
+  0009 holds one placement per file, so other copies could come later as a
+  second file with its own `#placement` line, without a new format
 - To ask the pggb authors: whether they would publish `odgi untangle`
   projections of release 2 against GRCh38 and CHM13; whether a
   chain-based single-copy projection is what they would endorse for a
