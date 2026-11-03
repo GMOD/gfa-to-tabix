@@ -10,6 +10,7 @@ use std::thread::{self, JoinHandle};
 use crate::bed::{self, Format, Layout, Line, Row};
 use crate::gfa::Graph;
 use crate::json::{Json, object, text};
+use crate::place::Placed;
 use crate::{alleles, bubbles};
 
 const PLUGIN_URL: &str = "https://jbrowse.org/plugins/jbrowse-plugin-graphgenomeviewer/latest/dist/jbrowse-plugin-graphgenomeviewer.esm.js";
@@ -292,10 +293,9 @@ fn has_csi(path: &str) -> bool {
 
 struct Built<'a> {
     base: &'a str,
-    // the prefix the graph track reads: the anchored index for an rGFA, the
-    // contig layout for a plain GFA, whose anchored index files a segment under
-    // every reference position its branch spans
-    track_index: String,
+    // the contig layout's prefix: beside an rGFA's anchored index, or a plain
+    // GFA's one index
+    contig: String,
     sample: Option<String>,
     assembly: String,
     format: Format,
@@ -315,7 +315,7 @@ impl Built<'_> {
             ("reference", self.sample.clone().map_or(Json::Null, text)),
             ("format", format()),
             ("index", text(base)),
-            ("contig", text(format!("{base}.contig"))),
+            ("contig", text(&self.contig)),
             (
                 "tier",
                 object([
@@ -357,10 +357,7 @@ impl Built<'_> {
         };
         let csi = |on: bool| on.then_some(("csi", Json::Bool(true)));
         let format = || (self.format == Format::Two).then_some(("format", Json::Number(2)));
-        let mut graph_adapter = vec![
-            ("type", text("RgfaTabixAdapter")),
-            ("uri", text(&self.track_index)),
-        ];
+        let mut graph_adapter = vec![("type", text("RgfaTabixAdapter")), ("uri", text(base))];
         graph_adapter.extend(format());
         graph_adapter.extend(csi(self.csi.graph));
         graph_adapter.extend(pansn());
@@ -433,6 +430,27 @@ impl Built<'_> {
     }
 }
 
+// Writes the index in one layout, and returns its node rows' text
+fn write_layout(
+    graph: &Graph,
+    placed: &Placed,
+    layout: Layout,
+    max_component: Option<u64>,
+    format: Format,
+    prefix: &str,
+) -> Result<Vec<String>, String> {
+    match format {
+        Format::One => {
+            let (nodes, _) = crate::write_index(graph, placed, layout, max_component, prefix)?;
+            Ok(nodes.iter().map(Row::text).collect())
+        }
+        Format::Two => {
+            let rows = crate::write_graph(graph, placed, layout, max_component, prefix)?;
+            Ok(alleles::split_graph(prefix, rows.iter().map(|row| Ok(row.text())))?.0)
+        }
+    }
+}
+
 fn joined<T>(handle: thread::ScopedJoinHandle<'_, T>) -> T {
     handle
         .join()
@@ -497,37 +515,27 @@ pub fn run(options: &Options) -> Result<(), String> {
     let flipped = &flipped;
     let (sample, bubbles) = thread::scope(|scope| {
         let bubbles = scope.spawn(move || bubble_file(route, gfatools, snarls, flipped, prefix));
-        let fine = scope.spawn(|| match options.format {
-            Format::One => crate::write_index(
+        // An rGFA's fine index is anchored, with the contig layout beside it. A
+        // plain GFA has the one index, in the contig layout: the anchored one
+        // files a segment under every reference position its branch spans.
+        let fine = scope.spawn(|| match route {
+            Route::Rgfa => write_layout(
                 graph,
                 placed,
                 Layout::Anchored,
                 options.max_component,
+                options.format,
                 prefix,
             )
             .map(drop),
-            Format::Two => crate::write_graph(
-                graph,
-                placed,
-                Layout::Anchored,
-                options.max_component,
-                prefix,
-            )
-            .map(drop),
+            Route::Paths => Ok(()),
         });
         let contig = scope.spawn(|| {
-            let contig = format!("{prefix}.contig");
-            let nodes: Vec<String> = match options.format {
-                Format::One => {
-                    let (nodes, _) =
-                        crate::write_index(graph, placed, Layout::Contig, None, &contig)?;
-                    nodes.iter().map(Row::text).collect()
-                }
-                Format::Two => {
-                    let rows = crate::write_graph(graph, placed, Layout::Contig, None, &contig)?;
-                    alleles::split_graph(&contig, rows.iter().map(|row| Ok(row.text())))?.0
-                }
+            let contig = match route {
+                Route::Rgfa => format!("{prefix}.contig"),
+                Route::Paths => prefix.to_string(),
             };
+            let nodes = write_layout(graph, placed, Layout::Contig, None, options.format, &contig)?;
             Ok::<_, String>(reference_sample(&nodes))
         });
         let coarse = scope.spawn(|| {
@@ -548,13 +556,12 @@ pub fn run(options: &Options) -> Result<(), String> {
         Ok::<_, String>((sample, joined(bubbles)?))
     })?;
 
-    let track_prefix = match route {
-        Route::Rgfa => prefix.to_string(),
-        Route::Paths => format!("{prefix}.contig"),
-    };
     let built = Built {
         base: basename(prefix),
-        track_index: basename(&track_prefix).to_string(),
+        contig: match route {
+            Route::Rgfa => format!("{}.contig", basename(prefix)),
+            Route::Paths => basename(prefix).to_string(),
+        },
         assembly: options
             .assembly
             .clone()
@@ -565,7 +572,7 @@ pub fn run(options: &Options) -> Result<(), String> {
         tier,
         bubbles,
         csi: Csi {
-            graph: has_csi(&format!("{track_prefix}{}", index_suffix(options.format))),
+            graph: has_csi(&format!("{prefix}{}", index_suffix(options.format))),
             coarse: has_csi(&format!(
                 "{prefix}.fold{tier}{}",
                 index_suffix(options.format)

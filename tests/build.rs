@@ -128,7 +128,7 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
   "reference": "ref",
   "format": 2,
   "index": "my-graph.v1",
-  "contig": "my-graph.v1.contig",
+  "contig": "my-graph.v1",
   "tier": {
     "prefix": "my-graph.v1.fold50",
     "foldBelowBp": 50,
@@ -160,7 +160,7 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
       ],
       "adapter": {{
         "type": "RgfaTabixAdapter",
-        "uri": "my-graph.v1.contig",
+        "uri": "my-graph.v1",
         "format": 2,
         "assemblyNameToPanSN": {{
           "hg": "ref"
@@ -214,9 +214,15 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
         gunzip(&dir.join("my-graph.v1.bubbles.bed.gz")),
         "ref#1#chr\t4\t6\t4\t2\t0\t1\t2\t.\t.\t.\t1@4,4\n"
     );
-    for kind in ["graph", "contig.graph", "fold50.graph"] {
+    for kind in ["graph", "fold50.graph"] {
         assert!(dir.join(format!("my-graph.v1.{kind}.bed.gz.tbi")).exists());
     }
+    // a plain GFA's one index is the contig layout
+    let index = gunzip(&dir.join("my-graph.v1.graph.bed.gz"));
+    assert!(
+        index.lines().next().unwrap().contains("layout:Z:contig"),
+        "{index}"
+    );
     // a plain GFA's tier is in the contig layout, as the track's fine index is
     let tier = gunzip(&dir.join("my-graph.v1.fold50.graph.bed.gz"));
     assert!(
@@ -254,7 +260,7 @@ fn a_segment_the_reference_reads_reversed_is_written_forward() {
     assert!(links.contains("\t1+\t2+\t"), "{links}");
     assert!(links.contains("\t2+\t4+\t"), "{links}");
     assert!(!links.contains('-'), "{links}");
-    assert!(!rows(&gunzip(&dir.join("out.contig.graph.bed.gz")), "L").contains('-'));
+    assert!(!dir.join("out.contig.graph.bed.gz").exists());
     assert_eq!(
         gunzip(&dir.join("out.bubbles.bed.gz")),
         "ref#1#chr\t4\t6\t4\t2\t0\t1\t2\t.\t.\t.\t1@4,4\n"
@@ -491,7 +497,7 @@ fn a_reference_past_512_mb_gets_csi_indexes_and_tracks_that_read_them() {
         None,
     );
     assert!(output.status.success(), "{output:?}");
-    for file in ["graph", "contig.graph", "fold50.graph"] {
+    for file in ["graph", "fold50.graph"] {
         assert!(
             dir.join(format!("out.{file}.bed.gz.csi")).exists(),
             "{file}"
@@ -503,7 +509,7 @@ fn a_reference_past_512_mb_gets_csi_indexes_and_tracks_that_read_them() {
     }
     let config = read(&dir.join("out.config.json"));
     assert!(
-        config.contains("\"uri\": \"out.contig\",\n        \"format\": 2,\n        \"csi\": true,"),
+        config.contains("\"uri\": \"out\",\n        \"format\": 2,\n        \"csi\": true,"),
         "{config}"
     );
     assert_eq!(config.matches("\"csi\"").count(), 1, "{config}");
@@ -608,20 +614,38 @@ fn the_contig_index_takes_the_build_format() {
             assert!(output.status.success(), "{gfa}: {output:?}");
             index(&dir, &gfa, reference, &format!("index{format}"), format);
         }
+        // an rGFA's contig layout sits beside its anchored index; a plain
+        // GFA's is its one index
+        let contig = |format: &str| {
+            if reference.is_empty() {
+                format!("f{format}.contig")
+            } else {
+                format!("f{format}")
+            }
+        };
         for file in ["segs", "links"] {
             assert_eq!(
-                fs::read(dir.join(format!("f1.contig.{file}.bed.gz"))).unwrap(),
+                fs::read(dir.join(format!("{}.{file}.bed.gz", contig("1")))).unwrap(),
                 fs::read(dir.join(format!("index1.{file}.bed.gz"))).unwrap(),
                 "{gfa}"
             );
         }
         assert_eq!(
-            fs::read(dir.join("f2.contig.graph.bed.gz")).unwrap(),
+            fs::read(dir.join(format!("{}.graph.bed.gz", contig("2")))).unwrap(),
             fs::read(dir.join("index2.graph.bed.gz")).unwrap(),
             "{gfa}"
         );
-        assert!(!dir.join("f1.contig.graph.bed.gz").exists(), "{gfa}");
-        assert!(!dir.join("f2.contig.segs.bed.gz").exists(), "{gfa}");
+        assert!(
+            !dir.join(format!("{}.graph.bed.gz", contig("1"))).exists(),
+            "{gfa}"
+        );
+        assert!(
+            !dir.join(format!("{}.segs.bed.gz", contig("2"))).exists(),
+            "{gfa}"
+        );
+        if !reference.is_empty() {
+            assert!(!dir.join("f2.contig.graph.bed.gz").exists(), "{gfa}");
+        }
         assert!(!dir.join("f1.alleles.bed.gz").exists(), "{gfa}");
         let manifest = |format: &str| {
             read(&dir.join(format!("f{format}.graph.json")))

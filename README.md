@@ -137,8 +137,9 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 
 **When to change it**
 
-- **Keep the default** for pggb and Minigraph-Cactus graphs of human
-  chromosomes
+- **Keep the default** when indexing a pggb or Minigraph-Cactus graph of a
+  human chromosome in the anchored layout. `build` indexes a plain GFA in the
+  contig layout, which needs no limit
 - **Raise it** to draw a moved bubble whole. In the chrY list above, the third
   component is a 120 kb bubble, while the first two span 30 and 44 Mb.
   `--max-component 50000` draws the bubble whole, and every window under it

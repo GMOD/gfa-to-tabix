@@ -84,10 +84,10 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 `<prefix>.config.json` is ready to merge into a JBrowse config. It loads the
 [graph genome viewer plugin](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer)
 and holds a graph track and, with a bubble file, two bubble tracks. For a plain
-GFA the graph track reads `<prefix>.contig` and the tier is folded in the contig
-layout, since the anchored layout files a segment under every reference position
-its branch spans, which on pggb's collapsed repeats is megabases. A graph track
-written by hand names the file and its index:
+GFA, `<prefix>.graph.bed.gz` and the tier are in the contig layout and no
+`.contig` file is written, since the anchored layout files a segment under every
+reference position its branch spans, which on pggb's collapsed repeats is
+megabases. A graph track written by hand names the file and its index:
 
 ```json
 {

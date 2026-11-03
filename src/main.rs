@@ -270,7 +270,11 @@ fn write_tier(
         graph.segment_count(),
         graph.links.len()
     );
-    let placed = place::from_tags(&folded);
+    // the fold states coordinates as rGFA tags, so the tier is placed from
+    // them, whatever placed the graph it was folded from
+    let summary = format!("tier folded under {below} bp from: {}", placed.summary);
+    let mut placed = place::from_tags(&folded);
+    placed.summary = summary;
     match format {
         Format::One => write_index(&folded, &placed, layout, max_component, prefix).map(drop),
         Format::Two => write_graph(&folded, &placed, layout, max_component, prefix).map(drop),
