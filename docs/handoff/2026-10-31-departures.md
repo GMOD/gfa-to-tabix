@@ -99,8 +99,14 @@ there. The urgent part is the word on screen
      window. Or drop the arc label and leave the facts to the hover
 2. **Format 6, Minigraph-Cactus first. Stop before starting: ask the
    user.** A review on 2026-11-01 found gaps in the evidence behind ADR
-   0009, listed under its "Review after acceptance". Confirm the format
-   with the user before porting anything. Port the spike's writer and its
+   0009, listed under its "Review after acceptance". Six more reviews on
+   2026-11-03 amended the format, and the ADR's "Amendments of 2026-11-03"
+   lists what is open before the port: the filing measurement, a rebuild
+   with the amended record, and the fixes that need no format change.
+   Do those first, and confirm the format with the user before porting
+   anything. The spike's writer is not a plain port: its steps take the
+   placement rule's pass, not the decoded one, and its blocks follow the
+   chunk size. Port the spike's writer and its
    tests, with ADR 0009's field names (`leavePos`/`rejoinPos`), into
    gfa-to-tabix 3.0; rebuild the hosted MC walk files on ada under new names
    (keep the format 5 files: graph-walks 4.x refuses format 6); then
@@ -108,8 +114,8 @@ there. The urgent part is the word on screen
    departure-read budget beside the 8 MB cut budget), bandage-core 13, plugin
    9 (synteny strand per end, mate span from `hapStart` and `ownBp`,
    `EXPAND_NAMED_MAX` replaced by a per-row threshold), jbrowse-components'
-   `laneBp`, then BandageJS, ggbandage and the tube map. ADR 0009's
-   Consequences list each
+   lane-side bp, then BandageJS, ggbandage, the tube map and jb2hubs. ADR
+   0009's Consequences list each
 3. **pggb, when it comes up.** Check that every path rebuilds from its rows
    under alignment-guided placement (checked for the chaining spike, not this
    one); then `--alignments` as an optional input in its own ADR. Questions
@@ -134,7 +140,9 @@ there. The urgent part is the word on screen
 - graph-walks 4.x throws on any format but 5 (`walkReader.ts:198`), so every
   consumer still pinned to 4.x breaks on format 6 files under old names
 - The `order` column of the `bypass` prototype was the reference's order, not
-  the haplotype's: 604 of MC chr22's 685 "backward" jumps were reverse-strand
-  contigs going forward. ADR 0009 derives direction from the ends
+  the haplotype's: MC chr22's 685 "backward" jumps included
+  reverse-strand contigs going forward. The breakdown in the notes (604,
+  406, 8) sums to 1,018, so don't cite it. ADR 0009 derives direction from
+  the ends
 - `tests/build.rs`'s `gfatools_reads_the_graph_and_its_bubbles_are_sorted`
   failed once and passed on rerun: its fake gfatools reads stdin and races

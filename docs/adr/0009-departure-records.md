@@ -1,6 +1,8 @@
 # ADR 0009: One record per departure, filed as blocks under a sibling sequence
 
-- **Status:** accepted, 2026-10-31
+- **Status:** accepted, 2026-10-31; amended 2026-11-03 after a second
+  review, see [Amendments of 2026-11-03](#amendments-of-2026-11-03). Not
+  ported: the items under "Open before the port" there come first
 - **Decides:** what a walk file holds for every place a haplotype's path
   does not follow the reference between two of its steps on it, how the
   rows are filed so that any window finds them, and what the projection
@@ -45,29 +47,42 @@ seq~departure  a  b  departure  path fragStart hapStart ownBp ownSteps missingBp
   for a step against it, and the other way round for the rejoin); the
   node; `+` or `-` for the step along or against S's orientation at that
   pass; how many times the reference's paths pass the node; and the start
-  of the chunk the step's piece is filed under. A one-ended record, at a
-  contig's end, has `.` in the five columns of the end it lacks
+  of the chunk the step's piece is filed under. A one-ended record has `.`
+  in the five columns of the end it lacks: the contig has no step on S
+  before the rejoin, or none after the leave, in any of its W lines. Its
+  own sequence runs from the contig's first record, or to its last, with
+  `missingBp` and `xb` counted as for a two-ended record
 - `hapStart` is where the haplotype's own sequence between the ends starts
   on its contig, right after the leave step; it runs `ownBp` over
   `ownSteps` steps, both 0 for a direct jump. `ownSteps` counts every step
   between the ends, those on other reference sequences included.
-  `missingBp` counts the part of `ownBp` no W line of the contig covers,
-  across a record gap; `xb` the part the path walks on other reference
-  sequences
+  `missingBp` counts the part of `ownBp` no W line of the contig covers:
+  the gaps between records only, never the records chained over. `xb`
+  counts the part the path walks on other reference sequences, those
+  records' steps included
 - No direction and no type column. A reader derives them:
   `leaveStrand ≠ rejoinStrand` is a strand switch; otherwise, for a `+`
   leave the haplotype jumps back when `rejoinPos < leavePos`, and for a
   `-` leave when `rejoinPos > leavePos`, over reference it walks again;
   `rejoinPos = leavePos` is own sequence between adjacent steps; any other
-  case is a jump forward. `ownBp` 0 is a direct jump; `ownBp` with
-  `ownSteps` 0 is sequence the graph lacks
-- (path, `hapStart`) identifies a departure; every row of one departure
-  repeats the same columns
+  case is a jump forward. `ownBp` 0 is a direct jump; `missingBp` above 0
+  is sequence the graph lacks
+- Two consecutive steps on S are adjacent, and have no record, when
+  `ownSteps` is 0, the strands are equal and `leavePos = rejoinPos`
+- (path, `hapStart`) identifies a departure within one `S~departure`;
+  every row of one departure repeats the same columns. A zero-length
+  segment can give two departures one `hapStart`: the port either refuses
+  such segments under `--walks` or widens the key
 
 **Per sequence.** Departures are defined per reference sequence: for S, the
 path's steps on S in order, with its steps on any other reference sequence
-counted as own sequence. A step on a node the reference passes more than
-once takes the pass the file's placement rule gives it
+counted as own sequence. A step's position on S is the one its walk row
+decodes to, by [the decoding rules](../walks-format.md#decoding-a-walk-row)
+against its chunk's R; a step the row decodes as route interior is own
+sequence. The placement rule picks only the chunk a step is filed under.
+So the records and the walk rows state one projection: on a node the
+reference passes more than once, the pass is the one the reader decodes,
+including after the stay rule has moved a run to another chunk
 
 **Which departures get a record.** Between two pieces always; inside one
 piece when the stretch between the breakpoints crosses a chunk boundary or
@@ -78,20 +93,39 @@ row, where the reader computes it from the steps
 
 **Filing.** Every record is filed under the sibling sequence
 `S~departure` of the same file, as bin-aligned blocks: the stretch
-[min(leavePos, rejoinPos), max(...)) cut at aligned multiples of
-chunk × 2^{10, 7, 4, 1, 0}, each block clipped to the stretch, so that each
-lands in a Tabix bin of about its own extent. An empty stretch is one base
-at the breakpoint; a one-ended record is one base at the end it has. Every
-record therefore has at least one block, which is the only way a reader
-reaches it: there are no copies in the end chunks. A window query on S
-never reads them; the reader queries `S~departure` over the same range,
-one more request set, and dedups on (path, `hapStart`)
+[min(leavePos, rejoinPos), max(...)) cut at aligned multiples of the
+index's own bin sizes, 2^26, 2^23, 2^20 and 2^17 bp, whatever `--chunk`
+is, each block clipped to the stretch, so that each lands in a Tabix bin
+no larger than its own size. The CSI index the writer uses past 512 Mb has
+bins at the same sizes. An empty stretch is one base of the leave end's
+node beside the breakpoint, and a one-ended record one base of the node of
+the end it has: [bp − 1, bp) where the breakpoint is the node's end,
+[bp, bp + 1) where it is its start, so that the block never lies past the
+end of S. Every record therefore has at least one block, which is the
+only way a reader reaches it: there are no copies in the end chunks. A
+window query on S never reads them; the reader queries `S~departure` over
+the window, one more request set, and dedups on (path, `hapStart`).
+Whether it must also cover the walk query's lookback, up to a `#long`
+node's length before the window, is measured before the port
+
+Which stretches get blocks between their ends is open: see the
+[amendments](#amendments-of-2026-11-03)
+
+**Reference holes.** A reference whose sequence has gaps between its W
+lines, such as a clipped haplotype used as the reference, writes a
+`#hole  seq  start  end` header line for each gap, and for the stretch
+before its first W line when that starts past 0, as `#long` does for long
+nodes. A hole is not a departure of any haplotype. Positions on S compare
+with holes removed: two steps either side of a hole with nothing between
+them are adjacent and have no record, and the direction rules read a
+stretch less the holes it overlaps. A window inside a hole states that the
+reference has no sequence there
 
 **Header.** `format:i:6`, `fold:i:` and a `placement` line naming the rule
 that placed steps on nodes the reference passes more than once, with its
 parameters and, when the rule took an input, the input's name and checksum,
-such as `placement nearest-pass stay:311`. `skip:i:` and `bypass:i:` are
-gone
+such as `placement nearest-pass stay:311`, and the `#hole` lines.
+`skip:i:` and `bypass:i:` are gone
 
 **Scope of the projection.** Projecting a haplotype onto one reference is
 exact where the haplotype keeps the reference's order, and a placement
@@ -108,7 +142,14 @@ structural-forms `Departure` keeps its name
 
 ## Evidence
 
-The spike under nearest-pass placement:
+The spike under nearest-pass placement. Its record lacks `missingBp`,
+`leaveChunk` and `rejoinChunk`, takes a step's pass from the placement
+rule rather than the decoded row, and cuts blocks down to 64 kb, so every
+figure below predates the amendments of 2026-11-03 and bounds format 6's
+sizes in neither direction: the new columns add bytes, decoded positions
+and the coarser finest block remove rows. The chrY rows per window come
+from the spike's first build, and its departure query costs may too; the
+rest of its column is from the second:
 
 | | MC chr22 GRCh38 | pggb chrY GRCh38 | pggb chr22 GRCh38 |
 |---|---|---|---|
@@ -133,16 +174,22 @@ The spike under nearest-pass placement:
   window on both graphs
 - Without the per-end chunk a reader cannot find the piece holding a
   departure's own steps: on MC chr22 19,630 of 25,185 leave breakpoints lie
-  in a different chunk from the leave piece, where the leave node straddles
-  the boundary
+  in a different chunk from the leave piece, against 1,254 of 25,185 rejoin
+  breakpoints. The cause is not established: a leave node straddling the
+  boundary, given before, explains at most 1.6% at `maxnode:i:1024`
+  (1,024 of 65,536 bp), and 314 lie in the chunk before. No saved script
+  makes this measurement
 - Without the per-sequence definition, a contig that leaves chr22 for a
   random contig and returns leaves a chr22 window inside the excursion
   nothing: 15,051 of pggb chr22's 21,465 absent pairs had no block until the
   spike was changed to it; MC chr22 came out byte-identical
 - The prototype's 32-chunk cap left 294 stretches uncovered on MC chr22 and
   24,629 on chrY; its `order` column was the reference's order, not the
-  haplotype's: 604 of MC chr22's 685 "backward" jumps were reverse-strand
-  contigs going forward
+  haplotype's. The breakdown the notes give for MC chr22's 685 "backward"
+  jumps, 604 reverse-strand contigs going forward, 406 strand switches and 8
+  backs, sums to 1,018, so its numbers are not to be cited. The 406 and 8
+  are exactly the split of the 414 `dep.rs` mismatches, which suggests the
+  two lists were run together
 - The `fold` threshold moves about 1,300 records on MC chr22 and 1,150 on
   chrY between 10 kb and 64 kb
 - On pggb under nearest-pass placement the file is exact and the content is
@@ -150,17 +197,32 @@ The spike under nearest-pass placement:
   than once, 87-89% carry 0 own bp, one haplotype has up to 2,065 records
   over one 64 kb window, and only 35.9% of chrY pieces land within 10 kb of
   where Minigraph-Cactus places the same contig position (35.6% in Yp11 and
-  Yq11, 50.5% elsewhere). The record needs no change for any placement rule
+  Yq11, 50.5% elsewhere). The record needs no change for any single-copy
+  placement rule tried
 
 ## Consequences
 
 - graph-walks 5 reads format 6 only: two reads per window, the walk chunks
   and the departure blocks, both fixed by the window; no follow rounds, no
   crossing cap, no direct-jump detection from steps the cut happened to
-  read; a departure's own steps are attached from the record's chunk under a
-  per-record budget. `WalkSkip`, `WalkCrossing` and `skipsOver` go
+  read. Attaching a departure's own steps costs one more read per distinct
+  `leaveChunk` outside the read range, which the window does not fix. Which
+  records get their steps attached follows from the record alone, such as
+  `ownSteps` above 0 and `ownBp` under the expansion threshold, never from
+  budget order, so no haplotype's answer depends on the others. Own steps
+  on other reference sequences are not in `leaveChunk`'s piece and are
+  reached by following `nx`. `WalkSkip`, `WalkCrossing` and `skipsOver` go
 - The departure read needs its own budget beside the 8 MB cut-wide byte
-  budget, and a cut over budget fails whole, never per haplotype
+  budget, and a cut over budget fails whole, never per haplotype. Its error
+  is its own: zooming in does not lower the departure read, since a 1 bp
+  window inside a long jump reads every record over it, so it never shows
+  the walk budget's "zoom in" notice
+- The `tables.skips` hand-off from graph-walks to bandage-core is
+  optional, so graph-walks 5 under bandage-core 12 drops every departure
+  without an error: each consumer takes both in one bump
+- graph-walks 4.x's refusal tells the reader of a format 6 file to rebuild
+  it with gfa-to-tabix 1.4 or later. A 4.x release before gfa-to-tabix 3.0
+  says to update the viewer instead
 - A departure inside one piece under `fold`, with an end on a node the
   reference passes more than once, has no pass count anywhere: the reader
   computes it from the steps and the chunk's rows hold no count. This
@@ -169,18 +231,27 @@ The spike under nearest-pass placement:
 - The plugin's synteny lanes take strand per end and the mate span from
   `hapStart` and `ownBp`; `skipCrossings` and `sideCrossings` go;
   `EXPAND_NAMED_MAX` gives way to a per-row expansion threshold.
-  jbrowse-components' multi-way header needs a `laneBp` field to say what
-  the lane carries. bandage-core draws a departure beside a haplotype's walk
-  with its facts, for every haplotype; `deleted`, `deletionBp` and "inside a
-  deletion" go, in BandageJS and ggbandage too
+  jbrowse-components' multi-way header has `laneBp` on `LaneChange`
+  already; `WindowDeletion` and `Placeless` need a lane-side bp to say what
+  the lane carries, which can land before format 6. bandage-core draws a
+  departure beside a haplotype's walk with its facts, for every haplotype;
+  `deleted`, `deletionBp` and "inside a deletion" go, in BandageJS,
+  ggbandage and the plugin's `pane/walkRowViews.ts` too
 - graph-walks 4.x refuses format 6, so BandageJS, ggbandage and the tube map
   keep the format 5 files under their names until they move, and format 6
   files are hosted under new names. The plugin's `walks5_*` fixtures and
   graph-walks' test data are regenerated
 - Hosted Minigraph-Cactus walk files are rebuilt under new names. No pggb
   walk files are hosted today, and none ship under nearest-pass placement: a
-  pggb chr22 window would read up to 73 MB of departure rows. Nothing hosted
-  changes for users until the readers move
+  pggb chr22 window would read up to 73 MB of departure rows. The pggb
+  E. coli walk files in ggbandage, BandageJS and the tube map are
+  rebuilt under nearest-pass placement, harmless at that size. Nothing
+  hosted changes for users until the readers move, but then every hosted
+  config moves at once: they load the plugin from `/latest/`, so plugin 9
+  stops reading every format 5 file the day it is rehosted, users' own
+  builds included, unless it bundles graph-walks 4 beside 5 for one release
+  and picks by the header's `format`. jb2hubs pins graph-walks and
+  bandage-core and names the format 5 file, and moves with the rest
 
 ## Review after acceptance
 
@@ -206,6 +277,95 @@ user that it doesn't matter, before format 6 is ported:
   sampled windows. The `dep.rs` cross-check left out 414 mismatches
 - The placement comparison in open-problems has its own caveats, listed
   there
+
+## Amendments of 2026-11-03
+
+Six independent reviews, each from one side (evidence, the record's
+semantics, filing and the reader, pggb, a design drafted before reading
+this ADR, and the consumers), kept the record and the sibling filing and
+found what follows. None of the 2026-11-01 gaps above had been settled.
+
+**Changed in the Decision above.**
+
+- **A step's position is the decoded one.** `visits_along` sets each
+  step's pass, then `stay_home` moves only its chunk (`src/walks.rs`,
+  `pass` and `stay_home`), and the spike built records from that pass. The
+  reader decodes the walk row by nearest pass, so a record and a row could
+  state two projections of one step, and a run the stay had absorbed came
+  back as two chunk-crossing records. The encoder treats a step as on R
+  only when the chunk's R holds its node (`encode` in `src/routes.rs`), so
+  a run the stay absorbed is route interior, and now own sequence. A
+  piece's decoded ends then cross a chunk boundary only at a node that
+  straddles it, and most records inside a piece should go: 320,644 of
+  pggb chrY's 572,051 (nearly all hops under the stay rule, by the spike
+  report) and 7,782,294 of pggb chr22's 12,458,636. MC chr22's 537 stay.
+  This is inferred; the rebuild measures it. [ADR
+  0001](0001-step-placement.md)'s rule 3 still places such interior nodes
+  at a `ref` row's position for drawing; for departures they are own
+  sequence
+- **Blocks follow the index's bin sizes, not the chunk.** The spike cut at
+  `chunk << k`, and `--chunk` takes any value: at `--chunk 100000` the
+  largest blocks land in the 512 Mb bin every query on the sequence reads.
+  The spike's 64 kb level lands in the same 128 kb bins as its 128 kb one
+- **End blocks lie on the end's own node.** The spike's [bp, bp + 1) lies
+  past the node for a `+` leave or a `-` rejoin, and past the end of S for
+  a contig that overhangs S's last node, where no window finds it
+- **Reference holes,** which [the haplotype-reference
+  handoff](../handoff/2026-11-02-haplotype-references.md) asks format 6 to
+  state
+- **Definitions:** one-ended records, `missingBp` and `xb` across chained
+  record gaps, the adjacency test, the key's scope, and `missingBp` in
+  place of "`ownBp` with `ownSteps` 0"
+
+**Open before the port.**
+
+- **Which stretches get blocks between their ends.** Strand switches and
+  back jumps are 76% of pggb chr22's records under nearest-pass placement
+  and 63% under alignment-guided placement, and a window inside one should
+  mostly hold the haplotype's own pieces already, which is unmeasured. Ends
+  alone break coverage: a
+  contig on [50, 60) that jumps back to [0, 10) crosses 30 only by the
+  jump. Measure on MC chr22, and on pggb chr22 under both placements, the
+  rows and bytes per window at p95 and max and the uncovered (contig,
+  chunk) pairs, for:
+  - the whole stretch, as above
+  - strand switches and back jumps at their ends only
+  - every record's end blocks, plus blocks over only the chunks where that
+    path has no piece, which keeps coverage by construction
+- **A per-path summary row** when a path's departures over a window pass a
+  bound, after [ADR 0004](0004-abridged-detours.md)'s abridged rows, if
+  that measurement still leaves pggb windows over the departure budget at
+  every zoom
+- **A rebuild of the three graphs with the amended record:** sizes; bytes
+  and requests per window, counted the way @gmod/tabix reads them (it
+  merges reads only up to 5 MB, so 73 MB is many requests, not 5); distinct
+  `leaveChunk`s per window; what a departure query over the walk query's
+  lookback adds, up to 1 Mb on pggb; the `.tbi` size; the leave-chunk
+  measurement,
+  with its script saved; the `dep.rs` mismatches split by field; a check
+  that every `dep.rs` departure without a record lies inside one piece
+  under `fold`; and `pggbY.audit.txt` in full
+- **Pass counts for departures inside a piece** with an end on a node the
+  reference passes more than once: a `ref`-row tag listing such positions
+  of R with their counts, or a plain statement that the reader cannot know
+  them
+- **Zero-length segments:** they can give two departures one `hapStart`,
+  and put an end block off its node, at −1 at the start of S. Refuse them
+  under `--walks`, or widen the key and define their end block
+
+**Not changed.** The placement rule stays ADR 0001's. Decoding already
+makes the runs the stay absorbed own sequence. Extending that to the
+hop-and-return runs the stay does not absorb today, and a per-end
+placement class (once, aligned, predicted), belong to the placement ADR
+for pggb.
+
+**Before format 6, with no format change:** graph-walks 4.x's refusal
+wording; bandage-core's `WalkSkips` keeping the `offBp` and `offSteps`
+graph-walks already sends, in place of `offReferenceBp: 0`; the lane-side
+bp in jbrowse-components' header; and a count, on the hosted
+Minigraph-Cactus format 5 file, of the (contig, chunk) pairs no piece and
+no `skip` row covers, which says how urgent format 6 is. `audit.py` counts
+coverage from departure rows only and needs a `skip` mode for it.
 
 ## Alternatives rejected
 
