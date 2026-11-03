@@ -4,8 +4,8 @@ What each subcommand writes:
 
 | Subcommand              | Writes                                                           |
 | ----------------------- | ---------------------------------------------------------------- |
-| [build](#build)         | the index, contig layout, coarse tier, alleles, bubbles, manifest and JBrowse config, from one read of the graph |
-| [alleles](#alleles)     | one row per allele, anchored on the reference                    |
+| [build](#build)         | the index, contig layout, coarse tier, bubbles, manifest and JBrowse config, from one read of the graph |
+| [alleles](#alleles)     | deprecated: one row per allele, anchored on the reference        |
 | [bubbles](#bubbles)     | a plain GFA's bubbles, from a snarl VCF                          |
 | [fold](#fold)           | the coarse tier: the graph with small variants folded            |
 | [paths](#paths)         | one row per bubble and sample, from `minigraph --call`           |
@@ -22,9 +22,8 @@ gfa-to-tabix build ecoli.gfa.gz --reference K12 --snarls ecoli.snarls.vcf -o eco
 | File                               | Holds                                              |
 | ---------------------------------- | -------------------------------------------------- |
 | `hprc.graph.bed.gz`                | the fine index, anchored layout                    |
-| `hprc.contig.graph.bed.gz`         | the contig layout, which `alleles` reads           |
+| `hprc.contig.graph.bed.gz`         | the contig layout                                  |
 | `hprc.fold10000.graph.bed.gz`      | the coarse tier ([fold](#fold))                    |
-| `hprc.alleles.bed.gz`              | the allele inventory ([alleles](#alleles))         |
 | `hprc.bubbles.bed.gz`              | the bubbles ([bubbles](#bubbles))                  |
 | `hprc.graph.json`                  | the [manifest](#the-manifest)                      |
 | `hprc.config.json`                 | the tracks ([JBrowse config](#the-jbrowse-config)) |
@@ -69,8 +68,7 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
   "index": "hprc",
   "contig": "hprc.contig",
   "tier": { "prefix": "hprc.fold10000", "foldBelowBp": 10000, "format": 2 },
-  "bubbles": "hprc.bubbles.bed.gz",
-  "alleles": "hprc.alleles.bed.gz"
+  "bubbles": "hprc.bubbles.bed.gz"
 }
 ```
 
@@ -85,8 +83,7 @@ The manifest, `<prefix>.graph.json`, lists each file relative to itself, or
 
 `<prefix>.config.json` is ready to merge into a JBrowse config. It loads the
 [graph genome viewer plugin](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer)
-and holds a graph track, an alleles track and, with a bubble file, two bubble
-tracks. A graph track written by hand names the file and its index:
+and holds a graph track and, with a bubble file, two bubble tracks. A graph track written by hand names the file and its index:
 
 ```json
 {
@@ -126,6 +123,9 @@ tracks. A graph track written by hand names the file and its index:
 - Walk files take `walksUri`; see [readers](walks-format.md#readers)
 
 ## alleles
+
+Deprecated, and gone in the next major version: `build` no longer writes the
+allele inventory.
 
 - **In:** `<prefix>.graph.bed.gz`, or a format 1 pair, indexed with
   `--layout contig`. The command needs no graph, so a hosted index works

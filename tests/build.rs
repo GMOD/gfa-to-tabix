@@ -134,8 +134,7 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
     "foldBelowBp": 50,
     "format": 2
   },
-  "bubbles": "my-graph.v1.bubbles.bed.gz",
-  "alleles": "my-graph.v1.alleles.bed.gz"
+  "bubbles": "my-graph.v1.bubbles.bed.gz"
 }
 "#
     );
@@ -187,18 +186,6 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
       ]
     }},
     {{
-      "type": "AlignmentsTrack",
-      "trackId": "my_graph_v1_alleles",
-      "name": "my-graph.v1 alleles",
-      "assemblyNames": [
-        "hg"
-      ],
-      "adapter": {{
-        "type": "BedTabixAdapter",
-        "uri": "my-graph.v1.alleles.bed.gz"
-      }}
-    }},
-    {{
       "type": "FeatureTrack",
       "trackId": "my_graph_v1_bubbles",
       "name": "my-graph.v1 bubbles",
@@ -227,7 +214,7 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
         gunzip(&dir.join("my-graph.v1.bubbles.bed.gz")),
         "ref#1#chr\t4\t6\t4\t2\t0\t1\t2\t.\t.\t.\t1@4,4\n"
     );
-    for kind in ["graph", "contig.graph", "fold50.graph", "alleles"] {
+    for kind in ["graph", "contig.graph", "fold50.graph"] {
         assert!(dir.join(format!("my-graph.v1.{kind}.bed.gz.tbi")).exists());
     }
     fs::remove_dir_all(&dir).unwrap();
@@ -299,8 +286,7 @@ fn without_gfatools_an_rgfa_from_stdin_builds_with_no_bubbles() {
     "foldBelowBp": 10000,
     "format": 2
   },
-  "bubbles": null,
-  "alleles": "out.alleles.bed.gz"
+  "bubbles": null
 }
 "#
     );
@@ -341,18 +327,6 @@ fn without_gfatools_an_rgfa_from_stdin_builds_with_no_bubbles() {
           "displayId": "out_graph-LinearBasicDisplay"
         }}
       ]
-    }},
-    {{
-      "type": "AlignmentsTrack",
-      "trackId": "out_alleles",
-      "name": "out alleles",
-      "assemblyNames": [
-        "reference"
-      ],
-      "adapter": {{
-        "type": "BedTabixAdapter",
-        "uri": "out.alleles.bed.gz"
-      }}
     }}
   ]
 }}
@@ -521,8 +495,6 @@ fn a_reference_past_512_mb_gets_csi_indexes_and_tracks_that_read_them() {
             "{file}"
         );
     }
-    // no allele reaches past 512 Mb, so the allele file keeps a .tbi
-    assert!(dir.join("out.alleles.bed.gz.tbi").exists());
     let config = read(&dir.join("out.config.json"));
     assert!(
         config.contains("\"uri\": \"out\",\n        \"format\": 2,\n        \"csi\": true,"),
@@ -605,7 +577,7 @@ fn index(dir: &Path, gfa: &str, reference: &[&str], prefix: &str, format: &str) 
 }
 
 #[test]
-fn the_contig_index_takes_the_build_format_and_the_alleles_do_not_change() {
+fn the_contig_index_takes_the_build_format() {
     for (gfa, reference) in [
         ("alleles.gfa", &[][..]),
         ("paths.gfa", &["--reference", "ref#1"]),
@@ -644,11 +616,7 @@ fn the_contig_index_takes_the_build_format_and_the_alleles_do_not_change() {
         );
         assert!(!dir.join("f1.contig.graph.bed.gz").exists(), "{gfa}");
         assert!(!dir.join("f2.contig.segs.bed.gz").exists(), "{gfa}");
-        let alleles =
-            |format: &str| fs::read(dir.join(format!("f{format}.alleles.bed.gz"))).unwrap();
-        let inventory = gunzip(&dir.join("f1.alleles.bed.gz"));
-        assert!(inventory.lines().any(|row| !row.starts_with('#')), "{gfa}");
-        assert_eq!(alleles("1"), alleles("2"), "{gfa}");
+        assert!(!dir.join("f1.alleles.bed.gz").exists(), "{gfa}");
         let manifest = |format: &str| {
             read(&dir.join(format!("f{format}.graph.json")))
                 .replace(&format!("f{format}"), "f")

@@ -163,8 +163,8 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ### Which output do I need?
 
 - The node and link index holds the nodes and links a graph track draws at a
-  locus, for any input graph. `build` writes it with the coarse tier, alleles,
-  bubbles and a JBrowse config
+  locus, for any input graph. `build` writes it with the coarse tier, bubbles
+  and a JBrowse config
 - The walk files hold each haplotype's path through a base-level graph, which a
   viewer needs to draw haplotypes
 - [gbz-comparison.md](docs/gbz-comparison.md) compares the walk files with
@@ -185,7 +185,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ## Docs
 
 - [The node and link index](docs/index-format.md): inputs (rGFA, plain GFA, choosing a reference), options, coordinates, layouts, columns, scale
-- [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `alleles`, `bubbles`, `fold`, `paths`
+- [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `bubbles`, `fold`, `paths`, and the deprecated `alleles`
 - [Walk files](docs/walks-format.md): options, placement rules, the row format 5 and its readers
 - Decisions:
   - [ADR 0001](docs/adr/0001-step-placement.md): which chunk a walk file files each step under

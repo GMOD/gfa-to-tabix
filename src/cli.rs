@@ -119,7 +119,6 @@ accepted; - reads stdin):
   PREFIX.graph.bed.gz                the fine index, anchored layout
   PREFIX.contig.graph.bed.gz         the contig layout
   PREFIX.foldBP.graph.bed.gz         the coarse tier, as `fold` writes it
-  PREFIX.alleles.bed.gz              the allele inventory, as `alleles` writes it
   PREFIX.bubbles.bed.gz              `gfatools bubble` for an rGFA, --snarls for a plain GFA
   PREFIX.graph.json                  a manifest naming the files above
   PREFIX.config.json                 the JBrowse tracks, ready to merge into a config
@@ -129,11 +128,12 @@ rGFA's bubbles need gfatools on PATH; when it is missing, fails or crashes, the
 build notes why and writes no bubble file.";
 
 const ALLELES_ABOUT: &str =
-    "Read PREFIX.graph.bed.gz, or the PREFIX.segs.bed.gz and PREFIX.links.bed.gz
-pair, as this tool writes them with --layout contig, and write
-PREFIX.alleles.bed.gz (+ .tbi): one row per allele the graph holds, anchored on
-the reference, with a CIGAR that states its size. The index is all it needs, so
-a hosted index works without the graph.";
+    "Deprecated: `build` no longer writes the allele inventory, and this command goes
+in the next major version. Read PREFIX.graph.bed.gz, or the PREFIX.segs.bed.gz
+and PREFIX.links.bed.gz pair, as this tool writes them with --layout contig, and
+write PREFIX.alleles.bed.gz (+ .tbi): one row per allele the graph holds,
+anchored on the reference, with a CIGAR that states its size. The index is all
+it needs, so a hosted index works without the graph.";
 
 const BUBBLES_ABOUT: &str =
     "Write PREFIX.bubbles.bed.gz (+ .tbi) from a `vg deconstruct` snarl VCF (gz
@@ -194,7 +194,7 @@ pub enum Command {
         #[arg(long, value_enum, default_value = "2")]
         format: Format,
     },
-    #[command(about = "Write the allele inventory from a contig-layout index", long_about = ALLELES_ABOUT, args_override_self = true)]
+    #[command(about = "Deprecated: write the allele inventory from a contig-layout index", long_about = ALLELES_ABOUT, args_override_self = true)]
     Alleles {
         /// The index's prefix
         prefix: String,

@@ -276,7 +276,6 @@ fn basename(prefix: &str) -> &str {
 struct Csi {
     graph: bool,
     coarse: bool,
-    alleles: bool,
     bubbles: bool,
 }
 
@@ -325,7 +324,6 @@ impl Built<'_> {
                 "bubbles",
                 file(self.bubbles, format!("{base}.bubbles.bed.gz")),
             ),
-            ("alleles", text(format!("{base}.alleles.bed.gz"))),
         ])
     }
 
@@ -368,40 +366,21 @@ impl Built<'_> {
             coarse.push(("csi", Json::Bool(self.csi.coarse)));
         }
         graph_adapter.push(("coarse", object(coarse)));
-        let mut tracks = vec![
-            object([
-                ("type", text("GraphTrack")),
-                ("trackId", text(format!("{stem}_graph"))),
-                ("name", text(format!("{base} graph"))),
-                ("assemblyNames", assembly()),
-                ("adapter", object(graph_adapter)),
-                ("displayDefaults", object([("showLabels", text("none"))])),
-                (
-                    "displays",
-                    Json::List(vec![
-                        display("LinearGraphDisplay"),
-                        display("LinearBasicDisplay"),
-                    ]),
-                ),
-            ]),
-            object([
-                ("type", text("AlignmentsTrack")),
-                ("trackId", text(format!("{stem}_alleles"))),
-                ("name", text(format!("{base} alleles"))),
-                ("assemblyNames", assembly()),
-                (
-                    "adapter",
-                    object(
-                        [
-                            ("type", text("BedTabixAdapter")),
-                            ("uri", text(format!("{base}.alleles.bed.gz"))),
-                        ]
-                        .into_iter()
-                        .chain(csi(self.csi.alleles)),
-                    ),
-                ),
-            ]),
-        ];
+        let mut tracks = vec![object([
+            ("type", text("GraphTrack")),
+            ("trackId", text(format!("{stem}_graph"))),
+            ("name", text(format!("{base} graph"))),
+            ("assemblyNames", assembly()),
+            ("adapter", object(graph_adapter)),
+            ("displayDefaults", object([("showLabels", text("none"))])),
+            (
+                "displays",
+                Json::List(vec![
+                    display("LinearGraphDisplay"),
+                    display("LinearBasicDisplay"),
+                ]),
+            ),
+        ])];
         if self.bubbles {
             let adapter = || {
                 let mut fields = vec![
@@ -531,26 +510,18 @@ pub fn run(options: &Options) -> Result<(), String> {
         });
         let contig = scope.spawn(|| {
             let contig = format!("{prefix}.contig");
-            let (nodes, links) = match options.format {
+            let nodes: Vec<String> = match options.format {
                 Format::One => {
-                    let (nodes, links) =
+                    let (nodes, _) =
                         crate::write_index(graph, placed, Layout::Contig, None, &contig)?;
-                    let text = |rows: Vec<Row>| rows.iter().map(Row::text).collect();
-                    (text(nodes), text(links))
+                    nodes.iter().map(Row::text).collect()
                 }
                 Format::Two => {
                     let rows = crate::write_graph(graph, placed, Layout::Contig, None, &contig)?;
-                    alleles::split_graph(&contig, rows.iter().map(|row| Ok(row.text())))?
+                    alleles::split_graph(&contig, rows.iter().map(|row| Ok(row.text())))?.0
                 }
             };
-            let sample = reference_sample(&nodes);
-            alleles::from_rows(
-                &contig,
-                nodes.into_iter(),
-                links.into_iter(),
-                &format!("{prefix}.alleles.bed.gz"),
-            )?;
-            Ok::<_, String>(sample)
+            Ok::<_, String>(reference_sample(&nodes))
         });
         let coarse = scope.spawn(|| {
             let tier_prefix = format!("{prefix}.fold{tier}");
@@ -587,7 +558,6 @@ pub fn run(options: &Options) -> Result<(), String> {
                 "{prefix}.fold{tier}{}",
                 index_suffix(options.format)
             )),
-            alleles: has_csi(&format!("{prefix}.alleles.bed.gz")),
             bubbles: has_csi(&format!("{prefix}.bubbles.bed.gz")),
         },
     };
