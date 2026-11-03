@@ -123,9 +123,11 @@ accepted; - reads stdin):
   PREFIX.graph.json                  a manifest naming the files above
   PREFIX.config.json                 the JBrowse tracks, ready to merge into a config
 --format 1 writes each of the three indexes as a .segs.bed.gz and .links.bed.gz
-pair instead. Each file gets a .tbi, or a .csi when a row lies past 512 Mb. An
-rGFA's bubbles need gfatools on PATH; when it is missing, fails or crashes, the
-build notes why and writes no bubble file.";
+pair instead. Each file gets a .tbi, or a .csi when a row lies past 512 Mb. A
+plain GFA's tier is in the contig layout, and its config's graph track reads
+PREFIX.contig: the anchored layout files a segment under every reference
+position its branch spans. An rGFA's bubbles need gfatools on PATH; when it is
+missing, fails or crashes, the build notes why and writes no bubble file.";
 
 const ALLELES_ABOUT: &str =
     "Deprecated: `build` no longer writes the allele inventory, and this command goes

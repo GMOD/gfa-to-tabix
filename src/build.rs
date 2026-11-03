@@ -292,6 +292,10 @@ fn has_csi(path: &str) -> bool {
 
 struct Built<'a> {
     base: &'a str,
+    // the prefix the graph track reads: the anchored index for an rGFA, the
+    // contig layout for a plain GFA, whose anchored index files a segment under
+    // every reference position its branch spans
+    track_index: String,
     sample: Option<String>,
     assembly: String,
     format: Format,
@@ -353,7 +357,10 @@ impl Built<'_> {
         };
         let csi = |on: bool| on.then_some(("csi", Json::Bool(true)));
         let format = || (self.format == Format::Two).then_some(("format", Json::Number(2)));
-        let mut graph_adapter = vec![("type", text("RgfaTabixAdapter")), ("uri", text(base))];
+        let mut graph_adapter = vec![
+            ("type", text("RgfaTabixAdapter")),
+            ("uri", text(&self.track_index)),
+        ];
         graph_adapter.extend(format());
         graph_adapter.extend(csi(self.csi.graph));
         graph_adapter.extend(pansn());
@@ -472,9 +479,9 @@ pub fn run(options: &Options) -> Result<(), String> {
         }
         Err(why) => Err(why),
     };
-    let (name, default_tier) = match route {
-        Route::Rgfa => ("rgfa", 10000),
-        Route::Paths => ("paths", 50),
+    let (name, default_tier, tier_layout) = match route {
+        Route::Rgfa => ("rgfa", 10000, Layout::Anchored),
+        Route::Paths => ("paths", 50, Layout::Contig),
     };
     eprintln!("{name} graph: {}", options.graph);
     let tier = options.tier.unwrap_or(default_tier);
@@ -529,7 +536,7 @@ pub fn run(options: &Options) -> Result<(), String> {
                 graph,
                 placed,
                 tier,
-                Layout::Anchored,
+                tier_layout,
                 options.max_component,
                 options.format,
                 &tier_prefix,
@@ -541,8 +548,13 @@ pub fn run(options: &Options) -> Result<(), String> {
         Ok::<_, String>((sample, joined(bubbles)?))
     })?;
 
+    let track_prefix = match route {
+        Route::Rgfa => prefix.to_string(),
+        Route::Paths => format!("{prefix}.contig"),
+    };
     let built = Built {
         base: basename(prefix),
+        track_index: basename(&track_prefix).to_string(),
         assembly: options
             .assembly
             .clone()
@@ -553,7 +565,7 @@ pub fn run(options: &Options) -> Result<(), String> {
         tier,
         bubbles,
         csi: Csi {
-            graph: has_csi(&format!("{prefix}{}", index_suffix(options.format))),
+            graph: has_csi(&format!("{track_prefix}{}", index_suffix(options.format))),
             coarse: has_csi(&format!(
                 "{prefix}.fold{tier}{}",
                 index_suffix(options.format)

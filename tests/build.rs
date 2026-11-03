@@ -160,7 +160,7 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
       ],
       "adapter": {{
         "type": "RgfaTabixAdapter",
-        "uri": "my-graph.v1",
+        "uri": "my-graph.v1.contig",
         "format": 2,
         "assemblyNameToPanSN": {{
           "hg": "ref"
@@ -217,6 +217,12 @@ fn a_plain_gfa_with_snarls_maps_the_assembly_onto_its_sample() {
     for kind in ["graph", "contig.graph", "fold50.graph"] {
         assert!(dir.join(format!("my-graph.v1.{kind}.bed.gz.tbi")).exists());
     }
+    // a plain GFA's tier is in the contig layout, as the track's fine index is
+    let tier = gunzip(&dir.join("my-graph.v1.fold50.graph.bed.gz"));
+    assert!(
+        tier.lines().next().unwrap().contains("layout:Z:contig"),
+        "{tier}"
+    );
     fs::remove_dir_all(&dir).unwrap();
 }
 
@@ -255,7 +261,7 @@ fn a_segment_the_reference_reads_reversed_is_written_forward() {
     );
     assert_eq!(
         rows(&gunzip(&dir.join("out.fold50.graph.bed.gz")), "N"),
-        "ref#1#chr\t0\t9\t1\t0\tref#1#chr\t0\t9\n"
+        "ref#1#chr\t0\t9\t1\t0\n"
     );
     fs::remove_dir_all(&dir).unwrap();
 }
@@ -497,7 +503,7 @@ fn a_reference_past_512_mb_gets_csi_indexes_and_tracks_that_read_them() {
     }
     let config = read(&dir.join("out.config.json"));
     assert!(
-        config.contains("\"uri\": \"out\",\n        \"format\": 2,\n        \"csi\": true,"),
+        config.contains("\"uri\": \"out.contig\",\n        \"format\": 2,\n        \"csi\": true,"),
         "{config}"
     );
     assert_eq!(config.matches("\"csi\"").count(), 1, "{config}");
