@@ -1,0 +1,10 @@
+[  18.2 s] reference GRCh38: 2 paths, 263414 nodes
+[  54.6 s] 1053 paths, 544640313 steps
+GRCh38: 471497 pieces, 527 paths visit no GRCh38 node and are left out; 0 holes; mp bytes 5233740
+departures: 426128 records; 425040 between pieces, 396 inside a piece, 8127463 inside a piece left to the walk row, 0 across record gaps, 692 one-ended (104 under recordbp), 9872 over steps on another sequence, 0 adjacent across a hole
+filing: 732948 end rows, 467510 interior rows, 24598 whole-stretch rows over 11576 records filed whole, 0 crowds (0 crowd rows, 0 records, largest 0, 0 detail rows)
+stay: 71277 runs kept (1785011 steps: 1381810 re-placed, 1381810 of them moved, 247789 made route interior); 112985 runs only the old rule keeps, 0 only the new; refused 139610 for a node passed once, 73690 for a copy beyond stay
+[ 148.1 s] 2681923 rows -> out/pggbY.k0.GRCh38.walks.bed.gz (+ .tbi): 130039 routes, 360212 walk rows, 68006 with step counts; 669 paths abridged to 110886 detail walk rows
+pages: 891 detail pages, longest detail record 3772 rows
+positions: 471098 walk pieces, 175505718 steps on R, 152238223 in chunks whose R holds a node more than once, 13112990 that format 5's rules decode elsewhere in 119147 rows, 0 placed off R on a node R holds; start@k 47017 of 471098, exit @k 462375 of 8127859 exits (8178560 choices); @k bytes 1623250 where it differs, 19116049 on every node R holds more than once; step counts on 119749 rows, 118077 under format 5
+pggbY.k0: 148.55 s, 12429496 KB peak

@@ -1,0 +1,10 @@
+[  12.6 s] reference GRCh38: 1 paths, 1389745 nodes
+[  46.2 s] 1131 paths, 630140053 steps
+GRCh38: 253629 pieces, 36 paths visit no GRCh38 node and are left out; 0 holes; mp bytes 0
+departures: 25259 records; 24090 between pieces, 537 inside a piece, 25968505 inside a piece left to the walk row, 558 across record gaps, 74 one-ended (55 under recordbp), 0 over steps on another sequence, 0 adjacent across a hole
+filing: 27660 end rows, 0 interior rows, 4189 whole-stretch rows over 802 records filed whole, 0 crowds (0 crowd rows, 0 records, largest 0, 0 detail rows)
+stay: 0 runs kept (0 steps: 0 re-placed, 0 of them moved, 0 made route interior); 0 runs only the old rule keeps, 0 only the new; refused 0 for a node passed once, 0 for a copy beyond stay
+[  54.8 s] 1936249 rows -> out/mc22.whole.GRCh38.walks.bed.gz (+ .tbi): 786690 routes, 250281 walk rows, 0 with step counts; 2468 paths abridged to 2572 detail walk rows
+pages: 2536 detail pages, longest detail record 7259 rows
+positions: 252853 walk pieces, 552857684 steps on R, 0 in chunks whose R holds a node more than once, 0 that format 5's rules decode elsewhere in 0 rows, 0 placed off R on a node R holds; start@k 0 of 252853, exit @k 0 of 25969042 exits (25988762 choices); @k bytes 0 where it differs, 0 on every node R holds more than once; step counts on 0 rows, 0 under format 5
+mc22.whole: 54.95 s, 4075300 KB peak

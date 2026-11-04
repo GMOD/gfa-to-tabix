@@ -1,0 +1,1 @@
+mc/chr22.gfa 3122495 S lines, 0 of 0 bp

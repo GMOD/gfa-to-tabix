@@ -1,0 +1,11 @@
+[  77.8 s] reference GRCh38: 10 paths, 1444415 nodes
+[  78.0 s] 683763 aligned blocks for 10715 paths
+[ 261.9 s] 1773 paths, 2831451690 steps
+alignment placement: 744135443 steps placed by the alignment, 10384080 aligned but no pass within tolerance (off), 141880690 unaligned placed by prediction, 714815217 unaligned outside the slack (off), 1016 unaligned once-passed anchors placed, 134532 unaligned multi-pass with nothing to predict from (off)
+GRCh38: 407863 pieces, 93 paths visit no GRCh38 node and are left out; 0 holes
+departures: 177475 records in 452672 rows; 168958 between pieces, 0 across record gaps, 8517 one-ended, 3350 over steps on another sequence; 67232497 inside a piece left to the walk row, 0 adjacent across a hole
+stay: 65573 runs kept (1439464 steps: 1196290 re-placed, 1196290 of them moved, 140502 made route interior); 17571 runs only the old rule keeps, 0 only the new; refused 99470 for a node passed once, 5898 for a copy beyond stay
+[ 517.3 s] 6276838 rows -> out6/pggb22a.GRCh38.walks.bed.gz (+ .tbi): 840977 routes, 321683 walk rows, 52635 with step counts; 10128 paths abridged to 85570 detail walk rows
+pages: 10254 detail pages, longest detail record 4498 rows
+positions: 407253 walk pieces, 947944301 steps on R, 731926159 in chunks whose R holds a node more than once, 55882041 that format 5's rules decode elsewhere in 120865 rows, 171139936 placed off R on a node R holds; start@k 6729 of 407253, exit @k 8814442 of 67232497 exits (67277969 choices); @k bytes 26813836 where it differs, 92731504 on every node R holds more than once; step counts on 80411 rows, 82255 under format 5
+pggb22a: 517.97 s, 41018980 KB peak

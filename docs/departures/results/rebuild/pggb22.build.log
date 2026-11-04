@@ -1,0 +1,9 @@
+[  59.2 s] reference GRCh38: 10 paths, 1444415 nodes
+[ 296.8 s] 1773 paths, 2831451690 steps
+GRCh38: 5569569 pieces, 92 paths visit no GRCh38 node and are left out; 0 holes
+departures: 5333737 records in 17434823 rows; 5323159 between pieces, 0 across record gaps, 10578 one-ended, 325397 over steps on another sequence; 172297902 inside a piece left to the walk row, 0 adjacent across a hole
+stay: 3387871 runs kept (78531975 steps: 60569484 re-placed, 60569484 of them moved, 7928733 made route interior); 355435 runs only the old rule keeps, 0 only the new; refused 3566286 for a node passed once, 127980 for a copy beyond stay
+[ 586.3 s] 44208056 rows -> out6/pggb22.GRCh38.walks.bed.gz (+ .tbi): 820878 routes, 1854473 walk rows, 119630 with step counts; 16470 paths abridged to 3714486 detail walk rows
+pages: 21973 detail pages, longest detail record 13054 rows
+positions: 5568959 walk pieces, 1665489899 steps on R, 1431136414 in chunks whose R holds a node more than once, 54605958 that format 5's rules decode elsewhere in 479419 rows, 0 placed off R on a node R holds; start@k 109044 of 5568959, exit @k 14187799 of 172297902 exits (172872658 choices); @k bytes 38203125 where it differs, 288114993 on every node R holds more than once; step counts on 561313 rows, 557568 under format 5
+pggb22: 586.94 s, 36280792 KB peak

@@ -1,12 +1,23 @@
 # Departure records: measurements behind ADR 0009
 
-The writer spike that produced these files lives in a scratch copy of the
-repository (`write_departures`, `--fold`, `--chain`, `--alignments` in
-`src/walks.rs`); its code is ported into the tool under ADR 0009. The
-graphs are HPRC v2.1 Minigraph-Cactus chr22 and HPRC release 2 pggb chrY
-and chr22, all on GRCh38; the builds ran on ada.
+Two rounds of measurement, on HPRC v2.1 Minigraph-Cactus chr22 and HPRC
+release 2 pggb chrY and chr22, all on GRCh38, built on ada:
+
+- **The rebuild, 2026-11-03,** in [results/rebuild/](results/rebuild/README.md):
+  a prototype of the format ADR 0009 specifies, read back by `audit6.py`.
+  Its numbers supersede the spike's wherever both measure the same thing
+- **The spike, 2026-10-30,** in `results/`: an earlier writer with a
+  narrower record, before positions, copies and bin-sized blocks (`--fold`,
+  `--chain`, `--alignments` in a scratch copy of `src/walks.rs`)
 
 ## Scripts
+
+- `audit6.py walks.bed.gz [--truth dep.tsv] [--shard I/N]`: reads a format
+  6 file as a reader would and checks it, as the rebuild's README
+  describes. `--shard` splits the paths so a large graph fits in memory
+- `fuzz6.sh` with `fuzz6-gen.py`: random graphs built and audited in six
+  option modes
+- `summary6.py out/`: one table row per build log and audit
 
 - `audit.py walks.bed.gz [--truth dep.tsv] [--baseline f5.bed.gz]`:
   departures by kind, rows per departure, every (contig, chunk) a contig

@@ -1,0 +1,103 @@
+# header
+format:6	chunk:65536	maxnode:1000000	stay:311	abridge:1000000	abridgebytes:3000000	recordbp:65536	crowdmax:8	page:2048	kinds:ref,nodes,route,walk,abridged,departure,crowd
+# rows by kind
+669	abridged rows
+109244349	crowd detail rows
+758536	crowd rows
+763988	departure rows
+669	detail nodes rows
+853629	detail route rows
+110886	detail walk rows
+364	nodes rows
+399	ref rows
+130039	route rows
+360212	walk rows
+# text bytes by kind
+16890319225	crowd (91.03%)
+1226116152	route (6.61%)
+198179879	departure (1.07%)
+122773356	nodes (0.66%)
+106223251	walk (0.57%)
+10407987	ref (0.06%)
+316362	abridged (0.00%)
+1964072223	file bytes; 6217904 index bytes (pggbY.k8.GRCh38.walks.bed.gz.csi)
+0	#hole lines
+# departures recomputed from the decoded rows, against the records
+104	one-ended: computed by the reader, no record
+692	one-ended: match
+0	records with no recomputed departure
+8127463	within a record: computed by the reader, no record
+425436	within a record: match
+# the reader promise: record stretch bases off the path's pieces under no block or crowd
+0	bases uncovered, over 0 records (must be 0)
+# GRCh38#0#chrY~departure: rows by class: end 727837, interior 9680, whole 21360, crowd 754766
+64 kb windows: 874
+  rows median 114 p95 5926 max 136435
+    end: median 0 p95 2743 max 99409
+    interior: median 114 p95 358 max 433
+    whole: median 0 p95 646 max 1873
+    crowd: median 0 p95 2529 max 83476
+  text bytes: median 18440 p95 804665 max 17268956
+  paths with a row: median 114 p95 277 max 313
+  distinct leaveChunks outside the walk read: median 2 p95 28 max 36
+  departure read requests: median 0 p95 0 max 0
+  departure read bytes: median 0 p95 0 max 0
+  walk read requests: median 0 p95 0 max 0
+  walk read bytes: median 0 p95 0 max 0
+  densest window GRCh38#0#chrY:20054016-20119552: 136435 rows, 17224098 text bytes, 264 paths, departure read 0 requests 0 bytes; walk read 0 requests 0 bytes
+    by class: end 52252, interior 362, whole 345, crowd 83476
+    most rows by path: HG02668#1#CM088876.1 2008, HG02984#1#JBJKOM010000014.1 1520, HG02647#1#JBHDSP010000021.1 1393, NA19043#1#JBHDVS010000048.1 1383, NA18948#1#JBKACC010000023.1 1285
+    52959 records: 0 own bp 40081, an end on a node passed more than once 49853, both ends on nodes passed once 3106, own bp 12878, stretch 64 kb or more 27030, stretch under 1 kb 368, stretch under 64 kb 25561
+  densest window GRCh38#0#chrY:20119552-20185088: 128249 rows, 16618908 text bytes, 264 paths, departure read 0 requests 0 bytes; walk read 0 requests 0 bytes
+    by class: end 57916, interior 362, whole 345, crowd 69626
+    most rows by path: HG02668#1#CM088876.1 2267, HG02984#1#JBJKOM010000014.1 1712, HG02647#1#JBHDSP010000021.1 1466, HG005#1#JAHEPO020000010.1 1335, NA19043#1#JBHDVS010000048.1 1311
+    58623 records: 0 own bp 48860, an end on a node passed more than once 55636, both ends on nodes passed once 2987, own bp 9763, stretch 64 kb or more 19370, stretch under 1 kb 301, stretch under 64 kb 38952
+  densest window GRCh38#0#chrY:11534336-11599872: 116553 rows, 17268956 text bytes, 280 paths, departure read 0 requests 0 bytes; walk read 0 requests 0 bytes
+    by class: end 99409, interior 319, whole 507, crowd 16318
+    most rows by path: HG02145#1#JAHKSG020000082.1 1449, HG03050#1#JBJKOK010000063.1 1378, HG03098#1#JAHEPM020000017.1 1352, NA18952#1#JBHIJS010000003.1 1265, NA18620#1#JBHIJU010000099.1 1236
+    100235 records: 0 own bp 81334, an end on a node passed more than once 95027, both ends on nodes passed once 5207, one-ended 1, own bp 18900, stretch 64 kb or more 942, stretch under 1 kb 1502, stretch under 64 kb 97790
+1 bp windows: 55887
+  rows median 114 p95 1058 max 30997
+    end: median 0 p95 232 max 30192
+    interior: median 114 p95 355 max 426
+    whole: median 0 p95 579 max 1873
+    crowd: median 0 p95 135 max 250
+  text bytes: median 18440 p95 155982 max 4831768
+  paths with a row: median 114 p95 264 max 311
+  distinct leaveChunks outside the walk read: median 2 p95 27 max 36
+  departure read requests: median 0 p95 0 max 0
+  departure read bytes: median 0 p95 0 max 0
+  walk read requests: median 0 p95 0 max 0
+  walk read bytes: median 0 p95 0 max 0
+# GRCh38#0#chrY_KI270740v1_random~departure: rows by class: end 5111, interior 0, whole 0, crowd 3770
+64 kb windows: 1
+  rows median 8881 p95 8881 max 8881
+    end: median 5111 p95 5111 max 5111
+    interior: median 0 p95 0 max 0
+    whole: median 0 p95 0 max 0
+    crowd: median 3770 p95 3770 max 3770
+  text bytes: median 1247888 p95 1247888 max 1247888
+  paths with a row: median 120 p95 120 max 120
+  distinct leaveChunks outside the walk read: median 0 p95 0 max 0
+  departure read requests: median 0 p95 0 max 0
+  departure read bytes: median 0 p95 0 max 0
+  walk read requests: median 0 p95 0 max 0
+  walk read bytes: median 0 p95 0 max 0
+  densest window GRCh38#0#chrY_KI270740v1_random:0-65536: 8881 rows, 1247888 text bytes, 120 paths, departure read 0 requests 0 bytes; walk read 0 requests 0 bytes
+    by class: end 5111, interior 0, whole 0, crowd 3770
+    most rows by path: HG02668#1#CM088876.1 198, HG02984#1#JBJKOM010000014.1 178, HG01252#1#JBHIHY010000015.1 139, HG01952#1#JAHAME020000013.1 138, HG02647#1#JBHDSP010000021.1 120
+    5111 records: an end on a node passed more than once 4352, both ends on nodes passed once 525, one-ended 234, own bp 4877, stretch under 1 kb 810, stretch under 64 kb 4067
+1 bp windows: 37
+  rows median 177 p95 2360 max 2368
+    end: median 177 p95 2248 max 2364
+    interior: median 0 p95 0 max 0
+    whole: median 0 p95 0 max 0
+    crowd: median 0 p95 5 max 112
+  text bytes: median 28752 p95 378258 max 384495
+  paths with a row: median 116 p95 120 max 120
+  distinct leaveChunks outside the walk read: median 0 p95 0 max 0
+  departure read requests: median 0 p95 0 max 0
+  departure read bytes: median 0 p95 0 max 0
+  walk read requests: median 0 p95 0 max 0
+  walk read bytes: median 0 p95 0 max 0
+audit pggbY.k8: 1270.56 s, 6288556 KB peak

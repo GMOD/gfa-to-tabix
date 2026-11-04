@@ -97,19 +97,22 @@ there. The urgent part is the word on screen
      drawing show the skipped stretch, for example by marking or dimming
      the bypassed reference and saying when most of it lies outside the
      window. Or drop the arc label and leave the facts to the hover
-2. **Format 6, Minigraph-Cactus first. Stop before starting: ask the
-   user.** A review on 2026-11-01 found gaps in the evidence behind ADR
-   0009, listed under its "Review after acceptance". Six more reviews on
-   2026-11-03 and eleven more that day amended it in three rounds; walk
-   rows now name the copy (`@k`), a walk-row change the user agreed to
-   write up. The ADR's "Open before the port" is the current list, chiefly
-   a rebuild on ada with the amended record, filing and positions. Do that
-   first, and confirm the format with the user before porting anything.
-   The spike's writer is not a plain port: it has no `@k`, `mp`, `crowd`
-   rows or pages, its blocks follow the chunk size and cover whole
-   stretches, and its stay is unbounded. Port the spike's writer and its
-   tests, with ADR 0009's field names (`leavePos`/`rejoinPos`), into
-   gfa-to-tabix 3.0; rebuild the hosted MC walk files on ada under new names
+2. **Format 6, Minigraph-Cactus first.** ADR 0009 was amended in three
+   rounds of review on 2026-11-03, then rebuilt on ada the same day: a
+   prototype of the amended Decision on all three graphs under both
+   placements, read back by an independent audit
+   ([results](../departures/results/rebuild/README.md)). The rebuild
+   simplified the format, and the ADR now specifies the simplified one:
+   whole-stretch filing, records only between pieces and at contig ends,
+   no crowds, no `recordbp`, `mp` deferred to a tag. The user asked the
+   agent to decide these, with two Fable vibe checks; the user wants the
+   finished system to be simple. Port the prototype
+   (`~/notes/handoffs/2026-11-03-format6-prototype.patch`, against 6e1ddf6;
+   live copy `target/f6/tree`) rather than the spike, with its tests: its
+   `tests/walks.rs` still expects format 5 rows in seven tests, and the
+   port should hold less memory (41 GB peak on pggb chr22, against the
+   spike's 21-23 GB). Port it into gfa-to-tabix 3.0; rebuild the hosted MC
+   walk files on ada under new names
    (keep the format 5 files: graph-walks 4.x refuses format 6); then
    graph-walks 5 (`WalkDeparture`, two reads per window, no follow rounds, a
    departure-read budget beside the 8 MB cut budget), bandage-core 13, plugin
@@ -131,6 +134,9 @@ there. The urgent part is the word on screen
   `reader/`, `pggb/` and `untangle/` beside it. Its texts and scripts are
   copied to `~/notes/handoffs/2026-10-31-departures-reviews/`, with a README
   giving the reading order
+- ada: `~/work/rebuild/` (the 2026-11-03 rebuild: `out6/` the simplified
+  format, `out/` the amended Decision's filing variants, `run*.sh`), and the
+  prototype's sources in `~/src/gfa-to-tabix-rebuild-simple/`
 - ada: `~/work/f6/` (the `bypass` prototype builds of MC chr22 and pggb
   chrY), `~/work/spike/` (spike builds, MC chrY cut for the agreement
   scores, alignments in `align/`)

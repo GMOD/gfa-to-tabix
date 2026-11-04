@@ -138,6 +138,15 @@ nothing decided.
 | chr22 departure query bytes p95 / max | 6.2 MB / 73 MB | | 389 KB / 1.4 MB |
 | chr22 file over format 5 | +32.6% | | +17.8% |
 
+- The departure rows above are the spike's format, and its chrY maximum
+  under the primary projection, 1,937, was an audit error: the spike's own
+  file holds 19,933 rows in its densest window. The 2026-11-03 rebuild of
+  the simplified format 6 gives, on chrY, 425,836 records in 1,224,800
+  rows under nearest pass (p95 / max per window 18,037 / 104,479) and
+  30,329 in 43,415 under the projection (265 / 18,562); on chr22,
+  5,333,737 in 17,434,823 under nearest pass and 177,475 in 452,672 under
+  the projection (1,070 / 71,889, at most 988 KB a departure read).
+  [Results](departures/results/rebuild/README.md)
 - Caveats from a review on 2026-11-01. Until these are fixed and the
   scores rerun, don't quote the agreement figures as the gap between the
   two placements:

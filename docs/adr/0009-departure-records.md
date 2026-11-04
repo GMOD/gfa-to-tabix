@@ -1,17 +1,17 @@
 # ADR 0009: One record per departure, and walk rows that name the copy
 
-- **Status:** accepted, 2026-10-31; amended on 2026-11-03 after seventeen
-  reviews, see [History](#history). Not ported: [Open before the
-  port](#open-before-the-port) comes first
+- **Status:** accepted, 2026-10-31; simplified on 2026-11-03 by the
+  rebuild, see [History](#history). Not ported
 - **Decides:** what a walk file holds for every place a haplotype's path
   does not follow the reference between two of its steps on it, how the
-  rows are filed so that any window finds them, which copy of a node a
+  records are filed so that any window finds them, which copy of a node a
   walk row's step takes where the reference passes it more than once, and
   how later additions get in without a new format. Walk format 6
-- **Measured by:** a writer spike built on HPRC v2.1 Minigraph-Cactus chr22
-  and HPRC release 2 pggb chrY and chr22, on GRCh38, with the scripts and
-  results in [docs/departures/](../departures/), and simulations over the
-  format 5 pggb chrY builds, under [Evidence](#evidence)
+- **Measured by:** a prototype writer built on HPRC v2.1
+  Minigraph-Cactus chr22 and HPRC release 2 pggb chrY and chr22, on GRCh38,
+  under nearest-pass and alignment-guided placement, and an independent
+  audit that reads its files as a reader would; scripts and results in
+  [docs/departures/](../departures/), under [Evidence](#evidence)
 - **Supersedes:** [ADR 0006](0006-walks-skip-rows.md)'s `skip` rows, and
   the decoding rules' own choice of copy in
   [walks-format.md](../walks-format.md#decoding-a-walk-row)
@@ -29,22 +29,25 @@
   route exit lands on the nearest, the later on a tie (`Path::first` and
   `Path::nearest` in `src/routes.rs`). `encode` never reads the placement
   pass, which only picks the chunk. So no placement rule can put a step on
-  another copy within a chunk, and on pggb a tenth to a fifth of the steps
-  on R in chunks with repeats decode elsewhere than placement put them
+  another copy within a chunk: format 5's rules put 3.8% to 8.6% of the
+  steps in chunks with repeats on another copy than nearest-pass placement
+  chose, and up to 63% under alignment-guided placement
 - The tools make no variant calls; they state what the data shows. A
   haplotype's answer must not depend on the keep set. A window inside a
   jump of any length must find it from a bounded number of range requests
-  near the window. Long own sequence is summarised and fetchable. No
-  backwards compatibility. Format 6 breaks every reader anyway, so it aims
-  at the ideal format: what it leaves out costs a format 7
+  near the window. No backwards compatibility. Format 6 breaks every
+  reader anyway, so it aims at the ideal format, and the ideal includes
+  being simple: every mechanism below earned its place in the rebuild
 
 ## Decision
 
 ### The record
 
-One `departure` row per place a path's consecutive steps on one reference
-sequence S are not adjacent on S at the passes they took. Fields, plain
-integers:
+One `departure` record for every departure the walk read cannot show:
+each place a path's consecutive steps on one reference sequence S are not
+adjacent on S at the passes they took and lie in different pieces, and each
+end of a contig with own sequence beyond its first or last step on S.
+Fields, plain integers:
 
 ```
 seq~departure  a  b  departure  path fragStart hapStart ownBp ownSteps missingBp
@@ -61,15 +64,15 @@ seq~departure  a  b  departure  path fragStart hapStart ownBp ownSteps missingBp
 - A one-ended record has `.` in the five columns of the end it lacks: the
   contig has no step on S before the rejoin, or none after the leave, in
   any of its W lines. Its own sequence runs from the contig's first
-  record, or to its last
+  record, or to its last, and it is written whenever that is not empty
 - `hapStart` is where the haplotype's own sequence between the ends starts
   on its contig, right after the leave step; it runs `ownBp` over
   `ownSteps` steps, both 0 for a direct jump. `ownSteps` counts every step
-  between the ends, those on other reference sequences included.
-  `missingBp` counts the part of `ownBp` no W line of the contig covers:
-  the gaps between records only, never the records chained over. `xb`
-  counts the part the path walks on other reference sequences, those
-  records' steps included. One-ended records count all three the same way
+  between the ends, those on other reference sequences and in W lines with
+  no step on S included. `missingBp` counts the part of `ownBp` no W line
+  of the contig covers: the gaps between records only. `xb` counts the
+  part the path walks on other reference sequences. One-ended records
+  count all three the same way
 - `fragStart` is the W line of the leave step, or of the rejoin step for a
   record with no leave end
 - No direction and no type column. A reader derives them:
@@ -79,11 +82,14 @@ seq~departure  a  b  departure  path fragStart hapStart ownBp ownSteps missingBp
   `rejoinPos = leavePos` is own sequence between adjacent steps; any other
   case is a jump forward. `ownBp` 0 is a direct jump; `missingBp` above 0
   is sequence the graph lacks
-- Two consecutive steps on S are adjacent, and have no record, when
-  `ownSteps` and `ownBp` are 0, the strands are equal and
-  `leavePos = rejoinPos`
-- Every row of one departure repeats the same columns, and a reader
-  dedups on all of them but `a` and `b`
+- Two consecutive steps on S are adjacent, and depart nowhere, when
+  `ownSteps` and `ownBp` are 0, the strands are equal and `leavePos =
+  rejoinPos`, holes removed (below)
+- A departure inside one piece has no record: the reader computes it from
+  the piece's steps. A record and a computed departure never stand for the
+  same departure, so a reader needs no key to match them
+- Every row of one record repeats the same columns, and a reader dedups on
+  all of them but `a` and `b`
 
 ### Positions
 
@@ -95,28 +101,24 @@ sequence.
   stay's re-placement below, and its walk row states that pass, so readers
   never choose a copy. A step the placement leaves off S is route
   interior, even where the chunk's R holds its node, and own sequence on
-  every reference sequence, so `xb` counts only steps placed on another
-  one
+  every reference sequence
 - The writer fails the build if any row decodes to another (handle,
   position) than the one it placed
-- **The stay** keeps a run home only where each of its steps on a node the
-  home chunk's R holds has a copy there within `stay` bp of the offset
-  `visits_along` predicts for it from the run's previous step, and
+- **The stay** keeps a run home only where it returns there, holds no node
+  the reference passes once, and each of its steps on a node the home
+  chunk's R holds has a copy there within `stay` bp of the offset
+  `visits_along` predicts for it from the run's previous step; it
   re-places the step on the nearest such copy. A step on a node the home
   chunk's R lacks is route interior. Any other run moves the piece on, so
-  the stay moves no step more than `stay` bp from its prediction
-- The stay absorbs no run holding a node the reference passes once, under
-  every placement rule, which amends ADR 0001's rule 2 and [ADR
-  0003](0003-long-node-lookback.md)'s guard. Under nearest-pass placement
-  own sequence therefore holds no such node, and the build asserts it.
-  Other rules, such as alignment-guided placement, may place such a node
-  off S, and readers rely on neither
+  the stay moves no step more than `stay` bp from its prediction. This
+  amends ADR 0001's rule 2 and [ADR 0003](0003-long-node-lookback.md)'s
+  guard. Under nearest-pass placement own sequence therefore holds no node
+  the reference passes once
 - The reference's own paths lie at their offsets and have no departures
 - [ADR 0001](0001-step-placement.md)'s rule 3 places route-interior nodes
   at a `ref` row's position for drawing only, never a haplotype's steps
 - Departures therefore depend on the placement rule and `stay`, both in
-  the header, and on `chunk` only through the stay. Which of them get a
-  record, and their blocks, also depend on `chunk`
+  the header, and on `chunk` through the stay and the pieces
 
 ### Walk rows name the copy
 
@@ -141,100 +143,46 @@ abridged  ... start[@k] end[@k] detail pages ...
 - The encoder continues along R only where R's next position is the
   step's pass, and otherwise takes a route, with an empty interior if need
   be. It writes step counts `:n` wherever the row decoded without them
-  differs from the steps in handle or in position: handles alone pass a
-  row whose positions are wrong, as where a haplotype holds one more unit
-  of a looping array than R
+  differs from the steps in handle or in position
 - A file on a reference that passes every node once writes no `@`
 - The decoding rules in [walks-format.md](../walks-format.md#decoding-a-walk-row)
   take `@k` in place of R's first copy and the nearest copy
 
-### Pass counts in the walk read
-
-Each `ref` row lists, over its own steps, the runs on nodes the reference
-passes more than once, as `mp:Z:i,n,count;...`: from the row's step `i`,
-counted from 0, `n` steps whose nodes the reference's paths pass `count`
-times in all, as `leavePasses` counts. A row with no such run has no tag.
-So a viewer can say where a haplotype's placement is a choice, departure
-or not.
-
-### Which departures get a record
-
-Between two pieces always; inside one piece when the stretch between the
-breakpoints crosses a chunk boundary or `ownBp` is at least `recordbp`
-(65,536 bp by default); across a record gap of a contig, chained over W
-lines with no step on S; one-ended at a contig's ends from `recordbp`. A
-reader computes every departure inside a piece from its steps, so
-`recordbp` is the writer's choice; where a record repeats a departure the
-reader computed, the reader keeps the record, matched on (`path`,
-`hapStart`, `leavePos`, `rejoinPos`).
-
 ### What a reader is promised
 
 The walk read and the departure read over the same extent give together
-every departure over it. The extent is what the cut draws, the window and
-its context.
+every departure over it, each once. The extent is what the cut draws, the
+window and its context.
 
-- The walk read gives the departures inside its pieces
-- A query on `S~departure` returns every record whose stretch covers a
-  base of the extent where its path has no piece; every record with an
-  end block in the extent; and every strand switch and back jump both of
-  whose ends lie on nodes the reference passes once, over its whole
-  stretch. A `crowd` row stands in for each record it counts, over its
-  run
-- A piece covers the bases of S its steps lie on. An abridged row covers
-  the bases from the lower of its `start` and `end` positions to the end
-  of the higher one's node, which is exactly what the writer subtracts
-- Elsewhere, where the path has a piece, the piece is the answer and a
-  departure passing over it may be missing
-- A file holding more blocks than this is still valid, so the writer's
+- The walk read gives every departure inside its pieces. Both steps of one
+  lie in the piece's chunk, so the stretch between them lies in that chunk
+  and the next, or in a `#long` pass that starts in one of them, and a
+  reader of any window over it reads the piece's chunk
+- A query on `S~departure` returns every record whose stretch, end bases
+  included, overlaps the extent
+- A file holding more rows than the filing below is still valid, so the
   filing can change without a reader release
 
 ### Filing
 
 Every record is filed under the sibling sequence `S~departure` of the same
-file, as bin-aligned blocks, which are the only way a reader reaches it:
-there are no copies in the end chunks, and a window query on S never reads
-them.
+file, which is the only way a reader reaches it: there are no copies in the
+chunks, and a window query on S never reads it.
 
-- **End blocks:** one base of each end's node beside its breakpoint,
-  [bp − 1, bp) where the breakpoint is the node's end and [bp, bp + 1)
-  where it is its start; for a node of 0 bp, [bp, bp + 1). Each is
-  clipped to S, and at S's end is [len − 1, len). An empty stretch has the
-  leave end's block only, and a one-ended record its one end's block.
-  Every record therefore has at least one block
-- **Interior blocks:** the stretch [min(leavePos, rejoinPos), max(...))
-  less the bases the path's own pieces cover; for a strand switch or back
-  jump with both ends on nodes the reference passes once, the whole
-  stretch. On Minigraph-Cactus those are real duplications and
-  inversions, few, and a window inside one states its extent
-- **Cutting:** every run of interior bases is cut at aligned multiples of
-  the index's own bin sizes, 2^26, 2^23, 2^20 and 2^17 bp, whatever
-  `--chunk` is, each block clipped to the run, so that each lands in a
-  Tabix bin no larger than its own size. The CSI index the writer uses
-  past 512 Mb has bins at the same sizes
-- **Crowds:** for each path, take each maximal run of bases where at least
-  one of its departures passes over and none of its pieces does. When more
-  than K of its departures pass over any one base of the run, the run's
-  interior blocks, whole-stretch ones included, give way to `crowd` rows
-  over the same blocks, and the departures' end blocks stay:
-
-  ```
-  seq~departure  a  b  crowd  path fragStart n minPos maxPos detail pages
-  ```
-
-  The row states that the path has no piece over [a, b), that `n` of its
-  departures pass over some of the run, and that their stretches lie in
-  [`minPos`, `maxPos`). The `n` records in full are detail record
-  `detail` of the sequence `S~crowd`. K is the header's `crowdmax:i:`. A
-  `crowd` row is a count and extents, decided per path from the file
-  alone, so it calls nothing and depends on no keep set. Readers dedup
-  `crowd` rows on (`path`, `fragStart`, `detail`)
-- **Pages:** every detail record, an abridged one under `S~cs` or a crowd
-  one under `S~crowd`, is numbered by its first page: its rows lie from
-  `detail × 16384`, at most the header's `page:i:` rows a page, and its
-  later pages at the following multiples of 16384, so the next record's
-  `detail` is this one's plus `pages`. The row pointing at it states
-  `pages`. So no expansion reads more than `page` rows a request
+- A record covers its stretch, from one base of the first end's node beside
+  its breakpoint to one base of the other end's: [bp − 1, bp) where the
+  breakpoint is the node's end and [bp, bp + 1) where it is its start, for
+  a node of 0 bp [bp, bp + 1), each clipped to S, so at S's end
+  [len − 1, len). A one-ended record covers its one end's base
+- That extent is cut at aligned multiples of the index's bin sizes, 2^26,
+  2^23, 2^20 and 2^17 bp, whatever `--chunk` is, one row per block, so
+  that each row lands in a Tabix bin no larger than its own size. The CSI
+  index the writer uses past 512 Mb has bins at the same sizes
+- Abridged paths' detail records are numbered by their first page: their
+  rows lie from `detail × 16384`, at most the header's `page:i:` rows a
+  page, and their later pages at the following multiples of 16384, so the
+  next record's `detail` is this one's plus `pages`. The `abridged` row
+  states `pages`. So no expansion reads more than `page` rows a request
 
 ### Reference holes
 
@@ -251,7 +199,7 @@ there.
 ### Header
 
 ```
-#walks	format:i:6	chunk:i:	maxnode:i:	stay:i:	abridge:i:	abridgebytes:i:	recordbp:i:	crowdmax:i:	page:i:	kinds:Z:ref,nodes,route,walk,abridged,departure,crowd
+#walks	format:i:6	chunk:i:	maxnode:i:	stay:i:	abridge:i:	abridgebytes:i:	page:i:	kinds:Z:ref,nodes,route,walk,abridged,departure
 #placement	nearest-pass
 #reference	GRCh38
 #haplotype	...
@@ -276,16 +224,16 @@ These let later additions in without a format change:
   or files instead
 - A reader ignores tags it doesn't know, on every row kind, in any order
   after the fixed columns
-- A reader reads only the sequences S, `S~cs`, `S~departure` and
-  `S~crowd`, and ignores any other sibling
+- A reader reads only the sequences S, `S~cs` and `S~departure`, and
+  ignores any other sibling
 - One file holds one placement. A second placement of the same graph, such
   as every copy of a repeat, is another file with its own `#placement`
   line, so no row needs a placement key
 
-So a per-end placement class, the sequence an excursion goes to, own bp
-the file does not hold and the chunks of an excursion's own steps are
-tags; a map of the reference's own copies is a sibling; secondary
-placements are files.
+The first expected tag is `mp:Z:i,n,count;...` on `ref` rows: from the
+row's step `i`, `n` steps whose nodes the reference's paths pass `count`
+times, so a viewer can mark where placement on the reference is a choice
+without a departure there. It waits for a viewer that draws it.
 
 ### Scope of the projection
 
@@ -293,12 +241,10 @@ Projecting a haplotype onto one reference is exact where the haplotype
 keeps the reference's order, and a placement choice where the reference
 passes a node more than once. The format doc and the viewers say so: on a
 region where the placement is a choice, a viewer states that placement on
-the reference is ambiguous there and offers the graph,
-haplotype-coordinate or alignment view. Pass counts stay in every record,
-and `mp` gives them in the walk read, so a viewer can flag the ambiguity
-without the header. The placement rule itself is [ADR
-0001](0001-step-placement.md)'s, and a better one for repeats is an [open
-problem](../open-problems.md).
+the reference is ambiguous there and offers the graph, haplotype-coordinate
+or alignment view. Records carry pass counts at both ends. The placement
+rule itself is [ADR 0001](0001-step-placement.md)'s, and a better one for
+repeats is an [open problem](../open-problems.md).
 
 ### Readers
 
@@ -307,184 +253,132 @@ graph-walks 5 returns the record as `WalkDeparture`; the structural-forms
 
 ## Open before the port
 
-- **The rebuild on ada** of MC chr22, pggb chr22 under nearest-pass and
-  alignment-guided placement, and pggb chrY, with this record, `@k`, `mp`,
-  pages and the filing above. Compare whole-stretch filing against it,
-  with `crowd` at K 4 and K 8. Over every window, at 64 kb and at 1 bp,
-  with end and interior blocks counted apart:
-  - rows, bytes and requests the way @gmod/tabix reads them (it merges
-    reads only up to 5 MB)
-  - bases with a departure over them and neither a piece, a block nor a
-    computed departure, which must be 0
-  - the 130,149-row window of pggb chr22 under alignment-guided placement,
-    broken down
-  - that Minigraph-Cactus writes no `crowd` row
-- **Positions, in the same rebuild,** from the writer itself: carry each
-  step's `visits_along` pass into the pieces, decode each row to R
-  positions after the round-trip check, and count per row the steps on R,
-  those in chunks with repeats, those whose pass differs from the decoded
-  position, those the stay kept, starts not on the first copy and exits
-  not on the nearest. Then the `@k` and `mp` bytes on pggb chr22 and on
-  Minigraph-Cactus CHM13, `@k` written only where it differs against
-  written on every node R holds more than once, which would let readers
-  drop the nearest rule; and the pieces the stay's new rule changes
-- **The rest of the rebuild:** the number of `#hole` lines for HG002#1,
-  against the first BGZF block the header should fit; distinct
-  `leaveChunk`s per window; the `.tbi` size; the leave-chunk measurement
-  below, with its script saved; the `dep.rs` mismatches split by field; a
-  check that every `dep.rs` departure without a record lies inside one
-  piece; `pggbY.audit.txt` in full
-- **`recordbp`:** whether any reader needs records inside a piece once
-  every reader computes in-piece departures from the steps
-- **The names** `crowd`, `crowdmax`, `recordbp`, `page`, `kinds` and
-  `#placement`, before the port writes them
+- The writer's peak memory, 36-41 GB on pggb chr22 against the spike's
+  21-23 GB: the port holds a record's body once and the steps' positions
+  per piece, not per path
+- Whether pggb walk files ship, and under which placement; the format does
+  not depend on it
+- The `walks-format.md` rewrite and the test suite: the prototype's
+  `tests/walks.rs` still expects format 5 rows in seven tests
+- `#placement`'s `sha256:Z:`, which the prototype does not write
 
 ## Evidence
 
-### The spike
+### The rebuild
 
-Under nearest-pass placement. Its record lacks `missingBp`, `leaveChunk`
-and `rejoinChunk`, takes positions from neither `@k` nor the decoder,
-files whole stretches and cuts blocks down to 64 kb, so these figures
-bound format 6's sizes in neither direction. The chrY rows per window come
-from the spike's first build, and its departure query costs may too; the
-rest of its column is from the second.
+A prototype of this Decision, read back by an independent audit
+([results](../departures/results/rebuild/README.md)). Format 5 files are
+the hosted builds of the same graphs; pggb's are under nearest-pass
+placement.
 
-| | MC chr22 GRCh38 | pggb chrY GRCh38 | pggb chr22 GRCh38 |
-|---|---|---|---|
-| format 5 file | 59.14 MB | 179.77 MB | 1,409 MB |
-| format 6 file | +1.0% | +10.2% | +32.6% |
-| departures, rows per departure | 25,234, 1.26 | 572,051, 2.83 | 12,458,636, 2.93 |
-| (contig, chunk) pairs a contig spans without a piece | 15,698 | 92,912 | 21,465 |
-| of those with no block over them | 0 | 0 | 0 |
-| rows a 64 kb window returns, median / p95 / max | 4 / 310 / 893 | 114 / 23,452 / 173,357 | 9 / 328,602 / 6,539,739 |
-| departure query: requests median / max, bytes p95 / max | 1 / 1, 84 KB / 126 KB | 1 / 5, 598 KB / 1.6 MB | 2 / 5, 6.2 MB / 73 MB |
-| walk-chunk query bytes p95 / max | 120 KB / 374 KB | 99 KB / 796 KB | 335 KB / 1.1 MB |
+| | MC chr22 | pggb chrY | pggb chrY, aligned | pggb chr22 | pggb chr22, aligned |
+|---|---|---|---|---|---|
+| file | 59.47 MB | 196.6 MB | 219.4 MB | 1.68 GB | 1.81 GB |
+| against format 5 | +0.54% | +9.3% | +22.0% | +19.0% | +28.6% |
+| records | 24,777 | 425,836 | 30,329 | 5,333,737 | 177,475 |
+| departure rows | 31,368 | 1,224,800 | 43,415 | 17,434,823 | 452,672 |
+| departures the walk rows hold | 25.97 M | 8.13 M | 10.95 M | 172.3 M | 67.2 M |
+| departure rows a 64 kb window returns, p95 / max | 310 / 893 | 18,037 / 104,479 | 265 / 18,562 | not audited | 1,070 / 71,889 \* |
+| departure read, requests max, bytes p95 / max | 1, 84 KB / 132 KB | 5, 556 KB / 1.14 MB | 2, 234 KB / 282 KB | not audited | 4, 376 KB / 988 KB \* |
+| build, s / peak GB | 52 / 4.1 | 132 / 12.5 | 149 / 12.2 | 587 / 36.3 | 518 / 41.0 |
 
-- Own bp and steps agree with an enumeration straight from the GFA
-  (`dep.rs`) on every comparable departure of MC chr22 (24,213 jumps and
-  insertions) and pggb chrY; the stretches differ only where the
-  enumeration reports the gap between the nodes and the record the
-  breakpoints. The check matches records on (path, `hapStart`) and puts
-  stretch, strand and own-bp disagreements in one bucket, so it tests the
-  arithmetic more than placement or completeness
-- The rows `tabix` returns for a window are exactly those over it on every
-  window of the three graphs; pggb chr22's "every window" is 97 sampled
-  ones. The bytes the index points at include whole bins, up to one level
-  over a block's size: nothing on MC, under 2x at p95 on pggb. Blocks of
-  16 kb cost 3.3 times the rows on MC and 2.2 times on chrY, against the
-  spike's 64 kb blocks
-- On MC chr22 19,630 of 25,185 leave breakpoints lie in a different chunk
-  from the leave piece, against 1,254 rejoin breakpoints, so `leaveChunk`
-  is needed. The cause is not established: a leave node straddling the
-  boundary explains at most 1.6% at `maxnode:i:1024` (1,024 of 65,536
-  bp), and 314 lie in the chunk before. No saved script makes this
-  measurement
-- Without the per-sequence definition, a contig that leaves chr22 for a
-  random contig and returns leaves a chr22 window inside the excursion
-  nothing: 15,051 of pggb chr22's 21,465 absent pairs had no block until
-  the spike was changed to it; MC chr22 came out byte-identical
-- The prototype's 32-chunk cap left 294 stretches uncovered on MC chr22
-  and 24,629 on chrY. Its `order` column was the reference's order, not
-  the haplotype's. The breakdown the notes give for MC chr22's 685
-  "backward" jumps, 604 reverse-strand contigs going forward, 406 strand
-  switches and 8 backs, sums to 1,018 and is not to be cited; the 406 and
-  8 are exactly the split of the 414 `dep.rs` mismatches
-- The spike's `fold`, now `recordbp`, moves about 1,300 records on MC
-  chr22 and 1,150 on chrY between 10 kb and 64 kb
-- On pggb under nearest-pass placement the content is placement: 97% of
-  records have an end on a node the reference passes more than once,
-  87-89% carry 0 own bp, one haplotype has up to 2,065 records over one
-  64 kb window, and only 35.9% of chrY pieces land within 10 kb of where
-  Minigraph-Cactus places the same contig position (35.6% in Yp11 and
-  Yq11, 50.5% elsewhere). Under alignment-guided placement 88% of pggb
-  chr22's 303,171 records still have an end on a node the reference
-  passes more than once, 81% carry 0 own bp, and 63% are back jumps or
-  strand switches
-- Records inside a piece were 537 of MC chr22's, 320,644 of pggb chrY's
-  (nearly all hops under the stay rule, by the spike report) and 7,782,294
-  of pggb chr22's. Under this Decision most of the pggb ones should go;
-  that is inferred, and the rebuild measures it
+\* From the whole-stretch variant of the amended Decision, the same filing
+with 205 records inside a piece and 1,532 fewer one-ended ones. The audits
+of the simplified pggb chr22 files, and of nearest pass on chr22 at all,
+were killed when other jobs filled ada's memory; nearest pass on chr22
+needs the audit's `--shard`, at about 37 GB a shard.
 
-### Filing, by a proxy
-
-On a local format 5 build of pggb chrY, the spike's baseline, at chunk
-granularity, under nearest-pass placement, over all 869 windows, counting
-a join between a path's pieces in chunks that are not adjacent as a
-departure, leaving out departures inside one piece:
-
-| filing | rows per 64 kb window, p95 | max |
-|---|---|---|
-| whole stretch | 17,404 | 37,228 |
-| less the path's pieces, exact query | 5,160 | 15,521 |
-| less the path's chunks, chunk-aligned query | 7,269 | 21,908 |
-
-- In the densest windows most rows are end blocks, which grow with the
-  pieces, so they cost about what the walk read does
-- Over runs where the path has no piece, one contig gave up to 229 rows in
-  one chunk and a window up to 6,559, which one row per path takes to 258.
-  A contig ping-ponging between copies far apart, and satellite contigs
-  placed off the reference, are bounded only by `crowd`
-- Leaving out whole chunks where the path has a piece breaks coverage
-  under an exact query: a piece over [64k, 70k) and a jump forward over
-  [70k, 190k) leave a window at 100k with nothing. With a chunk-aligned
-  query instead it read about 60,000 rows in the TSPY window against
-  45,000 for whole stretches
-- Filing strand switches and back jumps at their ends only breaks
-  coverage: a contig on [50, 60) that jumps back to [0, 10) crosses 30
-  only by the jump
-- The reader rule the Decision keeps drops only departures over a path's
-  own pieces, which no current reader uses: the plugin's synteny lanes
-  keep a skip only for a haplotype with no walk in the window
-  (`WalkTabixSyntenyAdapter.ts`, `!walking.has`), and graph-walks'
-  `skipsOver` keeps a skip row's jump only for a path the cut holds no
-  walk of, beside the crossings it finds between the steps it read
-- On Minigraph-Cactus chr22 the worst window holds 893 departure rows over
-  464 haplotypes, so `crowd` at K 8 is expected never to appear there
+- The audit decodes every walk row to positions by the decoding rules,
+  recomputes every departure, and finds on every graph each record equal
+  in every field to a departure that needs one, each departure that needs
+  one recorded, every departure inside a piece within the walk read's
+  reach, and every base of every record's stretch under one of its rows.
+  It agrees with the writer on the test fixtures and on 450 random graphs
+  at chunks of 8 to 64 bp. A W line with no step on the reference has no
+  rows, so a reader cannot see its steps; MC chr22 has 35 records over one
+- Against `dep.rs`'s enumeration from the GFA, on departures with both
+  ends on nodes passed once: on MC chr22 36,845 jumps and 10,032
+  insertions match, 24,002 more lie inside one piece, and 1,209 differ
+  only in the stretch, where an end runs against S and `dep.rs` reports
+  the gap between the nodes and the record the breakpoints
+- On pggb under nearest pass the densest windows are placement: in chrY's
+  TSPY array, 99,378 of 104,479 rows are records with an end on a node the
+  reference passes more than once, about 85,000 of them with 0 own bp, from
+  contigs that hop between copies. Alignment-guided placement takes chrY's
+  densest window to 18,562 rows, short back jumps through a satellite node
+  the reference passes 1,188 times at 26.6 Mb. The spike's file holds
+  19,933 there; its audit's 1,937 was an error. On chr22 alignment-guided
+  placement's densest window holds 71,889 rows, against the spike's
+  130,149
+- Alignment-guided files are 9-20% larger than the spike's: a step the
+  alignment leaves unplaced is route interior where format 5 let the
+  decoder put it on a copy, 20 M steps on chrY and 171 M on chr22. That
+  is placement coverage, not the format
 
 ### Copies
 
-A simulation over the local format 5 pggb chrY builds re-encoded every
-walk row with `@k` in the chunks whose R holds a node twice (655 of 1,071
-chunks on GRCh38, 2,553 of 2,952 on CHM13), against a port of
-`visits_along` restarted at each piece and limited to the chunk's R:
+| | pggb chrY | pggb chrY, aligned | pggb chr22 | pggb chr22, aligned |
+|---|---|---|---|---|
+| steps in chunks with repeats that format 5's rules put on another copy | 8.6% | 63% | 3.8% | 7.6% |
+| `@k` bytes, written where it differs | 1.6 MB, 0.8% | 7.6 MB, 3.4% | 38 MB, 2.3% | 27 MB, 1.5% |
+| `@k` bytes, written on every node R holds more than once | 19 MB, 9.6% | 33 MB, 15% | 288 MB, 17% | 93 MB, 5.1% |
+| step counts, rows | 119,749 | 20,871 | 561,313 | 80,411 |
 
-| | pggb chrY GRCh38 | pggb chrY CHM13 |
-|---|---|---|
-| steps on R in those chunks the decoder places elsewhere | 7.7% | 16.3% |
-| walk rows with such a step | 65,242 | 230,121 |
-| `start@k` written | 19,362 | 101,310 |
-| exit `@k` written, of all choices | 469,256 of 7.69 M | 614,275 of 8.96 M |
-| those chunks' walk and route rows, zlib | +0.60% | +0.50% |
-
-- Every row decoded back to its steps and its positions. On a reference
-  that passes every node once the cost is 0 by construction
-- These are lower bounds. An audit ran an exact port of `visits_along`
-  over whole paths, three on GRCh38 and two on CHM13: the decoder places
-  elsewhere 12.9% of such steps on the GRCh38 three, and 5.4% and 19.1%
-  on the CHM13 two,
-  against the restarted port's 9.0%, 4.8% and 15.0%. Much of the gap is
-  steps the stay kept, which the restarted port chained inside the home
-  chunk. So roughly 9-11% on GRCh38 and 18-20% on CHM13, and the `@k`
-  bytes perhaps +0.7-0.9% of those rows, under 0.5% of the file, which is
-  extrapolated
-- In HG002's piece 183 in the TSPY array, the decoder starts on R's copy
-  at 9,344,124, where `visits_along` predicts and takes the copy at
-  9,364,418: the whole 1,288-step run is shifted by one 20.3 kb unit
+- MC chr22 writes no `@k` and no step counts it did not write before
 - Reference `>1>2>3>2>3>4` with 10 bp nodes, haplotype `>3>4`: format 5
   starts at R's first `>3` and exits to `>4` at 50, a 20 bp forward jump,
   though the haplotype matches the second copy. Format 6 writes `start`
   as `6@1` and needs no route
 - Reference `>2>1>1>1>3` with 2 bp copies of node 1, haplotype holding one
   more `>1`: format 5 writes no step counts, since the handles round-trip,
-  but decodes the extra unit at the array's start. A brute-force check of
-  200,000 random pairs found 355 such rows, all where R holds a node at
-  adjacent positions, and with counts written wherever positions differ
-  every one decoded exactly
-- A stay that re-placed a kept step on the home chunk's nearest copy
-  without a bound turned a step 1 bp from its prediction into a back jump
-  and a forward jump of 8 bp at `--chunk 10`, up to a chunk at 64 kb, so
-  the stay is bounded by `stay`
+  but decodes the extra unit at the array's start. Format 6 writes counts
+  wherever positions differ
+- The bounded stay keeps fewer runs than ADR 0001's: on pggb chrY 71,277
+  runs, against 112,985 more the old rule kept; it refused 139,610 runs
+  holding a node passed once and 73,690 with no home copy within `stay`
+
+### Filing
+
+On the amended Decision's filings, built side by side
+([variants](../departures/results/rebuild/variants/)):
+
+| | pggb chrY | pggb chrY, aligned | MC chr22 |
+|---|---|---|---|
+| stretch less the path's pieces, rows a 64 kb window returns p95 / max | 18,034 / 104,511 | 265 / 18,558 | 310 / 893 |
+| whole stretch, the same | 18,034 / 104,511 | 265 / 18,558 | 310 / 893 |
+| departure read bytes p95, less pieces / whole | 688 KB / 549 KB | 226 KB / 225 KB | 83 KB / 83 KB |
+| file with crowds at K 8 / without | 1.96 GB / 199 MB | 224 MB / 221 MB | 59.8 MB / 59.8 MB |
+
+- Subtracting the path's own pieces saves nothing once a stretch is cut at
+  the bin sizes and each block clipped to the bases left in it: a block
+  goes only where the pieces cover all of it. Subtracting without the
+  bin-hull rule fragmented records instead, up to 3,499 rows for one
+  3.2 Mb MC record
+- A crowd's detail record copies every record over its run, and a path
+  that hops between copies has thousands of runs over the same records:
+  109 M crowd detail rows on pggb chrY and 263 M on pggb chr22 aligned,
+  whose file went from 1.81 GB to 5.2 GB. Crowds lowered pggb chrY's p95
+  window from 18,034 rows to 5,926 and raised its densest from 104,511 to
+  136,435; they replace interior rows, and the dense windows are end rows
+
+### The spike
+
+Under nearest-pass placement, before positions, copies or bin-sized
+blocks; its record lacked `missingBp`, `leaveChunk` and `rejoinChunk`.
+Kept for the measurements the rebuild did not repeat.
+
+- On MC chr22 19,630 of 25,185 leave breakpoints lie in a different chunk
+  from the leave piece, against 1,254 rejoin breakpoints, so `leaveChunk`
+  is needed
+- Without the per-sequence definition, a contig that leaves chr22 for a
+  random contig and returns leaves a chr22 window inside the excursion
+  nothing: 15,051 of pggb chr22's 21,465 absent (contig, chunk) pairs had
+  no block until the spike was changed to it
+- The prototype's 32-chunk cap left 294 stretches uncovered on MC chr22
+  and 24,629 on chrY
+- Only 35.9% of pggb chrY pieces under nearest pass land within 10 kb of
+  where Minigraph-Cactus places the same contig position
+  ([chrY.placement-vs-mc.txt](../departures/results/chrY.placement-vs-mc.txt))
 
 ## Consequences
 
@@ -492,12 +386,11 @@ chunks on GRCh38, 2,553 of 2,952 on CHM13), against a port of
   and the departure blocks, both fixed by the cut's extent; no follow
   rounds for coverage, no crossing cap, no direct-jump detection from
   steps the cut happened to read. It takes copies from `@k` and never
-  chooses one, reads `crowd` rows and expands detail records page by page
-  from its first release, and takes a departure over a base where the path
-  has a piece from that piece, but for the strand switches and back jumps
-  filed whole. It exports one function that derives a departure's
-  direction and type, holes included, so the consumers don't each
-  re-derive them. `WalkSkip`, `WalkCrossing` and `skipsOver` go
+  chooses one, computes the departures inside the pieces it reads, takes
+  every other departure from the records, and expands detail records page
+  by page from its first release. It exports one function that derives a
+  departure's direction and type, holes included, so the consumers don't
+  each re-derive them. `WalkSkip`, `WalkCrossing` and `skipsOver` go
 - Attaching a departure's own steps costs one more read per distinct
   `leaveChunk` outside the read range. Which records get their steps
   attached follows from the record alone, such as `ownSteps` above 0 and
@@ -539,12 +432,7 @@ chunks on GRCh38, 2,553 of 2,952 on CHM13), against a port of
   `walks5_*` fixtures and graph-walks' test data are regenerated, and the
   pggb E. coli walk files in ggbandage, BandageJS and the tube map are
   rebuilt
-- Hosted Minigraph-Cactus walk files are rebuilt under new names. No pggb
-  walk files are hosted today; whether pggb ships, and under which
-  placement, waits on the rebuild. By estimate, alignment-guided placement
-  would keep pggb chr22's departure rows under 1% of the file and a
-  window's departure read under 1.4 MB, and nearest pass would not be
-  pleasant to view
+- Hosted Minigraph-Cactus walk files are rebuilt under new names
 - [walks-format.md](../walks-format.md) documents format 5 until the port,
   which rewrites it for format 6
 
@@ -559,44 +447,21 @@ chunks on GRCh38, 2,553 of 2,952 on CHM13), against a port of
   strand switches only at their ends was never weighed; chrY's rows per
   window and the 2,065 records were not in the results; the `dep.rs`
   check left out 414 mismatches
-- **2026-11-03, first round,** six reviews (evidence, semantics, filing,
-  pggb, a blind design, consumers) and one of the amendment:
-  - positions from the decoded row rather than the placement pass, since
-    `stay_home` moves only a step's chunk and the spike's records and rows
-    stated two projections; superseded in the third round
-  - blocks at the index's bin sizes rather than `chunk << k`, which put
-    blocks in the 512 Mb bin at `--chunk 100000`
-  - end blocks on the end's own node, since the spike's [bp, bp + 1) lay
-    past the node and, at a contig overhanging S's end, past S
-  - `#hole` lines, the haplotype-reference handoff's request
-  - definitions of one-ended records, `missingBp` and `xb` across chained
-    gaps, adjacency and the key
-  - evidence corrections: the leave-chunk cause, the 604/685 breakdown,
-    the chrY build mix
-- **2026-11-03, second round,** two adversarial reviews:
-  - positions from the decoder itself, since a fuzzed port of `encode`
-    and the decoding rules disagreed on 343 of 1.8 M rows; superseded
-  - the stay absorbs no node the reference passes once
-  - the reader promise and filing less the path's own pieces, with a
-    summary row then named `passes`, and the departure query over the
-    window exactly; the extent became the cut's in the third round
-- **2026-11-03, third round,** five reviews aiming at the ideal format
-  (copy naming, a compromise audit, a blind design, the ideal viewer, the
-  ideal pggb end state), then three of the amendment (an attack on `@k`,
-  consistency, an audit of the copy simulation):
-  - walk rows name the copy, since the decoder's own choice made it the
-    projection; four of the five reached it on their own
-  - the stay bounded by `stay` and re-placing on the home copy, counts
-    written wherever positions differ, and `@k` defaults for every token
-  - the extension rules, with "one file, one placement" in place of a
-    placement key
-  - whole-stretch filing for strand switches and back jumps with both
-    ends on nodes passed once; `mp` on `ref` rows; the promise counting
-    the walk read's departures inside pieces, which the second round's
-    contradicted; the cut's extent; pages; the whole-record dedup key
-  - `passes` renamed `crowd` and `fold` renamed `recordbp`, since
-    `passes` named a row, a column and a header and `fold` names the
-    index's coarse tier
+- **2026-11-03, three rounds of amendment,** seventeen reviews: positions
+  from the placement pass and walk rows that name the copy (`@k`), the
+  stay bounded by `stay`, counts written wherever positions differ, blocks
+  at the index's bin sizes, end blocks on the end's own node, `#hole`
+  lines, the extension rules, one file per placement; and, since cut by
+  the rebuild, base-level filing less the path's own pieces with a
+  whole-stretch exception, `crowd` rows with paged `S~crowd` detail
+  records, in-piece records from `recordbp` with a reader match key, and
+  `mp` on every `ref` row
+- **2026-11-03, the rebuild.** A prototype of the amended Decision on all
+  three graphs under both placements, read back by an independent audit,
+  simplified it: whole-stretch filing for every record, records only
+  where the walk read cannot show a departure, no crowds, no `recordbp`,
+  `mp` deferred to a tag. Two vibe checks, before and after the numbers,
+  agreed
 
 ## Alternatives rejected
 
@@ -607,33 +472,44 @@ chunks on GRCh38, 2,553 of 2,952 on CHM13), against a port of
   extra request, and a row per path and chunk which the reader still dedups
 - **One row per departure under its whole interval:** a coarse Tabix bin
   every query in the chromosome reads
-- **Copies in the end chunks beside the blocks:** a record seen three ways
-  in one cut, for nothing the end block does not give
+- **Copies in the chunks beside the rows under `S~departure`:** a record
+  seen twice in one cut, for nothing the departure read does not give
 - **A separate departure file:** two indexes to fetch and host for one
   fact
-- **Blocks at Tabix's 16 kb level:** 2.2 to 3.3 times the rows of the
-  spike's 64 kb blocks
+- **Blocks at Tabix's 16 kb level:** 2.2 to 3.3 times the rows of 64 kb
+  blocks in the spike
 - **A record with ends on two sequences** (the converged design): no block
   on either sequence over the excursion, 15,051 uncovered pairs on pggb
   chr22
-- **A record for every in-piece departure with a multi-pass end:** tens of
-  millions on pggb chrY, nearly all between adjacent copies
 - **Positions from the decoder:** the decoder's choice of copy became the
   projection, and no placement rule could change it within a chunk
-- **Filing whole stretches for every record:** 3.4 times the rows at p95
-  on chrY by the proxy, for departures over the path's own pieces that no
-  reader uses; kept only for strand switches and back jumps with both
-  ends on nodes passed once
+- **`@k` on every node R holds more than once,** so that readers need no
+  default rule: 5-17% of the pggb files, against 0.8-3.4%
+- **Walk rows by position deltas into R in place of handles,** from a
+  blind design: exact positions too, but `@k` gives them at 0 bytes on
+  Minigraph-Cactus without a new row syntax
+- **Filing a record's stretch less the path's own pieces,** with whole
+  stretches for strand switches and back jumps with both ends on nodes
+  passed once: the same rows as the whole stretch once blocks are cut at
+  the bin sizes, more bytes on pggb chrY, two rules and a reader exception
+  for nothing. It was chosen on a proxy that subtracted exactly
+- **`crowd` rows standing in for a path's dense runs,** with paged
+  `S~crowd` detail records: a tenfold larger file on pggb chrY, and the
+  dense windows are end rows they do not replace
+- **Records for departures inside a piece,** from `recordbp` bp of own
+  sequence or across a chunk boundary: the walk read holds them already,
+  and a record that repeats a computed departure needs a key to match the
+  two, which collides on 0 bp nodes. Long own sequence inside a piece is
+  the abridging of [ADR 0004](0004-abridged-detours.md)
+- **`mp` on every `ref` row now:** 2.6% of pggb chrY for a mark no viewer
+  draws yet; it is the first expected tag
 - **Leaving out whole chunks where the path has a piece, or filing back
   jumps and strand switches at their ends only:** both break coverage
 - **A placement key on every row:** one file holds one placement instead
-- **Walk rows by position deltas into R in place of handles,** from the
-  blind design: exact positions too, but `@k` gives them at 0 bytes on
-  Minigraph-Cactus without a new row syntax
 - **Summarising departures inside the walk row rather than abridging a
-  path per chunk:** abridging stays [ADR 0004](0004-abridged-detours.md)'s,
-  though which paths a chunk abridges depends on the chunk's other paths;
-  it does not depend on the keep set
+  path per chunk:** abridging stays ADR 0004's, though which paths a
+  chunk abridges depends on the chunk's other paths; it does not depend on
+  the keep set
 - **Names:** `bypass`, `skip`, `jump`, `traversal`, `allele`, `gap`;
   `departure` was the only name every arbiter ranked in its top three, and
   the closest prior art is the gap between blocks of a UCSC chain
