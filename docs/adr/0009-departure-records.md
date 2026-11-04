@@ -544,9 +544,13 @@ Kept for the measurements the rebuild did not repeat.
   node of MC chr22 twice, so the stay keeps nothing there; in the
   genome-wide MC graph CHM13 passes 209,578 nodes more than once (ADR
   0001), so the hosted CHM13 file is the first to depend on it and on `@k`
-- The hosted genome-wide MC graph, with `--refs GRCh38,CHM13`, has no
-  format 6 build yet; its size, time, memory and an audit by chromosome or
-  `--shard` come before hosting
+- The hosted genome-wide MC graph, with `--refs GRCh38,CHM13`, builds in
+  1 h 22 m at 13.1 GB, against format 5's 2 h 25 m: the GRCh38 file is
+  1.55 GB as before, the CHM13 file 1.99 GB against 1.46 GB, since CHM13
+  passes 209,578 nodes more than once and nearest-pass placement files
+  5.5 M departure records there, in 42.7 M rows
+  ([results](../departures/results/minimal/README.md)). An audit by
+  chromosome comes before hosting
 - The writer's peak memory on pggb, set by the densest chunks' encoding,
   lies above format 5's; see [The port](#the-port)
 

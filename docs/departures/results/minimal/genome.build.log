@@ -1,0 +1,8 @@
+[ 743.0 s, 12.5 GiB peak] reference GRCh38: 195 paths, 83303684 nodes
+[ 743.6 s, 12.5 GiB peak] reference CHM13: 97 paths, 82736440 nodes
+[4497.1 s, 12.5 GiB peak] 53150 paths, 38403445885 steps
+GRCh38: 19933602 pieces, 1797769 departure records in 2066063 rows, 1698 paths visit no GRCh38 node and are left out
+CHM13: 23760739 pieces, 5537747 departure records in 42748799 rows, 3736 paths visit no CHM13 node and are left out
+[4927.0 s, 12.5 GiB peak] 95409901 rows -> genome/hprc-v2.1-mc-grch38-f6.GRCh38.walks.bed.gz (+ .tbi): 48297999 routes, 19812109 walk rows, 0 copies named; 66981 paths abridged to 74053 detail walk rows
+[4927.3 s, 12.5 GiB peak] 131233956 rows -> genome/hprc-v2.1-mc-grch38-f6.CHM13.walks.bed.gz (+ .tbi): 48506706 routes, 23198502 walk rows, 65 copies named; 38504 paths abridged to 518746 detail walk rows
+genome: 4927.62 s, 13105020 KB peak

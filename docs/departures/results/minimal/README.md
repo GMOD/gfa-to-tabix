@@ -47,3 +47,30 @@ is the same graphs built by 552b9c1.
   port wrote `@k` on some rows and step counts on every token of 119,749
 - The departure rows a window returns are the port's: the one-ended
   records it lost were one row each, and the cuts change no other filing
+
+## The genome-wide graph
+
+The hosted graph, HPRC v2.1 Minigraph-Cactus on GRCh38, with `--refs
+GRCh38,CHM13`, built by the same writer on ada from
+`~/hprc-gbz/walks/hprc-v2.1-mc-grch38.W.gfa.gz` (`genome.build.log`);
+format 5 is the hosted `hprc-v2.1-mc-grch38-f5s` build of 2026-10-28:
+
+| | GRCh38 file | CHM13 file |
+|---|---|---|
+| file | 1.55 GB | 1.99 GB |
+| format 5 | 1.55 GB | 1.46 GB |
+| rows | 95,409,901 | 131,233,956 |
+| format 5 rows | 93,368,633 | 88,516,941 |
+| pieces | 19,933,602 | 23,760,739 |
+| departure records, rows | 1,797,769, 2,066,063 | 5,537,747, 42,748,799 |
+| copies named on walk rows | 0 | 65 |
+| paths abridged, detail walk rows | 66,981, 74,053 | 38,504, 518,746 |
+| build, s / peak GB | 4,928 / 13.1 (both files) | |
+| format 5 build | 8,703 / 13.1 | |
+
+- GRCh38 passes no node twice, so its file writes no copies and holds
+  about as many bytes as format 5's, the records in place of the skip rows
+- CHM13 passes 209,578 nodes more than once, and under nearest-pass
+  placement its paths depart at those copies as pggb's do: 5.5 M records in
+  42.7 M rows, a third of the file. The audit of its chr22 is in
+  `CHM13.chr22.audit.txt` once run

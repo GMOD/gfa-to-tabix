@@ -140,17 +140,22 @@ there. The urgent part is the word on screen
      longer reach past the drawn stretch, so forms that depended on
      following a departure to its rejoin should move to `cut.departures`;
      bandage-core 13 and plugin 9 (below)
-   - A format 6 build of what is hosted, the genome-wide MC graph with
-     `--refs GRCh38,CHM13`: started on ada at 16:50 UTC on 2026-11-04,
-     `~/work/rebuild/genome.sh` from `~/hprc-gbz/walks/hprc-v2.1-mc-grch38.W.gfa.gz`
-     with the port3 binary (76c9223), capped at 80 GB, into
-     `~/work/rebuild/genome/` (`run.done` when finished). Its first pass
-     took 743 s at 12.5 GiB; format 5's whole build took 2 h 25 m at 13
-     GB. Then its size, time, memory and an audit by chromosome or
-     `--shard`; the audit of a 1.5 GB file needs `audit6.py` to take a
-     sequence filter, since a shard still parses every row. CHM13 passes
-     209,578 of its nodes more than once, so that file is the first to
-     need `@k` and the bounded stay
+   - **Done, 2026-11-04 evening: the genome-wide build**, on ada by
+     `~/work/rebuild/genome.sh` from
+     `~/hprc-gbz/walks/hprc-v2.1-mc-grch38.W.gfa.gz` with the port3 binary
+     (76c9223), into `~/work/rebuild/genome/`: 1 h 22 m at 13.1 GB; the
+     GRCh38 file 1.55 GB as format 5's, the CHM13 file 1.99 GB against
+     1.46 GB, with 5.5 M departure records in 42.7 M rows, since CHM13
+     passes 209,578 nodes more than once and nearest-pass placement files
+     a departure at each hop between copies, as on pggb
+     ([results](../departures/results/minimal/README.md)). Only 65 walk
+     rows name a copy. `genome-audit.sh` then audits chr22 of each file
+     with `audit6.py --seq`, CHM13 first, into `genome/CHM13.chr22.audit.txt`
+     and `genome/GRCh38.chr22.audit.txt` (`genome/audit.done` when
+     finished); it was running at the end of the session. The CHM13
+     file's departure reads in repeats are the thing to look at before
+     hosting it: the placement question of open-problems applies to CHM13
+     as a reference too, not only to pggb
    - graph-walks 4.6.1 (a51b7bf, which asks for a newer viewer on a format
      6 file), bundled by the plugin, BandageJS, ggbandage and the tube map,
      before gfa-to-tabix 3.0 is released. Releasing is bumping `version`
