@@ -589,9 +589,10 @@ fn a_step_on_a_node_of_0_bp_between_two_lines_is_a_departure() {
     );
 }
 
-// R's chr has two lines, 0-12 and 20-32, so 12-20 is a hole. H steps from 2,
-// ending at 12, to 3, starting at 20: adjacent once the hole is removed, so it
-// has no record. G walks 8 bp of its own there.
+// R's chr has two lines, 0-12 and 20-32, so 12-20 is a hole, and a third line
+// at 16 with no steps, which covers nothing. H steps from 2, ending at 12, to
+// 3, starting at 20: adjacent once the hole is removed, so it has no record.
+// G walks 8 bp of its own there.
 #[test]
 fn steps_either_side_of_a_hole_in_the_reference_are_adjacent() {
     let built = build_text(
@@ -603,6 +604,7 @@ fn steps_either_side_of_a_hole_in_the_reference_are_adjacent() {
             "S 4 AAAAAA",
             "S 5 AAAAAAAA",
             "W R 0 chr 0 12 >1>2",
+            "W R 0 chr 16 16 ",
             "W R 0 chr 20 32 >3>4",
             "W H 1 h 0 24 >1>2>3>4",
             "W G 1 g 0 32 >1>2>5>3>4",
@@ -611,7 +613,13 @@ fn steps_either_side_of_a_hole_in_the_reference_are_adjacent() {
     );
     assert!(built.output.status.success());
     let walks = built.file("R");
-    assert!(header(walks).contains(&tsv(&["#hole R#0#chr 12 20"])));
+    assert_eq!(
+        header(walks)
+            .lines()
+            .filter(|l| l.starts_with("#hole"))
+            .collect::<Vec<_>>(),
+        ["#hole\tR#0#chr\t12\t20"]
+    );
     assert_eq!(
         under(walks, "R#0#chr~departure"),
         tsv(&["R#0#chr~departure 11 21 departure G#1#g 0 12 8 1 0 12 2 + 1 0 20 3 + 1 20"])
@@ -638,6 +646,46 @@ fn a_walk_row_names_the_copy_it_starts_on_where_it_is_not_the_first() {
     assert_eq!(
         rows_of(built.file("R"), "R#0#chr", "walk", "H#1#h"),
         tsv(&["R#0#chr 0 1 walk H#1#h 0 0 0 2 6@1 2 ."])
+    );
+}
+
+// R walks 1 2 3 2 3 4 with 10 bp nodes, all in one chunk. H carries 25 bp of
+// its own on node 5 between 1 and 3, so placement predicts 3 at 35 and puts
+// it on the second 3, at 40, though the occurrence nearest the route's entry
+// is the first: the choice names occurrence 1. Abridged, the row's end names
+// it too, since the 3 nearest its start is the first.
+#[test]
+fn a_route_exit_and_an_abridged_end_name_the_copy_where_it_is_not_the_nearest() {
+    let lines = [
+        "S 1 AAAAAAAAAA",
+        "S 2 AAAAAAAAAA",
+        "S 3 AAAAAAAAAA",
+        "S 4 AAAAAAAAAA",
+        "S 5 AAAAAAAAAAAAAAAAAAAAAAAAA",
+        "W R 0 chr 0 60 >1>2>3>2>3>4",
+        "W H 1 h 0 45 >1>5>3",
+    ];
+    let built = build_text("exit-copy", &lines, &["--refs", "R", "--chunk", "1000"]);
+    assert_eq!(
+        rows_of(built.file("R"), "R#0#chr", "route", "2")
+            + &rows_of(built.file("R"), "R#0#chr", "walk", "H#1#h"),
+        tsv(&[
+            "R#0#chr 0 1 route 2 8 -4",
+            "R#0#chr 0 1 walk H#1#h 0 0 0 3 2 4 0@1",
+        ])
+    );
+    let abridged = build_text(
+        "exit-copy-abridged",
+        &lines,
+        &["--refs", "R", "--chunk", "1000", "--abridge-bytes", "1"],
+    );
+    assert_eq!(
+        rows_of(abridged.file("R"), "R#0#chr", "abridged", "H#1#h"),
+        tsv(&["R#0#chr 0 1 abridged H#1#h 0 0 0 3 45 2 6@1 0"])
+    );
+    assert_eq!(
+        rows_of(abridged.file("R"), "R#0#chr~0", "walk", "H#1#h"),
+        tsv(&["R#0#chr~0 0 1 walk H#1#h 0 0 0 3 2 4 0@1"])
     );
 }
 

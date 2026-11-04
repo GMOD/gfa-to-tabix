@@ -1654,7 +1654,7 @@ struct Output {
     details: Details,
 }
 
-// The process's peak resident memory in GB, where /proc says
+// The process's peak resident memory in GiB, where /proc says
 fn peak_memory() -> Option<f64> {
     let status = fs::read_to_string("/proc/self/status").ok()?;
     let line = status.lines().find(|l| l.starts_with("VmHWM:"))?;
@@ -1671,7 +1671,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         format!(
             "[{:6.1} s{}]",
             clock.elapsed().as_secs_f64(),
-            peak_memory().map_or(String::new(), |gb| format!(", {gb:.1} GB peak"))
+            peak_memory().map_or(String::new(), |gib| format!(", {gib:.1} GiB peak"))
         )
     };
     let mut names = Interner::default();

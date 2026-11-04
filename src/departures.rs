@@ -168,8 +168,10 @@ pub struct Holes {
 }
 
 impl Holes {
-    // From the stretches the reference's lines cover
+    // From the stretches the reference's lines cover; a line with no steps
+    // covers nothing
     pub fn between(mut cover: Vec<(u64, u64)>) -> Holes {
+        cover.retain(|&(a, b)| b > a);
         cover.sort_unstable();
         let mut holes = Holes {
             spans: Vec::new(),
