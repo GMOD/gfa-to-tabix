@@ -4,8 +4,9 @@ ADR 0009's "Open before the port": a prototype writer of the amended
 Decision, built on ada on HPRC v2.1 Minigraph-Cactus chr22 (`mc22`) and
 HPRC release 2 pggb chrY (`pggbY`) and chr22 (`pggb22`), on GRCh38, under
 nearest-pass placement and alignment-guided placement (`pggbYa`,
-`pggb22a`, from `~/work/impg/lift.*.primary.tsv`). Every file was read back
-by [`audit6.py`](../../scripts/audit6.py).
+`pggb22a`, from `~/work/impg/lift.*.primary.tsv`). Every file but pggb
+chr22's under nearest pass was read back by
+[`audit6.py`](../../scripts/audit6.py); see below.
 
 The prototype is saved as `~/notes/handoffs/2026-11-03-format6-prototype.patch`
 (the simplified format) and `-with-crowds.patch` (the amended Decision the

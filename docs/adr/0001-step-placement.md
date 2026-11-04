@@ -1,6 +1,8 @@
 # ADR 0001: Where a walk file files a haplotype step
 
-- **Status:** accepted, 2026-10-19
+- **Status:** accepted, 2026-10-19; rule 2, the stay, amended by
+  [ADR 0009](0009-departure-records.md) without this ADR's table, which
+  is open there
 - **Decides:** which reference chunk `--walks` files each step of a non-reference
   path under, when the reference passes the step's node more than once
 - **Measured by:** the [success criteria](#success-criteria) below, with

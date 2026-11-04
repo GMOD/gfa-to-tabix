@@ -37,6 +37,10 @@ nothing decided.
 
 ## Walk files in place of the index for path graphs
 
+These measurements were taken on walk format 5 and graph-walks 4, whose
+`skip` rows walk format 6 replaces with departure records
+([ADR 0009](adr/0009-departure-records.md)).
+
 - [ADR 0008](adr/0008-index-keeps-its-placement.md) keeps the index's
   placement and its role for path graphs. Its measurement, graph-walks' own
   cuts over 80 to 100 windows per graph, is the baseline here
@@ -83,6 +87,9 @@ nothing decided.
   `docs/placement/scripts`
 
 ## Haplotypes jumping between repeat copies
+
+Measured on walk format 5; format 6 records each jump as a departure with
+its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
 
 - On pggb, most of the nodes the harness counts lost lie outside every chunk
   the walk cut reads, and outside those its skip rows name: 86% on chr22 and
@@ -145,7 +152,7 @@ nothing decided.
   rows under nearest pass (p95 / max per window 18,037 / 104,479) and
   30,329 in 43,415 under the projection (265 / 18,562); on chr22,
   5,333,737 in 17,434,823 under nearest pass and 177,475 in 452,672 under
-  the projection (1,070 / 71,889, at most 988 KB a departure read).
+  the projection (1,070 / 71,905, at most 988 KB a departure read).
   [Results](departures/results/rebuild/README.md)
 - Caveats from a review on 2026-11-01. Until these are fixed and the
   scores rerun, don't quote the agreement figures as the gap between the

@@ -27,20 +27,23 @@
   reconstructs what it can from the pieces it happens to read, so a
   haplotype's answer depended on which other haplotypes were kept, and the
   viewers called the result a deletion
-- Format 5's decoding rules choose a copy themselves where a chunk's R
-  holds a node more than once: a piece starts at R's first copy and a
-  route exit lands on the nearest, the later on a tie (`Path::first` and
-  `Path::nearest` in `src/routes.rs`). `encode` never reads the placement
-  pass, which only picks the chunk. So no placement rule can put a step on
-  another copy within a chunk: format 5's rules put 3.8% to 8.6% of the
-  steps in chunks with repeats on another copy than nearest-pass placement
-  chose, and up to 63% under alignment-guided placement
+- Format 5's decoding rules chose a copy themselves where a chunk's R
+  held a node more than once: a piece started at R's first copy and a
+  route exit landed on the nearest, the later on a tie (`Path::first` and
+  `Path::nearest` in format 5's `src/routes.rs`). Its `encode` never read
+  the placement pass, which only picked the chunk. So no placement rule
+  could put a step on another copy within a chunk: format 5's rules put
+  3.8% to 8.6% of the steps in chunks with repeats on another copy than
+  nearest-pass placement chose, and up to 63% under alignment-guided
+  placement
 - The tools make no variant calls; they state what the data shows. A
   haplotype's answer must not depend on the keep set. A window inside a
   jump of any length must find it from a bounded number of range requests
   near the window. No backwards compatibility. Format 6 breaks every
   reader anyway, so it aims at the ideal format, and the ideal includes
-  being simple: every mechanism below earned its place in the rebuild
+  being simple: every mechanism the rebuild measured below earned its
+  place there; `#hole`, `xb`, `kinds:Z:` and `#placement` are kept for
+  their uses, unmeasured
 
 ## Decision
 
@@ -67,13 +70,13 @@ seq~departure  a  b  departure  path fragStart hapStart ownBp ownSteps missingBp
 - A one-ended record has `.` in the five columns of the end it lacks: the
   contig has no step on S before the rejoin, or none after the leave, in
   any of its W lines. Its own sequence runs from the contig's first
-  record, or to its last, and it is written whenever that is not empty
+  W line, or to its last, and it is written whenever its `ownBp` is above 0
 - `hapStart` is where the haplotype's own sequence between the ends starts
   on its contig, right after the leave step; it runs `ownBp` over
   `ownSteps` steps, both 0 for a direct jump. `ownSteps` counts every step
   between the ends, those on other reference sequences and in W lines with
   no step on S included. `missingBp` counts the part of `ownBp` no W line
-  of the contig covers: the gaps between records only. `xb` counts the
+  of the contig covers: the gaps between W lines only. `xb` counts the
   part the path walks on other reference sequences. One-ended records
   count all three the same way
 - `fragStart` is the W line of the leave step, or of the rejoin step for a
@@ -107,16 +110,17 @@ sequence.
   every reference sequence
 - The writer fails the build if any row decodes to another (handle,
   position) than the one it placed
-- **The stay** keeps a run home only where it returns there, holds no node
-  the reference passes once, and each of its steps on a node the home
+- **The stay** keeps a run home only where it returns there, holds at most
+  `stay` bp of reference nodes and no node the reference passes once, and
+  each of its steps on a node the home
   chunk's R holds has a copy there within `stay` bp of the offset
   `visits_along` predicts for it from the run's previous step; it
   re-places the step on the nearest such copy. A step on a node the home
   chunk's R lacks is route interior. Any other run moves the piece on, so
   the stay moves no step more than `stay` bp from its prediction. This
   amends ADR 0001's rule 2 and [ADR 0003](0003-long-node-lookback.md)'s
-  guard. Under nearest-pass placement own sequence therefore holds no node
-  the reference passes once
+  guard. Under nearest-pass placement no step on a node the reference
+  passes once is therefore route interior
 - The reference's own paths lie at their offsets and have no departures
 - [ADR 0001](0001-step-placement.md)'s rule 3 places route-interior nodes
   at a `ref` row's position for drawing only, never a haplotype's steps
@@ -277,8 +281,15 @@ graph-walks 5 returns the record as `WalkDeparture`; the structural-forms
   port writes nearest pass only, which takes no input
 - The bounded stay changes [ADR 0001](0001-step-placement.md)'s rule 2
   without its table of agreement with Minigraph-Cactus placement on pggb
-  chr22, which ADR 0001 asks a replacement to report. MC files do not
-  depend on it: GRCh38 passes no MC node twice, so the stay keeps nothing
+  chr22, which ADR 0001 asks a replacement to report. GRCh38 passes no
+  node of MC chr22 twice, so the stay keeps nothing there; but in the
+  genome-wide MC graph CHM13 passes 209,578 nodes more than once (ADR
+  0001), so the hosted CHM13 file depends on it, on `@k` and on step
+  counts
+- No format 6 build of what is hosted: the genome-wide MC graph with
+  `--refs GRCh38,CHM13`. Its size, time, memory and audit, which a file of
+  1.2-1.6 GB needs to take by chromosome or `--shard`, come before
+  hosting
 - The writer's peak memory on pggb, set by the densest chunks' encoding,
   above format 5's; see [The port](#the-port)
 
@@ -318,17 +329,18 @@ audit ran whole on 2026-11-04, at 35 GB.
   rows, so a reader cannot see its steps; MC chr22 has 35 records over one
 - Against `dep.rs`'s enumeration from the GFA, on departures with both
   ends on nodes passed once: on MC chr22 36,845 jumps and 10,032
-  insertions match, 24,002 more lie inside one piece, and 1,209 differ
-  only in the stretch, where an end runs against S and `dep.rs` reports
-  the gap between the nodes and the record the breakpoints
+  insertions match, 24,002 more lie inside one piece, and 1,215 jumps
+  differ only in the stretch, where `dep.rs` reports the gap between the
+  nodes and the record the breakpoints: 1,209 with an end against S, and
+  6 back jumps with both ends along it
 - On pggb under nearest pass the densest windows are placement: in chrY's
-  TSPY array, 99,378 of 104,479 rows are records with an end on a node the
-  reference passes more than once, about 85,000 of them with 0 own bp, from
-  contigs that hop between copies. Alignment-guided placement takes chrY's
+  TSPY array, 98,965 of the densest window's 104,479 records have an end on
+  a node the reference passes more than once, 84,748 of them with 0 own
+  bp, from contigs that hop between copies. Alignment-guided placement takes chrY's
   densest window to 18,562 rows, short back jumps through a satellite node
   the reference passes 1,188 times at 26.6 Mb. The spike's file holds
   19,933 there; its audit's 1,937 was an error. On chr22 alignment-guided
-  placement's densest window holds 71,889 rows, against the spike's
+  placement's densest window holds 71,905 rows, against the spike's
   130,149
 - Alignment-guided files are 9-20% larger than the spike's: a step the
   alignment leaves unplaced is route interior where format 5 let the
@@ -351,7 +363,7 @@ pass, against the prototype and against format 5 built by 552b9c1
 
 - With abridging off, MC chr22's `ref`, `nodes`, `route` and `walk` rows
   equal format 5's, neighbour tags aside
-- The build phase peaks at 1.3 GB on pggb chr22, departure records
+- The build phase peaks at 1.3 GiB on pggb chr22, departure records
   included: the peak is the encoding of the densest chunks. Reading
   positions straight into positions in R, holding each route once and
   dropping a chunk's whole encoding before abridging it took pggb chr22
@@ -417,7 +429,10 @@ Kept for the measurements the rebuild did not repeat.
 
 - On MC chr22 19,630 of 25,185 leave breakpoints lie in a different chunk
   from the leave piece, against 1,254 rejoin breakpoints, so `leaveChunk`
-  is needed
+  is needed. That was before positions: in format 6 a step's piece is
+  filed under the chunk holding its pass, so an end's chunk differs from
+  its breakpoint's only where the end's node crosses a chunk boundary or
+  the stay kept it home. Not re-measured
 - Without the per-sequence definition, a contig that leaves chr22 for a
   random contig and returns leaves a chr22 window inside the excursion
   nothing: 15,051 of pggb chr22's 21,465 absent (contig, chunk) pairs had
@@ -460,7 +475,8 @@ Kept for the measurements the rebuild did not repeat.
   consumer takes both in one bump
 - graph-walks 4.x refused a format 6 file by asking for a rebuild with
   gfa-to-tabix 1.4 or later. graph-walks a51b7bf asks for a newer viewer
-  instead; it is to be released as 4.6.1 before any format 6 file exists
+  instead; it is to be released as 4.6.1, and bundled by the viewers,
+  before gfa-to-tabix 3.0 is released or any format 6 file hosted
 - The plugin's first format 6 release bundles graph-walks 4 beside 5 under
   an alias and picks by the header's `format`, with one bandage-core. A
   format 5 file draws its pieces, drops its skip rows and says to rebuild
@@ -485,8 +501,8 @@ Kept for the measurements the rebuild did not repeat.
   pggb E. coli walk files in ggbandage, BandageJS and the tube map are
   rebuilt
 - Hosted Minigraph-Cactus walk files are rebuilt under new names
-- [walks-format.md](../walks-format.md) documents format 5 until the port,
-  which rewrites it for format 6
+- [walks-format.md](../walks-format.md) documents format 6 since the
+  port
 
 ## History
 

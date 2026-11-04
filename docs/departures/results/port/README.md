@@ -9,7 +9,8 @@ graphs built by 552b9c1, the commit before the port.
 ## Files
 
 - `NAME.build.log`: the port's builds, with each phase's time and the
-  process's peak memory so far
+  process's peak memory so far, in GiB. The tables give `/usr/bin/time`'s
+  peak in KiB over 10^6, as the rebuild's do
 - `NAME.format5.build.log`: format 5's
 
 ## The port against the prototype and format 5
@@ -36,23 +37,26 @@ the memory changes below, took 508 s.
   are the same in format 6 as in format 5, neighbour tags aside. GRCh38
   passes no MC node twice, so no row takes `@k` or step counts it did not
   take before, and the stay keeps nothing
-- With the neighbour tags kept, the first build of the port was 59.77 MB on
-  MC chr22 and 197.2 MB on pggb chrY: the tags cost 0.31 MB and 0.70 MB.
-  On pggb chr22 they also moved 805 more paths to detail records, since
-  they count toward the chunk byte budget
+- The first build of the port kept all six neighbour tags and paged its
+  detail records: 59.77 MB on MC chr22 and 197.25 MB on pggb chrY. Against
+  the prototype, which had the same paging and four of the tags, `pv` and
+  `nx` cost 0.31 MB and 0.70 MB; against the final port, the tags and
+  pages together cost 0.35 MB and 0.69 MB. On pggb chr22 they also moved
+  805 more paths to detail records, since they count toward the chunk
+  byte budget
 
 ## Memory
 
 - The build phase, which cuts the paths and files the departure records
-  through an external sort, peaks at 1.1 GB on pggb chrY and 1.3 GB on pggb
+  through an external sort, peaks at 1.1 GiB on pggb chrY and 1.3 GiB on pggb
   chr22 (2.83 billion steps). The rest is the encoding of the chunks, which
-  the densest ones set: pggb chrY on 4 cores peaked at 10.2 GB against 11.7
-  GB on 24, before the changes below
+  the densest ones set: pggb chrY on 4 cores peaked at 10.7 against 12.3
+  on 24, before the changes below
 - A walk piece's positions are read from the sort straight into positions
   in the chunk's reference path, 4 bytes a step, never held as offsets;
   each route is held once; and a chunk over budget drops its whole-chunk
-  encoding before encoding what it keeps. These took pggb chrY from 11.7 GB
-  to 8.0 GB and pggb chr22 from 35.8 GB to 22.4 GB
+  encoding before encoding what it keeps. These took pggb chrY from 12.3 to
+  8.0 and pggb chr22 from 37.6 to 22.4
 - Format 6 still holds more than format 5: a step's position in the sorted
   rows, and more pieces, since the bounded stay keeps fewer runs home
   (5,569,569 pieces on pggb chr22 against 4,882,682)
@@ -64,10 +68,13 @@ the memory changes below, took 508 s.
   reference sequences (`xb`), over a step on a 0 bp node between abutting W
   lines, and across a hole in the reference; `@k` and step counts where
   positions need them; and the bounded stay
-- `audit6.py` over every walk fixture and five hand-made graphs in five
-  option modes, and `fuzz6.sh` over 450 random graphs in six modes, which
-  now draw references with holes and contigs whose W lines abut: no
-  failures
+- `audit6.py` over every walk fixture and five hand-made graphs at
+  `--chunk 10` in five option modes (none, `--abridge-steps 1`,
+  `--abridge-bytes 1`, `--stay 2`, `--stay 0`), 60 builds; and `fuzz6.sh 1
+  450` over 450 random graphs in its six modes, 2,700 builds, which now
+  draw references with holes and contigs whose W lines abut: no failures,
+  on the final binary, run locally. Neither run's output was kept, since
+  `fuzz6.sh` keeps only the graphs that fail
 - Extending the fuzz found one fault of the prototype, a departure missed
   across abutting W lines over a step on a 0 bp node (adjacency checked
   `ownBp` and not `ownSteps`), and two of the audit, both fixed: it took a

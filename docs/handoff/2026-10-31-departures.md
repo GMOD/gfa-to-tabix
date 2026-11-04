@@ -105,19 +105,36 @@ there. The urgent part is the word on screen
    and `docs/walks-format.md` are format 6, and the port's rows equal the
    prototype's on MC chr22 and pggb chrY and chr22, the cuts aside
    ([results](../departures/results/port/README.md)). ADR 0009's History
-   says how the format got here. Next:
+   says how the format got here. Three Opus reviews of the port found the
+   code sound and corrected the docs; their open design questions are
+   below. Next:
+   - graph-walks 5 against a local format 6 build of MC chr22 (`WalkDeparture`,
+     two reads per window, no follow rounds, no neighbour tags, a
+     departure-read budget beside the 8 MB cut budget), which settles the
+     spec before any file is hosted
+   - A format 6 build of what is hosted, the genome-wide MC graph with
+     `--refs GRCh38,CHM13`: its size, time, memory and an audit by
+     chromosome or `--shard`. CHM13 passes 209,578 of its nodes more than
+     once, so that file is the first to need `@k`, step counts and the
+     bounded stay
    - graph-walks 4.6.1 (a51b7bf, which asks for a newer viewer on a format
-     6 file) before any format 6 file is hosted
-   - Rebuild the hosted MC walk files on ada with the port under new names,
-     keeping the format 5 files: graph-walks 4.x refuses format 6
-   - graph-walks 5 (`WalkDeparture`, two reads per window, no follow
-     rounds, no neighbour tags, a departure-read budget beside the 8 MB cut
-     budget), bandage-core 13 (its "filed near" label and "not in the
-     graph" gap from the record's `rejoinChunk` and `missingBp`), plugin 9
-     (synteny strand per end, mate span from `hapStart` and `ownBp`,
-     `EXPAND_NAMED_MAX` replaced by a per-row threshold), jbrowse-components'
-     lane-side bp, then BandageJS, ggbandage, the tube map and jb2hubs.
-     ADR 0009's Consequences list each
+     6 file), bundled by the plugin, BandageJS, ggbandage and the tube map,
+     before gfa-to-tabix 3.0 is released. Releasing is bumping `version`
+     on main, so push main with the bump, not before
+   - Then the hosted MC walk files rebuilt under new names, keeping the
+     format 5 files; bandage-core 13 (its "filed near" label and "not in
+     the graph" gap from the record's `rejoinChunk` and `missingBp`, and the
+     hand-off from graph-walks a required type, so a mismatched bump fails
+     to compile); plugin 9, which per ADR 0009 bundles graph-walks 4 beside
+     5 for format 5 files (synteny strand per end, mate span from
+     `hapStart` and `ownBp`, `EXPAND_NAMED_MAX` replaced by a per-row
+     threshold); jbrowse-components' lane-side bp; then BandageJS,
+     ggbandage, the tube map and jb2hubs
+   - Open design questions from the reviews, for the user: whether
+     `kinds:Z:`, `#placement`, `xb` and the pass counts earn their place
+     for a first MC release, whether `leaveChunk` still does once ends lie
+     in their pieces' chunks, and whether one-ended records over 0 bp of
+     own steps should be written
 3. **pggb, when it comes up.** Check that every path rebuilds from its rows
    under alignment-guided placement (checked for the chaining spike, not this
    one); then `--alignments` as an optional input in its own ADR. Questions

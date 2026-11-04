@@ -1,6 +1,8 @@
 # ADR 0006: Mark a haplotype that jumps over a window in the walk files
 
-- **Status:** accepted, 2026-10-28
+- **Status:** accepted, 2026-10-28; superseded by
+  [ADR 0009](0009-departure-records.md), whose `departure` records replace
+  `skip` rows in walk format 6
 - **Decides:** what a walk file holds for a window that a haplotype's deletion
   spans
 - **Measured by:** HPRC release 2's pggb chrY

@@ -64,7 +64,14 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus, and
 - On the reference paths, a step takes the chunk that holds its offset, so
   where the reference passes a node twice each pass lies where it is
 - A piece is a run of a path's steps in one chunk. `piece` numbers the pieces
-  along the path, so a reader joins consecutive pieces back into one walk
+  along one W line from 0, so a reader keys a piece by `path`, `fragStart`
+  and `piece`, and joins consecutive pieces back into one walk
+- A contig can span several W lines, one per stretch the graph holds, as
+  where Minigraph-Cactus clips a haplotype. On its first read of the GFA
+  the tool refuses two W lines of a contig that overlap or start at the
+  same base, and a W line whose end column is not its start plus its
+  nodes' lengths. The rows are the same for any order of the W lines,
+  which `vg convert` changes from run to run
 - A path that visits no node of a reference has no rows in that reference's
   file, and the tool counts these paths on stderr
 - A node the reference passes once has that pass as its position. For a node
@@ -138,16 +145,18 @@ them.
 
 - `format:i:6` marks this format. A reader refuses any other
 - `maxnode` is the longest node on the reference paths in bp
-- `stay` is the `--stay` value in bp the file was written with; 0 means no stay
+- `stay` is the `--stay` value in bp the file was written with; 0 means no
+  stay. A reader ignores it
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
   `--abridge-bytes` budgets the file was written with; 0 means none. A reader
   ignores them
 - `kinds:Z:` lists every row kind the file may hold, detail records included.
   A reader refuses a file that lists a kind it doesn't know, and reads every
   kind listed. Tags a reader doesn't know it ignores, on every row, in any
-  order after the fixed columns; it reads only the sequences `S` and
-  `S~cs` of a chunk, and `S~departure`, and ignores any other. Later
-  additions are tags, sibling sequences or files, not new kinds
+  order after the fixed columns, and header lines too; it reads only the
+  sequences `S` and `S~cs` of a chunk, and `S~departure`, and ignores any
+  other. Later additions are tags, sibling sequences or files, not new
+  kinds
 - `#placement` names the rule that placed steps on nodes the reference passes
   more than once, then its parameters as typed tags. One file holds one
   placement
@@ -250,7 +259,8 @@ seq cs cs+1 walk path fragStart hapOffset piece nsteps start[@k] end choices
 - Where R holds a node more than once, `@k` names the occurrence a step lands
   on, counting R's positions holding the node from 0: on `start`, where it is
   not R's first; on a choice, where the route's exit lands on another than the
-  one nearest the entry, the later on a tie. A route with no entry or no exit
+  one nearest the entry's position in R, counted in positions, the later on a
+  tie. A route with no entry or no exit
   takes no `@k`. The tool writes `@k` only where it differs from that
   default, so a file has one encoding, and a reference that passes every node
   once has none
@@ -270,7 +280,8 @@ seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start[@k] end[@k]
 - `nsteps` and `bp` count the steps of those pieces and their nodes' bp
 - `start` is the first piece's first handle on R and `end` the last piece's
   last handle on R, both absolute. `start@k` names its occurrence as on a walk
-  row; `end@k` names its occurrence where it is not the one nearest `start`'s
+  row; `end@k` names its occurrence where it is not the one nearest
+  `start`'s position in R, counted in positions, the later on a tie
 - `detail` numbers the chunk's record that holds the pieces' rows
 
 ### departure
@@ -297,8 +308,9 @@ the piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   the start of the chunk the step's piece is filed under
 - A one-ended record has `.` in the five columns of the end it lacks: the
   contig has no step on S before the rejoin, or none after the leave, in any
-  of its W lines. Its own sequence runs from the contig's first W line, or to
-  its last
+  of its W lines: the contig arrives on S from sequence of its own, or leaves
+  S for good. Its own sequence runs from the contig's first W line, or to
+  its last, and the record is written where that has bp
 - `hapStart` is where the path's own sequence between the ends starts on its
   contig, right after the leave step; it runs `ownBp` over `ownSteps` steps,
   both 0 for a direct jump. `ownSteps` counts every step between the ends,
@@ -315,17 +327,20 @@ the piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   is a strand switch; otherwise, for a `+` leave the path jumps back when
   `rejoinPos < leavePos`, and for a `-` leave when `rejoinPos > leavePos`,
   over reference it walks again; equal breakpoints are sequence of its own
-  between adjacent steps; any other case is a jump forward. `ownBp` 0 is a
-  direct jump; `missingBp` above 0 is sequence the graph lacks
+  between adjacent steps; any other case is a jump forward. Positions
+  compare with the holes before them removed. `ownBp` 0 is a direct jump;
+  `missingBp` above 0 is sequence the graph lacks
 - A record covers its stretch, from one base of its first end's node beside
   the breakpoint to one base of the other's: `[bp − 1, bp)` where the
   breakpoint is the node's end and `[bp, bp + 1)` where it is its start, for a
-  node of 0 bp `[bp, bp + 1)`, each clipped to S. That extent is cut at
+  node of 0 bp `[bp, bp + 1)`, each clipped to S; a one-ended record covers
+  its one end's base. That extent is cut at
   aligned multiples of 2^26, 2^23, 2^20 and 2^17 bp, the index's bin sizes,
   one row per block, `a` to `b`, so each row lands in a Tabix bin no larger
   than itself
 - Every row of a record repeats the same columns after `a` and `b`, and a
-  reader dedups on them
+  reader dedups on them. A file with more rows than these rules give is
+  still valid, so the filing can change without a reader release
 
 ### Reading a window
 
@@ -336,7 +351,11 @@ the piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   or in a `#long` pass that starts in one of them
 - The departure read: `seq~departure` over the same extent, which returns
   every record whose stretch, its end bases included, overlaps it
-- The two reads together give every departure over the extent, each once
+- The two reads together give every departure over the extent, each once,
+  when a reader computes departures only between consecutive steps of one
+  piece: one between two pieces is a record, even where it read both. An
+  abridged path's pieces lie in its detail record, so the departures inside
+  them come with that record, when a viewer fetches it
 
 ## Abridged chunks
 
@@ -380,7 +399,8 @@ position in R, and so with its offset and pass.
    - emit the interior
    - with no exit, stop: the piece ends off R
    - emit the exit, at occurrence `k` of its node in R with `@k`, else at the
-     occurrence nearest the current position, the later one on a tie
+     occurrence nearest the current position in R, counted in positions,
+     the later one on a tie
 4. Step along R until the current handle is `start + end`, or with `:n` take
    exactly the tail's `n` steps
 
