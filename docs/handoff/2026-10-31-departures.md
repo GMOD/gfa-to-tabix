@@ -144,6 +144,13 @@ there. The urgent part is the word on screen
 ## Gotchas
 
 - Local disk is at 97%; keep large builds on ada
+- ada's 125 GB are shared with other heavy jobs on the same account; on
+  2026-11-03 they filled it, the kernel killed audits well under their
+  `systemd-run` caps, and sshd refused connections for a while. Check
+  `free -g` before starting anything over 30 GB, and run `audit6.py` on
+  pggb chr22 nearest pass with `--shard`, one shard at a time
+- ada's login shell is zsh: `$pids` does not word-split, so kill a list of
+  PIDs through `xargs`
 - graph-walks 4.x throws on any format but 5 (`walkReader.ts:198`), so every
   consumer still pinned to 4.x breaks on format 6 files under old names
 - The `order` column of the `bypass` prototype was the reference's order, not
