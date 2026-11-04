@@ -1,12 +1,13 @@
 // The --walks mode: every path of a base-level GFA cut into pieces filed under
 // fixed chunks of each reference's coordinate, written as one Tabix-indexed
-// BED file per reference in walk format 5 (`routes.rs` writes a chunk's rows). A
-// row's interval is the first base of its chunk: a full-chunk interval would
-// share a Tabix bin with the next chunk, and a query would pull both. Header
-// lines give the format, the chunk size and the longest node, then the
-// reference and the haplotypes.
+// BED file per reference in walk format 6 (`routes.rs` writes a chunk's rows,
+// `departures.rs` the departure records). A row's interval is the first base
+// of its chunk: a full-chunk interval would share a Tabix bin with the next
+// chunk, and a query would pull both. Header lines give the format, the chunk
+// size and the longest node, then the placement rule, the reference and the
+// haplotypes.
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 use std::fs::{self, File};
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
@@ -17,9 +18,10 @@ use std::thread;
 use std::time::Instant;
 
 use crate::bed;
+use crate::departures::{self, Departure, End, Holes, Own};
 use crate::gfa::{blunt_error, is_blunt, parse_u64, split_path_name, text};
 use crate::intern::{FastMap, Interner};
-use crate::routes::{self, Piece, PieceRef};
+use crate::routes::{self, PieceRef};
 use crate::sorter::Sorter;
 
 pub struct Options {
@@ -31,14 +33,10 @@ pub struct Options {
 }
 
 const NONE: u32 = u32::MAX;
-// The most chunks a path's jump over the reference files `skip` rows in; a
-// farther jump is a paralog's
-const SKIP_CHUNKS: u64 = 32;
-// The first byte of a `skip` row in the sort, after a chunk's pieces, which
-// start 0 (the reference's) or 1
-const SKIP_ROW: u8 = 2;
 // Set on a placement taken from a path off the reference: rank 1.
 const OFF_REFERENCE: u32 = 1 << 31;
+// Every row kind a walk file holds, detail records' included
+const KINDS: &str = "ref,nodes,route,walk,abridged,departure";
 
 fn push_u64(out: &mut Vec<u8>, mut n: u64) {
     let mut digits = [0u8; 20];
@@ -192,7 +190,8 @@ impl Graph {
 // each of the sample's own paths ends, which bounds its chunks even past its
 // last first-visited node. `visits` lists every pass of the sample's paths
 // over a node they pass more than once, by node, name and offset;
-// `visits_of` gives each such node's stretch of it.
+// `visits_of` gives each such node's stretch of it. `holes` gives each of the
+// sample's sequences the stretches its lines leave out.
 struct Reference {
     sample: Vec<u8>,
     walks: u64,
@@ -203,15 +202,27 @@ struct Reference {
     visits: Vec<Visit>,
     visits_of: FastMap<u32, (u32, u32)>,
     path_ends: HashMap<u32, u64>,
+    holes: HashMap<u32, Holes>,
     pieces: u64,
-    skips: u64,
     unplaced: u64,
+    departures: u64,
+    departure_rows: u64,
     haplotypes: BTreeSet<Vec<u8>>,
 }
 
 impl Reference {
     fn on_reference(&self, id: usize) -> bool {
         self.placement[id] & OFF_REFERENCE == 0
+    }
+
+    // How many times the sample's paths pass a node
+    fn passes(&self, id: usize) -> u32 {
+        if self.revisited.get(id) {
+            let (from, to) = self.visits_of[&(id as u32)];
+            to - from
+        } else {
+            1
+        }
     }
 
     // maxnode: the longest node on the reference paths, in bp
@@ -285,6 +296,15 @@ struct Visit {
     name: u32,
     offset: u64,
     reverse: bool,
+}
+
+impl Visit {
+    // No pass: a step that is route interior
+    const INTERIOR: Visit = Visit {
+        name: NONE,
+        offset: 0,
+        reverse: false,
+    };
 }
 
 struct Bits(Vec<u64>);
@@ -455,15 +475,17 @@ impl Stable {
     }
 }
 
-// A W or P line with steps: its name id and the stretch of its contig it covers.
+// A W or P line with steps: its name id, the stretch of its contig it covers,
+// and its number of steps.
 struct Record {
     name: u32,
     start: u64,
     end: u64,
+    steps: u64,
 }
 
 // Refuses a W line whose end column disagrees with its steps.
-fn record(path: &PathLine, name: u32, end: u64) -> Result<Record, String> {
+fn record(path: &PathLine, name: u32, end: u64, steps: usize) -> Result<Record, String> {
     if let Some(stated) = path.end
         && stated != end
     {
@@ -477,6 +499,7 @@ fn record(path: &PathLine, name: u32, end: u64) -> Result<Record, String> {
         name,
         start: path.start,
         end,
+        steps: steps as u64,
     })
 }
 
@@ -571,7 +594,7 @@ fn first_pass(
                     .all(|&id| lengths.get(id as usize).is_some_and(|&l| l != NONE))
                 {
                     let end = stable.visit(names, name, path.start, &ids, &lengths);
-                    let record = record(&path, name, end)?;
+                    let record = record(&path, name, end, ids.len())?;
                     if !ids.is_empty() {
                         records.push(record);
                     }
@@ -581,6 +604,7 @@ fn first_pass(
                         name,
                         start: path.start,
                         end: path.start,
+                        steps: 0,
                     });
                 }
                 if let Some(reference) = options
@@ -628,7 +652,7 @@ fn first_pass(
                 ids.push(id);
             }
             let end = stable.visit(names, name, path.start, &ids, &lengths);
-            records[at] = record(&path, name, end)?;
+            records[at] = record(&path, name, end, ids.len())?;
             Ok(())
         })?;
     }
@@ -662,13 +686,18 @@ fn first_pass(
             visits: Vec::new(),
             visits_of: FastMap::default(),
             path_ends: HashMap::new(),
+            holes: HashMap::new(),
             pieces: 0,
-            skips: 0,
             unplaced: 0,
+            departures: 0,
+            departure_rows: 0,
             haplotypes: BTreeSet::new(),
         })
         .collect();
     let mut on_reference: Vec<Stable> = options.refs.iter().map(|_| Stable::default()).collect();
+    // by reference, then sequence: the stretches its lines cover
+    let mut covers: Vec<HashMap<u32, Vec<(u64, u64)>>> =
+        options.refs.iter().map(|_| HashMap::new()).collect();
     for walk in &ref_walks {
         ids.clear();
         ids.extend(walk.handles.iter().map(|h| h >> 1));
@@ -683,11 +712,21 @@ fn first_pass(
         }
         on_reference[walk.reference].visit(names, walk.name, walk.start, &ids, &lengths);
         let length: u64 = ids.iter().map(|&id| u64::from(lengths[id as usize])).sum();
+        covers[walk.reference]
+            .entry(walk.name)
+            .or_default()
+            .push((walk.start, walk.start + length));
         let end = references[walk.reference]
             .path_ends
             .entry(walk.name)
             .or_default();
         *end = (*end).max(walk.start + length);
+    }
+    for (reference, covers) in references.iter_mut().zip(covers) {
+        reference.holes = covers
+            .into_iter()
+            .map(|(name, cover)| (name, Holes::between(cover)))
+            .collect();
     }
     for (reference, best) in references.iter_mut().zip(&on_reference) {
         for (id, &name) in best.name.iter().enumerate() {
@@ -770,10 +809,11 @@ fn index_visits<'a>(
 // files are sorted: by sequence name in byte order, then by start.
 struct Chunks {
     size: u64,
-    // by name id: the number of a reference sequence's first chunk, and the
-    // reference it belongs to
+    // by name id: the number of a reference sequence's first chunk, the
+    // reference it belongs to, and where it ends
     first: Vec<u32>,
     owner: Vec<u32>,
+    end: Vec<u64>,
     // by chunk number: (name id, start)
     starts: Vec<(u32, u64)>,
 }
@@ -788,6 +828,7 @@ impl Chunks {
         sequences.sort_unstable();
         let mut first = vec![NONE; names.len()];
         let mut owner = vec![NONE; names.len()];
+        let mut ends = vec![0; names.len()];
         let mut starts = Vec::new();
         let count: u64 = sequences.iter().map(|&(_, _, _, end)| end / size + 1).sum();
         if count >= u64::from(NONE) {
@@ -796,6 +837,7 @@ impl Chunks {
         for (_, name, reference, end) in sequences {
             first[name as usize] = starts.len() as u32;
             owner[name as usize] = reference;
+            ends[name as usize] = end;
             for c in 0..=end / size {
                 starts.push((name, c * size));
             }
@@ -804,6 +846,7 @@ impl Chunks {
             size,
             first,
             owner,
+            end: ends,
             starts,
         })
     }
@@ -811,36 +854,19 @@ impl Chunks {
     fn of(&self, name: u32, offset: u64) -> u32 {
         self.first[name as usize] + (offset / self.size) as u32
     }
-
-    // Whether a reader of every window over a pass of `length` bp at `start`
-    // reads `home`. A reader reads the chunk before the window, or before a
-    // `#long` pass it overlaps, so a pass longer than a chunk needs only its
-    // first chunk to reach.
-    fn reaches(&self, name: u32, start: u64, length: u64, home: u32) -> bool {
-        let first = self.of(name, start);
-        let last = if length > self.size {
-            first
-        } else {
-            self.of(name, start + length.max(1) - 1)
-        };
-        home <= first && last - home <= 1 && self.starts[home as usize].0 == name
-    }
 }
 
-// Under one reference: the chunks a record's first and last pieces are filed
-// under, NONE for a record with no rows there, and its number of pieces.
+// A record's first and last steps on one reference sequence S, as a rejoin
+// and a leave, and its own sequence for S before the first and after the
+// last, which the departures across the contig's records and at its ends
+// take up
 #[derive(Clone, Copy)]
-struct Placed {
-    first: u32,
-    last: u32,
-    pieces: u32,
+struct RecordEnds {
+    first: End,
+    last: End,
+    lead: Own,
+    tail: Own,
 }
-
-const UNPLACED: Placed = Placed {
-    first: NONE,
-    last: NONE,
-    pieces: 0,
-};
 
 // The records before and after one on its contig, NONE at either end.
 #[derive(Clone, Copy)]
@@ -856,16 +882,25 @@ struct Builder {
     stay: u64,
     references: Vec<Reference>,
     rows: Sorter,
-    // by record, then reference
-    placed: Vec<Placed>,
+    // departure rows, keyed by the first chunk of their sequence
+    departures: Sorter,
+    // by record, then reference: the bp of its steps placed on the reference
+    placed_bp: Vec<u64>,
+    // by reference, then (record, sequence name id)
+    ends: Vec<FastMap<(u32, u32), RecordEnds>>,
     paths: u64,
     steps: u64,
     handles: Vec<u32>,
+    // by step, and one past the last: where it starts on the path
     before: Vec<u64>,
     chunk_of: Vec<u32>,
     // by step of a path off the reference: the reference pass a step on a
-    // reference node takes, as (name id, offset); NONE for any other step
-    pass: Vec<(u32, u64)>,
+    // reference node takes; name NONE for route interior
+    pass: Vec<Visit>,
+    // by step, and one past the last: the bp of the steps before it on the
+    // reference
+    placed_before: Vec<u64>,
+    positions: Vec<u64>,
     pieces: Vec<(usize, usize)>,
 }
 
@@ -893,6 +928,7 @@ impl Builder {
             self.before.push(offset);
             offset += self.graph.length(path, h)?;
         }
+        self.before.push(offset);
         if handles.is_empty() {
             return Ok(());
         }
@@ -910,7 +946,7 @@ impl Builder {
             });
             if !self.assign_chunks(r, handles, own) {
                 self.references[r].unplaced += 1;
-                self.placed.push(UNPLACED);
+                self.placed_bp.push(0);
                 continue;
             }
             if own.is_none() {
@@ -922,15 +958,11 @@ impl Builder {
             }
             self.cut_pieces();
             self.references[r].pieces += self.pieces.len() as u64;
-            self.placed.push(Placed {
-                first: self.chunk_of[0],
-                last: self.chunk_of[handles.len() - 1],
-                pieces: self.pieces.len() as u32,
-            });
+            self.placed_bp.push(0);
             let pieces = std::mem::take(&mut self.pieces);
-            let mut result = self.write_pieces(r, path, handles, record, &pieces);
+            let mut result = self.write_pieces(r, path, handles, &pieces);
             if own.is_none() && result.is_ok() {
-                result = self.write_skips(r, path, handles, &pieces);
+                result = self.record_departures(r, path, handles, record, &pieces);
             }
             self.pieces = pieces;
             result?;
@@ -943,8 +975,9 @@ impl Builder {
     // first reference step's for those that lead). On one of the reference's
     // own paths, `own` (its name id and start), a step takes the chunk that
     // holds its offset. On any other path, a step on a node the reference
-    // passes more than once takes the pass `visits_along` picks. False when
-    // the path visits no node of the reference.
+    // passes more than once takes the pass `visits_along` picks, and `pass`
+    // keeps every step's. False when the path visits no node of the
+    // reference.
     fn assign_chunks(&mut self, r: usize, handles: &[u32], own: Option<(u32, u64)>) -> bool {
         let reference = &self.references[r];
         self.chunk_of.clear();
@@ -962,15 +995,17 @@ impl Builder {
                 let chunk_of = &mut self.chunk_of;
                 let pass = &mut self.pass;
                 pass.clear();
-                pass.resize(handles.len(), (NONE, 0));
+                pass.resize(handles.len(), Visit::INTERIOR);
                 visits_along(
-                    reference,
-                    handles,
-                    &self.before,
-                    &self.graph.lengths,
+                    &Along {
+                        reference,
+                        handles,
+                        before: &self.before,
+                        lengths: &self.graph.lengths,
+                    },
                     |i, v| {
                         chunk_of[i] = chunks.of(v.name, v.offset);
-                        pass[i] = (v.name, v.offset);
+                        pass[i] = v;
                     },
                 );
             }
@@ -989,18 +1024,15 @@ impl Builder {
         if own.is_none() && self.stay > 0 {
             stay_home(
                 &mut self.chunk_of,
-                handles,
-                reference,
-                &self.graph.lengths,
-                self.stay,
-                |id, home| {
-                    self.chunks.reaches(
-                        reference.placement[id],
-                        reference.offset[id],
-                        u64::from(self.graph.lengths[id]),
-                        home,
-                    )
+                &mut self.pass,
+                &Along {
+                    reference,
+                    handles,
+                    before: &self.before,
+                    lengths: &self.graph.lengths,
                 },
+                &self.chunks,
+                self.stay,
             );
         }
         true
@@ -1024,171 +1056,431 @@ impl Builder {
         r: usize,
         path: &PathLine,
         handles: &[u32],
-        record: u32,
         pieces: &[(usize, usize)],
     ) -> Result<(), String> {
         let reference = self.references[r].sample == path.sample;
-        let mut tags = Vec::new();
+        self.positions.clear();
+        if !reference {
+            self.positions.extend(self.pass.iter().map(|v| {
+                if v.name == NONE {
+                    routes::OFF
+                } else {
+                    v.offset
+                }
+            }));
+        }
         for (k, &(a, b)) in pieces.iter().enumerate() {
             let chunk = self.chunk_of[a];
-            tags.clear();
-            let previous = k.checked_sub(1).and_then(|j| pieces.get(j));
-            for (tag, at) in [(b"pv", previous), (b"nx", pieces.get(k + 1))] {
-                if let Some(&(c, _)) = at {
-                    let there = self.chunk_of[c];
-                    push_chunk_tag(&mut tags, tag, &self.chunks, &self.names, chunk, there);
-                }
-            }
             let before = &self.before;
+            let positions = if reference {
+                &[][..]
+            } else {
+                &self.positions[a..b]
+            };
             self.rows.push(chunk, |out| {
-                Piece::write(
-                    out,
-                    &PieceRef {
-                        reference,
-                        name: &path.name,
-                        frag: path.start,
-                        offset: path.start + before[a],
-                        piece: k as u32,
-                        record,
-                        tags: &tags,
-                        handles: &handles[a..b],
-                    },
-                )
+                PieceRef {
+                    reference,
+                    name: &path.name,
+                    frag: path.start,
+                    offset: path.start + before[a],
+                    piece: k as u32,
+                    handles: &handles[a..b],
+                    positions,
+                }
+                .write(out)
             })?;
         }
         Ok(())
     }
 
-    // Writes a `skip` row into each chunk a path jumps over between two of its
-    // pieces on one reference sequence, when the jump spans at most
-    // SKIP_CHUNKS chunks: `skip path fragStart piece from to refStart refEnd`,
-    // where `piece` numbers the piece before the jump, `from` and `to` are the
-    // chunks the two pieces are filed under, and refStart-refEnd is the
-    // reference between the passes either side of the jump. A chunk gets one
-    // skip row per path, from its first jump over the chunk, and none where
-    // the path has a piece: in a collapsed repeat a path hops over the same
-    // chunks again and again.
-    fn write_skips(
+    // Files a departure for each pair of consecutive steps of a path on one
+    // reference sequence that are not adjacent there and lie in different
+    // pieces; a reader computes one inside a piece from its walk row. Keeps
+    // each sequence's first and last steps in `ends` for the departures
+    // across the contig's records and at its ends.
+    fn record_departures(
         &mut self,
         r: usize,
         path: &PathLine,
         handles: &[u32],
+        record: u32,
         pieces: &[(usize, usize)],
     ) -> Result<(), String> {
+        let n = handles.len();
         let lengths = &self.graph.lengths;
-        let pass = &self.pass;
-        let mut covered: HashSet<u32> = pieces.iter().map(|&(a, _)| self.chunk_of[a]).collect();
-        let span = |i: usize| {
-            let (name, start) = pass[i];
-            (
-                name,
-                start,
-                start + u64::from(lengths[(handles[i] >> 1) as usize]),
+        let length = |i: usize| u64::from(lengths[(handles[i] >> 1) as usize]);
+        let (pass, before) = (&self.pass, &self.before);
+        self.placed_before.clear();
+        let mut placed = 0;
+        for (i, v) in pass.iter().enumerate() {
+            self.placed_before.push(placed);
+            if v.name != NONE {
+                placed += length(i);
+            }
+        }
+        self.placed_before.push(placed);
+        let refs = self.references.len();
+        self.placed_bp[record as usize * refs + r] = placed;
+        let placed_before = &self.placed_before;
+        let reference = &self.references[r];
+        let end = |i: usize, leave: bool| {
+            step_end(
+                reference,
+                &self.chunks,
+                handles[i],
+                pass[i],
+                length(i),
+                self.chunk_of[i],
+                leave,
             )
         };
-        let mut line = Vec::new();
-        for (k, pair) in pieces.windows(2).enumerate() {
-            let ((a, b), (_, c)) = (pair[0], pair[1]);
-            let (Some(i), Some(j)) = (
-                (a..b).rev().find(|&i| pass[i].0 != NONE),
-                (b..c).find(|&j| pass[j].0 != NONE),
-            ) else {
-                continue;
-            };
-            let ((name, i_start, i_end), (other, j_start, j_end)) = (span(i), span(j));
-            let (gap_start, gap_end) = match () {
-                _ if name != other => continue,
-                _ if i_end < j_start => (i_end, j_start),
-                _ if j_end < i_start => (j_end, i_start),
-                _ => continue,
-            };
-            let (first, last) = (
-                self.chunks.of(name, gap_start),
-                self.chunks.of(name, gap_end - 1),
-            );
-            let (from, to) = (self.chunk_of[a], self.chunk_of[b]);
-            let starts = &self.chunks.starts;
-            if u64::from(last - first) >= SKIP_CHUNKS
-                || starts[from as usize].0 != name
-                || starts[to as usize].0 != name
-            {
-                continue;
-            }
-            line.clear();
-            line.extend_from_slice(b"skip\t");
-            line.extend_from_slice(&path.name);
-            for n in [
-                path.start,
-                k as u64,
-                starts[from as usize].1,
-                starts[to as usize].1,
-                gap_start,
-                gap_end,
-            ] {
-                line.push(b'\t');
-                push_u64(&mut line, n);
-            }
-            line.push(b'\n');
-            for chunk in first..=last {
-                if !covered.insert(chunk) {
-                    continue;
+        let piece_of = |i: usize| pieces.partition_point(|&(_, b)| b <= i);
+        let own = |from: usize, to: usize| Own {
+            bp: before[to] - before[from],
+            steps: (to - from) as u64,
+            xb: placed_before[to] - placed_before[from],
+            missing: 0,
+        };
+        // by sequence: its first and last steps so far
+        let mut on: Vec<(u32, usize, usize)> = Vec::new();
+        let mut filed = (0, 0);
+        for j in (0..n).filter(|&j| pass[j].name != NONE) {
+            let s = pass[j].name;
+            match on.iter_mut().find(|(name, _, _)| *name == s) {
+                Some((_, _, last)) => {
+                    let i = *last;
+                    let (leave, rejoin) = (end(i, true), end(j, false));
+                    let between = own(i + 1, j);
+                    if piece_of(i) != piece_of(j)
+                        && !reference.holes[&s].adjacent(between.steps, between.bp, &leave, &rejoin)
+                    {
+                        let departure = Departure {
+                            path: &path.name,
+                            frag: path.start,
+                            hap_start: path.start + before[i + 1],
+                            own: between,
+                            leave: Some(leave),
+                            rejoin: Some(rejoin),
+                        };
+                        filed.0 += 1;
+                        filed.1 +=
+                            departure.file(self.chunks.first[s as usize], &mut self.departures)?;
+                    }
+                    *last = j;
                 }
-                self.rows.push(chunk, |out| {
-                    out.push(SKIP_ROW);
-                    out.extend_from_slice(&line);
-                })?;
-                self.references[r].skips += 1;
+                None => on.push((s, j, j)),
             }
+        }
+        let ends = &mut self.ends[r];
+        for (s, first, last) in on {
+            ends.insert(
+                (record, s),
+                RecordEnds {
+                    first: end(first, false),
+                    last: end(last, true),
+                    lead: own(0, first),
+                    tail: own(last + 1, n),
+                },
+            );
+        }
+        let reference = &mut self.references[r];
+        reference.departures += filed.0;
+        reference.departure_rows += filed.1;
+        Ok(())
+    }
+
+    // Files the departures across each contig's records, from a record's last
+    // step on a reference sequence to the next record's first, and from the
+    // contig's first record to its first step there, and from its last step
+    // there to the contig's last record, where the contig has own sequence
+    // there.
+    fn record_contig_departures(
+        &mut self,
+        records: &[Record],
+        links: &[Link],
+    ) -> Result<(), String> {
+        let refs = self.references.len();
+        for r in 0..refs {
+            let ends = std::mem::take(&mut self.ends[r]);
+            let mut filed = (0, 0);
+            for (&(k, s), here) in &ends {
+                let record = &records[k as usize];
+                let others = |forward: bool| {
+                    contig_between(
+                        records,
+                        links,
+                        k,
+                        forward,
+                        |j| ends.contains_key(&(j, s)),
+                        |j| self.placed_bp[j as usize * refs + r],
+                    )
+                };
+                let departure = |hap_start: u64, own: Own, leave, rejoin| Departure {
+                    path: &self.names[record.name as usize],
+                    frag: record.start,
+                    hap_start,
+                    own,
+                    leave,
+                    rejoin,
+                };
+                let mut departures = Vec::new();
+                let (previous, before) = others(false);
+                let lead = before + here.lead;
+                if previous == NONE && lead.bp > 0 {
+                    departures.push(departure(
+                        record.start - before.bp,
+                        lead,
+                        None,
+                        Some(here.first),
+                    ));
+                }
+                let (next, after) = others(true);
+                let hap_start = record.end - here.tail.bp;
+                if next == NONE {
+                    let tail = here.tail + after;
+                    if tail.bp > 0 {
+                        departures.push(departure(hap_start, tail, Some(here.last), None));
+                    }
+                } else {
+                    let there = &ends[&(next, s)];
+                    let own = here.tail + after + there.lead;
+                    if !self.references[r].holes[&s].adjacent(
+                        own.steps,
+                        own.bp,
+                        &here.last,
+                        &there.first,
+                    ) {
+                        departures.push(departure(
+                            hap_start,
+                            own,
+                            Some(here.last),
+                            Some(there.first),
+                        ));
+                    }
+                }
+                for departure in departures {
+                    filed.0 += 1;
+                    filed.1 +=
+                        departure.file(self.chunks.first[s as usize], &mut self.departures)?;
+                }
+            }
+            let reference = &mut self.references[r];
+            reference.departures += filed.0;
+            reference.departure_rows += filed.1;
         }
         Ok(())
     }
 }
 
-// Files a run of steps away from the current piece's chunk under that chunk
-// when the path comes back to it, the run spends at most `stay` bp on
-// reference nodes, one of those nodes is one the reference passes more than
-// once, and a reader of each window over a node it passes once also reads
-// the piece's chunk, as `reaches` says. A step on a node the reference passes
-// more than once has no one true chunk, so it needs no reader. Any other run
-// moves the piece on to the run's first chunk.
-fn stay_home(
-    chunk_of: &mut [u32],
-    handles: &[u32],
+// One end of a departure: the step `handle`, of `length` bp, on the pass
+// `at`, filed under `chunk`, as the leave or the rejoin
+fn step_end(
     reference: &Reference,
-    lengths: &[u32],
-    stay: u64,
-    reaches: impl Fn(usize, u32) -> bool,
-) {
+    chunks: &Chunks,
+    handle: u32,
+    at: Visit,
+    length: u64,
+    chunk: u32,
+    leave: bool,
+) -> End {
+    let against = (handle & 1 == 1) != at.reverse;
+    let on_start = against == leave;
+    let bp = if on_start {
+        at.offset
+    } else {
+        at.offset + length
+    };
+    let base = if length == 0 || on_start { bp } else { bp - 1 };
+    End {
+        bp,
+        node: handle >> 1,
+        against,
+        passes: reference.passes((handle >> 1) as usize),
+        chunk: chunks.starts[chunk as usize].1,
+        base: base.min(chunks.end[at.name as usize].saturating_sub(1)),
+    }
+}
+
+// The nearest record after record `k` on its contig, or before it, with a
+// step on S, NONE for none, and the contig's own sequence for S between the
+// two, or to the contig's last record, or from its first. `on_s` says
+// whether a record has a step on S, and `xb` gives the bp of one that has
+// none placed on the reference's other sequences.
+fn contig_between(
+    records: &[Record],
+    links: &[Link],
+    k: u32,
+    forward: bool,
+    on_s: impl Fn(u32) -> bool,
+    xb: impl Fn(u32) -> u64,
+) -> (u32, Own) {
+    let step = |j: u32| {
+        if forward {
+            links[j as usize].next
+        } else {
+            links[j as usize].previous
+        }
+    };
+    let gap = |from: u32, to: u32| {
+        let (a, b) = (&records[from as usize], &records[to as usize]);
+        if forward {
+            b.start - a.end
+        } else {
+            a.start - b.end
+        }
+    };
+    let mut own = Own::default();
+    let mut edge = k;
+    let mut at = step(k);
+    while at != NONE && !on_s(at) {
+        let (record, missing) = (&records[at as usize], gap(edge, at));
+        own = own
+            + Own {
+                bp: missing + record.end - record.start,
+                steps: record.steps,
+                xb: xb(at),
+                missing,
+            };
+        edge = at;
+        at = step(at);
+    }
+    if at != NONE {
+        let missing = gap(edge, at);
+        own = own
+            + Own {
+                bp: missing,
+                missing,
+                ..Own::default()
+            };
+    }
+    (at, own)
+}
+
+// A path's steps against a reference, for placing them on its passes
+struct Along<'a> {
+    reference: &'a Reference,
+    handles: &'a [u32],
+    before: &'a [u64],
+    lengths: &'a [u32],
+}
+
+impl Along<'_> {
+    fn id(&self, i: usize) -> usize {
+        (self.handles[i] >> 1) as usize
+    }
+
+    fn on(&self, i: usize) -> bool {
+        self.reference.on_reference(self.id(i))
+    }
+
+    fn length(&self, i: usize) -> i64 {
+        i64::from(self.lengths[self.id(i)])
+    }
+
+    // The offset step `j` takes from step `i` on the pass `at`: as far along
+    // the reference as the path has gone between them, in the direction their
+    // strands agree on
+    fn predict(&self, i: usize, at: Visit, j: usize) -> i64 {
+        let gone = self.before[j] as i64 - self.before[i] as i64;
+        if (self.handles[i] & 1 == 1) == at.reverse {
+            at.offset as i64 + gone
+        } else {
+            at.offset as i64 + self.length(i) - gone - self.length(j)
+        }
+    }
+}
+
+// Keeps a run of steps away from the current piece's chunk, its home, in
+// that chunk when the path comes back to it, the run spends at most `stay`
+// bp on reference nodes and holds no node the reference passes once, and
+// each of its steps on a node the home chunk's R holds has a pass there
+// within `stay` bp of where `visits_along` predicts it from the run's
+// previous placed step. Such a step moves to the nearest such pass, and a
+// step on a node the home chunk's R lacks becomes route interior. Any other
+// run moves the piece on to the run's first chunk.
+fn stay_home(chunk_of: &mut [u32], pass: &mut [Visit], along: &Along, chunks: &Chunks, stay: u64) {
     let n = chunk_of.len();
     let mut home = chunk_of[0];
     let mut i = 1;
+    let mut moves: Vec<(usize, Visit)> = Vec::new();
     while i < n {
         if chunk_of[i] == home {
             i += 1;
-            continue;
-        }
-        let mut content = 0u64;
-        let mut revisits = false;
-        let mut seen = true;
-        let mut j = i;
-        while j < n && chunk_of[j] != home && content <= stay {
-            let id = (handles[j] >> 1) as usize;
-            if reference.on_reference(id) {
-                content += u64::from(lengths[id]);
-                let revisited = reference.revisited.get(id);
-                revisits |= revisited;
-                seen &= revisited || reaches(id, home);
-            }
-            j += 1;
-        }
-        if j < n && chunk_of[j] == home && content <= stay && revisits && seen {
-            chunk_of[i..j].fill(home);
-            i = j;
         } else {
-            home = chunk_of[i];
-            i += 1;
+            let mut content = 0;
+            let mut once = false;
+            let mut j = i;
+            while j < n && chunk_of[j] != home && content <= stay {
+                if along.on(j) {
+                    content += along.length(j) as u64;
+                    once |= !along.reference.revisited.get(along.id(j));
+                }
+                j += 1;
+            }
+            let returns = j < n && chunk_of[j] == home && content <= stay && !once;
+            if returns && rehome(&mut moves, pass, along, chunks, home, i..j, stay) {
+                for &(k, v) in &moves {
+                    pass[k] = v;
+                }
+                chunk_of[i..j].fill(home);
+                i = j;
+            } else {
+                home = chunk_of[i];
+                i += 1;
+            }
         }
     }
+}
+
+// The pass in chunk `home` each placed step of `run` moves to, INTERIOR for
+// one on a node the chunk's R lacks, into `moves`; false where a step's
+// nearest pass there lies more than `stay` bp from where the run's previous
+// placed step predicts it
+fn rehome(
+    moves: &mut Vec<(usize, Visit)>,
+    pass: &[Visit],
+    along: &Along,
+    chunks: &Chunks,
+    home: u32,
+    run: std::ops::Range<usize>,
+    stay: u64,
+) -> bool {
+    moves.clear();
+    let (name, start) = chunks.starts[home as usize];
+    let reference = along.reference;
+    let mut previous = (0..run.start)
+        .rev()
+        .find(|&k| pass[k].name != NONE)
+        .map(|k| (k, pass[k]));
+    run.filter(|&k| pass[k].name != NONE).all(|k| {
+        let (from, to) = reference.visits_of[&(along.id(k) as u32)];
+        let visits = &reference.visits[from as usize..to as usize];
+        let lo = visits.partition_point(|v| (v.name, v.offset) < (name, start));
+        let hi = visits.partition_point(|v| (v.name, v.offset) < (name, start + chunks.size));
+        let here = &visits[lo..hi];
+        if here.is_empty() {
+            moves.push((k, Visit::INTERIOR));
+            true
+        } else {
+            let nearest = previous.map(|(p, at)| {
+                let expected = along.predict(p, at, k);
+                let distance = |v: &Visit| (v.offset as i64 - expected).unsigned_abs();
+                let nearest = *here
+                    .iter()
+                    .min_by_key(|v| distance(v))
+                    .expect("a pass in the home chunk");
+                (nearest, distance(&nearest))
+            });
+            match nearest {
+                Some((nearest, distance)) if distance <= stay => {
+                    moves.push((k, nearest));
+                    previous = Some((k, nearest));
+                    true
+                }
+                _ => false,
+            }
+        }
+    })
 }
 
 // Calls `place` with the reference pass each reference step of a path takes.
@@ -1199,62 +1491,25 @@ fn stay_home(
 // on a node the reference passes once and runs outward both ways, so a path
 // that follows the reference through a collapsed tandem repeat takes each
 // copy in turn.
-fn visits_along(
-    reference: &Reference,
-    handles: &[u32],
-    before: &[u64],
-    lengths: &[u32],
-    mut place: impl FnMut(usize, Visit),
-) {
-    let id = |i: usize| (handles[i] >> 1) as usize;
-    let on = |i: usize| reference.on_reference(id(i));
-    let Some(anchor) = (0..handles.len())
-        .find(|&i| on(i) && !reference.revisited.get(id(i)))
-        .or_else(|| (0..handles.len()).find(|&i| on(i)))
-    else {
-        return;
-    };
-    let start = reference.first_visit(id(anchor));
-    place(anchor, start);
-    let mut from = |order: &mut dyn Iterator<Item = usize>| {
-        let (mut i, mut at) = (anchor, start);
-        for j in order.filter(|&j| on(j)) {
-            let gone = before[j] as i64 - before[i] as i64;
-            let expected = if (handles[i] & 1 == 1) == at.reverse {
-                at.offset as i64 + gone
-            } else {
-                at.offset as i64 + i64::from(lengths[id(i)]) - gone - i64::from(lengths[id(j)])
-            };
-            at = reference.visit_near(id(j), at.name, expected);
-            i = j;
-            place(j, at);
-        }
-    };
-    from(&mut (anchor + 1..handles.len()));
-    from(&mut (0..anchor).rev());
-}
-
-// A tag giving the start of the chunk `there`, with its reference sequence's
-// name when that differs from the sequence of the chunk `here`.
-fn push_chunk_tag(
-    out: &mut Vec<u8>,
-    tag: &[u8],
-    chunks: &Chunks,
-    names: &Interner,
-    here: u32,
-    there: u32,
-) {
-    let (name, start) = chunks.starts[there as usize];
-    out.push(b'\t');
-    out.extend_from_slice(tag);
-    if name == chunks.starts[here as usize].0 {
-        out.extend_from_slice(b":i:");
-    } else {
-        out.extend_from_slice(b":Z:");
-        out.extend_from_slice(&names[name as usize]);
-        out.push(b':');
+fn visits_along(along: &Along, mut place: impl FnMut(usize, Visit)) {
+    let (reference, n) = (along.reference, along.handles.len());
+    let anchor = (0..n)
+        .find(|&i| along.on(i) && !reference.revisited.get(along.id(i)))
+        .or_else(|| (0..n).find(|&i| along.on(i)));
+    if let Some(anchor) = anchor {
+        let start = reference.first_visit(along.id(anchor));
+        place(anchor, start);
+        let mut from = |order: &mut dyn Iterator<Item = usize>| {
+            let (mut i, mut at) = (anchor, start);
+            for j in order.filter(|&j| along.on(j)) {
+                at = reference.visit_near(along.id(j), at.name, along.predict(i, at, j));
+                i = j;
+                place(j, at);
+            }
+        };
+        from(&mut (anchor + 1..n));
+        from(&mut (0..anchor).rev());
     }
-    push_u64(out, start);
 }
 
 // Chains the records of each contig in start order, refusing two that start
@@ -1299,6 +1554,7 @@ impl Drop for TempDir {
 }
 
 const SORT_BUDGET: usize = 512 << 20;
+const DEPARTURE_SORT_BUDGET: usize = 128 << 20;
 
 // The detail records of a sequence's chunks, held on disk until its main rows
 // are written, since Tabix needs each sequence's rows together. Chunk `cs` of
@@ -1398,12 +1654,26 @@ struct Output {
     details: Details,
 }
 
+// The process's peak resident memory in GB, where /proc says
+fn peak_memory() -> Option<f64> {
+    let status = fs::read_to_string("/proc/self/status").ok()?;
+    let line = status.lines().find(|l| l.starts_with("VmHWM:"))?;
+    let kb: f64 = line.split_whitespace().nth(1)?.parse().ok()?;
+    Some(kb / (1 << 20) as f64)
+}
+
 pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     if gfa == "-" {
         return Err("--walks reads the GFA twice, so it needs a file, not stdin".into());
     }
     let clock = Instant::now();
-    let elapsed = || format!("[{:6.1} s]", clock.elapsed().as_secs_f64());
+    let elapsed = || {
+        format!(
+            "[{:6.1} s{}]",
+            clock.elapsed().as_secs_f64(),
+            peak_memory().map_or(String::new(), |gb| format!(", {gb:.1} GB peak"))
+        )
+    };
     let mut names = Interner::default();
     let (graph, references, records) = first_pass(gfa, options, &mut names)?;
     let links = link_records(&records, &names)?;
@@ -1446,13 +1716,17 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         chunks,
         references,
         rows: Sorter::new(&temp.0, "rows", SORT_BUDGET),
-        placed: Vec::new(),
+        departures: Sorter::new(&temp.0, "departures", DEPARTURE_SORT_BUDGET),
+        placed_bp: Vec::new(),
+        ends: options.refs.iter().map(|_| FastMap::default()).collect(),
         paths: 0,
         steps: 0,
         handles: Vec::new(),
         before: Vec::new(),
         chunk_of: Vec::new(),
         pass: Vec::new(),
+        placed_before: Vec::new(),
+        positions: Vec::new(),
         pieces: Vec::new(),
         stay: options.stay,
     };
@@ -1463,6 +1737,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         },
         _ => Ok(()),
     })?;
+    builder.record_contig_departures(&records, &links)?;
     eprintln!(
         "{} {} paths, {} steps",
         elapsed(),
@@ -1471,10 +1746,11 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     );
     for reference in &builder.references {
         eprintln!(
-            "{}: {} pieces, {} skip rows, {} paths visit no {} node and are left out",
+            "{}: {} pieces, {} departure records in {} rows, {} paths visit no {} node and are left out",
             text(&reference.sample),
             reference.pieces,
-            reference.skips,
+            reference.departures,
+            reference.departure_rows,
             reference.unplaced,
             text(&reference.sample)
         );
@@ -1486,7 +1762,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         chunks,
         references,
         rows,
-        placed,
+        departures,
         ..
     } = builder;
     let threads = thread::available_parallelism().map_or(4, |n| n.get());
@@ -1496,7 +1772,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let mut writer = bed::Writer::create(&path)?;
         let longest = reference.longest(&graph.lengths);
         let mut header = format!(
-            "#walks\tformat:i:5\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\tskip:i:{SKIP_CHUNKS}\n#reference\t{}\n",
+            "#walks\tformat:i:6\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\tkinds:Z:{KINDS}\n#placement\tnearest-pass\n#reference\t{}\n",
             chunks.size,
             options.stay,
             options.budget.cost,
@@ -1504,6 +1780,11 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             text(&reference.sample)
         )
         .into_bytes();
+        for name in &reference.haplotypes {
+            header.extend_from_slice(b"#haplotype\t");
+            header.extend_from_slice(name);
+            header.push(b'\n');
+        }
         let mut long: Vec<(&[u8], u64, u64)> = reference
             .long_passes(&graph.lengths, chunks.size)
             .into_iter()
@@ -1516,10 +1797,22 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             header.extend_from_slice(name);
             header.extend_from_slice(format!("\t{start}\t{end}\n").as_bytes());
         }
-        for name in &reference.haplotypes {
-            header.extend_from_slice(b"#haplotype\t");
+        let mut holes: Vec<(&[u8], u64, u64)> = reference
+            .holes
+            .iter()
+            .flat_map(|(&name, holes)| {
+                let name = names[name as usize].as_slice();
+                holes
+                    .spans()
+                    .iter()
+                    .map(move |&(start, end)| (name, start, end))
+            })
+            .collect();
+        holes.sort_unstable();
+        for (name, start, end) in holes {
+            header.extend_from_slice(b"#hole\t");
             header.extend_from_slice(name);
-            header.push(b'\n');
+            header.extend_from_slice(format!("\t{start}\t{end}\n").as_bytes());
         }
         writer.header(&header)?;
         let details = Details::create(&temp.0, writers.len())?;
@@ -1535,45 +1828,12 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let sequence = options.sequences.then_some(&sequence_of);
     // Chunks encode in parallel, a batch at a time, and are written in order.
     type Encoded = Result<(Vec<u8>, Vec<usize>, routes::Counts, routes::Details), String>;
-    let refs = references.len();
-    // the gap to the record before or after a piece's on its contig, and the
-    // chunk that record's nearest piece is filed under
-    let record_tags = |piece: &mut Piece, chunk: u32| {
-        let r = chunks.owner[chunks.starts[chunk as usize].0 as usize] as usize;
-        let record = piece.record as usize;
-        let link = links[record];
-        let here = &records[record];
-        if piece.piece == 0 && link.previous != NONE {
-            let previous = link.previous as usize;
-            piece.tags.extend_from_slice(b"\tpg:i:");
-            push_u64(&mut piece.tags, here.start - records[previous].end);
-            let last = placed[previous * refs + r].last;
-            if last != NONE {
-                push_chunk_tag(&mut piece.tags, b"pr", &chunks, &names, chunk, last);
-            }
-        }
-        if piece.piece + 1 == placed[record * refs + r].pieces && link.next != NONE {
-            let next = link.next as usize;
-            piece.tags.extend_from_slice(b"\tng:i:");
-            push_u64(&mut piece.tags, records[next].start - here.end);
-            let first = placed[next * refs + r].first;
-            if first != NONE {
-                push_chunk_tag(&mut piece.tags, b"nr", &chunks, &names, chunk, first);
-            }
-        }
-    };
-    let encode = |chunk: u32, raw: &[Vec<u8>]| -> Encoded {
-        let (skips, raw): (Vec<&Vec<u8>>, Vec<&Vec<u8>>) =
-            raw.iter().partition(|r| r[0] == SKIP_ROW);
-        let mut pieces: Vec<Piece> = raw.iter().map(|r| Piece::read(r)).collect();
-        for piece in &mut pieces {
-            record_tags(piece, chunk);
-        }
+    let encode = |raw: &[Vec<u8>]| -> Encoded {
         let (mut lines, mut ends) = (Vec::new(), Vec::new());
         let mut counts = routes::Counts::default();
         let mut details = routes::Details::new();
         routes::write_chunk(
-            &pieces,
+            raw,
             &graph.lengths,
             sequence,
             options.budget,
@@ -1585,10 +1845,6 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             },
             &mut details,
         )?;
-        for skip in skips {
-            lines.extend_from_slice(&skip[1..]);
-            ends.push(lines.len());
-        }
         Ok((lines, ends, counts, details))
     };
     let mut line = Vec::new();
@@ -1600,10 +1856,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                 scope.spawn(|| {
                     loop {
                         let k = next.fetch_add(1, Ordering::Relaxed);
-                        let Some((chunk, raw)) = batch.get(k) else {
+                        let Some((_, raw)) = batch.get(k) else {
                             break;
                         };
-                        *encoded[k].lock().unwrap() = Some(encode(*chunk, raw));
+                        *encoded[k].lock().unwrap() = Some(encode(raw));
                     }
                 });
             }
@@ -1659,16 +1915,43 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     })?;
     write_batch(&mut batch)?;
     drop(write_batch);
-    for mut out in writers {
-        let rows = out.rows + out.details.flush(&mut out.writer)?;
+    for out in &mut writers {
+        out.rows += out.details.flush(&mut out.writer)?;
+    }
+    // each sequence's departure rows under its sibling S~departure
+    let mut sibling: (u32, Vec<u8>) = (NONE, Vec::new());
+    departures.merge(|key, row| {
+        let name = chunks.starts[key as usize].0;
+        if sibling.0 != name {
+            sibling.1.clear();
+            sibling.1.extend_from_slice(&names[name as usize]);
+            sibling.1.extend_from_slice(b"~departure");
+            sibling.0 = name;
+        }
+        let (start, end, rest) = departures::unfile(row);
+        line.clear();
+        line.extend_from_slice(&sibling.1);
+        line.push(b'\t');
+        push_u64(&mut line, start);
+        line.push(b'\t');
+        push_u64(&mut line, end);
+        line.push(b'\t');
+        line.extend_from_slice(rest);
+        line.push(b'\n');
+        let out = &mut writers[chunks.owner[name as usize] as usize];
+        out.rows += 1;
+        out.writer.push(&sibling.1, start, end, &line)
+    })?;
+    for out in writers {
         let index = out.writer.finish()?;
-        let (path, counts) = (out.path, out.counts);
+        let (path, rows, counts) = (out.path, out.rows, out.counts);
         eprintln!(
-            "{} {rows} rows -> {path} (+ .{index}): {} routes, {} walk rows, {} with step counts; {} paths abridged to {} detail walk rows",
+            "{} {rows} rows -> {path} (+ .{index}): {} routes, {} walk rows, {} with step counts, {} copies named; {} paths abridged to {} detail walk rows",
             elapsed(),
             counts.routes,
             counts.walks,
             counts.counted,
+            counts.copies,
             counts.abridged,
             counts.detail_walks
         );

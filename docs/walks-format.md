@@ -6,8 +6,12 @@
   `<prefix>.<sample>.walks.bed.gz`, holding every path of the graph cut into
   pieces filed under fixed chunks of that reference
 - A region query returns the rows a reader needs to rebuild every step of
-  every path through the region exactly
-- gfa-to-tabix 1.4 and later write walk format 5, which this page describes
+  every path through the region exactly, each on the pass of the reference
+  the placement gave it, and a second query returns every place a path
+  departs from the reference that the rows can't show
+- gfa-to-tabix 3.0 and later write walk format 6, which this page describes.
+  1.4 to 2.x wrote format 5, which had `skip` rows in place of departure
+  records ([ADR 0009](adr/0009-departure-records.md))
 
 ```bash
 vg convert -f chr22.gbz > chr22.gfa
@@ -34,27 +38,29 @@ chr22.CHM13.walks.bed.gz   chr22.CHM13.walks.bed.gz.tbi
 | `--refs <names>`  | Comma-separated PanSN samples, one file per sample. Required.            |
 | `--chunk <bp>`    | Chunk size. Default 65536.                                               |
 | `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
-| `--stay <bp>`     | Keep a piece in its chunk across a short stretch over nodes the reference passes twice. Default 311, the `-k 311` minimum match of the HPRC pggb graphs; 0 turns it off. |
+| `--stay <bp>`     | Keep a piece in its chunk across a short stretch elsewhere over nodes the reference passes more than once, each moved to a pass in the chunk. Default 311, the `-k 311` minimum match of the HPRC pggb graphs; 0 turns it off. |
 | `--abridge-steps <n>` | Move a chunk's costliest paths to its detail rows until the rest cost at most n interior steps. Default 1000000; 0 turns it off. |
 | `--abridge-bytes <bytes>` | ...and until the rest compress to at most this many bytes. Default 3000000; 0 turns it off. |
 
 ![Four haplotype paths through a bubble, the walk rows for their chunk, and the paths a reader rebuilds from them](figures/walks-detail.svg)
 
 [Example](#example) lists a harder chunk, whose one route has no entry and is
-taken flipped.
+taken flipped, and its departure records.
 
 ## Chunks and pieces
 
 [ADR 0001](adr/0001-step-placement.md) gives the reasons for these rules, the
-alternatives tried and their measurements on pggb and Minigraph-Cactus.
+alternatives tried and their measurements on pggb and Minigraph-Cactus, and
+[ADR 0009](adr/0009-departure-records.md) the changes format 6 made.
 
 - The tool cuts each reference sequence into chunks of `chunk` bp and files
   every row under its chunk's first base, `seq cs cs+1`, so a query on a window
   returns whole chunks. A row spanning the whole chunk would share a Tabix bin
   with the next chunk, and a query would read both
-- A step on a reference node takes the chunk holding that node's position. A
-  step on any other node takes the chunk of the last reference step before it,
-  or of the first one after it for steps that lead the path
+- A step on a reference node takes a pass of the reference over the node, its
+  **position**, and the chunk holding it. A step on any other node takes the
+  chunk of the last reference step before it, or of the first one after it
+  for steps that lead the path
 - On the reference paths, a step takes the chunk that holds its offset, so
   where the reference passes a node twice each pass lies where it is
 - A piece is a run of a path's steps in one chunk. `piece` numbers the pieces
@@ -66,23 +72,27 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus.
   step's own offset plus the bp the path has walked since, in the direction
   their strands agree on. The step takes the pass on the same reference
   sequence nearest that offset, the earlier on a tie, or the first pass when
-  that sequence has none
+  that sequence has none. `#placement` names this rule, `nearest-pass`
 - Placing starts at the path's first step on a node the reference passes once
   (or on any reference node when there is none) and runs outward in both
   directions
 - A run of steps that the rules above file in other chunks stays in the current
-  piece, joining its routes, when:
-  - the path returns to the piece's chunk
-  - the run holds at most `stay` bp of reference nodes, one of them a node the
-    reference passes more than once
-  - each node in the run that the reference passes once lies on the piece's
-    sequence, from its first base to its last in the piece's chunk or the
-    next; a node longer than a chunk only has to start there
-- Any other run starts a new piece, and the reference's own paths are exempt.
-  A reference that passes each node once therefore gets the same rows at any
-  `stay`. A window reads every piece with a step on a node in it that the
-  reference passes once; a step on a node it passes more than once can lie in
-  a piece of another window
+  piece, its home, when:
+  - the path returns to the home chunk
+  - the run holds at most `stay` bp of reference nodes, none of them a node
+    the reference passes once
+  - each of its steps on a node the home chunk's reference path holds has a
+    pass there within `stay` bp of the offset the run's previous placed step
+    predicts for it
+- Such a step moves to the nearest such pass, and a step on a node the home
+  chunk's reference path lacks becomes route interior. Any other run starts a
+  new piece, and the reference's own paths are exempt. A reference that passes
+  each node once therefore gets the same rows at any `stay`
+- The walk row states each step's position ([walk](#walk)), so a reader never
+  chooses a pass itself, and the tool fails the build if a row decodes to
+  another node or position than the one it placed. A step the placement
+  leaves off the reference is route interior, even where the chunk's
+  reference path holds its node
 - A route can hold another chunk's reference nodes. A reader places a node at
   its reference position from a `ref` row of a chunk it read whenever one
   exists, from the row whose path sorts first, at its earliest start, when
@@ -93,7 +103,7 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus.
 - **Paralog jumps:** in a segmental duplication, a haplotype can step onto the
   reference nodes of a distant paralog and back. The steps after the jump take
   the paralog's chunk, so a window at the haplotype's own locus shows the
-  haplotype in more pieces and leaves out some of its inserted nodes. On
+  haplotype in more pieces, and a departure record for each jump. On
   Minigraph-Cactus graphs this is rare and sits almost entirely in low-copy
   repeats such as 22q11's
 - **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes,
@@ -101,7 +111,9 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus.
   apart. pggb graphs have many such nodes; Minigraph-Cactus's GRCh38 path has
   none. Filing every step at the node's first pass, as format 3 did, split each
   haplotype into a piece per hop and made pggb walk files dozens of times
-  larger than Minigraph-Cactus's; the nearest pass and `stay` above replace it
+  larger than Minigraph-Cactus's; the nearest pass and `stay` above replace it.
+  Which copy a step takes is a placement choice: the file states the choice,
+  and a viewer says where a region's placement is ambiguous
 - **Satellite arrays:** pggb gives each haplotype a separate long path through
   thousands of tiny nodes, and the tool files all of it in the chunk where the
   haplotype leaves the reference. [Abridged chunks](#abridged-chunks) moves the
@@ -117,14 +129,31 @@ Header lines start with `#`: `tabix -H` prints them and region queries skip
 them.
 
 ```
-#walks	format:i:5	chunk:i:65536	maxnode:i:1024	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	skip:i:32
+#walks	format:i:6	chunk:i:65536	maxnode:i:1024	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	kinds:Z:ref,nodes,route,walk,abridged,departure
+#placement	nearest-pass
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
 ```
 
-- `format:i:5` marks this format. A reader refuses any other
+- `format:i:6` marks this format. A reader refuses any other
 - `maxnode` is the longest node on the reference paths in bp
+- `stay` is the `--stay` value in bp the file was written with; 0 means no stay
+- `abridge` and `abridgebytes` are the `--abridge-steps` and
+  `--abridge-bytes` budgets the file was written with; 0 means none. A reader
+  ignores them
+- `kinds:Z:` lists every row kind the file may hold, detail records included.
+  A reader refuses a file that lists a kind it doesn't know, and reads every
+  kind listed. Tags a reader doesn't know it ignores, on every row, in any
+  order after the fixed columns; it reads only the sequences `S` and
+  `S~cs` of a chunk, and `S~departure`, and ignores any other. Later
+  additions are tags, sibling sequences or files, not new kinds
+- `#placement` names the rule that placed steps on nodes the reference passes
+  more than once, then its parameters as typed tags. One file holds one
+  placement
+- `#reference` names the reference sample
+- `#haplotype` lists each other haplotype with rows in the file, as its PanSN
+  `sample#haplotype`, once each in byte order
 - `#long` gives each pass of the reference over a node longer than a chunk:
   sequence, start, end, as in `#long  GRCh38#0#chr22  10510000  11510000`. vg
   chops nodes at 1,024 bp, so its graphs have none; pggb's N runs and
@@ -132,24 +161,18 @@ them.
 - A reader queries from the chunk before the window's first, and from the
   chunk before each `#long` pass that overlaps the window, whichever is
   earlier ([ADR 0003](adr/0003-long-node-lookback.md))
-- `stay` is the `--stay` value in bp the file was written with; 0 means no stay.
-  A reader ignores it
-- `abridge` and `abridgebytes` are the `--abridge-steps` and
-  `--abridge-bytes` budgets the file was written with; 0 means none. A reader
-  ignores them
-- `skip` is the most chunks a jump has [skip rows](#skip) in. A file without it
-  has no skip rows, so a reader can't tell a jump over the window from a
-  haplotype absent there
-- `#reference` names the reference sample
-- `#haplotype` lists each other haplotype with rows in the file, as its PanSN
-  `sample#haplotype`, once each in byte order
+- `#hole` gives each stretch of a reference sequence that no line of the
+  reference covers, between its lines and before its first: sequence, start,
+  end, as `#long` does. A reference whose lines leave holes, such as a
+  clipped haplotype, has them; a window inside one has no reference sequence
+  there. A hole is not a departure of any haplotype
 
 ## Rows
 
-Every row starts `seq cs cs+1 kind`. A chunk lists its `ref` rows, then at
-most one `nodes` row, then its `route` rows, then its `walk` rows, then its
-`abridged` rows, then its `skip` rows. A reader skips a kind of row it doesn't
-know.
+Every row in a chunk starts `seq cs cs+1 kind`. A chunk lists its `ref` rows,
+then at most one `nodes` row, then its `route` rows, then its `walk` rows,
+then its `abridged` rows. Departure records lie under the sibling sequence
+`seq~departure`, and detail records under `seq~cs`.
 
 A handle is `2 × id + r`, with `r` 1 for the reverse strand. A list of handles
 is written as delta tokens: each token is `2 × (id − previous id) + r`, and the
@@ -163,7 +186,7 @@ of −3 on the reverse strand; dividing toward zero would read −2.
 ### ref
 
 ```
-seq cs cs+1 ref path fragStart hapOffset piece nsteps steps lengths [pv] [nx] [pg] [pr] [ng] [nr] [SQ:Z:bases]
+seq cs cs+1 ref path fragStart hapOffset piece nsteps steps lengths [SQ:Z:bases]
 ```
 
 - One row per piece of the reference paths in the chunk, so usually one
@@ -173,7 +196,8 @@ seq cs cs+1 ref path fragStart hapOffset piece nsteps steps lengths [pv] [nx] [p
 - `steps` is the piece's handles as delta tokens, the first from 0
 - `lengths` lists each step's node length in bp
 - **R**, the chunk's reference path, is every `ref` row's steps joined in
-  `hapOffset` order. Positions in R count from 0
+  `hapOffset` order. Positions in R count from 0, and each has its offset on
+  the sequence from its row's `hapOffset` and the lengths before it
 
 ### nodes
 
@@ -199,7 +223,7 @@ seq cs cs+1 route entry interior exit
   `interior`, the steps off R; and `exit`, the handle on R it returns to
 - `entry` or `exit` is `.` for a route that starts or ends the piece off R.
   `interior` is `.` for a route straight from one part of R to another, such as
-  a deletion or a jump between repeat copies
+  a jump over the reference or between repeat copies
 - All three columns are delta tokens chained through the chunk's route rows: a
   token's previous id is the id of the token before it, across columns and rows.
   The chunk's first route row starts from 0
@@ -211,7 +235,7 @@ seq cs cs+1 route entry interior exit
 ### walk
 
 ```
-seq cs cs+1 walk path fragStart hapOffset piece nsteps start end choices [pv] [nx] [pg] [pr] [ng] [nr]
+seq cs cs+1 walk path fragStart hapOffset piece nsteps start[@k] end choices
 ```
 
 - One row per piece of every other path, the other references' included.
@@ -221,41 +245,22 @@ seq cs cs+1 walk path fragStart hapOffset piece nsteps start end choices [pv] [n
 - `choices` lists the routes the piece takes in order, `.` for none. Each token
   is `2 × (route id − previous route id) + flip`, the first from 0, where flip
   1 means the piece takes the route the other way round
-- A token may end `:n`, and then every token does and `end` ends `:n` too. See
-  [Decoding a walk row](#decoding-a-walk-row)
-
-### Neighbours
-
-`pv` and `nx` give the start of the chunk the path's previous and next piece is
-filed under, as `pv:i:cs`, or as `pv:Z:seq:cs` on another reference sequence. A
-row at either end of its path has no tag there. A reader that cuts a path off
-at the edge of what it read follows the tag to the chunk the path goes on in.
-
-### Records
-
-A contig can span several W lines, one per stretch the graph holds, as where
-Minigraph-Cactus clips a haplotype. `piece`, `pv` and `nx` run within one line
-(one record), so the tool links a contig's records in start order:
-
-- A record's last piece has `ng:i:bp`, the contig bp between this record's end
-  and the next record's start, which the graph lacks. `nr` gives the chunk the
-  next record's first piece is filed under, written like `nx`
-- The next record's first piece mirrors these as `pg` and `pr`
-- A record that visits no node of the reference has no rows in the file. Its
-  neighbours get `ng` and `pg` but no `nr` or `pr`
-- A last piece with neither `nx` nor `ng` ends the contig's last record in the
-  graph. The contig itself may go on
-- On its first read of the GFA, the tool refuses two records of a contig that
-  overlap or start at the same base, and a W line whose end column is not its
-  start plus its nodes' lengths, since `ng` would then depend on which one to
-  believe. A malformed file therefore fails before the slow second read
-- The rows are the same for any order of the W lines, which `vg convert`
-  changes from run to run
+- A token may end `:n`, and then every token does and `end` ends `:n` too. A
+  token may then end `@k`. See [Decoding a walk row](#decoding-a-walk-row)
+- Where R holds a node more than once, `@k` names the occurrence a step lands
+  on, counting R's positions holding the node from 0: on `start`, where it is
+  not R's first; on a choice, where the route's exit lands on another than the
+  one nearest the entry, the later on a tie. A route with no entry or no exit
+  takes no `@k`. The tool writes `@k` only where it differs from that
+  default, so a file has one encoding, and a reference that passes every node
+  once has none
+- The walk continues along R only where R's next position is the step's, and
+  otherwise takes a route, with an empty interior if need be
 
 ### abridged
 
 ```
-seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start end detail [pv] [nx] [pg] [pr] [ng] [nr]
+seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start[@k] end[@k] detail
 ```
 
 - One row per path whose pieces in the chunk the tool moved to a detail
@@ -264,27 +269,74 @@ seq cs cs+1 abridged path fragStart hapOffset pieces nsteps bp start end detail 
   so `0,2` is pieces 0 and 2. `hapOffset` is where the first one starts
 - `nsteps` and `bp` count the steps of those pieces and their nodes' bp
 - `start` is the first piece's first handle on R and `end` the last piece's
-  last handle on R, both absolute
+  last handle on R, both absolute. `start@k` names its occurrence as on a walk
+  row; `end@k` names its occurrence where it is not the one nearest `start`'s
 - `detail` numbers the chunk's record that holds the pieces' rows
-- The `pv`, `pg` and `pr` tags come from the first piece, and `nx`, `ng` and
-  `nr` from the last
 
-### skip
+### departure
 
 ```
-seq cs cs+1 skip path fragStart piece from to refStart refEnd
+seq~departure a b departure path fragStart hapStart ownBp ownSteps missingBp leavePos leaveNode leaveStrand leavePasses leaveChunk rejoinPos rejoinNode rejoinStrand rejoinPasses rejoinChunk [xb:i:bp]
 ```
 
-- A path of another sample that leaves the reference and rejoins it on the
-  same sequence, leaving out `refStart`-`refEnd`, has a `skip` row in each
-  chunk that stretch touches. A path has at most one in a chunk, from its first
-  jump over it, and none in a chunk where it has a piece
-- `piece` numbers the piece before the jump, and `from` and `to` give the
-  chunks the two pieces are filed under, so a reader draws the haplotype across
-  the window as a deletion and can fetch either side
-- A jump over more than `skip` chunks, such as one onto a distant paralog, has
-  no skip rows
-- [ADR 0006](adr/0006-walks-skip-rows.md) gives the reasons
+A record for each place a path departs from a reference sequence S that its
+walk rows can't show: where two of its consecutive steps on S are not
+adjacent there at the passes they took and lie in different pieces, and at
+each end of a contig with sequence of its own beyond its first or last step
+on S. A departure inside one piece has no record: a reader computes it from
+the piece's steps ([ADR 0009](adr/0009-departure-records.md)).
+
+- Departures are per reference sequence: for S, the path's steps on S in
+  order, with its steps on the reference's other sequences counted as its own
+  sequence. A contig's W lines count as one path, in start order
+- Each end is a step on S: `Pos` is its breakpoint, where the path's sequence
+  stops following S (the node's end for a step along S, its start for a step
+  against it, and the other way round for the rejoin); `Node` the node;
+  `Strand` `+` or `-` for the step along or against S's orientation at its
+  pass; `Passes` how many times the reference's paths pass the node; `Chunk`
+  the start of the chunk the step's piece is filed under
+- A one-ended record has `.` in the five columns of the end it lacks: the
+  contig has no step on S before the rejoin, or none after the leave, in any
+  of its W lines. Its own sequence runs from the contig's first W line, or to
+  its last
+- `hapStart` is where the path's own sequence between the ends starts on its
+  contig, right after the leave step; it runs `ownBp` over `ownSteps` steps,
+  both 0 for a direct jump. `ownSteps` counts every step between the ends,
+  those on other reference sequences and in W lines with no step on S
+  included. `missingBp` is the part of `ownBp` between W lines, which the
+  graph lacks. `xb` is the part the path walks on the reference's other
+  sequences, written where it is not 0
+- `fragStart` is the W line of the leave step, or of the rejoin step for a
+  record with no leave
+- Two consecutive steps on S are adjacent, and depart nowhere, when `ownSteps`
+  and `ownBp` are 0, the strands are equal and the breakpoints are equal,
+  [holes](#header) removed
+- No column says what kind of departure it is. `leaveStrand ≠ rejoinStrand`
+  is a strand switch; otherwise, for a `+` leave the path jumps back when
+  `rejoinPos < leavePos`, and for a `-` leave when `rejoinPos > leavePos`,
+  over reference it walks again; equal breakpoints are sequence of its own
+  between adjacent steps; any other case is a jump forward. `ownBp` 0 is a
+  direct jump; `missingBp` above 0 is sequence the graph lacks
+- A record covers its stretch, from one base of its first end's node beside
+  the breakpoint to one base of the other's: `[bp − 1, bp)` where the
+  breakpoint is the node's end and `[bp, bp + 1)` where it is its start, for a
+  node of 0 bp `[bp, bp + 1)`, each clipped to S. That extent is cut at
+  aligned multiples of 2^26, 2^23, 2^20 and 2^17 bp, the index's bin sizes,
+  one row per block, `a` to `b`, so each row lands in a Tabix bin no larger
+  than itself
+- Every row of a record repeats the same columns after `a` and `b`, and a
+  reader dedups on them
+
+### Reading a window
+
+- The walk read: every chunk the window and its context touch, from the
+  chunk before, as [Header](#header) says. It gives every piece over the
+  extent and every departure inside them: both steps of one lie in the
+  piece's chunk, so the stretch between them lies in that chunk and the next,
+  or in a `#long` pass that starts in one of them
+- The departure read: `seq~departure` over the same extent, which returns
+  every record whose stretch, its end bases included, overlaps it
+- The two reads together give every departure over the extent, each once
 
 ## Abridged chunks
 
@@ -316,37 +368,42 @@ seq cs cs+1 skip path fragStart piece from to refStart refEnd
 
 R's step from position `i` holding handle `h` goes forward when `R[i] = h`,
 to `R[i+1]`, and backward otherwise, to `R[i−1]` flipped. Each route below is
-taken the way round its flip says.
+taken the way round its flip says. Every handle on R is emitted with its
+position in R, and so with its offset and pass.
 
 1. If the first route has no entry, emit its interior
-2. Emit `start`, at the first position in R holding its node
+2. Emit `start`, at occurrence `k` of its node in R with `@k`, else at the
+   first
 3. For each route with an entry:
    - step along R, emitting each handle, until the current handle is the
      route's entry. With `:n`, take exactly `n` steps instead
    - emit the interior
    - with no exit, stop: the piece ends off R
-   - emit the exit, and move to the position in R holding its node that lies
-     nearest the current position, the later one on a tie
+   - emit the exit, at occurrence `k` of its node in R with `@k`, else at the
+     occurrence nearest the current position, the later one on a tie
 4. Step along R until the current handle is `start + end`, or with `:n` take
    exactly the tail's `n` steps
 
-The encoder decodes every walk row it writes with these rules. Where stepping
-until a route's entry would stop at an earlier pass over the same node, as when
-a haplotype takes a repeat copy the reference passes twice, it writes the step
-counts. On HPRC v2.1's Minigraph-Cactus chr22 neither GRCh38 nor CHM13 passes a
-node twice, and no walk row needs counts.
+The encoder decodes every walk row it writes with these rules and compares
+each step's handle and position. Where stepping until a route's entry would
+stop at an earlier pass over the same node, or the steps would decode to
+other positions, it writes the step counts. On HPRC v2.1's Minigraph-Cactus
+chr22 GRCh38 passes no node twice, and no walk row needs counts or `@k`.
 
 ## Example
 
 `tests/walks.rs` builds `tests/data/walks-two-refs.gfa` with `--chunk 10
---stay 0` and checks every row. Chunk 0-10 of R:
+--stay 0` and checks every row. Part of chunk 0-10 of R, and two of R's
+departure records:
 
 ```
-R#0#chr  0  1  ref    R#0#chr  0    0    0  2  2,2  6,6  nx:i:10
-R#0#chr  0  1  nodes  6  6
-R#0#chr  0  1  route  .  13  -9
-R#0#chr  0  1  walk   H#1#h    100  100  0  2  2  2  .  nx:i:10
-R#0#chr  0  1  walk   Q#0#chr  0    0    0  2  2  0  1  nx:i:10
+R#0#chr            0   1   ref        R#0#chr  0  0    0  2  2,2  6,6
+R#0#chr            0   1   nodes      6  6
+R#0#chr            0   1   route      .  13  -9
+R#0#chr            0   1   walk       H#1#h    100  100  0  2  2  2  .
+R#0#chr            0   1   walk       Q#0#chr  0    0    0  2  2  0  1
+R#0#chr~departure  0   24  departure  D#1#d    0  24 0  0  0  24 4  +  1  10 0   1  +  1  0
+R#0#chr~departure  5   13  departure  Q#0#chr  0  6  6  1  0  6  1  +  1  0  12  3  +  1  10
 ```
 
 - R is `>1 >2`: tokens `2` and `2` are ids 1 and 2, forward
@@ -356,6 +413,10 @@ R#0#chr  0  1  walk   Q#0#chr  0    0    0  2  2  0  1  nx:i:10
   route 0 flipped, `>1 >6` with no exit: its steps are `>1 >6`
 - H's piece starts on `>1`, ends on `>2` (`end` 2), and takes no route: its
   steps are `>1 >2`
+- Q leaves R at 1's end, 6, walks 6 bp of its own on one step, node 6, and
+  rejoins at 3's start, 12, in a piece filed under chunk 10. Its record
+  covers 1's last base to 3's first, 5-13
+- D jumps back from 4's end, 24, to 1's start, 0, over nothing of its own
 
 ## Scale
 
@@ -363,23 +424,27 @@ R#0#chr  0  1  walk   Q#0#chr  0    0    0  2  2  0  1  nx:i:10
   gzip input works
 - The tool holds about 16 bytes per node, 24 more per node for each reference,
   and with `--sequences` the graph's bases
-- Pieces wait for an external sort in up to 512 MB of memory and then in
-  compressed runs in a temporary directory beside the output. The sort's merge
-  encodes the chunks on every core
+- Pieces and departure records wait for an external sort in up to 512 MB and
+  128 MB of memory and then in compressed runs in a temporary directory
+  beside the output. The sort's merge encodes the chunks on every core, and
+  the densest chunks set the peak: 22 GB on pggb chr22, against 20 GB in
+  format 5
 - A Minigraph-Cactus chromosome with two references takes minutes and a few GB
   of memory on a laptop
 - The header fits in the file's first BGZF block, and a window reads two
   chunks, so a reader fetches a small fraction of a megabyte per window
-  (`docs/format-2/scripts/window_sizes.py` measures it)
+  (`docs/format-2/scripts/window_sizes.py` measures it); the departure read
+  adds one request on Minigraph-Cactus
 
 ## Readers
 
 - [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 4 reads format 5
-  only, and asks for a rebuild of any other file
+  only, and refuses a format 6 file. graph-walks 5, to read format 6, is not
+  yet released
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
   the tube map read through @jbrowse/graph-walks
-- jbrowse.org hosts HPRC v2.1's files, skip rows included, as
+- jbrowse.org hosts HPRC v2.1's files in format 5, as
   `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f5s.{GRCh38,CHM13}.walks.bed.gz`
 
 In a JBrowse graph track, `walksUri` takes the prefix up to the reference

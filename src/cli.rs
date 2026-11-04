@@ -98,7 +98,9 @@ pub struct Cli {
     pub sequences: bool,
 
     /// Keep a path's piece in its chunk across a stretch elsewhere that
-    /// returns to it with at most BP of reference nodes (default 311; 0 off)
+    /// returns to it with at most BP of reference nodes, all passed more than
+    /// once, each moved to a pass in the chunk within BP of where the path
+    /// predicts it (default 311; 0 off)
     #[arg(long, value_name = "BP", requires = "walks", help_heading = WALKS)]
     pub stay: Option<u64>,
 

@@ -187,7 +187,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 
 - [The node and link index](docs/index-format.md): inputs (rGFA, plain GFA, choosing a reference), options, coordinates, layouts, columns, scale
 - [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `bubbles`, `fold`, `paths`, and the deprecated `alleles`
-- [Walk files](docs/walks-format.md): options, placement rules, the row format 5 and its readers
+- [Walk files](docs/walks-format.md): options, placement rules, the row format 6 and its readers
 - Decisions:
   - [ADR 0001](docs/adr/0001-step-placement.md): which chunk a walk file files each step under
   - [ADR 0002](docs/adr/0002-two-index-files.md): why format 1 keeps nodes and links in two files
@@ -197,6 +197,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   - [ADR 0006](docs/adr/0006-walks-skip-rows.md): `skip` rows for a haplotype whose deletion spans the window
   - [ADR 0007](docs/adr/0007-node-link-format-2.md): node and link format 2, one file with carriers as bits
   - [ADR 0008](docs/adr/0008-index-keeps-its-placement.md): the index keeps its placement, and walk files take placement work
+  - [ADR 0009](docs/adr/0009-departure-records.md): one record per departure from the reference, and walk rows that name the copy (walk format 6)
 - [Open problems](docs/open-problems.md): measured but undecided, such as pggb's collapsed repeats
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when a figure differs from that output

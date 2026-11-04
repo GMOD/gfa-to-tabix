@@ -4,6 +4,7 @@ mod bed;
 mod bubbles;
 mod build;
 mod cli;
+mod departures;
 mod fold;
 mod gfa;
 mod intern;
