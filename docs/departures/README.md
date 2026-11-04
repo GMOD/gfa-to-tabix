@@ -20,9 +20,11 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
 
 ## Scripts
 
-- `audit6.py walks.bed.gz [--truth dep.tsv] [--shard I/N]`: reads a format
-  6 file as a reader would and checks it, as the rebuild's README
-  describes. `--shard` splits the paths so a large graph fits in memory
+- `audit6.py walks.bed.gz [--truth dep.tsv] [--shard I/N] [--seq NAME]`:
+  reads a format 6 file as a reader would and checks it, as the rebuild's
+  README describes. `--shard` splits the paths so a large graph fits in
+  memory, and `--seq` audits one reference sequence of a genome-wide file,
+  counting a path's bp on the other sequences as unseen
 - `fuzz6.sh` with `fuzz6-gen.py`: random graphs built and audited in six
   option modes. A graph's reference may have holes between its lines, and a
   haplotype's lines may abut

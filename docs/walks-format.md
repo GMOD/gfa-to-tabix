@@ -453,9 +453,11 @@ R#0#chr~departure  5   13  departure  Q#0#chr  6  6  0  6  +  12 +
 
 ## Readers
 
-- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 4 reads format 5
-  only, and refuses a format 6 file. graph-walks 5, to read format 6, is not
-  yet released
+- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 5 reads format
+  6: two reads per window, the chunks and the `~departure` blocks, and every
+  departure over the window once, those inside one piece computed from its
+  steps and the rest from the records. graph-walks 4 reads format 5 only,
+  and refuses a format 6 file
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
   the tube map read through @jbrowse/graph-walks

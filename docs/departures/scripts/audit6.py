@@ -10,7 +10,7 @@
 # it: rows by class, text bytes, and requests and bytes from the .tbi with
 # its chunk merging (gaps under 65,000 bytes, merged spans under 5 MB).
 #
-# Usage: audit6.py walks.bed.gz [--window 65536] [--point 1024] [--top 1]
+# Usage: audit6.py walks.bed.gz [--seq NAME] [--window 65536] [--point 1024] [--top 1]
 import argparse
 import bisect
 import collections
@@ -26,6 +26,8 @@ ap.add_argument('--point', type=int, default=1024, help='spacing of the 1 bp win
 ap.add_argument('--top', type=int, default=1, help='windows to break down')
 ap.add_argument('--examples', type=int, default=5)
 ap.add_argument('--truth', help="dep.rs's dep.tsv for the same graph and reference")
+ap.add_argument('--seq', help='audit one reference sequence and its siblings only, so a genome-wide file fits in '
+                'memory; a departure across sequences then counts the bp on the others as unseen')
 ap.add_argument('--shard', default='0/1', help='I/N: check only the paths whose name hashes to I of N; '
                 'shard 0 also costs the windows')
 args = ap.parse_args()
@@ -281,6 +283,8 @@ with gzip.open(args.file, 'rt') as f:
                 holes[c[1]].append((int(c[2]), int(c[3])))
             continue
         c = line.rstrip('\n').split('\t')
+        if args.seq is not None and c[0].split('~', 1)[0] != args.seq:
+            continue
         seq, a, b = c[0], int(c[1]), int(c[2])
         kind = c[3]
         text_bytes[kind if not seq.endswith(('~departure', '~crowd')) else seq.rsplit('~', 1)[1]] += len(line)
