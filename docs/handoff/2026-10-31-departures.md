@@ -130,15 +130,63 @@ there. The urgent part is the word on screen
      `hapStart` and `ownBp`, `EXPAND_NAMED_MAX` replaced by a per-row
      threshold); jbrowse-components' lane-side bp; then BandageJS,
      ggbandage, the tube map and jb2hubs
-   - Open design questions from the reviews, for the user: whether
-     `kinds:Z:`, `#placement`, `xb` and the pass counts earn their place
-     for a first MC release, whether `leaveChunk` still does once ends lie
-     in their pieces' chunks, and whether one-ended records over 0 bp of
-     own steps should be written
+   - First decide the minimal design below, which changes the writer,
+     tests, walks-format.md and ADR 0009 before graph-walks 5 is written
 3. **pggb, when it comes up.** Check that every path rebuilds from its rows
    under alignment-guided placement (checked for the chaining spike, not this
    one); then `--alignments` as an optional input in its own ADR. Questions
    for the pggb authors are in open-problems
+
+## Minimal design proposal, 2026-11-04 (not decided)
+
+The user wants a minimal format 6 ("getting a good 'minimal' design will be
+very valuable"). Five Fable reviews (four per question, one deriving the
+minimal format from the requirements alone) and measurements on the port's
+files on ada (`~/work/rebuild/port2/`) propose these cuts. The session ran
+out before the user chose; ask them, group by group:
+
+- **Backed by two reviews and measurement, or no consumer:**
+  - `kinds:Z:`: `format:i:` already refuses unknown formats, and new kinds
+    are a format change anyway. No reader reads it
+  - the `#placement` line: no reader acts on it; a tag on `#walks` can
+    come with a second placement rule, without a format bump
+  - `leaveChunk`/`rejoinChunk`: equal to the chunk of the end node's pass
+    start on every end measured (49,425 on MC chr22, 850,876 on pggb
+    chrY), so derivable from `Pos`, `Strand` and the node's length; they
+    differ from the chunk of the base beside the breakpoint only for a node
+    straddling a chunk boundary, by one chunk. The fetch of a departure's
+    own steps needed them on 0 records of three graphs. 6% of pggb chrY's
+    departure bytes
+  - `leavePasses`/`rejoinPasses`: only the 3% of departures that are
+    records carry them, never checked by the audit (it needs `mp`); the
+    deferred `mp` tag on `ref` rows is the real ambiguity mark
+  - `xb`: says how much, not where; a later tag naming the other sequence's
+    chunk and bp would replace it
+- **One review, medium:** `ownSteps` (only the attach policy uses it,
+  which `ownBp > 0` serves), `leaveNode`/`rejoinNode` (the piece edge step
+  where the end's chunk is read), `fragStart` (`hapStart` keys the leave
+  piece, since a contig's W lines can't overlap)
+- **Split: one-ended records.** Measured: MC chr22 129, of which 26 carry
+  sequence from other W lines (`missingBp` > 0) and 103 repeat what the
+  first or last piece's route shows; pggb chrY 796, 240 with `xb`; pggb
+  chr22 10,578, 9,338 with `xb`. Cutting them gives every record both ends
+- With all of the above the record is `departure path hapStart ownBp
+  missingBp leavePos leaveStrand rejoinPos rejoinStrand`, against 16
+  columns and a tag now
+- **Structural, one review each:**
+  - file departure rows in the chunk rows, every chunk the stretch covers,
+    in place of `S~departure` blocks: one read per window, no sibling
+    sequence or block rule. Measured departure text: MC chr22 1.2% of the
+    file's text now, 1.8% filed per chunk (47,725 rows against 31,368);
+    pggb chrY 11.5% now, 34% per chunk. ADR 0009 rejected it for pggb's
+    cost; the genome-wide MC number is unknown
+  - fold step counts (`:n`) into `@k` on route entries and drop the walk
+    row's `end`, which `nsteps` makes redundant: one copy mechanism. MC
+    chr22 writes neither today; it changes the encoder, `audit6.py` and the
+    test decoder
+
+Earlier the same day three Opus reviews found the port's code sound (see
+ADR 0009 History); their doc and number fixes are committed.
 
 ## Where things are
 
@@ -157,8 +205,9 @@ there. The urgent part is the word on screen
   `f5/` format 5 builds of the same graphs from 552b9c1; `noab/` MC chr22
   with abridging off in both formats. `run6.sh` audits the port's pggb
   chr22 file in four shards, each waiting for 80 GB free, into
-  `port2/pggb22.shardN.audit.txt` (`port2/audit.done` when finished); no
-  audit of nearest pass on pggb chr22 has finished yet. Sources:
+  `port2/pggb22.shardN.audit.txt` (`port2/audit.done` when finished); shard
+  0 was running at the end of 2026-11-04, and no audit of nearest pass on
+  pggb chr22 had finished. Sources:
   `~/src/gfa-to-tabix-port/` (rsync of the working tree) and
   `~/src/gfa-to-tabix-f5/`
 - ada: `~/work/f6/` (the `bypass` prototype builds of MC chr22 and pggb
