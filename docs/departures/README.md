@@ -1,8 +1,11 @@
 # Departure records: measurements behind ADR 0009
 
-Two rounds of measurement, on HPRC v2.1 Minigraph-Cactus chr22 and HPRC
+Three rounds of measurement, on HPRC v2.1 Minigraph-Cactus chr22 and HPRC
 release 2 pggb chrY and chr22, all on GRCh38, built on ada:
 
+- **The port, 2026-11-04,** in [results/port/](results/port/README.md): the
+  writer in `src/`, compared row for row with the rebuild's prototype and
+  sized and timed against format 5 built from the same commit's parent
 - **The rebuild, 2026-11-03,** in [results/rebuild/](results/rebuild/README.md):
   a prototype of the format ADR 0009 specifies, read back by `audit6.py`.
   Its numbers supersede the spike's wherever both measure the same thing
@@ -16,7 +19,8 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
   6 file as a reader would and checks it, as the rebuild's README
   describes. `--shard` splits the paths so a large graph fits in memory
 - `fuzz6.sh` with `fuzz6-gen.py`: random graphs built and audited in six
-  option modes
+  option modes. A graph's reference may have holes between its lines, and a
+  haplotype's lines may abut
 - `summary6.py out/`: one table row per build log and audit
 
 - `audit.py walks.bed.gz [--truth dep.tsv] [--baseline f5.bed.gz]`:

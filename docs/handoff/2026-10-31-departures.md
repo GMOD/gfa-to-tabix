@@ -18,6 +18,9 @@ things are.
   consecutive steps on a reference sequence are not adjacent there, filed as
   bin-aligned blocks under `seq~departure`, with no chunk cap and no type
   column
+- Format 6 walk rows carry no neighbour tags (`pv`, `nx`, `pg`, `pr`, `ng`,
+  `nr`) and detail records have no pages (2026-11-04, after a vibe check
+  and two independent reviews)
 - The projection onto one reference is exact where haplotypes keep its order
   (Minigraph-Cactus: no jump ends on a node GRCh38 passes twice) and a
   placement choice in repeats (pggb). Viewers say so where it is a choice
@@ -97,29 +100,24 @@ there. The urgent part is the word on screen
      drawing show the skipped stretch, for example by marking or dimming
      the bypassed reference and saying when most of it lies outside the
      window. Or drop the arc label and leave the facts to the hover
-2. **Format 6, Minigraph-Cactus first.** ADR 0009 was amended in three
-   rounds of review on 2026-11-03, then rebuilt on ada the same day: a
-   prototype of the amended Decision on all three graphs under both
-   placements, read back by an independent audit
-   ([results](../departures/results/rebuild/README.md)). The rebuild
-   simplified the format, and the ADR now specifies the simplified one:
-   whole-stretch filing, records only between pieces and at contig ends,
-   no crowds, no `recordbp`, `mp` deferred to a tag. The user asked the
-   agent to decide these, with two Fable vibe checks; the user wants the
-   finished system to be simple. Port the prototype
-   (`~/notes/handoffs/2026-11-03-format6-prototype.patch`, against 6e1ddf6;
-   live copy `target/f6/tree`) rather than the spike, with its tests: its
-   `tests/walks.rs` still expects format 5 rows in seven tests, and the
-   port should hold less memory (41 GB peak on pggb chr22, against the
-   spike's 21-23 GB). Port it into gfa-to-tabix 3.0; rebuild the hosted MC
-   walk files on ada under new names
-   (keep the format 5 files: graph-walks 4.x refuses format 6); then
-   graph-walks 5 (`WalkDeparture`, two reads per window, no follow rounds, a
-   departure-read budget beside the 8 MB cut budget), bandage-core 13, plugin
-   9 (synteny strand per end, mate span from `hapStart` and `ownBp`,
-   `EXPAND_NAMED_MAX` replaced by a per-row threshold), jbrowse-components'
-   lane-side bp, then BandageJS, ggbandage, the tube map and jb2hubs. ADR
-   0009's Consequences list each
+2. **Format 6, Minigraph-Cactus first.** Ported on 2026-11-04 into
+   `src/` (gfa-to-tabix 3.0, not released): the writer, `tests/walks.rs`
+   and `docs/walks-format.md` are format 6, and the port's rows equal the
+   prototype's on MC chr22 and pggb chrY and chr22, the cuts aside
+   ([results](../departures/results/port/README.md)). ADR 0009's History
+   says how the format got here. Next:
+   - graph-walks 4.6.1 (a51b7bf, which asks for a newer viewer on a format
+     6 file) before any format 6 file is hosted
+   - Rebuild the hosted MC walk files on ada with the port under new names,
+     keeping the format 5 files: graph-walks 4.x refuses format 6
+   - graph-walks 5 (`WalkDeparture`, two reads per window, no follow
+     rounds, no neighbour tags, a departure-read budget beside the 8 MB cut
+     budget), bandage-core 13 (its "filed near" label and "not in the
+     graph" gap from the record's `rejoinChunk` and `missingBp`), plugin 9
+     (synteny strand per end, mate span from `hapStart` and `ownBp`,
+     `EXPAND_NAMED_MAX` replaced by a per-row threshold), jbrowse-components'
+     lane-side bp, then BandageJS, ggbandage, the tube map and jb2hubs.
+     ADR 0009's Consequences list each
 3. **pggb, when it comes up.** Check that every path rebuilds from its rows
    under alignment-guided placement (checked for the chaining spike, not this
    one); then `--alignments` as an optional input in its own ADR. Questions
@@ -137,6 +135,15 @@ there. The urgent part is the word on screen
 - ada: `~/work/rebuild/` (the 2026-11-03 rebuild: `out6/` the simplified
   format, `out/` the amended Decision's filing variants, `run*.sh`), and the
   prototype's sources in `~/src/gfa-to-tabix-rebuild-simple/`
+- ada, the port (2026-11-04): `~/work/rebuild/port2/` its builds of MC
+  chr22 and pggb chrY and chr22, with `compare2.sh` against `out6/`;
+  `f5/` format 5 builds of the same graphs from 552b9c1; `noab/` MC chr22
+  with abridging off in both formats. `run6.sh` audits the port's pggb
+  chr22 file in four shards, each waiting for 80 GB free, into
+  `port2/pggb22.shardN.audit.txt` (`port2/audit.done` when finished); no
+  audit of nearest pass on pggb chr22 has finished yet. Sources:
+  `~/src/gfa-to-tabix-port/` (rsync of the working tree) and
+  `~/src/gfa-to-tabix-f5/`
 - ada: `~/work/f6/` (the `bypass` prototype builds of MC chr22 and pggb
   chrY), `~/work/spike/` (spike builds, MC chrY cut for the agreement
   scores, alignments in `align/`)
@@ -150,7 +157,10 @@ there. The urgent part is the word on screen
   `free -g` before starting anything over 30 GB, and run `audit6.py` on
   pggb chr22 nearest pass with `--shard`, one shard at a time
 - ada's login shell is zsh: `$pids` does not word-split, so kill a list of
-  PIDs through `xargs`
+  PIDs through `xargs`. The local shell is zsh too: run a loop over a
+  string of options or seeds under `bash -c`
+- `pgrep -f PATTERN | xargs kill` over ssh also matches the ssh session's
+  own command line, which holds the pattern, and kills it; kill by PID
 - graph-walks 4.x throws on any format but 5 (`walkReader.ts:198`), so every
   consumer still pinned to 4.x breaks on format 6 files under old names
 - The `order` column of the `bypass` prototype was the reference's order, not

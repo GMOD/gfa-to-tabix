@@ -1,0 +1,5 @@
+[  15.0 s] reference GRCh38: 2 paths, 263414 nodes
+[  80.9 s] 1053 paths, 544640313 steps
+GRCh38: 292320 pieces, 4879 skip rows, 527 paths visit no GRCh38 node and are left out
+[ 168.0 s] 1306955 rows -> f5/pggbY.GRCh38.walks.bed.gz (+ .tbi): 130603 routes, 246593 walk rows, 38899 with step counts; 708 paths abridged to 45328 detail walk rows
+pggbY: 168.59 s, 6515636 KB peak

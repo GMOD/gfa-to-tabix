@@ -16,9 +16,12 @@ variants measured), both against 6e1ddf6. Its live copy is
 
 - `NAME.build.log`, `NAME.audit.txt`: the simplified format 6 that ADR 0009
   now specifies: records between pieces and at contig ends, each filed over
-  its whole stretch, no crowds, no `recordbp`, no `mp`. pggb chr22 has
-  build logs only: its audits were killed when other jobs
-  filled ada's memory, and need `--shard` to rerun (about 37 GB a shard)
+  its whole stretch, no crowds, no `recordbp`, no `mp`. The aligned pggb
+  chr22 file was audited on 2026-11-04 (`pggb22a.audit.txt`, 35 GB). Nearest
+  pass on pggb chr22 has a build log only: its audit needs `--shard` (about
+  37 GB a shard), and its shards were stopped twice when other jobs filled
+  ada's memory, on 2026-11-03 and 11-04. The port's file, which has the same
+  rows, is the one to audit next
 - `variants/NAME.VARIANT.*`: the amended Decision before the
   simplification, with records inside a piece from `recordbp` or across a
   chunk boundary, `mp` tags, and its filings:

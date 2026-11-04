@@ -1,20 +1,23 @@
 # ADR 0009: One record per departure, and walk rows that name the copy
 
 - **Status:** accepted, 2026-10-31; simplified on 2026-11-03 by the
-  rebuild, see [History](#history). Not ported
+  rebuild and on 2026-11-04 by the port, see [History](#history). Ported to
+  gfa-to-tabix 3.0, not released
 - **Decides:** what a walk file holds for every place a haplotype's path
   does not follow the reference between two of its steps on it, how the
   records are filed so that any window finds them, which copy of a node a
-  walk row's step takes where the reference passes it more than once, and
-  how later additions get in without a new format. Walk format 6
+  walk row's step takes where the reference passes it more than once, what
+  a walk row no longer carries, and how later additions get in without a
+  new format. Walk format 6
 - **Measured by:** a prototype writer built on HPRC v2.1
   Minigraph-Cactus chr22 and HPRC release 2 pggb chrY and chr22, on GRCh38,
-  under nearest-pass and alignment-guided placement, and an independent
-  audit that reads its files as a reader would; scripts and results in
+  under nearest-pass and alignment-guided placement, an independent audit
+  that reads its files as a reader would, and the port, compared row for
+  row with the prototype; scripts and results in
   [docs/departures/](../departures/), under [Evidence](#evidence)
-- **Supersedes:** [ADR 0006](0006-walks-skip-rows.md)'s `skip` rows, and
-  the decoding rules' own choice of copy in
-  [walks-format.md](../walks-format.md#decoding-a-walk-row)
+- **Supersedes:** [ADR 0006](0006-walks-skip-rows.md)'s `skip` rows, the
+  decoding rules' own choice of copy, and the `pv`, `nx`, `pg`, `pr`, `ng`
+  and `nr` tags of format 5's walk rows
 
 ## Context
 
@@ -127,7 +130,7 @@ a step takes wherever it is not the default:
 
 ```
 walk      ... start[@k] end choices ...              choices token: t[:n][@k]
-abridged  ... start[@k] end[@k] detail pages ...
+abridged  ... start[@k] end[@k] detail
 ```
 
 - `k` counts the chunk's R positions holding the node, from 0, in a
@@ -147,6 +150,24 @@ abridged  ... start[@k] end[@k] detail pages ...
 - A file on a reference that passes every node once writes no `@`
 - The decoding rules in [walks-format.md](../walks-format.md#decoding-a-walk-row)
   take `@k` in place of R's first copy and the nearest copy
+
+### Walk rows carry no neighbour tags
+
+Format 5's walk, `ref` and `abridged` rows named the chunk of a path's
+previous and next piece (`pv`, `nx`) and, across a contig's W lines, the
+bp between them and the chunk of the next line's first piece (`pg`, `ng`,
+`pr`, `nr`). Format 6 drops all six:
+
+- Readers used them for follow rounds and crossing detection, which format
+  6's two reads replace, and for where a path goes on at a piece's end. A
+  departure between pieces or across W lines is now a record with both
+  ends' chunks and `missingBp`, and a piece's adjacent continuation lies in
+  the chunk holding its breakpoint, which a window's walk read reads
+- The one thing no record holds is where a path goes on another reference
+  sequence: a record with `xb` says how much, not where. No reader follows
+  it today. If one needs it, a tag on the record can name the chunk of the
+  path's first piece there, as the extension rules allow
+- They cost 0.5% of MC chr22's file and 0.35% of pggb chrY's
 
 ### What a reader is promised
 
@@ -178,11 +199,8 @@ chunks, and a window query on S never reads it.
   2^23, 2^20 and 2^17 bp, whatever `--chunk` is, one row per block, so
   that each row lands in a Tabix bin no larger than its own size. The CSI
   index the writer uses past 512 Mb has bins at the same sizes
-- Abridged paths' detail records are numbered by their first page: their
-  rows lie from `detail × 16384`, at most the header's `page:i:` rows a
-  page, and their later pages at the following multiples of 16384, so the
-  next record's `detail` is this one's plus `pages`. The `abridged` row
-  states `pages`. So no expansion reads more than `page` rows a request
+- Abridged paths' detail records stay as format 5 files them, record
+  `detail` at `detail × 16384`, one Tabix leaf bin each
 
 ### Reference holes
 
@@ -199,7 +217,7 @@ there.
 ### Header
 
 ```
-#walks	format:i:6	chunk:i:	maxnode:i:	stay:i:	abridge:i:	abridgebytes:i:	page:i:	kinds:Z:ref,nodes,route,walk,abridged,departure
+#walks	format:i:6	chunk:i:	maxnode:i:	stay:i:	abridge:i:	abridgebytes:i:	kinds:Z:ref,nodes,route,walk,abridged,departure
 #placement	nearest-pass
 #reference	GRCh38
 #haplotype	...
@@ -207,8 +225,8 @@ there.
 #hole	...
 ```
 
-- `kinds:Z:` lists, comma-separated, every row kind the file holds,
-  detail records included. `skip:i:` and `bypass:i:` are gone
+- `kinds:Z:` lists, comma-separated, every row kind the file may hold,
+  detail records included. `skip:i:` is gone
 - `#placement` names the rule that placed steps on nodes the reference
   passes more than once, then its parameters as typed tags, and, when the
   rule took an input, `input:Z:` with the input's name and `sha256:Z:`
@@ -251,16 +269,18 @@ repeats is an [open problem](../open-problems.md).
 graph-walks 5 returns the record as `WalkDeparture`; the structural-forms
 `Departure` keeps its name.
 
-## Open before the port
+## Open after the port
 
-- The writer's peak memory, 36-41 GB on pggb chr22 against the spike's
-  21-23 GB: the port holds a record's body once and the steps' positions
-  per piece, not per path
 - Whether pggb walk files ship, and under which placement; the format does
-  not depend on it
-- The `walks-format.md` rewrite and the test suite: the prototype's
-  `tests/walks.rs` still expects format 5 rows in seven tests
-- `#placement`'s `sha256:Z:`, which the prototype does not write
+  not depend on it. Alignment-guided placement, the `--alignments` input,
+  goes in its own ADR, with `#placement`'s `input:Z:` and `sha256:Z:`; the
+  port writes nearest pass only, which takes no input
+- The bounded stay changes [ADR 0001](0001-step-placement.md)'s rule 2
+  without its table of agreement with Minigraph-Cactus placement on pggb
+  chr22, which ADR 0001 asks a replacement to report. MC files do not
+  depend on it: GRCh38 passes no MC node twice, so the stay keeps nothing
+- The writer's peak memory on pggb, set by the densest chunks' encoding,
+  above format 5's; see [The port](#the-port)
 
 ## Evidence
 
@@ -278,15 +298,15 @@ placement.
 | records | 24,777 | 425,836 | 30,329 | 5,333,737 | 177,475 |
 | departure rows | 31,368 | 1,224,800 | 43,415 | 17,434,823 | 452,672 |
 | departures the walk rows hold | 25.97 M | 8.13 M | 10.95 M | 172.3 M | 67.2 M |
-| departure rows a 64 kb window returns, p95 / max | 310 / 893 | 18,037 / 104,479 | 265 / 18,562 | not audited | 1,070 / 71,889 \* |
-| departure read, requests max, bytes p95 / max | 1, 84 KB / 132 KB | 5, 556 KB / 1.14 MB | 2, 234 KB / 282 KB | not audited | 4, 376 KB / 988 KB \* |
+| departure rows a 64 kb window returns, p95 / max | 310 / 893 | 18,037 / 104,479 | 265 / 18,562 | \* | 1,070 / 71,905 |
+| departure read, requests max, bytes p95 / max | 1, 84 KB / 132 KB | 5, 556 KB / 1.14 MB | 2, 234 KB / 282 KB | \* | 4, 382 KB / 988 KB |
 | build, s / peak GB | 52 / 4.1 | 132 / 12.5 | 149 / 12.2 | 587 / 36.3 | 518 / 41.0 |
 
-\* From the whole-stretch variant of the amended Decision, the same filing
-with 205 records inside a piece and 1,532 fewer one-ended ones. The audits
-of the simplified pggb chr22 files, and of nearest pass on chr22 at all,
-were killed when other jobs filled ada's memory; nearest pass on chr22
-needs the audit's `--shard`, at about 37 GB a shard.
+\* Not audited. The audit of nearest pass on pggb chr22 needs `--shard`, at
+about 37 GB a shard, and its shards were stopped when other jobs filled
+ada's memory, on 2026-11-03 and again on 2026-11-04. The port's file has the
+same rows ([The port](#the-port)) and is the one to audit. The aligned chr22
+audit ran whole on 2026-11-04, at 35 GB.
 
 - The audit decodes every walk row to positions by the decoding rules,
   recomputes every departure, and finds on every graph each record equal
@@ -314,6 +334,34 @@ needs the audit's `--shard`, at about 37 GB a shard.
   alignment leaves unplaced is route interior where format 5 let the
   decoder put it on a copy, 20 M steps on chrY and 171 M on chr22. That
   is placement coverage, not the format
+
+### The port
+
+The writer in `src/` after the port, on the same graphs under nearest
+pass, against the prototype and against format 5 built by 552b9c1
+([results](../departures/results/port/README.md)).
+
+| | MC chr22 | pggb chrY | pggb chr22 |
+|---|---|---|---|
+| file | 59.43 MB | 196.6 MB | 1.68 GB |
+| against format 5 | +0.48% | +9.3% | +18.9% |
+| rows differing from the prototype's, its cuts aside | 0 | 0 | 0 |
+| build, s / peak GB | 56 / 4.1 | 115 / 8.0 | 693 / 22.4 |
+| format 5 build, s / peak GB | 70 / 4.1 | 169 / 6.5 | 581 / 20.1 |
+
+- With abridging off, MC chr22's `ref`, `nodes`, `route` and `walk` rows
+  equal format 5's, neighbour tags aside
+- The build phase peaks at 1.3 GB on pggb chr22, departure records
+  included: the peak is the encoding of the densest chunks. Reading
+  positions straight into positions in R, holding each route once and
+  dropping a chunk's whole encoding before abridging it took pggb chr22
+  from the prototype's 36.3 GB to 22.4 GB. The rest over format 5 is
+  positions in the sorted rows and 14% more pieces, from the bounded stay
+- The fuzz now draws references with holes and contigs whose W lines
+  abut. It found the prototype missed a departure over a step on a 0 bp
+  node between abutting W lines, which the port records, and two faults
+  of the audit, fixed: a run along R measured by the reference's span,
+  holes included, and an unseen abutting W line taken for a mismatch
 
 ### Copies
 
@@ -386,18 +434,22 @@ Kept for the measurements the rebuild did not repeat.
   and the departure blocks, both fixed by the cut's extent; no follow
   rounds for coverage, no crossing cap, no direct-jump detection from
   steps the cut happened to read. It takes copies from `@k` and never
-  chooses one, computes the departures inside the pieces it reads, takes
-  every other departure from the records, and expands detail records page
-  by page from its first release. It exports one function that derives a
-  departure's direction and type, holes included, so the consumers don't
-  each re-derive them. `WalkSkip`, `WalkCrossing` and `skipsOver` go
+  chooses one, computes the departures inside the pieces it reads, and
+  takes every other departure from the records; it reads no neighbour tag.
+  It exports one function that derives a departure's direction and type,
+  holes included, so the consumers don't each re-derive them. `WalkSkip`,
+  `WalkCrossing`, `skipsOver` and the `WalkStop` kinds built from the
+  neighbour tags go
 - Attaching a departure's own steps costs one more read per distinct
   `leaveChunk` outside the read range. Which records get their steps
   attached follows from the record alone, such as `ownSteps` above 0 and
   `ownBp` under the expansion threshold, never from budget order, so no
   haplotype's answer depends on the others. Own steps on other reference
-  sequences are not in `leaveChunk`'s piece and are reached by following
-  `nx`, outside the cut's two reads
+  sequences are not in `leaveChunk`'s piece, and the file does not say
+  where they lie until a tag on the record does
+- bandage-core's label for a path that goes on elsewhere ("on nodes filed
+  near chr22:20.3 Mb", from `nx`) and its "not in the graph" gap (from
+  `ng`) take the record's `rejoinChunk` and `missingBp` instead
 - The departure read has its own budget beside the 8 MB cut-wide byte
   budget, and a cut over budget fails whole, never per haplotype. Its
   error is its own: zooming in does not lower the departure read, so it
@@ -462,8 +514,25 @@ Kept for the measurements the rebuild did not repeat.
   where the walk read cannot show a departure, no crowds, no `recordbp`,
   `mp` deferred to a tag. Two vibe checks, before and after the numbers,
   agreed
+- **2026-11-04, the port** to gfa-to-tabix 3.0. The prototype had dropped
+  `pv` and `nx` unrecorded, so its sizes left them out; measured, they
+  cost 0.35-0.5%. A vibe check and two independent reviews found that
+  format 6's records carry what readers took from all six neighbour tags,
+  but where a path goes on another reference sequence, and that detail
+  paging bounds nothing; both went, with the user's agreement. The port
+  writes nearest pass only, and records a departure across abutting W
+  lines over a step on a 0 bp node, which the prototype missed
 
 ## Alternatives rejected
+
+- **Neighbour tags on walk rows** (format 5's `pv`, `nx`, `pg`, `pr`, `ng`,
+  `nr`): a second account of where a path goes, which the records give;
+  the cross-sequence link they alone hold can come back as a record tag
+- **Detail records in pages of `page` rows,** each at its own multiple of
+  16384: a record's walk rows cite routes on its earlier pages, so no page
+  decodes alone; @gmod/tabix merges a record's adjacent pages into one
+  request; and the largest page is 90-99% of the largest record, 27.7 of
+  28.0 MB raw on pggb chrY, so paging by rows caps nothing
 
 - **A type or direction column:** derivable from the ends, and the
   prototype's `order` was wrong
