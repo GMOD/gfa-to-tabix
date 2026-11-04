@@ -21,7 +21,7 @@ things are.
 - Format 6 walk rows carry no neighbour tags (`pv`, `nx`, `pg`, `pr`, `ng`,
   `nr`) and detail records have no pages (2026-11-04, after a vibe check
   and two independent reviews)
-- The minimal record (2026-11-05, see below): `departure path hapStart
+- The minimal record (2026-11-04, see below): `departure path hapStart
   ownBp missingBp leavePos leaveStrand rejoinPos rejoinStrand`, no
   one-ended records, no `kinds:Z:` or `#placement` in the header. Made
   under the user's "getting a good 'minimal' design will be very valuable"
@@ -139,14 +139,14 @@ there. The urgent part is the word on screen
    one); then `--alignments` as an optional input in its own ADR. Questions
    for the pggb authors are in open-problems
 
-## Minimal design, decided 2026-11-05
+## Minimal design, decided 2026-11-04
 
 The user wants a minimal format 6 ("getting a good 'minimal' design will be
-very valuable"). Five Fable reviews on 2026-11-04 (four per question, one
-deriving the minimal format from the requirements alone) and measurements
-on the port's files on ada (`~/work/rebuild/port2/`) proposed the cuts;
-the next session made them, since the user was away, and they are the
-user's to reverse. What ADR 0009 now says, and why:
+very valuable"). Five Fable reviews in the morning of 2026-11-04 (four per
+question, one deriving the minimal format from the requirements alone) and
+measurements on the port's files on ada (`~/work/rebuild/port2/`) proposed
+the cuts; the next session, that afternoon, made them, since the user was
+away, and they are the user's to reverse. What ADR 0009 now says, and why:
 
 - **Cut from the record:** `fragStart`, `ownSteps`, `leaveNode`,
   `leavePasses`, `leaveChunk`, `rejoinNode`, `rejoinPasses`,
@@ -173,7 +173,11 @@ user's to reverse. What ADR 0009 now says, and why:
   would be 1.8% per chunk; 11.5% of pggb chrY's and would be 34%
 - **Checked:** `cargo test`, `audit6.py` over every walk fixture and five
   hand-made graphs at `--chunk 10` in five option modes (65 files), and
-  `fuzz6.sh 1 300` (1,800 builds), no failures
+  `fuzz6.sh 1 300` (1,800 builds), no failures, for each of the two
+  commits; then MC chr22 and pggb chrY built on ada at 76c9223 and
+  audited clean ([results](../departures/results/minimal/README.md)):
+  59.17 MB, +0.04% over format 5, and 190.4 MB, +5.9%, against the port's
+  +0.48% and +9.3%
 - **Walk rows, one copy mechanism:** a choice token is `t[:k][@k]`, `:k`
   the occurrence of the entry's node the walk leaves R from and `@k` the
   one its exit lands on, each written only where the default decodes
@@ -202,10 +206,15 @@ ADR 0009 History); their doc and number fixes are committed.
   with abridging off in both formats. `run6.sh` audits the port's pggb
   chr22 file in four shards, each waiting for 80 GB free, into
   `port2/pggb22.shardN.audit.txt` (`port2/audit.done` when finished); shard
-  0 was running at the end of 2026-11-04, and no audit of nearest pass on
-  pggb chr22 had finished. Sources:
-  `~/src/gfa-to-tabix-port/` (rsync of the working tree) and
+  0 finished on 2026-11-04 (4,497 s, 39 GB) with every record matched and
+  nothing missing, and its window costs are in ADR 0009's rebuild table;
+  shards 1 to 3 were still waiting for memory that afternoon. Sources:
+  `~/src/gfa-to-tabix-port/` (rsync of the working tree of 2026-11-04) and
   `~/src/gfa-to-tabix-f5/`
+- ada, the minimal record (2026-11-04, afternoon): `~/work/rebuild/port3/` builds
+  and audits of MC chr22 and pggb chrY by `port3.sh`, from
+  `~/src/gfa-to-tabix-port3/` (rsync of the working tree at 76c9223),
+  with `port3/sizes.txt` against `port2/` and `f5/`
 - ada: `~/work/f6/` (the `bypass` prototype builds of MC chr22 and pggb
   chrY), `~/work/spike/` (spike builds, MC chrY cut for the agreement
   scores, alignments in `align/`)

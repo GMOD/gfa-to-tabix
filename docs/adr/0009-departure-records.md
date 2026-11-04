@@ -1,8 +1,8 @@
 # ADR 0009: One record per departure, and walk rows that name the copy
 
 - **Status:** accepted, 2026-10-31; simplified on 2026-11-03 by the
-  rebuild, on 2026-11-04 by the port and on 2026-11-05 to the minimal
-  record, see [History](#history). Ported to gfa-to-tabix 3.0, not released
+  rebuild and on 2026-11-04 by the port, then to the minimal record,
+  see [History](#history). Ported to gfa-to-tabix 3.0, not released
 - **Decides:** what a walk file holds for every place a haplotype's path
   does not follow the reference between two of its steps on it, how the
   records are filed so that any window finds them, which copy of a node a
@@ -42,7 +42,7 @@
   near the window. No backwards compatibility. Format 6 breaks every
   reader anyway, so it aims at the ideal format, and the ideal includes
   being simple: every mechanism the rebuild measured below earned its
-  place there, and the minimal record of 2026-11-05 keeps only what a
+  place there, and the minimal record of 2026-11-04 keeps only what a
   reader cannot take from the walk read
 
 ## Decision
@@ -294,15 +294,15 @@ placement.
 | records | 24,777 | 425,836 | 30,329 | 5,333,737 | 177,475 |
 | departure rows | 31,368 | 1,224,800 | 43,415 | 17,434,823 | 452,672 |
 | departures the walk rows hold | 25.97 M | 8.13 M | 10.95 M | 172.3 M | 67.2 M |
-| departure rows a 64 kb window returns, p95 / max | 310 / 893 | 18,037 / 104,479 | 265 / 18,562 | \* | 1,070 / 71,905 |
-| departure read, requests max, bytes p95 / max | 1, 84 KB / 132 KB | 5, 556 KB / 1.14 MB | 2, 234 KB / 282 KB | \* | 4, 382 KB / 988 KB |
+| departure rows a 64 kb window returns, p95 / max | 310 / 893 | 18,037 / 104,479 | 265 / 18,562 | 217,883 / 2,491,246 \* | 1,070 / 71,905 |
+| departure read, requests max, bytes p95 / max | 1, 84 KB / 132 KB | 5, 556 KB / 1.14 MB | 2, 234 KB / 282 KB | 15, 5.2 MB / 32.9 MB \* | 4, 382 KB / 988 KB |
 | build, s / peak GB | 52 / 4.1 | 132 / 12.5 | 149 / 12.2 | 587 / 36.3 | 518 / 41.0 |
 
-\* Not audited. The audit of nearest pass on pggb chr22 needs `--shard`, at
-about 37 GB a shard, and its shards were stopped when other jobs filled
-ada's memory, on 2026-11-03 and again on 2026-11-04. The port's file has the
-same rows ([The port](#the-port)) and is the one to audit. The aligned chr22
-audit ran whole on 2026-11-04, at 35 GB.
+\* From the port's file of 2026-11-04, which has the same rows ([The
+port](#the-port)), by shard 0 of 4 of its audit, which costs the windows
+over every record: 4,497 s at 39 GB. Shards 1 to 3 wait for memory on ada.
+The aligned chr22 audit ran whole on 2026-11-04, at 35 GB. The densest
+window, chr22:12.06-12.12 Mb, returns 2,491,246 rows from 791 paths
 
 - The audit decodes every walk row to positions by the decoding rules,
   recomputes every departure, and finds on every graph each record equal
@@ -354,6 +354,11 @@ pass, against the prototype and against format 5 built by 552b9c1
   dropping a chunk's whole encoding before abridging it took pggb chr22
   from the prototype's 36.3 GB to 22.4 GB. The rest over format 5 is
   positions in the sorted rows and 14% more pieces, from the bounded stay
+- Shard 0 of 4 of the audit of the port's pggb chr22 file under nearest
+  pass, before the minimal record, whose two-ended records the cuts leave
+  as they were: 1,293,162 records each equal in every field to a departure
+  that needs one, none missing, none unmatched, every departure inside a
+  piece within the walk read's reach and every stretch base under a row
 - The fuzz now draws references with holes and contigs whose W lines
   abut. It found the prototype missed a departure over a step on a 0 bp
   node between abutting W lines, which the port records, and two faults
@@ -378,6 +383,27 @@ Measured on the port's files of 2026-11-04 on ada, before the cuts:
   records and on none the reader computes, and no audit checked them
 - With every cut a record has 8 fields after its kind, against 16 and a
   tag
+
+Built at 76c9223 on ada, audited, against the port's files and format 5's
+([results](../departures/results/minimal/README.md)):
+
+| | MC chr22 | pggb chrY |
+|---|---|---|
+| file | 59.17 MB | 190.4 MB |
+| the port, before the cuts | 59.43 MB | 196.6 MB |
+| against format 5 | +0.04% | +5.9% |
+| records, rows | 24,648, 31,239 | 425,040, 1,224,004 |
+| copies named on walk rows | 0 | 299,916 |
+| departure read, requests max, bytes p95 / max | 1, 81 KB / 115 KB | 5, 569 KB / 1.05 MB |
+| build, s / peak GB | 57 / 4.1 | 102 / 7.6 |
+
+- The records lost against the port are the one-ended ones, 129 and 796.
+  Every record left matches a departure the audit recomputes from the
+  decoded rows in every field, none is missing, every departure inside a
+  piece lies within the walk read's reach, and every stretch base lies
+  under a row
+- pggb chrY names 299,916 copies on its walk rows, where the port wrote
+  `@k` on some and step counts on every token of 119,749 rows
 
 ### Copies
 
@@ -558,8 +584,8 @@ Kept for the measurements the rebuild did not repeat.
   paging bounds nothing; both went, with the user's agreement. The port
   writes nearest pass only, and recorded a departure across abutting W
   lines over a step on a 0 bp node, which the prototype missed
-- **2026-11-05, the minimal record.** The user asked for a minimal
-  format. Five reviews, four per question and one deriving the record from
+- **2026-11-04, the minimal record,** later the same day. The user had
+  asked for a minimal format. Five reviews, four per question and one deriving the record from
   the requirements alone, and measurements on the port's files cut every
   column a reader can take from the walk read or no reader uses:
   `leaveChunk` and `rejoinChunk`, `leaveNode` and `rejoinNode`,

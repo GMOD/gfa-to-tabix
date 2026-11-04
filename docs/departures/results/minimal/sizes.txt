@@ -1,0 +1,2 @@
+mc22: port3 59170079 bytes, port2 59425372 bytes, f5 59144351 bytes
+pggbY: port3 190420488 bytes, port2 196557283 bytes, f5 179774883 bytes

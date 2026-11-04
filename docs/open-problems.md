@@ -122,7 +122,8 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   haplotype has up to 2,065 records over one 64 kb window, and only 35.9%
   of pieces land within 10 kb of where Minigraph-Cactus places the same
   contig position (35.6% in Yp11 and Yq11); on chr22 a window can read
-  73 MB of departure rows. Measured in [docs/departures/](departures/)
+  73 MB of departure rows in the spike's format, and 32.9 MB in 2,491,246
+  rows in the port's. Measured in [docs/departures/](departures/)
 - No one publishes a rule for this: `odgi untangle` votes per segment with
   no continuity term and ties identical copies, vg deconstruct assigns
   alleles by a 10 kb context vote, and HPRC release 2 ships no projection

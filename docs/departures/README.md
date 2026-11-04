@@ -3,6 +3,11 @@
 Three rounds of measurement, on HPRC v2.1 Minigraph-Cactus chr22 and HPRC
 release 2 pggb chrY and chr22, all on GRCh38, built on ada:
 
+- **The minimal record, 2026-11-04,** in
+  [results/minimal/](results/minimal/README.md): the writer at 76c9223,
+  with the record cut to eight fields and one copy mechanism on walk
+  rows, built on MC chr22 and pggb chrY, audited and sized against the
+  port and format 5
 - **The port, 2026-11-04,** in [results/port/](results/port/README.md): the
   writer in `src/`, compared row for row with the rebuild's prototype and
   sized and timed against format 5 built from the same commit's parent
