@@ -135,27 +135,32 @@ Where a chunk's R holds a node more than once, a walk row names the copy
 a step takes wherever it is not the default:
 
 ```
-walk      ... start[@k] end choices ...              choices token: t[:n][@k]
+walk      ... start[@k] choices                  choices token: t[:k][@k]
 abridged  ... start[@k] end[@k] detail
 ```
 
 - `k` counts the chunk's R positions holding the node, from 0, in a
-  detail record too. The writer writes `@k` only where it differs from
+  detail record too. The writer writes a copy only where it differs from
   the default, so a file has one encoding
-- On `start` the default is R's first copy. On a choice token `@k` names
-  the copy the exit lands on as the walk takes the route, flip applied;
-  its default is the copy nearest the entry's R index, the later on a
-  tie. A route with no entry or no exit takes no `@k`: a leading route's
-  exit is `start`, which `start@k` names, and a trailing route has no
-  exit. On an abridged row's `end` the default is the copy nearest
+- On `start` the default is R's first copy. On a choice token `:k` names
+  the copy of the entry's node the walk leaves R from; its default is
+  where stepping along R from the last landing until the entry's handle
+  stops. `@k` names the copy the exit lands on as the walk takes the
+  route, flip applied; its default is the copy nearest the entry's R
+  index, the later on a tie. A route with no entry takes neither, since
+  its exit is `start`, which `start@k` names, and a trailing route takes
+  no `@k`. On an abridged row's `end` the default is the copy nearest
   `start`'s
 - The encoder continues along R only where R's next position is the
   step's pass, and otherwise takes a route, with an empty interior if need
-  be. It writes step counts `:n` wherever the row decoded without them
-  differs from the steps in handle or in position
-- A file on a reference that passes every node once writes no `@`
+  be. A walk row has no `end`: after its last route the walk follows R
+  until it has `nsteps` steps. Every choice a decoder makes is which
+  occurrence, so the copies pin the row to its positions with one
+  mechanism
+- A file on a reference that passes every node once writes no `@` or `:`
 - The decoding rules in [walks-format.md](../walks-format.md#decoding-a-walk-row)
-  take `@k` in place of R's first copy and the nearest copy
+  take `@k` and `:k` in place of R's first copy, the first handle reached
+  and the nearest copy
 
 ### Walk rows carry no neighbour tags
 
@@ -381,17 +386,17 @@ Measured on the port's files of 2026-11-04 on ada, before the cuts:
 | steps in chunks with repeats that format 5's rules put on another copy | 8.6% | 63% | 3.8% | 7.6% |
 | `@k` bytes, written where it differs | 1.6 MB, 0.8% | 7.6 MB, 3.4% | 38 MB, 2.3% | 27 MB, 1.5% |
 | `@k` bytes, written on every node R holds more than once | 19 MB, 9.6% | 33 MB, 15% | 288 MB, 17% | 93 MB, 5.1% |
-| step counts, rows | 119,749 | 20,871 | 561,313 | 80,411 |
+| rows with step counts, before `:k` replaced them | 119,749 | 20,871 | 561,313 | 80,411 |
 
-- MC chr22 writes no `@k` and no step counts it did not write before
+- MC chr22 writes no `@k` and no `:k`
 - Reference `>1>2>3>2>3>4` with 10 bp nodes, haplotype `>3>4`: format 5
   starts at R's first `>3` and exits to `>4` at 50, a 20 bp forward jump,
   though the haplotype matches the second copy. Format 6 writes `start`
   as `6@1` and needs no route
 - Reference `>2>1>1>1>3` with 2 bp copies of node 1, haplotype holding one
   more `>1`: format 5 writes no step counts, since the handles round-trip,
-  but decodes the extra unit at the array's start. Format 6 writes counts
-  wherever positions differ
+  but decodes the extra unit at the array's start. Format 6 names the copy
+  the route leaves from, `:2`, the last
 - The bounded stay keeps fewer runs than ADR 0001's: on pggb chrY 71,277
   runs, against 112,985 more the old rule kept; it refused 139,610 runs
   holding a node passed once and 73,690 with no home copy within `stay`
@@ -562,7 +567,10 @@ Kept for the measurements the rebuild did not repeat.
   one-ended records; and from the header `kinds:Z:` and `#placement`.
   Adjacency is by bp, so a step on a 0 bp node between adjacent steps is
   no departure. Filing departure rows in the chunks in place of
-  `S~departure`, weighed again on the port's numbers, stayed rejected
+  `S~departure`, weighed again on the port's numbers, stayed rejected. On
+  walk rows, `:k` on a choice names the copy the walk leaves R from, in
+  place of step counts on every token of a row, and `end` went, since
+  `nsteps` bounds the last stretch: one copy mechanism
 
 ## Alternatives rejected
 
@@ -645,6 +653,11 @@ Kept for the measurements the rebuild did not repeat.
   chr22 103 of 129 repeated what the first or last piece's route shows;
   the 26 with bp between W lines and pggb's 9,338 with bp on another
   sequence state what a reader can see from the piece's end
+- **Step counts `:n` on every token of a row, and an `end` handle:** a
+  second mechanism beside `@k` for pinning a row to its positions, written
+  all or nothing per row, 119,749 rows on pggb chrY; `:k` on the token
+  that needs it says which occurrence like `@k` does, and `nsteps` ends
+  the row
 - **`kinds:Z:`:** `format:i:` refuses what a reader can't read, and a new
   kind is a new format anyway; no reader read it
 - **`#placement`:** one rule, which the format fixes; no reader acted on

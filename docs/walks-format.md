@@ -239,28 +239,30 @@ seq cs cs+1 route entry interior exit
 ### walk
 
 ```
-seq cs cs+1 walk path fragStart hapOffset piece nsteps start[@k] end choices
+seq cs cs+1 walk path fragStart hapOffset piece nsteps start[@k] choices
 ```
 
 - One row per piece of every other path, the other references' included.
   `path`, `fragStart`, `hapOffset`, `piece` and `nsteps` are as on a `ref` row
-- `start` is the piece's first handle on R, absolute. `end` is its last handle
-  on R minus `start`
+- `start` is the piece's first handle on R, absolute
 - `choices` lists the routes the piece takes in order, `.` for none. Each token
   is `2 × (route id − previous route id) + flip`, the first from 0, where flip
-  1 means the piece takes the route the other way round
-- A token may end `:n`, and then every token does and `end` ends `:n` too. A
-  token may then end `@k`. See [Decoding a walk row](#decoding-a-walk-row)
-- Where R holds a node more than once, `@k` names the occurrence a step lands
-  on, counting R's positions holding the node from 0: on `start`, where it is
-  not R's first; on a choice, where the route's exit lands on another than the
-  one nearest the entry's position in R, counted in positions, the later on a
-  tie. A route with no entry or no exit
-  takes no `@k`. The tool writes `@k` only where it differs from that
-  default, so a file has one encoding, and a reference that passes every node
-  once has none
+  1 means the piece takes the route the other way round. A token may end
+  `:k`, then `@k`. See [Decoding a walk row](#decoding-a-walk-row)
+- Where R holds a node more than once, `k` names an occurrence, counting R's
+  positions holding the node from 0. `start@k` is the occurrence the piece
+  starts on, where it is not R's first. On a choice, `:k` is the occurrence
+  of the entry's node the walk leaves R from, where stepping along R from
+  where it last landed until it reads the entry would stop at an earlier
+  one, and `@k` the occurrence the route's exit lands on, where it is not
+  the one nearest the entry's position in R, counted in positions, the later
+  on a tie. A route with no entry takes neither and one with no exit takes
+  no `@k`. The tool writes them only where they differ from those defaults,
+  so a file has one encoding, and a reference that passes every node once
+  has none
 - The walk continues along R only where R's next position is the step's, and
-  otherwise takes a route, with an empty interior if need be
+  otherwise takes a route, with an empty interior if need be; after its last
+  route it follows R until it has `nsteps` steps
 
 ### abridged
 
@@ -389,20 +391,19 @@ position in R, and so with its offset and pass.
    first
 3. For each route with an entry:
    - step along R, emitting each handle, until the current handle is the
-     route's entry. With `:n`, take exactly `n` steps instead
+     route's entry, or with `:k` until the position is occurrence `k` of
+     the entry's node
    - emit the interior
    - with no exit, stop: the piece ends off R
    - emit the exit, at occurrence `k` of its node in R with `@k`, else at the
      occurrence nearest the current position in R, counted in positions,
      the later one on a tie
-4. Step along R until the current handle is `start + end`, or with `:n` take
-   exactly the tail's `n` steps
+4. Step along R until the piece has `nsteps` steps
 
 The encoder decodes every walk row it writes with these rules and compares
-each step's handle and position. Where stepping until a route's entry would
-stop at an earlier pass over the same node, or the steps would decode to
-other positions, it writes the step counts. On HPRC v2.1's Minigraph-Cactus
-chr22 GRCh38 passes no node twice, and no walk row needs counts or `@k`.
+each step's handle and position, and fails the build on any difference. On
+HPRC v2.1's Minigraph-Cactus chr22 GRCh38 passes no node twice, and no walk
+row needs `@k` or `:k`.
 
 ## Example
 
@@ -414,8 +415,8 @@ departure records:
 R#0#chr            0   1   ref        R#0#chr  0  0    0  2  2,2  6,6
 R#0#chr            0   1   nodes      6  6
 R#0#chr            0   1   route      .  13  -9
-R#0#chr            0   1   walk       H#1#h    100  100  0  2  2  2  .
-R#0#chr            0   1   walk       Q#0#chr  0    0    0  2  2  0  1
+R#0#chr            0   1   walk       H#1#h    100  100  0  2  2  .
+R#0#chr            0   1   walk       Q#0#chr  0    0    0  2  2  1
 R#0#chr~departure  0   24  departure  D#1#d    24 0  0  24 +  0  +
 R#0#chr~departure  5   13  departure  Q#0#chr  6  6  0  6  +  12 +
 ```
@@ -423,10 +424,10 @@ R#0#chr~departure  5   13  departure  Q#0#chr  6  6  0  6  +  12 +
 - R is `>1 >2`: tokens `2` and `2` are ids 1 and 2, forward
 - The one route has no entry, interior `13` (id 6 reversed) and exit `-9` (id 1
   reversed), so it reads `<6 <1`
-- Q's piece starts on `>1` (handle 2) and ends there (`end` 0), then takes
-  route 0 flipped, `>1 >6` with no exit: its steps are `>1 >6`
-- H's piece starts on `>1`, ends on `>2` (`end` 2), and takes no route: its
-  steps are `>1 >2`
+- Q's piece starts on `>1` (handle 2) and takes route 0 flipped, `>1 >6`
+  with no exit: its steps are `>1 >6`
+- H's piece starts on `>1` and takes no route, so it follows R for its 2
+  steps: `>1 >2`
 - Q leaves R at 1's end, 6, walks 6 bp of its own, node 6, and rejoins at
   3's start, 12, in a piece filed under chunk 10. Its record covers 1's last
   base to 3's first, 5-13

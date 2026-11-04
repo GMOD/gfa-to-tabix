@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Audits a walk format 6 file as a reader sees it. Decodes every walk row,
 # detail ones included, to positions on its sequence by the decoding rules
-# (`@k` copies, step counts), recomputes every departure from those
+# (`@k` and `:k` copies), recomputes every departure from those
 # positions, and checks them against the departure records: each departure
 # that needs a record has one with the same fields, and no record lacks a
 # departure. Then checks the reader promise (every base of a record's
@@ -108,30 +108,24 @@ class Bad(Exception):
 def decode(r, routes, cols):
     # A walk row's steps as runs along R, (first index, last index, against),
     # and route interiors, ('I', handles)
+    count = int(cols[8])
     start, sk = with_k(cols[9])
     start = int(start)
-    end_tok = cols[10]
-    counted = ':' in end_tok
-    if counted:
-        d, tail = end_tok.split(':')
-        tail = int(tail)
-    else:
-        d, tail = end_tok, 0
-    end = start + int(d)
     choices = []
     prev = 0
-    if cols[11] != '.':
-        for tok in cols[11].split(','):
+    if cols[10] != '.':
+        for tok in cols[10].split(','):
             tok, k = with_k(tok)
-            n = None
+            ke = None
             if ':' in tok:
-                tok, n = tok.split(':')
-                n = int(n)
+                tok, ke = tok.split(':')
+                ke = int(ke)
             v = int(tok)
             flip = v & 1
             prev += (v - flip) // 2
-            choices.append((prev, flip, n, k))
+            choices.append((prev, flip, ke, k))
     segs = []
+    emitted = 0
 
     def oriented(rank, flip):
         e, inter, x = routes[rank]
@@ -144,6 +138,7 @@ def decode(r, routes, cols):
         e, inter, x = oriented(choices[0][0], choices[0][1])
         if e is None:
             segs.append(('I', inter))
+            emitted += len(inter)
             q = 1
     h = start
     i = r.copy(h, sk) if sk is not None else r.copy(h, 0)
@@ -151,22 +146,20 @@ def decode(r, routes, cols):
         raise Bad('start not on R')
     run = [i, i, h != r.h[i]]
 
-    def follow(h, i, target, count):
-        if counted:
-            if count == 0:
-                return h, i
-            if r.h[i] == h:
-                j = i + count
-                if j >= len(r.h):
-                    raise Bad('count past R')
-                return r.h[j], j
-            j = i - count
-            if j < 0:
-                raise Bad('count before R')
-            return r.h[j] ^ 1, j
+    def follow(h, i, target, ke):
+        # along R from i, reading it the way h does, to the first position
+        # reading `target`, or to occurrence ke of its node
+        forward = r.h[i] == h
+        if ke is not None:
+            j = r.copy(target, ke)
+            if j is None or (j < i if forward else j > i):
+                raise Bad('entry copy not ahead')
+            if (r.h[j] if forward else r.h[j] ^ 1) != target:
+                raise Bad('entry copy reads another way')
+            return target, j
         if h == target:
             return h, i
-        if r.h[i] == h:
+        if forward:
             at = r.at.get(target, [])
             p = bisect.bisect_right(at, i)
             if p == len(at):
@@ -178,17 +171,19 @@ def decode(r, routes, cols):
             raise Bad('entry not behind')
         return target, at[p]
 
-    for rank, flip, n, k in choices[q:]:
+    for rank, flip, ke, k in choices[q:]:
         e, inter, x = oriented(rank, flip)
         if e is None:
             raise Bad('entry-less route inside a row')
-        h, j = follow(h, i, e, n)
+        h, j = follow(h, i, e, ke)
         if h != e:
             raise Bad('entry mismatch')
         run[1] = j
         i = j
         segs.append(('R', run[0], run[1], run[2]))
+        emitted += abs(run[1] - run[0]) + 1
         segs.append(('I', inter))
+        emitted += len(inter)
         if x is None:
             return segs
         h = x
@@ -196,9 +191,12 @@ def decode(r, routes, cols):
         if i is None:
             raise Bad('exit not on R')
         run = [i, i, h != r.h[i]]
-    h, j = follow(h, i, end, tail)
-    if h != end:
-        raise Bad('end mismatch')
+    tail = count - emitted - 1
+    if tail < 0:
+        raise Bad('more steps than the row counts')
+    j = i + tail if r.h[i] == h else i - tail
+    if j < 0 or j >= len(r.h):
+        raise Bad('tail past R')
     run[1] = j
     segs.append(('R', run[0], run[1], run[2]))
     return segs

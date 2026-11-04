@@ -1814,11 +1814,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let index = out.writer.finish()?;
         let (path, rows, counts) = (out.path, out.rows, out.counts);
         eprintln!(
-            "{} {rows} rows -> {path} (+ .{index}): {} routes, {} walk rows, {} with step counts, {} copies named; {} paths abridged to {} detail walk rows",
+            "{} {rows} rows -> {path} (+ .{index}): {} routes, {} walk rows, {} copies named; {} paths abridged to {} detail walk rows",
             elapsed(),
             counts.routes,
             counts.walks,
-            counts.counted,
             counts.copies,
             counts.abridged,
             counts.detail_walks

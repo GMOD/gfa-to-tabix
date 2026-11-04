@@ -7,9 +7,9 @@
 // follows R, so those steps are implied. Each step of a walk piece comes with
 // the position the placement gave it on R's sequence, or none for route
 // interior, and the row names the copy of R it takes wherever the default
-// rule would take another. The encoder decodes every walk row it writes and
-// compares the steps and their copies, and writes explicit step counts for a
-// walk that the default rule would decode wrongly.
+// rule would take another: where it starts, where it leaves R for a route
+// and where the route's exit lands. The encoder decodes every walk row it
+// writes and compares the steps and their copies.
 
 use std::hash::BuildHasherDefault;
 
@@ -240,6 +240,17 @@ impl Path {
         self.first.get(&(handle >> 1)).map(|&i| i as usize)
     }
 
+    // The first position from `i`, reading R the way `handle` reads it there,
+    // whose handle read that way is `target`: where a decoder stepping along
+    // R until it reaches `target` stops
+    fn reached(&self, i: usize, handle: u32, target: u32) -> Option<usize> {
+        if self.handles[i] == handle {
+            (i..self.handles.len()).find(|&j| self.handles[j] == target)
+        } else {
+            (0..=i).rev().find(|&j| self.handles[j] ^ 1 == target)
+        }
+    }
+
     // The handle one step from `i` in the direction `handle` reads R there.
     fn step(&self, i: usize, handle: u32) -> Option<(usize, u32)> {
         if self.handles[i] == handle {
@@ -286,7 +297,9 @@ impl Route {
 struct Choice {
     route: usize,
     flip: bool,
-    implied: u32,
+    // the occurrence of the entry's node the walk leaves R from, where
+    // stepping along R until the entry would stop at an earlier one
+    entry_copy: Option<u32>,
     // the occurrence the exit lands on, where it is not the one nearest the
     // entry's
     exit_copy: Option<u32>,
@@ -301,9 +314,7 @@ struct Walk {
     start_copy: Option<u32>,
     end: u32,
     end_at: usize,
-    tail: u32,
     choices: Vec<Choice>,
-    counted: bool,
 }
 
 // The chunk's distinct routes, numbered in the order they first appear
@@ -330,18 +341,22 @@ impl Routes {
 fn encode(path: &Path, handles: &[u32], targets: &[u32], routes: &mut Routes) -> Option<Walk> {
     // the last step on R: its position there and its handle
     let mut on: Option<(usize, u32)> = None;
-    let mut start = (0, 0);
+    // where the walk last landed on R: the start or the last exit
+    let mut landing = (0, 0);
     let mut pending: Vec<u32> = Vec::new();
-    let mut implied = 0;
     let mut choices = Vec::new();
-    let mut take = |routes: &mut Routes, route: Route, implied: u32, exit_copy: Option<u32>| {
-        let (route, flip) = routes.intern(route);
-        choices.push(Choice {
-            route,
-            flip,
-            implied,
-            exit_copy,
-        });
+    let mut take =
+        |routes: &mut Routes, route: Route, entry_copy: Option<u32>, exit_copy: Option<u32>| {
+            let (route, flip) = routes.intern(route);
+            choices.push(Choice {
+                route,
+                flip,
+                entry_copy,
+                exit_copy,
+            });
+        };
+    let entry_copy = |i: usize, current: u32, (at, landed): (usize, u32)| {
+        (path.reached(at, landed, current) != Some(i)).then(|| path.rank(i))
     };
     for (&h, &target) in handles.iter().zip(targets) {
         if target == NONE {
@@ -350,7 +365,7 @@ fn encode(path: &Path, handles: &[u32], targets: &[u32], routes: &mut Routes) ->
             let j = target as usize;
             match on {
                 None => {
-                    start = (h, j);
+                    landing = (j, h);
                     if !pending.is_empty() {
                         let interior = std::mem::take(&mut pending);
                         take(
@@ -360,15 +375,13 @@ fn encode(path: &Path, handles: &[u32], targets: &[u32], routes: &mut Routes) ->
                                 interior,
                                 exit: h,
                             },
-                            0,
+                            None,
                             None,
                         );
                     }
                 }
                 Some((i, current)) => {
-                    if pending.is_empty() && path.step(i, current) == Some((j, h)) {
-                        implied += 1;
-                    } else {
+                    if !(pending.is_empty() && path.step(i, current) == Some((j, h))) {
                         let interior = std::mem::take(&mut pending);
                         let exit_copy = (path.nearest(h, i) != Some(j)).then(|| path.rank(j));
                         take(
@@ -378,10 +391,10 @@ fn encode(path: &Path, handles: &[u32], targets: &[u32], routes: &mut Routes) ->
                                 interior,
                                 exit: h,
                             },
-                            implied,
+                            entry_copy(i, current, landing),
                             exit_copy,
                         );
-                        implied = 0;
+                        landing = (j, h);
                     }
                 }
             }
@@ -397,29 +410,27 @@ fn encode(path: &Path, handles: &[u32], targets: &[u32], routes: &mut Routes) ->
                 interior: pending,
                 exit: NONE,
             },
-            implied,
+            entry_copy(end_at, end, landing),
             None,
         );
-        implied = 0;
     }
-    let (start, start_at) = start;
+    let first = targets.iter().position(|&t| t != NONE)?;
+    let (start, start_at) = (handles[first], targets[first] as usize);
     Some(Walk {
         start,
         start_at,
         start_copy: (path.first(start) != Some(start_at)).then(|| path.rank(start_at)),
         end,
         end_at,
-        tail: implied,
         choices,
-        counted: false,
     })
 }
 
-// The steps a walk row stands for, each with its position in R, NONE for
-// route interior. With `counted`, each stretch along R takes its stated step
-// count; otherwise it runs until it reaches the next route's entry, or the
-// row's last reference handle.
-fn decode(path: &Path, walk: &Walk, routes: &Routes, counted: bool) -> Option<Vec<(u32, u32)>> {
+// The `count` steps a walk row stands for, each with its position in R, NONE
+// for route interior. Each stretch along R runs until it reaches the next
+// route's entry, or the occurrence its `:k` names, and the last until the
+// row has its steps.
+fn decode(path: &Path, walk: &Walk, routes: &Routes, count: usize) -> Option<Vec<(u32, u32)>> {
     let mut steps = Vec::new();
     let mut choices = walk.choices.iter().peekable();
     let oriented = |c: &Choice| {
@@ -445,24 +456,31 @@ fn decode(path: &Path, walk: &Walk, routes: &Routes, counted: bool) -> Option<Ve
         None => path.first(h)?,
     };
     steps.push((h, i as u32));
-    let follow =
-        |steps: &mut Vec<(u32, u32)>, h: &mut u32, i: &mut usize, target: u32, count: u32| {
-            let mut taken = 0;
-            while if counted { taken < count } else { *h != target } {
-                let (j, next) = path.step(*i, *h)?;
-                *i = j;
-                *h = next;
-                steps.push((next, j as u32));
-                taken += 1;
-            }
-            Some(())
-        };
+    let step = |steps: &mut Vec<(u32, u32)>, h: &mut u32, i: &mut usize| {
+        let (j, next) = path.step(*i, *h)?;
+        *i = j;
+        *h = next;
+        steps.push((next, j as u32));
+        Some(())
+    };
     for c in choices {
         let route = oriented(c);
         if route.entry == NONE {
             return None;
         }
-        follow(&mut steps, &mut h, &mut i, route.entry, c.implied)?;
+        match c.entry_copy {
+            Some(k) => {
+                let at = path.copy(route.entry, k)?;
+                while i != at {
+                    step(&mut steps, &mut h, &mut i)?;
+                }
+            }
+            None => {
+                while h != route.entry {
+                    step(&mut steps, &mut h, &mut i)?;
+                }
+            }
+        }
         if h != route.entry {
             return None;
         }
@@ -477,8 +495,10 @@ fn decode(path: &Path, walk: &Walk, routes: &Routes, counted: bool) -> Option<Ve
         };
         steps.push((h, i as u32));
     }
-    follow(&mut steps, &mut h, &mut i, walk.end, walk.tail)?;
-    (h == walk.end).then_some(steps)
+    while steps.len() < count {
+        step(&mut steps, &mut h, &mut i)?;
+    }
+    Some(steps)
 }
 
 fn decodes_to(steps: Option<Vec<(u32, u32)>>, handles: &[u32], targets: &[u32]) -> bool {
@@ -536,12 +556,11 @@ fn delta_steps<'a>(handles: &'a [u32], previous: &'a mut i64) -> impl Iterator<I
         .map(|(d, &h)| 2 * d + i64::from(h & 1))
 }
 
-// `copies` counts the walk rows' `@k`
+// `copies` counts the walk rows' `@k` and `:k`
 #[derive(Default)]
 pub struct Counts {
     pub routes: u64,
     pub walks: u64,
-    pub counted: u64,
     pub copies: u64,
     pub abridged: u64,
     pub detail_walks: u64,
@@ -551,7 +570,6 @@ impl std::ops::AddAssign for Counts {
     fn add_assign(&mut self, other: Counts) {
         self.routes += other.routes;
         self.walks += other.walks;
-        self.counted += other.counted;
         self.copies += other.copies;
         self.abridged += other.abridged;
         self.detail_walks += other.detail_walks;
@@ -590,28 +608,27 @@ fn encode_all<'p>(
     path: &Path,
     pieces: &'p [Piece<'p>],
     members: impl IntoIterator<Item = usize>,
-    counts: &mut Counts,
 ) -> Result<Encoded<'p>, String> {
     let mut routes = Routes::default();
     let mut walks = Vec::new();
     for piece in members.into_iter().map(|k| &pieces[k]) {
         let name = || String::from_utf8_lossy(piece.name).into_owned();
         let (handles, targets) = (&piece.handles, &piece.targets);
-        let mut walk = encode(path, handles, targets, &mut routes).ok_or_else(|| {
+        let walk = encode(path, handles, targets, &mut routes).ok_or_else(|| {
             format!(
                 "{}: a piece with no step on the reference path in its chunk",
                 name()
             )
         })?;
-        if !decodes_to(decode(path, &walk, &routes, false), handles, targets) {
-            walk.counted = true;
-            if !decodes_to(decode(path, &walk, &routes, true), handles, targets) {
-                return Err(format!(
-                    "{}: the walk row does not decode to its steps and their copies",
-                    name()
-                ));
-            }
-            counts.counted += 1;
+        if !decodes_to(
+            decode(path, &walk, &routes, handles.len()),
+            handles,
+            targets,
+        ) {
+            return Err(format!(
+                "{}: the walk row does not decode to its steps and their copies",
+                name()
+            ));
         }
         walks.push((piece, walk));
     }
@@ -742,7 +759,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         .map(|row| Piece::read(row, Some(&path)))
         .collect::<Result<_, _>>()?;
     let mut scratch = Counts::default();
-    let enc = encode_all(&path, &pieces, 0..pieces.len(), &mut scratch)?;
+    let enc = encode_all(&path, &pieces, 0..pieces.len())?;
     let mut text = Vec::new();
     emit_rows(
         &path,
@@ -781,19 +798,14 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
             gone[k] = true;
         }
     }
-    let kept = encode_all(
-        &path,
-        &pieces,
-        (0..pieces.len()).filter(|&k| !gone[k]),
-        counts,
-    )?;
+    let kept = encode_all(&path, &pieces, (0..pieces.len()).filter(|&k| !gone[k]))?;
     emit_rows(&path, &references, &kept, lengths, sequence, counts, emit)?;
     drop(kept);
     let mut detail_counts = Counts::default();
     for (k, group) in moved.iter().enumerate() {
         let mut members = group.pieces.clone();
         members.sort_by_key(|&k| pieces[k].offset);
-        let alone = encode_all(&path, &pieces, members, &mut detail_counts)?;
+        let alone = encode_all(&path, &pieces, members)?;
         emit(&summary_row(&path, &alone.walks, lengths, k))?;
         let mut record = Vec::new();
         emit_rows(
@@ -971,14 +983,8 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
             + walk
                 .choices
                 .iter()
-                .filter(|c| c.exit_copy.is_some())
-                .count() as u64;
-        line.push(b'\t');
-        push_i64(&mut line, i64::from(walk.end) - i64::from(walk.start));
-        if walk.counted {
-            line.push(b':');
-            push_i64(&mut line, i64::from(walk.tail));
-        }
+                .map(|c| u64::from(c.entry_copy.is_some()) + u64::from(c.exit_copy.is_some()))
+                .sum::<u64>();
         line.push(b'\t');
         if walk.choices.is_empty() {
             line.push(b'.');
@@ -993,9 +999,9 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
                 line.push(b',');
             }
             push_i64(&mut line, 2 * d + i64::from(c.flip));
-            if walk.counted {
+            if let Some(k) = c.entry_copy {
                 line.push(b':');
-                push_i64(&mut line, i64::from(c.implied));
+                push_i64(&mut line, i64::from(k));
             }
             if let Some(k) = c.exit_copy {
                 line.push(b'@');

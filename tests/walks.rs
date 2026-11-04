@@ -8,8 +8,9 @@
 //
 // A handle is 2 * id + 1 when reversed. In a ref row and a route row each
 // handle is written as 2 * (id - previous id) + reverse; a walk row names its
-// routes by 2 * (route id - previous route id) + flip, and a handle on R or a
-// route's exit takes `@k` where it lands on occurrence k of its node in R.
+// routes by 2 * (route id - previous route id) + flip; a handle on R or a
+// route's exit takes `@k` where it lands on occurrence k of its node in R,
+// and a route `:k` where the walk leaves R from occurrence k of its entry.
 
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
@@ -191,30 +192,27 @@ fn with_copy(token: &str) -> (&str, Option<usize>) {
 }
 
 fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
+    let count: usize = cols[8].parse().unwrap();
     let (start, start_copy) = with_copy(cols[9]);
     let start: u32 = start.parse().unwrap();
-    let mut end_parts = cols[10].split(':');
-    let end = (i64::from(start) + end_parts.next().unwrap().parse::<i64>().unwrap()) as u32;
-    let tail: Option<usize> = end_parts.next().map(|n| n.parse().unwrap());
-    let counted = tail.is_some();
     let mut choices = Vec::new();
     let mut previous = 0i64;
-    if cols[11] != "." {
-        for tok in cols[11].split(',') {
+    if cols[10] != "." {
+        for tok in cols[10].split(',') {
             let (tok, exit_copy) = with_copy(tok);
             let mut parts = tok.split(':');
             let d: i64 = parts.next().unwrap().parse().unwrap();
             let flip = d & 1;
             previous += (d - flip) / 2;
             let route = &routes[previous as usize];
-            let count: Option<usize> = parts.next().map(|n| n.parse().unwrap());
+            let entry_copy: Option<usize> = parts.next().map(|k| k.parse().unwrap());
             choices.push((
                 if flip == 1 {
                     flipped(route)
                 } else {
                     route.clone()
                 },
-                count,
+                entry_copy,
                 exit_copy,
             ));
         }
@@ -228,22 +226,25 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
     let mut h = start;
     let mut i = path.copy(h, start_copy);
     steps.push(h);
-    let follow =
-        |steps: &mut Vec<u32>, h: &mut u32, i: &mut usize, target: u32, count: Option<usize>| {
-            let mut taken = 0;
-            while if counted {
-                taken < count.unwrap()
-            } else {
-                *h != target
-            } {
-                (*i, *h) = path.step(*i, *h);
-                steps.push(*h);
-                taken += 1;
-            }
-        };
-    for ((entry, interior, exit), count, exit_copy) in rest {
+    let step = |steps: &mut Vec<u32>, h: &mut u32, i: &mut usize| {
+        (*i, *h) = path.step(*i, *h);
+        steps.push(*h);
+    };
+    for ((entry, interior, exit), entry_copy, exit_copy) in rest {
         let entry = entry.expect("an open route after the first choice");
-        follow(&mut steps, &mut h, &mut i, entry, *count);
+        match entry_copy {
+            Some(k) => {
+                let at = path.copy(entry, Some(*k));
+                while i != at {
+                    step(&mut steps, &mut h, &mut i);
+                }
+            }
+            None => {
+                while h != entry {
+                    step(&mut steps, &mut h, &mut i);
+                }
+            }
+        }
         assert_eq!(h, entry);
         steps.extend_from_slice(interior);
         let Some(exit) = exit else {
@@ -256,8 +257,9 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
         };
         steps.push(h);
     }
-    follow(&mut steps, &mut h, &mut i, end, tail);
-    assert_eq!(h, end);
+    while steps.len() < count {
+        step(&mut steps, &mut h, &mut i);
+    }
     steps
 }
 
@@ -457,8 +459,8 @@ fn an_abridged_row_lists_its_pieces_and_names_its_detail_record() {
             .map(|l| l.to_string() + "\n")
             .collect::<String>(),
         tsv(&[
-            "R#0#chr~0 16384 16385 walk D#1#d 0 0 0 2 2 2 .",
-            "R#0#chr~0 16384 16385 walk D#1#d 0 24 2 2 2 2 .",
+            "R#0#chr~0 16384 16385 walk D#1#d 0 0 0 2 2 .",
+            "R#0#chr~0 16384 16385 walk D#1#d 0 24 2 2 2 .",
         ])
     );
 }
@@ -557,9 +559,9 @@ fn a_contig_that_leaves_a_sequence_for_good_has_no_record() {
             + &rows_of(built.file("R"), "R#0#chr2", "route", ".")
             + &rows_of(built.file("R"), "R#0#chr2", "walk", "H#1#h"),
         tsv(&[
-            "R#0#chr1 0 1 walk H#1#h 0 0 0 2 2 2 .",
+            "R#0#chr1 0 1 walk H#1#h 0 0 0 2 2 .",
             "R#0#chr2 0 1 route . 11 -1",
-            "R#0#chr2 0 1 walk H#1#h 0 12 1 3 6 2 1",
+            "R#0#chr2 0 1 walk H#1#h 0 12 1 3 6 1",
         ])
     );
 }
@@ -592,8 +594,8 @@ fn a_step_on_a_node_of_0_bp_between_two_lines_is_no_departure() {
             + &rows_of(built.file("R"), "R#0#chr", "walk", "H#1#h"),
         tsv(&[
             "R#0#chr 0 1 route . 11 -5",
-            "R#0#chr 0 1 walk H#1#h 0 0 0 3 2 2 1",
-            "R#0#chr 10 11 walk H#1#h 12 12 0 2 6 2 .",
+            "R#0#chr 0 1 walk H#1#h 0 0 0 3 2 1",
+            "R#0#chr 10 11 walk H#1#h 12 12 0 2 6 .",
         ])
     );
 }
@@ -654,7 +656,7 @@ fn a_walk_row_names_the_copy_it_starts_on_where_it_is_not_the_first() {
     );
     assert_eq!(
         rows_of(built.file("R"), "R#0#chr", "walk", "H#1#h"),
-        tsv(&["R#0#chr 0 1 walk H#1#h 0 0 0 2 6@1 2 ."])
+        tsv(&["R#0#chr 0 1 walk H#1#h 0 0 0 2 6@1 ."])
     );
 }
 
@@ -680,7 +682,7 @@ fn a_route_exit_and_an_abridged_end_name_the_copy_where_it_is_not_the_nearest() 
             + &rows_of(built.file("R"), "R#0#chr", "walk", "H#1#h"),
         tsv(&[
             "R#0#chr 0 1 route 2 8 -4",
-            "R#0#chr 0 1 walk H#1#h 0 0 0 3 2 4 0@1",
+            "R#0#chr 0 1 walk H#1#h 0 0 0 3 2 0@1",
         ])
     );
     let abridged = build_text(
@@ -694,17 +696,17 @@ fn a_route_exit_and_an_abridged_end_name_the_copy_where_it_is_not_the_nearest() 
     );
     assert_eq!(
         rows_of(abridged.file("R"), "R#0#chr~0", "walk", "H#1#h"),
-        tsv(&["R#0#chr~0 0 1 walk H#1#h 0 0 0 3 2 4 0@1"])
+        tsv(&["R#0#chr~0 0 1 walk H#1#h 0 0 0 3 2 0@1"])
     );
 }
 
 // R walks 2 then three copies of the 2 bp node 1, then 3; H walks one more 1,
-// which placement puts on R's last, at 14, twice. Its handles alone would
-// decode without step counts, putting the extra 1 at R's first, so the row
-// gives counts: 3 steps along R to the last 1, a route back onto it, then one
-// step to 3.
+// which placement puts on R's last, at 14, twice. Stepping along R from 2
+// until a 1 would stop at R's first, so the route's token names the
+// occurrence the walk leaves from, `:2`, the last; its exit lands on the
+// occurrence nearest that, the same one, by default.
 #[test]
-fn a_walk_row_gives_step_counts_where_its_copies_would_decode_wrongly() {
+fn a_walk_row_names_the_copy_it_leaves_r_from_where_stepping_would_stop_early() {
     let built = build_text(
         "counts",
         &[
@@ -721,7 +723,7 @@ fn a_walk_row_gives_step_counts_where_its_copies_would_decode_wrongly() {
             + &rows_of(built.file("R"), "R#0#chr", "walk", "H#1#h"),
         tsv(&[
             "R#0#chr 0 1 route 2 . 0",
-            "R#0#chr 0 1 walk H#1#h 0 0 0 6 4 2:1 0:3",
+            "R#0#chr 0 1 walk H#1#h 0 0 0 6 4 0:2",
         ])
     );
 }
@@ -765,21 +767,21 @@ fn a_chunk_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
             "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6",
             "R#0#chr 0 1 nodes 6 6",
             "R#0#chr 0 1 route . 13 -9",
-            "R#0#chr 0 1 walk D#1#d 0 0 0 2 2 2 .",
-            "R#0#chr 0 1 walk D#1#d 0 24 2 2 2 2 .",
-            "R#0#chr 0 1 walk H#1#h 100 100 0 2 2 2 .",
-            "R#0#chr 0 1 walk I#1#i 0 0 0 1 2 0 .",
-            "R#0#chr 0 1 walk I#1#i 0 12 2 1 5 0 .",
-            "R#0#chr 0 1 walk Q#0#chr 0 0 0 2 2 0 1",
+            "R#0#chr 0 1 walk D#1#d 0 0 0 2 2 .",
+            "R#0#chr 0 1 walk D#1#d 0 24 2 2 2 .",
+            "R#0#chr 0 1 walk H#1#h 100 100 0 2 2 .",
+            "R#0#chr 0 1 walk I#1#i 0 0 0 1 2 .",
+            "R#0#chr 0 1 walk I#1#i 0 12 2 1 5 .",
+            "R#0#chr 0 1 walk Q#0#chr 0 0 0 2 2 1",
         ])
     );
     assert_eq!(
         rows_of(r, "R#0#chr", "route", "6") + &rows_of(r, "R#0#chr", "walk", "H#1#h"),
         tsv(&[
             "R#0#chr 10 11 route 6 8 -6",
-            "R#0#chr 0 1 walk H#1#h 100 100 0 2 2 2 .",
-            "R#0#chr 10 11 walk H#1#h 100 112 1 3 6 2 0",
-            "R#0#chr 20 21 walk H#1#h 100 127 2 1 10 0 .",
+            "R#0#chr 0 1 walk H#1#h 100 100 0 2 2 .",
+            "R#0#chr 10 11 walk H#1#h 100 112 1 3 6 0",
+            "R#0#chr 20 21 walk H#1#h 100 127 2 1 10 .",
         ])
     );
 }
@@ -810,39 +812,37 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     assert_eq!(
         rows_of(walks, "R#0#chr", "walk", "H#1#h"),
         tsv(&[
-            "R#0#chr 0 1 walk H#1#h 0 0 0 2 2 2 .",
-            "R#0#chr 10 11 walk H#1#h 0 12 1 2 6 -2 .",
-            "R#0#chr 20 21 walk H#1#h 0 24 2 1 6 0 .",
-            "R#0#chr 30 31 walk H#1#h 0 30 3 1 8 0 .",
+            "R#0#chr 0 1 walk H#1#h 0 0 0 2 2 .",
+            "R#0#chr 10 11 walk H#1#h 0 12 1 2 6 .",
+            "R#0#chr 20 21 walk H#1#h 0 24 2 1 6 .",
+            "R#0#chr 30 31 walk H#1#h 0 30 3 1 8 .",
         ])
     );
 }
 
 // walks-loop.gfa, in one chunk: R walks 1 2 3 2 3 4. A takes the repeat three
-// times. Following R from 1 until the first 3 would stop a pass early, so A's
-// row gives each stretch along R as a step count after a colon, and the tail
-// after the last route likewise. F inserts 5 inside the second copy.
+// times. Following R from 1 until a 3 would stop a pass early, at R's first,
+// so A's route token names the occurrence it leaves from, `:1`, the second.
+// F inserts 5 inside the second copy and leaves R from the second 2 likewise.
+// B jumps from the first 3 to 4, where stepping stops right.
 #[test]
-fn a_walk_the_default_rule_would_misread_states_its_step_counts() {
+fn a_walk_the_default_rule_would_misread_names_the_copy_it_leaves_from() {
     let built = build("walks-loop.gfa", &["--refs", "R", "--chunk", "1000"]);
     assert!(built.output.status.success());
     let walks = built.file("R");
     assert_eq!(
         rows_of(walks, "R#0#chr", "walk", "A#1#a") + &rows_of(walks, "R#0#chr", "walk", "F#1#f"),
         tsv(&[
-            "R#0#chr 0 1 walk A#1#a 0 0 0 8 2 6:2 5:4",
-            "R#0#chr 0 1 walk F#1#f 0 0 0 7 2 6:1 2:3",
+            "R#0#chr 0 1 walk A#1#a 0 0 0 8 2 5:1",
+            "R#0#chr 0 1 walk F#1#f 0 0 0 7 2 2:1",
         ])
     );
     assert_eq!(
         rows_of(walks, "R#0#chr", "walk", "B#1#b"),
-        tsv(&["R#0#chr 0 1 walk B#1#b 0 0 0 4 2 6 6"])
+        tsv(&["R#0#chr 0 1 walk B#1#b 0 0 0 4 2 6"])
     );
     let stderr = String::from_utf8_lossy(&built.output.stderr);
-    assert!(
-        stderr.contains("6 walk rows, 2 with step counts"),
-        "{stderr}"
-    );
+    assert!(stderr.contains("6 walk rows, 2 copies named"), "{stderr}");
 }
 
 #[test]
@@ -851,11 +851,11 @@ fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
     assert_eq!(
         rows_of(&built.walks, "R#0#chr", "walk", "D#1#d"),
         tsv(&[
-            "R#0#chr 0 1 walk D#1#d 0 0 0 2 2 2 .",
-            "R#0#chr 0 1 walk D#1#d 0 24 2 2 2 2 .",
-            "R#0#chr 10 11 walk D#1#d 0 12 1 2 6 2 .",
-            "R#0#chr 10 11 walk D#1#d 0 36 3 2 6 2 .",
-            "R#0#chr 20 21 walk D#1#d 0 48 4 1 10 0 .",
+            "R#0#chr 0 1 walk D#1#d 0 0 0 2 2 .",
+            "R#0#chr 0 1 walk D#1#d 0 24 2 2 2 .",
+            "R#0#chr 10 11 walk D#1#d 0 12 1 2 6 .",
+            "R#0#chr 10 11 walk D#1#d 0 36 3 2 6 .",
+            "R#0#chr 20 21 walk D#1#d 0 48 4 1 10 .",
         ])
     );
 }
@@ -882,19 +882,19 @@ fn a_short_stretch_over_a_revisited_node_stays_in_its_piece_on_a_pass_there() {
     assert_eq!(
         rows_of(moved.file("R"), "R#0#chr", "walk", "K#1#k"),
         tsv(&[
-            "R#0#chr 0 1 walk K#1#k 0 0 0 2 2 2 .",
-            "R#0#chr 10 11 walk K#1#k 0 12 1 4 6 -2 0",
-            "R#0#chr 20 21 walk K#1#k 0 36 2 1 6 0 .",
-            "R#0#chr 30 31 walk K#1#k 0 42 3 1 8 0 .",
+            "R#0#chr 0 1 walk K#1#k 0 0 0 2 2 .",
+            "R#0#chr 10 11 walk K#1#k 0 12 1 4 6 0",
+            "R#0#chr 20 21 walk K#1#k 0 36 2 1 6 .",
+            "R#0#chr 30 31 walk K#1#k 0 42 3 1 8 .",
         ])
     );
     assert_eq!(
         rows_of(interior.file("R"), "R#0#chr", "walk", "K#1#k"),
         tsv(&[
-            "R#0#chr 0 1 walk K#1#k 0 0 0 2 2 2 .",
-            "R#0#chr 10 11 walk K#1#k 0 12 1 2 6 -2 .",
-            "R#0#chr 20 21 walk K#1#k 0 24 2 3 6 0 0",
-            "R#0#chr 30 31 walk K#1#k 0 42 3 1 8 0 .",
+            "R#0#chr 0 1 walk K#1#k 0 0 0 2 2 .",
+            "R#0#chr 10 11 walk K#1#k 0 12 1 2 6 .",
+            "R#0#chr 20 21 walk K#1#k 0 24 2 3 6 0",
+            "R#0#chr 30 31 walk K#1#k 0 42 3 1 8 .",
         ])
     );
     for built in [&moved, &interior] {
@@ -1158,16 +1158,16 @@ fn a_contig_departs_once_from_each_w_line_to_the_next_with_a_step_on_r() {
     assert_eq!(
         rows_of(walks, "R#0#chr", "walk", "H#1#h"),
         tsv(&[
-            "R#0#chr 0 1 walk H#1#h 0 0 0 2 2 2 .",
-            "R#0#chr 0 1 walk H#1#h 40 40 0 1 4 0 .",
-            "R#0#chr 10 11 walk H#1#h 40 46 1 2 6 2 .",
+            "R#0#chr 0 1 walk H#1#h 0 0 0 2 2 .",
+            "R#0#chr 0 1 walk H#1#h 40 40 0 1 4 .",
+            "R#0#chr 10 11 walk H#1#h 40 46 1 2 6 .",
         ])
     );
     assert_eq!(
         rows_of(walks, "R#0#chr", "walk", "G#1#g"),
         tsv(&[
-            "R#0#chr 0 1 walk G#1#g 0 0 0 2 2 2 .",
-            "R#0#chr 10 11 walk G#1#g 30 30 0 1 8 0 .",
+            "R#0#chr 0 1 walk G#1#g 0 0 0 2 2 .",
+            "R#0#chr 10 11 walk G#1#g 30 30 0 1 8 .",
         ])
     );
     assert_eq!(

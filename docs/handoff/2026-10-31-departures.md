@@ -174,10 +174,12 @@ user's to reverse. What ADR 0009 now says, and why:
 - **Checked:** `cargo test`, `audit6.py` over every walk fixture and five
   hand-made graphs at `--chunk 10` in five option modes (65 files), and
   `fuzz6.sh 1 300` (1,800 builds), no failures
-- **Not yet done:** fold step counts (`:n`) into `@k` on route entries
-  and drop the walk row's `end`, which `nsteps` makes redundant, so that
-  a walk row has one copy mechanism. It changes `routes.rs`, the test
-  decoder and `audit6.py`
+- **Walk rows, one copy mechanism:** a choice token is `t[:k][@k]`, `:k`
+  the occurrence of the entry's node the walk leaves R from and `@k` the
+  one its exit lands on, each written only where the default decodes
+  wrongly; step counts on every token and the `end` column went, since
+  `nsteps` bounds the last stretch. `routes.rs`, the test decoder and
+  `audit6.py` changed together, with the same checks as above
 
 Earlier, on 2026-11-04, three Opus reviews found the port's code sound (see
 ADR 0009 History); their doc and number fixes are committed.
