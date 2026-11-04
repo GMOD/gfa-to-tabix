@@ -1,8 +1,12 @@
 # A random GFA: a reference whose path passes some nodes several times (tandem
-# and dispersed copies), and haplotypes that follow stretches of it, jump
-# forward and back, invert, and add nodes of their own, in one or more W lines
+# and dispersed copies), in one or more W lines with holes between, and
+# haplotypes that follow stretches of it, jump forward and back, invert, and
+# add nodes of their own, in one or more W lines, which may abut
 import random, sys
 seed = int(sys.argv[1]); random.seed(seed)
+# holes and abutting lines draw from their own generator, so that every seed
+# keeps the graph it had before them
+extra = random.Random(seed + 1_000_000)
 n_unique = random.randint(20, 80)
 lengths = {i: random.choice([0, 1, 2, 3, 5, 8, 13, 30]) if random.random() < 0.9 else random.randint(40, 200) for i in range(1, n_unique + 1)}
 ref = []
@@ -47,13 +51,22 @@ def w(sample, hap, contig, start, steps):
     end = start + sum(lengths[s] for s, _ in steps)
     print(f'W\t{sample}\t{hap}\t{contig}\t{start}\t{end}\t' + ''.join(('<' if r else '>') + str(s) for s, r in steps))
     return end
-w('R', 0, 'chr', 0, [(s, False) for s in ref])
+ref_steps = [(s, False) for s in ref]
+if extra.random() < 0.3 and len(ref) > 4:
+    cuts = sorted(extra.sample(range(1, len(ref)), extra.randint(1, min(2, len(ref) - 1))))
+    at = extra.choice([0, 0, 5])
+    for a, b in zip([0] + cuts, cuts + [len(ref)]):
+        at = w('R', 0, 'chr', at, ref_steps[a:b]) + extra.choice([1, 7, 100])
+else:
+    w('R', 0, 'chr', 0, ref_steps)
 for k, steps in enumerate(haps):
     if not steps:
         continue
     if random.random() < 0.3 and len(steps) > 4:
         cut = random.randrange(1, len(steps) - 1)
         end = w(f'H{k}', 1, 'c', 0, steps[:cut])
-        w(f'H{k}', 1, 'c', end + random.choice([1, 7, 100]), steps[cut:])
+        gap = random.choice([1, 7, 100])
+        abut = extra.random() < 0.3 and end > 0
+        w(f'H{k}', 1, 'c', end + (0 if abut else gap), steps[cut:])
     else:
         w(f'H{k}', 1, 'c', random.choice([0, 50]), steps)

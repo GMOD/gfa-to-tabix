@@ -75,6 +75,11 @@ class R:
             offset += n
 
     def index(self):
+        # bp of R's steps before each, so that a run's bp leaves out the
+        # holes it crosses
+        self.cum = [0]
+        for n in self.len:
+            self.cum.append(self.cum[-1] + n)
         self.at = collections.defaultdict(list)
         self.copies = collections.defaultdict(list)
         for i, h in enumerate(self.h):
@@ -238,7 +243,7 @@ def steps_of(r, segs, nodes):
             first = (r.h[i0] >> 1, r.off[i0], r.len[i0])
             last = (r.h[i1] >> 1, r.off[i1], r.len[i1])
             out.append(('R', r.seq, r.start, first, last, against, hi - lo + 1,
-                        r.off[hi] + r.len[hi] - r.off[lo], r.off[lo], r.off[hi] + r.len[hi]))
+                        r.cum[hi + 1] - r.cum[lo], r.off[lo], r.off[hi] + r.len[hi]))
     return out
 
 
@@ -596,7 +601,8 @@ for path, S, d, needs in computed:
         tally[f'{kind}: recorded though the reader computes it'] += 1
     if diffs and set(diffs) <= {'own_steps', 'missing'} and rec['missing'] < d['missing']:
         tally[f'{kind}: over a W line the file holds no row of (steps unseen)'] += 1
-    elif diffs and kind == 'one-ended' and set(diffs) <= {'own_bp', 'own_steps', 'missing', 'xb'} and rec['missing'] > d['missing']:
+    elif diffs and kind == 'one-ended' and set(diffs) <= {'own_bp', 'own_steps', 'missing', 'xb'} and (
+            rec['missing'] > d['missing'] or rec['own_steps'] > d['own_steps']):
         tally[f'{kind}: to a W line the file holds no row of (steps unseen)'] += 1
     elif diffs:
         tally[f'{kind}: field mismatch'] += 1
