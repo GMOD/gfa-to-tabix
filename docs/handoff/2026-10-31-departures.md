@@ -113,14 +113,44 @@ there. The urgent part is the word on screen
    says how the format got here. Three Opus reviews of the port found the
    code sound and corrected the docs; their open design questions are
    below. Next:
-   - graph-walks 5 against a local format 6 build of MC chr22 (`WalkDeparture`,
-     two reads per window, no follow rounds, no neighbour tags, a
-     departure-read budget beside the 8 MB cut budget), which settles the
-     spec before any file is hosted
+   - **Done, 2026-11-04 afternoon: graph-walks 5** at `~/src/graph-walks`
+     commit 43910ec, unreleased and unpushed, `version` still 4.6.0 (the
+     bump is `pnpm version major`, which pushes). Against the port3 format
+     6 files of MC chr22 and pggb chrY and the fixtures rebuilt in format 6
+     from their GFAs, now kept in `test_data/` with `build.sh`. It reads
+     format 6 only; makes two reads per cut, the walk chunks and the
+     `~departure` blocks over the drawn stretch; returns `departures`,
+     every departure over the stretch once, those inside one piece
+     computed from its steps and the rest from the records; cuts each
+     fragment from the walk's first step on the drawn stretch to its last,
+     with `trimmedBefore`/`trimmedAfter`, so no follow rounds, run-on,
+     crossings, skips or stop kinds; attaches a departure's own steps
+     under `attachBp` (65,536), fetching the leave chunk when the read
+     lacks it, at most `attachFetches` (8) chunks; exports `departureKind`
+     (`switch`, `back`, `adjacent`, `forward`); and refuses a departure
+     read over `departureByteBudget` (2 MB in `WALK_BUDGETS`) with a
+     `DepartureReadError`, not a zoom-in notice. `GraphTables.departures`
+     is required, `before`/`after`/`skips` are gone. 159 tests pass.
+     Timings on the port3 files: MC chr22 64 kb LCR22A window, every
+     haplotype, 2.4 s with 67,144 departures; a 10 kb window at 30 Mb 0.3
+     s; pggb chrY 64 kb at 12 Mb for HG002 1.3 s, mostly parsing the
+     100,000 departure rows of the TSPY array before the keep filter.
+     Not done: the structural-forms cut (`walkDepartures.ts`, `formsCut`)
+     still derives departures from fragments and `graph.nodes`, which no
+     longer reach past the drawn stretch, so forms that depended on
+     following a departure to its rejoin should move to `cut.departures`;
+     bandage-core 13 and plugin 9 (below)
    - A format 6 build of what is hosted, the genome-wide MC graph with
-     `--refs GRCh38,CHM13`: its size, time, memory and an audit by
-     chromosome or `--shard`. CHM13 passes 209,578 of its nodes more than
-     once, so that file is the first to need `@k` and the bounded stay
+     `--refs GRCh38,CHM13`: started on ada at 16:50 UTC on 2026-11-04,
+     `~/work/rebuild/genome.sh` from `~/hprc-gbz/walks/hprc-v2.1-mc-grch38.W.gfa.gz`
+     with the port3 binary (76c9223), capped at 80 GB, into
+     `~/work/rebuild/genome/` (`run.done` when finished). Its first pass
+     took 743 s at 12.5 GiB; format 5's whole build took 2 h 25 m at 13
+     GB. Then its size, time, memory and an audit by chromosome or
+     `--shard`; the audit of a 1.5 GB file needs `audit6.py` to take a
+     sequence filter, since a shard still parses every row. CHM13 passes
+     209,578 of its nodes more than once, so that file is the first to
+     need `@k` and the bounded stay
    - graph-walks 4.6.1 (a51b7bf, which asks for a newer viewer on a format
      6 file), bundled by the plugin, BandageJS, ggbandage and the tube map,
      before gfa-to-tabix 3.0 is released. Releasing is bumping `version`
@@ -184,6 +214,9 @@ away, and they are the user's to reverse. What ADR 0009 now says, and why:
   wrongly; step counts on every token and the `end` column went, since
   `nsteps` bounds the last stretch. `routes.rs`, the test decoder and
   `audit6.py` changed together, with the same checks as above
+- **Read back by graph-walks 5** (item 2 above), which decodes the rows,
+  the copies and the records as the spec says; nothing in the format
+  needed changing for the reader
 
 Earlier, on 2026-11-04, three Opus reviews found the port's code sound (see
 ADR 0009 History); their doc and number fixes are committed.
@@ -214,7 +247,13 @@ ADR 0009 History); their doc and number fixes are committed.
 - ada, the minimal record (2026-11-04, afternoon): `~/work/rebuild/port3/` builds
   and audits of MC chr22 and pggb chrY by `port3.sh`, from
   `~/src/gfa-to-tabix-port3/` (rsync of the working tree at 76c9223),
-  with `port3/sizes.txt` against `port2/` and `f5/`
+  with `port3/sizes.txt` against `port2/` and `f5/`; `~/work/rebuild/genome/`
+  the genome-wide build (item 2 above). ada's disk was at 99% with 44 GB
+  free during that build
+- graph-walks: `~/src/graph-walks` at 43910ec, unpushed. Its `test_data/`
+  holds each fixture's GFA and `build.sh`, which rebuilds them with a
+  gfa-to-tabix binary; the chrM fixture's GFA was recovered from the
+  format 5 file with the old decoder, bases included
 - ada: `~/work/f6/` (the `bypass` prototype builds of MC chr22 and pggb
   chrY), `~/work/spike/` (spike builds, MC chrY cut for the agreement
   scores, alignments in `align/`)
