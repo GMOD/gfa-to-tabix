@@ -205,7 +205,7 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   chaining spike was checked, the alignment-guided one was not
 - Showing every copy stays open: the HPRC pggb team may weigh in. ADR
   0009 holds one placement per file, so other copies could come later as a
-  second file with its own `#placement` line, without a new format
+  second file, under a header tag naming its rule
 - To ask the pggb authors: whether they would publish `odgi untangle`
   projections of release 2 against GRCh38 and CHM13; whether a
   chain-based single-copy projection is what they would endorse for a

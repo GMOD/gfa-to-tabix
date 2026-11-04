@@ -21,6 +21,11 @@ things are.
 - Format 6 walk rows carry no neighbour tags (`pv`, `nx`, `pg`, `pr`, `ng`,
   `nr`) and detail records have no pages (2026-11-04, after a vibe check
   and two independent reviews)
+- The minimal record (2026-11-05, see below): `departure path hapStart
+  ownBp missingBp leavePos leaveStrand rejoinPos rejoinStrand`, no
+  one-ended records, no `kinds:Z:` or `#placement` in the header. Made
+  under the user's "getting a good 'minimal' design will be very valuable"
+  while they were away, so it is theirs to reverse
 - The projection onto one reference is exact where haplotypes keep its order
   (Minigraph-Cactus: no jump ends on a node GRCh38 passes twice) and a
   placement choice in repeats (pggb). Viewers say so where it is a choice
@@ -115,77 +120,66 @@ there. The urgent part is the word on screen
    - A format 6 build of what is hosted, the genome-wide MC graph with
      `--refs GRCh38,CHM13`: its size, time, memory and an audit by
      chromosome or `--shard`. CHM13 passes 209,578 of its nodes more than
-     once, so that file is the first to need `@k`, step counts and the
-     bounded stay
+     once, so that file is the first to need `@k` and the bounded stay
    - graph-walks 4.6.1 (a51b7bf, which asks for a newer viewer on a format
      6 file), bundled by the plugin, BandageJS, ggbandage and the tube map,
      before gfa-to-tabix 3.0 is released. Releasing is bumping `version`
      on main, so push main with the bump, not before
    - Then the hosted MC walk files rebuilt under new names, keeping the
      format 5 files; bandage-core 13 (its "filed near" label and "not in
-     the graph" gap from the record's `rejoinChunk` and `missingBp`, and the
+     the graph" gap from the record's `rejoinPos` and `missingBp`, and the
      hand-off from graph-walks a required type, so a mismatched bump fails
      to compile); plugin 9, which per ADR 0009 bundles graph-walks 4 beside
      5 for format 5 files (synteny strand per end, mate span from
      `hapStart` and `ownBp`, `EXPAND_NAMED_MAX` replaced by a per-row
      threshold); jbrowse-components' lane-side bp; then BandageJS,
      ggbandage, the tube map and jb2hubs
-   - First decide the minimal design below, which changes the writer,
-     tests, walks-format.md and ADR 0009 before graph-walks 5 is written
 3. **pggb, when it comes up.** Check that every path rebuilds from its rows
    under alignment-guided placement (checked for the chaining spike, not this
    one); then `--alignments` as an optional input in its own ADR. Questions
    for the pggb authors are in open-problems
 
-## Minimal design proposal, 2026-11-04 (not decided)
+## Minimal design, decided 2026-11-05
 
 The user wants a minimal format 6 ("getting a good 'minimal' design will be
-very valuable"). Five Fable reviews (four per question, one deriving the
-minimal format from the requirements alone) and measurements on the port's
-files on ada (`~/work/rebuild/port2/`) propose these cuts. The session ran
-out before the user chose; ask them, group by group:
+very valuable"). Five Fable reviews on 2026-11-04 (four per question, one
+deriving the minimal format from the requirements alone) and measurements
+on the port's files on ada (`~/work/rebuild/port2/`) proposed the cuts;
+the next session made them, since the user was away, and they are the
+user's to reverse. What ADR 0009 now says, and why:
 
-- **Backed by two reviews and measurement, or no consumer:**
-  - `kinds:Z:`: `format:i:` already refuses unknown formats, and new kinds
-    are a format change anyway. No reader reads it
-  - the `#placement` line: no reader acts on it; a tag on `#walks` can
-    come with a second placement rule, without a format bump
-  - `leaveChunk`/`rejoinChunk`: equal to the chunk of the end node's pass
-    start on every end measured (49,425 on MC chr22, 850,876 on pggb
-    chrY), so derivable from `Pos`, `Strand` and the node's length; they
-    differ from the chunk of the base beside the breakpoint only for a node
-    straddling a chunk boundary, by one chunk. The fetch of a departure's
-    own steps needed them on 0 records of three graphs. 6% of pggb chrY's
-    departure bytes
-  - `leavePasses`/`rejoinPasses`: only the 3% of departures that are
-    records carry them, never checked by the audit (it needs `mp`); the
-    deferred `mp` tag on `ref` rows is the real ambiguity mark
-  - `xb`: says how much, not where; a later tag naming the other sequence's
-    chunk and bp would replace it
-- **One review, medium:** `ownSteps` (only the attach policy uses it,
-  which `ownBp > 0` serves), `leaveNode`/`rejoinNode` (the piece edge step
-  where the end's chunk is read), `fragStart` (`hapStart` keys the leave
-  piece, since a contig's W lines can't overlap)
-- **Split: one-ended records.** Measured: MC chr22 129, of which 26 carry
-  sequence from other W lines (`missingBp` > 0) and 103 repeat what the
-  first or last piece's route shows; pggb chrY 796, 240 with `xb`; pggb
-  chr22 10,578, 9,338 with `xb`. Cutting them gives every record both ends
-- With all of the above the record is `departure path hapStart ownBp
-  missingBp leavePos leaveStrand rejoinPos rejoinStrand`, against 16
-  columns and a tag now
-- **Structural, one review each:**
-  - file departure rows in the chunk rows, every chunk the stretch covers,
-    in place of `S~departure` blocks: one read per window, no sibling
-    sequence or block rule. Measured departure text: MC chr22 1.2% of the
-    file's text now, 1.8% filed per chunk (47,725 rows against 31,368);
-    pggb chrY 11.5% now, 34% per chunk. ADR 0009 rejected it for pggb's
-    cost; the genome-wide MC number is unknown
-  - fold step counts (`:n`) into `@k` on route entries and drop the walk
-    row's `end`, which `nsteps` makes redundant: one copy mechanism. MC
-    chr22 writes neither today; it changes the encoder, `audit6.py` and the
-    test decoder
+- **Cut from the record:** `fragStart`, `ownSteps`, `leaveNode`,
+  `leavePasses`, `leaveChunk`, `rejoinNode`, `rejoinPasses`,
+  `rejoinChunk` and the `xb` tag. The chunks equalled the chunk of the
+  end's pass start on every end measured (49,425 on MC chr22, 850,876 on
+  pggb chrY), which the walk read of any window over the end holds; the
+  nodes are the ones R holds at the breakpoints; the pass counts marked
+  3% of departures and the `mp` tag will mark every `ref` row; the rest
+  no reader needs. The record is `departure path hapStart ownBp missingBp
+  leavePos leaveStrand rejoinPos rejoinStrand`
+- **Cut: one-ended records** (MC chr22 129, 26 with bp between W lines
+  and 103 repeating what the first or last piece's route shows; pggb chrY
+  796; pggb chr22 10,578, 9,338 with own bp on another sequence). A
+  contig's sequence before its first step on S or after its last is not a
+  departure, and the piece's route with no entry or exit shows it
+- **Adjacency is by bp:** with `ownSteps` gone, a step on a 0 bp node
+  between two adjacent steps is no departure. The port had recorded it;
+  the writer, the audit and the tests now agree the other way
+- **Cut from the header:** `kinds:Z:` (`format:i:` refuses what a reader
+  can't read, and a new kind is a new format) and `#placement` (one rule,
+  which the format fixes; a later rule is a header tag or a new format)
+- **Kept: `S~departure` blocks** rather than departure rows in every
+  chunk of the stretch. Departure text is 1.2% of MC chr22's file and
+  would be 1.8% per chunk; 11.5% of pggb chrY's and would be 34%
+- **Checked:** `cargo test`, `audit6.py` over every walk fixture and five
+  hand-made graphs at `--chunk 10` in five option modes (65 files), and
+  `fuzz6.sh 1 300` (1,800 builds), no failures
+- **Not yet done:** fold step counts (`:n`) into `@k` on route entries
+  and drop the walk row's `end`, which `nsteps` makes redundant, so that
+  a walk row has one copy mechanism. It changes `routes.rs`, the test
+  decoder and `audit6.py`
 
-Earlier the same day three Opus reviews found the port's code sound (see
+Earlier, on 2026-11-04, three Opus reviews found the port's code sound (see
 ADR 0009 History); their doc and number fixes are committed.
 
 ## Where things are

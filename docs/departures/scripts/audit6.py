@@ -204,7 +204,6 @@ def decode(r, routes, cols):
     return segs
 
 
-passes = collections.Counter()   # (seq, node) -> passes, from mp
 ref_nodes = set()
 pieces = collections.defaultdict(list)   # path -> [(frag, offset, piece, steps)]
 records = []
@@ -343,13 +342,6 @@ with gzip.open(args.file, 'rt') as f:
             seq_len[seq] = max(seq_len[seq], r.off[-1] + r.len[-1])
             for h in hs:
                 ref_nodes.add((seq, h >> 1))
-            for t in c[11:]:
-                if t.startswith('mp:Z:'):
-                    start = len(r.h) - len(hs)
-                    for run in t[5:].split(';'):
-                        i, n, count = map(int, run.split(','))
-                        for j in range(i, i + n):
-                            passes[r.h[start + j] >> 1] = count
             continue
         if not indexed:
             r.index()
@@ -395,21 +387,20 @@ def squeeze(seq, bp):
     return bp - sum(b - a for a, b in holes.get(seq, []) if b <= bp)
 
 
-# Departures recomputed from the decoded rows, per path and sequence
+# Departures recomputed from the decoded rows, per path and sequence. An end
+# is (breakpoint, strand) as the record states it, then what the audit knows
+# beside: the node and the chunk the step's piece is filed under
 def end_of(step, against, leave, chunk):
     node, off, length = step
     on_start = against == leave
     bp = off if on_start else off + length
-    return (bp, node, '-' if against else '+', passes.get(node, 1), chunk)
+    return (bp, '-' if against else '+', node, chunk)
 
 
 def parse_record(rec):
-    # departure path fragStart hapStart ownBp ownSteps missingBp L(5) R(5) [tags]
-    def end(cols):
-        return None if cols[0] == '.' else (int(cols[0]), int(cols[1]), cols[2], int(cols[3]), int(cols[4]))
-    tags = {t.split(':')[0]: t.split(':', 2)[2] for t in rec[17:]}
-    return dict(path=rec[1], frag=int(rec[2]), hap_start=int(rec[3]), own_bp=int(rec[4]), own_steps=int(rec[5]),
-                missing=int(rec[6]), leave=end(rec[7:12]), rejoin=end(rec[12:17]), xb=int(tags.get('xb', 0)))
+    # departure path hapStart ownBp missingBp leavePos leaveStrand rejoinPos rejoinStrand [tags]
+    return dict(path=rec[1], hap_start=int(rec[2]), own_bp=int(rec[3]), missing=int(rec[4]),
+                leave=(int(rec[5]), rec[6]), rejoin=(int(rec[7]), rec[8]))
 
 
 parsed = [parse_record(rec) for rec in records]
@@ -419,9 +410,7 @@ for seq, a, b, kind, k, _ in dep_rows:
         rec_seq[k] = seq
 by_key = collections.defaultdict(list)
 for k, d in enumerate(parsed):
-    lp = d['leave'][0] if d['leave'] else None
-    rp = d['rejoin'][0] if d['rejoin'] else None
-    by_key[(d['path'], d['hap_start'], lp, rp)].append(k)
+    by_key[(d['path'], d['hap_start'], d['leave'][0], d['rejoin'][0])].append(k)
 
 truth_keys = set()
 if args.truth:
@@ -433,12 +422,11 @@ quiet = collections.Counter()
 
 def emit(path, S, d, needs):
     # keeps a departure only where a record or a truth row may match it
-    key = (path, d['hap_start'], d['leave'][0] if d['leave'] else None, d['rejoin'][0] if d['rejoin'] else None)
-    if needs or key in by_key or (path, d['hap_start']) in truth_keys or d['leave'] is None or d['rejoin'] is None:
+    key = (path, d['hap_start'], d['leave'][0], d['rejoin'][0])
+    if needs or key in by_key or (path, d['hap_start']) in truth_keys:
         computed.append((path, S, d, needs))
     else:
-        kind = 'one-ended' if d['leave'] is None or d['rejoin'] is None else (
-            'across a record gap' if d['gap'] else 'within a record')
+        kind = 'across a record gap' if d['gap'] else 'within a record'
         quiet[f'{kind}: computed by the reader, no record'] += 1
 
 
@@ -474,18 +462,15 @@ for path, ps in pieces.items():
                 coverage[(path, seq)].append((lo, hi))
                 at += bp
     seqs = {s[3] for s in stream if s[0] == 'R'}
-    first_frag = ps[0][0]
     for S in seqs:
         leave = None   # (end tuple, hap after, frag, piece key)
-        own_bp = own_steps = xb = missing = 0
+        own_bp = missing = 0
         hap = None
-        lead = None
         for s in stream:
             if s[0] == 'I':
                 if hap is not None and s[2] != hap:
                     own_bp += s[2] - hap
                     missing += s[2] - hap
-                own_steps += s[3]
                 own_bp += s[4]
                 hap = s[2] + s[4]
                 continue
@@ -494,41 +479,26 @@ for path, ps in pieces.items():
                 own_bp += at - hap
                 missing += at - hap
             if seq != S:
-                own_steps += n
                 own_bp += bp
-                xb += bp
                 hap = at + bp
                 continue
             rejoin = end_of(first, against, False, cs)
-            if leave is None:
-                lead = dict(hap_start=first_frag, own_bp=at - first_frag, own_steps=own_steps, xb=xb,
-                            frag=frag, rejoin=rejoin, missing=missing)
-            else:
+            if leave is not None:
                 lend, after, lfrag, lkey = leave
-                adjacent = own_steps == 0 and own_bp == 0 and lend[2] == rejoin[2] and squeeze(S, lend[0]) == squeeze(S, rejoin[0])
+                adjacent = own_bp == 0 and lend[1] == rejoin[1] and squeeze(S, lend[0]) == squeeze(S, rejoin[0])
                 if not adjacent:
                     lo, hi = min(lend[0], rejoin[0]), max(lend[0], rejoin[0], min(lend[0], rejoin[0]) + 1)
                     needs = lkey != key
                     empty = lend[0] == rejoin[0]
-                    ok = (reachable(S, lend[4], lo - 1, lo) or reachable(S, lend[4], lo, lo + 1)) if empty else reachable(S, lend[4], lo, hi)
+                    ok = (reachable(S, lend[3], lo - 1, lo) or reachable(S, lend[3], lo, lo + 1)) if empty else reachable(S, lend[3], lo, hi)
                     if not needs and not ok:
                         unreachable.append((path, lend, rejoin))
-                    emit(path, S, dict(frag=lfrag, hap_start=after, own_bp=own_bp, own_steps=own_steps,
-                                                   leave=lend, rejoin=rejoin, xb=xb, missing=missing, gap=lfrag != frag),
-                                     needs or lfrag != frag)
+                    emit(path, S, dict(hap_start=after, own_bp=own_bp, leave=lend, rejoin=rejoin,
+                                       missing=missing, gap=lfrag != frag),
+                         needs or lfrag != frag)
             leave = (end_of(last, against, True, cs), at + bp, frag, key)
-            own_bp = own_steps = xb = missing = 0
+            own_bp = missing = 0
             hap = at + bp
-        if lead is not None and lead['own_bp'] > 0:
-            emit(path, S, dict(frag=lead['frag'], hap_start=lead['hap_start'], own_bp=lead['own_bp'],
-                                           own_steps=lead['own_steps'], leave=None, rejoin=lead['rejoin'],
-                                           xb=lead['xb'], missing=lead['missing'], gap=False), True)
-        # the tail: own bp after the last step on S to the contig's last decoded step
-        if leave is not None and hap is not None and hap > leave[1]:
-            tail_bp = hap - leave[1]
-            emit(path, S, dict(frag=leave[2], hap_start=leave[1], own_bp=tail_bp, own_steps=own_steps,
-                                           leave=leave[0], rejoin=None, xb=xb, missing=missing, gap=False),
-                             True)
 for v in coverage.values():
     v.sort()
     merged = []
@@ -546,43 +516,25 @@ matched = set()
 
 
 def differences(rec, d):
-    diffs = [f for f in ('frag', 'own_bp', 'own_steps', 'xb', 'missing') if rec[f] != d[f]]
+    diffs = [f for f in ('own_bp', 'missing') if rec[f] != d[f]]
     for side in ('leave', 'rejoin'):
-        if (rec[side] is None) != (d[side] is None):
-            diffs.append(side)
-        elif rec[side] is not None:
-            names = ['Pos', 'Node', 'Strand', 'Passes', 'Chunk']
-            diffs += [side + names[i] for i in range(5) if rec[side][i] != d[side][i] and (i != 3 or passes)]
+        names = ['Pos', 'Strand']
+        diffs += [side + names[i] for i in range(2) if rec[side][i] != d[side][i]]
     return diffs
 
 
 def key_of(d):
-    return (d['path'] if 'path' in d else None, d['hap_start'], d['leave'][0] if d['leave'] else None,
-            d['rejoin'][0] if d['rejoin'] else None)
+    return (d['hap_start'], d['leave'][0], d['rejoin'][0])
 
 
-by_path_end = collections.defaultdict(list)
-for k, d in enumerate(parsed):
-    if d['leave'] is None or d['rejoin'] is None:
-        side = 'rejoin' if d['leave'] is None else 'leave'
-        by_path_end[(d['path'], side, d[side][0])].append(k)
 exact = set()
 for path, S, d, needs in computed:
-    for k in by_key.get((path,) + key_of(d)[1:], []):
+    for k in by_key.get((path,) + key_of(d), []):
         if not differences(parsed[k], d):
             exact.add(k)
 for path, S, d, needs in computed:
-    lp = d['leave'][0] if d['leave'] else None
-    rp = d['rejoin'][0] if d['rejoin'] else None
-    ks = by_key.get((path, d['hap_start'], lp, rp), [])
-    kind = 'one-ended' if lp is None or rp is None else ('across a record gap' if d['gap'] else 'within a record')
-    if not ks and kind == 'one-ended':
-        side = 'rejoin' if lp is None else 'leave'
-        alike = [k for k in by_path_end.get((path, side, (d[side] or (None,))[0]), []) if k not in matched]
-        if alike and parsed[alike[0]]['own_bp'] > d['own_bp']:
-            matched.add(alike[0])
-            tally[f'{kind}: over a W line the file holds no row of (steps unseen)'] += 1
-            continue
+    ks = by_key.get((path,) + key_of(d), [])
+    kind = 'across a record gap' if d['gap'] else 'within a record'
     if not ks:
         tally[f'{kind}: {"MISSING RECORD" if needs else "computed by the reader, no record"}'] += 1
         if needs and len(bad_examples) < 3 * args.examples:
@@ -599,11 +551,8 @@ for path, S, d, needs in computed:
     matched.add(k)
     if not needs:
         tally[f'{kind}: recorded though the reader computes it'] += 1
-    if diffs and set(diffs) <= {'own_steps', 'missing'} and rec['missing'] < d['missing']:
+    if diffs and set(diffs) <= {'missing'} and rec['missing'] < d['missing']:
         tally[f'{kind}: over a W line the file holds no row of (steps unseen)'] += 1
-    elif diffs and kind == 'one-ended' and set(diffs) <= {'own_bp', 'own_steps', 'missing', 'xb'} and (
-            rec['missing'] > d['missing'] or rec['own_steps'] > d['own_steps']):
-        tally[f'{kind}: to a W line the file holds no row of (steps unseen)'] += 1
     elif diffs:
         tally[f'{kind}: field mismatch'] += 1
         for x in diffs:
@@ -612,20 +561,7 @@ for path, S, d, needs in computed:
             bad_examples.append(('fields', diffs, d, rec))
     else:
         tally[f'{kind}: match'] += 1
-extent = {}
-for path, ps in pieces.items():
-    first = ps[0]
-    extent[path] = first[0]
-unmatched = []
-for k, d in enumerate(parsed):
-    if k in matched or not in_shard(d['path']):
-        continue
-    if d['leave'] is None and d['hap_start'] < extent.get(d['path'], 0):
-        tally['one-ended: from a W line the file holds no row of (steps unseen)'] += 1
-    elif d['rejoin'] is None and d['missing'] > 0:
-        tally['one-ended: to a W line the file holds no row of (steps unseen)'] += 1
-    else:
-        unmatched.append(k)
+unmatched = [k for k, d in enumerate(parsed) if k not in matched and in_shard(d['path'])]
 tally['records with no recomputed departure'] = len(unmatched)
 for k in unmatched[:args.examples]:
     bad_examples.append(('unmatched record', parsed[k]))
@@ -654,7 +590,7 @@ if args.truth:
             t['multi-pass end, not compared'] += 1
             continue
         rs, re_, own_bp, own, hap, inva, invb = int(c[5]), int(c[6]), int(c[9]), int(c[10]), int(c[11]), c[12] == '1', c[13] == '1'
-        found = [x for x in by_hap.get((c[0], hap), []) if x[0]['leave'] and x[0]['rejoin']]
+        found = by_hap.get((c[0], hap), [])
         if not found:
             t[f'{c[2]}: no departure decoded at its hapStart'] += 1
             continue
@@ -662,11 +598,9 @@ if args.truth:
         diffs = []
         if d['own_bp'] != own_bp:
             diffs.append('own bp')
-        if d['own_steps'] != own:
-            diffs.append('own steps')
-        if (d['leave'][2] == '-') != inva:
+        if (d['leave'][1] == '-') != inva:
             diffs.append('leave strand')
-        if (d['rejoin'][2] == '-') != invb:
+        if (d['rejoin'][1] == '-') != invb:
             diffs.append('rejoin strand')
         lo, hi = sorted((d['leave'][0], d['rejoin'][0]))
         if (lo, hi) != (rs, re_):
@@ -719,7 +653,7 @@ crowd_cover = {k: merged(v) for k, v in crowds.items()}
 uncovered_bases = uncovered_records = 0
 whole_bases = whole_records = 0
 for k, d in enumerate(parsed):
-    if d['leave'] is None or d['rejoin'] is None or not in_shard(d['path']):
+    if not in_shard(d['path']):
         continue
     seq = rec_seq[k]
     lo, hi = sorted((d['leave'][0], d['rejoin'][0]))
@@ -805,12 +739,10 @@ def classify(seq, a, b, kind, k):
     d = parsed[k]
     for e in (d['leave'], d['rejoin']):
         # a row holding a base beside an end's breakpoint
-        if e is not None and a <= e[0] and e[0] <= b and (a < e[0] or b > e[0]) and (e[0] - 1 >= a or e[0] + 1 <= b):
+        if a <= e[0] and e[0] <= b and (a < e[0] or b > e[0]) and (e[0] - 1 >= a or e[0] + 1 <= b):
             return 'end'
-    if d['leave'] is None or d['rejoin'] is None:
-        return 'end'
-    whole_type = d['leave'][3] == 1 and d['rejoin'][3] == 1 and (
-        d['leave'][2] != d['rejoin'][2] or ((d['rejoin'][0] < d['leave'][0]) if d['leave'][2] == '+' else (d['rejoin'][0] > d['leave'][0])))
+    whole_type = d['leave'][1] != d['rejoin'][1] or (
+        (d['rejoin'][0] < d['leave'][0]) if d['leave'][1] == '+' else (d['rejoin'][0] > d['leave'][0]))
     return 'whole' if whole_type else 'interior'
 
 
@@ -825,7 +757,11 @@ for seq, rows in (by_seq.items() if SHARD == 0 else []):
     print(f'# {seq}~departure: rows by class: ' + ', '.join(f'{c} {cls.count(c)}' for c in CLASSES))
     length = seq_len[seq]
     path_of = [parsed[k]['path'] if kind == 'd' else k for _, _, _, kind, k, _ in rows]
-    chunk_of = [parsed[k]['leave'][4] if kind == 'd' and parsed[k]['leave'] else None for _, _, _, kind, k, _ in rows]
+    # the leave piece's chunk, from the base beside the leave breakpoint
+    def leave_chunk(d):
+        bp, strand = d['leave']
+        return max(bp - 1, 0) // chunk_size * chunk_size if strand == '+' else bp // chunk_size * chunk_size
+    chunk_of = [leave_chunk(parsed[k]) if kind == 'd' else None for _, _, _, kind, k, _ in rows]
     by_end = sorted(range(len(rows)), key=lambda j: rows[j][2])
     for label, size, step in (('64 kb', args.window, args.window), ('1 bp', 1, args.point)):
         # a sweep: rows join as their start passes the window's end and
@@ -895,11 +831,6 @@ for seq, rows in (by_seq.items() if SHARD == 0 else []):
                 kinds_ = collections.Counter()
                 for k in recs:
                     d = parsed[k]
-                    if d['leave'] is None or d['rejoin'] is None:
-                        kinds_['one-ended'] += 1
-                        continue
-                    multi = d['leave'][3] > 1 or d['rejoin'][3] > 1
-                    kinds_['an end on a node passed more than once' if multi else 'both ends on nodes passed once'] += 1
                     kinds_['0 own bp' if d['own_bp'] == 0 else 'own bp'] += 1
                     span = abs(d['rejoin'][0] - d['leave'][0])
                     kinds_['stretch under 1 kb' if span < 1000 else ('stretch under 64 kb' if span < 65536 else 'stretch 64 kb or more')] += 1

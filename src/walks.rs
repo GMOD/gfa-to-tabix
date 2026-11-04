@@ -4,8 +4,7 @@
 // `departures.rs` the departure records). A row's interval is the first base
 // of its chunk: a full-chunk interval would share a Tabix bin with the next
 // chunk, and a query would pull both. Header lines give the format, the chunk
-// size and the longest node, then the placement rule, the reference and the
-// haplotypes.
+// size and the longest node, then the reference and the haplotypes.
 
 use std::collections::{BTreeSet, HashMap};
 use std::fs::{self, File};
@@ -35,8 +34,6 @@ pub struct Options {
 const NONE: u32 = u32::MAX;
 // Set on a placement taken from a path off the reference: rank 1.
 const OFF_REFERENCE: u32 = 1 << 31;
-// Every row kind a walk file holds, detail records' included
-const KINDS: &str = "ref,nodes,route,walk,abridged,departure";
 
 fn push_u64(out: &mut Vec<u8>, mut n: u64) {
     let mut digits = [0u8; 20];
@@ -213,16 +210,6 @@ struct Reference {
 impl Reference {
     fn on_reference(&self, id: usize) -> bool {
         self.placement[id] & OFF_REFERENCE == 0
-    }
-
-    // How many times the sample's paths pass a node
-    fn passes(&self, id: usize) -> u32 {
-        if self.revisited.get(id) {
-            let (from, to) = self.visits_of[&(id as u32)];
-            to - from
-        } else {
-            1
-        }
     }
 
     // maxnode: the longest node on the reference paths, in bp
@@ -475,17 +462,16 @@ impl Stable {
     }
 }
 
-// A W or P line with steps: its name id, the stretch of its contig it covers,
-// and its number of steps.
+// A W or P line with steps: its name id and the stretch of its contig it
+// covers.
 struct Record {
     name: u32,
     start: u64,
     end: u64,
-    steps: u64,
 }
 
 // Refuses a W line whose end column disagrees with its steps.
-fn record(path: &PathLine, name: u32, end: u64, steps: usize) -> Result<Record, String> {
+fn record(path: &PathLine, name: u32, end: u64) -> Result<Record, String> {
     if let Some(stated) = path.end
         && stated != end
     {
@@ -499,7 +485,6 @@ fn record(path: &PathLine, name: u32, end: u64, steps: usize) -> Result<Record, 
         name,
         start: path.start,
         end,
-        steps: steps as u64,
     })
 }
 
@@ -594,7 +579,7 @@ fn first_pass(
                     .all(|&id| lengths.get(id as usize).is_some_and(|&l| l != NONE))
                 {
                     let end = stable.visit(names, name, path.start, &ids, &lengths);
-                    let record = record(&path, name, end, ids.len())?;
+                    let record = record(&path, name, end)?;
                     if !ids.is_empty() {
                         records.push(record);
                     }
@@ -604,7 +589,6 @@ fn first_pass(
                         name,
                         start: path.start,
                         end: path.start,
-                        steps: 0,
                     });
                 }
                 if let Some(reference) = options
@@ -652,7 +636,7 @@ fn first_pass(
                 ids.push(id);
             }
             let end = stable.visit(names, name, path.start, &ids, &lengths);
-            records[at] = record(&path, name, end, ids.len())?;
+            records[at] = record(&path, name, end)?;
             Ok(())
         })?;
     }
@@ -868,10 +852,9 @@ struct RecordEnds {
     tail: Own,
 }
 
-// The records before and after one on its contig, NONE at either end.
+// The record after one on its contig, NONE for the last.
 #[derive(Clone, Copy)]
 struct Link {
-    previous: u32,
     next: u32,
 }
 
@@ -884,8 +867,6 @@ struct Builder {
     rows: Sorter,
     // departure rows, keyed by the first chunk of their sequence
     departures: Sorter,
-    // by record, then reference: the bp of its steps placed on the reference
-    placed_bp: Vec<u64>,
     // by reference, then (record, sequence name id)
     ends: Vec<FastMap<(u32, u32), RecordEnds>>,
     paths: u64,
@@ -897,9 +878,6 @@ struct Builder {
     // by step of a path off the reference: the reference pass a step on a
     // reference node takes; name NONE for route interior
     pass: Vec<Visit>,
-    // by step, and one past the last: the bp of the steps before it on the
-    // reference
-    placed_before: Vec<u64>,
     positions: Vec<u64>,
     pieces: Vec<(usize, usize)>,
 }
@@ -946,7 +924,6 @@ impl Builder {
             });
             if !self.assign_chunks(r, handles, own) {
                 self.references[r].unplaced += 1;
-                self.placed_bp.push(0);
                 continue;
             }
             if own.is_none() {
@@ -958,7 +935,6 @@ impl Builder {
             }
             self.cut_pieces();
             self.references[r].pieces += self.pieces.len() as u64;
-            self.placed_bp.push(0);
             let pieces = std::mem::take(&mut self.pieces);
             let mut result = self.write_pieces(r, path, handles, &pieces);
             if own.is_none() && result.is_ok() {
@@ -1097,7 +1073,7 @@ impl Builder {
     // reference sequence that are not adjacent there and lie in different
     // pieces; a reader computes one inside a piece from its walk row. Keeps
     // each sequence's first and last steps in `ends` for the departures
-    // across the contig's records and at its ends.
+    // across the contig's records.
     fn record_departures(
         &mut self,
         r: usize,
@@ -1110,35 +1086,12 @@ impl Builder {
         let lengths = &self.graph.lengths;
         let length = |i: usize| u64::from(lengths[(handles[i] >> 1) as usize]);
         let (pass, before) = (&self.pass, &self.before);
-        self.placed_before.clear();
-        let mut placed = 0;
-        for (i, v) in pass.iter().enumerate() {
-            self.placed_before.push(placed);
-            if v.name != NONE {
-                placed += length(i);
-            }
-        }
-        self.placed_before.push(placed);
-        let refs = self.references.len();
-        self.placed_bp[record as usize * refs + r] = placed;
-        let placed_before = &self.placed_before;
         let reference = &self.references[r];
-        let end = |i: usize, leave: bool| {
-            step_end(
-                reference,
-                &self.chunks,
-                handles[i],
-                pass[i],
-                length(i),
-                self.chunk_of[i],
-                leave,
-            )
-        };
+        let end =
+            |i: usize, leave: bool| step_end(&self.chunks, handles[i], pass[i], length(i), leave);
         let piece_of = |i: usize| pieces.partition_point(|&(_, b)| b <= i);
         let own = |from: usize, to: usize| Own {
             bp: before[to] - before[from],
-            steps: (to - from) as u64,
-            xb: placed_before[to] - placed_before[from],
             missing: 0,
         };
         // by sequence: its first and last steps so far
@@ -1152,15 +1105,14 @@ impl Builder {
                     let (leave, rejoin) = (end(i, true), end(j, false));
                     let between = own(i + 1, j);
                     if piece_of(i) != piece_of(j)
-                        && !reference.holes[&s].adjacent(between.steps, between.bp, &leave, &rejoin)
+                        && !reference.holes[&s].adjacent(between.bp, &leave, &rejoin)
                     {
                         let departure = Departure {
                             path: &path.name,
-                            frag: path.start,
                             hap_start: path.start + before[i + 1],
                             own: between,
-                            leave: Some(leave),
-                            rejoin: Some(rejoin),
+                            leave,
+                            rejoin,
                         };
                         filed.0 += 1;
                         filed.1 +=
@@ -1190,78 +1142,34 @@ impl Builder {
     }
 
     // Files the departures across each contig's records, from a record's last
-    // step on a reference sequence to the next record's first, and from the
-    // contig's first record to its first step there, and from its last step
-    // there to the contig's last record, where the contig has own sequence
-    // there.
+    // step on a reference sequence to the next record's first step there.
     fn record_contig_departures(
         &mut self,
         records: &[Record],
         links: &[Link],
     ) -> Result<(), String> {
-        let refs = self.references.len();
-        for r in 0..refs {
+        for r in 0..self.references.len() {
             let ends = std::mem::take(&mut self.ends[r]);
             let mut filed = (0, 0);
             for (&(k, s), here) in &ends {
                 let record = &records[k as usize];
-                let others = |forward: bool| {
-                    contig_between(
-                        records,
-                        links,
-                        k,
-                        forward,
-                        |j| ends.contains_key(&(j, s)),
-                        |j| self.placed_bp[j as usize * refs + r],
-                    )
-                };
-                let departure = |hap_start: u64, own: Own, leave, rejoin| Departure {
-                    path: &self.names[record.name as usize],
-                    frag: record.start,
-                    hap_start,
-                    own,
-                    leave,
-                    rejoin,
-                };
-                let mut departures = Vec::new();
-                let (previous, before) = others(false);
-                let lead = before + here.lead;
-                if previous == NONE && lead.bp > 0 {
-                    departures.push(departure(
-                        record.start - before.bp,
-                        lead,
-                        None,
-                        Some(here.first),
-                    ));
-                }
-                let (next, after) = others(true);
-                let hap_start = record.end - here.tail.bp;
-                if next == NONE {
-                    let tail = here.tail + after;
-                    if tail.bp > 0 {
-                        departures.push(departure(hap_start, tail, Some(here.last), None));
-                    }
-                } else {
+                let (next, between) =
+                    contig_after(records, links, k, |j| ends.contains_key(&(j, s)));
+                if next != NONE {
                     let there = &ends[&(next, s)];
-                    let own = here.tail + after + there.lead;
-                    if !self.references[r].holes[&s].adjacent(
-                        own.steps,
-                        own.bp,
-                        &here.last,
-                        &there.first,
-                    ) {
-                        departures.push(departure(
-                            hap_start,
+                    let own = here.tail + between + there.lead;
+                    if !self.references[r].holes[&s].adjacent(own.bp, &here.last, &there.first) {
+                        let departure = Departure {
+                            path: &self.names[record.name as usize],
+                            hap_start: record.end - here.tail.bp,
                             own,
-                            Some(here.last),
-                            Some(there.first),
-                        ));
+                            leave: here.last,
+                            rejoin: there.first,
+                        };
+                        filed.0 += 1;
+                        filed.1 +=
+                            departure.file(self.chunks.first[s as usize], &mut self.departures)?;
                     }
-                }
-                for departure in departures {
-                    filed.0 += 1;
-                    filed.1 +=
-                        departure.file(self.chunks.first[s as usize], &mut self.departures)?;
                 }
             }
             let reference = &mut self.references[r];
@@ -1273,16 +1181,8 @@ impl Builder {
 }
 
 // One end of a departure: the step `handle`, of `length` bp, on the pass
-// `at`, filed under `chunk`, as the leave or the rejoin
-fn step_end(
-    reference: &Reference,
-    chunks: &Chunks,
-    handle: u32,
-    at: Visit,
-    length: u64,
-    chunk: u32,
-    leave: bool,
-) -> End {
+// `at`, as the leave or the rejoin
+fn step_end(chunks: &Chunks, handle: u32, at: Visit, length: u64, leave: bool) -> End {
     let against = (handle & 1 == 1) != at.reverse;
     let on_start = against == leave;
     let bp = if on_start {
@@ -1293,56 +1193,34 @@ fn step_end(
     let base = if length == 0 || on_start { bp } else { bp - 1 };
     End {
         bp,
-        node: handle >> 1,
         against,
-        passes: reference.passes((handle >> 1) as usize),
-        chunk: chunks.starts[chunk as usize].1,
         base: base.min(chunks.end[at.name as usize].saturating_sub(1)),
     }
 }
 
-// The nearest record after record `k` on its contig, or before it, with a
-// step on S, NONE for none, and the contig's own sequence for S between the
-// two, or to the contig's last record, or from its first. `on_s` says
-// whether a record has a step on S, and `xb` gives the bp of one that has
-// none placed on the reference's other sequences.
-fn contig_between(
+// The nearest record after record `k` on its contig with a step on S, NONE
+// for none, and the contig's own sequence for S between the two: the records
+// between, which have no step on S, and the gaps between the records, which
+// no line covers. `on_s` says whether a record has a step on S.
+fn contig_after(
     records: &[Record],
     links: &[Link],
     k: u32,
-    forward: bool,
     on_s: impl Fn(u32) -> bool,
-    xb: impl Fn(u32) -> u64,
 ) -> (u32, Own) {
-    let step = |j: u32| {
-        if forward {
-            links[j as usize].next
-        } else {
-            links[j as usize].previous
-        }
-    };
-    let gap = |from: u32, to: u32| {
-        let (a, b) = (&records[from as usize], &records[to as usize]);
-        if forward {
-            b.start - a.end
-        } else {
-            a.start - b.end
-        }
-    };
+    let gap = |from: u32, to: u32| records[to as usize].start - records[from as usize].end;
     let mut own = Own::default();
     let mut edge = k;
-    let mut at = step(k);
+    let mut at = links[k as usize].next;
     while at != NONE && !on_s(at) {
         let (record, missing) = (&records[at as usize], gap(edge, at));
         own = own
             + Own {
                 bp: missing + record.end - record.start,
-                steps: record.steps,
-                xb: xb(at),
                 missing,
             };
         edge = at;
-        at = step(at);
+        at = links[at as usize].next;
     }
     if at != NONE {
         let missing = gap(edge, at);
@@ -1350,7 +1228,6 @@ fn contig_between(
             + Own {
                 bp: missing,
                 missing,
-                ..Own::default()
             };
     }
     (at, own)
@@ -1517,13 +1394,7 @@ fn visits_along(along: &Along, mut place: impl FnMut(usize, Visit)) {
 fn link_records(records: &[Record], names: &Interner) -> Result<Vec<Link>, String> {
     let mut order: Vec<u32> = (0..records.len() as u32).collect();
     order.sort_unstable_by_key(|&i| (records[i as usize].name, records[i as usize].start));
-    let mut links = vec![
-        Link {
-            previous: NONE,
-            next: NONE,
-        };
-        records.len()
-    ];
+    let mut links = vec![Link { next: NONE }; records.len()];
     for pair in order.windows(2) {
         let (a, b) = (&records[pair[0] as usize], &records[pair[1] as usize]);
         if a.name != b.name {
@@ -1540,7 +1411,6 @@ fn link_records(records: &[Record], names: &Interner) -> Result<Vec<Link>, Strin
             ));
         }
         links[pair[0] as usize].next = pair[1];
-        links[pair[1] as usize].previous = pair[0];
     }
     Ok(links)
 }
@@ -1717,7 +1587,6 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         references,
         rows: Sorter::new(&temp.0, "rows", SORT_BUDGET),
         departures: Sorter::new(&temp.0, "departures", DEPARTURE_SORT_BUDGET),
-        placed_bp: Vec::new(),
         ends: options.refs.iter().map(|_| FastMap::default()).collect(),
         paths: 0,
         steps: 0,
@@ -1725,7 +1594,6 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         before: Vec::new(),
         chunk_of: Vec::new(),
         pass: Vec::new(),
-        placed_before: Vec::new(),
         positions: Vec::new(),
         pieces: Vec::new(),
         stay: options.stay,
@@ -1772,7 +1640,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let mut writer = bed::Writer::create(&path)?;
         let longest = reference.longest(&graph.lengths);
         let mut header = format!(
-            "#walks\tformat:i:6\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\tkinds:Z:{KINDS}\n#placement\tnearest-pass\n#reference\t{}\n",
+            "#walks\tformat:i:6\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
             chunks.size,
             options.stay,
             options.budget.cost,

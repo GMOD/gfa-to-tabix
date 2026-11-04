@@ -496,8 +496,8 @@ fn a_path_that_jumps_over_the_reference_has_a_departure_record_over_the_stretch(
         assert_eq!(
             under(built.file(sample), &anchor),
             tsv(&[
-                &format!("{anchor} 19 71 departure B#1#b 0 10 0 0 0 70 5 - 1 70 20 2 - 1 10"),
-                &format!("{anchor} 19 71 departure D#1#d 0 20 0 0 0 20 2 + 1 10 70 5 + 1 70"),
+                &format!("{anchor} 19 71 departure B#1#b 10 0 0 70 - 20 -"),
+                &format!("{anchor} 19 71 departure D#1#d 20 0 0 20 + 70 +"),
             ]),
             "{sample}"
         );
@@ -517,10 +517,10 @@ fn a_departure_between_pieces_has_a_record_and_one_inside_a_piece_has_none() {
     assert_eq!(
         under(built.file("R"), "R#0#chr~departure"),
         tsv(&[
-            "R#0#chr~departure 0 24 departure D#1#d 0 24 0 0 0 24 4 + 1 10 0 1 + 1 0",
-            "R#0#chr~departure 5 13 departure Q#0#chr 0 6 6 1 0 6 1 + 1 0 12 3 + 1 10",
-            "R#0#chr~departure 5 18 departure I#1#i 0 6 0 0 0 6 1 + 1 0 18 3 - 1 10",
-            "R#0#chr~departure 6 19 departure I#1#i 0 18 0 0 0 6 2 - 1 0 18 4 + 1 10",
+            "R#0#chr~departure 0 24 departure D#1#d 24 0 0 24 + 0 +",
+            "R#0#chr~departure 5 13 departure Q#0#chr 6 6 0 6 + 12 +",
+            "R#0#chr~departure 5 18 departure I#1#i 6 0 0 6 + 18 -",
+            "R#0#chr~departure 6 19 departure I#1#i 18 0 0 6 - 18 +",
         ])
     );
     let whole = build("walks-two-refs.gfa", &["--chunk", "1000"]);
@@ -528,12 +528,14 @@ fn a_departure_between_pieces_has_a_record_and_one_inside_a_piece_has_none() {
     assert!(!whole.walks.contains("~departure"));
 }
 
-// R has chr1 (1 2) and chr2 (3 4); H walks 1 2 3 4. On chr1 H leaves at 2's
-// end and never comes back, so its record has no rejoin, and the 12 bp of own
-// sequence after it lie on chr2, as `xb` says; on chr2 its record has no
-// leave. Each is filed over its one end's base.
+// R has chr1 (1 2) and chr2 (3 4); H walks 1 2 3 4, then 5 of its own. On
+// chr1 H leaves at 2's end and never comes back, and on chr2 it arrives from
+// chr1 and goes on to 5: no step on either sequence lies on both sides of
+// those stretches, so none is a departure, and the file has no record. Its
+// pieces show where it goes: on chr2 a route from 4 onto 5, stored the way
+// round whose handles sort first and taken flipped.
 #[test]
-fn a_contig_that_leaves_a_sequence_for_good_has_a_one_ended_record() {
+fn a_contig_that_leaves_a_sequence_for_good_has_no_record() {
     let built = build_text(
         "one-ended",
         &[
@@ -541,33 +543,34 @@ fn a_contig_that_leaves_a_sequence_for_good_has_a_one_ended_record() {
             "S 2 AAAAAA",
             "S 3 AAAAAA",
             "S 4 AAAAAA",
+            "S 5 AAAAAA",
             "W R 0 chr1 0 12 >1>2",
             "W R 0 chr2 0 12 >3>4",
-            "W H 1 h 0 24 >1>2>3>4",
+            "W H 1 h 0 30 >1>2>3>4>5",
         ],
         &["--refs", "R"],
     );
     assert!(built.output.status.success());
-    let rows: String = built
-        .walks
-        .lines()
-        .filter(|l| l.contains("~departure"))
-        .map(|l| l.to_string() + "\n")
-        .collect();
+    assert!(!built.walks.contains("~departure"));
     assert_eq!(
-        rows,
+        rows_of(built.file("R"), "R#0#chr1", "walk", "H#1#h")
+            + &rows_of(built.file("R"), "R#0#chr2", "route", ".")
+            + &rows_of(built.file("R"), "R#0#chr2", "walk", "H#1#h"),
         tsv(&[
-            "R#0#chr1~departure 11 12 departure H#1#h 0 12 12 2 0 12 2 + 1 0 . . . . . xb:i:12",
-            "R#0#chr2~departure 0 1 departure H#1#h 0 0 12 2 0 . . . . . 0 3 + 1 0 xb:i:12",
+            "R#0#chr1 0 1 walk H#1#h 0 0 0 2 2 2 .",
+            "R#0#chr2 0 1 route . 11 -1",
+            "R#0#chr2 0 1 walk H#1#h 0 12 1 3 6 2 1",
         ])
     );
 }
 
 // H's first line ends with node 5, of 0 bp, and its second line starts where
-// the first ends. 2's end and 3's start are the same base, but the step on 5
-// lies between, so the contig departs there, over 0 bp of its own in 1 step.
+// the first ends. 2's end and 3's start are the same base and the step on 5
+// carries no sequence, so the two steps are adjacent and the contig has no
+// record there; the first piece's route from 2 onto 5, taken flipped, shows
+// the step.
 #[test]
-fn a_step_on_a_node_of_0_bp_between_two_lines_is_a_departure() {
+fn a_step_on_a_node_of_0_bp_between_two_lines_is_no_departure() {
     let built = build_text(
         "zero",
         &[
@@ -583,9 +586,15 @@ fn a_step_on_a_node_of_0_bp_between_two_lines_is_a_departure() {
         &["--refs", "R"],
     );
     assert!(built.output.status.success());
+    assert!(!built.walks.contains("~departure"));
     assert_eq!(
-        under(built.file("R"), "R#0#chr~departure"),
-        tsv(&["R#0#chr~departure 11 13 departure H#1#h 0 12 0 1 0 12 2 + 1 0 12 3 + 1 10"])
+        rows_of(built.file("R"), "R#0#chr", "route", ".")
+            + &rows_of(built.file("R"), "R#0#chr", "walk", "H#1#h"),
+        tsv(&[
+            "R#0#chr 0 1 route . 11 -5",
+            "R#0#chr 0 1 walk H#1#h 0 0 0 3 2 2 1",
+            "R#0#chr 10 11 walk H#1#h 12 12 0 2 6 2 .",
+        ])
     );
 }
 
@@ -622,7 +631,7 @@ fn steps_either_side_of_a_hole_in_the_reference_are_adjacent() {
     );
     assert_eq!(
         under(walks, "R#0#chr~departure"),
-        tsv(&["R#0#chr~departure 11 21 departure G#1#g 0 12 8 1 0 12 2 + 1 0 20 3 + 1 20"])
+        tsv(&["R#0#chr~departure 11 21 departure G#1#g 12 8 0 12 + 20 +"])
     );
 }
 
@@ -727,8 +736,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         assert_eq!(
             header(built.file(sample)),
             tsv(&[
-                "#walks format:i:6 chunk:i:10 maxnode:i:6 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000 kinds:Z:ref,nodes,route,walk,abridged,departure",
-                "#placement nearest-pass",
+                "#walks format:i:6 chunk:i:10 maxnode:i:6 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",
@@ -900,7 +908,7 @@ fn a_short_stretch_over_a_revisited_node_stays_in_its_piece_on_a_pass_there() {
     );
     assert_eq!(
         under(cut.file("R"), "R#0#chr~departure"),
-        tsv(&["R#0#chr~departure 18 30 departure K#1#k 0 30 0 0 0 30 3 + 2 20 18 2 + 2 10"])
+        tsv(&["R#0#chr~departure 18 30 departure K#1#k 30 0 0 30 + 18 +"])
     );
 }
 
@@ -1165,8 +1173,8 @@ fn a_contig_departs_once_from_each_w_line_to_the_next_with_a_step_on_r() {
     assert_eq!(
         under(walks, "R#0#chr~departure"),
         tsv(&[
-            "R#0#chr~departure 6 12 departure H#1#h 0 12 28 2 22 12 2 + 1 0 6 2 + 1 0",
-            "R#0#chr~departure 11 19 departure G#1#g 0 12 18 0 18 12 2 + 1 0 18 4 + 1 10",
+            "R#0#chr~departure 6 12 departure H#1#h 12 28 22 12 + 6 +",
+            "R#0#chr~departure 11 19 departure G#1#g 12 18 18 12 + 18 +",
         ])
     );
 }
