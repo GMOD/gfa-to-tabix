@@ -664,3 +664,13 @@ Where the findings have come from so far, and the rule each gives:
   64-name `EXPAND_NAMED_MAX` cap by a per-row threshold; and the forms'
   departures carry no pass counts, so the Forms track cannot say
   "placement choice". Both are graph-walks features for a later minor
+- **2026-11-05, ggbandage's final pass on the 13.0.1 candidate.**
+  bandage-core 899ee29 keeps "a walk with no trimmed bp and no departure"
+  whole, meant for GFA extracts, so on a walk file a contig ending inside
+  the window with no departure reads as a whole walk shorter than R ("0.3
+  kb (−200 bp)", `linked` true), while one with an unrelated departure
+  reads "contig ends inside the window": repro `clip.REF.gfa`, REF
+  `>1>2>3>4>5`, CLIP `>1>2>3`, CLIPSNP `>1>6>3`, 100 bp nodes, chr1:1-500.
+  Source: a rule keyed on the absence of facts, where a walk file states
+  them (trimmed bp 0 means the contig ends) and a GFA extract does not.
+  Fix: below
