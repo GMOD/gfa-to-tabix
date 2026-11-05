@@ -105,57 +105,57 @@
 <!-- rows -->
 <g id="node7" class="node">
 <title>rows</title>
-<polygon fill="none" stroke="#aaaaaa" points="32.62,-471.21 32.62,-495.46 86.96,-495.46 86.96,-471.21 32.62,-471.21"/>
-<text xml:space="preserve" text-anchor="start" x="47.42" y="-479.06" font-family="Helvetica,sans-Serif" font-size="12.00">kind</text>
-<polygon fill="none" stroke="#aaaaaa" points="86.96,-471.21 86.96,-495.46 382.04,-495.46 382.04,-471.21 86.96,-471.21"/>
-<text xml:space="preserve" text-anchor="start" x="167.38" y="-479.06" font-family="Helvetica,sans-Serif" font-size="12.00">columns after the kind</text>
-<polygon fill="none" stroke="#aaaaaa" points="382.04,-471.21 382.04,-495.46 649.38,-495.46 649.38,-471.21 382.04,-471.21"/>
-<text xml:space="preserve" text-anchor="start" x="461.71" y="-479.06" font-family="Helvetica,sans-Serif" font-size="12.00">what the row says</text>
-<polygon fill="#e8eef7" stroke="none" points="32.62,-446.96 32.62,-471.21 86.96,-471.21 86.96,-446.96 32.62,-446.96"/>
-<polygon fill="none" stroke="#aaaaaa" points="32.62,-446.96 32.62,-471.21 86.96,-471.21 86.96,-446.96 32.62,-446.96"/>
-<text xml:space="preserve" text-anchor="start" x="51.54" y="-454.81" font-family="Helvetica,sans-Serif" font-size="12.00">ref</text>
-<polygon fill="none" stroke="#aaaaaa" points="86.96,-446.96 86.96,-471.21 382.04,-471.21 382.04,-446.96 86.96,-446.96"/>
-<text xml:space="preserve" text-anchor="start" x="91.96" y="-455.38" font-family="Courier,monospace" font-size="11.00">GRCh38#0#chr1 0 0 0 4 2,2,2,2 10,10,10,10</text>
-<polygon fill="none" stroke="#aaaaaa" points="382.04,-446.96 382.04,-471.21 649.38,-471.21 649.38,-446.96 382.04,-446.96"/>
-<text xml:space="preserve" text-anchor="start" x="387.04" y="-454.81" font-family="Helvetica,sans-Serif" font-size="12.00">R, the reference path: 1+ 2+ 3+ 4+</text>
-<polygon fill="none" stroke="#aaaaaa" points="32.62,-422.71 32.62,-446.96 86.96,-446.96 86.96,-422.71 32.62,-422.71"/>
-<text xml:space="preserve" text-anchor="start" x="41.79" y="-430.56" font-family="Helvetica,sans-Serif" font-size="12.00">nodes</text>
-<polygon fill="none" stroke="#aaaaaa" points="86.96,-422.71 86.96,-446.96 382.04,-446.96 382.04,-422.71 86.96,-422.71"/>
-<text xml:space="preserve" text-anchor="start" x="91.96" y="-431.13" font-family="Courier,monospace" font-size="11.00">5 15</text>
-<polygon fill="none" stroke="#aaaaaa" points="382.04,-422.71 382.04,-446.96 649.38,-446.96 649.38,-422.71 382.04,-422.71"/>
-<text xml:space="preserve" text-anchor="start" x="387.04" y="-430.56" font-family="Helvetica,sans-Serif" font-size="12.00">node 5, 15 bp, the one node a route visits</text>
-<polygon fill="#ede4f5" stroke="none" points="32.62,-398.46 32.62,-422.71 86.96,-422.71 86.96,-398.46 32.62,-398.46"/>
-<polygon fill="none" stroke="#aaaaaa" points="32.62,-398.46 32.62,-422.71 86.96,-422.71 86.96,-398.46 32.62,-398.46"/>
-<text xml:space="preserve" text-anchor="start" x="44.04" y="-406.31" font-family="Helvetica,sans-Serif" font-size="12.00">route</text>
-<polygon fill="none" stroke="#aaaaaa" points="86.96,-398.46 86.96,-422.71 382.04,-422.71 382.04,-398.46 86.96,-398.46"/>
-<text xml:space="preserve" text-anchor="start" x="91.96" y="-406.88" font-family="Courier,monospace" font-size="11.00">4 . 4</text>
-<polygon fill="none" stroke="#aaaaaa" points="382.04,-398.46 382.04,-422.71 649.38,-422.71 649.38,-398.46 382.04,-398.46"/>
-<text xml:space="preserve" text-anchor="start" x="387.04" y="-406.31" font-family="Helvetica,sans-Serif" font-size="12.00">route 0: from 2+ straight to 4+</text>
-<polygon fill="#fde6cf" stroke="none" points="32.62,-374.21 32.62,-398.46 86.96,-398.46 86.96,-374.21 32.62,-374.21"/>
-<polygon fill="none" stroke="#aaaaaa" points="32.62,-374.21 32.62,-398.46 86.96,-398.46 86.96,-374.21 32.62,-374.21"/>
-<text xml:space="preserve" text-anchor="start" x="44.04" y="-382.06" font-family="Helvetica,sans-Serif" font-size="12.00">route</text>
-<polygon fill="none" stroke="#aaaaaa" points="86.96,-374.21 86.96,-398.46 382.04,-398.46 382.04,-374.21 86.96,-374.21"/>
-<text xml:space="preserve" text-anchor="start" x="91.96" y="-382.63" font-family="Courier,monospace" font-size="11.00">&#45;4 6 &#45;2</text>
-<polygon fill="none" stroke="#aaaaaa" points="382.04,-374.21 382.04,-398.46 649.38,-398.46 649.38,-374.21 382.04,-374.21"/>
-<text xml:space="preserve" text-anchor="start" x="387.04" y="-382.06" font-family="Helvetica,sans-Serif" font-size="12.00">route 1: from 2+ through 5+ to 4+</text>
-<polygon fill="none" stroke="#aaaaaa" points="32.62,-349.96 32.62,-374.21 86.96,-374.21 86.96,-349.96 32.62,-349.96"/>
-<text xml:space="preserve" text-anchor="start" x="46.29" y="-357.81" font-family="Helvetica,sans-Serif" font-size="12.00">walk</text>
-<polygon fill="none" stroke="#aaaaaa" points="86.96,-349.96 86.96,-374.21 382.04,-374.21 382.04,-349.96 86.96,-349.96"/>
-<text xml:space="preserve" text-anchor="start" x="91.96" y="-358.38" font-family="Courier,monospace" font-size="11.00">CHM13#0#chr1 0 0 0 3 2 6 0</text>
-<polygon fill="none" stroke="#aaaaaa" points="382.04,-349.96 382.04,-374.21 649.38,-374.21 649.38,-349.96 382.04,-349.96"/>
-<text xml:space="preserve" text-anchor="start" x="387.04" y="-357.81" font-family="Helvetica,sans-Serif" font-size="12.00">follows R from 1+ to 4+ by route 0</text>
-<polygon fill="none" stroke="#aaaaaa" points="32.62,-325.71 32.62,-349.96 86.96,-349.96 86.96,-325.71 32.62,-325.71"/>
-<text xml:space="preserve" text-anchor="start" x="46.29" y="-333.56" font-family="Helvetica,sans-Serif" font-size="12.00">walk</text>
-<polygon fill="none" stroke="#aaaaaa" points="86.96,-325.71 86.96,-349.96 382.04,-349.96 382.04,-325.71 86.96,-325.71"/>
-<text xml:space="preserve" text-anchor="start" x="91.96" y="-334.13" font-family="Courier,monospace" font-size="11.00">HG002#1#chr1 0 0 0 4 2 6 2</text>
-<polygon fill="none" stroke="#aaaaaa" points="382.04,-325.71 382.04,-349.96 649.38,-349.96 649.38,-325.71 382.04,-325.71"/>
-<text xml:space="preserve" text-anchor="start" x="387.04" y="-333.56" font-family="Helvetica,sans-Serif" font-size="12.00">follows R from 1+ to 4+ by route 1</text>
-<polygon fill="none" stroke="#aaaaaa" points="32.62,-301.46 32.62,-325.71 86.96,-325.71 86.96,-301.46 32.62,-301.46"/>
-<text xml:space="preserve" text-anchor="start" x="46.29" y="-309.31" font-family="Helvetica,sans-Serif" font-size="12.00">walk</text>
-<polygon fill="none" stroke="#aaaaaa" points="86.96,-301.46 86.96,-325.71 382.04,-325.71 382.04,-301.46 86.96,-301.46"/>
-<text xml:space="preserve" text-anchor="start" x="91.96" y="-309.88" font-family="Courier,monospace" font-size="11.00">HG002#2#chr1 0 0 0 4 2 6 .</text>
-<polygon fill="none" stroke="#aaaaaa" points="382.04,-301.46 382.04,-325.71 649.38,-325.71 649.38,-301.46 382.04,-301.46"/>
-<text xml:space="preserve" text-anchor="start" x="387.04" y="-309.31" font-family="Helvetica,sans-Serif" font-size="12.00">follows R from 1+ to 4+, no routes</text>
+<polygon fill="none" stroke="#aaaaaa" points="32.62,-471.21 32.62,-495.46 82.46,-495.46 82.46,-471.21 32.62,-471.21"/>
+<text xml:space="preserve" text-anchor="start" x="45.17" y="-479.06" font-family="Helvetica,sans-Serif" font-size="12.00">kind</text>
+<polygon fill="none" stroke="#aaaaaa" points="82.46,-471.21 82.46,-495.46 386.54,-495.46 386.54,-471.21 82.46,-471.21"/>
+<text xml:space="preserve" text-anchor="start" x="167.37" y="-479.06" font-family="Helvetica,sans-Serif" font-size="12.00">columns after the kind</text>
+<polygon fill="none" stroke="#aaaaaa" points="386.54,-471.21 386.54,-495.46 649.38,-495.46 649.38,-471.21 386.54,-471.21"/>
+<text xml:space="preserve" text-anchor="start" x="463.96" y="-479.06" font-family="Helvetica,sans-Serif" font-size="12.00">what the row says</text>
+<polygon fill="#e8eef7" stroke="none" points="32.62,-446.96 32.62,-471.21 82.46,-471.21 82.46,-446.96 32.62,-446.96"/>
+<polygon fill="none" stroke="#aaaaaa" points="32.62,-446.96 32.62,-471.21 82.46,-471.21 82.46,-446.96 32.62,-446.96"/>
+<text xml:space="preserve" text-anchor="start" x="49.29" y="-454.81" font-family="Helvetica,sans-Serif" font-size="12.00">ref</text>
+<polygon fill="none" stroke="#aaaaaa" points="82.46,-446.96 82.46,-471.21 386.54,-471.21 386.54,-446.96 82.46,-446.96"/>
+<text xml:space="preserve" text-anchor="start" x="87.46" y="-455.38" font-family="Courier,monospace" font-size="11.00">GRCh38#0#chr1 0 0 0 4 2,2,2,2 10,10,10,10 .</text>
+<polygon fill="none" stroke="#aaaaaa" points="386.54,-446.96 386.54,-471.21 649.38,-471.21 649.38,-446.96 386.54,-446.96"/>
+<text xml:space="preserve" text-anchor="start" x="391.54" y="-454.81" font-family="Helvetica,sans-Serif" font-size="12.00">R, the reference path: 1+ 2+ 3+ 4+</text>
+<polygon fill="none" stroke="#aaaaaa" points="32.62,-422.71 32.62,-446.96 82.46,-446.96 82.46,-422.71 32.62,-422.71"/>
+<text xml:space="preserve" text-anchor="start" x="39.54" y="-430.56" font-family="Helvetica,sans-Serif" font-size="12.00">nodes</text>
+<polygon fill="none" stroke="#aaaaaa" points="82.46,-422.71 82.46,-446.96 386.54,-446.96 386.54,-422.71 82.46,-422.71"/>
+<text xml:space="preserve" text-anchor="start" x="87.46" y="-431.13" font-family="Courier,monospace" font-size="11.00">5 15</text>
+<polygon fill="none" stroke="#aaaaaa" points="386.54,-422.71 386.54,-446.96 649.38,-446.96 649.38,-422.71 386.54,-422.71"/>
+<text xml:space="preserve" text-anchor="start" x="391.54" y="-430.56" font-family="Helvetica,sans-Serif" font-size="12.00">node 5, 15 bp, the one node a route visits</text>
+<polygon fill="#ede4f5" stroke="none" points="32.62,-398.46 32.62,-422.71 82.46,-422.71 82.46,-398.46 32.62,-398.46"/>
+<polygon fill="none" stroke="#aaaaaa" points="32.62,-398.46 32.62,-422.71 82.46,-422.71 82.46,-398.46 32.62,-398.46"/>
+<text xml:space="preserve" text-anchor="start" x="41.79" y="-406.31" font-family="Helvetica,sans-Serif" font-size="12.00">route</text>
+<polygon fill="none" stroke="#aaaaaa" points="82.46,-398.46 82.46,-422.71 386.54,-422.71 386.54,-398.46 82.46,-398.46"/>
+<text xml:space="preserve" text-anchor="start" x="87.46" y="-406.88" font-family="Courier,monospace" font-size="11.00">4 . 4</text>
+<polygon fill="none" stroke="#aaaaaa" points="386.54,-398.46 386.54,-422.71 649.38,-422.71 649.38,-398.46 386.54,-398.46"/>
+<text xml:space="preserve" text-anchor="start" x="391.54" y="-406.31" font-family="Helvetica,sans-Serif" font-size="12.00">route 0: from 2+ straight to 4+</text>
+<polygon fill="#fde6cf" stroke="none" points="32.62,-374.21 32.62,-398.46 82.46,-398.46 82.46,-374.21 32.62,-374.21"/>
+<polygon fill="none" stroke="#aaaaaa" points="32.62,-374.21 32.62,-398.46 82.46,-398.46 82.46,-374.21 32.62,-374.21"/>
+<text xml:space="preserve" text-anchor="start" x="41.79" y="-382.06" font-family="Helvetica,sans-Serif" font-size="12.00">route</text>
+<polygon fill="none" stroke="#aaaaaa" points="82.46,-374.21 82.46,-398.46 386.54,-398.46 386.54,-374.21 82.46,-374.21"/>
+<text xml:space="preserve" text-anchor="start" x="87.46" y="-382.63" font-family="Courier,monospace" font-size="11.00">&#45;4 6 &#45;2</text>
+<polygon fill="none" stroke="#aaaaaa" points="386.54,-374.21 386.54,-398.46 649.38,-398.46 649.38,-374.21 386.54,-374.21"/>
+<text xml:space="preserve" text-anchor="start" x="391.54" y="-382.06" font-family="Helvetica,sans-Serif" font-size="12.00">route 1: from 2+ through 5+ to 4+</text>
+<polygon fill="none" stroke="#aaaaaa" points="32.62,-349.96 32.62,-374.21 82.46,-374.21 82.46,-349.96 32.62,-349.96"/>
+<text xml:space="preserve" text-anchor="start" x="44.04" y="-357.81" font-family="Helvetica,sans-Serif" font-size="12.00">walk</text>
+<polygon fill="none" stroke="#aaaaaa" points="82.46,-349.96 82.46,-374.21 386.54,-374.21 386.54,-349.96 82.46,-349.96"/>
+<text xml:space="preserve" text-anchor="start" x="87.46" y="-358.38" font-family="Courier,monospace" font-size="11.00">CHM13#0#chr1 0 0 0 3 2 0</text>
+<polygon fill="none" stroke="#aaaaaa" points="386.54,-349.96 386.54,-374.21 649.38,-374.21 649.38,-349.96 386.54,-349.96"/>
+<text xml:space="preserve" text-anchor="start" x="391.54" y="-357.81" font-family="Helvetica,sans-Serif" font-size="12.00">follows R from 1+ to 4+ by route 0</text>
+<polygon fill="none" stroke="#aaaaaa" points="32.62,-325.71 32.62,-349.96 82.46,-349.96 82.46,-325.71 32.62,-325.71"/>
+<text xml:space="preserve" text-anchor="start" x="44.04" y="-333.56" font-family="Helvetica,sans-Serif" font-size="12.00">walk</text>
+<polygon fill="none" stroke="#aaaaaa" points="82.46,-325.71 82.46,-349.96 386.54,-349.96 386.54,-325.71 82.46,-325.71"/>
+<text xml:space="preserve" text-anchor="start" x="87.46" y="-334.13" font-family="Courier,monospace" font-size="11.00">HG002#1#chr1 0 0 0 4 2 2</text>
+<polygon fill="none" stroke="#aaaaaa" points="386.54,-325.71 386.54,-349.96 649.38,-349.96 649.38,-325.71 386.54,-325.71"/>
+<text xml:space="preserve" text-anchor="start" x="391.54" y="-333.56" font-family="Helvetica,sans-Serif" font-size="12.00">follows R from 1+ to 4+ by route 1</text>
+<polygon fill="none" stroke="#aaaaaa" points="32.62,-301.46 32.62,-325.71 82.46,-325.71 82.46,-301.46 32.62,-301.46"/>
+<text xml:space="preserve" text-anchor="start" x="44.04" y="-309.31" font-family="Helvetica,sans-Serif" font-size="12.00">walk</text>
+<polygon fill="none" stroke="#aaaaaa" points="82.46,-301.46 82.46,-325.71 386.54,-325.71 386.54,-301.46 82.46,-301.46"/>
+<text xml:space="preserve" text-anchor="start" x="87.46" y="-309.88" font-family="Courier,monospace" font-size="11.00">HG002#2#chr1 0 0 0 4 2 .</text>
+<polygon fill="none" stroke="#aaaaaa" points="386.54,-301.46 386.54,-325.71 649.38,-325.71 649.38,-301.46 386.54,-301.46"/>
+<text xml:space="preserve" text-anchor="start" x="391.54" y="-309.31" font-family="Helvetica,sans-Serif" font-size="12.00">follows R from 1+ to 4+, no routes</text>
 <text xml:space="preserve" text-anchor="start" x="40.62" y="-282.06" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">Every row starts GRCh38#0#chr1 0 1, the chunk&#39;s first base, so a query returns whole 64 kb chunks.</text>
 <text xml:space="preserve" text-anchor="start" x="40.62" y="-267.81" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#555555">The file holds each distinct route once, and a walk row lists only the routes its path takes.</text>
 </g>

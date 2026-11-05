@@ -293,11 +293,11 @@ def decode_walks(rows):
     return R, routes
 
 
-def splice(R, routes, first, last, choices):
+def splice(R, routes, first, nsteps, choices):
     pos = R.index(first)
     steps, cells = [R[pos]], [td(R[pos][0], BLUE[0])]
     pending = list(choices)
-    while R[pos] != last or pending:
+    while len(steps) < nsteps:
         route = None
         if pending:
             route_id, flip = pending[0]
@@ -358,12 +358,12 @@ def walks(rows, w_lines):
             simple.append(tr([td(f"route {route_id}", bg), td(" → ".join(node(h) for h in nodes if h), align="LEFT")]))
             route_id += 1
         elif kind == "walk":
-            start, end = int(rest[5]), int(rest[5]) + int(rest[6])
-            first, last = (start >> 1, start & 1), (end >> 1, end & 1)
-            choices, _ = deltas(rest[7])
+            start = int(rest[5])
+            first = (start >> 1, start & 1)
+            choices, _ = deltas(rest[6])
             taken = " and ".join(f"route {c}" for c, _ in choices)
-            meaning = f"follows R from {handle(first)} to {handle(last)}" + (f" by {taken}" if choices else ", no routes")
-            steps, cells = splice(R, routes, first, last, choices)
+            steps, cells = splice(R, routes, first, int(rest[4]), choices)
+            meaning = f"follows R from {handle(first)} to {handle(steps[-1])}" + (f" by {taken}" if choices else ", no routes")
             path = rest[0].rsplit("#", 1)[0]
             if [h[0] for h in steps] != w_lines[path]:
                 sys.exit(f"figures.py: {path} decodes to {steps}, but its W line visits {w_lines[path]}")

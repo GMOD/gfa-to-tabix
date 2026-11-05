@@ -508,3 +508,12 @@ Where the findings have come from so far, and the rule each gives:
   it by path is refused. Source: the machine; a script only ever run
   through `bash`. Fixed: the checks ran with `TMPDIR` under the worktree,
   and `fuzz6.sh` is executable. Open: the user clears `/tmp/claude-1001`
+- **2026-11-05, the 3.0.0 release workflow.** CI's `scripts/figures.py
+  --check` failed: its walk-row parser still read format 6's earlier
+  `end` column, dropped by 76c9223, so it ran off the row. No session's
+  checks ran it since; the release stopped at its tests and published
+  nothing. Source: a check left out of the local runs (the session ran
+  `cargo test`, clippy and fmt, not the whole CI job). Fixed: the
+  parser decodes by `nsteps` as the spec does, and the README figure
+  redrawn with format 6 rows. Guard: run every step of `push.yml`'s
+  "Format, lint and test" job before a release push
