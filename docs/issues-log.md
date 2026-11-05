@@ -673,7 +673,12 @@ Where the findings have come from so far, and the rule each gives:
   `>1>2>3>4>5`, CLIP `>1>2>3`, CLIPSNP `>1>6>3`, 100 bp nodes, chr1:1-500.
   Source: a rule keyed on the absence of facts, where a walk file states
   them (trimmed bp 0 means the contig ends) and a GFA extract does not.
-  Fix: below
+  Fixed in bandage-core e4e5c10 (13.0.1): the source decides; walk-file
+  tables state trimmed bp, 0 kept on the path, so a side with no trim and
+  no departure is a contig end, and GFA text and gbz-base extracts, which
+  state none, stay whole. Guard: `graphWalks.test.ts` on `clip.REF`
+  (ggbandage's repro) at chr1:0-500 (context 0, 100) and 50-450, with
+  `rejoin.GRCh38` HG002#2 and the pggb whole-reference test as controls
 - **2026-11-05, the tube map's final pass.** Its paths panel found a walk
   file's sequence length by probing chunk starts upward from 0, assuming
   rows start at 0 and a `.tbi` can tell chunks apart; the shipped E. coli
