@@ -8,7 +8,8 @@
 # counts are how often the file's `ref` rows hold the node, and the
 # header's `revisited` how many nodes they hold more than once; and that
 # each `abridged` row states its own piece of its detail record: its
-# hapOffset, steps and bp. Then checks the reader promise (every base of a record's
+# hapOffset, steps and bp, and its first and last steps on R, by position in
+# R and strand, as start and end. Then checks the reader promise (every base of a record's
 # stretch where its path has no piece lies under a block of the record or a
 # crowd row of the path), and costs each window the way @gmod/tabix reads
 # it: rows by class, text bytes, and requests and bytes from the .tbi with
@@ -211,6 +212,7 @@ def decode(r, routes, cols):
 ref_nodes = set()
 pieces = collections.defaultdict(list)   # path -> [(frag, offset, piece, steps)]
 detail_of = {}   # (path, frag, piece) -> (seq, cs, detail) for a piece in a detail record
+detail_ends = {}   # (path, frag, piece) -> its first and last steps on R, (position in R, handle)
 records = []
 crowds = collections.defaultdict(list)    # (seq, path) -> [(a, b)]
 dep_rows = []   # (seq, a, b, kind, body index or crowd path)
@@ -224,7 +226,7 @@ bad = collections.Counter()
 bad_examples = []
 crowd_detail = 0
 abridged = {}   # (seq, cs) -> [detail]
-abridged_rows = []   # (path, frag, offset, piece, steps, bp)
+abridged_rows = []   # (path, frag, offset, piece, steps, bp, (start, end), (seq, cs, detail))
 stated_passes = {}   # node -> the count its ref rows state
 held_passes = collections.Counter()   # node -> positions of the file's ref rows holding it
 keep_r = {}
@@ -270,7 +272,23 @@ def take_walk(r, routes, nodes, cols, origin=None):
         bad['decoded step count differs from the row'] += 1
     pieces[cols[4]].append((int(cols[5]), int(cols[6]), int(cols[7]), steps))
     if origin is not None:
-        detail_of[(cols[4], int(cols[5]), int(cols[7]))] = origin
+        key = (cols[4], int(cols[5]), int(cols[7]))
+        detail_of[key] = origin
+        runs = [x for x in segs if x[0] == 'R']
+        detail_ends[key] = ((runs[0][1], r.h[runs[0][1]] ^ runs[0][3]), (runs[-1][2], r.h[runs[-1][2]] ^ runs[-1][3]))
+
+
+def abridged_ends(r, start, end):
+    # The positions in R and handles an abridged row's start and end name:
+    # start at occurrence k with `@k`, else the first; end at occurrence k
+    # with `@k`, else the one nearest start's position, the later on a tie
+    h, k = with_k(start)
+    h = int(h)
+    i = r.copy(h, 0 if k is None else k)
+    e, ke = with_k(end)
+    e = int(e)
+    j = None if i is None else r.nearest(e, i) if ke is None else r.copy(e, ke)
+    return (i, h), (j, e)
 
 
 chunk = None
@@ -383,7 +401,7 @@ with gzip.open(args.file, 'rt') as f:
             abridged.setdefault((seq, a), []).append(int(c[12]))
             if in_shard(c[4]):
                 abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), int(c[9]),
-                                      int(c[10].split('@')[0]) >> 1, int(c[11].split('@')[0]) >> 1, (seq, a, int(c[12]))))
+                                      abridged_ends(r, c[10], c[11]), (seq, a, int(c[12]))))
 for v in abridged.values():
     v[:] = sorted(set(v))
 
@@ -606,22 +624,21 @@ for path, ps in pieces.items():
     for frag, offset, piece, steps in ps:
         n = sum(x[6] if x[0] == 'R' else x[1] for x in steps)
         bp = sum(x[7] if x[0] == 'R' else x[2] for x in steps)
-        runs = [x for x in steps if x[0] == 'R']
-        ends = (runs[0][3][0], runs[-1][4][0]) if runs else (None, None)
-        held_pieces[(path, frag, piece)] = (offset, n, bp, ends)
+        held_pieces[(path, frag, piece)] = (offset, n, bp)
 stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4], ())[:3] != (row[2], row[4], row[5])]
 print(f'{len(stray)}\tabridged rows unlike the piece their detail record holds (must be 0)')
 for row in stray[:args.examples]:
     print('   abridged', row, held_pieces.get(row[:2] + row[3:4]))
-misplaced = [row for row in abridged_rows if detail_of.get(row[:2] + row[3:4]) != row[8]]
+misplaced = [row for row in abridged_rows if detail_of.get(row[:2] + row[3:4]) != row[7]]
 print(f'{len(misplaced)}\tabridged rows whose piece is not in the detail record they name (must be 0)')
 for row in misplaced[:args.examples]:
     print('   misplaced', row, detail_of.get(row[:2] + row[3:4]))
 wrong_ends = [row for row in abridged_rows
-              if row[:2] + row[3:4] in held_pieces and held_pieces[row[:2] + row[3:4]][3] != (row[6], row[7])]
-print(f'{len(wrong_ends)}\tabridged rows whose start or end is not their piece\'s first or last node on R (must be 0)')
+              if row[:2] + row[3:4] in detail_ends and detail_ends[row[:2] + row[3:4]] != row[6]]
+print(f'{len(wrong_ends)}\tabridged rows whose start or end is not their piece\'s first or last step on R, '
+      'by position in R and strand (must be 0)')
 for row in wrong_ends[:args.examples]:
-    print('   ends', row, held_pieces[row[:2] + row[3:4]][3])
+    print('   ends', row, detail_ends[row[:2] + row[3:4]])
 rowed = {row[:2] + row[3:4] for row in abridged_rows}
 unrowed = [k for k in detail_of if k not in rowed]
 print(f'{len(unrowed)}\tdetail pieces with no abridged row (must be 0)')
