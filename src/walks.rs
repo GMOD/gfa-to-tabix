@@ -245,6 +245,14 @@ impl Reference {
         passes
     }
 
+    // How many times the reference's paths pass node `id`
+    fn passes(&self, id: usize) -> u32 {
+        match self.visits_of.get(&(id as u32)) {
+            Some(&(from, to)) => to - from,
+            None => 1,
+        }
+    }
+
     fn first_visit(&self, id: usize) -> Visit {
         Visit {
             name: self.placement[id],
@@ -1087,8 +1095,10 @@ impl Builder {
         let length = |i: usize| u64::from(lengths[(handles[i] >> 1) as usize]);
         let (pass, before) = (&self.pass, &self.before);
         let reference = &self.references[r];
-        let end =
-            |i: usize, leave: bool| step_end(&self.chunks, handles[i], pass[i], length(i), leave);
+        let end = |i: usize, leave: bool| {
+            let passes = reference.passes((handles[i] >> 1) as usize);
+            step_end(&self.chunks, handles[i], pass[i], length(i), passes, leave)
+        };
         let piece_of = |i: usize| pieces.partition_point(|&(_, b)| b <= i);
         let own = |from: usize, to: usize| Own {
             bp: before[to] - before[from],
@@ -1181,8 +1191,8 @@ impl Builder {
 }
 
 // One end of a departure: the step `handle`, of `length` bp, on the pass
-// `at`, as the leave or the rejoin
-fn step_end(chunks: &Chunks, handle: u32, at: Visit, length: u64, leave: bool) -> End {
+// `at` of the reference's `passes` over its node, as the leave or the rejoin
+fn step_end(chunks: &Chunks, handle: u32, at: Visit, length: u64, passes: u32, leave: bool) -> End {
     let against = (handle & 1 == 1) != at.reverse;
     let on_start = against == leave;
     let bp = if on_start {
@@ -1195,6 +1205,7 @@ fn step_end(chunks: &Chunks, handle: u32, at: Visit, length: u64, leave: bool) -
         bp,
         against,
         base: base.min(chunks.end[at.name as usize].saturating_sub(1)),
+        passes,
     }
 }
 
@@ -1640,8 +1651,9 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         let mut writer = bed::Writer::create(&path)?;
         let longest = reference.longest(&graph.lengths);
         let mut header = format!(
-            "#walks\tformat:i:6\tchunk:i:{}\tmaxnode:i:{longest}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
+            "#walks\tformat:i:6\tchunk:i:{}\tmaxnode:i:{longest}\trevisited:i:{}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
             chunks.size,
+            reference.visits_of.len(),
             options.stay,
             options.budget.cost,
             options.budget.bytes,
@@ -1696,13 +1708,18 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let sequence = options.sequences.then_some(&sequence_of);
     // Chunks encode in parallel, a batch at a time, and are written in order.
     type Encoded = Result<(Vec<u8>, Vec<usize>, routes::Counts, routes::Details), String>;
-    let encode = |raw: &[Vec<u8>]| -> Encoded {
+    let encode = |chunk: u32, raw: &[Vec<u8>]| -> Encoded {
+        let reference =
+            &references[chunks.owner[chunks.starts[chunk as usize].0 as usize] as usize];
         let (mut lines, mut ends) = (Vec::new(), Vec::new());
         let mut counts = routes::Counts::default();
         let mut details = routes::Details::new();
         routes::write_chunk(
             raw,
-            &graph.lengths,
+            routes::Nodes {
+                lengths: &graph.lengths,
+                passes: &|id| reference.passes(id),
+            },
             sequence,
             options.budget,
             &mut counts,
@@ -1724,10 +1741,10 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                 scope.spawn(|| {
                     loop {
                         let k = next.fetch_add(1, Ordering::Relaxed);
-                        let Some((_, raw)) = batch.get(k) else {
+                        let Some((chunk, raw)) = batch.get(k) else {
                             break;
                         };
-                        *encoded[k].lock().unwrap() = Some(encode(raw));
+                        *encoded[k].lock().unwrap() = Some(encode(*chunk, raw));
                     }
                 });
             }

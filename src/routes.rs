@@ -594,6 +594,13 @@ const BGZF_BLOCK: usize = 65280;
 // One record per Tabix leaf bin, so a query for one detail record reads no other
 pub const DETAIL_SPACING: u64 = 16384;
 
+// Each node's length in bp, and how many times the reference's paths pass it
+#[derive(Clone, Copy)]
+pub struct Nodes<'a> {
+    pub lengths: &'a [u32],
+    pub passes: &'a dyn Fn(usize) -> u32,
+}
+
 // The rows a chunk files under its detail sequence, one record per abridged
 // path, each row without the anchor columns and with its newline
 pub type Details = Vec<Vec<Vec<u8>>>;
@@ -722,16 +729,18 @@ fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64, ratio: f64) -> Vec<G
 // Writes the rows of a chunk's pieces, `raw` as the sort holds them, through
 // `emit`, each without the anchor columns and with its newline. `sequence`
 // gives a node's bases with --sequences. A chunk over `budget` moves its
-// costliest paths' rows to `details`, and leaves an `abridged` row for each.
+// costliest paths' rows to `details`, and leaves an `abridged` row for each
+// of their pieces.
 pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     raw: &[Vec<u8>],
-    lengths: &[u32],
+    nodes: Nodes,
     sequence: Option<&S>,
     budget: Budget,
     counts: &mut Counts,
     emit: &mut dyn FnMut(&[u8]) -> Result<(), String>,
     details: &mut Details,
 ) -> Result<(), String> {
+    let lengths = nodes.lengths;
     let mut references: Vec<Piece> = raw
         .iter()
         .filter(|row| is_reference(row))
@@ -765,7 +774,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         &path,
         &references,
         &enc,
-        lengths,
+        nodes,
         sequence,
         &mut scratch,
         &mut |row| {
@@ -799,20 +808,22 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         }
     }
     let kept = encode_all(&path, &pieces, (0..pieces.len()).filter(|&k| !gone[k]))?;
-    emit_rows(&path, &references, &kept, lengths, sequence, counts, emit)?;
+    emit_rows(&path, &references, &kept, nodes, sequence, counts, emit)?;
     drop(kept);
     let mut detail_counts = Counts::default();
     for (k, group) in moved.iter().enumerate() {
         let mut members = group.pieces.clone();
         members.sort_by_key(|&k| pieces[k].offset);
         let alone = encode_all(&path, &pieces, members)?;
-        emit(&summary_row(&path, &alone.walks, lengths, k))?;
+        for (piece, walk) in &alone.walks {
+            emit(&summary_row(&path, piece, walk, lengths, k))?;
+        }
         let mut record = Vec::new();
         emit_rows(
             &path,
             &[],
             &alone,
-            lengths,
+            nodes,
             sequence,
             &mut detail_counts,
             &mut |row| {
@@ -827,38 +838,32 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     Ok(())
 }
 
-// The `abridged` row standing for a path's pieces `members`, in offset order,
-// whose rows are detail record `k`
-fn summary_row(path: &Path, members: &[(&Piece, Walk)], lengths: &[u32], k: usize) -> Vec<u8> {
-    let (first, first_walk) = &members[0];
-    let (_, last_walk) = &members[members.len() - 1];
-    let steps: u64 = members.iter().map(|(p, _)| p.handles.len() as u64).sum();
-    let bp: u64 = members
+// The `abridged` row standing for one piece of a path whose pieces in the
+// chunk are detail record `k`
+fn summary_row(path: &Path, piece: &Piece, walk: &Walk, lengths: &[u32], k: usize) -> Vec<u8> {
+    let bp: u64 = piece
+        .handles
         .iter()
-        .flat_map(|(p, _)| p.handles.iter())
         .map(|&h| u64::from(lengths[(h >> 1) as usize]))
         .sum();
     let mut line = b"abridged\t".to_vec();
-    line.extend_from_slice(first.name);
-    for n in [first.frag, first.offset] {
+    line.extend_from_slice(piece.name);
+    for n in [
+        piece.frag,
+        piece.offset,
+        u64::from(piece.piece),
+        piece.handles.len() as u64,
+        bp,
+    ] {
         line.push(b'\t');
         line.extend_from_slice(n.to_string().as_bytes());
     }
     line.push(b'\t');
-    push_list(
-        &mut line,
-        differences(members.iter().map(|(p, _)| i64::from(p.piece)), &mut 0),
-    );
-    for n in [steps, bp] {
-        line.push(b'\t');
-        line.extend_from_slice(n.to_string().as_bytes());
-    }
+    push_copy(&mut line, walk.start, walk.start_copy);
     line.push(b'\t');
-    push_copy(&mut line, first_walk.start, first_walk.start_copy);
-    line.push(b'\t');
-    let end_copy = (path.nearest(last_walk.end, first_walk.start_at) != Some(last_walk.end_at))
-        .then(|| path.rank(last_walk.end_at));
-    push_copy(&mut line, last_walk.end, end_copy);
+    let end_copy = (path.nearest(walk.end, walk.start_at) != Some(walk.end_at))
+        .then(|| path.rank(walk.end_at));
+    push_copy(&mut line, walk.end, end_copy);
     line.push(b'\t');
     line.extend_from_slice(k.to_string().as_bytes());
     line.push(b'\n');
@@ -871,11 +876,12 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     path: &Path,
     references: &[Piece],
     enc: &Encoded,
-    lengths: &[u32],
+    nodes: Nodes,
     sequence: Option<&S>,
     counts: &mut Counts,
     emit: &mut dyn FnMut(&[u8]) -> Result<(), String>,
 ) -> Result<(), String> {
+    let Nodes { lengths, passes } = nodes;
     let routes = &enc.routes;
     let walks = &enc.walks;
     let anchor = |route: &Route| {
@@ -930,6 +936,17 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
                 .iter()
                 .map(|&h| i64::from(lengths[(h >> 1) as usize])),
         );
+        line.push(b'\t');
+        let counts: Vec<i64> = p
+            .handles
+            .iter()
+            .map(|&h| i64::from(passes((h >> 1) as usize)))
+            .collect();
+        if counts.iter().all(|&n| n == 1) {
+            line.push(b'.');
+        } else {
+            push_list(&mut line, counts.into_iter());
+        }
         with_bases(&mut line, &p.handles);
         line.push(b'\n');
         emit(&line)?;

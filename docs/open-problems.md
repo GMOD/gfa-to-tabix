@@ -217,10 +217,12 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   and graph-walks 5 refuses it, as it does a window at 13.5 Mb of chr14,
   where 4.2 M rows lie in one Mb. Measured in
   [results/minimal](departures/results/minimal/README.md#where-the-chm13-files-rows-are).
-  The interim plan (2026-11-05) is to host the file as it is, with that
-  refusal over those stretches; a placement rule for CHM13's repeats
-  might lift it, and a CHM13-referenced graph, if HPRC publishes one,
-  would avoid it ([handoff](handoff/2026-10-31-departures.md), item 2)
+  Decided 2026-11-05: the hs1 files come from HPRC v2.1's
+  CHM13-referenced graph, which HPRC publishes, and this file is not
+  hosted ([results](departures/results/arbitration/README.md)). The hops
+  are haplotypes alternating between the collapsed copies every few
+  hundred bp, which a placement rule for repeats could still reduce for
+  pggb, where no graph on the reference's own copies exists
 - To ask the pggb authors: whether they would publish `odgi untangle`
   projections of release 2 against GRCh38 and CHM13; whether a
   chain-based single-copy projection is what they would endorse for a

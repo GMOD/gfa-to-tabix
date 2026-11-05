@@ -16,6 +16,9 @@ pub struct End {
     pub against: bool,
     // the base of the node beside the breakpoint, clipped to S
     pub base: u64,
+    // how many times the reference's paths pass the step's node: above 1,
+    // which pass the step takes is the placement's choice
+    pub passes: u32,
 }
 
 // A stretch of a contig that is the path's own sequence for S: its bp, and
@@ -77,8 +80,8 @@ impl Departure<'_> {
         (a.min(b), a.max(b) + 1)
     }
 
-    // `departure path hapStart ownBp missingBp leavePos leaveStrand rejoinPos
-    // rejoinStrand`
+    // `departure path hapStart ownBp missingBp leavePos leaveStrand
+    // leavePasses rejoinPos rejoinStrand rejoinPasses`
     fn body(&self, out: &mut Vec<u8>) {
         out.extend_from_slice(b"departure\t");
         out.extend_from_slice(self.path);
@@ -89,7 +92,8 @@ impl Departure<'_> {
         for end in [self.leave, self.rejoin] {
             out.push(b'\t');
             push_u64(out, end.bp);
-            out.extend_from_slice(if end.against { b"\t-" } else { b"\t+" });
+            out.extend_from_slice(if end.against { b"\t-\t" } else { b"\t+\t" });
+            push_u64(out, u64::from(end.passes));
         }
     }
 

@@ -4,7 +4,11 @@
 # (`@k` and `:k` copies), recomputes every departure from those
 # positions, and checks them against the departure records: each departure
 # that needs a record has one with the same fields, and no record lacks a
-# departure. Then checks the reader promise (every base of a record's
+# departure, each end's pass count included; that each `ref` row's pass
+# counts are how often the file's `ref` rows hold the node, and the
+# header's `revisited` how many nodes they hold more than once; and that
+# each `abridged` row states its own piece of its detail record: its
+# hapOffset, steps and bp. Then checks the reader promise (every base of a record's
 # stretch where its path has no piece lies under a block of the record or a
 # crowd row of the path), and costs each window the way @gmod/tabix reads
 # it: rows by class, text bytes, and requests and bytes from the .tbi with
@@ -218,7 +222,10 @@ seq_len = collections.Counter()
 bad = collections.Counter()
 bad_examples = []
 crowd_detail = 0
-abridged = {}   # (seq, cs) -> [(detail, pages)]
+abridged = {}   # (seq, cs) -> [detail]
+abridged_rows = []   # (path, frag, offset, piece, steps, bp)
+stated_passes = {}   # node -> the count its ref rows state
+held_passes = collections.Counter()   # node -> positions of the file's ref rows holding it
 keep_r = {}
 record_index = {}
 
@@ -340,6 +347,13 @@ with gzip.open(args.file, 'rt') as f:
         if kind == 'ref':
             hs, _ = handles(c[9], 0)
             lengths = ints(c[10])
+            counts = [1] * len(hs) if c[11] == '.' else ints(c[11])
+            if len(counts) != len(hs):
+                bad['ref row: pass counts not one per step'] += 1
+            for h, n in zip(hs, counts):
+                held_passes[h >> 1] += 1
+                if stated_passes.setdefault(h >> 1, n) != n:
+                    bad['ref rows: one node with two pass counts'] += 1
             r.add(int(c[6]), hs, lengths)
             seq_len[seq] = max(seq_len[seq], r.off[-1] + r.len[-1])
             for h in hs:
@@ -361,11 +375,13 @@ with gzip.open(args.file, 'rt') as f:
         elif kind == 'walk':
             take_walk(r, routes, nodes, c)
         elif kind == 'abridged':
-            # abridged path frag offset pieces steps bp start end detail pages
+            # abridged path frag offset piece steps bp start end detail
             keep_r[(seq, a)] = r
             abridged.setdefault((seq, a), []).append(int(c[12]))
+            if in_shard(c[4]):
+                abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), int(c[9])))
 for v in abridged.values():
-    v.sort()
+    v[:] = sorted(set(v))
 
 print('# header')
 print('\t'.join(f'{k}:{v}' for k, v in header.items()))
@@ -396,13 +412,14 @@ def end_of(step, against, leave, chunk):
     node, off, length = step
     on_start = against == leave
     bp = off if on_start else off + length
-    return (bp, '-' if against else '+', node, chunk)
+    return (bp, '-' if against else '+', stated_passes.get(node), node, chunk)
 
 
 def parse_record(rec):
-    # departure path hapStart ownBp missingBp leavePos leaveStrand rejoinPos rejoinStrand [tags]
+    # departure path hapStart ownBp missingBp leavePos leaveStrand leavePasses rejoinPos rejoinStrand
+    # rejoinPasses [tags]
     return dict(path=rec[1], hap_start=int(rec[2]), own_bp=int(rec[3]), missing=int(rec[4]),
-                leave=(int(rec[5]), rec[6]), rejoin=(int(rec[7]), rec[8]))
+                leave=(int(rec[5]), rec[6], int(rec[7])), rejoin=(int(rec[8]), rec[9], int(rec[10])))
 
 
 parsed = [parse_record(rec) for rec in records]
@@ -492,7 +509,7 @@ for path, ps in pieces.items():
                     lo, hi = min(lend[0], rejoin[0]), max(lend[0], rejoin[0], min(lend[0], rejoin[0]) + 1)
                     needs = lkey != key
                     empty = lend[0] == rejoin[0]
-                    ok = (reachable(S, lend[3], lo - 1, lo) or reachable(S, lend[3], lo, lo + 1)) if empty else reachable(S, lend[3], lo, hi)
+                    ok = (reachable(S, lend[4], lo - 1, lo) or reachable(S, lend[4], lo, lo + 1)) if empty else reachable(S, lend[4], lo, hi)
                     if not needs and not ok:
                         unreachable.append((path, lend, rejoin))
                     emit(path, S, dict(hap_start=after, own_bp=own_bp, leave=lend, rejoin=rejoin,
@@ -520,8 +537,8 @@ matched = set()
 def differences(rec, d):
     diffs = [f for f in ('own_bp', 'missing') if rec[f] != d[f]]
     for side in ('leave', 'rejoin'):
-        names = ['Pos', 'Strand']
-        diffs += [side + names[i] for i in range(2) if rec[side][i] != d[side][i]]
+        names = ['Pos', 'Strand', 'Passes']
+        diffs += [side + names[i] for i in range(3) if rec[side][i] != d[side][i]]
     return diffs
 
 
@@ -570,6 +587,26 @@ for k in unmatched[:args.examples]:
 for k, v in sorted(tally.items()):
     print(f'{v}\t{k}')
 print(f'{len(unreachable)}\tdepartures inside a piece reaching past the chunk after its own (must be 0)')
+print('# pass counts and abridged rows')
+under = sum(1 for node, n in stated_passes.items() if n < held_passes[node])
+over = sum(1 for node, n in stated_passes.items() if n > held_passes[node])
+print(f'{under}\tnodes whose ref rows state fewer passes than the file\'s ref rows hold (must be 0)')
+print(f'{over}\tnodes whose ref rows state more passes than the {"sequence" if args.seq else "file"}\'s ref rows hold'
+      + ('' if args.seq else ' (must be 0)'))
+revisited = sum(1 for n in stated_passes.values() if n > 1)
+print(f'{revisited}\tnodes stated as passed more than once; the header says {header.get("revisited")}')
+if args.seq is None and str(revisited) != header.get('revisited'):
+    print('1\theader revisited differs from the ref rows (must be 0)')
+held_pieces = {}
+for path, ps in pieces.items():
+    for frag, offset, piece, steps in ps:
+        n = sum(x[6] if x[0] == 'R' else x[1] for x in steps)
+        bp = sum(x[7] if x[0] == 'R' else x[2] for x in steps)
+        held_pieces[(path, frag, piece)] = (offset, n, bp)
+stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4]) != (row[2], row[4], row[5])]
+print(f'{len(stray)}\tabridged rows unlike the piece their detail record holds (must be 0)')
+for row in stray[:args.examples]:
+    print('   abridged', row, held_pieces.get(row[:2] + row[3:4]))
 for u in unreachable[:args.examples]:
     print('   unreachable', u)
 for k, v in sorted(bad.items()):
@@ -761,7 +798,7 @@ for seq, rows in (by_seq.items() if SHARD == 0 else []):
     path_of = [parsed[k]['path'] if kind == 'd' else k for _, _, _, kind, k, _ in rows]
     # the leave piece's chunk, from the base beside the leave breakpoint
     def leave_chunk(d):
-        bp, strand = d['leave']
+        bp, strand, _ = d['leave']
         return max(bp - 1, 0) // chunk_size * chunk_size if strand == '+' else bp // chunk_size * chunk_size
     chunk_of = [leave_chunk(parsed[k]) if kind == 'd' else None for _, _, _, kind, k, _ in rows]
     by_end = sorted(range(len(rows)), key=lambda j: rows[j][2])

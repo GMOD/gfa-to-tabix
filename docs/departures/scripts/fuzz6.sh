@@ -13,7 +13,7 @@ for seed in $(seq $from $to); do
       echo "seed $seed $tag BUILD: $(grep -v '^\[' o$seed.$tag.log | tail -1)"; continue
     fi
     out=$(python3 -I $A o$seed.$tag.R.walks.bed.gz --window 64 --point 16 2>&1)
-    bad=$(echo "$out" | grep -E "MISSING|field mismatch|decode:|Traceback|Error|^[1-9][0-9]*\s+departures inside a piece reaching|^[1-9][0-9]*\s+records with no|^[1-9][0-9]*\s+bases uncovered|differs from the row")
+    bad=$(echo "$out" | grep -E "MISSING|field mismatch|decode:|Traceback|Error|^[1-9][0-9]*\s+departures inside a piece reaching|^[1-9][0-9]*\s+records with no|^[1-9][0-9]*\s+bases uncovered|^[1-9][0-9]*\s+.*\(must be 0\)|differs from the row")
     if [ -n "$bad" ]; then echo "seed $seed $tag: $(echo "$bad" | tr '\n' ' ')"; else rm -f o$seed.$tag.*; fi
   done
   [ -z "$(ls o$seed.* 2>/dev/null)" ] && rm -f g$seed.gfa

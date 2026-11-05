@@ -309,8 +309,9 @@ fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
             assert_eq!(steps.len(), cols[8].parse::<usize>().unwrap(), "{cols:?}");
             decoded.push((
                 format!("{}@{}", cols[4], cols[5]),
-                cols[7].parse::<i64>().unwrap(),
-                steps.len(),
+                cols[7].parse::<u64>().unwrap(),
+                cols[6].parse::<u64>().unwrap(),
+                steps.clone(),
             ));
             pieces
                 .entry(format!("{}@{}", cols[4], cols[5]))
@@ -319,6 +320,30 @@ fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
         }
         decoded
     };
+    // node lengths from the `ref` and `nodes` rows
+    let mut lengths: HashMap<u32, u64> = HashMap::new();
+    let mut learn = |rows: &[Vec<&str>]| {
+        for cols in rows {
+            let (ids, bps) = match cols[3] {
+                "ref" => (deltas(cols[9], &mut 0), cols[10]),
+                "nodes" => {
+                    let mut id = 0u32;
+                    let ids = cols[4].split(',').map(|d| {
+                        id = id.checked_add_signed(d.parse().unwrap()).unwrap();
+                        2 * id
+                    });
+                    (ids.collect(), cols[5])
+                }
+                _ => continue,
+            };
+            for (h, bp) in ids.iter().zip(bps.split(',')) {
+                lengths.insert(h >> 1, bp.parse().unwrap());
+            }
+        }
+    };
+    for rows in chunks.values().chain(details.values()) {
+        learn(rows);
+    }
     for ((seq, cs), rows) in &chunks {
         let mut refs: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "ref").collect();
         refs.sort_by_key(|c| c[6].parse::<u64>().unwrap());
@@ -326,25 +351,42 @@ fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
             handles: refs.iter().flat_map(|c| deltas(c[9], &mut 0)).collect(),
         };
         decode_rows(&path, rows);
-        for cols in rows.iter().filter(|c| c[3] == "abridged") {
-            let record = &details[&(seq.clone(), *cs, cols[12].parse().unwrap())];
+        let abridged: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "abridged").collect();
+        let mut records: Vec<u64> = abridged.iter().map(|c| c[12].parse().unwrap()).collect();
+        records.dedup();
+        for k in records {
+            let record = &details[&(seq.clone(), *cs, k)];
             assert!(record.iter().all(|c| c[3] != "ref" && c[3] != "abridged"));
             let decoded = decode_rows(&path, record);
-            let name = format!("{}@{}", cols[4], cols[5]);
-            assert!(decoded.iter().all(|(n, _, _)| *n == name), "{cols:?}");
-            let mut previous = 0;
-            let listed: Vec<i64> = cols[7]
-                .split(',')
-                .map(|d| {
-                    previous += d.parse::<i64>().unwrap();
-                    previous
-                })
+            let stands: Vec<&&Vec<&str>> = abridged
+                .iter()
+                .filter(|c| c[12].parse::<u64>().unwrap() == k)
                 .collect();
-            let mut held: Vec<i64> = decoded.iter().map(|(_, piece, _)| *piece).collect();
-            held.sort_unstable();
-            assert_eq!(held, listed, "{cols:?}");
-            let steps: usize = decoded.iter().map(|(_, _, n)| n).sum();
-            assert_eq!(steps.to_string(), cols[8], "{cols:?}");
+            assert_eq!(
+                stands.len(),
+                decoded.len(),
+                "one abridged row per piece of record {k}"
+            );
+            for ((name, piece, offset, steps), cols) in decoded.iter().zip(stands) {
+                let bp: u64 = steps.iter().map(|h| lengths[&(h >> 1)]).sum();
+                assert_eq!(
+                    (
+                        name.clone(),
+                        piece.to_string(),
+                        offset.to_string(),
+                        steps.len().to_string(),
+                        bp.to_string()
+                    ),
+                    (
+                        format!("{}@{}", cols[4], cols[5]),
+                        cols[7].to_string(),
+                        cols[6].to_string(),
+                        cols[8].to_string(),
+                        cols[9].to_string()
+                    ),
+                    "{cols:?}"
+                );
+            }
         }
     }
     pieces
@@ -438,17 +480,21 @@ fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
     }
 }
 
-// D#1#d's pieces 0 and 2 lie in chunk 0, with piece 1 in chunk 10, so its
-// row there lists both, and names the chunk's second detail record
+// D#1#d's pieces 0 and 2 lie in chunk 0, with piece 1 in chunk 10 between
+// them, so chunk 0 has a row for each, both naming the chunk's second detail
+// record, and each row's hapOffset and bp give where its own piece lies on
+// the contig: 0 to 12 and 24 to 36, not 0 to 24
 #[test]
-fn an_abridged_row_lists_its_pieces_and_names_its_detail_record() {
+fn an_abridged_row_stands_for_one_piece_and_names_its_detail_record() {
     let built = build("walks-two-refs.gfa", &["--abridge-bytes", "1"]);
     let r = built.file("R");
     assert_eq!(
         rows_of(r, "R#0#chr", "abridged", "D#1#d"),
         tsv(&[
-            "R#0#chr 0 1 abridged D#1#d 0 0 0,2 4 24 2 4 1",
-            "R#0#chr 10 11 abridged D#1#d 0 12 1,2 4 24 6 8 1",
+            "R#0#chr 0 1 abridged D#1#d 0 0 0 2 12 2 4 1",
+            "R#0#chr 0 1 abridged D#1#d 0 24 2 2 12 2 4 1",
+            "R#0#chr 10 11 abridged D#1#d 0 12 1 2 12 6 8 1",
+            "R#0#chr 10 11 abridged D#1#d 0 36 3 2 12 6 8 1",
             "R#0#chr 20 21 abridged D#1#d 0 48 4 1 6 10 10 0",
         ])
     );
@@ -498,8 +544,8 @@ fn a_path_that_jumps_over_the_reference_has_a_departure_record_over_the_stretch(
         assert_eq!(
             under(built.file(sample), &anchor),
             tsv(&[
-                &format!("{anchor} 19 71 departure B#1#b 10 0 0 70 - 20 -"),
-                &format!("{anchor} 19 71 departure D#1#d 20 0 0 20 + 70 +"),
+                &format!("{anchor} 19 71 departure B#1#b 10 0 0 70 - 1 20 - 1"),
+                &format!("{anchor} 19 71 departure D#1#d 20 0 0 20 + 1 70 + 1"),
             ]),
             "{sample}"
         );
@@ -519,10 +565,10 @@ fn a_departure_between_pieces_has_a_record_and_one_inside_a_piece_has_none() {
     assert_eq!(
         under(built.file("R"), "R#0#chr~departure"),
         tsv(&[
-            "R#0#chr~departure 0 24 departure D#1#d 24 0 0 24 + 0 +",
-            "R#0#chr~departure 5 13 departure Q#0#chr 6 6 0 6 + 12 +",
-            "R#0#chr~departure 5 18 departure I#1#i 6 0 0 6 + 18 -",
-            "R#0#chr~departure 6 19 departure I#1#i 18 0 0 6 - 18 +",
+            "R#0#chr~departure 0 24 departure D#1#d 24 0 0 24 + 1 0 + 1",
+            "R#0#chr~departure 5 13 departure Q#0#chr 6 6 0 6 + 1 12 + 1",
+            "R#0#chr~departure 5 18 departure I#1#i 6 0 0 6 + 1 18 - 1",
+            "R#0#chr~departure 6 19 departure I#1#i 18 0 0 6 - 1 18 + 1",
         ])
     );
     let whole = build("walks-two-refs.gfa", &["--chunk", "1000"]);
@@ -633,7 +679,7 @@ fn steps_either_side_of_a_hole_in_the_reference_are_adjacent() {
     );
     assert_eq!(
         under(walks, "R#0#chr~departure"),
-        tsv(&["R#0#chr~departure 11 21 departure G#1#g 12 8 0 12 + 20 +"])
+        tsv(&["R#0#chr~departure 11 21 departure G#1#g 12 8 0 12 + 1 20 + 1"])
     );
 }
 
@@ -738,7 +784,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         assert_eq!(
             header(built.file(sample)),
             tsv(&[
-                "#walks format:i:6 chunk:i:10 maxnode:i:6 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000",
+                "#walks format:i:6 chunk:i:10 maxnode:i:6 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000",
                 &format!("#reference {sample}"),
                 "#haplotype D#1",
                 "#haplotype H#1",
@@ -764,7 +810,7 @@ fn a_chunk_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
     assert_eq!(
         under(r, "R#0#chr\t0"),
         tsv(&[
-            "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6",
+            "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6 .",
             "R#0#chr 0 1 nodes 6 6",
             "R#0#chr 0 1 route . 13 -9",
             "R#0#chr 0 1 walk D#1#d 0 0 0 2 2 .",
@@ -798,15 +844,17 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     assert!(built.output.status.success());
     let walks = built.file("R");
     assert!(
-        header(walks).starts_with("#walks\tformat:i:6\tchunk:i:10\tmaxnode:i:15\tstay:i:311\t")
+        header(walks).starts_with(
+            "#walks\tformat:i:6\tchunk:i:10\tmaxnode:i:15\trevisited:i:2\tstay:i:311\t"
+        )
     );
     assert_eq!(
         rows_of(walks, "R#0#chr", "ref", "R#0#chr"),
         tsv(&[
-            "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6",
-            "R#0#chr 10 11 ref R#0#chr 0 12 1 2 6,-2 6,6",
-            "R#0#chr 20 21 ref R#0#chr 0 24 2 1 6 6",
-            "R#0#chr 30 31 ref R#0#chr 0 30 3 1 8 15",
+            "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6 1,2",
+            "R#0#chr 10 11 ref R#0#chr 0 12 1 2 6,-2 6,6 2,2",
+            "R#0#chr 20 21 ref R#0#chr 0 24 2 1 6 6 2",
+            "R#0#chr 30 31 ref R#0#chr 0 30 3 1 8 15 .",
         ])
     );
     assert_eq!(
@@ -908,7 +956,25 @@ fn a_short_stretch_over_a_revisited_node_stays_in_its_piece_on_a_pass_there() {
     );
     assert_eq!(
         under(cut.file("R"), "R#0#chr~departure"),
-        tsv(&["R#0#chr~departure 18 30 departure K#1#k 30 0 0 30 + 18 +"])
+        tsv(&["R#0#chr~departure 18 30 departure K#1#k 30 0 0 30 + 2 18 + 2"])
+    );
+}
+
+// In walks-repeat.gfa R passes 2 and 3 twice and 1 and 4 once. X follows R
+// to 4's end at 45 and jumps back to 2's second pass at 18: its leave is on a
+// node R passes once and its rejoin on one R passes twice, which the record
+// states end by end, and the chunks' ref rows state for every step of R
+#[test]
+fn a_record_states_how_many_times_the_reference_passes_each_end() {
+    let gfa = fs::read_to_string(fixture("walks-repeat.gfa")).unwrap()
+        + "W\tX\t1\tx\t0\t72\t>1>2>3>2>3>4>2>3>4\n";
+    let path = std::env::temp_dir().join(format!("walks-passes-{}.gfa", std::process::id()));
+    fs::write(&path, gfa).unwrap();
+    let built = build(path.to_str().unwrap(), &["--refs", "R", "--stay", "0"]);
+    fs::remove_file(&path).unwrap();
+    assert_eq!(
+        under(built.file("R"), "R#0#chr~departure"),
+        tsv(&["R#0#chr~departure 18 45 departure X#1#x 45 0 0 45 + 1 18 + 2"])
     );
 }
 
@@ -1105,7 +1171,7 @@ fn sequences_adds_the_bases_of_ref_and_nodes_rows() {
     let built = build("walks-two-refs.gfa", &["--sequences"]);
     let r = built.file("R");
     assert!(r.contains(&tsv(&[
-        "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6 SQ:Z:AAAAAACCCCCC"
+        "R#0#chr 0 1 ref R#0#chr 0 0 0 2 2,2 6,6 . SQ:Z:AAAAAACCCCCC"
     ])));
     assert!(r.contains(&tsv(&["R#0#chr 10 11 nodes 7 3 SQ:Z:GGG"])));
 }
@@ -1173,8 +1239,8 @@ fn a_contig_departs_once_from_each_w_line_to_the_next_with_a_step_on_r() {
     assert_eq!(
         under(walks, "R#0#chr~departure"),
         tsv(&[
-            "R#0#chr~departure 6 12 departure H#1#h 12 28 22 12 + 6 +",
-            "R#0#chr~departure 11 19 departure G#1#g 12 18 18 12 + 18 +",
+            "R#0#chr~departure 6 12 departure H#1#h 12 28 22 12 + 1 6 + 1",
+            "R#0#chr~departure 11 19 departure G#1#g 12 18 18 12 + 1 18 + 1",
         ])
     );
 }

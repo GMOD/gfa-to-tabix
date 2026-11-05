@@ -189,18 +189,20 @@ there. The urgent part is the word on screen
      at 21.4 Mb is now in `other`, reversing the earlier reading.
      Plugin 9 must map `*` to no genotype in `formVariants`' `genotypeOf`
      and read state keys carrying `@place`
-     **Open, from a design review the same day**, under arbitration by
-     two more agents (the format's contract):
-     - No record says whether an end lies on a node the reference
-       passes more than once, and `mp` is not written, so on CHM13 or
-       pggb no reader can tell a hop between copies from a jump, and
-       plugin 9's Forms track has nothing to say "placement choice"
-       from. The review proposes a record tag, written only where
-       nonzero, so MC on GRCh38 pays nothing. It also proposes an
-       abridged row's contig end in place of `bp`, since every reader
-       must rebuild the extent across other chunks' pieces, the bug
-       class found twice (59 of MC chr22's 2,468 abridged rows have
-       pieces apart, the review's count from the local file)
+     **Format contract arbitrated 2026-11-05** by two more independent
+     agents (Fable and Opus), who agreed on all but one point; landed
+     from `arb-format-opus` of both repos (ADR 0009's History): records
+     carry `leavePasses` and `rejoinPasses` as columns, `ref` rows a
+     `passes` column and the header `revisited:i:`; graph-walks exports
+     `placementChoice`, and plugin 9's Forms track says "placement
+     choice" for a departure where it is true. graph-walks' budgets
+     default to `WALK_BUDGETS`, so plugin 9 and BandageJS need pass
+     nothing. Where they differed, abridged rows: one row per moved
+     piece (Opus) was taken over a row stating the contig end of the
+     last piece (Fable), since a per-piece row spans no other chunk's
+     pieces and so leaves the reader nothing to absorb, the logic that
+     went wrong twice; it costs pggb chrY +0.93% against +0.26% and its
+     densest walk read 1.72 MB against 1.31, under the 8 MB budget
      Plugin 9 will need `formRows.test.ts` without `open` and the
      `^4.6.0` pin raised. Not done: bandage-core 13 and plugin 9
      (below)
@@ -232,7 +234,13 @@ there. The urgent part is the word on screen
      and chr5 hold 0.3 to 2.0 M rows each, not measured by window; the
      other sequences read as the GRCh38 file does
      ([results](../departures/results/minimal/README.md#where-the-chm13-files-rows-are),
-     and a bullet in open-problems). **Interim, 2026-11-05**: host the
+     and a bullet in open-problems). **Decided 2026-11-05 by the
+     format arbitration, replacing the interim below:** the hs1 files
+     come from HPRC v2.1's CHM13-referenced Minigraph-Cactus graph,
+     `hprc-v2.1-mc-chm13.gfa.gz` on HPRC's S3, built with `--refs
+     CHM13`; this graph's CHM13 file is not hosted
+     ([results](../departures/results/arbitration/README.md)). The
+     interim it replaces: host the
      CHM13 file as it is, with those windows refused. graph-walks 5's
      `cut` refuses a window whose departure read the index estimates
      past `departureByteBudget`, after reading the header and index and
@@ -368,6 +376,11 @@ ADR 0009 History); their doc and number fixes are committed.
   scores, alignments in `align/`)
 
 ## Gotchas
+
+- On 2026-11-05 ada no longer held `~/work/mc/`, `~/work/pggb/` or
+  `~/hprc-gbz/`; `docs/departures/scripts/arbitration-inputs.sh`, run in
+  `~/work/arb-format-opus/`, recuts MC chr22 and pggb chrY from HPRC's S3,
+  and chr9, chr14 and chr22 of the CHM13 graph, into its `in/`
 
 - Local disk is at 97%; keep large builds on ada
 - ada's 125 GB are shared with other heavy jobs on the same account; on

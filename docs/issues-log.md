@@ -43,6 +43,14 @@ Where the findings have come from so far, and the rule each gives:
   and pick by it
 - **A wrong word on screen.** "deletion" for a stretch the haplotype has no
   step on. Rule: state the facts the file holds
+- **A fact or a safeguard left to every reader.** An abridged row's extent,
+  whether an end's pass is a choice, a byte budget: where the file or the
+  library leaves each reader to reconstruct or remember it, a reader gets
+  it wrong. Rule: when a reader needs a fact to be correct, the file states
+  it on the row that needs it, and a safety limit is the library's default
+- **A cut justified by a mechanism not yet built.** `leavePasses` went
+  for an `mp` tag that was never written. Rule: cut a field only once what
+  replaces it is written and read
 - **The machine.** Memory kills on ada, the laptop's /tmp quota. Rule: check
   before starting, keep outputs small, record in the handoff's gotchas
 
@@ -265,3 +273,73 @@ Where the findings have come from so far, and the rule each gives:
   Source: widening kept while the read span stayed narrow. Fixed in
   7601e9e: no widening. Guard: test "a site spans the marks it comes
   from"
+- **2026-11-05, format arbitration (re-found from the design review).**
+  No record said whether an end lies on a node the reference passes more
+  than once, so no reader could tell a hop between repeat copies from a
+  jump. The 2026-11-04 cut of `leavePasses`/`rejoinPasses` leaned on an
+  `mp` tag on `ref` rows that was never written and could not have marked
+  a record's far end, which lies outside the walk read for exactly the
+  hops in question. Source: a cut justified by a mechanism not yet built
+  (a decision made ad hoc). Fixed: `leavePasses` and `rejoinPasses` are
+  columns again, `ref` rows carry `passes` and the header `revisited`;
+  graph-walks reads them into `WalkDeparture`, the departure table and
+  `WalkNode.passes`, computes them for departures inside a piece and
+  exports `placementChoice`. Guard: tests "a record states how many times
+  the reference passes each end" and the walks-repeat `ref` rows
+  (gfa-to-tabix), "a departure computed from steps takes its ends' pass
+  counts from the ref rows" and "a record row without pass counts is
+  refused, not misread" (graph-walks); `audit6.py` checks every record's
+  counts against the `ref` rows and those against the positions the file
+  holds, and fails a file with a count off by one (tried by hand)
+- **2026-11-05, format arbitration.** An abridged row's `bp` counted its
+  moved pieces alone, so every reader had to rebuild the path's extent
+  across other chunks' pieces and absorb the departures between them;
+  graph-walks got that wrong twice (graph-walks 4's `chains`, then the
+  forms rewrite, fixed in 73f2e6b). Source: the format's limits surfacing
+  in a reader; a row standing for pieces that are not consecutive. Fixed:
+  one `abridged` row per moved piece, with that piece's `hapOffset`,
+  `nsteps` and `bp`, sharing the path's detail record; graph-walks reads
+  each as an exact net and reads a shared detail record once. What the old
+  take-in compensated for, carried over or not: pieces of other chunks
+  between moved pieces (now rows of their own, nothing to absorb), the
+  departures between moved pieces (now records shown as departures, not
+  folded into a net), abutting abridged pieces (still one net), and a
+  departure across W lines leaving and rejoining inside two abridged
+  pieces (still one net with its missing bp). Guard: the test decoder in
+  `tests/walks.rs` checks every abridged row against its detail piece,
+  `audit6.py` likewise ("abridged rows unlike the piece their detail
+  record holds", tried by hand with a bp off by 12), the forms test on
+  `interleaved.R` (net 84 abridged and expanded), and graph-walks tests
+  "each abridged piece is a net over its own stretch" and "detail records
+  read at once ..." (one read per shared record)
+- **2026-11-05, format arbitration.** graph-walks' budgets defaulted to no
+  limit, so the CHM13 refusal the handoff promised held only for callers
+  that passed `WALK_BUDGETS`, and none did before edf4acd. Source: a safety
+  rule placed on every caller instead of the library. Fixed: `cut`'s step,
+  byte and departure byte budgets default to `WALK_BUDGETS`, `Infinity`
+  lifts one; `formsCut`'s cuts keep at least `FORMS_STEP_BUDGET` steps.
+  Guard: test "a cut keeps to WALK_BUDGETS unless its caller lifts them".
+  Open: a `TabixSource` without `bytesForRegions` still skips the byte
+  budgets; @gmod/tabix has it
+- **2026-11-05, format arbitration, diagnosis of the CHM13 chr9 rows.** In
+  the GRCh38 graph, CHM13 passes 209,578 nodes more than once: its chr9
+  pericentromeric copies share nodes. Of 2,241,003 consecutive record pairs
+  on chr9, 2,172,351 hop over 1 Mb to the other copy and back, after
+  walking a median 257 to 512 bp there and at most 1 kb for 1,698,238 of
+  them (`results/arbitration/CHM13.chr9.hops.txt`, by
+  `scripts/chm13-chr9-hops.py`): haplotypes alternate between collapsed
+  copies every few hundred bp, which no `stay` of 311 bp absorbs, so the
+  design review's hypothesis about `stay` refusing once-passed nodes
+  explains at most the shortest hops and the cause is the graph, not the
+  rule. Source: a file projected onto a reference that was not the
+  graph's (evidence on one graph: GRCh38 in its own graph passes no node
+  twice). Fixed: the hs1 files come from HPRC v2.1's CHM13-referenced MC
+  graph (`hprc-v2.1-mc-chm13`); the GRCh38 graph's CHM13 file is not
+  hosted. Guard: the header's `revisited`, which a host checks before
+  publishing a file as exact; results in `results/arbitration/`
+- **2026-11-05, the machine.** The inputs on ada the handoff names,
+  `~/work/mc/chr22.gfa`, `~/work/pggb/chrY.gfa` and `~/hprc-gbz/`, are
+  gone; recut from HPRC's S3 into `~/work/arb-format-opus/in/` by
+  `scripts/arbitration-inputs.sh` (pggb chrY gives the port3 counts exactly: 471,497 pieces,
+  425,040 records). `/tmp/claude-1001` past its quota again, losing one
+  command's output. Open: the user clears `/tmp/claude-1001`
