@@ -51,6 +51,12 @@ Where the findings have come from so far, and the rule each gives:
 - **A cut justified by a mechanism not yet built.** `leavePasses` went
   for an `mp` tag that was never written. Rule: cut a field only once what
   replaces it is written and read
+- **A format choice made without measurement or an ADR.** Format 6 files
+  every row of a chunk at `seq cs cs+1` because one commit said a full-span
+  row shares a Tabix bin with its neighbour; nobody measured it, and plain
+  `tabix` queries on the file return nothing. Rule: every format choice gets
+  an ADR with the alternatives measured, and a column means what its name
+  says
 - **The machine.** Memory kills on ada, the laptop's /tmp quota. Rule: check
   before starting, keep outputs small, record in the handoff's gotchas
 
@@ -691,3 +697,48 @@ Where the findings have come from so far, and the rule each gives:
   `--chunk 100` so its windows cross chunks, which fails on graph-walks
   5.0.0; a 3,279-window sweep over 16 files at chunks of 10 to 5,000 bp
   found nothing on 5.0.2 and caught 5.0.0's undrawn steps (not committed)
+- **2026-11-05, the format review (four reviewers, on reading S6's real
+  rows).** Walk format 6 files every row of a chunk at its first base,
+  `seq cs cs+1`, so `tabix file chr1:15-35` returns no rows (98 of 100
+  1 kb windows on MC chr22), and only a reader that rounds to chunk starts
+  gets any. Adopted in 3953bb1 on 2026-10-08, the day after 10d3ae1 filed
+  whole spans, with no numbers; 842a19b then made readers query from the
+  chunk before. The spec's reason, bin sharing, holds for @gmod/tabix and
+  not for htslib. The tube map's chunk-length probe (above) is the same
+  key misleading a consumer. Source: a format choice made without
+  measurement or an ADR. Open: ADR 0010 decides the container and filing,
+  with the review's data and scripts committed beside it
+- **2026-11-05, the format review.** graph-walks 5.0.2's `decode` drops a
+  chunk already decoded under another attach fetch's name filter, so of
+  two departure records whose leave chunks are adjacent, one loses its own
+  steps (chr22:22865052, NA18608#2). Source: tests shaped by the
+  implementation, no fixture with adjacent leave chunks. Open: fixed in
+  graph-walks 5.0.3 if ADR 0010 keeps format 6, else in the format 7
+  reader. Guard: a test with two records whose leave chunks are adjacent
+- **2026-11-05, the format review.** graph-walks sizes its departure and
+  attach reads from the file-wide `maxnode` instead of the `#long` passes
+  that need them. On pggb chrY, where `maxnode` is 1 Mb, a 1 kb window
+  fetches 4.0 MB in about 10 requests and 24 of 100 windows hit the budget
+  and are refused; sized from `#long`, 1.0 MB and 1 of 100. Departure
+  reads are about 95% of a pggb window's bytes. Source: evidence on one
+  graph (MC, `maxnode` 1,024). Open: with the item above
+- **2026-11-05, the format review.** Every read starts one chunk before
+  the window. The rule came with the one-base key (842a19b) and later
+  backed the stay guard; format 6 removed that need, since a stay can no
+  longer absorb a node the reference passes once, and the rule stayed. On
+  MC (`maxnode` ≤ chunk, no `#long`) it doubles a small window's walk read
+  (96 KB against 64 KB for 1 kb); graph-walks' own cut matched on 232 of
+  240 windows without it, the rest each gaining one departure's own
+  steps. Source: rewrites that drop what the old code compensated for, in
+  reverse: a mechanism kept after its reason went. Open: with ADR 0010
+- **2026-11-05, the format review.** @gmod/tabix fetches one BGZF block
+  past each read's last chunk, about 30 KB, because no chunk starts on a
+  block boundary, so a 1 kb window pays for its own chunk, the chunk before
+  and most of the chunk after. Source: a container behaviour nobody
+  measured. Open: with ADR 0010 (block-aligned chunks in the writer, or an
+  index giving exact ends)
+- **2026-11-05, the format review.** For two 22q11 windows, graph-walks
+  5.0.2 gave a different cut in a 240-window batch than when each window
+  ran alone; the narrower read was stable. Cause not found. Source: unknown.
+  Open: reproduce with the review's scripts before graph-walks 5.0.3 or the
+  format 7 reader
