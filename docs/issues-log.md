@@ -715,9 +715,19 @@ Where the findings have come from so far, and the rule each gives:
   chunk already decoded under another attach fetch's name filter, so of
   two departure records whose leave chunks are adjacent, one loses its own
   steps (chr22:22865052, NA18608#2). Source: tests shaped by the
-  implementation, no fixture with adjacent leave chunks. Open: fixed in
-  graph-walks 5.0.3 if ADR 0010 keeps format 6, else in the format 7
-  reader. Guard: a test with two records whose leave chunks are adjacent
+  implementation, no fixture with adjacent leave chunks. The mechanism:
+  the attach fetch for chunk `cs` reads from the chunk before, so it
+  decodes chunk `cs − chunk` under its own records' names and marks it
+  done, and the fetch for a record leaving in `cs − chunk` then skips it;
+  either order loses one record's steps, and which one depends on which
+  read returns first. Fixed on graph-walks' format7-reader branch before
+  the port: `decode` remembers the name filters each chunk was decoded
+  under and decodes again for names none of them took, and an attach
+  fetch is skipped only when the chunk was decoded for that record's
+  name. Format 7 keeps both rules, keyed by unit. Guard: test "two records
+  whose leave pieces lie in adjacent chunks both get their own steps" on
+  `test_data/attach.GRCh38.gfa`, which fails on 5.0.2 (HG003#1's `>21`
+  missing)
 - **2026-11-05, the format review.** graph-walks sizes its departure and
   attach reads from the file-wide `maxnode` instead of the `#long` passes
   that need them. On pggb chrY, where `maxnode` is 1 Mb, a 1 kb window
