@@ -42,7 +42,22 @@ things are.
 
 ## State
 
-- Released: graph-walks 4.6.0 (a crossing fragment carries `crossing`) and
+- **Released 2026-11-05:** graph-walks 4.6.1 (from branch `v4`: refuses a
+  format 6 file by asking for a newer reader), gfa-to-tabix 3.0.0 (walk
+  format 6, crates.io and GitHub binaries) and graph-walks 5.0.0 (reads
+  format 6 only; "Changes in 5" in its README). Checked before release
+  on ada: MC chr22 and pggb chrY built by the release writer and audited
+  clean, abridged nets equal expanded on seven MC chr22 windows
+  ([results](../departures/results/release-3.0/README.md)). Nothing
+  hosted changed: users still read format 5 through plugin 8.6.0 and
+  graph-walks 4. Next: the hs1 genome-wide build from
+  `hprc-v2.1-mc-chm13` (`vg convert -f` of its GBZ, at
+  `~/work/arb-format-opus/in/chm13.gbz` on ada) and the GRCh38 one,
+  hosted under new names beside the format 5 files; bandage-core 13 and
+  plugin 9 on graph-walks 5 (`*` drawn as no genotype, `@place` keys,
+  pass counts for "placement choice"); then BandageJS, ggbandage, the
+  tube map and jb2hubs
+- Released before: graph-walks 4.6.0 (a crossing fragment carries `crossing`) and
   jbrowse-plugin-graphgenomeviewer 8.6.0, rehosted. 8.6.0's synteny
   `crossingFeature` has two flaws: its mate span depends on which haplotypes
   are kept, and it takes strand from order along the reference
