@@ -640,7 +640,20 @@ Where the findings have come from so far, and the rule each gives:
   and its departure unmentioned; and a walk whose only step on the cut is
   a flank gets no direction from `partialSide` and draws the flank,
   outside the window, as a "partial walk", not saying it departs. Source:
-  rules written for format 5's fragments, which ran off R. Fix: below
+  rules written for format 5's fragments, which ran off R. Fixed in
+  bandage-core 899ee29 (13.0.1): with no context the reference's
+  outermost nodes in the cut stand in for flanks, so a walk-file walk
+  that departs or ends inside reads "goes on near …" or "contig ends
+  inside the window"; a walk with no trim and no departure, as GFA
+  extracts give, stays whole (a pggb test showed odgi-extract pieces end
+  on R wherever the subgraph clips them); and a lone flank takes its
+  direction from a departure's strand at that step, else the side
+  trimmed alone, reading "goes on near …" with 0 bp in the window.
+  Guard: `graphWalks.test.ts` on `rejoin.GRCh38` and `records.GRCh38` at
+  context 0 and 500, with true-whole and true-end controls. Left: a
+  contig that starts at a flank and runs off R toward the window for
+  good reads "contig ends at the window", since `GraphPath` has no step
+  strands
 - **2026-11-05, porting the JBrowse plugin.** The plugin adjusted its
   tests to graph-walks 5.0.0's missing right-hand context (the reference
   ending at 3200, not 3800, in `walks6_maxnode`), reading the README as
