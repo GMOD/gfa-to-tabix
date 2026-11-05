@@ -559,3 +559,13 @@ Where the findings have come from so far, and the rule each gives:
   chunks under its context, not only under its window", both sides, which
   fails on 5.0.0; unexpanded still equals expanded on the release check's
   seven MC chr22 windows
+- **2026-11-05, porting the tube map to graph-walks 5.** `WalkGraph.tables`
+  took `departures` with a default of none, so a caller still making
+  graph-walks 4's two-argument call compiled and drew no departure at
+  all, which ADR 0009's required hand-off exists to prevent. Source: a
+  default kept from a migration step, the hand-off required on
+  `GraphTables` but not on the call that fills it. Fixed in graph-walks
+  5.0.2: the parameter is required. Guard: a typecheck test whose
+  two-argument call must be a type error. Also from the ports: bandage-core
+  13's `laidOutGraph` takes GFA text only, so ggbandage repeats its
+  layout calls for tables (open)
