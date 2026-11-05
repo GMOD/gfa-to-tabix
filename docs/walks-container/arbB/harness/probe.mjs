@@ -1,0 +1,11 @@
+import { createRequire } from 'node:module'
+const require = createRequire('/home/cdiesh/src/graph-walks/package.json')
+const { TabixIndexedFile } = require('@gmod/tabix')
+const { LocalFile } = require('generic-filehandle2')
+const [file, index, seq, s, e] = process.argv.slice(2)
+const t = new TabixIndexedFile({ filehandle: new LocalFile(file), ...(index === 'csi' ? { csiFilehandle: new LocalFile(file + '.csi') } : { tbiFilehandle: new LocalFile(file + '.tbi') }) })
+const chunks = await t.index.blocksForRange(seq, +s, +e)
+for (const c of chunks) console.log(`minv ${c.minv.blockPosition}:${c.minv.dataPosition} maxv ${c.maxv.blockPosition}:${c.maxv.dataPosition} end ${c.endPosition} fetched ${c.fetchedSize()} bin ${c.bin}`)
+let n = 0; const cs = new Set()
+await t.getLines(seq, +s, +e, { lineCallback: l => { n++; cs.add(l.split('\t')[1]) } })
+console.log('lines', n, 'chunks', [...cs].join(','))

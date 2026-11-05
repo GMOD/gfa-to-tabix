@@ -1,0 +1,88 @@
+[
+ {
+  "name": "T64",
+  "kind": "tabix",
+  "walks": "mc22/t64.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 1024
+ },
+ {
+  "name": "T64-dep512k",
+  "kind": "tabix",
+  "walks": "mc22/t64d19.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 1024
+ },
+ {
+  "name": "Tn",
+  "kind": "tabix",
+  "walks": "mc22/tn.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 1024,
+  "strictDeps": true
+ },
+ {
+  "name": "S",
+  "kind": "table",
+  "query": "drawn",
+  "walks": "mc22/s.walks.gz",
+  "chunkIndex": "mc22/s.walks.idx.gz",
+  "departures": null,
+  "chunk": 65536,
+  "reach": 1024
+ },
+ {
+  "name": "S-noattach",
+  "kind": "table",
+  "query": "drawn",
+  "walks": "mc22/s.walks.gz",
+  "chunkIndex": "mc22/s.walks.idx.gz",
+  "departures": null,
+  "chunk": 65536,
+  "reach": 1024,
+  "noAttach": true
+ },
+ {
+  "name": "T64-noattach",
+  "kind": "tabix",
+  "walks": "mc22/t64d19.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 1024,
+  "noAttach": true
+ },
+ {
+  "name": "T64b",
+  "kind": "tabix",
+  "walks": "mc22/t64b.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 1024,
+  "strictDeps": true
+ },
+ {
+  "name": "T64b-noattach",
+  "kind": "tabix",
+  "walks": "mc22/t64b.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 1024,
+  "strictDeps": true,
+  "noAttach": true
+ }
+]

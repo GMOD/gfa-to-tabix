@@ -1,0 +1,6 @@
+{"size": 10000, "i": 0, "start": 25135336, "end": 25145336} {'fragments': [7, 5], 'departures': [0, 97], 'kept': [605, 10]}
+{"size": 10000, "i": 0, "start": 24803296, "end": 24813296} {'fragments': [3, 1], 'departures': [0, 1], 'kept': [444, 1]}
+{"size": 100000, "i": 0, "start": 22411574, "end": 22511574} {'fragments': [43, 238], 'departures': [4200, 209], 'kept': [489, 15]}
+{"size": 100000, "i": 0, "start": 23553844, "end": 23653844} {'fragments': [298, 881], 'departures': [9158, 42], 'kept': [64990, 18]}
+{"size": 1000, "i": 0, "start": 24286732, "end": 24287732} {'fragments': [40, 77], 'departures': [21814, 342], 'kept': [1199, 9]}
+{"size": 10000, "i": 0, "start": 25137548, "end": 25147548} {'fragments': [7, 5], 'departures': [0, 97], 'kept': [605, 10]}

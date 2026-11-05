@@ -1,0 +1,3 @@
+[
+  {"name": "T64-dep512k", "kind": "tabix", "walks": "mc22/t64d19.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536}
+]

@@ -1,0 +1,2 @@
+chunks 120: nodes row 2.69 MB, lengths on routes 3.09 MB, ratio 1.146
+detail records 2468: nodes row 40.41 MB, lengths on routes 26.91 MB, ratio 0.666

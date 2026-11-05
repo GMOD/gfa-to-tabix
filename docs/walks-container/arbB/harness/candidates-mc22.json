@@ -1,0 +1,11 @@
+[
+  {"name": "F6", "kind": "tabix", "walks": "mc22/f6.bed.gz", "index": "tbi", "patch": false, "query": "lookback", "chunk": 65536},
+  {"name": "F6-patched-client", "kind": "tabix", "walks": "mc22/f6.bed.gz", "index": "tbi", "patch": true, "query": "lookback", "chunk": 65536},
+  {"name": "F6p", "kind": "tabix", "walks": "mc22/f6p.bed.gz", "index": "tbi", "patch": true, "query": "reach1bp", "chunk": 65536},
+  {"name": "F6p-stock-client", "kind": "tabix", "walks": "mc22/f6p.bed.gz", "index": "tbi", "patch": false, "query": "reach1bp", "chunk": 65536},
+  {"name": "T64", "kind": "tabix", "walks": "mc22/t64.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536},
+  {"name": "T64-stock-client", "kind": "tabix", "walks": "mc22/t64.bed.gz", "index": "csi", "patch": false, "query": "reach", "chunk": 65536},
+  {"name": "T16", "kind": "tabix", "walks": "mc22/t16.bed.gz", "index": "tbi", "patch": true, "query": "reach", "chunk": 16384},
+  {"name": "O", "kind": "offset", "walks": "mc22/o.walks.bgz", "chunkIndex": "mc22/o.walks.idx.gz", "departures": {"file": "mc22/o.departures.bed.gz", "index": "tbi", "suffix": ""}, "patch": true, "query": "reach", "chunk": 65536},
+  {"name": "N16", "kind": "tabix", "walks": "mc22/n16.bed.gz", "index": "tbi", "patch": true, "query": "cell", "chunk": 16384, "departures": null, "stubs": true}
+]

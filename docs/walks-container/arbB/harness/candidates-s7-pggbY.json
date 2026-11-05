@@ -1,0 +1,23 @@
+[
+ {
+  "name": "S7",
+  "kind": "table",
+  "query": "drawn",
+  "walks": "pggbY/s7.walks.gz",
+  "chunkIndex": "pggbY/s7.walks.idx.gz",
+  "departures": null,
+  "chunk": 65536,
+  "reach": 50008
+ },
+ {
+  "name": "S7-noattach",
+  "kind": "table",
+  "query": "drawn",
+  "walks": "pggbY/s7.walks.gz",
+  "chunkIndex": "pggbY/s7.walks.idx.gz",
+  "departures": null,
+  "chunk": 65536,
+  "reach": 50008,
+  "noAttach": true
+ }
+]

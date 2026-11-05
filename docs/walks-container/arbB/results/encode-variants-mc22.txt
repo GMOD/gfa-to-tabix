@@ -1,0 +1,7 @@
+chunks 120 walk rows 36700 routes 119136
+f6        gz     2.69 MB  ratio  1.00   raw     24.8 MB
+rowdelta  gz     2.95 MB  ratio  1.10   raw     25.6 MB
+abs       gz     5.67 MB  ratio  2.11   raw     52.9 MB
+absdelta  gz     5.50 MB  ratio  2.04   raw     45.9 MB
+inline    gz    12.34 MB  ratio  4.58   raw    158.3 MB
+gaf       gz    65.95 MB  ratio 24.48   raw    834.0 MB

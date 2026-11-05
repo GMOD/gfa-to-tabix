@@ -1,0 +1,88 @@
+[
+ {
+  "name": "T64",
+  "kind": "tabix",
+  "walks": "pggbY/t64.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 50008
+ },
+ {
+  "name": "T64-dep512k",
+  "kind": "tabix",
+  "walks": "pggbY/t64d19.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 50008
+ },
+ {
+  "name": "Tn",
+  "kind": "tabix",
+  "walks": "pggbY/tn.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 50008,
+  "strictDeps": true
+ },
+ {
+  "name": "S",
+  "kind": "table",
+  "query": "drawn",
+  "walks": "pggbY/s.walks.gz",
+  "chunkIndex": "pggbY/s.walks.idx.gz",
+  "departures": null,
+  "chunk": 65536,
+  "reach": 50008
+ },
+ {
+  "name": "S-noattach",
+  "kind": "table",
+  "query": "drawn",
+  "walks": "pggbY/s.walks.gz",
+  "chunkIndex": "pggbY/s.walks.idx.gz",
+  "departures": null,
+  "chunk": 65536,
+  "reach": 50008,
+  "noAttach": true
+ },
+ {
+  "name": "T64-noattach",
+  "kind": "tabix",
+  "walks": "pggbY/t64d19.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 50008,
+  "noAttach": true
+ },
+ {
+  "name": "T64b",
+  "kind": "tabix",
+  "walks": "pggbY/t64b.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 50008,
+  "strictDeps": true
+ },
+ {
+  "name": "T64b-noattach",
+  "kind": "tabix",
+  "walks": "pggbY/t64b.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 50008,
+  "strictDeps": true,
+  "noAttach": true
+ }
+]

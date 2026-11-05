@@ -1,0 +1,76 @@
+mc22/dep.bed.gz	446264
+mc22/depu.bed.gz	337579
+mc22/f6p.bed.gz	58775525
+mc22/oabs.walks.gz	214359057
+mc22/oabs.walks.idx.gz	51715
+mc22/onochain.walks.gz	60590087
+mc22/onochain.walks.idx.gz	49759
+mc22/o.walks.gz	56944634
+mc22/o.walks.idx.gz	49543
+mc22/s2.walks.gz	61462822
+mc22/s2.walks.idx.gz	56998
+mc22/sabs.walks.gz	281623846
+mc22/sabs.walks.idx.gz	51882
+mc22/srel.walks.gz	101296249
+mc22/srel.walks.idx.gz	50272
+mc22/s.walks.gz	57817369
+mc22/s.walks.idx.gz	56817
+mc22/t.bed.gz	58838209
+mc22/tn.bed.gz	59048942
+mc22/oabs.walks.idx	270995
+mc22/onochain.walks.idx	266874
+mc22/o.walks.idx	266781
+mc22/s2.walks.idx	304142
+mc22/sabs.walks.idx	271895
+mc22/srel.walks.idx	267695
+mc22/s.walks.idx	304014
+../in/mc22.bed.gz	59171701
+../in/mc22.bed.gz.tbi	40885
+pggbY/dep.bed.gz	11701368
+pggbY/depu.bed.gz	3798829
+pggbY/f6p.bed.gz	183744960
+pggbY/oabs.walks.gz	350930607
+pggbY/oabs.walks.idx.gz	18424
+pggbY/onochain.walks.gz	170500825
+pggbY/onochain.walks.idx.gz	18268
+pggbY/o.walks.gz	169929142
+pggbY/o.walks.idx.gz	18207
+pggbY/s2.walks.gz	185044026
+pggbY/s2.walks.idx.gz	23764
+pggbY/sabs.walks.gz	410391733
+pggbY/sabs.walks.idx.gz	18533
+pggbY/srel.walks.gz	207417998
+pggbY/srel.walks.idx.gz	18433
+pggbY/s.walks.gz	184472343
+pggbY/s.walks.idx.gz	23760
+pggbY/t.bed.gz	186267180
+pggbY/tn.bed.gz	186285203
+pggbY/oabs.walks.idx	84096
+pggbY/onochain.walks.idx	83833
+pggbY/o.walks.idx	83829
+pggbY/s2.walks.idx	110233
+pggbY/sabs.walks.idx	84424
+pggbY/srel.walks.idx	84067
+pggbY/s.walks.idx	110225
+../in/pggbY.bed.gz	192154407
+../in/pggbY.bed.gz.tbi	15868
+mc22c16:
+total 68784
+drwxrwsr-x 2 cdiesh cdiesh     4096 Nov  5 13:26 .
+drwxrwsr-x 6 cdiesh cdiesh     4096 Nov  5 13:23 ..
+-rw-rw-r-- 1 cdiesh cdiesh 70353333 Nov  5 13:23 t.bed.gz
+-rw-rw-r-- 1 cdiesh cdiesh    62318 Nov  5 13:26 t.bed.gz.tbi
+
+pggbYc16:
+total 206176
+drwxrwsr-x 2 cdiesh cdiesh      4096 Nov  5 13:26 .
+drwxrwsr-x 6 cdiesh cdiesh      4096 Nov  5 13:23 ..
+-rw-rw-r-- 1 cdiesh cdiesh 211082378 Nov  5 13:24 t.bed.gz
+-rw-rw-r-- 1 cdiesh cdiesh     28665 Nov  5 13:26 t.bed.gz.tbi
+total 187768
+drwxrwsr-x  2 cdiesh cdiesh      4096 Nov  5 13:26 .
+drwxrwsr-x 11 cdiesh cdiesh      4096 Nov  5 13:47 ..
+-rw-rw-r--  1 cdiesh cdiesh  47330390 Nov  5 13:26 mc22.native.bed.gz
+-rw-rw-r--  1 cdiesh cdiesh    158531 Nov  5 13:26 mc22.native.bed.gz.tbi
+-rw-rw-r--  1 cdiesh cdiesh 144457753 Nov  5 13:26 pggbY.native.bed.gz
+-rw-rw-r--  1 cdiesh cdiesh    305924 Nov  5 13:26 pggbY.native.bed.gz.tbi

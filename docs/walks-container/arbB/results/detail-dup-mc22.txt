@@ -1,0 +1,6 @@
+raw bytes: main 162.7 MB, departures 3.8 MB, detail 264.7 MB
+detail raw by kind: nodes 137.0 MB, route 125.5 MB, walk 2.2 MB
+abridged chunks 18, records 2468, record routes 858580
+routes also in the chunk's route rows: 436456 (50.8%)
+routes also in an earlier record of the chunk: 240374 (28.0%)
+records compressed alone: 40.4 MB; their duplicate route rows 3.5 MB; walk rows 0.3 MB; nodes rows 23.2 MB

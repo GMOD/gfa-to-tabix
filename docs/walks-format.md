@@ -16,6 +16,9 @@
 - gfa-to-tabix 3.0 and later write walk format 6, which this page describes.
   1.4 to 2.x wrote format 5, which had `skip` rows in place of departure
   records ([ADR 0009](adr/0009-departure-records.md))
+- [ADR 0010](adr/0010-walks-unit-table.md) replaces this page's container
+  with walk format 7, gzip units and a unit table in place of Tabix, for
+  gfa-to-tabix 4.0; the rows inside a unit stay as this page gives them
 
 ```bash
 vg convert -f chr22.gbz > chr22.gfa

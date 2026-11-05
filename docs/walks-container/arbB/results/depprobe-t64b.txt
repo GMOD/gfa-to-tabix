@@ -1,0 +1,16 @@
+=== window 19129406-19130406 t64b (block filing, no reach)
+tabix chunk bin 4685 16724728:0..16777665:0 bytes 52937
+tabix chunk bin 4685 17718380:0..17779633:0 bytes 61253
+tabix: 2 chunks, 114190 bytes fetched, 5026 rows returned, 5026 overlapping drawn, 5026 records
+S: 51359 bytes, 5026 rows, 5026 distinct
+=== window 21677930-21678930 t64b (block filing, no reach)
+tabix chunk bin 4686 20607332:0..20608995:0 bytes 1663
+tabix chunk bin 37490 20856446:0..21152182:0 bytes 295736
+tabix: 2 chunks, 297399 bytes fetched, 14780 rows returned, 14780 overlapping drawn, 14780 records
+S: 139561 bytes, 14780 rows, 14780 distinct
+=== window 6566371-6567371 t64b (block filing, no reach)
+tabix chunk bin 4682 11448605:0..11465317:0 bytes 16712
+tabix chunk bin 37461 11538686:0..11673556:0 bytes 134870
+tabix: 2 chunks, 151582 bytes fetched, 11813 rows returned, 11813 overlapping drawn, 11813 records
+S: 109251 bytes, 11813 rows, 11813 distinct
+PROBE DONE

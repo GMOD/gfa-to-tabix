@@ -706,8 +706,11 @@ Where the findings have come from so far, and the rule each gives:
   chunk before. The spec's reason, bin sharing, holds for @gmod/tabix and
   not for htslib. The tube map's chunk-length probe (above) is the same
   key misleading a consumer. Source: a format choice made without
-  measurement or an ADR. Open: ADR 0010 decides the container and filing,
-  with the review's data and scripts committed beside it
+  measurement or an ADR. Decided in [ADR 0010](adr/0010-walks-unit-table.md):
+  walk format 7 drops the key, and every line states its true stretch.
+  Open until gfa-to-tabix 4.0 writes it. Guard: the writer checks each
+  line's extent against its decoded steps, and `verify7.mjs`'s release
+  checks become tests
 - **2026-11-05, the format review.** graph-walks 5.0.2's `decode` drops a
   chunk already decoded under another attach fetch's name filter, so of
   two departure records whose leave chunks are adjacent, one loses its own

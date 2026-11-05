@@ -1,0 +1,8 @@
+[
+  {"name": "T64", "kind": "tabix", "walks": "DIR/t64.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": REACH},
+  {"name": "T64-dep512k", "kind": "tabix", "walks": "DIR/t64d19.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": REACH},
+  {"name": "Tn", "kind": "tabix", "walks": "DIR/tn.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": REACH, "strictDeps": true},
+  {"name": "S", "kind": "table", "query": "drawn", "walks": "DIR/s.walks.gz", "chunkIndex": "DIR/s.walks.idx.gz", "departures": null, "chunk": 65536, "reach": REACH},
+  {"name": "S-noattach", "kind": "table", "query": "drawn", "walks": "DIR/s.walks.gz", "chunkIndex": "DIR/s.walks.idx.gz", "departures": null, "chunk": 65536, "reach": REACH, "noAttach": true},
+  {"name": "T64-noattach", "kind": "tabix", "walks": "DIR/t64d19.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": REACH, "noAttach": true}
+]

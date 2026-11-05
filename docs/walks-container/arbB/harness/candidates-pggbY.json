@@ -1,0 +1,7 @@
+[
+  {"name": "F6", "kind": "tabix", "walks": "pggbY/f6.bed.gz", "index": "tbi", "patch": false, "query": "lookback", "chunk": 65536},
+  {"name": "F6p", "kind": "tabix", "walks": "pggbY/f6p.bed.gz", "index": "tbi", "patch": true, "query": "reach1bp", "chunk": 65536, "reach": 50008},
+  {"name": "T64", "kind": "tabix", "walks": "pggbY/t64.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": 50008},
+  {"name": "O", "kind": "offset", "walks": "pggbY/o.walks.bgz", "chunkIndex": "pggbY/o.walks.idx.gz", "departures": {"file": "pggbY/o.departures.bed.gz", "index": "tbi", "suffix": ""}, "patch": true, "query": "reach", "chunk": 65536, "reach": 50008},
+  {"name": "N16", "kind": "tabix", "walks": "pggbY/n16.bed.gz", "index": "tbi", "patch": true, "query": "cell", "chunk": 16384, "departures": null, "stubs": true}
+]

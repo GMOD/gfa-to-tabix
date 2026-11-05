@@ -1,0 +1,4 @@
+[
+  {"name": "T64b-r4k", "kind": "tabix", "walks": "pggbY/t64b.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": 4096, "longFile": "pggbY/long4k.txt", "strictDeps": true},
+  {"name": "T64b-r4k-noattach", "kind": "tabix", "walks": "pggbY/t64b.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": 4096, "longFile": "pggbY/long4k.txt", "strictDeps": true, "noAttach": true}
+]

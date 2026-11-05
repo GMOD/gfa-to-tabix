@@ -198,6 +198,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   - [ADR 0007](docs/adr/0007-node-link-format-2.md): node and link format 2, one file with carriers as bits
   - [ADR 0008](docs/adr/0008-index-keeps-its-placement.md): the index keeps its placement, and walk files take placement work
   - [ADR 0009](docs/adr/0009-departure-records.md): one record per departure from the reference, and walk rows that name the copy (walk format 6)
+  - [ADR 0010](docs/adr/0010-walks-unit-table.md): the walk file is gzip units with a unit table, not a Tabix file (walk format 7)
 - [Open problems](docs/open-problems.md): measured but undecided, such as pggb's collapsed repeats
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when a figure differs from that output

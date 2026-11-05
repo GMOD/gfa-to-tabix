@@ -334,6 +334,24 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   pairs left with no kept piece. Suggested next step: time one abridged pggb
   chr22 window in the plugin
 
+## Departure records and attach fetches on pggb
+
+- Under walk format 7 ([ADR 0010](adr/0010-walks-unit-table.md)) a 1 kb
+  window on HPRC's pggb chrY reads a median 70 KB of tiles and departure
+  records, and 389 KB once graph-walks attaches the own steps departure
+  records leave out (p90 1,358 KB); on MC chr22 the same is 29 and 30 KB
+  ([evidence](walks-container/arbA/results/res4/))
+- The attach fetches read whole tiles elsewhere on the chromosome, one per
+  record whose leave piece lies outside the window. On pggb most come from
+  haplotypes hopping between collapsed-repeat copies, so every container
+  measured pays them
+- The reader review estimated carrying a record's own steps inline when
+  they are 4 kb or less at about 0.1 MB compressed on MC chr22, an
+  estimate, not a build ([reader](walks-container/reviews/reader.md)); not
+  measured on pggb
+- Suggested next step: measure inline own steps under a size cap on pggb
+  chrY against the attach fetches they replace
+
 ## Alleles on two reference samples
 
 - `alleles` drops the sample from a sequence's name, so GRCh38's and CHM13's

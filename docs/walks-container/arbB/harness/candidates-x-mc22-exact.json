@@ -1,0 +1,25 @@
+[
+ {
+  "name": "T64b-exact",
+  "kind": "tabix",
+  "walks": "mc22/t64b.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 1024,
+  "strictDeps": true
+ },
+ {
+  "name": "T64b-noattach-exact",
+  "kind": "tabix",
+  "walks": "mc22/t64b.bed.gz",
+  "index": "csi",
+  "patch": true,
+  "query": "reach",
+  "chunk": 65536,
+  "reach": 1024,
+  "strictDeps": true,
+  "noAttach": true
+ }
+]

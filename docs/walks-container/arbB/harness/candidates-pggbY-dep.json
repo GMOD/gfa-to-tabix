@@ -1,0 +1,4 @@
+[
+  {"name": "T64-dep128k", "kind": "tabix", "walks": "pggbY/t64d17.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": 50008},
+  {"name": "T64-dep512k", "kind": "tabix", "walks": "pggbY/t64d19.bed.gz", "index": "csi", "patch": true, "query": "reach", "chunk": 65536, "reach": 50008}
+]

@@ -1,0 +1,23 @@
+[
+ {
+  "name": "S7",
+  "kind": "table",
+  "query": "drawn",
+  "walks": "mc22/s7.walks.gz",
+  "chunkIndex": "mc22/s7.walks.idx.gz",
+  "departures": null,
+  "chunk": 65536,
+  "reach": 1024
+ },
+ {
+  "name": "S7-noattach",
+  "kind": "table",
+  "query": "drawn",
+  "walks": "mc22/s7.walks.gz",
+  "chunkIndex": "mc22/s7.walks.idx.gz",
+  "departures": null,
+  "chunk": 65536,
+  "reach": 1024,
+  "noAttach": true
+ }
+]
