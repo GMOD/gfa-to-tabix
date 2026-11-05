@@ -141,26 +141,92 @@ Where the findings have come from so far, and the rule each gives:
   writing every number's file. Guard: the rule above
 - **2026-11-05, measurement.** The CHM13 file's chr9 and chr14 hops: a 64
   kb window reads up to 2.0 M departure rows and graph-walks 5 refuses
-  it. Source: the format's one placement per file. Decided 2026-11-05:
-  host the file as it is; the refusal, from the index before any fetch,
-  is the stated limit (the handoff's item 2)
+  it. Source: the format's one placement per file. Interim, 2026-11-05:
+  host the file as it is with those windows refused; a CHM13-referenced
+  graph is the design review's alternative, for the user (the handoff's
+  item 2)
 - **2026-11-05, the machine.** `/tmp/claude-1001` at its 8 GB quota from
   earlier sessions' scratch files; one command's output lost. Open: the
   user clears it
 - **2026-11-05, this author, from the tests review's 28 windows.** A
   site was the union of every overlapping mark, so one haplotype's rare
-  long jump merged the sites it crossed for everyone: at chr22:20.3-20.4
-  Mb HG01175#1's 108 kb departure joined two sites of 461 and 460
-  haplotypes into one of 137 states, 173 haplotypes folded. The chain
-  model surfaces far more long departures than graph-walks 4's cut saw,
-  so this became common. Source: a rule written for marks inside the
-  window, met by the chain model's departures over it (the format's
-  limits surfacing in a reader). Fixed in graph-walks be081a5:
-  sites come from marks `minCarriers` haplotypes share, each
-  covering half of the other, and a rarer mark states itself at every
-  site it overlaps without widening one. Of eight MC chr22 windows only
-  that one changes, back to the two sites 4.6.0 had
+  long departure merged the sites it crossed for everyone: at chr22
+  20.3-20.4 Mb one HG01175#1 departure over 108.7 kb of R, with 126 kb
+  of its own, joined two sites of 461 and 460 haplotypes into one of 137
+  states (173 haplotypes in `rareCarriers`, against 158 with the sites
+  apart). The chain model surfaces far more long departures than
+  graph-walks 4's cut saw, so it can happen wherever a rare long
+  departure crosses two sites; one of the eight windows compared had
+  it. Source: a rule written for marks inside the window, met by the
+  chain model's departures over it (the format's limits surfacing in a
+  reader). Fixed in graph-walks be081a5: sites come from marks
+  `minCarriers` haplotypes share, each covering half of the other, and a
+  rarer mark states itself at every site it overlaps without widening
+  one. Of eight MC chr22 windows only that one changes, to two sites of
+  74 and 24 states at 20338159-20340085 and 20355284-20361765, where
+  4.6.0's were 20338159-20343643 and 20355284-20361765
   (`results/minimal/mc22.forms-sites.txt`). Guard: tests "a rare mark
   over two common sites keeps them apart and states itself at each",
   "rare marks overlapping no common site make a site of their own" and
   "a mark shared by minCarriers haplotypes ... makes sites"
+- **2026-11-05, logic review of be081a5.** A rare plain mark at a site
+  under 1 kb, where plain pieces are summed, still widened that site
+  over its whole span and was stated only at the last site it overlapped,
+  so the merging be081a5 set out to stop came back there: at chr22
+  42.11-42.13 Mb two rare marks made two overlapping sites of one.
+  Source: tests shaped by the implementation (the new tests built no
+  site under 1 kb), and a lookup (`siteIndex` by the piece's end) kept
+  from the old rule without asking what the new one needed of it.
+  Fixed in graph-walks edf4acd: a plain piece joins every summed site
+  it overlaps, and a summed change widens its site only when no piece of
+  it is a rare mark. Guard: tests "a rare plain mark from a summed site
+  neither widens it nor merges sites" and "a rare plain mark states
+  itself at every summed site it overlaps"
+- **2026-11-05, logic review of be081a5.** A form named a rare mark
+  spanning two sites twice when the state's median carrier differed
+  between the sites, since the dedupe keyed on exact coordinates: net
+  -41,980 where about -22,000 was right. Source: a rule written for one
+  carrier. Fixed in edf4acd: a mark over several sites dedupes on its
+  kind, state key and sites. Guard: test "a form names a rare bridge
+  once when its carriers' medians differ by site"
+- **2026-11-05, logic review of be081a5.** `commonMarks` compared every
+  mark pair and kept a set per mark: 1.4 s and 855 MB on 46k marks, out
+  of memory at 184k (a 50 bp floor over a wide window). Source: tests
+  and windows too small to show it. Fixed in edf4acd: marks of one
+  span compare once and a set stops at `minCarriers`; 0.3 s at 46k and
+  0.6 s at 185k (`results/minimal/mc22.forms-sites.txt`). Guard: none
+  automated
+- **2026-11-05, fact-check of c5ef587.** The CHM13 decision said graph-walks
+  5 refuses chr9's repeat windows, but `departureByteBudget` defaults to
+  no limit and no caller passes it: `formsCut` had no such option, so a
+  Forms read there would fetch about 22 MB per window. The refusal had
+  been inferred from gzipped sizes, never run. Source: prose ahead of
+  data. Fixed in edf4acd: `formsCut` takes `departureByteBudget` and
+  passes it to both cuts; the handoff says plugin 9 and BandageJS must
+  pass `WALK_BUDGETS`. Guard: test "throws DepartureReadError past its
+  departure byte budget"; plugin 9's own test is still to write
+- **2026-11-05, fact-check of c5ef587.** Wordings ahead of the data: the
+  user's "open to minimizing" written as confirming each cut; "307
+  haplotypes" for a state 304 carry (307 is the form); "173 haplotypes
+  folded" by the merge (158 stay in `rareCarriers` without it);
+  "back to the two sites 4.6.0 had" (the first ends 3.5 kb earlier);
+  "this became common" (one window of eight); "108 kb jump" for a
+  departure with 126 kb of its own; "hosted" for a file not yet hosted;
+  and HG00126#1 called "no fold artefact" in one doc and "an artefact of
+  rare-state folding" in another. Source: prose ahead of data. Fixed in
+  the commit after c5ef587. Guard: the rule above
+- **2026-11-05, design review.** Folding puts haplotypes in forms they
+  don't belong to: at chr22:22.3-22.4 Mb nine haplotypes with 500 to
+  740 kb departures over the window show as `ref`, and HG03784#1 and #2
+  as "ins 9.1kb +1", a 6.06 kb insertion they lack; a common mark still
+  merges every site nested in it. Source: fold and site rules tuned on
+  loci without jumps over the window, met by the chain model's. Open:
+  sites from the shared relation, a fold guarded by tolerance, measured
+  on jb2hubs' gate loci first (handoff item 2)
+- **2026-11-05, design review.** No record says whether its end lies on a
+  node the reference passes more than once, and `mp` is not written, so
+  no reader can tell a hop between copies from a jump, and plugin 9's
+  Forms track has nothing to say "placement choice" from. Source: the
+  minimal cut of `leavePasses`/`rejoinPasses`, justified by an `mp` tag
+  not yet written, which covers ends inside the walk read only. Open:
+  the handoff's item 2

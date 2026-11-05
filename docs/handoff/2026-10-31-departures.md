@@ -25,8 +25,9 @@ things are.
   ownBp missingBp leavePos leaveStrand rejoinPos rejoinStrand`, no
   one-ended records, no `kinds:Z:` or `#placement` in the header. Made
   under the user's "getting a good 'minimal' design will be very valuable"
-  while they were away, and confirmed by them on 2026-11-05 ("i am open to
-  minimizing the format")
+  while they were away. On 2026-11-05, told these cuts waited on them,
+  the user answered "i am open to minimizing the format and whatever else
+  seems good to you": a go-ahead, not a review of each cut
 - The projection onto one reference is exact where haplotypes keep its order
   (Minigraph-Cactus: no jump ends on a node GRCh38 passes twice) and a
   placement choice in repeats (pggb). Viewers say so where it is a choice
@@ -160,22 +161,42 @@ there. The urgent part is the word on screen
      ([results](../departures/results/minimal/README.md#the-forms-cut-on-mc-chr22)).
      **Decided 2026-11-05**, under the user's go-ahead ("whatever else
      seems good to you"): the forms keep the chain model's reading. In
-     LCR22A, LCR22B, IGL and near the centromere they group on jumps
-     over the window ("624 kb replaced by 130 kb", 114 haplotypes at
-     LCR22A) that the old cut never saw; on MC's GRCh38 the projection
-     is exact, so those are facts of the walks. One rule changed in
-     be081a5: sites come from marks `minCarriers` haplotypes share, so
-     one haplotype's rare jump no longer merges the sites it crosses
-     (chr22:20.3 Mb,
-     [issues log](../issues-log.md)). HG00126#1 at 21.4 Mb is no fold
-     artefact of the chain model: two of its contigs reach the 48.7 kb
-     inversion site, so it has no call there, and a rare no call folds
-     to the majority state, `inv 48.7kb` (307 haplotypes); it is listed
-     in `rareCarriers`. On a reference with nodes it passes more than
-     once (CHM13, pggb) a departure between copies is a placement
-     choice, and plugin 9's Forms track says so there. Plugin 9 will
-     need `formRows.test.ts` without `open` and the `^4.6.0` pin raised. Not done: bandage-core 13 and plugin
-     9 (below)
+     LCR22A, LCR22B and IGL they group on jumps over the window ("624 kb
+     replaced by 130 kb", 114 haplotypes at LCR22A) that the old cut
+     never saw, and at 12.3 and 15.0 Mb a jump over the window is one
+     shared site; on MC's GRCh38 the projection is exact, so those are
+     facts of the walks. Sites now come from marks `minCarriers`
+     haplotypes share (be081a5, with a logic review's fixes in
+     edf4acd), so one haplotype's rare departure no longer merges the
+     sites it crosses (chr22:20.3 Mb, [issues log](../issues-log.md)).
+     HG00126#1's `inv 48.7kb` at 21.4 Mb comes from the rare-state
+     fold: two of its contigs reach the inversion site, so it has no
+     call there, and a rare no call folds to the majority state, whose
+     form holds 307 haplotypes; it is listed in `rareCarriers`.
+     **Open, from a design review the same day** (each in the issues
+     log), for the user before graph-walks 5 is released:
+     - The fold puts haplotypes in forms they don't belong to: at
+       chr22:22.3-22.4 Mb nine haplotypes with 500 to 740 kb departures
+       over the window show as `ref`, and a common mark still merges
+       every site nested in it. The review proposes sites from the same
+       half-cover relation that makes marks common, with a larger mark
+       stated at each site inside it, and a fold only into a state
+       within a tolerance, never a no call into a change. To measure
+       first: jb2hubs' gate loci and the 28 chr22 windows under both
+       rules, and misfolds per window
+     - No record says whether an end lies on a node the reference
+       passes more than once, and `mp` is not written, so on CHM13 or
+       pggb no reader can tell a hop between copies from a jump, and
+       plugin 9's Forms track has nothing to say "placement choice"
+       from. The review proposes a record tag, written only where
+       nonzero, so MC on GRCh38 pays nothing. It also proposes an
+       abridged row's contig end in place of `bp`, since every reader
+       must rebuild the extent across other chunks' pieces, the bug
+       class found twice (59 of MC chr22's 2,468 abridged rows have
+       pieces apart, the review's count from the local file)
+     Plugin 9 will need `formRows.test.ts` without `open` and the
+     `^4.6.0` pin raised. Not done: bandage-core 13 and plugin 9
+     (below)
    - **Done, 2026-11-04 evening: the genome-wide build**, on ada by
      `~/work/rebuild/genome.sh` from
      `~/hprc-gbz/walks/hprc-v2.1-mc-grch38.W.gfa.gz` with the port3 binary
@@ -204,13 +225,26 @@ there. The urgent part is the word on screen
      and chr5 hold 0.3 to 2.0 M rows each, not measured by window; the
      other sequences read as the GRCh38 file does
      ([results](../departures/results/minimal/README.md#where-the-chm13-files-rows-are),
-     and a bullet in open-problems). **Decided 2026-11-05**, under the
-     user's go-ahead: host the CHM13 file as it is. graph-walks 5
-     refuses those windows from the index's byte estimate before
-     fetching a block, with a message naming a collapsed repeat, which
-     is the agreed rule of stating the limit and routing repeats to
-     non-linear views. A placement rule for CHM13's repeats stays the
-     pggb question of open-problems, not a blocker
+     and a bullet in open-problems). **Interim, 2026-11-05**: host the
+     CHM13 file as it is, with those windows refused. graph-walks 5's
+     `cut` refuses a window whose departure read the index estimates
+     past `departureByteBudget`, after reading the header and index and
+     before fetching any of the window's blocks, with a message naming
+     a collapsed repeat; the budget is off by default, so plugin 9 and
+     BandageJS must pass `WALK_BUDGETS` (and `formsCut` passes it on
+     since edf4acd). That these CHM13 windows are over it is inferred
+     from their gzipped sizes, not run. A design review argues against
+     this as the end state: the refused windows are chr9's
+     pericentromeric duplications, where CHM13 adds most over GRCh38
+     and which the hosted format 5 file draws today, and the hops look
+     like a placement artefact (every haplotype hops, 96% with no own
+     bp). Its proposal: build the hs1 files from a CHM13-referenced
+     Minigraph-Cactus graph, where CHM13 would pass no node twice, if
+     HPRC v2.1 publishes one (not checked; ada holds only the GRCh38
+     one). That costs a genome-wide build and gives the hs1 tracks
+     other node ids than the hg38 ones. For the user to decide; before
+     hosting, a refusal map of every CHM13 sequence from the index
+     alone
    - graph-walks 4.6.1 (a51b7bf, which asks for a newer viewer on a format
      6 file), bundled by the plugin, BandageJS, ggbandage and the tube map,
      before gfa-to-tabix 3.0 is released. Releasing is bumping `version`
@@ -236,8 +270,8 @@ very valuable"). Five Fable reviews in the morning of 2026-11-04 (four per
 question, one deriving the minimal format from the requirements alone) and
 measurements on the port's files on ada (`~/work/rebuild/port2/`) proposed
 the cuts; the next session, that afternoon, made them, since the user was
-away; the user confirmed them on 2026-11-05. What ADR 0009 now says, and
-why:
+away; on 2026-11-05 the user gave a go-ahead to minimizing the format
+without reviewing each cut. What ADR 0009 now says, and why:
 
 - **Cut from the record:** `fragStart`, `ownSteps`, `leaveNode`,
   `leavePasses`, `leaveChunk`, `rejoinNode`, `rejoinPasses`,

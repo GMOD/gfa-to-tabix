@@ -188,7 +188,13 @@ for it, and a rare no call folds to the majority state. Each is the
 chain model's reading, which the handoff's item 2 keeps (2026-11-05),
 with one rule changed: `mc22.forms-sites.txt` compares eight windows
 before and after sites came from marks `minCarriers` haplotypes share,
-and only 20.3-20.4 Mb changes, from one site of 137 states to two, as
-4.6.0 had, of 74 and 24 states. A 900 kb window at
+and only 20.3-20.4 Mb changes, from one informative site of 137 states
+to two of 74 and 24 states, at 20338159-20340085 and 20355284-20361765,
+where 4.6.0's two were 20338159-20343643 and 20355284-20361765. The
+same file compares be081a5 with the logic review's fixes (edf4acd) on
+ten windows: only 42.11-42.13 Mb changes, its two overlapping sites
+42112682-42112801 and 42112682-42112933 becoming 42112731-42112801 and
+42112859-42112933; and it times `structuralForms` on 462 haplotypes
+sharing 46,200 to 184,800 marks. A 900 kb window at
 22.0-22.9 Mb with 976,347 departures took 109 s in `walkDepartures` at
 1132859 and 0.6 s at 3574904, against 8 s for the cut.
