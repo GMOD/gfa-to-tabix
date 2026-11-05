@@ -626,7 +626,21 @@ Where the findings have come from so far, and the rule each gives:
   a departure record says it goes on and rejoins: `walks6_rejoin` at
   chr1:1000-1500, HG002#1 leaving at 1500 with 4 kb of its own. Source: a
   rule written for format 5, where a fragment running off R meant the
-  contig went on, met by format 6's fragments that end on R. Fix: below
+  contig went on, met by format 6's fragments that end on R. Fixed in
+  bandage-core 23169a2 (13.0.1): a side's contig ends only where its last
+  step is on R with no departure at it and no trimmed bp past it;
+  otherwise `WalkStop.goesOn` names the departure and the readout says
+  "goes on near … · … of its own". Guard: `graphWalks.test.ts` on
+  `rejoin.GRCh38` at chr1:1000-1500 and 4000-4500 with context 500, and
+  `records.GRCh38` HG002#1 as the control that truly ends
+- **2026-11-05, fixing the contig-ends bug.** Two more format 5
+  assumptions in bandage-core 13: with no context, `flanked` takes every
+  walk as whole, so a walk departing at the window's edge reads complete
+  with a length change ("0.5 kb (−500 bp)", read as a measured deletion)
+  and its departure unmentioned; and a walk whose only step on the cut is
+  a flank gets no direction from `partialSide` and draws the flank,
+  outside the window, as a "partial walk", not saying it departs. Source:
+  rules written for format 5's fragments, which ran off R. Fix: below
 - **2026-11-05, porting the JBrowse plugin.** The plugin adjusted its
   tests to graph-walks 5.0.0's missing right-hand context (the reference
   ending at 3200, not 3800, in `walks6_maxnode`), reading the README as
