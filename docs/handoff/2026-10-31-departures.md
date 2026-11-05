@@ -370,12 +370,22 @@ ADR 0009 History); their doc and number fixes are committed.
   and the repo's `CHM13.chr9.records.txt` is that file's summary. ada's
   disk was at 99% with 44 GB free during that build
 - Local, gitignored: `target/forms-check/` holds `f5/` and `port3/`'s MC
-  chr22 files, the inputs of the forms comparison
-- graph-walks: `~/src/graph-walks` at be081a5, unpushed (43910ec the
-  format 6 reader; 1132859, 73f2e6b, 3574904 and be081a5 the forms
-  cut). Its `test_data/` holds each fixture's GFA and `build.sh`, which rebuilds them with a
+  chr22 files, the inputs of the forms comparison, and `arb/` the format
+  arbitration's MC chr22 build with its forms cuts and checks
+- graph-walks: `~/src/graph-walks` at ec8ecd9, unpushed (43910ec the
+  format 6 reader; 1132859, 73f2e6b, 3574904, be081a5 and edf4acd the
+  forms cut; 7601e9e the forms arbitration; ec8ecd9 the format
+  arbitration). Its `test_data/` holds each fixture's GFA and `build.sh`, which rebuilds them with a
   gfa-to-tabix binary; the chrM fixture's GFA was recovered from the
   format 5 file with the old decoder, bases included
+- The arbitration of 2026-11-05: worktrees `~/src/arb-forms-{fable,opus}`
+  and `~/src/arb-format-{fable,opus}`, their branches kept; the Fable
+  branches were not landed (`arb-forms-fable` 47ecef3, no folding;
+  `arb-format-fable` db3699f and 15659ac, `hapEnd` abridged rows, with
+  chr9 hop scripts `hop-ends.py` and `chr9-dwell.py` and a `fuzz6.sh`
+  path fix not carried over). ada: `~/work/arb-format-opus/` (65 GB,
+  inputs re-cut from S3 into `in/`, builds in `out/`) and
+  `~/work/arb-format-fable/`
 - ada: `~/work/f6/` (the `bypass` prototype builds of MC chr22 and pggb
   chrY), `~/work/spike/` (spike builds, MC chrY cut for the agreement
   scores, alignments in `align/`)
