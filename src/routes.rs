@@ -839,21 +839,26 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
 }
 
 // The `abridged` row standing for one piece of a path whose pieces in the
-// chunk are detail record `k`
+// chunk are detail record `k`: its stretch on the contig from its first step
+// on R to its last, and all its steps
 fn summary_row(path: &Path, piece: &Piece, walk: &Walk, lengths: &[u32], k: usize) -> Vec<u8> {
-    let bp: u64 = piece
-        .handles
-        .iter()
-        .map(|&h| u64::from(lengths[(h >> 1) as usize]))
-        .sum();
+    let on_r = |t: &u32| *t != NONE;
+    let first = piece.targets.iter().position(on_r).expect("a step on R");
+    let last = piece.targets.iter().rposition(on_r).expect("a step on R");
+    let bp = |steps: &[u32]| -> u64 {
+        steps
+            .iter()
+            .map(|&h| u64::from(lengths[(h >> 1) as usize]))
+            .sum()
+    };
     let mut line = b"abridged\t".to_vec();
     line.extend_from_slice(piece.name);
     for n in [
         piece.frag,
-        piece.offset,
+        piece.offset + bp(&piece.handles[..first]),
         u64::from(piece.piece),
         piece.handles.len() as u64,
-        bp,
+        bp(&piece.handles[first..=last]),
     ] {
         line.push(b'\t');
         line.extend_from_slice(n.to_string().as_bytes());

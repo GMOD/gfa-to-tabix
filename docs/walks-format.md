@@ -308,12 +308,23 @@ seq cs cs+1 abridged path fragStart hapOffset piece nsteps bp start[@k] end[@k] 
   row. See [Abridged chunks](#abridged-chunks). A reader keys it by `path`,
   `fragStart` and `piece` as it does a walk row, so every piece of a path
   has one row in its chunk, walk or abridged
-- `hapOffset`, `nsteps` and `bp` are the piece's own: it runs from
-  `hapOffset` to `hapOffset + bp` on its contig, over `nsteps` steps
 - `start` is the piece's first handle on R and `end` its last, both
   absolute. `start@k` names its occurrence as on a walk row; `end@k` names
   its occurrence where it is not the one nearest `start`'s position in R,
   counted in positions, the later on a tie
+- `hapOffset` and `bp` give the piece's stretch on R: it runs from
+  `hapOffset`, where its `start` step begins on its contig, to `hapOffset +
+  bp`, where its `end` step ends, as a reader trims a walk row's piece to its
+  steps on R. Steps of its own before `start` or after `end`, at its
+  contig's start or end or beside a step on another sequence, lie outside it
+- A record leaves at a piece's last step on S and rejoins at a piece's
+  first, so no record's own bp share a base with an abridged row's stretch,
+  and a reader that leaves the piece unexpanded nets `bp` against the R
+  between `start` and `end` and takes the departures at its ends from their
+  records
+- `nsteps` counts all the piece's steps, those outside the stretch included:
+  the steps its detail record's walk row decodes, which a reader that reads
+  the record bounds its work by
 - `detail` numbers the chunk's record that holds the piece's walk row. A
   path's moved pieces in one chunk share one record
 
@@ -405,7 +416,8 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   chunk move together
 - The chunk keeps its `ref` rows, its other pieces' `nodes`, `route` and `walk`
   rows, encoded without the moved pieces, and an `abridged` row per moved
-  piece with its steps, bp and where it leaves and rejoins the reference
+  piece with its first and last handles on R, the bp from one to the other
+  and its steps
 - The moved pieces' rows go to detail record `detail` of the chunk, under the
   sequence `seq~cs` at position `detail × 16384`, so each record has a Tabix
   leaf bin to itself and a query for one reads no other. A window query names

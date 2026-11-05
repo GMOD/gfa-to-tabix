@@ -7,13 +7,16 @@
 # departure, each end's pass count included; that each `ref` row's pass
 # counts are how often the file's `ref` rows hold the node, and the
 # header's `revisited` how many nodes they hold more than once; and that
-# each `abridged` row states its own piece of its detail record: its
-# hapOffset, steps and bp, and its first and last steps on R, by position in
-# R and strand, as start and end. Then checks the reader promise (every base of a record's
-# stretch where its path has no piece lies under a block of the record or a
-# crowd row of the path), and costs each window the way @gmod/tabix reads
-# it: rows by class, text bytes, and requests and bytes from the .tbi with
-# its chunk merging (gaps under 65,000 bytes, merged spans under 5 MB).
+# each `abridged` row states its own piece of its detail record: its steps,
+# its stretch from its first step on R to its last as hapOffset and bp, and
+# those steps' handles and positions in R as start and end; and that every
+# base of a path from its first step on a sequence to its last lies in one
+# piece's stretch on R or one record's own bp. Then checks the reader
+# promise (every base of a record's stretch where its path has no piece lies
+# under a block of the record or a crowd row of the path), and costs each
+# window the way @gmod/tabix reads it: rows by class, text bytes, and
+# requests and bytes from the .tbi with its chunk merging (gaps under 65,000
+# bytes, merged spans under 5 MB).
 #
 # Usage: audit6.py walks.bed.gz [--seq NAME] [--window 65536] [--point 1024] [--top 1]
 import argparse
@@ -619,14 +622,31 @@ revisited = sum(1 for n in stated_passes.values() if n > 1)
 print(f'{revisited}\tnodes stated as passed more than once; the header says {header.get("revisited")}')
 if args.seq is None and str(revisited) != header.get('revisited'):
     print('1\theader revisited differs from the ref rows (must be 0)')
+# each piece's offset and bp trimmed to its stretch from its first step on R
+# to its last, and its steps; and by sequence and path those stretches and
+# the records' own bp
 held_pieces = {}
+stretches = collections.defaultdict(list)
 for path, ps in pieces.items():
     for frag, offset, piece, steps in ps:
         n = sum(x[6] if x[0] == 'R' else x[1] for x in steps)
         bp = sum(x[7] if x[0] == 'R' else x[2] for x in steps)
-        held_pieces[(path, frag, piece)] = (offset, n, bp)
-stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4], ())[:3] != (row[2], row[4], row[5])]
-print(f'{len(stray)}\tabridged rows unlike the piece their detail record holds (must be 0)')
+        on = [k for k, x in enumerate(steps) if x[0] == 'R']
+        lead = sum(x[2] for x in steps[:on[0]])
+        tail = sum(x[2] for x in steps[on[-1] + 1:])
+        held_pieces[(path, frag, piece)] = (offset + lead, n, bp - lead - tail)
+        stretches[(steps[on[0]][1], path)].append((offset + lead, offset + bp - tail))
+record_seq = {row[4]: row[0] for row in dep_rows if row[3] == 'd'}
+for k, rec in enumerate(records):
+    if in_shard(rec[1]):
+        stretches[(record_seq[k], rec[1])].append((int(rec[2]), int(rec[2]) + int(rec[3])))
+untiled = []
+for key, spans in stretches.items():
+    spans.sort()
+    if any(a[1] != b[0] for a, b in zip(spans, spans[1:])):
+        untiled.append((key, spans))
+stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4]) != (row[2], row[4], row[5])]
+print(f'{len(stray)}\tabridged rows unlike the stretch on R and the steps of the piece their detail record holds (must be 0)')
 for row in stray[:args.examples]:
     print('   abridged', row, held_pieces.get(row[:2] + row[3:4]))
 misplaced = [row for row in abridged_rows if detail_of.get(row[:2] + row[3:4]) != row[7]]
@@ -644,6 +664,10 @@ unrowed = [k for k in detail_of if k not in rowed]
 print(f'{len(unrowed)}\tdetail pieces with no abridged row (must be 0)')
 for k in unrowed[:args.examples]:
     print('   unrowed', k)
+print(f'{len(untiled)}\tpaths on a sequence whose bases from their first step on it to their last are not each in '
+      'one piece\'s stretch on R or one record\'s own bp (must be 0)')
+for key, spans in untiled[:args.examples]:
+    print('   untiled', key, spans[:12])
 for u in unreachable[:args.examples]:
     print('   unreachable', u)
 for k, v in sorted(bad.items()):

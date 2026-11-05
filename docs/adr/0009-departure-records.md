@@ -191,9 +191,14 @@ passed more than once.
 ### Abridged rows stand for one piece
 
 An `abridged` row is `path fragStart hapOffset piece nsteps bp start[@k]
-end[@k] detail`, one per moved piece, its `hapOffset`, `nsteps` and `bp`
-the piece's own, so it lies from `hapOffset` to `hapOffset + bp` on its
-contig as a walk row's piece does. A path's moved pieces in a chunk still
+end[@k] detail`, one per moved piece. Its `hapOffset` and `bp` give the
+piece's stretch on R, from where its `start` step begins on its contig to
+where its `end` step ends, as a reader trims a walk row's piece, and
+`nsteps` counts all the piece's steps, the number its detail record
+decodes. Every record ends at a piece's first or last step on S, so a
+record's own bp never overlap an abridged row's, and the own steps outside
+the stretch, which no record covers at a contig's ends, are not netted as
+a change. A path's moved pieces in a chunk still
 move together and share one detail record. Every piece of every path then
 has exactly one row in its chunk, a walk row or an abridged row, and a
 reader joins and keys them alike: the departures between two moved pieces
@@ -662,6 +667,12 @@ Kept for the measurements the rebuild did not repeat.
   files were moved to CHM13's own graph. The format number stays 6: no
   format 6 file was released or hosted, and graph-walks refuses a row
   missing the new columns rather than misread it
+- **2026-11-05, the final review before release.** An abridged row's
+  `hapOffset` and `bp` covered its whole piece, so an unexpanded piece
+  netted the own steps at a contig's start or end, which no record covers,
+  as a change. They now give the piece's stretch on R, from its `start`
+  step to its `end` step, and `nsteps` stays the whole piece's, which is
+  what reading its detail record costs
 
 ## Alternatives rejected
 

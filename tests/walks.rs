@@ -12,7 +12,7 @@
 // route's exit takes `@k` where it lands on occurrence k of its node in R,
 // and a route `:k` where the walk leaves R from occurrence k of its entry.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fs;
 use std::io::{Read, Write};
 use std::process::{Command, Output};
@@ -191,7 +191,8 @@ fn with_copy(token: &str) -> (&str, Option<usize>) {
     }
 }
 
-fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
+// A walk row's steps, each with its position in R, none for route interior
+fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<(u32, Option<usize>)> {
     let count: usize = cols[8].parse().unwrap();
     let (start, start_copy) = with_copy(cols[9]);
     let start: u32 = start.parse().unwrap();
@@ -218,17 +219,18 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
         }
     }
     let mut steps = Vec::new();
+    let off_r = |interior: &[u32]| interior.iter().map(|&h| (h, None)).collect::<Vec<_>>();
     let mut rest = &choices[..];
     if let Some(((None, interior, _), _, _)) = choices.first() {
-        steps.extend_from_slice(interior);
+        steps.extend(off_r(interior));
         rest = &choices[1..];
     }
     let mut h = start;
     let mut i = path.copy(h, start_copy);
-    steps.push(h);
-    let step = |steps: &mut Vec<u32>, h: &mut u32, i: &mut usize| {
+    steps.push((h, Some(i)));
+    let step = |steps: &mut Vec<(u32, Option<usize>)>, h: &mut u32, i: &mut usize| {
         (*i, *h) = path.step(*i, *h);
-        steps.push(*h);
+        steps.push((*h, Some(*i)));
     };
     for ((entry, interior, exit), entry_copy, exit_copy) in rest {
         let entry = entry.expect("an open route after the first choice");
@@ -246,7 +248,7 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
             }
         }
         assert_eq!(h, entry);
-        steps.extend_from_slice(interior);
+        steps.extend(off_r(interior));
         let Some(exit) = exit else {
             return steps;
         };
@@ -255,7 +257,7 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
             Some(k) => path.copy(h, Some(*k)),
             None => path.nearest(h, i),
         };
-        steps.push(h);
+        steps.push((h, Some(i)));
     }
     while steps.len() < count {
         step(&mut steps, &mut h, &mut i);
@@ -263,15 +265,26 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<u32> {
     steps
 }
 
-// Every path's steps rebuilt from a walk file, joining its pieces in order.
-fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
+// A walk file read back: every path's steps, joining its pieces in order, by
+// `path@fragStart`; and by sequence and path, the stretches of its contig each
+// piece spans from its first step on R to its last, abridged ones as their
+// rows state them, and each departure record's own bp.
+struct Decoded {
+    paths: BTreeMap<String, Vec<u32>>,
+    stretches: BTreeMap<(String, String), Vec<(u64, u64)>>,
+}
+
+fn decode_file(text: &str) -> Decoded {
     let mut chunks: BTreeMap<(String, u64), Vec<Vec<&str>>> = BTreeMap::new();
     // by sequence, chunk and record
     let mut details: BTreeMap<(String, u64, u64), Vec<Vec<&str>>> = BTreeMap::new();
+    let mut records: BTreeSet<(String, Vec<&str>)> = BTreeSet::new();
     for line in text.lines().filter(|l| !l.starts_with('#')) {
         let cols: Vec<&str> = line.split('\t').collect();
         match cols[0].split_once('~') {
-            Some((_, "departure")) => {}
+            Some((seq, "departure")) => {
+                records.insert((seq.to_string(), cols[3..].to_vec()));
+            }
             Some((seq, cs)) => details
                 .entry((
                     seq.to_string(),
@@ -286,8 +299,39 @@ fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
                 .push(cols),
         }
     }
+    // node lengths from the `ref` and `nodes` rows
+    let mut lengths: HashMap<u32, u64> = HashMap::new();
+    for cols in chunks.values().chain(details.values()).flatten() {
+        let (ids, bps) = match cols[3] {
+            "ref" => (deltas(cols[9], &mut 0), cols[10]),
+            "nodes" => {
+                let mut id = 0u32;
+                let ids = cols[4].split(',').map(|d| {
+                    id = id.checked_add_signed(d.parse().unwrap()).unwrap();
+                    2 * id
+                });
+                (ids.collect(), cols[5])
+            }
+            _ => continue,
+        };
+        for (h, bp) in ids.iter().zip(bps.split(',')) {
+            lengths.insert(h >> 1, bp.parse().unwrap());
+        }
+    }
+    let bp_of = |steps: &[(u32, Option<usize>)]| -> u64 {
+        steps.iter().map(|(h, _)| lengths[&(h >> 1)]).sum()
+    };
+    // a piece's stretch on R: from where its first step on R starts on the
+    // contig to where its last ends, and those steps' indices
+    let on_r = |offset: u64, steps: &[(u32, Option<usize>)]| {
+        let first = steps.iter().position(|s| s.1.is_some()).unwrap();
+        let last = steps.iter().rposition(|s| s.1.is_some()).unwrap();
+        let start = offset + bp_of(&steps[..first]);
+        (start, start + bp_of(&steps[first..=last]), first, last)
+    };
     let mut pieces: BTreeMap<String, BTreeMap<u64, Vec<u32>>> = BTreeMap::new();
-    let mut decode_rows = |path: &RefPath, rows: &[Vec<&str>]| {
+    let mut stretches: BTreeMap<(String, String), Vec<(u64, u64)>> = BTreeMap::new();
+    let mut decode_rows = |seq: &str, path: &RefPath, rows: &[Vec<&str>], detail: bool| {
         let mut previous = 0i64;
         let routes: Vec<Route> = rows
             .iter()
@@ -302,62 +346,53 @@ fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
         let mut decoded = Vec::new();
         for cols in rows {
             let steps = match cols[3] {
-                "ref" => deltas(cols[9], &mut 0),
+                "ref" => deltas(cols[9], &mut 0)
+                    .into_iter()
+                    .map(|h| (h, None))
+                    .collect(),
                 "walk" => decode_walk(path, &routes, cols),
                 _ => continue,
             };
             assert_eq!(steps.len(), cols[8].parse::<usize>().unwrap(), "{cols:?}");
+            let offset: u64 = cols[6].parse().unwrap();
+            if cols[3] == "walk" && !detail {
+                let (start, end, _, _) = on_r(offset, &steps);
+                stretches
+                    .entry((seq.to_string(), cols[4].to_string()))
+                    .or_default()
+                    .push((start, end));
+            }
             decoded.push((
                 format!("{}@{}", cols[4], cols[5]),
                 cols[7].parse::<u64>().unwrap(),
-                cols[6].parse::<u64>().unwrap(),
+                offset,
                 steps.clone(),
             ));
             pieces
                 .entry(format!("{}@{}", cols[4], cols[5]))
                 .or_default()
-                .insert(cols[7].parse().unwrap(), steps);
+                .insert(
+                    cols[7].parse().unwrap(),
+                    steps.iter().map(|s| s.0).collect(),
+                );
         }
         decoded
     };
-    // node lengths from the `ref` and `nodes` rows
-    let mut lengths: HashMap<u32, u64> = HashMap::new();
-    let mut learn = |rows: &[Vec<&str>]| {
-        for cols in rows {
-            let (ids, bps) = match cols[3] {
-                "ref" => (deltas(cols[9], &mut 0), cols[10]),
-                "nodes" => {
-                    let mut id = 0u32;
-                    let ids = cols[4].split(',').map(|d| {
-                        id = id.checked_add_signed(d.parse().unwrap()).unwrap();
-                        2 * id
-                    });
-                    (ids.collect(), cols[5])
-                }
-                _ => continue,
-            };
-            for (h, bp) in ids.iter().zip(bps.split(',')) {
-                lengths.insert(h >> 1, bp.parse().unwrap());
-            }
-        }
-    };
-    for rows in chunks.values().chain(details.values()) {
-        learn(rows);
-    }
+    let mut abridged_stretches = Vec::new();
     for ((seq, cs), rows) in &chunks {
         let mut refs: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "ref").collect();
         refs.sort_by_key(|c| c[6].parse::<u64>().unwrap());
         let path = RefPath {
             handles: refs.iter().flat_map(|c| deltas(c[9], &mut 0)).collect(),
         };
-        decode_rows(&path, rows);
+        decode_rows(seq, &path, rows, false);
         let abridged: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "abridged").collect();
-        let mut records: Vec<u64> = abridged.iter().map(|c| c[12].parse().unwrap()).collect();
-        records.dedup();
-        for k in records {
+        let mut held: Vec<u64> = abridged.iter().map(|c| c[12].parse().unwrap()).collect();
+        held.dedup();
+        for k in held {
             let record = &details[&(seq.clone(), *cs, k)];
             assert!(record.iter().all(|c| c[3] != "ref" && c[3] != "abridged"));
-            let decoded = decode_rows(&path, record);
+            let decoded = decode_rows(seq, &path, record, true);
             let stands: Vec<&&Vec<&str>> = abridged
                 .iter()
                 .filter(|c| c[12].parse::<u64>().unwrap() == k)
@@ -368,34 +403,59 @@ fn decode_file(text: &str) -> BTreeMap<String, Vec<u32>> {
                 "one abridged row per piece of record {k}"
             );
             for ((name, piece, offset, steps), cols) in decoded.iter().zip(stands) {
-                let bp: u64 = steps.iter().map(|h| lengths[&(h >> 1)]).sum();
+                let (start, end, first, last) = on_r(*offset, steps);
+                let (start_handle, start_copy) = with_copy(cols[10]);
+                let (end_handle, end_copy) = with_copy(cols[11]);
+                let (start_handle, end_handle) =
+                    (start_handle.parse().unwrap(), end_handle.parse().unwrap());
+                let start_at = path.copy(start_handle, start_copy);
+                let end_at = match end_copy {
+                    Some(k) => path.copy(end_handle, Some(k)),
+                    None => path.nearest(end_handle, start_at),
+                };
                 assert_eq!(
                     (
                         name.clone(),
                         piece.to_string(),
-                        offset.to_string(),
+                        start.to_string(),
                         steps.len().to_string(),
-                        bp.to_string()
+                        (end - start).to_string(),
+                        steps[first],
+                        steps[last],
                     ),
                     (
                         format!("{}@{}", cols[4], cols[5]),
                         cols[7].to_string(),
                         cols[6].to_string(),
                         cols[8].to_string(),
-                        cols[9].to_string()
+                        cols[9].to_string(),
+                        (start_handle, Some(start_at)),
+                        (end_handle, Some(end_at)),
                     ),
                     "{cols:?}"
                 );
+                abridged_stretches.push(((seq.clone(), cols[4].to_string()), (start, end)));
             }
         }
     }
-    pieces
+    for (key, stretch) in abridged_stretches {
+        stretches.entry(key).or_default().push(stretch);
+    }
+    for (seq, cols) in records {
+        let (start, own): (u64, u64) = (cols[2].parse().unwrap(), cols[3].parse().unwrap());
+        stretches
+            .entry((seq, cols[1].to_string()))
+            .or_default()
+            .push((start, start + own));
+    }
+    let paths = pieces
         .into_iter()
         .map(|(path, pieces)| {
             assert!(pieces.keys().copied().eq(0..pieces.len() as u64), "{path}");
             (path, pieces.into_values().flatten().collect())
         })
-        .collect()
+        .collect();
+    Decoded { paths, stretches }
 }
 
 // The handles of each W line, by `sample#hap#contig@start`.
@@ -423,14 +483,29 @@ fn gfa_paths(gfa: &str) -> HashMap<String, Vec<u32>> {
         .collect()
 }
 
+// Every path rebuilds from its rows, and from its first step on a sequence to
+// its last every base of it lies in one piece's stretch on R or one record's
+// own bp, so a reader that nets an abridged piece over its stretch and takes
+// the departures at its ends from their records counts each base once
 fn assert_rebuilds(gfa: &str, built: &Built, samples: &[&str]) {
     let paths = gfa_paths(gfa);
     for sample in samples {
         let decoded = decode_file(built.file(sample));
-        assert!(!decoded.is_empty(), "{sample}");
-        for (path, steps) in &decoded {
+        assert!(!decoded.paths.is_empty(), "{sample}");
+        for (path, steps) in &decoded.paths {
             assert_eq!(steps, &paths[path], "{sample}: {path}");
         }
+        for ((seq, path), stretches) in &decoded.stretches {
+            assert_tiles(stretches, &format!("{sample}: {seq} {path}"));
+        }
+    }
+}
+
+fn assert_tiles(stretches: &[(u64, u64)], what: &str) {
+    let mut sorted = stretches.to_vec();
+    sorted.sort_unstable();
+    for pair in sorted.windows(2) {
+        assert_eq!(pair[0].1, pair[1].0, "{what}: {sorted:?}");
     }
 }
 
@@ -445,6 +520,7 @@ fn every_path_rebuilds_from_its_rows() {
         ("walks-loop.gfa", "R", "10"),
         ("walks-loop.gfa", "R", "1000"),
         ("walks-records.gfa", "R", "10"),
+        ("walks-contig-ends.gfa", "R", "10"),
         ("walks-skip.gfa", "R,Q", "10"),
     ] {
         let built = build(gfa, &["--refs", refs, "--chunk", chunk]);
@@ -464,6 +540,7 @@ fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
         ("walks-repeat.gfa", "R"),
         ("walks-loop.gfa", "R"),
         ("walks-records.gfa", "R"),
+        ("walks-contig-ends.gfa", "R"),
     ] {
         let built = build(gfa, &["--refs", refs, "--abridge-bytes", "1"]);
         assert!(built.output.status.success(), "{gfa}");
@@ -507,6 +584,39 @@ fn an_abridged_row_stands_for_one_piece_and_names_its_detail_record() {
         tsv(&[
             "R#0#chr~0 16384 16385 walk D#1#d 0 0 0 2 2 .",
             "R#0#chr~0 16384 16385 walk D#1#d 0 24 2 2 2 .",
+        ])
+    );
+}
+
+// R is 1-6, 6 bp each; L starts with 30 bp of its own, 11 12 13, before 3,
+// and M ends with them after 3. Those steps lie at the contig's ends, where
+// no record covers them, so each abridged row spans its piece from its
+// first step on R to its last: L's piece 0 from 3's start at 30 for 12 bp,
+// M's piece 1 over 3 alone, at 12 for 6. nsteps still counts the whole
+// piece, 5 and 4 steps, which its detail record decodes.
+#[test]
+fn an_abridged_row_spans_its_piece_from_its_first_step_on_r_to_its_last() {
+    let built = build(
+        "walks-contig-ends.gfa",
+        &["--refs", "R", "--abridge-bytes", "1"],
+    );
+    let r = built.file("R");
+    assert_eq!(
+        rows_of(r, "R#0#c", "abridged", "L#1#c") + &rows_of(r, "R#0#c", "abridged", "M#1#c"),
+        tsv(&[
+            "R#0#c 10 11 abridged L#1#c 0 30 0 5 12 6 8 0",
+            "R#0#c 20 21 abridged L#1#c 0 42 1 1 6 10 10 0",
+            "R#0#c 30 31 abridged L#1#c 0 48 2 1 6 12 12 0",
+            "R#0#c 0 1 abridged M#1#c 0 0 0 2 12 2 4 0",
+            "R#0#c 10 11 abridged M#1#c 0 12 1 4 6 6 6 1",
+        ])
+    );
+    assert_eq!(under(r, "R#0#c~departure"), "");
+    assert_eq!(
+        rows_of(r, "R#0#c~10", "walk", "L#1#c") + &rows_of(r, "R#0#c~10", "walk", "M#1#c"),
+        tsv(&[
+            "R#0#c~10 0 1 walk L#1#c 0 0 0 5 6 0",
+            "R#0#c~10 16384 16385 walk M#1#c 0 12 1 4 6 1",
         ])
     );
 }
