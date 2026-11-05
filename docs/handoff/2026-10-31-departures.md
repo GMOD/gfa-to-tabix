@@ -166,15 +166,21 @@ there. The urgent part is the word on screen
      rows name a copy. `genome-audit.sh` then audits chr22 of each file
      with `audit6.py --seq`, CHM13 first, into `genome/CHM13.chr22.audit.txt`
      and `genome/GRCh38.chr22.audit.txt`. **Both audits are clean**
-     (2026-11-05): every record matches a recomputed departure, no base
-     of any stretch is uncovered, and a 64 kb window's departure read is
-     at most 117 KB on chr22 of either file. **The CHM13 file's extra
-     rows are on chr9**: 32.4 M of its 42.7 M, from 2.2 M records that
-     hop between copies 10 to 100 Mb apart, 96% with no own bp and 81%
-     switching strand, so a 64 kb window anywhere between 38 and 80 Mb
-     of CHM13 chr9 reads 1.7 M rows (22 MB compressed) and graph-walks 5
-     refuses it with its DepartureReadError; chr14 has 4.3 M rows in one
-     Mb. The rest of the file reads as the GRCh38 one does
+     (2026-11-05): every record matches a recomputed departure (the 9
+     and 28 over a W line the file holds no row of in all but the
+     missing bp the audit cannot see), no base of any stretch is
+     uncovered, and a 64 kb window's departure read is at most 117 KB
+     on chr22 of either file. **The CHM13 file's extra rows are on
+     chr9**: 32.4 M of its 42.7 M, from 2.2 M records that hop between
+     copies 1 to 100 Mb apart, three quarters of them 10 to 100 Mb, 96%
+     with no own bp and 81% switching strand, so a 64 kb window between
+     38 and 80 Mb of CHM13 chr9 reads up to 1.7 M rows (22 MB
+     compressed; 473 k rows and 5.3 MB at 39 Mb) and graph-walks 5
+     refuses it with its DepartureReadError; chr14 has 4.2 M rows in
+     one Mb, and a window at 13.5 Mb reads 2.0 M (25 MB). chr2, chr16,
+     chr8, chr21, chr4
+     and chr5 hold 0.3 to 2.0 M rows each, not measured by window; the
+     other sequences read as the GRCh38 file does
      ([results](../departures/results/minimal/README.md#where-the-chm13-files-rows-are),
      and a bullet in open-problems). **To decide** before hosting the
      CHM13 file: host it as it is, with the refusal over those stretches,
@@ -278,9 +284,11 @@ ADR 0009 History); their doc and number fixes are committed.
   `~/src/gfa-to-tabix-port3/` (rsync of the working tree at 76c9223),
   with `port3/sizes.txt` against `port2/` and `f5/`; `~/work/rebuild/genome/`
   the genome-wide build (item 2 above), its chr22 audits, and the chr9
-  breakdown by `genome/chr9.sh` (`chr9.records.txt` is the 2.2 M distinct
-  records, 100 MB). ada's disk was at 99% with 44 GB free during that
-  build
+  and chr14 breakdown by `genome/chr9.sh`, the repo's
+  `docs/departures/scripts/chm13-chr9-departures.sh`; its
+  `chr9.records.txt`, the 2.2 M distinct records at 100 MB, stays on ada,
+  and the repo's `CHM13.chr9.records.txt` is that file's summary. ada's
+  disk was at 99% with 44 GB free during that build
 - Local, gitignored: `target/forms-check/` holds `f5/` and `port3/`'s MC
   chr22 files, the inputs of the forms comparison
 - graph-walks: `~/src/graph-walks` at 1132859, unpushed (43910ec the

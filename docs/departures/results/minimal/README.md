@@ -75,14 +75,18 @@ format 5 is the hosted `hprc-v2.1-mc-grch38-f5s` build of 2026-10-28:
   42.7 M rows, a third of the file
 - `genome/`: chr22 of each file audited with `audit6.py --seq`
   (`CHM13.chr22.audit.txt`, 630 s and 15.3 GB; `GRCh38.chr22.audit.txt`,
-  435 s and 13.9 GB), the departure rows of each file by sequence, and
-  CHM13 chr9's records broken down by `scripts/chm13-chr9-departures.sh`
+  435 s and 13.9 GB) and, by `../../scripts/chm13-chr9-departures.sh`, the
+  departure rows of each file by sequence, the CHM13 file's rows by Mb of
+  chr9 and chr14 and by 64 kb over chr14's 13th Mb, its chr9 records
+  summarised and its chr14 records counted, and what nine 64 kb windows'
+  departure reads return (`CHM13.windows.txt`)
 
 ### chr22 of each file
 
-Every record matches a departure recomputed from the decoded rows and
-every base of every record's stretch lies under one of its rows, on both
-files. CHM13's chr22 has 94 `#hole` lines, stretches no line of the
+Every record matches a departure recomputed from the decoded rows, in
+every field but for the 9 and 28 that run over a W line the file holds no
+row of, whose missing bp the audit cannot see; and every base of every
+record's stretch lies under one of its rows, on both files. CHM13's chr22 has 94 `#hole` lines, stretches no line of the
 CHM13 reference covers, and the audit reads across them as the format
 says.
 
@@ -113,29 +117,35 @@ The GRCh38 file's departure rows spread over the chromosomes, at most
 On chr9, 2,241,594 records make the 32.4 M rows. 2,151,415 of them
 (96%) carry 0 own bp, 1,818,332 (81%) switch strand, 233,393 jump
 forward and 184,517 back; 1,680,736 span 10 to 100 Mb of CHM13 chr9 and
-496,029 span 1 to 10 Mb. Their leave breakpoints cluster at 38 to 44 Mb
-(1,339,179 records) and 76 to 79 Mb (841,477), and the stretches between
-make the rows: every Mb from 50 to 75 Mb holds a row of 1,680,735
-records. These are paths hopping between copies of sequence that CHM13
-holds tens of Mb apart there. chr14's rows lie in one Mb, at 13 Mb
-(4,215,785 of them).
+496,029 span 1 to 10 Mb. Their leave breakpoints cluster at 38 to 45 Mb
+(1,339,179 records) and 76 to 80 Mb (841,477), with none between, and
+the stretches between make the rows: the index files them as blocks of
+2^23 bp from 50.3 to 75.5 Mb, and each of the four blocks starting there
+holds a row of 1,680,735 or 1,680,736 records, with 358,780 rows of 2^20
+bp starting in each Mb from 45 to 50. These are paths hopping between
+copies of sequence that CHM13 holds tens of Mb apart there. chr14's
+4,278,254 rows are 1,060,530 records whose rows start in its 13th Mb
+(4,215,785 of them), 1,002,423 of those in the 64 kb from 13,500,416.
 
 A 64 kb window's departure read on the CHM13 file:
 
 | window | rows | text | gzipped |
 |---|---|---|---|
-| chr9:30,000,000 | 4 | 448 B | 198 B |
+| chr9:30,000,000 | 4 | 448 B | 203 B |
 | chr9:39,000,000 | 473,088 | 51.4 MB | 5.3 MB |
 | chr9:45,000,000 | 1,680,736 | 182.7 MB | 22.4 MB |
 | chr9:60,000,000 | 1,680,736 | 182.7 MB | 22.4 MB |
 | chr9:78,000,000 | 1,255,166 | 136.5 MB | 15.9 MB |
-| chr9:85,000,000 | 1 | 114 B | 109 B |
+| chr9:85,000,000 | 1 | 114 B | 114 B |
+| chr14:13,000,000 | 6 | 687 B | 227 B |
+| chr14:13,500,416 | 2,004,750 | 227.5 MB | 25.1 MB |
 | chr22:19,000,000 | 750 | 88 KB | 11 KB |
 
 graph-walks 5 refuses a departure read over `departureByteBudget`, 2 MB
 compressed, so on the CHM13 file every window between about 38 and 80
 Mb of chr9 gets its DepartureReadError, which names a collapsed repeat
-as the usual cause; the GRCh38 file has no such stretch. The placement
+as the usual cause, and so does the window at 13.5 Mb of chr14; the
+GRCh38 file has no such stretch. The placement
 question of [open-problems](../../../open-problems.md#placement-of-steps-on-nodes-the-reference-passes-more-than-once)
 applies to CHM13 as a reference of this graph, not only to pggb.
 
@@ -152,4 +162,7 @@ it, or jump over it whole, which the records hold and a cut of the
 window's chunks never reached. The forms there change from groups on a
 65.5 kb replacement to groups on those jumps (624 kb replaced by 130 kb
 for 114 haplotypes, 400 kb by 159 kb for 70); one window at 21.5 Mb adds
-one such departure. The new cut takes 1.9 s at LCR22A to the old 5.2 s.
+one departure, of a contig that leaves the reference before the window
+and rejoins inside it. The new cut takes 1.9 s at LCR22A to the old 5.2
+s, and 0.05 to 1 s longer than the old in the other five windows, one
+run each.

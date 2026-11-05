@@ -212,9 +212,10 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   CHM13 holds 5.5 M departure records in 42.7 M rows against the GRCh38
   file's 1.8 M in 2.1 M: 32.4 M of the rows are on chr9, where 2.2 M
   records, 96% with no own bp and 81% switching strand, hop between copies
-  held 10 to 100 Mb apart, so a 64 kb window between 38 and 80 Mb reads
-  1.7 M rows, 22 MB compressed, and graph-walks 5 refuses it. chr14 has
-  4.3 M rows in one Mb. Measured in
+  held 1 to 100 Mb apart, three quarters of them 10 to 100 Mb, so a 64 kb
+  window between 38 and 80 Mb reads up to 1.7 M rows, 22 MB compressed,
+  and graph-walks 5 refuses it, as it does a window at 13.5 Mb of chr14,
+  where 4.2 M rows lie in one Mb. Measured in
   [results/minimal](departures/results/minimal/README.md#where-the-chm13-files-rows-are)
 - To ask the pggb authors: whether they would publish `odgi untangle`
   projections of release 2 against GRCh38 and CHM13; whether a
