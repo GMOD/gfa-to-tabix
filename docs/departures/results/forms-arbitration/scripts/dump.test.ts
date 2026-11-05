@@ -20,7 +20,12 @@ test('dump', { timeout: 3_600_000 }, async () => {
       const haps = await formsCut(
         reader,
         { refName: 'chr22', start: s!, end: e! },
-        { partial: false },
+        {
+          partial: false,
+          stepBudget: Infinity,
+          byteBudget: Infinity,
+          departureByteBudget: Infinity,
+        },
       )
       writeFileSync(file, JSON.stringify(haps))
     }

@@ -717,9 +717,11 @@ Kept for the measurements the rebuild did not repeat.
   mark a record's far end outside the walk read, which is where a hop
   between copies tens of Mb apart lands. It was the reason the record's
   pass counts were cut on 2026-11-04 and was never written
-- **A pass-count tag on records written only where above 1:** the same
-  bytes on Minigraph-Cactus, but an absent tag reads the same as a file
-  that predates it; a fixed column cannot be missed
+- **A pass-count tag on records written only where above 1:** nothing on
+  Minigraph-Cactus against GRCh38, where the columns cost 4 bytes a row
+  (124,956 bytes of departure text on MC chr22, 3.4%, 0.007% of the
+  file, `results/arbitration/sizes.txt`), but an absent tag reads the
+  same as a file that predates it; a fixed column cannot be missed
 - **An abridged row's contig end in place of `bp`, one row per path:** the
   extent becomes exact, but the row still stands for pieces with other
   chunks' pieces and the departures between them inside it, which every

@@ -1,6 +1,7 @@
 591	paths
 2241003	consecutive record pairs of one path
-2172351	pairs hopping over 1 Mb to a copy and back
+2172351	pairs jumping over 1 Mb twice, the second leaving within 100 kb of the first landing
+2064356	of those, the second rejoining within 100 kb of the first leaving: to a copy and back
 18423	hops walking at most 2^0 bp on the far copy (cumulative 18423)
 11576	hops walking at most 2^1 bp on the far copy (cumulative 29999)
 13382	hops walking at most 2^2 bp on the far copy (cumulative 43381)

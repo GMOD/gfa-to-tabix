@@ -978,6 +978,24 @@ fn a_record_states_how_many_times_the_reference_passes_each_end() {
     );
 }
 
+// R passes 2 once on chr and once on chrU, so twice: X's jump back from 2's
+// end to 1's start leaves a node R passes twice, though chr holds it once
+#[test]
+fn a_pass_count_counts_every_sequence_of_the_reference() {
+    let gfa = "S\t1\tACGTACGTAC\nS\t2\tACGTACGTAC\nS\t3\tACGTACGTAC\nS\t4\tACGTACGTAC\n\
+               W\tR\t0\tchr\t0\t30\t>1>2>3\nW\tR\t0\tchrU\t0\t20\t>2>4\n\
+               W\tX\t1\tx\t0\t30\t>1>2>1\n";
+    let path = std::env::temp_dir().join(format!("walks-two-seqs-{}.gfa", std::process::id()));
+    fs::write(&path, gfa).unwrap();
+    let built = build(path.to_str().unwrap(), &["--refs", "R", "--stay", "0"]);
+    fs::remove_file(&path).unwrap();
+    assert!(built.file("R").contains("\trevisited:i:1\t"));
+    assert_eq!(
+        under(built.file("R"), "R#0#chr~departure"),
+        tsv(&["R#0#chr~departure 0 20 departure X#1#x 20 0 0 20 + 2 0 + 1"])
+    );
+}
+
 // R walks 1 2 3 4 3 5 on chr, passing 3 at 12 and 24, and 8 9 8 on chrU. B
 // leaves 5 for a 3 and G leaves 4 for chrU's 8; R passes both nodes twice but
 // neither in the piece's chunk, so each stretch stays in the piece as route

@@ -95,12 +95,16 @@ A 64 kb window's departure read (`chm13.windows.txt`, rows and text):
   a `#hole` (`CHM13.grch38-graph.chr9-holes.txt`), so the windows at 45
   and 60 Mb there have no CHM13 sequence; HPRC's v2.1 README says a
   graph's reference is never clipped, and in CHM13's own graph those
-  windows read 458 and 405 rows
+  windows read 458 and 405 rows; over the audit's 64 kb windows the
+  read is at most 848 rows on chr9, 1,328 on chr14 and 902 on chr22
+  (`chm13-*.audit.txt`)
 - chr22 has more records in CHM13's graph than in the GRCh38 graph's
   CHM13 file, 38,451 to 23,740; not looked into
 - Why the GRCh38 graph's file hops: of 2,241,003 consecutive record pairs
-  of one path on chr9, 2,172,351 hop over 1 Mb to the other copy and back,
-  walking a median 257 to 512 bp there (`CHM13.chr9.hops.txt`). The two
+  of one path on chr9, 2,172,351 jump over 1 Mb twice in a row, the
+  second leaving within 100 kb of where the first landed, and 2,064,356
+  of those rejoin within 100 kb of where the first left: a hop to the
+  other copy and back, walking a median 257 to 512 bp there (`CHM13.chr9.hops.txt`). The two
   copies share nodes in that graph, and each haplotype's path alternates
   between nodes CHM13 holds at one copy and at the other every few hundred
   bp. No `stay` near its 311 bp would absorb most of these. A placement

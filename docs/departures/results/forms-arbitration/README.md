@@ -11,6 +11,9 @@
 - `fable-branch.cyp2d6-place.txt`: the no-fold branch's forms at
   chr22:42.10-42.15 Mb holding the haplotypes with a 13.7 kb insertion
   at 42,134,095, their form's mark at 42,125,923
+- `scripts/dump.test.ts` lifts every budget; the r28 and gate cuts were
+  made before ec8ecd9, when graph-walks had no default budgets, and
+  `combined.txt`'s after, so all three read every window whole
 - The scripts ran from `~/src/arb-forms-opus/`; copy the `.test.ts` files
   into graph-walks' `src/arb/` to rerun them
 - `combined.txt`: the same check after the format arbitration landed

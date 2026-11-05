@@ -326,9 +326,12 @@ Where the findings have come from so far, and the rule each gives:
   build's count (513,592 counted from the published GBZ by
   `scripts/reference-passes.sh`, not reconciled): its chr9
   pericentromeric copies share nodes. Of 2,241,003 consecutive record pairs
-  on chr9, 2,172,351 hop over 1 Mb to the other copy and back, after
-  walking a median 257 to 512 bp there and at most 1 kb for 1,698,238 of
-  them (`results/arbitration/CHM13.chr9.hops.txt`, by
+  on chr9, 2,172,351 jump over 1 Mb twice in a row, the second leaving
+  near where the first landed, and 2,064,356 of those rejoin within 100
+  kb of where the first left, a hop to the other copy and back (the
+  return was checked only after the review of the landed work); they
+  walk a median 257 to 512 bp on the far copy and at most 1 kb for
+  1,698,238 (`results/arbitration/CHM13.chr9.hops.txt`, by
   `scripts/chm13-chr9-hops.py`): haplotypes alternate between collapsed
   copies every few hundred bp, which no `stay` of 311 bp absorbs, so the
   design review's hypothesis about `stay` refusing once-passed nodes
@@ -338,7 +341,10 @@ Where the findings have come from so far, and the rule each gives:
   twice). Fixed: the hs1 files come from HPRC v2.1's CHM13-referenced MC
   graph (`hprc-v2.1-mc-chm13`), whose CHM13 passes none of its
   90,761,410 nodes twice; on its chr9 the file holds 70,960 records in
-  84,745 rows and the densest window read measured 458 rows. The GRCh38
+  84,745 rows and a 64 kb window's departure read at most 848 rows over
+  the audit's windows (chm13-chr9.audit.txt; 458 was the one window
+  sampled at 45 Mb, misquoted as the densest until the review of the
+  landed work). The GRCh38
   graph's CHM13 file is not hosted. Guard: the header's `revisited`, which a host checks before
   publishing a file as exact; results in `results/arbitration/`
 - **2026-11-05, the machine.** The inputs on ada the handoff names,
@@ -355,3 +361,30 @@ Where the findings have come from so far, and the rule each gives:
   paths resolved before `cd`, and a seed whose graph has no `S` line
   reports itself. Guard: run relative, and with `GFA_TO_TABIX=/bin/false`
   every seed reports a build failure
+- **2026-11-05, review of the landed work.** Doc claims the committed
+  files contradicted: "the densest window read 458 rows" on the CHM13
+  graph's chr9 (458 was the 45 Mb sample; the audit's 64 kb windows
+  reach 848 on chr9, 1,328 on chr14, 902 on chr22); "hop to the other
+  copy and back" for 2,172,351 pairs whose return the script never
+  checked (2,064,356 return within 100 kb once checked); "the same
+  bytes on Minigraph-Cactus" for a pass-count tag against columns that
+  cost 124,956 bytes of MC chr22's departure text; `combined.txt` saying
+  every budget was lifted while the committed `dump.test.ts` lifted
+  none; the handoff still saying the budget was off by default and
+  listing the record without its pass counts. Source: prose ahead of
+  data, and a script edited locally but committed unedited. Fixed in
+  the commit after 0c8d428, `chm13-chr9-hops.py` now counting the
+  return and refusing records with pass counts, whose columns it would
+  misread. Guard: the rule above
+- **2026-11-05, review of the landed work.** `audit6.py` checked an
+  abridged row's offset, steps and bp against its piece but not that the
+  piece lies in the detail record the row names, that `start` and `end`
+  are the piece's first and last nodes on R, or that every detail piece
+  has a row; no writer test had a node the reference passes on two
+  sequences; `fuzz6.sh` broke a writer named by `PATH`. Source: tests
+  and audits shaped by the implementation. Fixed in the same commit:
+  the three audit checks, each shown to fire on a hand-tampered copy of
+  graph-walks' `abridged.R` fixture and to pass on the three abridged
+  fixtures; the test "a pass count counts every sequence of the
+  reference"; `command -v` before `readlink`. Guard: `fuzz6.sh` fails on
+  any nonzero "must be 0" line, which the new checks print

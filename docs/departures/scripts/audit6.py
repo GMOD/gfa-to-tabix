@@ -210,6 +210,7 @@ def decode(r, routes, cols):
 
 ref_nodes = set()
 pieces = collections.defaultdict(list)   # path -> [(frag, offset, piece, steps)]
+detail_of = {}   # (path, frag, piece) -> (seq, cs, detail) for a piece in a detail record
 records = []
 crowds = collections.defaultdict(list)    # (seq, path) -> [(a, b)]
 dep_rows = []   # (seq, a, b, kind, body index or crowd path)
@@ -253,7 +254,7 @@ def steps_of(r, segs, nodes):
     return out
 
 
-def take_walk(r, routes, nodes, cols):
+def take_walk(r, routes, nodes, cols, origin=None):
     if not in_shard(cols[4]):
         return
     try:
@@ -268,6 +269,8 @@ def take_walk(r, routes, nodes, cols):
     if n != int(cols[8]):
         bad['decoded step count differs from the row'] += 1
     pieces[cols[4]].append((int(cols[5]), int(cols[6]), int(cols[7]), steps))
+    if origin is not None:
+        detail_of[(cols[4], int(cols[5]), int(cols[7]))] = origin
 
 
 chunk = None
@@ -335,7 +338,7 @@ with gzip.open(args.file, 'rt') as f:
                 x, route_prev = handles(c[6], route_prev) if c[6] != '.' else ([None], route_prev)
                 routes.append((e[0], inter, x[0]))
             elif kind == 'walk':
-                take_walk(r, routes, nodes, c)
+                take_walk(r, routes, nodes, c, (base, cs, a // SPACING))
             continue
         kinds[f'{kind} rows'] += 1
         if (seq, a) != chunk:
@@ -379,7 +382,8 @@ with gzip.open(args.file, 'rt') as f:
             keep_r[(seq, a)] = r
             abridged.setdefault((seq, a), []).append(int(c[12]))
             if in_shard(c[4]):
-                abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), int(c[9])))
+                abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), int(c[9]),
+                                      int(c[10].split('@')[0]) >> 1, int(c[11].split('@')[0]) >> 1, (seq, a, int(c[12]))))
 for v in abridged.values():
     v[:] = sorted(set(v))
 
@@ -602,11 +606,27 @@ for path, ps in pieces.items():
     for frag, offset, piece, steps in ps:
         n = sum(x[6] if x[0] == 'R' else x[1] for x in steps)
         bp = sum(x[7] if x[0] == 'R' else x[2] for x in steps)
-        held_pieces[(path, frag, piece)] = (offset, n, bp)
-stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4]) != (row[2], row[4], row[5])]
+        runs = [x for x in steps if x[0] == 'R']
+        ends = (runs[0][3][0], runs[-1][4][0]) if runs else (None, None)
+        held_pieces[(path, frag, piece)] = (offset, n, bp, ends)
+stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4], ())[:3] != (row[2], row[4], row[5])]
 print(f'{len(stray)}\tabridged rows unlike the piece their detail record holds (must be 0)')
 for row in stray[:args.examples]:
     print('   abridged', row, held_pieces.get(row[:2] + row[3:4]))
+misplaced = [row for row in abridged_rows if detail_of.get(row[:2] + row[3:4]) != row[8]]
+print(f'{len(misplaced)}\tabridged rows whose piece is not in the detail record they name (must be 0)')
+for row in misplaced[:args.examples]:
+    print('   misplaced', row, detail_of.get(row[:2] + row[3:4]))
+wrong_ends = [row for row in abridged_rows
+              if row[:2] + row[3:4] in held_pieces and held_pieces[row[:2] + row[3:4]][3] != (row[6], row[7])]
+print(f'{len(wrong_ends)}\tabridged rows whose start or end is not their piece\'s first or last node on R (must be 0)')
+for row in wrong_ends[:args.examples]:
+    print('   ends', row, held_pieces[row[:2] + row[3:4]][3])
+rowed = {row[:2] + row[3:4] for row in abridged_rows}
+unrowed = [k for k in detail_of if k not in rowed]
+print(f'{len(unrowed)}\tdetail pieces with no abridged row (must be 0)')
+for k in unrowed[:args.examples]:
+    print('   unrowed', k)
 for u in unreachable[:args.examples]:
     print('   unreachable', u)
 for k, v in sorted(bad.items()):

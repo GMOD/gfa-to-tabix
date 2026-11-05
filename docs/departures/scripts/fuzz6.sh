@@ -4,7 +4,7 @@
 HERE=$(dirname "$(readlink -f "$0")")
 A=$HERE/audit6.py
 G=$HERE/fuzz6-gen.py
-B=$(readlink -f "${GFA_TO_TABIX:?set GFA_TO_TABIX to the writer binary}")
+B=$(readlink -f "$(command -v "${GFA_TO_TABIX:?set GFA_TO_TABIX to the writer binary}")")
 cd "${FUZZ_DIR:?set FUZZ_DIR to a scratch directory}"
 from=${1:-1}; to=${2:-200}
 for seed in $(seq $from $to); do
