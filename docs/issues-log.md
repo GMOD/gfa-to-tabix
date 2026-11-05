@@ -554,4 +554,8 @@ Where the findings have come from so far, and the rule each gives:
   Source: a rewrite dropping what the old mechanism compensated for,
   **re-found** as a class: graph-walks 4's follow rounds read past the
   window and hid it, and 43910ec removed them without listing that.
-  Fix: below
+  Fixed in graph-walks 3d9889a (5.0.1): the read runs from the chunk before
+  the drawn stretch's start through its end. Guard: test "a cut reads the
+  chunks under its context, not only under its window", both sides, which
+  fails on 5.0.0; unexpanded still equals expanded on the release check's
+  seven MC chr22 windows
