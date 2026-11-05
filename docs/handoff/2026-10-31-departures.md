@@ -377,10 +377,11 @@ ADR 0009 History); their doc and number fixes are committed.
 - Local, gitignored: `target/forms-check/` holds `f5/` and `port3/`'s MC
   chr22 files, the inputs of the forms comparison, and `arb/` the format
   arbitration's MC chr22 build with its forms cuts and checks
-- graph-walks: `~/src/graph-walks` at ec8ecd9, unpushed (43910ec the
+- graph-walks: `~/src/graph-walks` at dd6986c, unpushed (43910ec the
   format 6 reader; 1132859, 73f2e6b, 3574904, be081a5 and edf4acd the
   forms cut; 7601e9e the forms arbitration; ec8ecd9 the format
-  arbitration). Its `test_data/` holds each fixture's GFA and `build.sh`, which rebuilds them with a
+  arbitration; 277fa44 to dd6986c the review of the landed work). Its
+  `test_data/` holds each fixture's GFA and `build.sh`, which rebuilds them with a
   gfa-to-tabix binary; the chrM fixture's GFA was recovered from the
   format 5 file with the old decoder, bases included
 - The arbitration of 2026-11-05: worktrees `~/src/arb-forms-{fable,opus}`

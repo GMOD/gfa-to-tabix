@@ -388,3 +388,48 @@ Where the findings have come from so far, and the rule each gives:
   fixtures; the test "a pass count counts every sequence of the
   reference"; `command -v` before `readlink`. Guard: `fuzz6.sh` fails on
   any nonzero "must be 0" line, which the new checks print
+- **2026-11-05, review of the landed work.** walkDepartures gave an
+  unexpanded abridged piece the wrong net when a departure left or
+  rejoined inside it: the departure kept only its missing bp and the
+  steps the cut held, so own bp in pieces the cut never read or past
+  `ATTACH_BP` was lost or moved into the piece's net (HG03453#1 +227,316
+  unexpanded against +2,382 expanded; 11 haplotypes over 29 MC chr22
+  windows), and a piece whose handles both run against R read as along
+  it. Source: tests shaped by the implementation (pieces whose own bp
+  the cut always held). Fixed in graph-walks 277fa44: the departure
+  keeps its whole `ownBp` and the piece's net drops the overlap, using
+  the per-piece extent the format now states. Guard: unexpanded equals
+  expanded, in seven tests that fail on ec8ecd9 (checked) and the
+  `ownends.R` fixture; all 463 haplotypes match on 29 windows
+- **2026-11-05, review of the landed work.** Forms places came from
+  union-find over every mark, so one haplotype's mark could merge two
+  common changes' places or name one (CYP2D6 placed at 42,125,912 by a
+  single +1.6 kb replacement). Source: a relation (half-cover) assumed
+  transitive. Fixed in ec8cad4 and ea95ac0: a place is a set of common
+  spans that all half-cover each other, filled most carried first, and
+  a rarer mark's place is its own span. Guard: tests that fail on
+  ec8ecd9
+- **2026-11-05, review of the landed work.** `formContradictions` was
+  built from the code it checked (it imported six of structuralForms'
+  functions), compared marks that merely touched, and looked only
+  around the stated marks, so it missed contradictions; rewritten, it
+  found 5 to 30 place contradictions per setting in ec8ecd9's forms on
+  the 28 windows (same-size places sharing a start shared a key, as at
+  LCR22A's +61 bp; a state's carriers not all half-covering the one it
+  showed; folding matching places by key). Source: a checker written
+  by the author of the rules it checks. Fixed in ea95ac0: the checker
+  recomputes each member's changes from its departures and pairs them
+  one-to-one under half-cover, sharing only `agrees`, and
+  structuralForms meets it by construction. Guard: a test that fails if
+  the checker imports more of structuralForms, hand-edited wrong
+  results for every kind, and `results/forms-arbitration/strengthened.txt`
+  (0 on the 28 windows, every floor). Open: the checker reads a form's
+  keys, not the `marks` and `net` that `describeForm` draws; the gate
+  table in `structural-forms.md` was not rerun
+- **2026-11-05, review of the landed work.** The reader accepted a pass
+  count of 0 and refused rows of the earlier format 6 writer without
+  saying to rebuild; its README claimed a caller passing no budget never
+  fetches an unbounded read, false for a source without
+  `bytesForRegions`, detail reads (bounded by steps only) and attach
+  fetches. Source: prose ahead of the code. Fixed in dd6986c. Guard: the
+  row-refusal tests

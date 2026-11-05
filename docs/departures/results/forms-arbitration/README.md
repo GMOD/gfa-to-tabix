@@ -19,3 +19,6 @@
 - `combined.txt`: the same check after the format arbitration landed
   (graph-walks ec8ecd9), on that arbitration's MC chr22 build: no
   contradicted member on any of the 28 windows, at any floor
+- `strengthened.txt`: the same 28 cuts under the checker rewritten after
+  the review of the landed work (graph-walks ea95ac0), on dd6986c: no
+  contradicted member at any floor, folded or not

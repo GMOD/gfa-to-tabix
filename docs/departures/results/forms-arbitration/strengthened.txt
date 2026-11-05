@@ -1,0 +1,10 @@
+# formContradictions at graph-walks dd6986c (the strengthened checker: one-to-one half-cover pairing, recomputed from departures) on the 28 cached cuts of combined.txt
+keep 0 floor auto: TOTAL wrong 0
+keep 0 floor 50: TOTAL wrong 0
+keep 0 floor 1000: TOTAL wrong 0
+keep 0 floor 10000: TOTAL wrong 0
+keep 1 floor auto: TOTAL wrong 0
+keep 1 floor 50: TOTAL wrong 0
+keep 1 floor 1000: TOTAL wrong 0
+keep 1 floor 10000: TOTAL wrong 0
+# the same checker on ec8ecd9's forms, per the fixing agent: auto 5/5, 50 bp 24/30, 1 kb 6/7, 10 kb 0/0 (folded/not), every one a place contradiction
