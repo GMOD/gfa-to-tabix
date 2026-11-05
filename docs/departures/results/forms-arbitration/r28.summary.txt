@@ -1,0 +1,16 @@
+base keep 0 floor auto: TOTAL wrong 315 net 290 place 13 size 5 call 8
+base keep 0 floor 50: TOTAL wrong 1849 net 1628 place 136 size 25 call 94 rarer 6 hidden 134
+base keep 0 floor 1000: TOTAL wrong 412 net 309 place 87 size 9 call 8
+base keep 0 floor 10000: TOTAL wrong 174 net 164 size 5 place 4 call 1
+base keep 1 floor auto: TOTAL wrong 120 net 111 place 4 call 6
+base keep 1 floor 50: TOTAL wrong 663 net 615 call 36 place 4 size 10
+base keep 1 floor 1000: TOTAL wrong 151 net 77 place 69 call 6
+base keep 1 floor 10000: TOTAL wrong 150 place 4 net 146
+graph-walks keep 0 floor auto: TOTAL wrong 0
+graph-walks keep 0 floor 50: TOTAL wrong 0
+graph-walks keep 0 floor 1000: TOTAL wrong 0
+graph-walks keep 0 floor 10000: TOTAL wrong 0
+graph-walks keep 1 floor auto: TOTAL wrong 0
+graph-walks keep 1 floor 50: TOTAL wrong 0
+graph-walks keep 1 floor 1000: TOTAL wrong 0
+graph-walks keep 1 floor 10000: TOTAL wrong 0

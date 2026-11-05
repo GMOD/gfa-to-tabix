@@ -244,7 +244,7 @@ Where the findings have come from so far, and the rule each gives:
   passes, no call never folds, `~` and `other` claim nothing, shared
   decided after forming. Guard: `formContradictions` (0 on the 28
   windows and the gate, every floor, folded or not) and its tests;
-  numbers in `~/src/arb-forms-opus/r28/summary.txt` and `gate/`
+  numbers in `results/forms-arbitration/`
 - **2026-11-05, arbitration of the forms, re-found.** HG00126#1 at 21.4
   Mb, read the same day as "a rare no call folds to the majority" and
   left so, is a no call shown as a call. Source: a decision made ad hoc

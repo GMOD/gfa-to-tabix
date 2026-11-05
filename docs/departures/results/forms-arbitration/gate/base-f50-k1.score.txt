@@ -1,0 +1,83 @@
+claims within 10% or 500 bp of the assembly:
+  locus             6931/6952   0.997
+  random           12946/12946  1.000
+  locus unsized        0/1      0.000
+  locus rare          47/51     0.922
+  random rare         49/67     0.731
+by the larger of claim and assembly change:
+  locus  >=1 kb, within 10%          3127/3148   0.993
+  locus  50 bp-1 kb, within 50 bp     714/1023   0.698
+  random >=1 kb, within 10%           334/334    1.000
+  random 50 bp-1 kb, within 50 bp    2427/2756   0.881
+  locus |claim - assembly| median 8 bp, 90th percentile 49 bp
+  locus unscored: {'no truth: fetch': 1028, 'no truth: widened over an unsized site': 266, 'no truth: no': 335, 'no truth: walks miss the span': 19}
+  random |claim - assembly| median 11 bp, 90th percentile 35 bp
+  random unscored: {'no truth: fetch': 1760, 'no truth: no': 2, 'no truth: missing': 2454, 'no truth: walks miss the span': 4, 'no truth: widened over an unsized site': 1}
+per window:
+  mhc-hla    180/180
+  amy1       401/401
+  c4         407/407
+  lpa        404/404
+  rhd        405/405
+  kir        374/394
+  fcgr       385/386
+  hp         407/407
+  cyp2d6     406/406
+  hba        392/392
+  mns        392/392
+  cfhr       406/406
+  prss       407/407
+  ugt2b17    407/407
+  nphp1      74/74
+  gstm1      406/406
+  gstt1      388/388
+  pga        406/406
+  flna       284/284
+  rand0      404/404
+  rand1      405/405
+  rand2      405/405
+  rand3      406/406
+  rand5      405/405
+  rand6      405/405
+  rand7      406/406
+  rand9      400/400
+  rand10     404/404
+  rand11     406/406
+  rand12     407/407
+  rand13     404/404
+  rand15     406/406
+  rand17     407/407
+  rand20     406/406
+  rand21     406/406
+  rand22     406/406
+  rand23     403/403
+  rand24     405/405
+  rand25     403/403
+  rand26     406/406
+  rand27     407/407
+  rand28     407/407
+  rand29     398/398
+  rand30     405/405
+  rand31     397/397
+  rand32     404/404
+  rand33     403/403
+  rand35     405/405
+  rand36     404/404
+  rand37     405/405
+  rand39     406/406
+largest misses (gap, window, member, claim, assembly, form size, offset):
+   (81901, 'fcgr', 'NA18508#1', 82384, 483, 1, '0')
+   (31332, 'kir', 'HG00290#1', 16957, 48289, 3, '0')
+   (31303, 'kir', 'HG02717#2', 16989, 48292, 3, '0')
+   (31303, 'kir', 'HG02622#1', 16989, 48292, 3, '0')
+   (31292, 'kir', 'HG01123#1', 44371, 75663, 3, '0')
+   (31291, 'kir', 'HG02630#1', 44371, 75662, 3, '0')
+   (31152, 'kir', 'HG00128#2', 123450, 154602, 1, '0')
+   (16571, 'kir', 'HG03804#1', 11127, 27698, 2, '5000')
+   (16298, 'kir', 'HG01074#2', -2364, 13934, 12, '10000')
+   (16296, 'kir', 'HG03239#2', -13487, 2809, 1, '5000')
+   (16294, 'kir', 'HG03239#1', -29745, -13451, 19, '5000')
+   (16294, 'kir', 'HG01934#2', -29754, -13460, 19, '5000')
+   (16294, 'kir', 'HG01361#2', -2368, 13926, 12, '5000')
+   (16294, 'kir', 'HG00738#2', -2361, 13933, 12, '5000')
+   (16294, 'kir', 'HG00232#2', -29734, -13440, 19, '5000')

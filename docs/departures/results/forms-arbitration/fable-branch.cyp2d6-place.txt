@@ -1,0 +1,5 @@
+floor auto form ins 178bp->13.9kb members 42 with-insertion-at-42134095 4 marks 42125923+13712
+floor auto form ins 178bp->13.9kb +1 members 6 with-insertion-at-42134095 6 marks 42125923+13712 42134095+13709
+floor auto form other members 5 with-insertion-at-42134095 2 marks 
+floor 50 form ins 178bp->13.9kb +1 members 6 with-insertion-at-42134095 6 marks 42125923+13712 42134095+13709
+floor 50 form other members 25 with-insertion-at-42134095 6 marks 

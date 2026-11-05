@@ -1,0 +1,6 @@
+base-f50-k1 TOTAL wrong 206 other 0 rarer 0 forms 1092 placed 25886
+base-fauto-k0 TOTAL wrong 417 other 0 rarer 0 forms 175 placed 25887
+base-f50-k0 TOTAL wrong 1073 other 0 rarer 0 forms 286 placed 25886
+graph-walks-f50-k1 TOTAL wrong 0 other 0 rarer 0 forms 1212 placed 25886
+graph-walks-fauto-k0 TOTAL wrong 0 other 70 rarer 371 forms 188 placed 25887
+graph-walks-f50-k0 TOTAL wrong 0 other 561 rarer 502 forms 310 placed 25886
