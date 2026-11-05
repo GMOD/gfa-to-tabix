@@ -55,6 +55,9 @@ things are.
 
 ## Next, in order
 
+[docs/issues-log.md](../issues-log.md) holds every finding so far with its
+source, fix and guard; append to it before committing a fix.
+
 Format 6 is not urgent for Minigraph-Cactus users: format 5 mostly works
 there. The urgent part is the word on screen
 
@@ -135,8 +138,11 @@ there. The urgent part is the word on screen
      haplotype, 2.4 s with 67,144 departures; a 10 kb window at 30 Mb 0.3
      s; pggb chrY 64 kb at 12 Mb for HG002 1.3 s, mostly parsing the
      100,000 departure rows of the TSPY array before the keep filter.
-     **Done, 2026-11-05: the structural-forms cut**, graph-walks commit
-     1132859 (unpushed): `formsCut` and `walkDepartures` read each
+     **Done, 2026-11-05: the structural-forms cut**, graph-walks commits
+     1132859, 73f2e6b and 3574904 (unpushed; three reviews of the first
+     found the defects the other two fix, each logged with its source in
+     [docs/issues-log.md](../issues-log.md)): `formsCut` and
+     `walkDepartures` read each
      haplotype's departures off `cut.departures` and the fragments' end
      steps. A fragment with the departures at its ends and inside it is
      a chain read in its own orientation, as the old chains were; a
@@ -145,15 +151,22 @@ there. The urgent part is the word on screen
      two chains reach has no call; sequence between a contig's W lines
      counts as its own; an abridged fragment stays a net.
      `DepartureSource` is `{ fragments, departures, nodes }` and
-     `HaplotypeDepartures` has no `open`. Checked against 4.6.0 on the
-     format 5 file over six chr22 windows: every old departure is
-     reproduced and the forms are identical outside LCR22A
+     `HaplotypeDepartures` has no `open`; `WalkFragment` carries
+     `refStarts` and `against`. Checked against 4.6.0 on the format 5
+     file: every old departure is reproduced on 28 chr22 windows, the
+     forms are identical on 16 of them and differ on the 12 where jumps
+     over the window appear
      ([results](../departures/results/minimal/README.md#the-forms-cut-on-mc-chr22)).
-     **To decide:** at LCR22A the forms now group on the jumps over the
-     window ("624 kb replaced by 130 kb", 114 haplotypes) that the old
-     cut never saw; in a repeat that is the projection's placement
-     choice showing, so the Forms track may want to say so there rather
-     than call it. Not done: bandage-core 13 and plugin 9 (below)
+     **To decide:** in LCR22A, LCR22B, IGL and near the centromere the
+     forms now group on jumps over the window ("624 kb replaced by 130
+     kb", 114 haplotypes at LCR22A) that the old cut never saw, and a
+     contig that both jumps over the window and walks it has no call
+     there; in a repeat that is the projection's placement choice
+     showing, so the Forms track may want to say so there rather than
+     call it, and one rare-state fold now flips a haplotype (HG00126#1
+     at 21.4 Mb). Plugin 9 will need `formRows.test.ts` without `open`
+     and the `^4.6.0` pin raised. Not done: bandage-core 13 and plugin
+     9 (below)
    - **Done, 2026-11-04 evening: the genome-wide build**, on ada by
      `~/work/rebuild/genome.sh` from
      `~/hprc-gbz/walks/hprc-v2.1-mc-grch38.W.gfa.gz` with the port3 binary
@@ -291,8 +304,9 @@ ADR 0009 History); their doc and number fixes are committed.
   disk was at 99% with 44 GB free during that build
 - Local, gitignored: `target/forms-check/` holds `f5/` and `port3/`'s MC
   chr22 files, the inputs of the forms comparison
-- graph-walks: `~/src/graph-walks` at 1132859, unpushed (43910ec the
-  format 6 reader, 1132859 the forms cut). Its `test_data/`
+- graph-walks: `~/src/graph-walks` at 3574904, unpushed (43910ec the
+  format 6 reader; 1132859, 73f2e6b and 3574904 the forms cut). Its
+  `test_data/`
   holds each fixture's GFA and `build.sh`, which rebuilds them with a
   gfa-to-tabix binary; the chrM fixture's GFA was recovered from the
   format 5 file with the old decoder, bases included

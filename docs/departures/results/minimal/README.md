@@ -151,18 +151,40 @@ applies to CHM13 as a reference of this graph, not only to pggb.
 
 ## The forms cut on MC chr22
 
-`mc22.forms-compare.txt`: graph-walks 1132859's `formsCut` on the format
-6 file against 4.6.0's on the format 5 file (`f5/` and `port3/` on ada),
-six windows, every haplotype, `partial: false`. In every window every
-departure the old cut found over the window the new one finds too, and
-the forms are identical outside LCR22A. At chr22:18.6-18.68 Mb the new
-cut adds, for 377 of 463 haplotypes, departures the old one could not
-see: contigs that leave the reference before the window and rejoin after
-it, or jump over it whole, which the records hold and a cut of the
-window's chunks never reached. The forms there change from groups on a
-65.5 kb replacement to groups on those jumps (624 kb replaced by 130 kb
-for 114 haplotypes, 400 kb by 159 kb for 70); one window at 21.5 Mb adds
-one departure, of a contig that leaves the reference before the window
-and rejoins inside it. The new cut takes 1.9 s at LCR22A to the old 5.2
-s, and 0.05 to 1 s longer than the old in the other five windows, one
-run each.
+`mc22.forms-compare.txt`: graph-walks 3574904's `formsCut` (1132859 the
+chain model, 73f2e6b and 3574904 the fixes from its reviews, which leave
+this comparison unchanged) on the format 6 file against 4.6.0's on the
+format 5 file (`f5/` and `port3/` on ada), six windows, every haplotype,
+`partial: false`. In every window every departure the old cut found over
+the window the new one finds too, and the forms are identical in the
+five windows outside LCR22A. At chr22:18.6-18.68 Mb the new cut adds,
+for 377 of 463 haplotypes, departures the old one could not see: contigs
+that leave the reference before the window and rejoin after it, or jump
+over it whole, which the records hold and a cut of the window's chunks
+never reached. The forms there change from groups on a 65.5 kb
+replacement to groups on those jumps (624 kb replaced by 130 kb for 114
+haplotypes, 400 kb by 159 kb for 70); one window at 21.5 Mb adds one
+departure, of a contig that leaves the reference before the window and
+rejoins inside it. The new cut takes 1.9 s at LCR22A to the old 5.2 s,
+and 0.05 to 1 s longer than the old in the other five windows, one run
+each.
+
+`mc22.forms-compare-review.txt`: a reviewer's rerun over 28 windows at
+1132859, comparing `covered` and the forms too. The departure claim holds
+on every window. The forms differ in 12 of the 28, wherever such
+departures appear: LCR22A and LCR22B (18.6-18.75 Mb, 384 and 389 of 463
+form tags change; 20.3-20.4 Mb, 180, where two new departures of
+HG01175#1 merge two sites into one), the IGL locus (22.3-22.4 Mb 123,
+22.5-22.6 17, 22.8-22.9 18), and 12.3 and 15.0 Mb, where 39 and 40
+haplotypes now sit on a jump from 11.8 to 15.2 Mb as a shared site. Two
+mechanisms: a jump with no step on the window now carries a mark, and a
+contig that both jumps over the window and walks it has no call where
+its two chains overlap, so haplotypes move between placed and unplaced
+both ways (22.5-22.6 Mb). One change is an artefact of rare-state
+folding, at 21.4-21.5 Mb: HG00126#1 goes from `ref` to `inv 48.7kb`
+because a departure across a W-line gap of one of its contigs now
+overlaps another contig's inversion stretch and makes that site no call
+for it. Each is the chain model's reading; what the forms should say in
+such a window is open (the handoff's "To decide"). A 900 kb window at
+22.0-22.9 Mb with 976,347 departures took 109 s in `walkDepartures` at
+1132859 and 0.6 s at 3574904, against 8 s for the cut.

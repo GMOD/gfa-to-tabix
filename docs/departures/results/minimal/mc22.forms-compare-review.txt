@@ -1,0 +1,196 @@
+W chr22:18600000-18680000 old 3736 ms new 1384 ms
+  {"win":{"same":86,"adds":377,"differ":0},"all":{"same":10,"adds":226,"differ":227},"covered":{"same":10,"differ":453},"coveredClip":{"same":98,"differ":365},"openOld":116,"missing":0}
+  forms: placed old 217 new 362 unplaced old 246 new 101 tagDiff 384 sitesSame false
+  old sites: 18239129-18639008:123 18659542-18725118:202
+  new sites: 18185021-18873008:362
+  old forms: 90 repl 65.5kb->4.19kb +1; 51 repl 65.5kb->4.19kb; 16 repl 65.5kb->4.19kb +1; 15 no call; 15 repl 65.5kb->4.19kb +1; 13 repl 65.5kb->4.19kb +1
+  new forms: 114 repl 624kb->130kb; 70 repl 400kb->159kb +1; 46 repl 65.5kb->4.19kb; 43 repl 493kb->190kb; 20 repl 230kb->165kb; 13 repl 65.5kb->4.21kb +1
+W chr22:21500000-21600000 old 711 ms new 1455 ms
+  {"win":{"same":462,"adds":1,"differ":0},"all":{"same":462,"adds":1,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":462,"differ":1},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:23000000-23100000 old 1217 ms new 1423 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:30000000-30010000 old 337 ms new 253 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:42100000-42150000 old 587 ms new 663 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 42117822-42120669S:463 42123702-42135869:463 42138064-42139841S:463
+  new sites: 42117822-42120669S:463 42123702-42135869:463 42138064-42139841S:463
+  old forms: 378 ref; 42 ins 178bp->13.9kb; 21 del 12.2kb; 14 ins 12.2kb; 8 ins 178bp->13.9kb +1
+  new forms: 378 ref; 42 ins 178bp->13.9kb; 21 del 12.2kb; 14 ins 12.2kb; 8 ins 178bp->13.9kb +1
+W chr22:50000000-50100000 old 1299 ms new 1664 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":1,"differ":462},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 462 new 462 unplaced old 1 new 1 tagDiff 0 sitesSame true
+  old sites: 50004609-50007988S:462 50009894-50009894:462 50028599-50029418:462 50057331-50057696:462
+  new sites: 50004609-50007988S:462 50009894-50009894:462 50028599-50029418:462 50057331-50057696:462
+  old forms: 235 ref; 34 repl 317bp->1.64kb; 27 repl 365bp->3.19kb; 21 repl 674bp->1.89kb; 17 repl 339bp->2.72kb; 14 repl 181bp->1.44kb
+  new forms: 235 ref; 34 repl 317bp->1.64kb; 27 repl 365bp->3.19kb; 21 repl 674bp->1.89kb; 17 repl 339bp->2.72kb; 14 repl 181bp->1.44kb
+W chr22:18900000-19000000 old 3725 ms new 2667 ms
+  {"win":{"same":462,"adds":1,"differ":0},"all":{"same":461,"adds":2,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":462,"differ":1},"openOld":1,"missing":0}
+  forms: placed old 462 new 463 unplaced old 1 new 0 tagDiff 1 sitesSame false
+  old sites: 18939641-18947848:462
+  new sites: 18849805-19023236:463
+  old forms: 440 ref; 22 del 8.21kb
+  new forms: 440 ref; 23 del 8.21kb
+W chr22:19000000-19100000 old 2955 ms new 2219 ms
+  {"win":{"same":462,"adds":1,"differ":0},"all":{"same":459,"adds":2,"differ":2},"covered":{"same":0,"differ":463},"coveredClip":{"same":462,"differ":1},"openOld":1,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame false
+  old sites: 18849805-19023255S:463 19062662-19062883S:462
+  new sites: 18849805-19023255S:463 19062662-19069496S:463
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:20300000-20400000 old 2411 ms new 4338 ms
+  {"win":{"same":460,"adds":3,"differ":0},"all":{"same":459,"adds":4,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":460,"differ":3},"openOld":4,"missing":0}
+  forms: placed old 462 new 463 unplaced old 1 new 0 tagDiff 180 sitesSame false
+  old sites: 20338159-20343643:461 20355284-20361765:460
+  new sites: 20251926-20367774:461 20372520-20372520S:463
+  old forms: 66 repl 1.51kb->5.63kb; 27 repl 1.51kb->6.45kb; 25 repl 1.51kb->7.26kb; 21 repl 6.35kb->7.92kb +1; 21 repl 1.51kb->4.82kb; 20 repl 1.51kb->8.1kb
+  new forms: 67 repl 1.51kb->5.63kb; 54 repl 1.51kb->9.74kb +1; 31 repl 1.51kb->7.26kb; 29 repl 1.51kb->8.08kb; 28 repl 1.51kb->6.45kb; 21 repl 1.51kb->6.76kb +1
+W chr22:20700000-20800000 old 952 ms new 1900 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":462,"adds":1,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:21000000-21100000 old 814 ms new 2450 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":462,"adds":1,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:21400000-21500000 old 1450 ms new 3548 ms
+  {"win":{"same":462,"adds":1,"differ":0},"all":{"same":462,"adds":1,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":462,"differ":1},"openOld":3,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 1 sitesSame false
+  old sites: 21405488-21406862S:463 21415278-21419917S:460 21443089-21491761:463
+  new sites: 21405488-21406862S:463 21415278-21419917S:460 21443089-21491761:462
+  old forms: 307 inv 48.7kb; 156 ref
+  new forms: 308 inv 48.7kb; 155 ref
+W chr22:18700000-18750000 old 18926 ms new 12527 ms
+  {"win":{"same":170,"adds":293,"differ":0},"all":{"same":10,"adds":113,"differ":340},"covered":{"same":10,"differ":453},"coveredClip":{"same":188,"differ":275},"openOld":122,"missing":0}
+  forms: placed old 305 new 356 unplaced old 158 new 107 tagDiff 389 sitesSame false
+  old sites: 18385505-18733857:200 18733896-18734967:302 18735398-18735413S:305
+  new sites: 18185021-18873008:356
+  old forms: 55 repl 65.5kb->4.19kb +2; 40 repl 109bp->1.77kb +1; 33 no call; 33 repl 65.5kb->4.2kb +2; 31 repl 532bp->1.73kb +1; 24 repl 215kb->150kb +1
+  new forms: 92 repl 607kb->113kb; 59 repl 65.5kb->4.19kb; 56 repl 65.5kb->4.19kb +1; 35 repl 65.5kb->4.2kb +2; 30 repl 494kb->191kb; 24 repl 231kb->166kb
+W chr22:22000000-22100000 old 1196 ms new 2016 ms
+  {"win":{"same":462,"adds":1,"differ":0},"all":{"same":462,"adds":1,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":462,"differ":1},"openOld":1,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame false
+  old sites: 22018992-22025040S:463 22048376-22048376S:462
+  new sites: 22018992-22025040S:463 22031400-22903368S:463
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:22300000-22400000 old 1162 ms new 2619 ms
+  {"win":{"same":449,"adds":14,"differ":0},"all":{"same":449,"adds":14,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":449,"differ":14},"openOld":10,"missing":0}
+  forms: placed old 457 new 456 unplaced old 6 new 7 tagDiff 123 sitesSame false
+  old sites: 22361253-22361255:455 22362874-22370427:452 22398253-22398253:452
+  new sites: 22031474-22918451:456
+  old forms: 164 ref; 112 ins 6.06kb; 110 ins 9.1kb; 71 ins 9.1kb +1
+  new forms: 170 ref; 106 ins 6.07kb; 106 ins 9.1kb; 74 ins 9.1kb +1
+W chr22:22500000-22600000 old 2161 ms new 2705 ms
+  {"win":{"same":445,"adds":18,"differ":0},"all":{"same":433,"adds":18,"differ":12},"covered":{"same":1,"differ":462},"coveredClip":{"same":445,"differ":18},"openOld":0,"missing":0}
+  forms: placed old 449 new 454 unplaced old 14 new 9 tagDiff 17 sitesSame false
+  old sites: 22563654-22567049:449 22580268-22586241:449
+  new sites: 22031474-22918451:454
+  old forms: 438 ref; 11 del 5.94kb +1
+  new forms: 433 ref; 21 del 5.94kb +1
+W chr22:22800000-22900000 old 5345 ms new 2887 ms
+  {"win":{"same":442,"adds":21,"differ":0},"all":{"same":348,"adds":18,"differ":97},"covered":{"same":1,"differ":462},"coveredClip":{"same":442,"differ":21},"openOld":3,"missing":0}
+  forms: placed old 437 new 439 unplaced old 26 new 24 tagDiff 18 sitesSame false
+  old sites: 22428029-22904998:437
+  new sites: 22031474-22918451:439
+  old forms: 412 ref; 25 ins 63bp->5.43kb
+  new forms: 414 ref; 25 ins 63bp->5.43kb
+W chr22:22000000-22900000 old 10662 ms new 115650 ms
+  {"win":{"same":456,"adds":7,"differ":0},"all":{"same":402,"adds":7,"differ":54},"covered":{"same":0,"differ":463},"coveredClip":{"same":456,"differ":7},"openOld":7,"missing":0}
+  forms: placed old 432 new 435 unplaced old 31 new 28 tagDiff 3 sitesSame false
+  old sites: 22031400-22918451S:432
+  new sites: 22031400-22918451S:435
+  old forms: 432 ref
+  new forms: 435 ref
+W chr22:12345000-12395000 old 871 ms new 138 ms
+  {"win":{"same":424,"adds":39,"differ":0},"all":{"same":424,"adds":39,"differ":0},"covered":{"same":424,"differ":39},"coveredClip":{"same":424,"differ":39},"openOld":0,"missing":0}
+  forms: placed old 0 new 39 unplaced old 463 new 424 tagDiff 39 sitesSame false
+  old sites: 
+  new sites: 11817352-15192675S:39
+  old forms: 
+  new forms: 39 shared
+W chr22:15000000-15050000 old 33 ms new 38 ms
+  {"win":{"same":423,"adds":40,"differ":0},"all":{"same":423,"adds":40,"differ":0},"covered":{"same":423,"differ":40},"coveredClip":{"same":423,"differ":40},"openOld":0,"missing":0}
+  forms: placed old 0 new 40 unplaced old 463 new 423 tagDiff 40 sitesSame false
+  old sites: 
+  new sites: 11817352-15192675S:40
+  old forms: 
+  new forms: 40 shared
+W chr22:25500000-25550000 old 8621 ms new 3872 ms
+  {"win":{"same":459,"adds":4,"differ":0},"all":{"same":231,"adds":4,"differ":228},"covered":{"same":0,"differ":463},"coveredClip":{"same":459,"differ":4},"openOld":0,"missing":0}
+  forms: placed old 459 new 463 unplaced old 4 new 0 tagDiff 5 sitesSame false
+  old sites: 25252869-25515698S:459
+  new sites: 25252861-25759392:463
+  old forms: 459 ref
+  new forms: 458 ref; 5 repl 507kb->250kb
+W chr22:33333000-33383000 old 849 ms new 734 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 33340008-33341070:463 33359629-33364153:463
+  new sites: 33340008-33341070:463 33359629-33364153:463
+  old forms: 430 ref; 28 del 4.49kb; 5 del 1.06kb
+  new forms: 430 ref; 28 del 4.49kb; 5 del 1.06kb
+W chr22:38000000-38050000 old 678 ms new 573 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:45678000-45728000 old 606 ms new 473 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:48000000-48050000 old 686 ms new 677 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:10500000-10550000 old 4 ms new 11 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":460,"differ":3},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 3 new 3 unplaced old 460 new 460 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 3 ref
+  new forms: 3 ref
+W chr22:50780000-50818468 old 1276 ms new 1179 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":2,"differ":461},"coveredClip":{"same":463,"differ":0},"openOld":9,"missing":0}
+  forms: placed old 457 new 457 unplaced old 6 new 6 tagDiff 0 sitesSame true
+  old sites: 50797069-50798421S:457 50800510-50800631S:454 50807218-50807273:451 50807810-50808465:253
+  new sites: 50797069-50798421S:457 50800510-50800631S:454 50807218-50807273:451 50807810-50808465:253
+  old forms: 253 ref; 198 no call; 6 no call +1
+  new forms: 253 ref; 198 no call; 6 no call +1
+W chr22:30000000-30001000 old 383 ms new 318 ms
+  {"win":{"same":463,"adds":0,"differ":0},"all":{"same":463,"adds":0,"differ":0},"covered":{"same":0,"differ":463},"coveredClip":{"same":463,"differ":0},"openOld":0,"missing":0}
+  forms: placed old 463 new 463 unplaced old 0 new 0 tagDiff 0 sitesSame true
+  old sites: 
+  new sites: 
+  old forms: 463 ref
+  new forms: 463 ref
