@@ -78,6 +78,15 @@ things are.
     published by its `upload.sh`); jbrowse-components `demos/hprc` and
     `demos/hprc_multiway` configs (deployed by `deploy-demo.sh`)
   - Done when no target names a format 5 walk file or graph-walks 4
+  - **Release gates, after a vibe check the same afternoon** found the
+    libraries released before any consumer had compiled against them
+    (the ports then found two graph-walks bugs within the hour, fixed in
+    5.0.1 and 5.0.2): no library release until every consumer's port is
+    green against the exact versions to be released, all pinned alike; a
+    local run of the repo's whole CI job before any tag;
+    `pnpm release-check` in graph-walks (`WALKS=<path or url>`) clean on
+    the file to be hosted; and the hosted swap in one pass, after the
+    upload is audited from its URL
 - Released before: graph-walks 4.6.0 (a crossing fragment carries `crossing`) and
   jbrowse-plugin-graphgenomeviewer 8.6.0, rehosted. 8.6.0's synteny
   `crossingFeature` has two flaws: its mate span depends on which haplotypes
