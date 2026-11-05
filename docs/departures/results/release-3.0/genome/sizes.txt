@@ -1,0 +1,4 @@
+-rw-rw-r-- 1 cdiesh cdiesh 1766959626 Nov  5 12:41 hprc-v2.1-mc-chm13.CHM13.walks.bed.gz
+-rw-rw-r-- 1 cdiesh cdiesh    1705430 Nov  5 12:41 hprc-v2.1-mc-chm13.CHM13.walks.bed.gz.tbi
+-rw-rw-r-- 1 cdiesh cdiesh 1552571702 Nov  5 11:36 hprc-v2.1-mc-grch38.GRCh38.walks.bed.gz
+-rw-rw-r-- 1 cdiesh cdiesh    1747103 Nov  5 11:36 hprc-v2.1-mc-grch38.GRCh38.walks.bed.gz.tbi

@@ -1,0 +1,5 @@
+vg version v1.76.1
+993b13d18cd44c8f240aa03d033465b6  hprc-v2.1-mc-chm13.CHM13.walks.bed.gz
+96d2f8d187bded7a8b31b58662d78f3b  hprc-v2.1-mc-grch38.GRCh38.walks.bed.gz
+533a3f49d05c1ecd9c689a9a5ae1971e  hprc-v2.1-mc-chm13.CHM13.walks.bed.gz.tbi
+4b03d39182e110e4bd2a932ca97519d6  hprc-v2.1-mc-grch38.GRCh38.walks.bed.gz.tbi

@@ -1,0 +1,7 @@
+GRCh38:chr22:18600000	1483 departure rows	181780 text bytes
+GRCh38:chr9:45000000	563 departure rows	69358 text bytes
+GRCh38:chr6:160614798	319 departure rows	38901 text bytes
+CHM13:chr9:45000000	458 departure rows	56961 text bytes
+CHM13:chr9:60000000	405 departure rows	50819 text bytes
+CHM13:chr14:13500416	1084 departure rows	130820 text bytes
+CHM13:chr22:19000000	927 departure rows	113308 text bytes

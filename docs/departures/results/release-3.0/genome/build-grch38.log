@@ -1,0 +1,5 @@
+[1191.3 s, 7.9 GiB peak] reference GRCh38: 195 paths, 83303684 nodes
+[3918.4 s, 7.9 GiB peak] 53150 paths, 38403445885 steps
+GRCh38: 19933602 pieces, 1797769 departure records in 2066063 rows, 1698 paths visit no GRCh38 node and are left out
+[4160.4 s, 7.9 GiB peak] 95416973 rows -> hprc-v2.1-mc-grch38.GRCh38.walks.bed.gz (+ .tbi): 48297999 routes, 19812109 walk rows, 0 copies named; 66981 paths abridged to 74053 detail walk rows
+build GRCh38: 4160.85 s, 8300188 KB peak

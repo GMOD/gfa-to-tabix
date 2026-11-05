@@ -1,0 +1,5 @@
+[1421.6 s, 8.6 GiB peak] reference CHM13: 25 paths, 90761410 nodes
+[3669.0 s, 8.6 GiB peak] 60807 paths, 39926597498 steps
+CHM13: 20237742 pieces, 1750312 departure records in 2033905 rows, 3312 paths visit no CHM13 node and are left out
+[3874.6 s, 8.6 GiB peak] 109627990 rows -> hprc-v2.1-mc-chm13.CHM13.walks.bed.gz (+ .tbi): 52740567 routes, 20124767 walk rows, 0 copies named; 60782 paths abridged to 65396 detail walk rows
+build CHM13: 3874.93 s, 8995716 KB peak
