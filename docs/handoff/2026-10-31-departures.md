@@ -169,21 +169,28 @@ there. The urgent part is the word on screen
      haplotypes share (be081a5, with a logic review's fixes in
      edf4acd), so one haplotype's rare departure no longer merges the
      sites it crosses (chr22:20.3 Mb, [issues log](../issues-log.md)).
-     HG00126#1's `inv 48.7kb` at 21.4 Mb comes from the rare-state
-     fold: two of its contigs reach the inversion site, so it has no
-     call there, and a rare no call folds to the majority state, whose
-     form holds 307 haplotypes; it is listed in `rareCarriers`.
-     **Open, from a design review the same day** (each in the issues
-     log), for the user before graph-walks 5 is released:
-     - The fold puts haplotypes in forms they don't belong to: at
-       chr22:22.3-22.4 Mb nine haplotypes with 500 to 740 kb departures
-       over the window show as `ref`, and a common mark still merges
-       every site nested in it. The review proposes sites from the same
-       half-cover relation that makes marks common, with a larger mark
-       stated at each site inside it, and a fold only into a state
-       within a tolerance, never a no call into a change. To measure
-       first: jb2hubs' gate loci and the 28 chr22 windows under both
-       rules, and misfolds per window
+     **Arbitrated 2026-11-05** by two independent agents (Fable and
+     Opus), after the user asked for the design to be fixed rather than
+     handed back: both found the forms had no rule for what a row may
+     say of its members, and fold rules tuned on loci but never checked
+     against the output. graph-walks 7601e9e (Opus's branch) is landed:
+     one tolerance, `agrees`, that every fold must pass; a no call never
+     folds; a rare state that agrees with no common one is `~`, a member
+     that fits no common form goes to `other` (key `*`), which states
+     nothing; a site is shared only if every form but `other` has one
+     state there; at a site over 1 kb a change keys on its place as well
+     as its size; no site widening. `formContradictions` checks any
+     result against the members' own departures: 315 contradicted
+     members on the 28 chr22 windows at the auto floor and 417 on the
+     jb2hubs gate before, none after, at every floor, folded or not.
+     Fable's branch (no folding at all) was not landed: it still drew 4
+     haplotypes' 13.7 kb insertion at 42,134,095 at another carrier's
+     42,125,923, which its size-only checker could not see. HG00126#1
+     at 21.4 Mb is now in `other`, reversing the earlier reading.
+     Plugin 9 must map `*` to no genotype in `formVariants`' `genotypeOf`
+     and read state keys carrying `@place`
+     **Open, from a design review the same day**, under arbitration by
+     two more agents (the format's contract):
      - No record says whether an end lies on a node the reference
        passes more than once, and `mp` is not written, so on CHM13 or
        pggb no reader can tell a hop between copies from a jump, and

@@ -230,3 +230,38 @@ Where the findings have come from so far, and the rule each gives:
   minimal cut of `leavePasses`/`rejoinPasses`, justified by an `mp` tag
   not yet written, which covers ends inside the walk read only. Open:
   the handoff's item 2
+- **2026-11-05, arbitration of the forms (Opus and Fable agents,
+  independently).** Forms put members in rows their own departures
+  contradict: 315 contradicted members on the 28 chr22 windows at the
+  auto floor (1,849 at 50 bp) and 417 on the jb2hubs gate, among them
+  the 22.3 Mb jump carriers shown `ref`, HG03784 shown "ins 9.1kb +1"
+  and HG00126#1's no call shown `inv 48.7kb`. Source: the forms had no
+  rule for what a row may say of its members; four fold rules (rare
+  state to nearest net, no call to majority, rare form to nearest form,
+  majority marks on shared sites) were tuned on loci and scored against
+  assemblies with rare carriers set apart, so nothing checked the
+  output. Fixed in graph-walks 7601e9e: one tolerance every fold
+  passes, no call never folds, `~` and `other` claim nothing, shared
+  decided after forming. Guard: `formContradictions` (0 on the 28
+  windows and the gate, every floor, folded or not) and its tests;
+  numbers in `~/src/arb-forms-opus/r28/summary.txt` and `gate/`
+- **2026-11-05, arbitration of the forms, re-found.** HG00126#1 at 21.4
+  Mb, read the same day as "a rare no call folds to the majority" and
+  left so, is a no call shown as a call. Source: a decision made ad hoc
+  (explaining a rule instead of checking what it claims). Fixed in
+  7601e9e: it is in `other`. Guard: test "a rare no call is never shown
+  as a call"
+- **2026-11-05, arbitration of the forms.** State keys had no place, so
+  at CYP2D6 4 haplotypes with a 13.7 kb insertion at 42,134,095 were
+  drawn at another carrier's 42,125,923; the same at merged IGL and
+  LCR22A sites. Source: a key written for small sites, applied to
+  merged wide ones. Fixed in 7601e9e: at a site over 1 kb a change keys
+  on its place, from the half-cover relation. Guard: the checker's
+  `place` kind and its test. The no-fold branch the Fable agent wrote
+  in parallel still showed it, which decided between the two
+- **2026-11-05, arbitration of the forms.** A summed change widened its
+  site past the span its states were read over: at 50.78 Mb three
+  haplotypes' 1 kb insertions in the widened part were stated `ref`.
+  Source: widening kept while the read span stayed narrow. Fixed in
+  7601e9e: no widening. Guard: test "a site spans the marks it comes
+  from"
