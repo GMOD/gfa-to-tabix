@@ -1,0 +1,9 @@
+# formContradictions at graph-walks ec8ecd9 (forms 7601e9e + format arbitration) on the format arbitration's MC chr22 build (ada ~/work/arb-format-opus/out/mc22.GRCh38.walks.bed.gz), 28 windows, cuts by scripts/dump.test.ts with every budget lifted, check by scripts/check.test.ts
+keep 0 floor auto: TOTAL wrong 0
+keep 0 floor 50: TOTAL wrong 0
+keep 0 floor 1000: TOTAL wrong 0
+keep 0 floor 10000: TOTAL wrong 0
+keep 1 floor auto: TOTAL wrong 0
+keep 1 floor 50: TOTAL wrong 0
+keep 1 floor 1000: TOTAL wrong 0
+keep 1 floor 10000: TOTAL wrong 0

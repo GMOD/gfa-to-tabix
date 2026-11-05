@@ -13,3 +13,6 @@
   at 42,134,095, their form's mark at 42,125,923
 - The scripts ran from `~/src/arb-forms-opus/`; copy the `.test.ts` files
   into graph-walks' `src/arb/` to rerun them
+- `combined.txt`: the same check after the format arbitration landed
+  (graph-walks ec8ecd9), on that arbitration's MC chr22 build: no
+  contradicted member on any of the 28 windows, at any floor
