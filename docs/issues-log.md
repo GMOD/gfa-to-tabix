@@ -347,3 +347,11 @@ Where the findings have come from so far, and the rule each gives:
   `scripts/arbitration-inputs.sh` (pggb chrY gives the port3 counts exactly: 471,497 pieces,
   425,040 records). `/tmp/claude-1001` past its quota again, losing one
   command's output. Open: the user clears `/tmp/claude-1001`
+- **2026-11-05, the format arbitration (Fable agent).** `fuzz6.sh` resolved
+  its own path and the writer's after `cd` into the scratch directory, so
+  a relative invocation failed every seed with a build error ("no S
+  lines" or no binary). It failed loudly, not silently, so no fuzz result
+  was wrong. Source: a script only ever run with absolute paths. Fixed:
+  paths resolved before `cd`, and a seed whose graph has no `S` line
+  reports itself. Guard: run relative, and with `GFA_TO_TABIX=/bin/false`
+  every seed reports a build failure
