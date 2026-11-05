@@ -569,3 +569,71 @@ Where the findings have come from so far, and the rule each gives:
   two-argument call must be a type error. Also from the ports: bandage-core
   13's `laidOutGraph` takes GFA text only, so ggbandage repeats its
   layout calls for tables (open)
+- **2026-11-05, porting jb2hubs to graph-walks 5.** The page's converter
+  (`pangenomeWalkForms.ts`) turned the `other` form, `*` at every site and
+  no marks, into a form with no marks, which the panel counts as GRCh38's
+  structure and gives a lane. Source: a reader of the forms' states that
+  listed the states it drew (`.`, `~`) and dropped the rest silently.
+  Fixed on jb2hubs `format6`: the form is marked `other`, gets no lane,
+  and counts in the "other forms" row. Guard: test "the walks' other form
+  gets no lane and is not the reference's structure", which fails with
+  either half of the fix removed
+- **2026-11-05, porting jb2hubs to graph-walks 5.** The page keyed a
+  change by site, kind and size (`changeKey`), so graph-walks 5's
+  `-2000@1000` and `-2000@2500`, one size at two places in a site over
+  1 kb, merged into one change with both forms' carriers. Source: an
+  identity rebuilt from a mark's fields where the library's state key
+  already is the identity. Fixed on `format6`: a walk mark's key adds its
+  state. Guard: test "one size deleted at two places in a site is two
+  changes"
+- **2026-11-05, porting jb2hubs to graph-walks 5.** `formsCut` gained
+  default byte and departure budgets, which the page's sidecar fallback
+  did not catch, so a refused window would have shown an error rather
+  than the callset's forms; `generatePangenomeLocusGenes.ts` cut with no
+  budget, which 5's 4 M step default refuses at MHC class II (11 M steps
+  expanded), and `generatePangenomeGeneModels.ts`'s `...WALK_BUDGETS`
+  started carrying a departure budget its catch did not expect. Source:
+  callers that relied on "no option means no limit". Fixed on `format6`:
+  `WalkFormsTooLarge` covers `RegionTooLargeError` and
+  `DepartureReadError`; the locus generator lifts every budget and the
+  gene-model one the departure budget. Guard: test "a read past
+  graph-walks' budgets falls back to the callset, and nothing else does";
+  the generators have none (build-box scripts)
+- **2026-11-05, porting jb2hubs to graph-walks 5.** `scoreForms.py`
+  scored the `other` form's members as rare carriers claiming no change.
+  Source: as above, a reader that did not know the new form. Fixed on
+  `format6`: `printWalkForms.ts` writes `other: true` and the scorer counts
+  its members as "no claim: other form". Measured on the 3.0.0 MC chr22
+  file at the gate's cyp2d6 and gstt1 windows against `truth2.tsv`: the
+  rare line read 3 of 5 (auto floor) and 19 of 27 (50 bp) with them, 2
+  of 2 without; every other line unchanged (801/801, 779/779, 814/814
+  unfolded)
+- **2026-11-05, porting jb2hubs to graph-walks 5.**
+  `checkPangenomeAssets.mjs`, the check that every url a pangenome config
+  names resolves, read `adapter.uri` only, so the lane track's
+  `walksUri` (the HPRC walk file) was never probed and a config naming a
+  missing walk file passed. Source: a url field the check's adapter list
+  did not know. Fixed on `format6`: `<walksUri>.walks.bed.gz` and its
+  `.tbi` are probed. Guard: the check FAILs on the `-f6` url until it is
+  uploaded. Also: `structuralForms` takes `floorBp: NaN` without
+  complaint and returns forms (170 haplotypes in `other` at cyp2d6);
+  `printWalkForms.ts` now refuses a floor that is not a number (open in
+  graph-walks)
+- **2026-11-05, porting the JBrowse plugin.** bandage-core 13 marks a
+  walk row whose fragment ends at the window's edge as "contig ends inside
+  the window" (`walkRowRuns.ts` sets `contigEnds` from whether the last
+  step is on the reference, true for every format 6 fragment), even where
+  a departure record says it goes on and rejoins: `walks6_rejoin` at
+  chr1:1000-1500, HG002#1 leaving at 1500 with 4 kb of its own. Source: a
+  rule written for format 5, where a fragment running off R meant the
+  contig went on, met by format 6's fragments that end on R. Fix: below
+- **2026-11-05, porting the JBrowse plugin.** The plugin adjusted its
+  tests to graph-walks 5.0.0's missing right-hand context (the reference
+  ending at 3200, not 3800, in `walks6_maxnode`), reading the README as
+  saying so; 5.0.1 fixed the read. Source: a port fitted to its target's
+  bug. Fix: below, with the plugin on `^5.0.2`
+- **2026-11-05, porting the JBrowse plugin.** Open: graph-walks 5 calls
+  `expand(name)` with the name alone, so the plugin cannot replace its
+  64-name `EXPAND_NAMED_MAX` cap by a per-row threshold; and the forms'
+  departures carry no pass counts, so the Forms track cannot say
+  "placement choice". Both are graph-walks features for a later minor
