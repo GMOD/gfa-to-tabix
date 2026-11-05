@@ -57,6 +57,27 @@ things are.
   plugin 9 on graph-walks 5 (`*` drawn as no genotype, `@place` keys,
   pass counts for "placement choice"); then BandageJS, ggbandage, the
   tube map and jb2hubs
+- **Deploying format 6 to every target (started 2026-11-05)**, in order:
+  - Data: genome-wide files by gfa-to-tabix 3.0.0 on ada
+    (`~/work/genome3.sh` into `~/work/genome3/`) from HPRC v2.1's GBZs,
+    `hprc-v2.1-mc-grch38.gbz` and `hprc-v2.1-mc-chm13.gbz`, checked
+    byte-identical to HPRC's S3 objects by their multipart ETags
+    (e63ecd53…-655 and 37079e4a…-735), converted by `vg convert -f`
+    (vg 1.76.1); chr22 of each audited before upload
+  - Hosted names, beside the format 5 files, which stay for old viewers:
+    `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f6.GRCh38.walks.bed.gz`
+    (from the GRCh38 graph, so node ids match the format 5 file's) and
+    `hprc-v2.1-mc-chm13-f6.CHM13.walks.bed.gz` (from the CHM13 graph, for
+    hs1 tracks; its node ids are that graph's). Uploaded with
+    jbrowse-components' `scripts/deploy-demo.sh`, `.tbi` with each
+  - Libraries: graph-walks 5.0.0 (released), bandage-core 13.0.0
+  - Viewers, each on graph-walks 5 and bandage-core 13 alone and every
+    URL moved from `-f5s`/`-f5` to `-f6`: jbrowse-plugin-graphgenomeviewer
+    9 (rehosted by jbrowse-plugin-list), BandageJS, ggbandage (its bundled
+    `inst/js/bandage.js`), sequenceTubeMapModern, jb2hubs (configs
+    published by its `upload.sh`); jbrowse-components `demos/hprc` and
+    `demos/hprc_multiway` configs (deployed by `deploy-demo.sh`)
+  - Done when no target names a format 5 walk file or graph-walks 4
 - Released before: graph-walks 4.6.0 (a crossing fragment carries `crossing`) and
   jbrowse-plugin-graphgenomeviewer 8.6.0, rehosted. 8.6.0's synteny
   `crossingFeature` has two flaws: its mate span depends on which haplotypes
