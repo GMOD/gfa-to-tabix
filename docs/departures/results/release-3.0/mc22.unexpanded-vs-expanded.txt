@@ -1,0 +1,7 @@
+18219008-18284544 haplotypes 463 differ 0 
+18600000-18680000 haplotypes 463 differ 0 
+16250000-16350000 haplotypes 463 differ 0 
+20300000-20400000 haplotypes 463 differ 0 
+22300000-22400000 haplotypes 463 differ 0 
+42100000-42150000 haplotypes 463 differ 0 
+11000000-11500000 haplotypes 463 differ 0 

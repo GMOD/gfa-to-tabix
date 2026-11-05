@@ -1,0 +1,2 @@
+-rw-rw-r-- 1 cdiesh cdiesh  59171701 Nov  5 09:01 mc22.GRCh38.walks.bed.gz
+-rw-rw-r-- 1 cdiesh cdiesh 192154407 Nov  5 09:12 pggbY.GRCh38.walks.bed.gz
