@@ -433,3 +433,22 @@ Where the findings have come from so far, and the rule each gives:
   `bytesForRegions`, detail reads (bounded by steps only) and attach
   fetches. Source: prose ahead of the code. Fixed in dd6986c. Guard: the
   row-refusal tests
+- **2026-11-05, final review before release.** An `abridged` row's
+  `hapOffset` and `bp` cover its whole piece, own steps before its first
+  step on S or after its last included, where no departure record
+  covers them (a contig's start or end, a move onto another sequence),
+  so an unexpanded piece netted them as a change: on a hand-made graph
+  built with `--abridge-bytes 1`, L and M net +30 unexpanded and 0
+  expanded; pggb's satellite paths at contig ends are the main case.
+  Source: the format's limits surfacing in a reader, again: a row stating
+  less than the reader needs. Fix: below, in the commit that lands it
+- **2026-11-05, final review before release.** `audit6.py`'s new check of
+  an abridged row's ends compared node ids only, so a `start` or `end`
+  pointing at another occurrence (`@k`) or strand passed while
+  graph-walks read another stretch. Source: a check written to the
+  common case. Fix: below
+- **2026-11-05, final review before release.** Forms place sets were
+  filled in an order that ties in carriers and start left to input
+  order, which differs from window to window: two orders of three
+  equal-sized replacements gave different forms, and the checker passed
+  both. Source: an unordered tie. Fix: below
