@@ -441,14 +441,70 @@ Where the findings have come from so far, and the rule each gives:
   built with `--abridge-bytes 1`, L and M net +30 unexpanded and 0
   expanded; pggb's satellite paths at contig ends are the main case.
   Source: the format's limits surfacing in a reader, again: a row stating
-  less than the reader needs. Fix: below, in the commit that lands it
+  less than the reader needs. Fixed in gfa-to-tabix 1a74b3e: the row's
+  `hapOffset` and `bp` run from where its `start` step begins to where its
+  `end` step ends, as a reader trims a walk row's piece. `nsteps` stays the
+  whole piece's, the steps its detail record decodes, which graph-walks'
+  expansion budget sums; a count of the stretch alone would let a
+  satellite's own steps at a contig end past that budget. Every record
+  leaves at a piece's last step on S and rejoins at a piece's first, so
+  none ends inside the stretch, and graph-walks d2058b5 drops 277fa44's
+  `ownTrimmed`. What it compensated for, each now impossible: a record
+  leaving a piece with own steps after its leave (the row ends at the
+  leave), one rejoining a piece with own steps before its rejoin (the row
+  starts at the rejoin), both across W lines (the record's own bp hold
+  both lines' ends), and a move onto another sequence and back (the steps
+  before the move trail the leave). The contig's own ends, which it never
+  covered, were this bug. A file from the earlier writer reads wrong
+  without it and no reader can tell, so every format 6 file is rebuilt;
+  none was released. Guard: the decoder in `tests/walks.rs` checks each
+  abridged row against its piece's stretch, steps and end positions and
+  strands, and that every base of a path from its first step on a
+  sequence to its last lies in one piece's stretch or one record's own
+  bp, which fails on main's writer, on `walks-two-refs.gfa` too; test "an
+  abridged row spans its piece from its first step on R to its last" on
+  `walks-contig-ends.gfa`, the graph above; `audit6.py` the same two
+  checks, shown firing on main's `ownends.R` and `abridged.R` fixtures and
+  on a record's `ownBp` off by one, clean on every fixture and `fuzz6.sh 1
+  100`; graph-walks test "reads each haplotype to the net and coverage its
+  walks give in full when an abridged piece holds its contig's first or
+  last steps" on `contigends.R` (+30 on main's reader and writer). Not
+  checked on real data: the local MC chr22 file comes from the earlier
+  writer and no graph could be built on this machine
 - **2026-11-05, final review before release.** `audit6.py`'s new check of
   an abridged row's ends compared node ids only, so a `start` or `end`
   pointing at another occurrence (`@k`) or strand passed while
   graph-walks read another stretch. Source: a check written to the
-  common case. Fix: below
+  common case. Fixed in gfa-to-tabix cba70b5: each end resolves as the
+  format says, `start` at its `@k` or R's first occurrence, `end` at its
+  `@k` or the occurrence nearest `start`'s position, the later on a tie,
+  and compares its position in R and its handle with the detail piece's
+  first and last steps on R. Guard: it fires on the review's `X#1#c` row
+  with `6@1` rewritten `6`, and with `start` or `end` on the other strand,
+  all three of which main's audit passes, and is clean on every
+  graph-walks fixture and `fuzz6.sh 1 100`
 - **2026-11-05, final review before release.** Forms place sets were
   filled in an order that ties in carriers and start left to input
   order, which differs from window to window: two orders of three
   equal-sized replacements gave different forms, and the checker passed
-  both. Source: an unordered tie. Fix: below
+  both. Source: an unordered tie. Fixed in graph-walks 52557ed: spans
+  fill places by carriers, start and end, and a span joins the place with
+  the most carriers, then the earliest start and end; a span is one
+  place's first at most, so both orders are total. Two more ties left
+  to input order, fixed in the same commit: a state's median carrier
+  among equal net changes, which picks the marks a form draws (`repl
+  6kb->11kb` or `repl 10kb->15kb` for the same members), found by the
+  shuffling test, and a rare form fitting two common forms of one size,
+  found reading the rest of `structuralForms`.
+  Guard: tests "forms are the same for every order of the haplotypes
+  where places tie in carriers and start" (six orders and their
+  reverses) and "a rare form that fits two common forms of one size joins
+  the same one for every order of the haplotypes", both failing on
+  dd6986c
+- **2026-11-05, the machine, during the final review's fixes.**
+  `/tmp/claude-1001` at its quota again: a full graph-walks run failed to
+  load seven test files with no message, and a scratch file was written
+  empty. `fuzz6.sh` was committed without its executable bit, so running
+  it by path is refused. Source: the machine; a script only ever run
+  through `bash`. Fixed: the checks ran with `TMPDIR` under the worktree,
+  and `fuzz6.sh` is executable. Open: the user clears `/tmp/claude-1001`
