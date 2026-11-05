@@ -135,11 +135,25 @@ there. The urgent part is the word on screen
      haplotype, 2.4 s with 67,144 departures; a 10 kb window at 30 Mb 0.3
      s; pggb chrY 64 kb at 12 Mb for HG002 1.3 s, mostly parsing the
      100,000 departure rows of the TSPY array before the keep filter.
-     Not done: the structural-forms cut (`walkDepartures.ts`, `formsCut`)
-     still derives departures from fragments and `graph.nodes`, which no
-     longer reach past the drawn stretch, so forms that depended on
-     following a departure to its rejoin should move to `cut.departures`;
-     bandage-core 13 and plugin 9 (below)
+     **Done, 2026-11-05: the structural-forms cut**, graph-walks commit
+     1132859 (unpushed): `formsCut` and `walkDepartures` read each
+     haplotype's departures off `cut.departures` and the fragments' end
+     steps. A fragment with the departures at its ends and inside it is
+     a chain read in its own orientation, as the old chains were; a
+     departure touching no fragment, such as a contig jumping over the
+     window or rejoining far outside it, is a chain of its own; R that
+     two chains reach has no call; sequence between a contig's W lines
+     counts as its own; an abridged fragment stays a net.
+     `DepartureSource` is `{ fragments, departures, nodes }` and
+     `HaplotypeDepartures` has no `open`. Checked against 4.6.0 on the
+     format 5 file over six chr22 windows: every old departure is
+     reproduced and the forms are identical outside LCR22A
+     ([results](../departures/results/minimal/README.md#the-forms-cut-on-mc-chr22)).
+     **To decide:** at LCR22A the forms now group on the jumps over the
+     window ("624 kb replaced by 130 kb", 114 haplotypes) that the old
+     cut never saw; in a repeat that is the projection's placement
+     choice showing, so the Forms track may want to say so there rather
+     than call it. Not done: bandage-core 13 and plugin 9 (below)
    - **Done, 2026-11-04 evening: the genome-wide build**, on ada by
      `~/work/rebuild/genome.sh` from
      `~/hprc-gbz/walks/hprc-v2.1-mc-grch38.W.gfa.gz` with the port3 binary
@@ -151,11 +165,21 @@ there. The urgent part is the word on screen
      ([results](../departures/results/minimal/README.md)). Only 65 walk
      rows name a copy. `genome-audit.sh` then audits chr22 of each file
      with `audit6.py --seq`, CHM13 first, into `genome/CHM13.chr22.audit.txt`
-     and `genome/GRCh38.chr22.audit.txt` (`genome/audit.done` when
-     finished); it was running at the end of the session. The CHM13
-     file's departure reads in repeats are the thing to look at before
-     hosting it: the placement question of open-problems applies to CHM13
-     as a reference too, not only to pggb
+     and `genome/GRCh38.chr22.audit.txt`. **Both audits are clean**
+     (2026-11-05): every record matches a recomputed departure, no base
+     of any stretch is uncovered, and a 64 kb window's departure read is
+     at most 117 KB on chr22 of either file. **The CHM13 file's extra
+     rows are on chr9**: 32.4 M of its 42.7 M, from 2.2 M records that
+     hop between copies 10 to 100 Mb apart, 96% with no own bp and 81%
+     switching strand, so a 64 kb window anywhere between 38 and 80 Mb
+     of CHM13 chr9 reads 1.7 M rows (22 MB compressed) and graph-walks 5
+     refuses it with its DepartureReadError; chr14 has 4.3 M rows in one
+     Mb. The rest of the file reads as the GRCh38 one does
+     ([results](../departures/results/minimal/README.md#where-the-chm13-files-rows-are),
+     and a bullet in open-problems). **To decide** before hosting the
+     CHM13 file: host it as it is, with the refusal over those stretches,
+     or give CHM13 a placement rule for its repeats first, which is the
+     pggb question of open-problems
    - graph-walks 4.6.1 (a51b7bf, which asks for a newer viewer on a format
      6 file), bundled by the plugin, BandageJS, ggbandage and the tube map,
      before gfa-to-tabix 3.0 is released. Releasing is bumping `version`
@@ -253,9 +277,14 @@ ADR 0009 History); their doc and number fixes are committed.
   and audits of MC chr22 and pggb chrY by `port3.sh`, from
   `~/src/gfa-to-tabix-port3/` (rsync of the working tree at 76c9223),
   with `port3/sizes.txt` against `port2/` and `f5/`; `~/work/rebuild/genome/`
-  the genome-wide build (item 2 above). ada's disk was at 99% with 44 GB
-  free during that build
-- graph-walks: `~/src/graph-walks` at 43910ec, unpushed. Its `test_data/`
+  the genome-wide build (item 2 above), its chr22 audits, and the chr9
+  breakdown by `genome/chr9.sh` (`chr9.records.txt` is the 2.2 M distinct
+  records, 100 MB). ada's disk was at 99% with 44 GB free during that
+  build
+- Local, gitignored: `target/forms-check/` holds `f5/` and `port3/`'s MC
+  chr22 files, the inputs of the forms comparison
+- graph-walks: `~/src/graph-walks` at 1132859, unpushed (43910ec the
+  format 6 reader, 1132859 the forms cut). Its `test_data/`
   holds each fixture's GFA and `build.sh`, which rebuilds them with a
   gfa-to-tabix binary; the chrM fixture's GFA was recovered from the
   format 5 file with the old decoder, bases included
@@ -285,3 +314,9 @@ ADR 0009 History); their doc and number fixes are committed.
   the ends
 - `tests/build.rs`'s `gfatools_reads_the_graph_and_its_bubbles_are_sorted`
   failed once and passed on rerun: its fake gfatools reads stdin and races
+- The laptop's `/tmp` is a tmpfs with a per-user quota, and
+  `/tmp/claude-1001` held 8 GB of earlier sessions' scratch files on
+  2026-11-05 (bender 2.8 GB, jbrowse-components 2.9 GB, notes 1.2 GB), so
+  Claude Code's tool output hit "Disk quota exceeded" and one command's
+  output was lost. Nothing was deleted; clear those directories when
+  convenient

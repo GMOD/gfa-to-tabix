@@ -1,0 +1,18 @@
+W chr22:18600000-18680000 old 5170 ms new 1858 ms haplotypes same 86 new adds 377 differ 0
+  old forms: 90 repl 65.5kb->4.19kb, no call; 51 repl 65.5kb->4.19kb; 16 repl 65.5kb->4.19kb, rarer; 15 no call; 15 repl 65.5kb->4.19kb, repl 136kb->134kb; 13 repl 65.5kb->4.19kb, repl 136kb->133kb; 10 repl 65.5kb->4.19kb, repl 120kb->118kb; 7 repl 65.5kb->4.19kb, repl 136kb->134kb
+  new forms: 114 repl 624kb->130kb; 70 repl 400kb->159kb, repl 65.5kb->4.21kb; 46 repl 65.5kb->4.19kb; 43 repl 493kb->190kb; 20 repl 230kb->165kb; 13 repl 65.5kb->4.21kb, repl 136kb->134kb; 13 repl 65.5kb->4.2kb, repl 136kb->133kb; 12 del 454kb->20.2kb, repl 65.5kb->4.2kb; 11 repl 230kb->164kb; 11 del 687kb->323bp; 9 repl 65.5kb->4.21kb, repl 136kb->134kb
+W chr22:21500000-21600000 old 842 ms new 1860 ms haplotypes same 462 new adds 1 differ 0
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:23000000-23100000 old 1180 ms new 1713 ms haplotypes same 463 new adds 0 differ 0
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:30000000-30010000 old 362 ms new 532 ms haplotypes same 463 new adds 0 differ 0
+  old forms: 463 ref
+  new forms: 463 ref
+W chr22:42100000-42150000 old 659 ms new 710 ms haplotypes same 463 new adds 0 differ 0
+  old forms: 378 ref; 42 ins 178bp->13.9kb; 21 del 12.2kb; 14 ins 12.2kb; 8 ins 178bp->13.9kb, ins 13.7kb
+  new forms: 378 ref; 42 ins 178bp->13.9kb; 21 del 12.2kb; 14 ins 12.2kb; 8 ins 178bp->13.9kb, ins 13.7kb
+W chr22:50000000-50100000 old 1332 ms new 1716 ms haplotypes same 463 new adds 0 differ 0
+  old forms: 235 ref; 34 repl 317bp->1.64kb; 27 repl 365bp->3.19kb; 21 repl 674bp->1.89kb; 17 repl 339bp->2.72kb; 14 repl 181bp->1.44kb; 14 repl 347bp->2.09kb; 13 repl 243bp->2.04kb; 13 repl 353bp->2.53kb; 12 repl 675bp->1.73kb; 11 repl 357bp->1.96kb; 11 repl 365bp->2.46kb; 10 repl 795bp->2.2kb; 8 repl 481bp->2.79kb; 8 repl 774bp->2.3kb, ins 1.01kb; 7 repl 392bp->2.31kb; 7 repl 481bp->2.49kb
+  new forms: 235 ref; 34 repl 317bp->1.64kb; 27 repl 365bp->3.19kb; 21 repl 674bp->1.89kb; 17 repl 339bp->2.72kb; 14 repl 181bp->1.44kb; 14 repl 347bp->2.09kb; 13 repl 243bp->2.04kb; 13 repl 353bp->2.53kb; 12 repl 675bp->1.73kb; 11 repl 357bp->1.96kb; 11 repl 365bp->2.46kb; 10 repl 795bp->2.2kb; 8 repl 481bp->2.79kb; 8 repl 774bp->2.3kb, ins 1.01kb; 7 repl 392bp->2.31kb; 7 repl 481bp->2.49kb
