@@ -20,12 +20,6 @@ waitmem 30
 cap 20G /usr/bin/time -f "mc22: %e s, %M KB peak" $B in/mc22.gfa --walks --refs GRCh38 -o out/mc22 > out/mc22.build.log 2>&1
 waitmem 30
 cap 30G /usr/bin/time -f "audit mc22: %e s, %M KB peak" python3 -I $A out/mc22.GRCh38.walks.bed.gz --top 3 > out/mc22.audit.txt 2>&1
-windows() {
-  for w in "$@"; do
-    seq=${w%:*}; at=${w#*:}
-    tabix out/$1.CHM13.walks.bed.gz "CHM13#0#$seq~departure:$((at + 1))-$((at + 65536))" 2>/dev/null | wc -lc | awk -v w="$w" '{printf "%s\t%d rows\t%d text bytes\n", w, $1, $2}'
-  done
-}
 for c in chr9 chr14 chr22; do
   until grep -q "^chm13-$c " in/inputs.log 2>/dev/null; do sleep 30; done
   waitmem 40

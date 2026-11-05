@@ -17,8 +17,9 @@
   row with the prototype; scripts and results in
   [docs/departures/](../departures/), under [Evidence](#evidence)
 - **Supersedes:** [ADR 0006](0006-walks-skip-rows.md)'s `skip` rows, the
-  decoding rules' own choice of copy, and the `pv`, `nx`, `pg`, `pr`, `ng`
-  and `nr` tags of format 5's walk rows
+  decoding rules' own choice of copy, the `pv`, `nx`, `pg`, `pr`, `ng`
+  and `nr` tags of format 5's walk rows, and
+  [ADR 0004](0004-abridged-detours.md)'s one `abridged` row per path
 
 ## Context
 

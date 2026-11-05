@@ -1,0 +1,5 @@
+[  19.6 s, 4.2 GiB peak] reference CHM13: 1 paths, 2465848 nodes
+[  84.5 s, 4.2 GiB peak] 4478 paths, 940065182 steps
+CHM13: 304698 pieces, 38451 departure records in 60545 rows, 490 paths visit no CHM13 node and are left out
+[  97.7 s, 4.2 GiB peak] 7432819 rows -> out/chm13-chr22.CHM13.walks.bed.gz (+ .tbi): 1374837 routes, 296433 walk rows, 0 copies named; 7389 paths abridged to 7481 detail walk rows
+chm13-chr22: 97.91 s, 4412116 KB peak

@@ -1,0 +1,4 @@
+195	paths
+83303684	steps
+83303684	nodes
+0	nodes passed more than once

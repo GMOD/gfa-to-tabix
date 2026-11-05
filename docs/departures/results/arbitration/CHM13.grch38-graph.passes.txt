@@ -1,0 +1,4 @@
+97	paths
+83437361	steps
+82736440	nodes
+513592	nodes passed more than once

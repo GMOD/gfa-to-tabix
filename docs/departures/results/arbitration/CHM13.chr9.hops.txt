@@ -1,0 +1,22 @@
+591	paths
+2241003	consecutive record pairs of one path
+2172351	pairs hopping over 1 Mb to a copy and back
+18423	hops walking at most 2^0 bp on the far copy (cumulative 18423)
+11576	hops walking at most 2^1 bp on the far copy (cumulative 29999)
+13382	hops walking at most 2^2 bp on the far copy (cumulative 43381)
+33400	hops walking at most 2^3 bp on the far copy (cumulative 76781)
+66426	hops walking at most 2^4 bp on the far copy (cumulative 143207)
+110414	hops walking at most 2^5 bp on the far copy (cumulative 253621)
+182010	hops walking at most 2^6 bp on the far copy (cumulative 435631)
+260962	hops walking at most 2^7 bp on the far copy (cumulative 696593)
+309677	hops walking at most 2^8 bp on the far copy (cumulative 1006270)
+362078	hops walking at most 2^9 bp on the far copy (cumulative 1368348)
+329890	hops walking at most 2^10 bp on the far copy (cumulative 1698238)
+231974	hops walking at most 2^11 bp on the far copy (cumulative 1930212)
+131682	hops walking at most 2^12 bp on the far copy (cumulative 2061894)
+62885	hops walking at most 2^13 bp on the far copy (cumulative 2124779)
+29577	hops walking at most 2^14 bp on the far copy (cumulative 2154356)
+12291	hops walking at most 2^15 bp on the far copy (cumulative 2166647)
+4426	hops walking at most 2^16 bp on the far copy (cumulative 2171073)
+1276	hops walking at most 2^17 bp on the far copy (cumulative 2172349)
+2	hops walking at most 2^18 bp on the far copy (cumulative 2172351)

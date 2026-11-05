@@ -239,7 +239,12 @@ there. The urgent part is the word on screen
      come from HPRC v2.1's CHM13-referenced Minigraph-Cactus graph,
      `hprc-v2.1-mc-chm13.gfa.gz` on HPRC's S3, built with `--refs
      CHM13`; this graph's CHM13 file is not hosted
-     ([results](../departures/results/arbitration/README.md)). The
+     ([results](../departures/results/arbitration/README.md): on chr9
+     70,960 records in 84,745 rows against 2.2 M in 32.4 M, the
+     densest window read 458 rows, `revisited:i:0` on chr9, chr14 and
+     chr22). Not yet done: the genome-wide build of that graph; the
+     66 GB `gfa.gz` download from S3 stalled at 57 GB on ada, and `vg
+     convert -f` of its 6.2 GB GBZ is the other way to a GFA. The
      interim it replaces: host the
      CHM13 file as it is, with those windows refused. graph-walks 5's
      `cut` refuses a window whose departure read the index estimates

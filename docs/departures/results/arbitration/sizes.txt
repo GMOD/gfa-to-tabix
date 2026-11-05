@@ -1,0 +1,26 @@
+pggbY: arb 192199564 bytes, base 190420488 bytes
+  out abridged: 110886 rows, 12128542 text bytes
+  out departure: 1224004 rows, 143898329 text bytes
+  out nodes: 1033 rows, 122773220 text bytes
+  out ref: 399 rows, 7502474 text bytes
+  out route: 983668 rows, 1225741216 text bytes
+  out walk: 471098 rows, 77453406 text bytes
+  base abridged: 669 rows, 300250 text bytes
+  base departure: 1224004 rows, 138301281 text bytes
+  base nodes: 1033 rows, 122773220 text bytes
+  base ref: 399 rows, 5163366 text bytes
+  base route: 983668 rows, 1225741216 text bytes
+  base walk: 471098 rows, 77453406 text bytes
+mc22: arb 59174381 bytes, base 59170079 bytes
+  out abridged: 2572 rows, 316903 text bytes
+  out departure: 31239 rows, 3752859 text bytes
+  out nodes: 3033 rows, 141885736 text bytes
+  out ref: 776 rows, 6374007 text bytes
+  out route: 1645270 rows, 185563562 text bytes
+  out walk: 252853 rows, 93206798 text bytes
+  base abridged: 2468 rows, 304377 text bytes
+  base departure: 31239 rows, 3627903 text bytes
+  base nodes: 3033 rows, 141885736 text bytes
+  base ref: 776 rows, 6372455 text bytes
+  base route: 1645270 rows, 185563562 text bytes
+  base walk: 252853 rows, 93206798 text bytes

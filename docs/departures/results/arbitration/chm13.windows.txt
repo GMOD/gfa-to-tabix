@@ -1,0 +1,9 @@
+# 64 kb windows' departure reads, CHM13-referenced graph (window: sequence:start)
+chr9:30000000	4 rows	464 text bytes
+chr9:39000000	19 rows	2177 text bytes
+chr9:45000000	458 rows	56961 text bytes
+chr9:60000000	405 rows	50819 text bytes
+chr9:78000000	206 rows	24372 text bytes
+chr9:85000000	1 rows	118 text bytes
+chr14:13000000	14 rows	1710 text bytes
+chr14:13500416	1084 rows	130820 text bytes

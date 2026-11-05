@@ -1,0 +1,76 @@
+# header
+format:6	chunk:65536	maxnode:1024	revisited:0	stay:311	abridge:1000000	abridgebytes:3000000
+# rows by kind
+2015	abridged rows
+84745	departure rows
+2012	detail nodes rows
+1149790	detail route rows
+2015	detail walk rows
+2001	nodes rows
+2299	ref rows
+2437963	route rows
+831213	walk rows
+# text bytes by kind
+270481931	walk (46.81%)
+214011300	route (37.04%)
+63425337	nodes (10.98%)
+19885999	ref (3.44%)
+9801957	departure (1.70%)
+236085	abridged (0.04%)
+66400047	file bytes; 65969 index bytes (chm13-chr9.CHM13.walks.bed.gz.tbi)
+0	#hole lines
+# departures recomputed from the decoded rows, against the records
+1977	across a record gap: match
+66	across a record gap: over a W line the file holds no row of (steps unseen)
+0	records with no recomputed departure
+73026449	within a record: computed by the reader, no record
+68917	within a record: match
+0	departures inside a piece reaching past the chunk after its own (must be 0)
+# pass counts and abridged rows
+0	nodes whose ref rows state fewer passes than the file's ref rows hold (must be 0)
+0	nodes whose ref rows state more passes than the file's ref rows hold (must be 0)
+0	nodes stated as passed more than once; the header says 0
+0	abridged rows unlike the piece their detail record holds (must be 0)
+# the reader promise: record stretch bases off the path's pieces under no block or crowd
+0	bases uncovered, over 0 records (must be 0)
+0	stretch bases under no block of their record or crowd, over 0 records (0 where every record is filed over its whole stretch)
+# CHM13#0#chr9~departure: rows by class: end 76467, interior 6035, whole 2243, crowd 0
+64 kb windows: 2299
+  rows median 11 p95 408 max 848
+    end: median 3 p95 261 max 663
+    interior: median 0 p95 359 max 426
+    whole: median 0 p95 48 max 239
+    crowd: median 0 p95 0 max 0
+  text bytes: median 1289 p95 51076 max 98563
+  paths with a row: median 11 p95 398 max 460
+  distinct leaveChunks outside the walk read: median 1 p95 33 max 36
+  departure read requests: median 1 p95 3 max 3
+  departure read bytes: median 72793 p95 292452 max 366915
+  walk read requests: median 1 p95 1 max 1
+  walk read bytes: median 112659 p95 135930 max 391408
+  densest window CHM13#0#chr9:48300032-48365568: 848 rows, 98563 text bytes, 309 paths, departure read 2 requests 366915 bytes; walk read 1 requests 181671 bytes
+    by class: end 608, interior 1, whole 239, crowd 0
+    most rows by path: NA18967#1#JBKABW010000009.1 4, HG02630#1#CM091811.1 4, NA18945#1#CM101616.1 4, NA18747#1#CM087204.1 4, NA19468#2#CM087836.1 3
+    848 records: 0 own bp 228, own bp 620, stretch 64 kb or more 306, stretch under 1 kb 307, stretch under 64 kb 235
+  densest window CHM13#0#chr9:48627712-48693248: 730 rows, 86969 text bytes, 455 paths, departure read 2 requests 366915 bytes; walk read 1 requests 352243 bytes
+    by class: end 663, interior 61, whole 6, crowd 0
+    most rows by path: HG02630#1#CM091811.1 4, HG03209#1#CM087216.1 4, NA18945#1#CM101616.1 4, HG002#2#chr9 4, NA18967#1#JBKABW010000009.1 3
+    730 records: own bp 730, stretch 64 kb or more 567, stretch under 64 kb 163
+  densest window CHM13#0#chr9:48234496-48300032: 660 rows, 77393 text bytes, 310 paths, departure read 2 requests 366915 bytes; walk read 1 requests 171824 bytes
+    by class: end 420, interior 1, whole 239, crowd 0
+    most rows by path: HG02630#1#CM091811.1 4, NA18945#1#CM101616.1 4, NA18967#1#JBKABW010000009.1 3, NA19468#2#CM087836.1 3, HG00344#1#JBIREN010000014.1 3
+    660 records: own bp 660, stretch 64 kb or more 306, stretch under 1 kb 354
+1 bp windows: 147088
+  rows median 1 p95 407 max 613
+    end: median 0 p95 6 max 471
+    interior: median 0 p95 359 max 426
+    whole: median 0 p95 48 max 239
+    crowd: median 0 p95 0 max 0
+  text bytes: median 117 p95 51076 max 72083
+  paths with a row: median 1 p95 398 max 455
+  distinct leaveChunks outside the walk read: median 1 p95 33 max 37
+  departure read requests: median 1 p95 3 max 3
+  departure read bytes: median 65536 p95 292452 max 366915
+  walk read requests: median 1 p95 1 max 1
+  walk read bytes: median 90538 p95 123553 max 391408
+audit chm13-chr9: 1528.80 s, 39616464 KB peak

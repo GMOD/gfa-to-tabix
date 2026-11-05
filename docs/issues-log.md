@@ -322,7 +322,9 @@ Where the findings have come from so far, and the rule each gives:
   Open: a `TabixSource` without `bytesForRegions` still skips the byte
   budgets; @gmod/tabix has it
 - **2026-11-05, format arbitration, diagnosis of the CHM13 chr9 rows.** In
-  the GRCh38 graph, CHM13 passes 209,578 nodes more than once: its chr9
+  the GRCh38 graph, CHM13 passes 209,578 nodes more than once by the
+  build's count (513,592 counted from the published GBZ by
+  `scripts/reference-passes.sh`, not reconciled): its chr9
   pericentromeric copies share nodes. Of 2,241,003 consecutive record pairs
   on chr9, 2,172,351 hop over 1 Mb to the other copy and back, after
   walking a median 257 to 512 bp there and at most 1 kb for 1,698,238 of
@@ -334,8 +336,10 @@ Where the findings have come from so far, and the rule each gives:
   rule. Source: a file projected onto a reference that was not the
   graph's (evidence on one graph: GRCh38 in its own graph passes no node
   twice). Fixed: the hs1 files come from HPRC v2.1's CHM13-referenced MC
-  graph (`hprc-v2.1-mc-chm13`); the GRCh38 graph's CHM13 file is not
-  hosted. Guard: the header's `revisited`, which a host checks before
+  graph (`hprc-v2.1-mc-chm13`), whose CHM13 passes none of its
+  90,761,410 nodes twice; on its chr9 the file holds 70,960 records in
+  84,745 rows and the densest window read measured 458 rows. The GRCh38
+  graph's CHM13 file is not hosted. Guard: the header's `revisited`, which a host checks before
   publishing a file as exact; results in `results/arbitration/`
 - **2026-11-05, the machine.** The inputs on ada the handoff names,
   `~/work/mc/chr22.gfa`, `~/work/pggb/chrY.gfa` and `~/hprc-gbz/`, are
