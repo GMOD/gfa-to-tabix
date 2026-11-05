@@ -545,3 +545,13 @@ Where the findings have come from so far, and the rule each gives:
   removed; "Fragments" and "Changes in 5" say the opposite. Source: a
   rewrite that left sections it did not touch. Open: fix in graph-walks'
   README at its next release
+- **2026-11-05, porting BandageJS to graph-walks 5.** A cut read chunks
+  from the window's start to its end, not over the drawn stretch with its
+  `context`, so context past the window's last chunk was dropped: on
+  `skip.GRCh38` (chunk 10) a cut of 32-38 with context 5 kept R to 40
+  where 27-43 with none keeps it to 50; at HPRC's 64 kb chunks and 1 kb
+  context about 1.5% of BandageJS windows lost up to 1 kb on the right.
+  Source: a rewrite dropping what the old mechanism compensated for,
+  **re-found** as a class: graph-walks 4's follow rounds read past the
+  window and hid it, and 43910ec removed them without listing that.
+  Fix: below
