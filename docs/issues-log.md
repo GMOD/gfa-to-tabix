@@ -517,3 +517,31 @@ Where the findings have come from so far, and the rule each gives:
   parser decodes by `nsteps` as the spec does, and the README figure
   redrawn with format 6 rows. Guard: run every step of `push.yml`'s
   "Format, lint and test" job before a release push
+- **2026-11-05, the handoff's list, porting bandage-core to graph-walks
+  5.** A row for a haplotype that jumps over the window (`skipRowOf`)
+  stated `offReferenceBp: 0`, claiming nothing off the reference however
+  much sequence of its own the haplotype carried there. Source: a fact
+  format 5 did not hold (a skip row had no own bp), hard-coded rather than
+  left unstated. Fixed in bandage-core 240b9e8 (13.0.0): a stepless row's
+  `offReferenceBp` is its departures' `ownBp`, and its readout states it
+  ("no step on GRCh38 across 2.5 kb · 4 kb of its own"). Guard: tests "a
+  haplotype with no step in the window draws its departure under it" and,
+  on graph-walks 5's own cut of `follow.GRCh38`, "a stepless row states
+  the own bp between the departure's ends"
+- **2026-11-05, ADR 0009's consequences, porting bandage-core.** The
+  hand-off `GraphTables.skips` was optional, so graph-walks 5 under
+  bandage-core 12 drew no departure and raised no error. Source: an
+  optional field for a fact the viewer must show. Fixed in bandage-core
+  240b9e8 (13.0.0): `departures` is required, a source with none passes
+  `departureTable()`, and bandage-core's `GraphTables` mirror is held
+  identical to graph-walks 5's by `typecheck/graphWalks.ts`, both ways and
+  optional fields included. Guard: `tsc` fails on that file when the
+  pinned graph-walks changes the tables' shape (checked by adding a field
+  and by making `departures` optional, each of which failed)
+- **2026-11-05, reading graph-walks 5.0.0's README for the port.** Its
+  "Contained cuts" and "How a cut works" sections still describe format
+  5's follow rounds ("follows each haplotype ... until it rejoins", "reads
+  on to that chunk, in up to three rounds", `pv:`/`nx:` tags), which 5
+  removed; "Fragments" and "Changes in 5" say the opposite. Source: a
+  rewrite that left sections it did not touch. Open: fix in graph-walks'
+  README at its next release
