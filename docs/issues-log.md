@@ -674,3 +674,15 @@ Where the findings have come from so far, and the rule each gives:
   Source: a rule keyed on the absence of facts, where a walk file states
   them (trimmed bp 0 means the contig ends) and a GFA extract does not.
   Fix: below
+- **2026-11-05, the tube map's final pass.** Its paths panel found a walk
+  file's sequence length by probing chunk starts upward from 0, assuming
+  rows start at 0 and a `.tbi` can tell chunks apart; the shipped E. coli
+  slice (rows from 1,004,500) and any file with chunks under 16 kb listed
+  length 0. Older than the port, hidden because the hosted HPRC files
+  satisfy both. Source: tests and fixtures in one 64 kb chunk. Fixed in
+  sequenceTubeMap 81f867f: it asks whether rows lie at or past a 16 kb
+  step and reads that step's rows. Guard: test "the E. coli file lists
+  K12#1#chr at length 1,004,961"; the departures fixture rebuilt with
+  `--chunk 100` so its windows cross chunks, which fails on graph-walks
+  5.0.0; a 3,279-window sweep over 16 files at chunks of 10 to 5,000 bp
+  found nothing on 5.0.2 and caught 5.0.0's undrawn steps (not committed)
