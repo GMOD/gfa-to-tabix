@@ -73,9 +73,10 @@ reconciled, and the hosting decision does not depend on which is right.
 `chm13-chr9.audit.txt` audits the CHM13 graph's chr9 file clean: of its
 70,960 records 70,894 match a recomputed departure in every field and 66
 run over a W line the file holds no row of, as on MC chr22; every pass
-count is 1; no base of any stretch is uncovered. chr14 and chr22 are
-audited by the same script, `chm13-chr14.audit.txt` and
-`chm13-chr22.audit.txt` where present.
+count is 1; no base of any stretch is uncovered. chr14
+(`chm13-chr14.audit.txt`: 63,212 match, 120 over a W line with no row)
+and chr22 (`chm13-chr22.audit.txt`: 38,223 match, 228 over a W line with
+no row) are clean the same way.
 
 A 64 kb window's departure read (`chm13.windows.txt`, rows and text):
 
