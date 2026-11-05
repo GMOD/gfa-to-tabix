@@ -94,6 +94,16 @@ things are.
     fails), so its branch pushes use `--no-verify`; the plugin's hook
     needs `pnpm_config_verify_deps_before_run=false` to typecheck against
     an overlaid core
+  - **On hold, 2026-11-05 evening:** the genome-wide files are built and
+    audited (`results/release-3.0/genome/`) but not uploaded, and no
+    target is cut over, because the gfa-to-tabix-db session is deciding
+    ADR 0010 on the walk file's container and filing (every row filed at
+    `seq cs cs+1`, so a plain `tabix file region` returns nothing): patched
+    format 6, real-span filing with a matched index, a chunk offset table,
+    or site rows. Only the first keeps format 6 and graph-walks 5's reads;
+    the others are a format 7 and a rebuild. Resume the cutover only once
+    the ADR is decided, and fold its outcome into one rebuild and one
+    rollout
   - **Release gates, after a vibe check the same afternoon** found the
     libraries released before any consumer had compiled against them
     (the ports then found two graph-walks bugs within the hour, fixed in
