@@ -1,0 +1,71 @@
+# graph-walks 3574904 (before) and with the common-mark site rule (after), on target/forms-check/f6.mc22.GRCh38.walks.bed.gz, CHM13 excluded, partial: false
+# sites: start-end, I informative, S shared, E edge, :covered:states
+## before
+W 18600000-18680000 placed 361 unplaced 101 rare 31
+  sites 18185021-18873008I:361:29
+  forms 114 repl 624kb->130kb; 69 repl 400kb->159kb +1; 46 repl 65.5kb->4.19kb; 43 repl 493kb->190kb; 22 repl 65.5kb->4.21kb +1; 20 repl 230kb->165kb; 13 repl 65.5kb->4.2kb +1; 12 del 454kb->20.2kb +1
+W 20300000-20400000 placed 462 unplaced 0 rare 173
+  sites 20251926-20367774I:460:137 20372520-20372520S:462:2
+  forms 67 repl 1.51kb->5.63kb; 54 repl 1.51kb->9.74kb +1; 31 repl 1.51kb->7.26kb; 29 repl 1.51kb->8.08kb; 28 repl 1.51kb->6.45kb; 21 repl 1.51kb->6.76kb +1; 21 repl 1.47kb->3.77kb; 20 repl 6.35kb->7.92kb +1
+W 21400000-21500000 placed 462 unplaced 0 rare 6
+  sites 21405488-21406862S:462:2 21415278-21419917S:459:1 21443089-21491761I:461:3
+  forms 307 inv 48.7kb; 155 ref
+W 22500000-22600000 placed 453 unplaced 9 rare 16
+  sites 22031474-22918451I:453:14
+  forms 432 ref; 21 del 5.94kb +1
+W 22300000-22400000 placed 455 unplaced 7 rare 12
+  sites 22031474-22918451I:455:15
+  forms 170 ref; 106 ins 6.07kb; 105 ins 9.1kb; 74 ins 9.1kb +1
+W 12300000-12400000 placed 38 unplaced 424 rare 35
+  sites 11817352-15192675S:38:30
+  forms 38 shared
+W 42100000-42150000 placed 462 unplaced 0 rare 5
+  sites 42117822-42120669S:462:2 42123702-42135869I:462:8 42138064-42139841S:462:2
+  forms 377 ref; 42 ins 178bp->13.9kb; 21 del 12.2kb; 14 ins 12.2kb; 8 ins 178bp->13.9kb +1
+W 50000000-50100000 placed 461 unplaced 1 rare 48
+  sites 50004609-50007988S:461:2 50009894-50009894I:461:2 50028599-50029418I:461:23 50057331-50057696I:461:6
+  forms 235 ref; 34 repl 317bp->1.64kb; 27 repl 365bp->3.19kb; 21 repl 674bp->1.89kb; 17 repl 339bp->2.72kb; 14 repl 181bp->1.44kb; 14 repl 347bp->2.09kb; 13 repl 243bp->2.04kb
+## after
+W 18600000-18680000 placed 361 unplaced 101 rare 31
+  sites 18185021-18873008I:361:29
+  forms 114 repl 624kb->130kb; 69 repl 400kb->159kb +1; 46 repl 65.5kb->4.19kb; 43 repl 493kb->190kb; 22 repl 65.5kb->4.21kb +1; 20 repl 230kb->165kb; 13 repl 65.5kb->4.2kb +1; 12 del 454kb->20.2kb +1
+W 20300000-20400000 placed 462 unplaced 0 rare 158
+  sites 20338159-20340085I:461:74 20355284-20361765I:460:24 20372520-20372520S:462:2
+  forms 66 repl 1.51kb->5.63kb; 33 repl 1.51kb->7.26kb; 27 repl 1.51kb->6.45kb; 25 repl 1.51kb->8.1kb; 21 repl 6.35kb->7.92kb +1; 20 repl 1.51kb->4.82kb; 20 repl 1.51kb->8.89kb; 19 repl 1.47kb->3.77kb
+W 21400000-21500000 placed 462 unplaced 0 rare 6
+  sites 21405488-21406862S:462:2 21415278-21419917S:459:1 21443089-21491761I:461:3
+  forms 307 inv 48.7kb; 155 ref
+W 22500000-22600000 placed 453 unplaced 9 rare 16
+  sites 22031474-22918451I:453:14
+  forms 432 ref; 21 del 5.94kb +1
+W 22300000-22400000 placed 455 unplaced 7 rare 12
+  sites 22031474-22918451I:455:15
+  forms 170 ref; 106 ins 6.07kb; 105 ins 9.1kb; 74 ins 9.1kb +1
+W 12300000-12400000 placed 38 unplaced 424 rare 35
+  sites 11817352-15192675S:38:30
+  forms 38 shared
+W 42100000-42150000 placed 462 unplaced 0 rare 5
+  sites 42117822-42120669S:462:2 42123702-42135869I:462:8 42138064-42139841S:462:2
+  forms 377 ref; 42 ins 178bp->13.9kb; 21 del 12.2kb; 14 ins 12.2kb; 8 ins 178bp->13.9kb +1
+W 50000000-50100000 placed 461 unplaced 1 rare 48
+  sites 50004609-50007988S:461:2 50009894-50009894I:461:2 50028599-50029418I:461:23 50057331-50057696I:461:6
+  forms 235 ref; 34 repl 317bp->1.64kb; 27 repl 365bp->3.19kb; 21 repl 674bp->1.89kb; 17 repl 339bp->2.72kb; 14 repl 181bp->1.44kb; 14 repl 347bp->2.09kb; 13 repl 243bp->2.04kb
+## timing, 2026-11-05, structuralForms alone
+## after
+  structuralForms 116 ms, marks 976345 departures
+W 22000000-22900000 placed 434 unplaced 28 rare 35
+  sites 22031400-22918451S:434:31
+  forms 434 ref
+  structuralForms 29 ms, marks 23807 departures
+W 18600000-18680000 placed 361 unplaced 101 rare 31
+  sites 18185021-18873008I:361:29
+  forms 114 repl 624kb->130kb; 69 repl 400kb->159kb +1; 46 repl 65.5kb->4.19kb; 43 repl 493kb->190kb; 22 repl 65.5kb->4.21kb +1; 20 repl 230kb->165kb; 13 repl 65.5kb->4.2kb +1; 12 del 454kb->20.2kb +1
+## before
+  structuralForms 174 ms, marks 976345 departures
+W 22000000-22900000 placed 434 unplaced 28 rare 35
+  sites 22031400-22918451S:434:31
+  forms 434 ref
+  structuralForms 10 ms, marks 23807 departures
+W 18600000-18680000 placed 361 unplaced 101 rare 31
+  sites 18185021-18873008I:361:29
+  forms 114 repl 624kb->130kb; 69 repl 400kb->159kb +1; 46 repl 65.5kb->4.19kb; 43 repl 493kb->190kb; 22 repl 65.5kb->4.21kb +1; 20 repl 230kb->165kb; 13 repl 65.5kb->4.2kb +1; 12 del 454kb->20.2kb +1

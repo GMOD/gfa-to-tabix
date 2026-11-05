@@ -216,7 +216,9 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   window between 38 and 80 Mb reads up to 1.7 M rows, 22 MB compressed,
   and graph-walks 5 refuses it, as it does a window at 13.5 Mb of chr14,
   where 4.2 M rows lie in one Mb. Measured in
-  [results/minimal](departures/results/minimal/README.md#where-the-chm13-files-rows-are)
+  [results/minimal](departures/results/minimal/README.md#where-the-chm13-files-rows-are).
+  The decision (2026-11-05) is to host the file as it is, with that refusal
+  over those stretches; a placement rule for CHM13's repeats would lift it
 - To ask the pggb authors: whether they would publish `odgi untangle`
   projections of release 2 against GRCh38 and CHM13; whether a
   chain-based single-copy projection is what they would endorse for a

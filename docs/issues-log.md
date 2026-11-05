@@ -125,8 +125,9 @@ Where the findings have come from so far, and the rule each gives:
   over the window appear, by the chain model's design, and once by a
   rare-state fold (HG00126#1 at 21.4 Mb, `ref` to `inv 48.7kb`). Source:
   prose ahead of data. Fixed: the results README states the 28-window
-  picture (`mc22.forms-compare-review.txt`). Open: what forms should say
-  in such windows, in the handoff's "To decide"
+  picture (`mc22.forms-compare-review.txt`). Decided 2026-11-05: the
+  forms keep the chain model's reading (the handoff's item 2), and
+  HG00126#1's flip is a rare no call folding to the majority state
 - **2026-11-05, tests review.** The rewrite deleted two tests it should
   have kept, the interleaved-piece net and the byte budget, and three
   tests could not tell their rule from the wrong one. Source: a file
@@ -140,8 +141,26 @@ Where the findings have come from so far, and the rule each gives:
   writing every number's file. Guard: the rule above
 - **2026-11-05, measurement.** The CHM13 file's chr9 and chr14 hops: a 64
   kb window reads up to 2.0 M departure rows and graph-walks 5 refuses
-  it. Source: the format's one placement per file. Open: the handoff's
-  "To decide"
+  it. Source: the format's one placement per file. Decided 2026-11-05:
+  host the file as it is; the refusal, from the index before any fetch,
+  is the stated limit (the handoff's item 2)
 - **2026-11-05, the machine.** `/tmp/claude-1001` at its 8 GB quota from
   earlier sessions' scratch files; one command's output lost. Open: the
   user clears it
+- **2026-11-05, this author, from the tests review's 28 windows.** A
+  site was the union of every overlapping mark, so one haplotype's rare
+  long jump merged the sites it crossed for everyone: at chr22:20.3-20.4
+  Mb HG01175#1's 108 kb departure joined two sites of 461 and 460
+  haplotypes into one of 137 states, 173 haplotypes folded. The chain
+  model surfaces far more long departures than graph-walks 4's cut saw,
+  so this became common. Source: a rule written for marks inside the
+  window, met by the chain model's departures over it (the format's
+  limits surfacing in a reader). Fixed in graph-walks be081a5:
+  sites come from marks `minCarriers` haplotypes share, each
+  covering half of the other, and a rarer mark states itself at every
+  site it overlaps without widening one. Of eight MC chr22 windows only
+  that one changes, back to the two sites 4.6.0 had
+  (`results/minimal/mc22.forms-sites.txt`). Guard: tests "a rare mark
+  over two common sites keeps them apart and states itself at each",
+  "rare marks overlapping no common site make a site of their own" and
+  "a mark shared by minCarriers haplotypes ... makes sites"

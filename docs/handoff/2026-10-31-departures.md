@@ -25,7 +25,8 @@ things are.
   ownBp missingBp leavePos leaveStrand rejoinPos rejoinStrand`, no
   one-ended records, no `kinds:Z:` or `#placement` in the header. Made
   under the user's "getting a good 'minimal' design will be very valuable"
-  while they were away, so it is theirs to reverse
+  while they were away, and confirmed by them on 2026-11-05 ("i am open to
+  minimizing the format")
 - The projection onto one reference is exact where haplotypes keep its order
   (Minigraph-Cactus: no jump ends on a node GRCh38 passes twice) and a
   placement choice in repeats (pggb). Viewers say so where it is a choice
@@ -157,15 +158,23 @@ there. The urgent part is the word on screen
      forms are identical on 16 of them and differ on the 12 where jumps
      over the window appear
      ([results](../departures/results/minimal/README.md#the-forms-cut-on-mc-chr22)).
-     **To decide:** in LCR22A, LCR22B, IGL and near the centromere the
-     forms now group on jumps over the window ("624 kb replaced by 130
-     kb", 114 haplotypes at LCR22A) that the old cut never saw, and a
-     contig that both jumps over the window and walks it has no call
-     there; in a repeat that is the projection's placement choice
-     showing, so the Forms track may want to say so there rather than
-     call it, and one rare-state fold now flips a haplotype (HG00126#1
-     at 21.4 Mb). Plugin 9 will need `formRows.test.ts` without `open`
-     and the `^4.6.0` pin raised. Not done: bandage-core 13 and plugin
+     **Decided 2026-11-05**, under the user's go-ahead ("whatever else
+     seems good to you"): the forms keep the chain model's reading. In
+     LCR22A, LCR22B, IGL and near the centromere they group on jumps
+     over the window ("624 kb replaced by 130 kb", 114 haplotypes at
+     LCR22A) that the old cut never saw; on MC's GRCh38 the projection
+     is exact, so those are facts of the walks. One rule changed in
+     be081a5: sites come from marks `minCarriers` haplotypes share, so
+     one haplotype's rare jump no longer merges the sites it crosses
+     (chr22:20.3 Mb,
+     [issues log](../issues-log.md)). HG00126#1 at 21.4 Mb is no fold
+     artefact of the chain model: two of its contigs reach the 48.7 kb
+     inversion site, so it has no call there, and a rare no call folds
+     to the majority state, `inv 48.7kb` (307 haplotypes); it is listed
+     in `rareCarriers`. On a reference with nodes it passes more than
+     once (CHM13, pggb) a departure between copies is a placement
+     choice, and plugin 9's Forms track says so there. Plugin 9 will
+     need `formRows.test.ts` without `open` and the `^4.6.0` pin raised. Not done: bandage-core 13 and plugin
      9 (below)
    - **Done, 2026-11-04 evening: the genome-wide build**, on ada by
      `~/work/rebuild/genome.sh` from
@@ -195,10 +204,13 @@ there. The urgent part is the word on screen
      and chr5 hold 0.3 to 2.0 M rows each, not measured by window; the
      other sequences read as the GRCh38 file does
      ([results](../departures/results/minimal/README.md#where-the-chm13-files-rows-are),
-     and a bullet in open-problems). **To decide** before hosting the
-     CHM13 file: host it as it is, with the refusal over those stretches,
-     or give CHM13 a placement rule for its repeats first, which is the
-     pggb question of open-problems
+     and a bullet in open-problems). **Decided 2026-11-05**, under the
+     user's go-ahead: host the CHM13 file as it is. graph-walks 5
+     refuses those windows from the index's byte estimate before
+     fetching a block, with a message naming a collapsed repeat, which
+     is the agreed rule of stating the limit and routing repeats to
+     non-linear views. A placement rule for CHM13's repeats stays the
+     pggb question of open-problems, not a blocker
    - graph-walks 4.6.1 (a51b7bf, which asks for a newer viewer on a format
      6 file), bundled by the plugin, BandageJS, ggbandage and the tube map,
      before gfa-to-tabix 3.0 is released. Releasing is bumping `version`
@@ -224,7 +236,8 @@ very valuable"). Five Fable reviews in the morning of 2026-11-04 (four per
 question, one deriving the minimal format from the requirements alone) and
 measurements on the port's files on ada (`~/work/rebuild/port2/`) proposed
 the cuts; the next session, that afternoon, made them, since the user was
-away, and they are the user's to reverse. What ADR 0009 now says, and why:
+away; the user confirmed them on 2026-11-05. What ADR 0009 now says, and
+why:
 
 - **Cut from the record:** `fragStart`, `ownSteps`, `leaveNode`,
   `leavePasses`, `leaveChunk`, `rejoinNode`, `rejoinPasses`,
@@ -304,10 +317,9 @@ ADR 0009 History); their doc and number fixes are committed.
   disk was at 99% with 44 GB free during that build
 - Local, gitignored: `target/forms-check/` holds `f5/` and `port3/`'s MC
   chr22 files, the inputs of the forms comparison
-- graph-walks: `~/src/graph-walks` at 3574904, unpushed (43910ec the
-  format 6 reader; 1132859, 73f2e6b and 3574904 the forms cut). Its
-  `test_data/`
-  holds each fixture's GFA and `build.sh`, which rebuilds them with a
+- graph-walks: `~/src/graph-walks` at be081a5, unpushed (43910ec the
+  format 6 reader; 1132859, 73f2e6b, 3574904 and be081a5 the forms
+  cut). Its `test_data/` holds each fixture's GFA and `build.sh`, which rebuilds them with a
   gfa-to-tabix binary; the chrM fixture's GFA was recovered from the
   format 5 file with the old decoder, bases included
 - ada: `~/work/f6/` (the `bypass` prototype builds of MC chr22 and pggb

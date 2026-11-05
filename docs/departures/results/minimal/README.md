@@ -184,7 +184,11 @@ both ways (22.5-22.6 Mb). One change is an artefact of rare-state
 folding, at 21.4-21.5 Mb: HG00126#1 goes from `ref` to `inv 48.7kb`
 because a departure across a W-line gap of one of its contigs now
 overlaps another contig's inversion stretch and makes that site no call
-for it. Each is the chain model's reading; what the forms should say in
-such a window is open (the handoff's "To decide"). A 900 kb window at
+for it, and a rare no call folds to the majority state. Each is the
+chain model's reading, which the handoff's item 2 keeps (2026-11-05),
+with one rule changed: `mc22.forms-sites.txt` compares eight windows
+before and after sites came from marks `minCarriers` haplotypes share,
+and only 20.3-20.4 Mb changes, from one site of 137 states to two, as
+4.6.0 had, of 74 and 24 states. A 900 kb window at
 22.0-22.9 Mb with 976,347 departures took 109 s in `walkDepartures` at
 1132859 and 0.6 s at 3574904, against 8 s for the cut.
