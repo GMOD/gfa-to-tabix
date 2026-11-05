@@ -94,6 +94,36 @@ things are.
     fails), so its branch pushes use `--no-verify`; the plugin's hook
     needs `pnpm_config_verify_deps_before_run=false` to typecheck against
     an overlaid core
+  - **Superseded by walk format 7, 2026-11-05 night:** [ADR
+    0010](../adr/0010-walks-unit-table.md) replaces format 6's Tabix
+    container with one BGZF file of units and a per-sequence unit table
+    (S7); rows, decoding and `cut`'s return are unchanged, so each
+    consumer changes only the line that opens the walk file and a pin.
+    The format 6 genome files (`~/work/genome3/`) will not be hosted. The
+    gfa-to-tabix-db session writes gfa-to-tabix 4.0 and graph-walks 6
+    (`WalkReader.open(url)`, `WalkReader.fromFilehandles`, an adapted
+    `pnpm release-check`); this work then rebuilds the genome-wide files
+    (the two ~380 GB GFAs in `~/work/genome3/` are kept for it), audits
+    chr22 of each, moves the five consumers' openers and pins, and cuts
+    over in one pass under the release gates below. A genome-scale check
+    of S7 (first view per sequence, window bytes, cut equivalence) is
+    running in `~/work/s7-genome/` for the ADR's Evidence
+  - **State, 2026-11-05 evening (the user asked for a hard cutover):**
+    released graph-walks 5.0.2 (5.0.1 read the window's context, 5.0.2
+    required `tables`' departures) and bandage-core 13.0.1 (13.0.0 tagged,
+    never published; 13.0.1 adds three readout fixes for format 6
+    fragments), each through its gates. All five ports green on exactly
+    graph-walks 5.0.2 and bandage-core 13.0.1 from npm, on branches not
+    yet merged: plugin and BandageJS `core-next` (pushed), ggbandage,
+    sequenceTubeMap and jb2hubs `format6` (local worktrees under
+    `~/src/port/`). GRCh38 file built on ada (1.55 GB); CHM13 building.
+    Cutover in one pass once the data is audited and uploaded: plugin 9
+    to `latest/`, jbrowse-components demo configs, jb2hubs config and
+    site, BandageJS and tube map deploys, ggbandage main. BandageJS's
+    local pre-push hook runs bare `pnpm deploy` (pnpm's command, which
+    fails), so its branch pushes use `--no-verify`; the plugin's hook
+    needs `pnpm_config_verify_deps_before_run=false` to typecheck against
+    an overlaid core
   - **On hold, 2026-11-05 evening:** the genome-wide files are built and
     audited (`results/release-3.0/genome/`) but not uploaded, and no
     target is cut over, because the gfa-to-tabix-db session is deciding
