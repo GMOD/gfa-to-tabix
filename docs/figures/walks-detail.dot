@@ -34,7 +34,7 @@ digraph walks {
     }
 
     subgraph cluster_file {
-      label=<<B>2. graph.GRCh38.walks.bed.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">every row of the one chunk this graph fills</FONT><BR ALIGN="LEFT"/>>
+      label=<<B>2. graph.GRCh38.walks.gz</B><BR ALIGN="LEFT"/><FONT POINT-SIZE="12" COLOR="#555555">every row of the one tile this graph fills</FONT><BR ALIGN="LEFT"/>>
       rows [shape=plaintext, style="", label=<
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" COLOR="#aaaaaa">
           <TR BGCOLOR="#dddddd"><TD>kind</TD><TD>columns after the kind</TD><TD>what the row says</TD></TR>
@@ -48,7 +48,7 @@ digraph walks {
           <TR><TD>walk</TD><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="11">HG002#2#chr1 0 0 0 4 2 .</FONT></TD><TD ALIGN="LEFT">follows R from 1+ to 4+, no routes</TD></TR>
           <!-- end rows -->
           <!-- begin caption -->
-          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="3" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Every row starts GRCh38#0#chr1 0 1, the chunk's first base, so a query returns whole 64 kb chunks.<BR/>The file holds each distinct route once, and a walk row lists only the routes its path takes.</FONT></TD></TR>
+          <TR><TD BORDER="0" CELLPADDING="8" COLSPAN="3" ALIGN="LEFT" BALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Every row starts with its sequence and the stretch it is about: a walk row its piece's span, the<BR/>tile's ref, nodes and route rows the tile's extent, GRCh38#0#chr1 0 40. The file holds each distinct<BR/>route once, and a walk row lists only the routes its path takes.</FONT></TD></TR>
           <!-- end caption -->
         </TABLE>>]
     }
@@ -69,6 +69,6 @@ digraph walks {
 
   // begin arrows
   nbelow -> rows [ltail=cluster_graph, lhead=cluster_file, label="  gfa-to-tabix --walks\n  --refs GRCh38", penwidth=2]
-  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a query on chr1\n  returns these rows", penwidth=2]
+  rows -> rebuilt [ltail=cluster_file, lhead=cluster_rebuilt, label="  a read on chr1\n  fetches this tile", penwidth=2]
   // end arrows
 }

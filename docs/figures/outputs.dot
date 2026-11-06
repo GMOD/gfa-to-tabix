@@ -11,7 +11,7 @@ digraph outputs {
   gfa [label=<<B>A pangenome GFA</B><BR/><BR/><FONT POINT-SIZE="11">rGFA: minigraph, Minigraph-Cactus<BR/>with paths: pggb, odgi, vg convert -f</FONT>>, fillcolor="#fafafa", color="#888888"]
 
   index [label=<<B>hprc.graph.bed.gz</B><BR/><FONT POINT-SIZE="11">and its .tbi</FONT><BR/><BR/><FONT POINT-SIZE="11">a row per node and per link,<BR/>filed by GRCh38 coordinate</FONT>>, fillcolor="#dafbe1", color="#1a7f37"]
-  walks [label=<<B>hprc.GRCh38.walks.bed.gz</B><BR/><FONT POINT-SIZE="11">and its .tbi</FONT><BR/><BR/><FONT POINT-SIZE="11">each haplotype's path,<BR/>cut into 64 kb stretches of GRCh38</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
+  walks [label=<<B>hprc.GRCh38.walks.gz</B><BR/><FONT POINT-SIZE="11">and its .idx</FONT><BR/><BR/><FONT POINT-SIZE="11">each haplotype's path,<BR/>cut into 64 kb tiles of GRCh38</FONT>>, fillcolor="#fde6cf", color="#c77a2b"]
 
   track [label=<<B>JBrowse graph track</B><BR/><BR/><FONT POINT-SIZE="11">draws the nodes and links<BR/>under the region in view</FONT>>]
   reader [label=<<B>@jbrowse/graph-walks</B><BR/><BR/><FONT POINT-SIZE="11">rebuilds every haplotype's path<BR/>through the region, for JBrowse<BR/>and BandageJS to draw</FONT>>]

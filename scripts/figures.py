@@ -381,30 +381,29 @@ def walks(rows, w_lines):
     return table, simple, rebuilt
 
 
-def chunk_size(header):
-    return int(next(f for f in header[0] if f.startswith("chunk:i:")).split(":")[2])
+def tile_size(header):
+    return int(next(f for f in header[0] if f.startswith("tile:i:")).split(":")[2])
 
 
 def walks_label(header, rows):
     contig = rows[0][0].rsplit("#", 1)[1]
     grey = '<FONT POINT-SIZE="12" COLOR="#555555">'
     return [
-        f'label=<<B>2. {PREFIX}.{REF}.walks.bed.gz</B><BR ALIGN="LEFT"/>'
-        f"{grey}for each {chunk_size(header) // 1024} kb stretch of {contig}: {REF}'s path, each route off it, and the routes each haplotype takes</FONT>"
+        f'label=<<B>2. {PREFIX}.{REF}.walks.gz</B><BR ALIGN="LEFT"/>'
+        f"{grey}for each {tile_size(header) // 1024} kb tile of {contig}: {REF}'s path, each route off it, and the routes each haplotype takes</FONT>"
         f'<BR ALIGN="LEFT"/>>'
     ]
 
 
 def walks_caption(header, rows):
-    chunk = chunk_size(header)
-    starts = {(r[0], r[1]) for r in rows}
-    if len(starts) != 1:
-        sys.exit("figures.py: the walks figure expects one chunk")
-    seq, start = starts.pop()
+    tiles = [h for h in header if h[0] == "#unit" and h[4] == "tile"]
+    if len(tiles) != 1:
+        sys.exit("figures.py: the walks figure expects one tile")
+    _, seq, start, end, _, _ = tiles[0]
     text = (
-        f"Every row starts {seq} {start} {int(start) + 1}, the chunk's first base, so a query returns whole "
-        f"{chunk // 1024} kb chunks. The file holds each distinct route once, and a walk row lists only the routes "
-        "its path takes."
+        f"Every row starts with its sequence and the stretch it is about: a walk row its piece's span, the "
+        f"tile's ref, nodes and route rows the tile's extent, {seq} {start} {end}. The file holds each distinct "
+        "route once, and a walk row lists only the routes its path takes."
     )
     return [caption(3, text, 100)]
 
@@ -436,7 +435,7 @@ def walks_graph(lengths, links, paths, contigs):
     graph, bottom = bubble("n", ref, labels, links)
     arrows = [
         arrow((bottom, "cluster_graph"), ("rows", "cluster_file"), f"gfa-to-tabix --walks\n--refs {REF}"),
-        arrow(("rows", "cluster_file"), ("rebuilt", "cluster_rebuilt"), f"a query on {contig}\nreturns these rows"),
+        arrow(("rows", "cluster_file"), ("rebuilt", "cluster_rebuilt"), f"a read on {contig}\nfetches this tile"),
     ]
     return graph, arrows
 
@@ -461,7 +460,7 @@ def generate(binary):
         rows = read_rows(f"{out}.graph.bed.gz")
         segs, links = [r for r in rows if r[3] == "N"], [r for r in rows if r[3] == "L"]
         subprocess.run([binary, FIGURES / "walks.gfa", "--walks", "--refs", REF, "-o", out], **quiet)
-        walk_file = f"{out}.{REF}.walks.bed.gz"
+        walk_file = f"{out}.{REF}.walks.gz"
         walk_rows, header = read_rows(walk_file), read_header(walk_file)
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, simple, rebuilt = walks(walk_rows, paths)
