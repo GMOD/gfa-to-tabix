@@ -1052,8 +1052,11 @@ Where the findings have come from so far, and the rule each gives:
   was; the spec's Units table and ADR 0010 say `name` is the key other
   lines point at a unit by, `.` where nothing does. `verify7.py`,
   `verify7.mjs` and `compare7.py`, which read the size from the name, take
-  it from `start end`. Guard: writer test "a departure block is named
-  dot and every other name is unique", and `verify()` in `tests/walks.rs` and `verify7.py` refuse any
+  it from `start end`. graph-walks 6 never reads the name; on
+  `format7-reader-tidy` (97f857b) its fixtures are rebuilt with this
+  writer, its test writer names a block `.`, and its tests label a block
+  by its start. Guard: writer test "a departure block is named dot and
+  every other name is unique", and `verify()` in `tests/walks.rs` and `verify7.py` refuse any
   other name
 - **2026-11-06, the format 7 README figures, three drawings of the
   format.** ADR 0010 guaranteed every unit's name unique within its kind
