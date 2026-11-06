@@ -4,12 +4,12 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 
 - **In:** a GFA file (`.gfa` or `.gfa.gz`): an rGFA from minigraph or Minigraph-Cactus (`*.sv.gfa.gz`), or a plain GFA with P or W lines from pggb, odgi or `vg convert -f`
 - **Out:** `<prefix>.graph.bed.gz` and its `.tbi`, one line per node and per link ([format](docs/index-format.md#what-the-file-holds)); `--format 1` writes the `.segs.bed.gz` and `.links.bed.gz` pair that readers before graph-walks 4.4 and the JBrowse plugin 8.2 need
-- **Out, with `--walks --refs GRCh38`:** `<prefix>.GRCh38.walks.bed.gz` and its `.tbi`, every haplotype's path through a base-level graph in [walk format 6](docs/walks-format.md), which [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 5 reads; 2.x wrote format 5, which graph-walks 4 reads
+- **Out, with `--walks --refs GRCh38`:** `<prefix>.GRCh38.walks.gz` and its directory `.walks.gz.idx`, every haplotype's path through a base-level graph in [walk format 7](docs/walks-format.md), which [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 6 reads; 3.x wrote format 6, which graph-walks 5 reads, and 2.x format 5, which graph-walks 4 reads
 - A browser fetches the rows for a region with HTTP range requests and never downloads the whole graph
 - The [JBrowse 2](https://jbrowse.org) graph track reads the file
 - The tool is one static binary and needs no bgzip or tabix; `build` runs gfatools, when installed, for an rGFA's bubbles
 
-![A pangenome GFA goes through gfa-to-tabix build to hprc.graph.bed.gz, which a JBrowse graph track queries by region, and through gfa-to-tabix --walks to hprc.GRCh38.walks.bed.gz, which @jbrowse/graph-walks queries to rebuild each haplotype's path](docs/figures/outputs.svg)
+![A pangenome GFA goes through gfa-to-tabix build to hprc.graph.bed.gz, which a JBrowse graph track queries by region, and through gfa-to-tabix --walks to hprc.GRCh38.walks.gz, which @jbrowse/graph-walks reads by region to rebuild each haplotype's path](docs/figures/outputs.svg)
 
 ![The Tabix query a browser runs to view chr1:13-18, the node and link lines it returns, and the graph it draws from them, with each node and edge coloured by the kind of line it came from](docs/figures/overview.svg)
 
@@ -37,10 +37,10 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ```
 
 - `chr22.gfa` is a base-level GFA with integer node ids and W or P lines, as `vg convert -f chr22.gbz > chr22.gfa` writes
-- The command writes one file per `--refs` sample, here `chr22.GRCh38.walks.bed.gz` and `chr22.CHM13.walks.bed.gz`, each with a `.tbi`
-- A region query returns the rows a reader needs to rebuild every haplotype's path through that region. [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) rebuilds them, and BandageJS and the JBrowse graph plugin draw through it
+- The command writes one file per `--refs` sample, here `chr22.GRCh38.walks.gz` and `chr22.CHM13.walks.gz`, each with a `.walks.gz.idx` directory
+- Each file is a series of gzip units, one per 64 kb tile of the reference and per block of departure records, with a table of their byte ranges. A reader fetches the units over a region, which hold the rows it needs to rebuild every haplotype's path through that region. [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) rebuilds them, and BandageJS and the JBrowse graph plugin draw through it
 
-![Four haplotype paths through a bubble, the rows the GRCh38 file has for one 64 kb stretch of chr1, and the paths a reader rebuilds from those rows](docs/figures/walks.svg)
+![Four haplotype paths through a bubble, the rows the GRCh38 file has for one 64 kb tile of chr1, and the paths a reader rebuilds from those rows](docs/figures/walks.svg)
 
 ## FAQ
 
@@ -187,7 +187,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 
 - [The node and link index](docs/index-format.md): inputs (rGFA, plain GFA, choosing a reference), options, coordinates, layouts, columns, scale
 - [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `bubbles`, `fold`, `paths`, and the deprecated `alleles`
-- [Walk files](docs/walks-format.md): options, placement rules, the row format 6 and its readers
+- [Walk files](docs/walks-format.md): options, placement rules, walk format 7's units and rows, and its readers
 - Decisions:
   - [ADR 0001](docs/adr/0001-step-placement.md): which chunk a walk file files each step under
   - [ADR 0002](docs/adr/0002-two-index-files.md): why format 1 keeps nodes and links in two files
