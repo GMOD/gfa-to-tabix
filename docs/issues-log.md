@@ -1190,3 +1190,31 @@ Where the findings have come from so far, and the rule each gives:
   `abridged` rows from `kind` on, at level 6 in 65,280-byte blocks. Guard:
   the test "a tile that keeps walk rows fits its budgets", which fails on
   the old writer, and `claims7.py`'s B1 on the fuzz batch
+- **2026-11-06, the format 7 claims audit (claim 93).** "The tool checks
+  each of these as it writes" introduced the spec's list of writer
+  guarantees; the build checked only the walk and abridged rows' spans and
+  the `#` refusal. The partition, the tables, the extents, containment,
+  the cover, `ownTiles` and the names held by construction and were
+  checked only by `verify()`, `verify7.py` and `audit7.py`. Source:
+  86d1006, the format 7 rewrite: the sentence introduced a list that grew,
+  and each bullet was checked by tests, so it read true. Fix: the writer
+  now fails the build where a unit or table does not start where the last
+  one ended or the EOF block does not follow the last table; where a
+  table would list a unit out of file order or of 0 bytes; where two units
+  of a kind and sequence share a name other than `.`; where a tile or
+  detail line leaves its unit's extent; where a departure line is written
+  to a block outside its cover, not overlapping it, or twice; and where a
+  sequence gets fewer or more departure lines than its records' covers
+  hold. The spec's writer guarantees say which of them the build checks
+  and which only the tests, `verify7.py` and `claims7.py` do (the spec
+  pass below). Guard: the checks themselves, and claim C93's row naming
+  each
+- **2026-11-06, the format 7 claims audit (unstated: `|S|`).** A table's
+  `#unit` line ended at the largest end of its sequence's units, which a
+  reader computes from the entries anyway, and which a departure block
+  pushes past the sequence's end; `|S|`, on which the extents at the
+  sequence's end depend, was in no line, so graph-walks took it from the
+  largest tile end. Source: ADR 0010's table, written before anything
+  needed `|S|`. Fix: a table's `#unit` line runs from 0 to `|S|`, where
+  the sequence's last line ends. Guard: `verify()` and `verify7.py` check
+  it equals the end of the sequence's last `ref` row's stretch

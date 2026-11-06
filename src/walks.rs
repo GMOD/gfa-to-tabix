@@ -860,8 +860,10 @@ struct Builder {
     stay: u64,
     references: Vec<Reference>,
     rows: Sorter,
-    // departure rows, keyed by the first chunk of their sequence
+    // departure rows, keyed by the first chunk of their sequence, and how
+    // many each sequence has
     departures: Sorter,
+    departure_lines: HashMap<u32, u64>,
     // by reference, then (record, sequence name id)
     ends: Vec<FastMap<(u32, u32), RecordEnds>>,
     paths: u64,
@@ -1124,12 +1126,13 @@ impl Builder {
                             rejoin,
                             own_tiles: &own_tiles,
                         };
-                        filed.0 += 1;
-                        filed.1 += departure.file(
+                        let lines = departure.file(
                             self.chunks.first[s as usize],
                             self.chunks.size,
                             &mut self.departures,
                         )?;
+                        filed = (filed.0 + 1, filed.1 + lines);
+                        *self.departure_lines.entry(s).or_default() += lines;
                     }
                     *last = j;
                 }
@@ -1189,12 +1192,13 @@ impl Builder {
                             rejoin: there.first,
                             own_tiles: &own_tiles,
                         };
-                        filed.0 += 1;
-                        filed.1 += departure.file(
+                        let lines = departure.file(
                             self.chunks.first[s as usize],
                             self.chunks.size,
                             &mut self.departures,
                         )?;
+                        filed = (filed.0 + 1, filed.1 + lines);
+                        *self.departure_lines.entry(s).or_default() += lines;
                     }
                 }
             }
@@ -1455,50 +1459,65 @@ const SORT_BUDGET: usize = 512 << 20;
 const DEPARTURE_SORT_BUDGET: usize = 128 << 20;
 
 // A tile's or a detail record's lines, each starting with the sequence and
-// its piece's span, or for a ref, nodes or route row the unit's extent: the
-// union of its ref rows' stretches and its pieces' spans. Where that union
-// covers no base, at `p` on a sequence ending at `end`, the extent is the
-// base beside `p`, after it or, at the end, before it
+// its piece's span, or for a ref, nodes or route row the unit's extent: from
+// the first base its ref rows' stretches and its pieces' spans cover to the
+// last. Where they cover no base, at `p` on a sequence of `length` bp, the
+// extent is the base beside `p`, after it or, at the end, before it, and
+// `[0, 0)` on a sequence of 0 bp, which has no base. Fails where a piece's
+// span leaves the extent.
 struct Unit {
     extent: Span,
     text: Vec<u8>,
     lines: u64,
 }
 
-fn unit_of(seq: &[u8], end: u64, rows: &[(Stretch, &[u8])]) -> Option<Unit> {
+fn unit_of(seq: &[u8], length: u64, rows: &[(Stretch, &[u8])]) -> Result<Unit, String> {
     let (lo, hi) = rows
         .iter()
         .filter_map(|&(stretch, _)| match stretch {
             Stretch::Piece(span) | Stretch::Ref(span) => Some(span),
             Stretch::Dictionary => None,
         })
-        .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)))?;
+        .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)))
+        .ok_or("a unit with no step on the reference")?;
     let extent = if lo < hi {
         (lo, hi)
-    } else if lo < end {
+    } else if lo < length {
         (lo, lo + 1)
     } else {
         (lo.saturating_sub(1), lo)
     };
-    let mut text = Vec::new();
-    for &(stretch, row) in rows {
-        let (lo, hi) = match stretch {
-            Stretch::Piece(span) => span,
-            Stretch::Ref(_) | Stretch::Dictionary => extent,
-        };
-        text.extend_from_slice(seq);
-        text.push(b'\t');
-        push_u64(&mut text, lo);
-        text.push(b'\t');
-        push_u64(&mut text, hi);
-        text.push(b'\t');
-        text.extend_from_slice(row);
+    let outside = rows.iter().find_map(|&(stretch, _)| match stretch {
+        Stretch::Piece((a, b)) if a < extent.0 || b > extent.1 => Some((a, b)),
+        _ => None,
+    });
+    match outside {
+        Some((a, b)) => Err(format!(
+            "the writer broke its guarantee that every line lies within its unit's extent {}-{}: a row at {a}-{b}",
+            extent.0, extent.1
+        )),
+        None => {
+            let mut text = Vec::new();
+            for &(stretch, row) in rows {
+                let (a, b) = match stretch {
+                    Stretch::Piece(span) => span,
+                    Stretch::Ref(_) | Stretch::Dictionary => extent,
+                };
+                text.extend_from_slice(seq);
+                text.push(b'\t');
+                push_u64(&mut text, a);
+                text.push(b'\t');
+                push_u64(&mut text, b);
+                text.push(b'\t');
+                text.extend_from_slice(row);
+            }
+            Ok(Unit {
+                extent,
+                text,
+                lines: rows.len() as u64,
+            })
+        }
     }
-    Some(Unit {
-        extent,
-        text,
-        lines: rows.len() as u64,
-    })
 }
 
 // The detail records of the sequence being written, held on disk until its
@@ -1574,10 +1593,15 @@ struct Output {
 
 // The walk files, written in file order: each reference sequence's tiles
 // with its departure blocks between them by start, a tile before the blocks
-// that start with it, then its detail records, then its table
+// that start with it, then its detail records, then its table. Each
+// departure line written must overlap its block, which must be one of its
+// cover's, and must not repeat there, and a sequence must get as many as
+// its records' covers hold, so every record is in every block of its cover.
 struct Outputs<'a> {
     outputs: Vec<Output>,
     departures: Merged,
+    departure_lines: HashMap<u32, u64>,
+    written: u64,
     chunks: &'a Chunks,
     names: &'a Interner,
     // every reference sequence in file order, and how many are written
@@ -1593,16 +1617,30 @@ impl Outputs<'_> {
         let out = &mut self.outputs[self.chunks.owner[name as usize] as usize];
         let mut open = None;
         let mut line = Vec::new();
-        while let Some((k, row)) = self.departures.peek() {
+        let mut previous = Vec::new();
+        while let Some((k, row)) = self.departures.peek()
+            && k == key
+            && departures::unfile(row).block.0 < until
+        {
             let filed = departures::unfile(row);
-            if k != key || filed.block.0 >= until {
-                break;
+            let ((start, size), (lo, hi)) = (filed.block, filed.extent);
+            let mut covered = false;
+            departures::cover(lo, hi, self.chunks.size, |at, s| {
+                covered |= (at, s) == (start, size);
+            });
+            let overlaps = lo < start + size && (hi > start || lo == hi);
+            if !(covered && overlaps && row != previous.as_slice()) {
+                Err(format!(
+                    "the writer broke its guarantee that a departure line overlaps each block of its cover, once: {}",
+                    String::from_utf8_lossy(filed.body)
+                ))?;
             }
+            previous.clear();
+            previous.extend_from_slice(row);
             if open != Some(filed.block) {
                 if open.is_some() {
                     out.file.end()?;
                 }
-                let (start, size) = filed.block;
                 out.file
                     .begin(seq, (start, start + size), "departures", ".")?;
                 open = Some(filed.block);
@@ -1610,14 +1648,15 @@ impl Outputs<'_> {
             line.clear();
             line.extend_from_slice(seq);
             line.push(b'\t');
-            push_u64(&mut line, filed.extent.0);
+            push_u64(&mut line, lo);
             line.push(b'\t');
-            push_u64(&mut line, filed.extent.1);
+            push_u64(&mut line, hi);
             line.push(b'\t');
             line.extend_from_slice(filed.body);
             line.push(b'\n');
             out.file.write(&line)?;
             out.lines += 1;
+            self.written += 1;
             self.departures.advance()?;
         }
         if open.is_some() {
@@ -1632,10 +1671,17 @@ impl Outputs<'_> {
             && Some(s) != name
         {
             self.departures(s, u64::MAX)?;
+            if self.written != self.departure_lines.get(&s).copied().unwrap_or(0) {
+                Err(format!(
+                    "{}: the writer broke its guarantee that every departure record is in every block of its cover",
+                    text(&self.names[s as usize])
+                ))?;
+            }
+            self.written = 0;
             let seq = &self.names[s as usize];
             let out = &mut self.outputs[self.chunks.owner[s as usize] as usize];
             out.lines += out.details.flush(seq, &mut out.file)?;
-            out.file.table(seq)?;
+            out.file.table(seq, self.chunks.end[s as usize])?;
             self.done += 1;
         }
         Ok(())
@@ -1735,6 +1781,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         references,
         rows: Sorter::new(&temp.0, "rows", SORT_BUDGET),
         departures: Sorter::new(&temp.0, "departures", DEPARTURE_SORT_BUDGET),
+        departure_lines: HashMap::new(),
         ends: options.refs.iter().map(|_| FastMap::default()).collect(),
         paths: 0,
         steps: 0,
@@ -1779,6 +1826,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         references,
         rows,
         departures,
+        departure_lines,
         ..
     } = builder;
     let threads = thread::available_parallelism().map_or(4, |n| n.get());
@@ -1832,6 +1880,8 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let mut outputs = Outputs {
         outputs,
         departures: departures.merged()?,
+        departure_lines,
+        written: 0,
         chunks: &chunks,
         names: &names,
         sequences,
@@ -1874,7 +1924,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             })
             .collect();
         let end = chunks.end[name as usize];
-        let tile = unit_of(seq, end, &rows).ok_or("a tile with no step on the reference")?;
+        let tile = unit_of(seq, end, &rows)?;
         let details = details
             .iter()
             .map(|record| {
@@ -1882,7 +1932,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                     .iter()
                     .map(|(span, row)| (*span, row.as_slice()))
                     .collect();
-                unit_of(seq, end, &rows).ok_or("a detail record with no step on the reference")
+                unit_of(seq, end, &rows)
             })
             .collect::<Result<_, _>>()?;
         Ok((tile, details, counts))

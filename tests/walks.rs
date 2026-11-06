@@ -125,14 +125,17 @@ fn cover(lo: u64, hi: u64, tile: u64) -> Vec<(u64, u64)> {
 // line is the header's `#walks` line with the data's length; the header, the
 // units, the tables and the EOF block partition the file, each unit a run of
 // gzip members starting with its `#unit` line; each table lists its
-// sequence's units before it, in file order, as they are, and the directory
-// names every table, sequences in byte order; every line starts with its
-// unit's sequence; a departure block is named `.`, and no two units of a
-// kind and sequence share any other name; a departure record lies in every
-// block of its cover and no other, overlapping each, and tile and detail
-// lines within their unit's extent, which is the union of its ref
-// rows' stretches and its pieces' spans, or where that covers no base the
-// base beside its point
+// sequence's units before it, in file order, as they are, each above 0
+// bytes, and states `|S|`, where the sequence's last ref row ends; the
+// directory names every table, sequences in byte order; every line starts
+// with its unit's sequence; a departure block is named `.`, and no two units
+// of a kind and sequence share any other name; a departure record lies in
+// every block of its cover and no other, overlapping each, or at its start
+// where it is a point; tile and detail lines lie within their unit's
+// extent, which runs from the first base its ref rows' stretches and its
+// pieces' spans cover to the last, or where they cover no base is the base
+// after their point `p`, the base before it where `p` is `|S|`, or `[0, 0)`
+// where `|S|` is 0
 fn verify(data: &[u8], directory: &str, tile: u64) {
     let lines: Vec<Vec<&str>> = directory.lines().map(|l| l.split('\t').collect()).collect();
     let walks = &lines[0];
@@ -185,16 +188,22 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
             .all(|w| w[0].as_bytes() < w[1].as_bytes())
     );
     let mut before = header_end;
+    let mut lengths: BTreeMap<&str, u64> = BTreeMap::new();
     for c in &lines[2..] {
         let (offset, length): (usize, usize) = (c[1].parse().unwrap(), c[2].parse().unwrap());
         let text = gunzip(&data[offset..offset + length]);
         let mut rows = text.lines();
         let head: Vec<&str> = rows.next().unwrap().split('\t').collect();
-        assert_eq!((head[1], head[4], head[5]), (c[0], "table", "."));
+        assert_eq!(
+            (head[1], head[2], head[4], head[5]),
+            (c[0], "0", "table", ".")
+        );
+        lengths.insert(c[0], head[3].parse().unwrap());
         for row in rows {
             let e: Vec<&str> = row.split('\t').collect();
             assert_eq!((e[0], e[1]), ("#entry", c[0]), "{row}");
             let (at, length): (usize, usize) = (e[6].parse().unwrap(), e[7].parse().unwrap());
+            assert!(length > 0, "{row}");
             assert_eq!(at, before, "{row}: not in file order or not every unit");
             before = at + length;
             listed.insert(at, e[1..6].join("\t") + "\t" + e[7]);
@@ -203,6 +212,7 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
         before = offset + length;
     }
     assert_eq!(before, eof.0);
+    let mut ref_ends: BTreeMap<String, u64> = BTreeMap::new();
     for &(from, to) in &units {
         let text = gunzip(&data[from..to]);
         let mut rows = text.lines();
@@ -241,6 +251,8 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
                     assert_eq!((a, b), (lo, hi), "{row}");
                     let start: u64 = c[6].parse().unwrap();
                     let bp: u64 = c[10].split(',').map(|n| n.parse::<u64>().unwrap()).sum();
+                    let end = ref_ends.entry(seq.to_string()).or_default();
+                    *end = (*end).max(start + bp);
                     Some((start, start + bp))
                 }
                 "walk" | "abridged" => Some((a, b)),
@@ -263,9 +275,20 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
         }
         if kind != "departures" {
             let (a, b) = union.unwrap();
-            let point = a == b && (hi - lo, lo == a || hi == a) == (1, true);
-            assert!(union == Some((lo, hi)) || point, "{head:?} {union:?}");
+            let length = lengths[seq];
+            let beside = match a {
+                0 if length == 0 => (0, 0),
+                p if p == length => (p - 1, p),
+                p => (p, p + 1),
+            };
+            assert!(
+                (a < b && (a, b) == (lo, hi)) || (a == b && (lo, hi) == beside),
+                "{head:?} {union:?}"
+            );
         }
+    }
+    for (seq, length) in lengths {
+        assert_eq!(ref_ends.get(seq).copied().unwrap_or(0), length, "{seq}");
     }
     assert_eq!(
         listed.len(),

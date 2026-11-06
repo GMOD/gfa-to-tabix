@@ -59,7 +59,7 @@ const BLOCK_TILES: [u64; 4] = [512, 64, 8, 1];
 
 // Cuts [lo, hi), widened to whole tiles, into the largest aligned blocks of
 // the pyramid that fit, as (start, size)
-fn cover(lo: u64, hi: u64, tile: u64, mut each: impl FnMut(u64, u64)) {
+pub fn cover(lo: u64, hi: u64, tile: u64, mut each: impl FnMut(u64, u64)) {
     let mut at = lo / tile * tile;
     let end = hi.div_ceil(tile) * tile;
     while at < end {

@@ -58,6 +58,9 @@ pub struct UnitFile {
     entries: Vec<Entry>,
     open: Option<Entry>,
     units: u64,
+    // the block the next unit or table must start at, so they partition the
+    // file
+    next: u64,
 }
 
 impl UnitFile {
@@ -88,9 +91,11 @@ impl UnitFile {
             entries: Vec::new(),
             open: None,
             units: 0,
+            next: 0,
         };
         out.write(header)?;
         out.cut()?;
+        out.next = out.block();
         out.resolve_all()?;
         let length = out.start_of(out.block())?;
         out.directory = format!("#header\t0\t{length}\n").into_bytes();
@@ -99,6 +104,25 @@ impl UnitFile {
 
     fn failed(&self, e: std::io::Error) -> String {
         format!("{}: {e}", self.path)
+    }
+
+    fn holds(&self, kept: bool, guarantee: &str) -> Result<(), String> {
+        if kept {
+            Ok(())
+        } else {
+            Err(format!(
+                "{}: the writer broke its guarantee that {guarantee}",
+                self.path
+            ))
+        }
+    }
+
+    // The block a unit or table starts at, which must be where the last one
+    // ended
+    fn starting(&self) -> Result<u64, String> {
+        let from = self.block();
+        self.holds(from == self.next, "the units partition the file")?;
+        Ok(from)
     }
 
     fn block(&self) -> u64 {
@@ -132,7 +156,7 @@ impl UnitFile {
         name: &str,
     ) -> Result<(), String> {
         let line = unit_line(seq, lo, hi, kind, name);
-        let from = self.block();
+        let from = self.starting()?;
         self.write(&line)?;
         self.open = Some(Entry {
             lo,
@@ -149,19 +173,38 @@ impl UnitFile {
         self.cut()?;
         let mut entry = self.open.take().expect("a unit is open");
         entry.to = self.block();
+        self.next = entry.to;
         self.entries.push(entry);
         self.units += 1;
         Ok(())
     }
 
-    // Ends sequence `seq`: writes its table, which lists its units in file
-    // order, and names the table in the directory
-    pub fn table(&mut self, seq: &[u8]) -> Result<(), String> {
+    // Ends sequence `seq`, of `length` bp: writes its table, which lists its
+    // units in file order, and names the table in the directory. Fails
+    // where a listed unit is empty or does not start where the one before
+    // it ends, or where two units of a kind share a name other than `.`.
+    pub fn table(&mut self, seq: &[u8], length: u64) -> Result<(), String> {
         self.resolve_all()?;
-        let hi = self.entries.iter().map(|e| e.hi).max().unwrap_or(0);
-        let mut text = unit_line(seq, 0, hi, "table", ".");
+        let mut names: Vec<(&str, &str)> = self
+            .entries
+            .iter()
+            .filter(|e| e.name != ".")
+            .map(|e| (e.kind, e.name.as_str()))
+            .collect();
+        names.sort_unstable();
+        self.holds(
+            names.windows(2).all(|w| w[0] != w[1]),
+            "no two units of a kind and sequence share a name other than .",
+        )?;
+        let mut text = unit_line(seq, 0, length, "table", ".");
+        let mut at = self.entries.first().map(|e| e.from);
         for e in &self.entries {
             let (from, to) = (self.start_of(e.from)?, self.start_of(e.to)?);
+            self.holds(
+                at == Some(e.from) && to > from,
+                "a table lists its units in file order, each above 0 bytes",
+            )?;
+            at = Some(e.to);
             text.extend_from_slice(b"#entry\t");
             text.extend_from_slice(seq);
             text.extend_from_slice(
@@ -177,9 +220,10 @@ impl UnitFile {
             );
         }
         self.entries.clear();
-        let from = self.block();
+        let from = self.starting()?;
         self.write(&text)?;
         self.cut()?;
+        self.next = self.block();
         self.resolve_all()?;
         let (start, end) = (self.start_of(from)?, self.start_of(self.block())?);
         self.directory.extend_from_slice(seq);
@@ -194,6 +238,10 @@ impl UnitFile {
     // file's length, and renames it. Returns how many units the file holds
     // besides the header and the tables.
     pub fn finish(self) -> Result<u64, String> {
+        self.holds(
+            self.block() == self.next && self.open.is_none(),
+            "the EOF block follows the last table",
+        )?;
         let UnitFile {
             path,
             temp,
@@ -260,7 +308,7 @@ mod tests {
             out.write(b"\n").unwrap();
             out.end().unwrap();
         }
-        out.table(b"s").unwrap();
+        out.table(b"s", 4).unwrap();
         out.finish().unwrap();
         let data = fs::read(&path).unwrap();
         let directory = fs::read_to_string(format!("{path}.idx")).unwrap();
