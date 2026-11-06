@@ -30,3 +30,7 @@ The candidate files themselves are on ada under `~/work/arb-arbA/out/` and
 v2.1 Minigraph-Cactus chr22 (`~/work/rel3/mc22.GRCh38.walks.bed.gz`) and
 HPRC release 2 pggb chrY (`~/work/pggbY.GRCh38.walks.bed.gz`), both on
 GRCh38.
+- `genome/`: the genome-wide check of the prototype on GRCh38 and CHM13
+  by the session deploying the walk files: `report.md`, `summary.md`, its
+  scripts and `res/` (copied from ada `~/work/s7-genome/res/`; the report's
+  paths name that directory)

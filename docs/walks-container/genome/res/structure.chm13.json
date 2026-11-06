@@ -1,0 +1,719 @@
+{
+ "fileBytes": 1780802603,
+ "directoryBytes": 886,
+ "directoryLines": 27,
+ "headerBytes": 1366,
+ "sections": 25,
+ "tablesTotalBytes": 2133185,
+ "maxUnitEnd": 1780778726,
+ "over4GB": false,
+ "kinds": {
+  "tile": {
+   "n": 47579,
+   "bytes": 1168105746,
+   "zero": 0
+  },
+  "departures": {
+   "n": 46575,
+   "bytes": 58269862,
+   "zero": 0
+  },
+  "detail": {
+   "n": 60782,
+   "bytes": 552292416,
+   "zero": 0
+  }
+ },
+ "departureLines": 3743089,
+ "departureRecords": 1750312,
+ "duplication": 2.1385267312342027,
+ "detailUnitsSharingAName": 1592,
+ "largest": {
+  "tile": [
+   {
+    "seq": "CHM13#0#chr15",
+    "lo": 1179648,
+    "hi": 1245188,
+    "kind": "tile",
+    "name": "1179648",
+    "off": 533253874,
+    "len": 315444
+   },
+   {
+    "seq": "CHM13#0#chr14",
+    "lo": 1245192,
+    "hi": 1310722,
+    "kind": "tile",
+    "name": "1245184",
+    "off": 426274254,
+    "len": 299025
+   },
+   {
+    "seq": "CHM13#0#chr15",
+    "lo": 1245188,
+    "hi": 1310740,
+    "kind": "tile",
+    "name": "1245184",
+    "off": 533573961,
+    "len": 277367
+   }
+  ],
+  "departures": [
+   {
+    "seq": "CHM13#0#chr14",
+    "lo": 13434880,
+    "hi": 13500416,
+    "kind": "departures",
+    "name": "65536",
+    "off": 436292757,
+    "len": 19751
+   },
+   {
+    "seq": "CHM13#0#chr1",
+    "lo": 103612416,
+    "hi": 103677952,
+    "kind": "departures",
+    "name": "65536",
+    "off": 41956364,
+    "len": 18853
+   },
+   {
+    "seq": "CHM13#0#chr16",
+    "lo": 37748736,
+    "hi": 37814272,
+    "kind": "departures",
+    "name": "65536",
+    "off": 630319015,
+    "len": 16121
+   }
+  ],
+  "detail": [
+   {
+    "seq": "CHM13#0#chr2",
+    "lo": 92143616,
+    "hi": 92209150,
+    "kind": "detail",
+    "name": "92143616:5",
+    "off": 914590476,
+    "len": 106391
+   },
+   {
+    "seq": "CHM13#0#chr2",
+    "lo": 92143616,
+    "hi": 92209151,
+    "kind": "detail",
+    "name": "92143616:0",
+    "off": 914060866,
+    "len": 106325
+   },
+   {
+    "seq": "CHM13#0#chr2",
+    "lo": 92143617,
+    "hi": 92209151,
+    "kind": "detail",
+    "name": "92143616:3",
+    "off": 914378723,
+    "len": 105990
+   }
+  ]
+ },
+ "largestUnitsText": [
+  {
+   "seq": "CHM13#0#chr15",
+   "lo": 1179648,
+   "hi": 1245188,
+   "kind": "tile",
+   "name": "1179648",
+   "off": 533253874,
+   "len": 315444,
+   "textBytes": 2955637
+  },
+  {
+   "seq": "CHM13#0#chr14",
+   "lo": 1245192,
+   "hi": 1310722,
+   "kind": "tile",
+   "name": "1245184",
+   "off": 426274254,
+   "len": 299025,
+   "textBytes": 2876032
+  },
+  {
+   "seq": "CHM13#0#chr15",
+   "lo": 1245188,
+   "hi": 1310740,
+   "kind": "tile",
+   "name": "1245184",
+   "off": 533573961,
+   "len": 277367,
+   "textBytes": 2893213
+  }
+ ],
+ "perSeq": {
+  "CHM13#0#chr1": {
+   "tableBytes": 175643,
+   "tableTextBytes": 908175,
+   "units": 12808,
+   "entries": {
+    "tile": {
+     "n": 3791,
+     "textBytes": 259466,
+     "gzipAlone": 72542
+    },
+    "departures": {
+     "n": 3604,
+     "textBytes": 249853,
+     "gzipAlone": 52615
+    },
+    "detail": {
+     "n": 5413,
+     "textBytes": 398857,
+     "gzipAlone": 59083
+    }
+   },
+   "gzipWithoutDetail": 115264
+  },
+  "CHM13#0#chr10": {
+   "tableBytes": 82390,
+   "tableTextBytes": 404621,
+   "units": 5690,
+   "entries": {
+    "tile": {
+     "n": 2057,
+     "textBytes": 142968,
+     "gzipAlone": 39714
+    },
+    "departures": {
+     "n": 2083,
+     "textBytes": 147206,
+     "gzipAlone": 30290
+    },
+    "detail": {
+     "n": 1550,
+     "textBytes": 114448,
+     "gzipAlone": 17639
+    }
+   },
+   "gzipWithoutDetail": 63862
+  },
+  "CHM13#0#chr11": {
+   "tableBytes": 75559,
+   "tableTextBytes": 364288,
+   "units": 5161,
+   "entries": {
+    "tile": {
+     "n": 2062,
+     "textBytes": 143316,
+     "gzipAlone": 39623
+    },
+    "departures": {
+     "n": 2079,
+     "textBytes": 146865,
+     "gzipAlone": 30011
+    },
+    "detail": {
+     "n": 1020,
+     "textBytes": 74108,
+     "gzipAlone": 10988
+    }
+   },
+   "gzipWithoutDetail": 63568
+  },
+  "CHM13#0#chr12": {
+   "tableBytes": 74801,
+   "tableTextBytes": 354376,
+   "units": 5053,
+   "entries": {
+    "tile": {
+     "n": 2035,
+     "textBytes": 141365,
+     "gzipAlone": 39181
+    },
+    "departures": {
+     "n": 2029,
+     "textBytes": 143366,
+     "gzipAlone": 29370
+    },
+    "detail": {
+     "n": 989,
+     "textBytes": 69646,
+     "gzipAlone": 11149
+    }
+   },
+   "gzipWithoutDetail": 62635
+  },
+  "CHM13#0#chr13": {
+   "tableBytes": 99492,
+   "tableTextBytes": 549749,
+   "units": 7655,
+   "entries": {
+    "tile": {
+     "n": 1733,
+     "textBytes": 119402,
+     "gzipAlone": 33055
+    },
+    "departures": {
+     "n": 1637,
+     "textBytes": 115434,
+     "gzipAlone": 23844
+    },
+    "detail": {
+     "n": 4285,
+     "textBytes": 314914,
+     "gzipAlone": 46816
+    }
+   },
+   "gzipWithoutDetail": 52237
+  },
+  "CHM13#0#chr14": {
+   "tableBytes": 116958,
+   "tableTextBytes": 675554,
+   "units": 9464,
+   "entries": {
+    "tile": {
+     "n": 1544,
+     "textBytes": 106018,
+     "gzipAlone": 29547
+    },
+    "departures": {
+     "n": 1551,
+     "textBytes": 108839,
+     "gzipAlone": 22644
+    },
+    "detail": {
+     "n": 6369,
+     "textBytes": 460698,
+     "gzipAlone": 68759
+    }
+   },
+   "gzipWithoutDetail": 47775
+  },
+  "CHM13#0#chr15": {
+   "tableBytes": 86133,
+   "tableTextBytes": 456036,
+   "units": 6528,
+   "entries": {
+    "tile": {
+     "n": 1523,
+     "textBytes": 104316,
+     "gzipAlone": 29112
+    },
+    "departures": {
+     "n": 1503,
+     "textBytes": 105483,
+     "gzipAlone": 21899
+    },
+    "detail": {
+     "n": 3502,
+     "textBytes": 246238,
+     "gzipAlone": 38764
+    }
+   },
+   "gzipWithoutDetail": 46883
+  },
+  "CHM13#0#chr16": {
+   "tableBytes": 63367,
+   "tableTextBytes": 322837,
+   "units": 4591,
+   "entries": {
+    "tile": {
+     "n": 1470,
+     "textBytes": 100491,
+     "gzipAlone": 28145
+    },
+    "departures": {
+     "n": 1439,
+     "textBytes": 100963,
+     "gzipAlone": 20789
+    },
+    "detail": {
+     "n": 1682,
+     "textBytes": 121384,
+     "gzipAlone": 17728
+    }
+   },
+   "gzipWithoutDetail": 45007
+  },
+  "CHM13#0#chr17": {
+   "tableBytes": 57051,
+   "tableTextBytes": 287463,
+   "units": 4104,
+   "entries": {
+    "tile": {
+     "n": 1286,
+     "textBytes": 88119,
+     "gzipAlone": 24725
+    },
+    "departures": {
+     "n": 1266,
+     "textBytes": 88701,
+     "gzipAlone": 18301
+    },
+    "detail": {
+     "n": 1552,
+     "textBytes": 110644,
+     "gzipAlone": 17164
+    }
+   },
+   "gzipWithoutDetail": 39426
+  },
+  "CHM13#0#chr18": {
+   "tableBytes": 45636,
+   "tableTextBytes": 218635,
+   "units": 3115,
+   "entries": {
+    "tile": {
+     "n": 1229,
+     "textBytes": 84129,
+     "gzipAlone": 23533
+    },
+    "departures": {
+     "n": 1167,
+     "textBytes": 81690,
+     "gzipAlone": 16800
+    },
+    "detail": {
+     "n": 719,
+     "textBytes": 52817,
+     "gzipAlone": 8117
+    }
+   },
+   "gzipWithoutDetail": 36960
+  },
+  "CHM13#0#chr19": {
+   "tableBytes": 55945,
+   "tableTextBytes": 306658,
+   "units": 4349,
+   "entries": {
+    "tile": {
+     "n": 942,
+     "textBytes": 64361,
+     "gzipAlone": 18094
+    },
+    "departures": {
+     "n": 912,
+     "textBytes": 63824,
+     "gzipAlone": 13237
+    },
+    "detail": {
+     "n": 2495,
+     "textBytes": 178474,
+     "gzipAlone": 26847
+    }
+   },
+   "gzipWithoutDetail": 28855
+  },
+  "CHM13#0#chr2": {
+   "tableBytes": 147113,
+   "tableTextBytes": 727340,
+   "units": 10322,
+   "entries": {
+    "tile": {
+     "n": 3704,
+     "textBytes": 257845,
+     "gzipAlone": 71825
+    },
+    "departures": {
+     "n": 3716,
+     "textBytes": 261555,
+     "gzipAlone": 53964
+    },
+    "detail": {
+     "n": 2902,
+     "textBytes": 207941,
+     "gzipAlone": 31163
+    }
+   },
+   "gzipWithoutDetail": 114602
+  },
+  "CHM13#0#chr20": {
+   "tableBytes": 55781,
+   "tableTextBytes": 294035,
+   "units": 4145,
+   "entries": {
+    "tile": {
+     "n": 1011,
+     "textBytes": 69200,
+     "gzipAlone": 19434
+    },
+    "departures": {
+     "n": 1001,
+     "textBytes": 70053,
+     "gzipAlone": 14504
+    },
+    "detail": {
+     "n": 2133,
+     "textBytes": 154783,
+     "gzipAlone": 24376
+    }
+   },
+   "gzipWithoutDetail": 31090
+  },
+  "CHM13#0#chr21": {
+   "tableBytes": 66630,
+   "tableTextBytes": 390489,
+   "units": 5476,
+   "entries": {
+    "tile": {
+     "n": 689,
+     "textBytes": 47504,
+     "gzipAlone": 13268
+    },
+    "departures": {
+     "n": 712,
+     "textBytes": 50278,
+     "gzipAlone": 10458
+    },
+    "detail": {
+     "n": 4075,
+     "textBytes": 292708,
+     "gzipAlone": 44628
+    }
+   },
+   "gzipWithoutDetail": 21730
+  },
+  "CHM13#0#chr22": {
+   "tableBytes": 102926,
+   "tableTextBytes": 648486,
+   "units": 8976,
+   "entries": {
+    "tile": {
+     "n": 784,
+     "textBytes": 54306,
+     "gzipAlone": 15099
+    },
+    "departures": {
+     "n": 803,
+     "textBytes": 57043,
+     "gzipAlone": 11697
+    },
+    "detail": {
+     "n": 7389,
+     "textBytes": 537138,
+     "gzipAlone": 78305
+    }
+   },
+   "gzipWithoutDetail": 24628
+  },
+  "CHM13#0#chr3": {
+   "tableBytes": 115525,
+   "tableTextBytes": 569254,
+   "units": 7931,
+   "entries": {
+    "tile": {
+     "n": 3069,
+     "textBytes": 215783,
+     "gzipAlone": 59795
+    },
+    "departures": {
+     "n": 3082,
+     "textBytes": 219553,
+     "gzipAlone": 44515
+    },
+    "detail": {
+     "n": 1780,
+     "textBytes": 133919,
+     "gzipAlone": 19733
+    }
+   },
+   "gzipWithoutDetail": 94766
+  },
+  "CHM13#0#chr4": {
+   "tableBytes": 119904,
+   "tableTextBytes": 607368,
+   "units": 8479,
+   "entries": {
+    "tile": {
+     "n": 2954,
+     "textBytes": 207450,
+     "gzipAlone": 57394
+    },
+    "departures": {
+     "n": 2890,
+     "textBytes": 205749,
+     "gzipAlone": 41724
+    },
+    "detail": {
+     "n": 2635,
+     "textBytes": 194170,
+     "gzipAlone": 28730
+    }
+   },
+   "gzipWithoutDetail": 90093
+  },
+  "CHM13#0#chr5": {
+   "tableBytes": 113410,
+   "tableTextBytes": 565843,
+   "units": 7964,
+   "entries": {
+    "tile": {
+     "n": 2778,
+     "textBytes": 194865,
+     "gzipAlone": 54130
+    },
+    "departures": {
+     "n": 2774,
+     "textBytes": 197238,
+     "gzipAlone": 39906
+    },
+    "detail": {
+     "n": 2412,
+     "textBytes": 173741,
+     "gzipAlone": 26974
+    }
+   },
+   "gzipWithoutDetail": 85424
+  },
+  "CHM13#0#chr6": {
+   "tableBytes": 95287,
+   "tableTextBytes": 468155,
+   "units": 6579,
+   "entries": {
+    "tile": {
+     "n": 2627,
+     "textBytes": 183973,
+     "gzipAlone": 51144
+    },
+    "departures": {
+     "n": 2602,
+     "textBytes": 184819,
+     "gzipAlone": 37421
+    },
+    "detail": {
+     "n": 1350,
+     "textBytes": 99364,
+     "gzipAlone": 13742
+    }
+   },
+   "gzipWithoutDetail": 80484
+  },
+  "CHM13#0#chr7": {
+   "tableBytes": 107601,
+   "tableTextBytes": 552137,
+   "units": 7706,
+   "entries": {
+    "tile": {
+     "n": 2451,
+     "textBytes": 171307,
+     "gzipAlone": 47665
+    },
+    "departures": {
+     "n": 2451,
+     "textBytes": 173972,
+     "gzipAlone": 35381
+    },
+    "detail": {
+     "n": 2804,
+     "textBytes": 206859,
+     "gzipAlone": 31140
+    }
+   },
+   "gzipWithoutDetail": 75525
+  },
+  "CHM13#0#chr8": {
+   "tableBytes": 77705,
+   "tableTextBytes": 367912,
+   "units": 5229,
+   "entries": {
+    "tile": {
+     "n": 2232,
+     "textBytes": 155546,
+     "gzipAlone": 43416
+    },
+    "departures": {
+     "n": 2226,
+     "textBytes": 157621,
+     "gzipAlone": 32058
+    },
+    "detail": {
+     "n": 771,
+     "textBytes": 54746,
+     "gzipAlone": 8320
+    }
+   },
+   "gzipWithoutDetail": 68514
+  },
+  "CHM13#0#chr9": {
+   "tableBytes": 91455,
+   "tableTextBytes": 457448,
+   "units": 6434,
+   "entries": {
+    "tile": {
+     "n": 2299,
+     "textBytes": 159638,
+     "gzipAlone": 44128
+    },
+    "departures": {
+     "n": 2123,
+     "textBytes": 150560,
+     "gzipAlone": 30525
+    },
+    "detail": {
+     "n": 2012,
+     "textBytes": 147251,
+     "gzipAlone": 22147
+    }
+   },
+   "gzipWithoutDetail": 68485
+  },
+  "CHM13#0#chrM": {
+   "tableBytes": 92,
+   "tableTextBytes": 51,
+   "units": 1,
+   "entries": {
+    "tile": {
+     "n": 1,
+     "textBytes": 52,
+     "gzipAlone": 69
+    }
+   },
+   "gzipWithoutDetail": 69
+  },
+  "CHM13#0#chrX": {
+   "tableBytes": 82932,
+   "tableTextBytes": 395332,
+   "units": 5635,
+   "entries": {
+    "tile": {
+     "n": 2354,
+     "textBytes": 164323,
+     "gzipAlone": 45553
+    },
+    "departures": {
+     "n": 2344,
+     "textBytes": 166056,
+     "gzipAlone": 33475
+    },
+    "detail": {
+     "n": 937,
+     "textBytes": 64954,
+     "gzipAlone": 10184
+    }
+   },
+   "gzipWithoutDetail": 71780
+  },
+  "CHM13#0#chrY": {
+   "tableBytes": 23849,
+   "tableTextBytes": 104942,
+   "units": 1541,
+   "entries": {
+    "tile": {
+     "n": 954,
+     "textBytes": 63923,
+     "gzipAlone": 16795
+    },
+    "departures": {
+     "n": 581,
+     "textBytes": 40582,
+     "gzipAlone": 8084
+    },
+    "detail": {
+     "n": 6,
+     "textBytes": 438,
+     "gzipAlone": 157
+    }
+   },
+   "gzipWithoutDetail": 23785
+  }
+ }
+}

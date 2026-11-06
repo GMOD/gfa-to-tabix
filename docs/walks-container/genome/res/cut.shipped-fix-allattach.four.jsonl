@@ -1,0 +1,4 @@
+{"seq":"CHM13#0#chr14","set":"13-14Mb","size":1000,"i":112,"start":13211941,"identical":false,"fragmentsIdentical":true,"fragments":1002,"departures":5226,"diff":{"fragments":[0,0],"departures":[1,1],"kept":[2,0]}}
+{"seq":"CHM13#0#chr14","set":"13-14Mb","size":1000,"i":192,"start":13203459,"identical":false,"fragmentsIdentical":true,"fragments":1002,"departures":10970,"diff":{"fragments":[0,0],"departures":[1,1],"kept":[2,0]}}
+{"seq":"CHM13#0#chr14","set":"13-14Mb","size":100000,"i":88,"start":13203480,"identical":false,"fragmentsIdentical":true,"fragments":2289,"departures":189822,"diff":{"fragments":[0,0],"departures":[1,1],"kept":[2,0]}}
+{"seq":"CHM13#0#chr14","set":"13-14Mb","size":100000,"i":160,"start":13196615,"identical":false,"fragmentsIdentical":true,"fragments":1622,"departures":190506,"diff":{"fragments":[0,0],"departures":[1,1],"kept":[2,0]}}

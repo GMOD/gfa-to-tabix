@@ -1,0 +1,177 @@
+{
+ "fileBytes": 59305793,
+ "directoryBytes": 159,
+ "directoryLines": 3,
+ "headerBytes": 1366,
+ "sections": 1,
+ "tablesTotalBytes": 47103,
+ "maxUnitEnd": 59258662,
+ "over4GB": false,
+ "kinds": {
+  "tile": {
+   "n": 776,
+   "bytes": 18488773,
+   "zero": 0
+  },
+  "departures": {
+   "n": 593,
+   "bytes": 886299,
+   "zero": 0
+  },
+  "detail": {
+   "n": 2468,
+   "bytes": 39882224,
+   "zero": 0
+  }
+ },
+ "departureLines": 54050,
+ "departureRecords": 24648,
+ "duplication": 2.1928756897111326,
+ "detailUnitsSharingAName": 355,
+ "largest": {
+  "tile": [
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 11993939,
+    "hi": 12059569,
+    "kind": "tile",
+    "name": "11993088",
+    "off": 396316,
+    "len": 295618
+   },
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 18481511,
+    "hi": 18546716,
+    "kind": "tile",
+    "name": "18481152",
+    "off": 3138608,
+    "len": 193811
+   },
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 18350174,
+    "hi": 18415617,
+    "kind": "tile",
+    "name": "18350080",
+    "off": 2874769,
+    "len": 180218
+   }
+  ],
+  "departures": [
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 11993088,
+    "hi": 12058624,
+    "kind": "departures",
+    "name": "65536",
+    "off": 691934,
+    "len": 12657
+   },
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 18612224,
+    "hi": 18677760,
+    "kind": "departures",
+    "name": "65536",
+    "off": 3493882,
+    "len": 12463
+   },
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 18481152,
+    "hi": 18546688,
+    "kind": "departures",
+    "name": "65536",
+    "off": 3332419,
+    "len": 12077
+   }
+  ],
+  "detail": [
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 11814295,
+    "hi": 11817352,
+    "kind": "detail",
+    "name": "11796480:0",
+    "off": 19376438,
+    "len": 116734
+   },
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 11814295,
+    "hi": 11817352,
+    "kind": "detail",
+    "name": "11796480:202",
+    "off": 19609514,
+    "len": 116627
+   },
+   {
+    "seq": "GRCh38#0#chr22",
+    "lo": 11814295,
+    "hi": 11817352,
+    "kind": "detail",
+    "name": "11796480:154",
+    "off": 19726141,
+    "len": 116518
+   }
+  ]
+ },
+ "largestUnitsText": [
+  {
+   "seq": "GRCh38#0#chr22",
+   "lo": 11993939,
+   "hi": 12059569,
+   "kind": "tile",
+   "name": "11993088",
+   "off": 396316,
+   "len": 295618,
+   "textBytes": 1916910
+  },
+  {
+   "seq": "GRCh38#0#chr22",
+   "lo": 18481511,
+   "hi": 18546716,
+   "kind": "tile",
+   "name": "18481152",
+   "off": 3138608,
+   "len": 193811,
+   "textBytes": 2376820
+  },
+  {
+   "seq": "GRCh38#0#chr22",
+   "lo": 18350174,
+   "hi": 18415617,
+   "kind": "tile",
+   "name": "18350080",
+   "off": 2874769,
+   "len": 180218,
+   "textBytes": 2065201
+  }
+ ],
+ "perSeq": {
+  "GRCh38#0#chr22": {
+   "tableBytes": 47103,
+   "tableTextBytes": 275091,
+   "units": 3837,
+   "entries": {
+    "tile": {
+     "n": 776,
+     "textBytes": 51619,
+     "gzipAlone": 13729
+    },
+    "departures": {
+     "n": 593,
+     "textBytes": 41375,
+     "gzipAlone": 8693
+    },
+    "detail": {
+     "n": 2468,
+     "textBytes": 182098,
+     "gzipAlone": 25708
+    }
+   },
+   "gzipWithoutDetail": 21065
+  }
+ }
+}

@@ -1,9 +1,9 @@
 # ADR 0010: The walk file is gzip units with a unit table, not a Tabix file
 
-- **Status:** accepted, 2026-11-05. Walk format 7, for gfa-to-tabix 4.0
-  and graph-walks 6; not yet written. A genome-wide build of the
-  prototype is under way, and its results will be added under
-  [Evidence](#evidence)
+- **Status:** accepted, 2026-11-05; confirmed genome-wide on GRCh38 and
+  CHM13 the same day ([Genome-wide](#genome-wide)), which also amended how
+  a reader finds a departure's own steps. Walk format 7, for gfa-to-tabix
+  4.0 and graph-walks 6, being written
 - **Decides:** how a walk file is stored and indexed, what the first three
   columns of its lines mean, how a reader finds the rows for a window, and
   what a writer guarantees. The rows' own columns and decoding rules stay
@@ -118,8 +118,11 @@ For a window `[s, e)` with context `c`, `D = [s − c, e + c)`:
 - Gunzip each unit. Decode a tile's rows from `kind` on by format 6's
   rules. Keep the departure lines overlapping `D` and drop exact
   duplicates
-- An attach fetch reads the tile whose extent holds the leave base;
-  expanding an abridged piece reads the `detail` unit `cs:d`
+- An attach fetch reads the tile holding the record's own steps, which
+  the record names; expanding an abridged piece reads the `detail` unit
+  `cs:d`. The tile is not always the one holding the leave base: for a
+  record that jumps back along the reference, the contig's piece order
+  can file its own steps on the rejoin side ([Genome-wide](#genome-wide))
 - There is no chunk-before rule, no `maxnode`, no `#long` widening and no
   reach
 
@@ -144,7 +147,10 @@ zcat f.walks.gz | awk -F'\t' '$1=="GRCh38#0#chr22" && $2<20001000 && $3>20000000
   as format 6's encode-decode check is, on every row
 - Names hold no tab or newline and don't start with `#`; the build refuses
   any that do
-- Offsets and lengths are exact integers below 2^53
+- Offsets and lengths are exact integers below 2^53; files pass 2 GiB
+  (CHM13's is 1.78 GB), so writers, readers and checks stream and never
+  hold a whole file
+- Every unit's name is unique within its kind and sequence
 - The data file is written, then the directory, each under a temporary
   name and renamed
 
@@ -214,6 +220,45 @@ KB median / p90, walk and departure reads only (`arbA/results/res/`,
   rule reading more: the chunk before, and departures ±`maxnode`
 - `verify7.mjs` passes the release checks on both files: 3,837 units and
   1,958,554 lines on MC, 1,492 units and 3,126,030 lines on pggb
+
+### Genome-wide
+
+A second session built the prototype's format 7 from the genome-wide
+3.0.0 files, GRCh38 from the GRCh38 graph and CHM13 from the CHM13 graph,
+and measured it against format 6
+([report](../walks-container/genome/report.md), results in
+`genome/res/`):
+
+- A first view, opening the file and reading one 1 kb window, costs 3% to
+  12% of format 6's: 211 against 1,841 KB on GRCh38 chr1, 62 against 1,838
+  on chr22, 118 against 1,815 on CHM13 chr9. Opening reads an 8 KB
+  directory, the header and one sequence's table (183 KB for GRCh38 chr1,
+  176 KB for CHM13's); all the tables together are 2.15 and 2.13 MB,
+  against the `.tbi`'s 1.75 and 1.71 MB, and no reader fetches them at once
+- Format 7 reads fewer bytes at every window set and quantile: GRCh38 chr1
+  1 kb 25 / 34 / 78 KB (median / p90 / p99) against 76 / 106 / 204; CHM13
+  chr14 13–14 Mb, 1 kb with attach fetches, 296 / 385 / 475 against
+  771 / 1,024 / 1,104; at most two round trips against three
+- 0 wrong of 600,549 pieces and 0 missing of 117,877 departure records on
+  800 windows, among them CHM13 chr9 38–80 Mb and chr14 13–14 Mb.
+  graph-walks 5.0.2's cut over format 6's rows for exactly format 7's
+  units: 784 of 800 identical, all 16 differences the attach-decode bug,
+  800 of 800 with it fixed
+- Files 0.7% to 1.7% larger than format 6 with its `.tbi`; departure lines
+  repeated 2.12× and 2.14×, 3.3% to 3.6% of the file; the largest tile
+  315 KB (CHM13 chr15), departure block 36 KB, detail unit 117 KB; no tile
+  reaches more than 1,023 bp past its nominal 64 kb; the largest offset
+  1.78 GB
+- It found the jump-back case above: on CHM13 near chr14 13.20 Mb, record
+  NA19185#2 leaves at 13,472,637 and rejoins at 13,135,857, and its own
+  steps lie in tile 13,107,200, on the rejoin side. A fetch of the leave
+  tile misses them; format 6's wide read happened to cover them
+- Six windows show two fragments where format 6's lookback joined them
+  through steps 80–92 kb outside the window, nothing in the window
+  missing: the overlap rule reads only what overlaps
+- The converter it used gave 10,993 of GRCh38's 66,981 detail units and
+  1,592 of CHM13's 60,782 a shared name; no check expanded detail units,
+  so nothing above depends on it. The writer names them uniquely
 
 ## Consequences
 
