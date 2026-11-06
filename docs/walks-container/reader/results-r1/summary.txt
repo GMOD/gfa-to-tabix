@@ -1,0 +1,2 @@
+# graph-walks 6 at 7f9fcc6 (R1 fix) on own.pggbY.GRCh38.walks.gz, pggb chrY targeted windows; vsOld6 = 17ed0a6 (scripts/r1.sh, cut7check/diff7 with gw6prev).
+# 365 windows, 0 errors; identical: vs5 32, vsFixed 293, vs 17ed0a6 355. The 10 differing (3 ampliconic, 1 cen-long, 6 switch) only gain: 554 fragments of 17ed0a6 each inside a fragment of 7f9fcc6, 4068 records and 39 kept nodes only in 7f9fcc6, none only in 17ed0a6. fragmentsOnlyBaseCovered in d.pggbY.targets.jsonl.gz counts the covered ones per window (computed before its lists were cut to two).
