@@ -1,0 +1,4 @@
+-rw-rw-r-- 1 cdiesh cdiesh  58495901 Nov  5 18:40 own.mc22.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       159 Nov  5 18:40 own.mc22.GRCh38.walks.gz.idx
+-rw-rw-r-- 1 cdiesh cdiesh 186950858 Nov  5 18:48 own.pggbY.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       210 Nov  5 18:48 own.pggbY.GRCh38.walks.gz.idx

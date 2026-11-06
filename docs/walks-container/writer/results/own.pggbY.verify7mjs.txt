@@ -1,0 +1,1 @@
+{"file":"own.pggbY.GRCh38.walks.gz","ok":true,"units":1492,"tables":2,"lines":3126030,"departureLines":1558946}
