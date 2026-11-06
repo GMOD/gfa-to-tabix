@@ -1,0 +1,232 @@
+formsCheck.test.ts: a member in a form whose change it lacks contradicts it in count
+formsCheck.test.ts: a member shown with a call where its walks leave a gap contradicts it
+formsCheck.test.ts: a member whose change lies elsewhere in the site contradicts the place
+formsCheck.test.ts: a rare shift whose insertion lies at a summed site is that site's change, kept apart
+formsCheck.test.ts: a shift's net agrees to the last figure its key gives it
+formsCheck.test.ts: a summed site states a net change, so pieces that cancel agree with ref
+formsCheck.test.ts: structuralForms states nothing its members contradict, at any floor or fold
+formsCheck.test.ts: the checker reports a change that lies in no site
+formsCheck.test.ts: the checker reports a member's changes elsewhere in a wider site than the form's, though they touch
+formsCheck.test.ts: the checker reports a member's changes in a wider site that the form does not state, away from its marks
+formsCheck.test.ts: the checker reports a no call stated where the walks span the site
+formsCheck.test.ts: the checker reports a rarer change stated where the member makes none
+formsCheck.test.ts: the checker reports a summed site's largest change the members do not make
+formsCheck.test.ts: the checker reports a summed site's net change the members do not make
+formsCheck.test.ts: the checker reports a wider site's change stated at its place and net with another size
+formsCheck.test.ts: the checker reports a wider site's change stated at its place with another net change
+formsCheck.test.ts: the checker takes only the tolerance and constants from structuralForms
+refNames.test.ts: a PanSN name resolves under its sample and under its haplotype
+refNames.test.ts: a pggb name with no haplotype field resolves under its sample
+rgfaBed.test.ts: a backbone segment past the window is not marked moved
+rgfaBed.test.ts: a bubble filed under the window is not marked moved
+rgfaBed.test.ts: a closing read keeps links between held segments and the pieces inside its span
+rgfaBed.test.ts: a gap wider than the window splits the span, and read pieces that abut need nothing
+rgfaBed.test.ts: a legacy bare sample list is dropped rather than emitted as a tag
+rgfaBed.test.ts: a link row with no tag columns parses as untagged
+rgfaBed.test.ts: a segment off the reference that only a link brought is marked moved
+rgfaBed.test.ts: a tag column reaches the S-line as tab-separated GFA tags
+rgfaBed.test.ts: a valid tag beside a malformed one keeps only the valid one
+rgfaBed.test.ts: an rGFA row has no tags and synthesizes the S-line it always did
+rgfaBed.test.ts: backbone past the window closes between abutting pieces only
+rgfaBed.test.ts: link rows carry each endpoint tags
+rgfaBed.test.ts: pieces of one stable sequence close as one span over the gap between them
+rgfaBed.test.ts: segmentSamples drops a legacy bare sample list
+rgfaBed.test.ts: segmentSamples finds the tag beside other tags
+rgfaBed.test.ts: segmentSamples is undefined when the column says nothing
+rgfaBed.test.ts: segmentSamples reads the samples off the tag column
+rgfaBed.test.ts: segments at one position come out in the same order whichever arrived first
+rgfaCut.test.ts: a contig-layout cut reaches off-reference neighbours as it hops
+rgfaCut.test.ts: a cut is byte-identical across calls
+rgfaCut.test.ts: a cut refuses a range that is not finite before querying
+rgfaCut.test.ts: an anchored cut holds whole without hops what a contig cut hops to
+rgfaCut.test.ts: an anchored cut marks the segments of a moved component
+rgfaFormat2.test.ts: a %s cut of format 2 holds format 1 cut
+rgfaFormat2.test.ts: a format 2 node row names its carriers from #samples
+rgfaFormat2.test.ts: a format other than 2 is refused
+structuralForms.test.ts: a GSTM1-like window is two forms, and other holds a rare insertion
+structuralForms.test.ts: a change at another place in a site is another state, never folded into it
+structuralForms.test.ts: a change every haplotype shares tells none apart, and every form carries it
+structuralForms.test.ts: a change inserts, deletes or replaces on its exact REF and ALT
+structuralForms.test.ts: a change under 50 bp is no mark, a larger one keys on two figures
+structuralForms.test.ts: a common change is placed where most of its carriers put it
+structuralForms.test.ts: a deletion and an insertion of one size pair into a shift
+structuralForms.test.ts: a form marks its changes in R order and says them largest first
+structuralForms.test.ts: a form names a rare bridge once when its carriers' medians differ by site
+structuralForms.test.ts: a form needs 1% of the haplotypes, and at least one
+structuralForms.test.ts: a form whose only own changes are shifts says so
+structuralForms.test.ts: a gain at a site wider than 50 bp replaces it
+structuralForms.test.ts: a haplotype of a form under minCarriers joins a form whose every state fits it, or other
+structuralForms.test.ts: a haplotype placed somewhere is in a form, one placed nowhere is not
+structuralForms.test.ts: a mark at a site the walks do not span whole is no call there
+structuralForms.test.ts: a mark shared by minCarriers haplotypes, each covering half of the other, makes sites
+structuralForms.test.ts: a place's spans each cover half of every other, so any carrier of a state stands for it
+structuralForms.test.ts: a rare call where most haplotypes have no call stays apart
+structuralForms.test.ts: a rare form that fits two common forms of one size joins the same one for every order of the haplotypes
+structuralForms.test.ts: a rare mark over two common sites keeps them apart and states itself at each
+structuralForms.test.ts: a rare no call is never shown as a call
+structuralForms.test.ts: a rare plain mark from a summed site neither widens it nor merges sites
+structuralForms.test.ts: a rare plain mark states itself at every summed site it overlaps
+structuralForms.test.ts: a rare state folds into a common state its change agrees with, and is rarer where none does
+structuralForms.test.ts: a replacement under 5% on one side reads as a deletion or insertion
+structuralForms.test.ts: a shift keys on its net change where that passes the floor and the size's last figure
+structuralForms.test.ts: a site most walks do not reach is an edge, left out of the key
+structuralForms.test.ts: a site spans the marks it comes from, and a summed change reaching past it does not widen it
+structuralForms.test.ts: a site wider than 1 kb keeps its changes apart, unsummed
+structuralForms.test.ts: a step back along R is a duplication, which shifts like an insertion
+structuralForms.test.ts: a window with no change is one form
+structuralForms.test.ts: an abridged departure is a net mark, and its haplotype is listed
+structuralForms.test.ts: an inversion moves no length and is a state of its own
+structuralForms.test.ts: departures under 50 bp of R apart join, keeping their net change
+structuralForms.test.ts: describeForm lists every change, largest first
+structuralForms.test.ts: each mark names its site and state, and formStateAt reads a form at any site
+structuralForms.test.ts: excluded samples have no form, and none are excluded by default
+structuralForms.test.ts: foldRareForms: false keeps a form under minCarriers apart
+structuralForms.test.ts: formTag given the result leaves out the marks every form shares
+structuralForms.test.ts: formTag names the largest change of a form and counts the rest
+structuralForms.test.ts: forms a higher floor cannot tell apart merge
+structuralForms.test.ts: forms are the same for every order of the haplotypes where places tie in carriers and start
+structuralForms.test.ts: forms group the haplotypes that match at every informative site
+structuralForms.test.ts: markTag says a change in a short token
+structuralForms.test.ts: nested changes are one site, each haplotype stating only its own
+structuralForms.test.ts: one haplotype's mark covering half of two common changes merges neither's place
+structuralForms.test.ts: one size at two places starting together is two states
+structuralForms.test.ts: rare marks overlapping no common site make a site of their own
+structuralForms.test.ts: the auto floor is about 10 px of the window, snapped to a preset
+structuralForms.test.ts: the floor applies to a haplotype's net change across a site, not to each piece
+structuralForms.test.ts: the result is plain data
+structuralForms.test.ts: two marks overlapping by under half of one are not shared
+walkDeparture.test.ts: a departure covers the bases beside its breakpoints, as its record is filed
+walkDeparture.test.ts: a departure is a placement choice where either end lies on a node the reference passes more than once
+walkDeparture.test.ts: a departure is a strand switch, a jump back, own sequence between adjacent steps or a jump forward
+walkDeparture.test.ts: a record row from a writer before pass counts is refused, saying to rebuild the file
+walkDeparture.test.ts: a record row parses to its ends, own sequence and contig position
+walkDeparture.test.ts: a record row passing an end zero times is refused, as a ref row is
+walkDeparture.test.ts: ref and abridged rows from a writer before pass counts are refused, saying to rebuild the file
+walkDeparture.test.ts: steps either side of a hole in the reference are adjacent
+walkDepartures.test.ts: R that two paths of a haplotype cover, or a junction between them, has no call
+walkDepartures.test.ts: a contig's second visit to the window gives the R both reach no call
+walkDepartures.test.ts: a departure across W lines between abridged pieces is exact, and each piece a net over its stretch on R
+walkDepartures.test.ts: a departure across a contig's W lines counts the sequence the graph lacks as its own
+walkDepartures.test.ts: a departure leaving abridged pieces' last step keeps its own bp whole
+walkDepartures.test.ts: a departure leaving an abridged piece and rejoining reversed nets as the path read in full
+walkDepartures.test.ts: a departure leaving an abridged piece keeps its own bp, and the piece ends at its leave
+walkDepartures.test.ts: a departure over an abridged piece's leading own steps nets as the path read in full
+walkDepartures.test.ts: a departure over an abridged piece's trailing own steps nets as the path read in full
+walkDepartures.test.ts: a departure with no step on the window is read from its record alone
+walkDepartures.test.ts: a fragment's ends lie where their pass does, where R passes a node again
+walkDepartures.test.ts: a haplotype's paths join into one list, the reference's are left out
+walkDepartures.test.ts: a skipped stretch of R is a deletion with no ALT
+walkDepartures.test.ts: a step back along R is a tandem copy at the junction
+walkDepartures.test.ts: a stretch of R walked against it is ALT and inverted
+walkDepartures.test.ts: a walk along R departs nowhere and covers what it reaches
+walkDepartures.test.ts: a walk along R through a node R holds reversed stays on R
+walkDepartures.test.ts: a walk reading R mostly reversed is read the other way round
+walkDepartures.test.ts: an abridged fragment is net between its handles, and the departures either side stay exact
+walkDepartures.test.ts: an abridged walk is its net change over its anchors on R
+walkDepartures.test.ts: departures at both ends of one abridged piece net as the path read in full
+walkDepartures.test.ts: each abridged piece is a net over its own stretch, and a piece between two reads as itself
+walkDepartures.test.ts: keeps an abridged walk's net exact when a piece of it lies in another chunk
+walkDepartures.test.ts: keeps the net of each abridged walk past its step budget
+walkDepartures.test.ts: reads abridged walks in full, as the unabridged file gives them
+walkDepartures.test.ts: reads each haplotype to the net and coverage its walks give in full when a departure covers own steps of an abridged piece, or a piece runs against R
+walkDepartures.test.ts: reads each haplotype to the net and coverage its walks give in full when an abridged piece holds its contig's first or last steps
+walkDepartures.test.ts: steps off R between abutting R steps insert at a point
+walkDepartures.test.ts: steps off R in place of a stretch of R replace it
+walkDepartures.test.ts: steps off R past either end of a walk are no departure
+walkDepartures.test.ts: throws DepartureReadError past its departure byte budget
+walkDepartures.test.ts: throws RegionTooLargeError past its byte budget
+walkDepartures.test.ts: with partial: false reads every abridged walk, or throws before reading any
+walkReader.test.ts: a 0 bp own step is attached, cut $start-$end
+walkReader.test.ts: a contained cut splits a walk where it steps onto the reference off the window
+walkReader.test.ts: a contig names its sequence on the reference sample
+walkReader.test.ts: a cut computes no departure outside its drawn stretch, even inside a fragment
+walkReader.test.ts: a cut keeps each node's bases when asked
+walkReader.test.ts: a cut keeps the departure lines overlapping its window, of the blocks it reads: 0-$end
+walkReader.test.ts: a cut keeps the reference and the haplotypes asked for
+walkReader.test.ts: a cut keeps to WALK_BUDGETS unless its caller lifts them
+walkReader.test.ts: a cut leaves out the reference's other pass over the window's nodes
+walkReader.test.ts: a cut lists each departure over the window, with the own steps it holds
+walkReader.test.ts: a cut on a signal already aborted reads no row
+walkReader.test.ts: a cut over its departure budget fails without a zoom-in notice
+walkReader.test.ts: a cut over its node limit stops decoding at the tile that puts it over
+walkReader.test.ts: a cut over its step budget says how far to zoom in
+walkReader.test.ts: a cut reads the chunks under its context, not only under its window
+walkReader.test.ts: a cut reads the tiles and departure blocks its window overlaps, in one read where they touch, and fetches the tile holding a leave base
+walkReader.test.ts: a cut reads the tiles its window overlaps, and nothing else
+walkReader.test.ts: a cut returns every record whose line overlaps its window, in a hole too: $start-$end
+walkReader.test.ts: a cut's drawn stretch takes every pass over the window, not one per node
+walkReader.test.ts: a cut's links run the way a walk along the reference takes them
+walkReader.test.ts: a departure across a contig's W lines counts the bp the graph lacks as missing
+walkReader.test.ts: a departure computed from steps takes its ends' pass counts from the ref rows
+walkReader.test.ts: a direct jump across the window is a record with nothing of its own
+walkReader.test.ts: a directory and data that disagree are refused
+walkReader.test.ts: a file past 4 GiB is read at its exact offsets
+walkReader.test.ts: a file that is not a directory is refused
+walkReader.test.ts: a format %i walk file is refused, asking for a newer reader
+walkReader.test.ts: a format 6 file, which has no directory, is refused by its name
+walkReader.test.ts: a jump back whose own steps lie in the rejoin piece gets them attached, cut $start-$end
+walkReader.test.ts: a leave piece the read lacks is fetched for the own steps, once per tile, within the fetch cap
+walkReader.test.ts: a link is written the way round with more + ends, the smaller first on a tie: $line
+walkReader.test.ts: a node longer than a tile is read from the tile whose extent holds it
+walkReader.test.ts: a node the reference passes twice is placed at its pass over the window %i-%i
+walkReader.test.ts: a range that is not finite queries nothing
+walkReader.test.ts: a reader that cannot learn the data's length skips the directory's bytes check
+walkReader.test.ts: a record over the attach threshold carries no steps
+walkReader.test.ts: a record under the attach threshold carries the walk's own steps from the read
+walkReader.test.ts: a ref row whose passes do not count its steps is refused
+walkReader.test.ts: a region cut names the file's sequence for a contig, and keeps the haplotypes asked for
+walkReader.test.ts: a region cut on a sequence the file lacks names the ones it holds
+walkReader.test.ts: a region cut over its node limit says how far to zoom in
+walkReader.test.ts: a route's own steps inside one piece are a departure computed from the steps
+walkReader.test.ts: a sequence's length, the bytes a cut reads and the reference nodes over a window come from its tiles
+walkReader.test.ts: a step on a second pass over the window departs from that pass
+walkReader.test.ts: a table entry of length 0 is never read: $at
+walkReader.test.ts: a tile fetched to attach gives its record the own steps and nothing else: $opts
+walkReader.test.ts: a tile's R joins its ref rows in hapOffset order
+walkReader.test.ts: a unit of a kind the reader does not know is skipped
+walkReader.test.ts: a unit of a sequence of 0 bp, stating [0, 0), is read by no window
+walkReader.test.ts: a unit that does not start with its #unit line is refused
+walkReader.test.ts: a walk file whose directory states $walks is refused as format $format, with what to rebuild it with
+walkReader.test.ts: a walk jumping away for eight chunks and back has a record each way
+walkReader.test.ts: a walk leaving the window is cut there, and its record says where it rejoins
+walkReader.test.ts: a walk row takes the passes its :k, @k and start@k name, and the defaults where it names none
+walkReader.test.ts: a window inside a jump finds the jump in the departure read
+walkReader.test.ts: aborting an expanding cut stops its detail reads
+walkReader.test.ts: an abridged row's end takes the pass end@k names, else the one nearest its start
+walkReader.test.ts: an abridged walk cuts to a fragment from where it leaves R to where it rejoins, with its steps and bp
+walkReader.test.ts: an attach fetch reads an abridged piece's own steps where the cut expands the walk: $steps
+walkReader.test.ts: an expanded walk is read from its detail records as the unabridged file cuts it
+walkReader.test.ts: detail records read at once, finishing in reverse, cut as reads one at a time do
+walkReader.test.ts: keeps its reference position, in whichever order the chunks come
+walkReader.test.ts: open finds the directory beside the data, before any query
+walkReader.test.ts: readInOrder keeps at most its limit reading, and uses results in order
+walkReader.test.ts: referenceNodes gives every pass of the reference over the region
+walkReader.test.ts: steps either side of a hole in the reference depart nowhere
+walkReader.test.ts: tables takes the departures, so the call without them is a type error
+walkReader.test.ts: tags a reader does not know are ignored on any row and header line
+walkReader.test.ts: the header names the format, the reference, the haplotypes and the tile size, read from byte 0 and no tile
+walkReader.test.ts: the reference sequences leave out detail records and departures
+walkReader.test.ts: the same graph in 10 kb chunks computes the departure from the steps of one piece
+walkReader.test.ts: the same walks in pieces of their own cut whole, with the jumps as records
+walkReader.test.ts: two records of one walk at the same base are both kept
+walkReader.test.ts: two records whose leave pieces lie in adjacent chunks both get their own steps
+walkRows.test.ts: a contained cut splits a walk where it steps onto the reference off the window
+walkRows.test.ts: a cut is written as the GFA its tables stand for, with the departures over it
+walkRows.test.ts: a cut keeps its reference walk by the reference's whole name when it has no haplotype
+walkRows.test.ts: a departure between the pieces of one run comes from the records, not the steps
+walkRows.test.ts: a node is placed once
+walkRows.test.ts: a node's pass over the window wins over the reference's other passes, whichever is read first
+walkRows.test.ts: a node's reference position wins, whichever chunk is read first
+walkRows.test.ts: a record's own steps come from its leave and rejoin pieces, and a record lacking either is asked for
+walkRows.test.ts: a walk file's header states its format, tile, references, haplotypes and holes
+walkRows.test.ts: a walk leaving the window is cut at its last step on it, and its departure says where it rejoins
+walkRows.test.ts: asks for fewer haplotypes where no zoom fits
+walkRows.test.ts: continuation rows join by piece index, and a missing piece splits the walk
+walkRows.test.ts: counts a step along the reference as a quarter of one off it
+walkRows.test.ts: names the span from the window start that fits
+walkRows.test.ts: off the window, a node takes the reference row whose path sorts first, then its earliest start, whichever is read first: reversed %s
+walkRows.test.ts: offers a cut for every haplotype fewer as well as a zoom
+walkRows.test.ts: passes a window under it
+walkRows.test.ts: says so where no zoom fits
+walkRows.test.ts: the haplotype filter keeps the named walks and the reference
+walkRows.test.ts: the reference walk is written first, whatever order the rows came in

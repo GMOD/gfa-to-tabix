@@ -30,6 +30,8 @@ jobs:
       - run: cargo test --release --locked
       - run: python3 scripts/figures.py target/release/gfa-to-tabix --check
       - run: python3 scripts/check-links.py
+      - run: python3 scripts/check-claims.py
+      - run: scripts/check-walks.sh target/release/gfa-to-tabix
 
   parity:
     name: Byte parity with the JBrowse scripts and bandage-fold
