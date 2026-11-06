@@ -745,3 +745,62 @@ Where the findings have come from so far, and the rule each gives:
   ran alone; the narrower read was stable. Cause not found. Source: unknown.
   Open: reproduce with the review's scripts before graph-walks 5.0.3 or the
   format 7 reader
+- **2026-11-05, the format 7 writer, replacing format 6's Tabix filing.**
+  What format 6's mechanisms made up for, and where each went:
+  - **`#long`:** a reader widened its read for a reference node longer
+    than a chunk. Now a tile's extent runs to its longest node's end, so a
+    read by extent reaches it
+  - **`maxnode`:** widened every departure and attach read. Now a
+    departure line's extent covers its end nodes, and the pyramid files it
+    in every block of that cover
+  - **The one-base key and the chunk-before rule:** only a reader that
+    rounded to chunk starts got rows. Now the key is gone, and every line
+    states its stretch
+  - **`seq~cs` detail sequences at `DETAIL_SPACING`:** one record per
+    Tabix leaf bin, so a query for a record read no other. Now each record
+    is its own `detail` unit with exact bytes, and `DETAIL_SPACING` is
+    gone
+  - **`seq~departure` rows clipped to bin-sized blocks:** each row sat in
+    a bin no larger than itself. Now each block is a unit, and the record's
+    line in it is whole and the same in every block
+  - **The `.csi` fallback past 512 Mb:** the unit table has no coordinate
+    limit
+  - **Holding a sequence's detail records on disk until its main rows are
+    written:** Tabix needed each sequence's rows together. Kept, since a
+    table lists its units in file order
+  - **`bed::Writer`'s `.partial` name and rename:** kept, as `.tmp-<pid>`
+    for both files, the data file renamed before the directory is written
+
+  The `maxnode` test is gone with the header line. Source: rewrites that
+  drop what the old code compensated for. Guard: `tests/walks.rs`'s
+  `verify`, the release checks of `verify7.mjs`, runs on every file the
+  tests build
+- **2026-11-05, the format 7 writer.** Arbiter A's converter (`build.mjs`,
+  `s7.mjs`) keys detail records by path name. It names a `detail` unit
+  `cs:d` by looking up the path's last `abridged` row, so two records of one
+  path in a tile (two of its contigs abridged there) both take the last
+  number. On walks-records.gfa at `--tile 7 --abridge-bytes 1`, unit `0:2`
+  appears twice and `0:1` never. Found by comparing the writer's output
+  with the converter's on every test GFA and on fuzz graphs. Source:
+  evidence on one graph (the converter checked on MC and pggb only).
+  Fixed in the writer, which numbers records as `routes.rs` makes them.
+  Guard: `verify` refuses two tiles or two detail units of a sequence
+  with one name. The 'abridged' tests build walks-records.gfa at a byte
+  budget of 1
+- **2026-11-05, the format 7 writer.** The writer first gave each `ref`
+  row its own stretch. The ADR's table gives `ref` rows the tile's
+  extent, as rows of the tile's dictionary; the two differ only in a tile
+  with several `ref` rows. Found by the same comparison, on fuzz graphs
+  whose reference has holes. Source: tests shaped by the implementation,
+  since every hand-written fixture has one `ref` row per tile. Fixed before
+  the first commit. Guard: `verify` checks that each `ref` row states its
+  unit's extent and that the extent is the union of the ref rows'
+  stretches and the pieces' spans
+- **2026-11-05, the format 7 writer.** For a departure whose end step is
+  on a node of 0 bp, the converter takes the extent of the R node that
+  starts or ends at the breakpoint, a neighbour. The writer takes the end
+  step's own node, as the ADR words it ("its first end node"), widened by
+  the breakpoint stretch. Every departure line agrees between the two on
+  fuzz graphs with no 0 bp node. Source: a spec read two ways. Decided:
+  the ADR's reading, stated in walks-format.md. Guard: none needed in
+  readers, which keep lines overlapping their window either way

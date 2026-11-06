@@ -14,6 +14,7 @@ mod paths;
 mod place;
 mod routes;
 mod sorter;
+mod units;
 mod walks;
 
 use std::collections::HashSet;
@@ -108,7 +109,7 @@ fn index(cli: Cli) -> Result<(), String> {
         }
         let options = walks::Options {
             refs,
-            chunk: cli.chunk.unwrap_or(65536),
+            tile: cli.tile.unwrap_or(65536),
             sequences: cli.sequences,
             stay: cli.stay.unwrap_or(311),
             budget: routes::Budget {

@@ -80,10 +80,14 @@ impl Writer {
     }
 
     pub fn resolve(&self, (block, offset): Position) -> Option<VirtualPosition> {
-        let start = *self
-            .starts
-            .get(block.checked_sub(self.first_start)? as usize)?;
-        VirtualPosition::try_from((start, offset)).ok()
+        VirtualPosition::try_from((self.block_start(block)?, offset)).ok()
+    }
+
+    // Where block `block` starts in the compressed file, once it is written
+    pub fn block_start(&self, block: u64) -> Option<u64> {
+        self.starts
+            .get(block.checked_sub(self.first_start)? as usize)
+            .copied()
     }
 
     // Positions before `block` will not be resolved again.
@@ -102,15 +106,27 @@ impl Writer {
             self.block.extend_from_slice(&data[..take]);
             data = &data[take..];
             if self.block.len() == BLOCK {
-                let block = mem::replace(&mut self.block, Vec::with_capacity(BLOCK));
-                self.full.push(block);
-                if self.full.len() >= 16 * self.threads {
-                    self.write_full()?;
-                    wrote = true;
-                }
+                wrote |= self.cut()?;
             }
         }
         Ok(wrote)
+    }
+
+    // Ends the block being filled, so the next byte starts a block; true when
+    // the call wrote blocks.
+    pub fn cut(&mut self) -> io::Result<bool> {
+        if self.block.is_empty() {
+            Ok(false)
+        } else {
+            let block = mem::replace(&mut self.block, Vec::with_capacity(BLOCK));
+            self.full.push(block);
+            if self.full.len() >= 16 * self.threads {
+                self.write_full()?;
+                Ok(true)
+            } else {
+                Ok(false)
+            }
+        }
     }
 
     fn write_full(&mut self) -> io::Result<()> {

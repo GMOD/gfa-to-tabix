@@ -1,10 +1,10 @@
 // The --walks mode: every path of a base-level GFA cut into pieces filed under
-// fixed chunks of each reference's coordinate, written as one Tabix-indexed
-// BED file per reference in walk format 6 (`routes.rs` writes a chunk's rows,
-// `departures.rs` the departure records). A row's interval is the first base
-// of its chunk: a full-chunk interval would share a Tabix bin with the next
-// chunk, and a query would pull both. Header lines give the format, the chunk
-// size and the longest node, then the reference and the haplotypes.
+// fixed tiles of each reference's coordinate, written as one walk file per
+// reference in walk format 7 (ADR 0010): `routes.rs` writes a tile's rows,
+// `departures.rs` the departure records, and `units.rs` the units, tables and
+// directory. Every line starts with its sequence and the stretch of it the
+// line is about. The header unit gives the format, the tile size and the
+// options, then the reference, the haplotypes and the holes.
 
 use std::collections::{BTreeSet, HashMap};
 use std::fs::{self, File};
@@ -16,16 +16,16 @@ use std::sync::mpsc::{Receiver, sync_channel};
 use std::thread;
 use std::time::Instant;
 
-use crate::bed;
 use crate::departures::{self, Departure, End, Holes, Own};
 use crate::gfa::{blunt_error, is_blunt, parse_u64, split_path_name, text};
 use crate::intern::{FastMap, Interner};
-use crate::routes::{self, PieceRef};
-use crate::sorter::Sorter;
+use crate::routes::{self, PieceRef, Span, Stretch};
+use crate::sorter::{Merged, Sorter};
+use crate::units::UnitFile;
 
 pub struct Options {
     pub refs: Vec<String>,
-    pub chunk: u64,
+    pub tile: u64,
     pub sequences: bool,
     pub stay: u64,
     pub budget: routes::Budget,
@@ -210,39 +210,6 @@ struct Reference {
 impl Reference {
     fn on_reference(&self, id: usize) -> bool {
         self.placement[id] & OFF_REFERENCE == 0
-    }
-
-    // maxnode: the longest node on the reference paths, in bp
-    fn longest(&self, lengths: &[u32]) -> u32 {
-        (0..lengths.len())
-            .filter(|&id| self.on_reference(id))
-            .map(|id| lengths[id])
-            .max()
-            .unwrap_or(0)
-    }
-
-    // Every pass of the reference's paths over a node longer than `chunk`, as
-    // (name id, start, end), for the `#long` header lines
-    fn long_passes(&self, lengths: &[u32], chunk: u64) -> Vec<(u32, u64, u64)> {
-        let mut passes = Vec::new();
-        for id in
-            (0..lengths.len()).filter(|&id| self.on_reference(id) && u64::from(lengths[id]) > chunk)
-        {
-            let length = u64::from(lengths[id]);
-            if self.revisited.get(id) {
-                let (from, to) = self.visits_of[&(id as u32)];
-                for v in &self.visits[from as usize..to as usize] {
-                    passes.push((v.name, v.offset, v.offset + length));
-                }
-            } else {
-                passes.push((
-                    self.placement[id],
-                    self.offset[id],
-                    self.offset[id] + length,
-                ));
-            }
-        }
-        passes
     }
 
     // How many times the reference's paths pass node `id`
@@ -577,6 +544,12 @@ fn first_pass(
                 let Some(path) = path_line(line)? else {
                     return Ok(());
                 };
+                if path.name.first() == Some(&b'#') {
+                    return Err(format!(
+                        "path {} starts with #, which marks a walk file's header and unit lines",
+                        text(&path.name)
+                    ));
+                }
                 samples.id(path.sample);
                 parse_steps(&path, &mut handles)?;
                 let name = names.id(&path.name);
@@ -824,7 +797,7 @@ impl Chunks {
         let mut starts = Vec::new();
         let count: u64 = sequences.iter().map(|&(_, _, _, end)| end / size + 1).sum();
         if count >= u64::from(NONE) {
-            return Err("more than 2^32 chunks; use a larger --chunk".into());
+            return Err("more than 2^32 chunks; use a larger --tile".into());
         }
         for (_, name, reference, end) in sequences {
             first[name as usize] = starts.len() as u32;
@@ -1125,8 +1098,11 @@ impl Builder {
                             rejoin,
                         };
                         filed.0 += 1;
-                        filed.1 +=
-                            departure.file(self.chunks.first[s as usize], &mut self.departures)?;
+                        filed.1 += departure.file(
+                            self.chunks.first[s as usize],
+                            self.chunks.size,
+                            &mut self.departures,
+                        )?;
                     }
                     *last = j;
                 }
@@ -1177,8 +1153,11 @@ impl Builder {
                             rejoin: there.first,
                         };
                         filed.0 += 1;
-                        filed.1 +=
-                            departure.file(self.chunks.first[s as usize], &mut self.departures)?;
+                        filed.1 += departure.file(
+                            self.chunks.first[s as usize],
+                            self.chunks.size,
+                            &mut self.departures,
+                        )?;
                     }
                 }
             }
@@ -1205,6 +1184,7 @@ fn step_end(chunks: &Chunks, handle: u32, at: Visit, length: u64, passes: u32, l
         bp,
         against,
         base: base.min(chunks.end[at.name as usize].saturating_sub(1)),
+        node: (at.offset, at.offset + length),
         passes,
     }
 }
@@ -1437,14 +1417,50 @@ impl Drop for TempDir {
 const SORT_BUDGET: usize = 512 << 20;
 const DEPARTURE_SORT_BUDGET: usize = 128 << 20;
 
-// The detail records of a sequence's chunks, held on disk until its main rows
-// are written, since Tabix needs each sequence's rows together. Chunk `cs` of
-// sequence `seq` files its records as `seq~cs`, record k at k × DETAIL_SPACING.
+// A tile's or a detail record's lines, each starting with the sequence and
+// its piece's span, or for a row of the tile's dictionary the unit's extent:
+// the union of its ref rows' stretches and its pieces' spans
+struct Unit {
+    extent: Span,
+    text: Vec<u8>,
+    lines: u64,
+}
+
+fn unit_of(seq: &[u8], rows: &[(Stretch, &[u8])]) -> Option<Unit> {
+    let extent = rows
+        .iter()
+        .filter_map(|&(stretch, _)| match stretch {
+            Stretch::Piece(span) | Stretch::Ref(span) => Some(span),
+            Stretch::Dictionary => None,
+        })
+        .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)))?;
+    let mut text = Vec::new();
+    for &(stretch, row) in rows {
+        let (lo, hi) = match stretch {
+            Stretch::Piece(span) => span,
+            Stretch::Ref(_) | Stretch::Dictionary => extent,
+        };
+        text.extend_from_slice(seq);
+        text.push(b'\t');
+        push_u64(&mut text, lo);
+        text.push(b'\t');
+        push_u64(&mut text, hi);
+        text.push(b'\t');
+        text.extend_from_slice(row);
+    }
+    Some(Unit {
+        extent,
+        text,
+        lines: rows.len() as u64,
+    })
+}
+
+// The detail records of the sequence being written, held on disk until its
+// tiles and departure blocks are written: each as its tile's start, its
+// number there, its extent and its lines
 struct Details {
     file: BufWriter<File>,
     path: PathBuf,
-    sequence: Option<Vec<u8>>,
-    any: bool,
 }
 
 impl Details {
@@ -1454,43 +1470,29 @@ impl Details {
         Ok(Details {
             file: BufWriter::new(file),
             path,
-            sequence: None,
-            any: false,
         })
     }
 
-    fn add(&mut self, start: u64, records: &routes::Details) -> Result<(), String> {
+    fn add(&mut self, start: u64, k: usize, unit: &Unit) -> Result<(), String> {
         let path = &self.path;
         let io = |e: std::io::Error| format!("{}: {e}", path.display());
-        for (k, record) in records.iter().enumerate() {
-            for row in record {
-                self.file.write_all(&start.to_le_bytes()).map_err(io)?;
-                self.file.write_all(&(k as u64).to_le_bytes()).map_err(io)?;
-                self.file
-                    .write_all(&(row.len() as u64).to_le_bytes())
-                    .map_err(io)?;
-                self.file.write_all(row).map_err(io)?;
-                self.any = true;
-            }
+        let (lo, hi) = unit.extent;
+        for n in [start, k as u64, lo, hi, unit.lines, unit.text.len() as u64] {
+            self.file.write_all(&n.to_le_bytes()).map_err(io)?;
         }
-        Ok(())
+        self.file.write_all(&unit.text).map_err(io)
     }
 
-    // Writes the held records under the current sequence and empties the file
-    fn flush(&mut self, writer: &mut bed::Writer) -> Result<u64, String> {
-        let Some(sequence) = self.sequence.as_deref() else {
-            return Ok(0);
-        };
-        if !self.any {
-            return Ok(0);
-        }
+    // Writes the held records as `detail` units of `seq`, each named by its
+    // tile's start and its number there, and empties the file. Returns how
+    // many lines they hold.
+    fn flush(&mut self, seq: &[u8], out: &mut UnitFile) -> Result<u64, String> {
         let path = &self.path;
         let io = |e: std::io::Error| format!("{}: {e}", path.display());
         self.file.flush().map_err(io)?;
         let mut reader = BufReader::new(File::open(path).map_err(io)?);
-        let (mut word, mut row, mut line, mut name) =
-            ([0u8; 8], Vec::new(), Vec::new(), Vec::new());
-        let mut rows = 0;
+        let (mut word, mut text) = ([0u8; 8], Vec::new());
+        let mut lines = 0;
         let mut read_u64 = |reader: &mut BufReader<File>| -> Result<Option<u64>, String> {
             match reader.read_exact(&mut word) {
                 Ok(()) => Ok(Some(u64::from_le_bytes(word))),
@@ -1499,40 +1501,128 @@ impl Details {
             }
         };
         while let Some(start) = read_u64(&mut reader)? {
-            let k = read_u64(&mut reader)?.ok_or("a detail record ends early")?;
-            let len = read_u64(&mut reader)?.ok_or("a detail record ends early")?;
-            row.resize(len as usize, 0);
-            reader.read_exact(&mut row).map_err(io)?;
-            name.clear();
-            name.extend_from_slice(sequence);
-            name.push(b'~');
-            push_u64(&mut name, start);
-            let at = k * routes::DETAIL_SPACING;
-            line.clear();
-            line.extend_from_slice(&name);
-            line.push(b'\t');
-            push_u64(&mut line, at);
-            line.push(b'\t');
-            push_u64(&mut line, at + 1);
-            line.push(b'\t');
-            line.extend_from_slice(&row);
-            writer.push(&name, at, at + 1, &line)?;
-            rows += 1;
+            let mut next = || -> Result<u64, String> {
+                read_u64(&mut reader)?.ok_or_else(|| "a detail record ends early".into())
+            };
+            let (k, lo, hi, count, len) = (next()?, next()?, next()?, next()?, next()?);
+            text.resize(len as usize, 0);
+            reader.read_exact(&mut text).map_err(io)?;
+            out.begin(seq, (lo, hi), "detail", &format!("{start}:{k}"))?;
+            out.write(&text)?;
+            out.end()?;
+            lines += count;
         }
-        let file = File::create(path).map_err(io)?;
-        self.file = BufWriter::new(file);
-        self.any = false;
-        Ok(rows)
+        self.file = BufWriter::new(File::create(path).map_err(io)?);
+        Ok(lines)
     }
 }
 
-// One reference's walk file as the rows reach it
+// One reference's walk file as the units reach it
 struct Output {
-    writer: bed::Writer,
+    file: UnitFile,
     path: String,
-    rows: u64,
+    lines: u64,
     counts: routes::Counts,
     details: Details,
+}
+
+// The walk files, written in file order: each reference sequence's tiles
+// with its departure blocks between them by start, a tile before the blocks
+// that start with it, then its detail records, then its table
+struct Outputs<'a> {
+    outputs: Vec<Output>,
+    departures: Merged,
+    chunks: &'a Chunks,
+    names: &'a Interner,
+    // every reference sequence in file order, and how many are written
+    sequences: Vec<u32>,
+    done: usize,
+}
+
+impl Outputs<'_> {
+    // Writes the departure blocks of sequence `name` that start before `until`
+    fn departures(&mut self, name: u32, until: u64) -> Result<(), String> {
+        let key = self.chunks.first[name as usize];
+        let seq = &self.names[name as usize];
+        let out = &mut self.outputs[self.chunks.owner[name as usize] as usize];
+        let mut open = None;
+        let mut line = Vec::new();
+        while let Some((k, row)) = self.departures.peek() {
+            let filed = departures::unfile(row);
+            if k != key || filed.block.0 >= until {
+                break;
+            }
+            if open != Some(filed.block) {
+                if open.is_some() {
+                    out.file.end()?;
+                }
+                let (start, size) = filed.block;
+                out.file
+                    .begin(seq, (start, start + size), "departures", &size.to_string())?;
+                open = Some(filed.block);
+            }
+            line.clear();
+            line.extend_from_slice(seq);
+            line.push(b'\t');
+            push_u64(&mut line, filed.extent.0);
+            line.push(b'\t');
+            push_u64(&mut line, filed.extent.1);
+            line.push(b'\t');
+            line.extend_from_slice(filed.body);
+            line.push(b'\n');
+            out.file.write(&line)?;
+            out.lines += 1;
+            self.departures.advance()?;
+        }
+        if open.is_some() {
+            out.file.end()?;
+        }
+        Ok(())
+    }
+
+    // Ends every sequence before `name` in file order, or every one left
+    fn close_before(&mut self, name: Option<u32>) -> Result<(), String> {
+        while let Some(&s) = self.sequences.get(self.done)
+            && Some(s) != name
+        {
+            self.departures(s, u64::MAX)?;
+            let seq = &self.names[s as usize];
+            let out = &mut self.outputs[self.chunks.owner[s as usize] as usize];
+            out.lines += out.details.flush(seq, &mut out.file)?;
+            out.file.table(seq)?;
+            self.done += 1;
+        }
+        Ok(())
+    }
+
+    fn tile(&mut self, chunk: u32, tile: &Unit, details: &[Unit]) -> Result<(), String> {
+        let (name, start) = self.chunks.starts[chunk as usize];
+        self.close_before(Some(name))?;
+        self.departures(name, start)?;
+        let seq = &self.names[name as usize];
+        let out = &mut self.outputs[self.chunks.owner[name as usize] as usize];
+        out.file
+            .begin(seq, tile.extent, "tile", &start.to_string())?;
+        out.file.write(&tile.text)?;
+        out.file.end()?;
+        out.lines += tile.lines;
+        for (k, record) in details.iter().enumerate() {
+            out.details.add(start, k, record)?;
+        }
+        Ok(())
+    }
+
+    // Returns each file's path, lines, counts and units
+    fn finish(mut self) -> Result<Vec<(String, u64, routes::Counts, u64)>, String> {
+        self.close_before(None)?;
+        if self.departures.peek().is_some() {
+            return Err("departure lines of no reference sequence are left unwritten".into());
+        }
+        self.outputs
+            .into_iter()
+            .map(|out| Ok((out.path, out.lines, out.counts, out.file.finish()?)))
+            .collect()
+    }
 }
 
 // The process's peak resident memory in GiB, where /proc says
@@ -1584,7 +1674,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             reference.walks
         );
     }
-    let chunks = Chunks::new(options.chunk, &ends, &names)?;
+    let chunks = Chunks::new(options.tile, &ends, &names)?;
 
     let temp = TempDir(PathBuf::from(format!(
         "{prefix}.walks-tmp-{}",
@@ -1645,13 +1735,11 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         ..
     } = builder;
     let threads = thread::available_parallelism().map_or(4, |n| n.get());
-    let mut writers = Vec::with_capacity(references.len());
+    let mut outputs = Vec::with_capacity(references.len());
     for reference in &references {
-        let path = format!("{prefix}.{}.walks.bed.gz", text(&reference.sample));
-        let mut writer = bed::Writer::create(&path)?;
-        let longest = reference.longest(&graph.lengths);
+        let path = format!("{prefix}.{}.walks.gz", text(&reference.sample));
         let mut header = format!(
-            "#walks\tformat:i:6\tchunk:i:{}\tmaxnode:i:{longest}\trevisited:i:{}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
+            "#walks\tformat:i:7\ttile:i:{}\trevisited:i:{}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
             chunks.size,
             reference.visits_of.len(),
             options.stay,
@@ -1664,18 +1752,6 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             header.extend_from_slice(b"#haplotype\t");
             header.extend_from_slice(name);
             header.push(b'\n');
-        }
-        let mut long: Vec<(&[u8], u64, u64)> = reference
-            .long_passes(&graph.lengths, chunks.size)
-            .into_iter()
-            .map(|(name, start, end)| (names[name as usize].as_slice(), start, end))
-            .collect();
-        long.sort_unstable();
-        long.dedup();
-        for (name, start, end) in long {
-            header.extend_from_slice(b"#long\t");
-            header.extend_from_slice(name);
-            header.extend_from_slice(format!("\t{start}\t{end}\n").as_bytes());
         }
         let mut holes: Vec<(&[u8], u64, u64)> = reference
             .holes
@@ -1694,23 +1770,34 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             header.extend_from_slice(name);
             header.extend_from_slice(format!("\t{start}\t{end}\n").as_bytes());
         }
-        writer.header(&header)?;
-        let details = Details::create(&temp.0, writers.len())?;
-        writers.push(Output {
-            writer,
+        let file = UnitFile::create(&path, &header, threads)?;
+        let details = Details::create(&temp.0, outputs.len())?;
+        outputs.push(Output {
+            file,
             path,
-            rows: 0,
+            lines: 0,
             counts: routes::Counts::default(),
             details,
         });
     }
+    let mut sequences: Vec<u32> = chunks.starts.iter().map(|&(name, _)| name).collect();
+    sequences.dedup();
+    let mut outputs = Outputs {
+        outputs,
+        departures: departures.merged()?,
+        chunks: &chunks,
+        names: &names,
+        sequences,
+        done: 0,
+    };
     let sequence_of = |id: usize| graph.sequence(id);
     let sequence = options.sequences.then_some(&sequence_of);
-    // Chunks encode in parallel, a batch at a time, and are written in order.
-    type Encoded = Result<(Vec<u8>, Vec<usize>, routes::Counts, routes::Details), String>;
+    // Tiles encode in parallel, a batch at a time, and are written in order.
+    type Encoded = Result<(Unit, Vec<Unit>, routes::Counts), String>;
     let encode = |chunk: u32, raw: &[Vec<u8>]| -> Encoded {
-        let reference =
-            &references[chunks.owner[chunks.starts[chunk as usize].0 as usize] as usize];
+        let (name, _) = chunks.starts[chunk as usize];
+        let reference = &references[chunks.owner[name as usize] as usize];
+        let seq = &names[name as usize];
         let (mut lines, mut ends) = (Vec::new(), Vec::new());
         let mut counts = routes::Counts::default();
         let mut details = routes::Details::new();
@@ -1723,16 +1810,35 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             sequence,
             options.budget,
             &mut counts,
-            &mut |rest| {
+            &mut |stretch, rest| {
                 lines.extend_from_slice(rest);
-                ends.push(lines.len());
+                ends.push((stretch, lines.len()));
                 Ok(())
             },
             &mut details,
         )?;
-        Ok((lines, ends, counts, details))
+        let mut from = 0;
+        let rows: Vec<(Stretch, &[u8])> = ends
+            .iter()
+            .map(|&(stretch, end)| {
+                let row = &lines[from..end];
+                from = end;
+                (stretch, row)
+            })
+            .collect();
+        let tile = unit_of(seq, &rows).ok_or("a tile with no step on the reference")?;
+        let details = details
+            .iter()
+            .map(|record| {
+                let rows: Vec<(Stretch, &[u8])> = record
+                    .iter()
+                    .map(|(span, row)| (*span, row.as_slice()))
+                    .collect();
+                unit_of(seq, &rows).ok_or("a detail record with no step on the reference")
+            })
+            .collect::<Result<_, _>>()?;
+        Ok((tile, details, counts))
     };
-    let mut line = Vec::new();
     let mut write_batch = |batch: &mut Vec<(u32, Vec<Vec<u8>>)>| -> Result<(), String> {
         let next = AtomicUsize::new(0);
         let encoded: Vec<Mutex<Option<Encoded>>> = batch.iter().map(|_| Mutex::new(None)).collect();
@@ -1751,33 +1857,13 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         });
         for ((chunk, _), slot) in batch.iter().zip(encoded) {
             let (name, start) = chunks.starts[*chunk as usize];
-            let name_text = &names[name as usize];
-            let (lines, ends, chunk_counts, chunk_details) = slot
+            let (tile, details, counts) = slot
                 .into_inner()
                 .unwrap()
-                .expect("every chunk of the batch is encoded")
-                .map_err(|e| format!("{}:{start}: {e}", text(name_text)))?;
-            let out = &mut writers[chunks.owner[name as usize] as usize];
-            if out.details.sequence.as_deref() != Some(name_text.as_slice()) {
-                out.rows += out.details.flush(&mut out.writer)?;
-                out.details.sequence = Some(name_text.clone());
-            }
-            out.details.add(start, &chunk_details)?;
-            out.counts += chunk_counts;
-            let mut from = 0;
-            for end in ends {
-                line.clear();
-                line.extend_from_slice(name_text);
-                line.push(b'\t');
-                push_u64(&mut line, start);
-                line.push(b'\t');
-                push_u64(&mut line, start + 1);
-                line.push(b'\t');
-                line.extend_from_slice(&lines[from..end]);
-                out.writer.push(name_text, start, start + 1, &line)?;
-                out.rows += 1;
-                from = end;
-            }
+                .expect("every tile of the batch is encoded")
+                .map_err(|e| format!("{}:{start}: {e}", text(&names[name as usize])))?;
+            outputs.outputs[chunks.owner[name as usize] as usize].counts += counts;
+            outputs.tile(*chunk, &tile, &details)?;
         }
         batch.clear();
         Ok(())
@@ -1793,45 +1879,16 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         }
         batch
             .last_mut()
-            .expect("a chunk is open")
+            .expect("a tile is open")
             .1
             .push(rest.to_vec());
         Ok(())
     })?;
     write_batch(&mut batch)?;
     drop(write_batch);
-    for out in &mut writers {
-        out.rows += out.details.flush(&mut out.writer)?;
-    }
-    // each sequence's departure rows under its sibling S~departure
-    let mut sibling: (u32, Vec<u8>) = (NONE, Vec::new());
-    departures.merge(|key, row| {
-        let name = chunks.starts[key as usize].0;
-        if sibling.0 != name {
-            sibling.1.clear();
-            sibling.1.extend_from_slice(&names[name as usize]);
-            sibling.1.extend_from_slice(b"~departure");
-            sibling.0 = name;
-        }
-        let (start, end, rest) = departures::unfile(row);
-        line.clear();
-        line.extend_from_slice(&sibling.1);
-        line.push(b'\t');
-        push_u64(&mut line, start);
-        line.push(b'\t');
-        push_u64(&mut line, end);
-        line.push(b'\t');
-        line.extend_from_slice(rest);
-        line.push(b'\n');
-        let out = &mut writers[chunks.owner[name as usize] as usize];
-        out.rows += 1;
-        out.writer.push(&sibling.1, start, end, &line)
-    })?;
-    for out in writers {
-        let index = out.writer.finish()?;
-        let (path, rows, counts) = (out.path, out.rows, out.counts);
+    for (path, lines, counts, units) in outputs.finish()? {
         eprintln!(
-            "{} {rows} rows -> {path} (+ .{index}): {} routes, {} walk rows, {} copies named; {} paths abridged to {} detail walk rows",
+            "{} {lines} lines in {units} units -> {path} (+ .idx): {} routes, {} walk rows, {} copies named; {} paths abridged to {} detail walk rows",
             elapsed(),
             counts.routes,
             counts.walks,

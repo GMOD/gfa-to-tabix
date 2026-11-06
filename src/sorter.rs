@@ -1,7 +1,7 @@
 // An external sort for rows keyed by an integer, with the row's text as the
 // tiebreak. Rows collect in memory until a budget fills, then a background
 // thread sorts them and writes a compressed run file; `merge` streams the runs
-// back in order.
+// back in order, all at once or a row at a time.
 
 use std::cmp::{Ordering, Reverse};
 use std::collections::BinaryHeap;
@@ -151,14 +151,25 @@ impl Sorter {
 
     // Streams every row in (key, text) order to `emit`, then deletes the runs.
     pub fn merge(
-        mut self,
+        self,
         mut emit: impl FnMut(u32, &[u8]) -> Result<(), String>,
     ) -> Result<(), String> {
+        let mut merged = self.merged()?;
+        while let Some((key, text)) = merged.peek() {
+            emit(key, text)?;
+            merged.advance()?;
+        }
+        Ok(())
+    }
+
+    // The rows in (key, text) order, read one at a time
+    pub fn merged(mut self) -> Result<Merged, String> {
         self.spill()?;
         self.wait()?;
-        let mut runs = Vec::with_capacity(self.runs.len());
-        let mut heap = BinaryHeap::with_capacity(self.runs.len());
-        for (index, path) in self.runs.iter().enumerate() {
+        let paths = mem::take(&mut self.runs);
+        let mut runs = Vec::with_capacity(paths.len());
+        let mut heap = BinaryHeap::with_capacity(paths.len());
+        for (index, path) in paths.iter().enumerate() {
             let file = File::open(path).map_err(io_error(path))?;
             let mut run = Run {
                 reader: BufReader::with_capacity(
@@ -179,20 +190,43 @@ impl Sorter {
             }
             runs.push(run);
         }
-        while let Some(Reverse(mut head)) = heap.pop() {
-            emit(head.key, &head.text)?;
-            let path = &self.runs[head.run];
-            if runs[head.run]
+        Ok(Merged { paths, runs, heap })
+    }
+}
+
+pub struct Merged {
+    paths: Vec<PathBuf>,
+    runs: Vec<Run>,
+    heap: BinaryHeap<Reverse<Head>>,
+}
+
+impl Merged {
+    // The next row, None after the last
+    pub fn peek(&self) -> Option<(u32, &[u8])> {
+        self.heap
+            .peek()
+            .map(|Reverse(head)| (head.key, head.text.as_slice()))
+    }
+
+    pub fn advance(&mut self) -> Result<(), String> {
+        if let Some(Reverse(mut head)) = self.heap.pop() {
+            let path = &self.paths[head.run];
+            if self.runs[head.run]
                 .next(&mut head.key, &mut head.text)
                 .map_err(io_error(path))?
             {
-                heap.push(Reverse(head));
+                self.heap.push(Reverse(head));
             }
         }
-        for path in &self.runs {
-            fs::remove_file(path).map_err(io_error(path))?;
-        }
         Ok(())
+    }
+}
+
+impl Drop for Merged {
+    fn drop(&mut self) {
+        for path in &self.paths {
+            let _ = fs::remove_file(path);
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 // Departure records (ADR 0009): each place a path's consecutive steps on one
 // reference sequence S are not adjacent there and the walk rows can't show
-// it, filed under the sibling sequence `S~departure` as one row per
-// bin-sized block of the bases between its ends.
+// it, filed in every block of the departure pyramid that covers its end
+// nodes (ADR 0010).
 
 use crate::sorter::Sorter;
 
@@ -16,6 +16,8 @@ pub struct End {
     pub against: bool,
     // the base of the node beside the breakpoint, clipped to S
     pub base: u64,
+    // the stretch of S the step's node covers at its pass
+    pub node: (u64, u64),
     // how many times the reference's paths pass the step's node: above 1,
     // which pass the step takes is the placement's choice
     pub passes: u32,
@@ -49,21 +51,21 @@ pub struct Departure<'a> {
     pub rejoin: End,
 }
 
-const BIN_SIZES: [u64; 4] = [1 << 26, 1 << 23, 1 << 20, 1 << 17];
+// The pyramid's block sizes, in tiles, largest first
+const BLOCK_TILES: [u64; 4] = [512, 64, 8, 1];
 
-// Cuts [lo, hi) at aligned multiples of the index's bin sizes, each block
-// clipped to the stretch, so that each lands in a bin no larger than its own
-// size
-fn blocks(lo: u64, hi: u64, mut each: impl FnMut(u64, u64)) {
-    let unit = BIN_SIZES[3];
-    let mut at = lo / unit * unit;
-    let end = (hi - 1) / unit * unit + unit;
+// Cuts [lo, hi), widened to whole tiles, into the largest aligned blocks of
+// the pyramid that fit, as (start, size)
+fn cover(lo: u64, hi: u64, tile: u64, mut each: impl FnMut(u64, u64)) {
+    let mut at = lo / tile * tile;
+    let end = hi.div_ceil(tile) * tile;
     while at < end {
-        let size = BIN_SIZES
+        let size = BLOCK_TILES
             .into_iter()
+            .map(|n| n * tile)
             .find(|&s| at.is_multiple_of(s) && at + s <= end)
-            .unwrap_or(unit);
-        each(lo.max(at), hi.min(at + size));
+            .unwrap_or(tile);
+        each(at, size);
         at += size;
     }
 }
@@ -73,11 +75,16 @@ fn push_u64(out: &mut Vec<u8>, n: u64) {
 }
 
 impl Departure<'_> {
-    // The bases the record is filed over: from one base of one end's node
-    // beside its breakpoint to one of the other's
+    // From the first base of one end's node to the last of the other's, or
+    // the bases beside the breakpoints where wider
     fn extent(&self) -> (u64, u64) {
         let (a, b) = (self.leave.base, self.rejoin.base);
-        (a.min(b), a.max(b) + 1)
+        (
+            a.min(b).min(self.leave.node.0).min(self.rejoin.node.0),
+            (a.max(b) + 1)
+                .max(self.leave.node.1)
+                .max(self.rejoin.node.1),
+        )
     }
 
     // `departure path hapStart ownBp missingBp leavePos leaveStrand
@@ -97,30 +104,43 @@ impl Departure<'_> {
         }
     }
 
-    // Sorts the record's rows under `key`, S's place among the file's
-    // sequences, each as its block's start and end, big-endian so that bytes
-    // sort as numbers, then the row's text from its kind on. Returns how many.
-    pub fn file(&self, key: u32, sorter: &mut Sorter) -> Result<u64, String> {
+    // Sorts the record's line once per block of its cover under `key`, S's
+    // place among the file's sequences, as the block's start and size, the
+    // record's extent, each big-endian so that bytes sort as numbers, then
+    // the line's text from its kind on. Returns how many.
+    pub fn file(&self, key: u32, tile: u64, sorter: &mut Sorter) -> Result<u64, String> {
         let (lo, hi) = self.extent();
         let mut body = Vec::new();
         self.body(&mut body);
-        let mut rows = Vec::new();
-        blocks(lo, hi, |a, b| rows.push((a, b)));
-        for &(a, b) in &rows {
+        let mut blocks = Vec::new();
+        cover(lo, hi, tile, |at, size| blocks.push((at, size)));
+        for &(at, size) in &blocks {
             sorter.push(key, |out| {
-                out.extend_from_slice(&a.to_be_bytes());
-                out.extend_from_slice(&b.to_be_bytes());
+                for n in [at, size, lo, hi] {
+                    out.extend_from_slice(&n.to_be_bytes());
+                }
                 out.extend_from_slice(&body);
             })?;
         }
-        Ok(rows.len() as u64)
+        Ok(blocks.len() as u64)
     }
 }
 
-// A sorted row back as (start, end, text from its kind on)
-pub fn unfile(row: &[u8]) -> (u64, u64, &[u8]) {
-    let word = |at: usize| u64::from_be_bytes(row[at..at + 8].try_into().expect("8 bytes"));
-    (word(0), word(8), &row[16..])
+// A sorted line back as its block's start and size, its extent, and its text
+// from its kind on
+pub struct Filed<'a> {
+    pub block: (u64, u64),
+    pub extent: (u64, u64),
+    pub body: &'a [u8],
+}
+
+pub fn unfile(row: &[u8]) -> Filed<'_> {
+    let word = |k: usize| u64::from_be_bytes(row[8 * k..8 * k + 8].try_into().expect("8 bytes"));
+    Filed {
+        block: (word(0), word(1)),
+        extent: (word(2), word(3)),
+        body: &row[32..],
+    }
 }
 
 // The stretches of a reference sequence no line of the reference covers,

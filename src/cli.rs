@@ -79,9 +79,10 @@ pub struct Cli {
     #[arg(short, long = "out", value_name = "PREFIX")]
     pub out: Option<String>,
 
-    /// Instead write PREFIX.SAMPLE.walks.bed.gz and a .tbi for each SAMPLE in
-    /// --refs. Each file lists every haplotype's path in SAMPLE's coordinates.
-    /// Reads the GFA twice
+    /// Instead write PREFIX.SAMPLE.walks.gz and its directory
+    /// PREFIX.SAMPLE.walks.gz.idx for each SAMPLE in --refs, in walk format 7.
+    /// Each file lists every haplotype's path in SAMPLE's coordinates. Reads
+    /// the GFA twice
     #[arg(long, requires = "refs", help_heading = WALKS)]
     pub walks: bool,
 
@@ -89,9 +90,10 @@ pub struct Cli {
     #[arg(long, requires = "walks", help_heading = WALKS)]
     pub refs: Option<String>,
 
-    /// Chunk size on the reference (default 65536)
+    /// Tile size on the reference (default 65536): each tile's rows are one
+    /// unit, which a reader fetches whole
     #[arg(long, value_name = "BP", value_parser = value_parser!(u64).range(1..), requires = "walks", help_heading = WALKS)]
-    pub chunk: Option<u64>,
+    pub tile: Option<u64>,
 
     /// Add the bases of each reference and route row's nodes as SQ:Z:
     #[arg(long, requires = "walks", help_heading = WALKS)]

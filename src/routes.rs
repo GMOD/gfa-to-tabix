@@ -9,7 +9,8 @@
 // interior, and the row names the copy of R it takes wherever the default
 // rule would take another: where it starts, where it leaves R for a route
 // and where the route's exit lands. The encoder decodes every walk row it
-// writes and compares the steps and their copies.
+// writes and compares the steps and their copies, and states each row's span
+// on R's sequence from what it decodes to.
 
 use std::hash::BuildHasherDefault;
 
@@ -20,6 +21,19 @@ use crate::intern::{FastMap, IdHasher};
 const NONE: u32 = u32::MAX;
 // A step's position where it is route interior
 pub const OFF: u64 = u64::MAX;
+
+// A stretch of R's sequence, [start, end)
+pub type Span = (u64, u64);
+
+// What a row says of R's sequence: a piece's own span; a ref row's stretch,
+// which the tile's extent covers but the row does not state, since it belongs
+// to the tile's dictionary; or nothing, for the rest of the dictionary
+#[derive(Clone, Copy)]
+pub enum Stretch {
+    Piece(Span),
+    Ref(Span),
+    Dictionary,
+}
 
 // A piece as the cutting pass writes it into the sort, borrowed from its
 // path: for a walk piece, each step's position on R's sequence, OFF for route
@@ -165,17 +179,18 @@ impl<'a> Piece<'a> {
 
 type IdMap<V> = FastMap<u32, V>;
 
-// The chunk's reference path R with each step's offset on its sequence, and
-// each node's occurrences in it chained from the first.
+// The chunk's reference path R with where each step starts and ends on its
+// sequence, and each node's occurrences in it chained from the first.
 struct Path {
     handles: Vec<u32>,
     offsets: Vec<u64>,
+    ends: Vec<u64>,
     first: IdMap<u32>,
     next: Vec<u32>,
 }
 
 impl Path {
-    fn new(handles: Vec<u32>, offsets: Vec<u64>) -> Path {
+    fn new(handles: Vec<u32>, offsets: Vec<u64>, ends: Vec<u64>) -> Path {
         let mut first = IdMap::default();
         let mut last: IdMap<u32> = IdMap::default();
         let mut next = vec![NONE; handles.len()];
@@ -191,9 +206,16 @@ impl Path {
         Path {
             handles,
             offsets,
+            ends,
             first,
             next,
         }
+    }
+
+    // From the first base of the steps at positions `at` to the last
+    fn span(&self, at: impl Iterator<Item = usize>) -> Option<Span> {
+        at.map(|j| (self.offsets[j], self.ends[j]))
+            .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)))
     }
 
     // The position in R of the step on `handle`'s node at `offset`
@@ -501,8 +523,8 @@ fn decode(path: &Path, walk: &Walk, routes: &Routes, count: usize) -> Option<Vec
     Some(steps)
 }
 
-fn decodes_to(steps: Option<Vec<(u32, u32)>>, handles: &[u32], targets: &[u32]) -> bool {
-    steps.is_some_and(|steps| {
+fn decodes_to(steps: &Option<Vec<(u32, u32)>>, handles: &[u32], targets: &[u32]) -> bool {
+    steps.as_ref().is_some_and(|steps| {
         steps
             .iter()
             .copied()
@@ -591,9 +613,6 @@ const STEPS_PER_INTERIOR: u64 = 4;
 // bgzip compresses a stream in blocks of this many bytes
 const BGZF_BLOCK: usize = 65280;
 
-// One record per Tabix leaf bin, so a query for one detail record reads no other
-pub const DETAIL_SPACING: u64 = 16384;
-
 // Each node's length in bp, and how many times the reference's paths pass it
 #[derive(Clone, Copy)]
 pub struct Nodes<'a> {
@@ -601,13 +620,19 @@ pub struct Nodes<'a> {
     pub passes: &'a dyn Fn(usize) -> u32,
 }
 
-// The rows a chunk files under its detail sequence, one record per abridged
-// path, each row without the anchor columns and with its newline
-pub type Details = Vec<Vec<Vec<u8>>>;
+// A row from its kind on, with its newline, and what it says of R's sequence
+pub type Row = (Stretch, Vec<u8>);
 
+// Takes each row as `Row` holds it, borrowed
+pub type Emit<'a> = dyn FnMut(Stretch, &[u8]) -> Result<(), String> + 'a;
+
+// A chunk's detail records, one per abridged path
+pub type Details = Vec<Vec<Row>>;
+
+// Each walk piece with its row and the span its row decodes to
 struct Encoded<'p> {
     routes: Routes,
-    walks: Vec<(&'p Piece<'p>, Walk)>,
+    walks: Vec<(&'p Piece<'p>, Walk, Span)>,
 }
 
 // Encodes the walk pieces `members` of `pieces`, in that order
@@ -627,17 +652,23 @@ fn encode_all<'p>(
                 name()
             )
         })?;
-        if !decodes_to(
-            decode(path, &walk, &routes, handles.len()),
-            handles,
-            targets,
-        ) {
+        let steps = decode(path, &walk, &routes, handles.len());
+        if !decodes_to(&steps, handles, targets) {
             return Err(format!(
                 "{}: the walk row does not decode to its steps and their copies",
                 name()
             ));
         }
-        walks.push((piece, walk));
+        let span = path
+            .span(
+                steps
+                    .iter()
+                    .flatten()
+                    .filter(|&&(_, j)| j != NONE)
+                    .map(|&(_, j)| j as usize),
+            )
+            .expect("a walk row decodes to a step on R");
+        walks.push((piece, walk, span));
     }
     Ok(Encoded { routes, walks })
 }
@@ -678,7 +709,7 @@ struct Group {
 fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64, ratio: f64) -> Vec<Group> {
     let mut by_path: FastMap<(&[u8], u64), usize> = FastMap::default();
     let mut groups: Vec<Group> = Vec::new();
-    for (k, (piece, walk)) in enc.walks.iter().enumerate() {
+    for (k, (piece, walk, _)) in enc.walks.iter().enumerate() {
         let g = *by_path.entry((piece.name, piece.frag)).or_insert_with(|| {
             groups.push(Group {
                 pieces: Vec::new(),
@@ -727,7 +758,8 @@ fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64, ratio: f64) -> Vec<G
 }
 
 // Writes the rows of a chunk's pieces, `raw` as the sort holds them, through
-// `emit`, each without the anchor columns and with its newline. `sequence`
+// `emit`, each from its kind on with its newline, and what it says of R's
+// sequence. `sequence`
 // gives a node's bases with --sequences. A chunk over `budget` moves its
 // costliest paths' rows to `details`, and leaves an `abridged` row for each
 // of their pieces.
@@ -737,7 +769,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     sequence: Option<&S>,
     budget: Budget,
     counts: &mut Counts,
-    emit: &mut dyn FnMut(&[u8]) -> Result<(), String>,
+    emit: &mut Emit,
     details: &mut Details,
 ) -> Result<(), String> {
     let lengths = nodes.lengths;
@@ -747,12 +779,13 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         .map(|row| Piece::read(row, None))
         .collect::<Result<_, _>>()?;
     references.sort_by_key(|p| p.offset);
-    let mut offsets = Vec::new();
+    let (mut offsets, mut ends) = (Vec::new(), Vec::new());
     for p in &references {
         let mut at = p.offset;
         for &h in &p.handles {
             offsets.push(at);
             at += u64::from(lengths[(h >> 1) as usize]);
+            ends.push(at);
         }
     }
     let path = Path::new(
@@ -761,6 +794,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
             .flat_map(|p| p.handles.iter().copied())
             .collect(),
         offsets,
+        ends,
     );
     let pieces: Vec<Piece> = raw
         .iter()
@@ -769,7 +803,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         .collect::<Result<_, _>>()?;
     let mut scratch = Counts::default();
     let enc = encode_all(&path, &pieces, 0..pieces.len())?;
-    let mut text = Vec::new();
+    let (mut text, mut stretches) = (Vec::new(), Vec::new());
     emit_rows(
         &path,
         &references,
@@ -777,19 +811,24 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         nodes,
         sequence,
         &mut scratch,
-        &mut |row| {
+        &mut |stretch, row| {
             text.extend_from_slice(row);
+            stretches.push(stretch);
             Ok(())
         },
     )?;
-    let total: u64 = enc.walks.iter().map(|(p, w)| piece_cost(&enc, p, w)).sum();
+    let total: u64 = enc
+        .walks
+        .iter()
+        .map(|(p, w, _)| piece_cost(&enc, p, w))
+        .sum();
     let over_cost = budget.cost > 0 && total > budget.cost * STEPS_PER_INTERIOR;
     let raw = text.len() as u64;
     let over_bytes = budget.bytes > 0 && raw > budget.bytes;
     if !over_cost && !over_bytes {
         *counts += scratch;
-        for row in text.split_inclusive(|&b| b == b'\n') {
-            emit(row)?;
+        for (row, stretch) in text.split_inclusive(|&b| b == b'\n').zip(stretches) {
+            emit(stretch, row)?;
         }
         return Ok(());
     }
@@ -815,8 +854,9 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         let mut members = group.pieces.clone();
         members.sort_by_key(|&k| pieces[k].offset);
         let alone = encode_all(&path, &pieces, members)?;
-        for (piece, walk) in &alone.walks {
-            emit(&summary_row(&path, piece, walk, lengths, k))?;
+        for (piece, walk, _) in &alone.walks {
+            let (span, row) = summary_row(&path, piece, walk, lengths, k)?;
+            emit(Stretch::Piece(span), &row)?;
         }
         let mut record = Vec::new();
         emit_rows(
@@ -826,8 +866,8 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
             nodes,
             sequence,
             &mut detail_counts,
-            &mut |row| {
-                record.push(row.to_vec());
+            &mut |stretch, row| {
+                record.push((stretch, row.to_vec()));
                 Ok(())
             },
         )?;
@@ -840,8 +880,15 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
 
 // The `abridged` row standing for one piece of a path whose pieces in the
 // chunk are detail record `k`: its stretch on the contig from its first step
-// on R to its last, and all its steps
-fn summary_row(path: &Path, piece: &Piece, walk: &Walk, lengths: &[u32], k: usize) -> Vec<u8> {
+// on R to its last, and all its steps; and the span on R of the first and
+// last steps its start and end decode to, which must be the piece's
+fn summary_row(
+    path: &Path,
+    piece: &Piece,
+    walk: &Walk,
+    lengths: &[u32],
+    k: usize,
+) -> Result<(Span, Vec<u8>), String> {
     let on_r = |t: &u32| *t != NONE;
     let first = piece.targets.iter().position(on_r).expect("a step on R");
     let last = piece.targets.iter().rposition(on_r).expect("a step on R");
@@ -872,7 +919,25 @@ fn summary_row(path: &Path, piece: &Piece, walk: &Walk, lengths: &[u32], k: usiz
     line.push(b'\t');
     line.extend_from_slice(k.to_string().as_bytes());
     line.push(b'\n');
-    line
+    let start_at = match walk.start_copy {
+        Some(k) => path.copy(walk.start, k),
+        None => path.first(walk.start),
+    };
+    let end_at = start_at.and_then(|i| match end_copy {
+        Some(k) => path.copy(walk.end, k),
+        None => path.nearest(walk.end, i),
+    });
+    if (start_at, end_at) == (Some(walk.start_at), Some(walk.end_at)) {
+        let span = path
+            .span([walk.start_at, walk.end_at].into_iter())
+            .expect("two steps");
+        Ok((span, line))
+    } else {
+        Err(format!(
+            "{}: the abridged row does not decode to its piece's first and last steps on R",
+            String::from_utf8_lossy(piece.name)
+        ))
+    }
 }
 
 // The rows of encoded pieces: `references`' ref rows, then the nodes, route
@@ -884,7 +949,7 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     nodes: Nodes,
     sequence: Option<&S>,
     counts: &mut Counts,
-    emit: &mut dyn FnMut(&[u8]) -> Result<(), String>,
+    emit: &mut Emit,
 ) -> Result<(), String> {
     let Nodes { lengths, passes } = nodes;
     let routes = &enc.routes;
@@ -931,6 +996,12 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         line.push(b'\t');
     };
     for p in references {
+        let start = p.offset;
+        let end = start
+            + p.handles
+                .iter()
+                .map(|&h| u64::from(lengths[(h >> 1) as usize]))
+                .sum::<u64>();
         line.clear();
         piece_columns(&mut line, b"ref", p);
         push_list(&mut line, delta_steps(&p.handles, &mut 0));
@@ -954,7 +1025,7 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         }
         with_bases(&mut line, &p.handles);
         line.push(b'\n');
-        emit(&line)?;
+        emit(Stretch::Ref((start, end)), &line)?;
     }
     let mut interior: Vec<u32> = routes
         .list
@@ -979,7 +1050,7 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         );
         with_bases(&mut line, &interior);
         line.push(b'\n');
-        emit(&line)?;
+        emit(Stretch::Dictionary, &line)?;
     }
     let mut previous = 0i64;
     for &r in &order {
@@ -995,9 +1066,9 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
             }
         }
         line.push(b'\n');
-        emit(&line)?;
+        emit(Stretch::Dictionary, &line)?;
     }
-    for (p, walk) in walks {
+    for (p, walk, span) in walks {
         line.clear();
         piece_columns(&mut line, b"walk", p);
         push_copy(&mut line, walk.start, walk.start_copy);
@@ -1031,7 +1102,7 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
             }
         }
         line.push(b'\n');
-        emit(&line)?;
+        emit(Stretch::Piece(*span), &line)?;
     }
     Ok(())
 }
