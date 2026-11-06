@@ -10,6 +10,9 @@ With --check, exits 1 if a figure differs from what the tool writes now.
 
 import difflib
 import gzip
+import html
+import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -452,6 +455,159 @@ def splice_regions(text, regions, name):
     return "\n".join(lines)
 
 
+MONO = "Menlo, Consolas, DejaVu Sans Mono, monospace"
+SANS = "Helvetica, Arial, sans-serif"
+INK, MUTED = "#1f2328", "#57606a"
+BANDAGE_FIGURES = ["walks-simple", "walks-leave"]
+
+
+class Canvas:
+    def __init__(self):
+        self.out = []
+
+    def say(self, x, y, s, size=12, fill=INK, weight="normal", font=MONO):
+        self.out.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" font-weight="{weight}" '
+                        f'font-family="{font}" xml:space="preserve">{s}</text>')
+
+    def rect(self, x, y, w, h, fill, rx=0):
+        self.out.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="{fill}"/>')
+
+    def down(self, x, y, h):
+        self.out.append(f'<path d="M{x:.1f},{y:.1f} v{h - 8:.1f}" stroke="{MUTED}" stroke-width="2"/>'
+                        f'<path d="M{x - 6:.1f},{y + h - 9:.1f} l6,9 l6,-9 z" fill="{MUTED}"/>')
+
+    def svg(self, width, height):
+        size = f'width="{width:.0f}" height="{height:.0f}"'
+        return (f'<svg xmlns="http://www.w3.org/2000/svg" {size} viewBox="0 0 {width:.0f} {height:.0f}" '
+                f'font-family="{SANS}"><rect {size} fill="white"/>\n' + "\n".join(self.out) + "\n</svg>\n")
+
+
+def mono_line(c, x, y, fields, size=12, bold=(), tint=None):
+    """Draws a line's fields two spaces apart; returns its width."""
+    text = "  ".join(fields)
+    width = 0.602 * size * len(text)
+    if tint:
+        c.rect(x - 4, y - size * 0.9, width + 8, size * 1.35, tint, 3)
+    c.say(x, y, "  ".join(f'<tspan font-weight="bold">{f}</tspan>' if i in bold else f for i, f in enumerate(fields)), size)
+    return width
+
+
+def units_of(lines):
+    units = []
+    for f in lines:
+        if f[0] == "#unit":
+            units.append((f, []))
+        elif units:
+            units[-1][1].append(f)
+    return units
+
+
+def decode_tile(rows):
+    """One tile's ref rows as the reference's node ids, and each walk row's
+    node ids by its path and piece."""
+    reference = [h[0] for r in sorted((r for r in rows if r[3] == "ref"), key=lambda r: int(r[6])) for h in deltas(r[9])[0]]
+    routes, prev = [], 0
+    for r in rows:
+        if r[3] == "route":
+            entry, prev = deltas(r[4], prev)
+            interior, prev = deltas(r[5], prev)
+            exit_, prev = deltas(r[6], prev)
+            routes.append((entry[0] if entry else None, interior, exit_[0] if exit_ else None))
+    on_ref = [h for r in sorted((r for r in rows if r[3] == "ref"), key=lambda r: int(r[6])) for h in deltas(r[9])[0]]
+    walks = {}
+    for r in rows:
+        if r[3] == "walk":
+            if ":" in r[10] or "@" in r[10] or "@" in r[9]:
+                sys.exit("figures.py: the Bandage figures expect no repeated reference nodes")
+            taken = [flipped(routes[i]) if flip else routes[i] for i, flip in deltas(r[10])[0]]
+            pos = on_ref.index((int(r[9]) >> 1, int(r[9]) & 1))
+            steps = list(taken[0][1]) if taken and taken[0][0] is None else []
+            steps.append(on_ref[pos])
+            ended = False
+            for entry, interior, exit_ in (t for t in taken if t[0] is not None):
+                while on_ref[pos] != entry:
+                    pos += 1
+                    steps.append(on_ref[pos])
+                steps += interior
+                ended = exit_ is None
+                if not ended:
+                    pos = on_ref.index(exit_)
+                    steps.append(on_ref[pos])
+            while not ended and len(steps) < int(r[8]):
+                pos += 1
+                steps.append(on_ref[pos])
+            walks[r[4], int(r[7])] = [h[0] for h in steps]
+    return reference, walks
+
+
+def check_cut(lines, cut):
+    """Exits unless the cut graph-walks drew holds each path as the walk
+    file's rows decode it, its pieces joined in order."""
+    decoded, reference = {}, []
+    for unit, rows in units_of(lines):
+        if unit[4] == "tile":
+            ref, walks = decode_tile(rows)
+            reference += ref
+            decoded |= walks
+    paths = {next(r for _, rs in units_of(lines) for r in rs if r[3] == "ref")[4]: reference}
+    for (path, piece) in sorted(decoded, key=lambda k: k[1]):
+        paths.setdefault(path, []).extend(decoded[path, piece])
+    drawn = {f"{f[1]}#{f[2]}#{f[3]}": [int(n) for n in f[6].replace("<", ">").split(">") if n]
+             for f in (line.split("\t") for line in cut.splitlines()) if f[0] == "W"}
+    if drawn != paths:
+        sys.exit(f"figures.py: the drawn cut's walks {drawn} differ from the walk file's {paths}; "
+                 "run scripts/bandage-figure.mjs to redraw them")
+
+
+def bandage_drawing(svg):
+    """bandage-core's figure, less any key above its first panel's title, as
+    an element and its height."""
+    head = re.match(r'<svg [^>]*width="(\d+)" height="(\d+)"[^>]*>', svg)
+    width, height = int(head[1]), int(head[2])
+    first = re.search(r'<g transform="translate\(6 (\d+)\)"[^>]*><rect[^>]*url\(#key0\)', svg)
+    top = int(first[1]) - 2 if first else 0
+    inner = svg[head.end() : svg.rindex("</svg>")]
+    return width, height - top, (f'viewBox="0 {top} {width} {height - top}" width="{width}" height="{height - top}">'
+                                 f"{inner}</svg>")
+
+
+def bandage_spec(name):
+    """The options and region scripts/bandage-figure.mjs drew `name` with,
+    from the metadata of its drawing."""
+    svg = (FIGURES / f"{name}-bandage.svg").read_text()
+    return json.loads(html.unescape(re.search(r"<metadata>(.*?)</metadata>", svg)[1]))["spec"]
+
+
+def bandage_figure(name, lines, shown, tint):
+    """The GFA's W lines, the command, the walk file's lines a read of the
+    region uses, and bandage-core's drawing of graph-walks' cut there."""
+    cut = (FIGURES / f"{name}-cut.gfa").read_text()
+    check_cut(lines, cut)
+    width, height, drawing = bandage_drawing((FIGURES / f"{name}-bandage.svg").read_text())
+    spec = bandage_spec(name)
+    contig, start, end = spec["region"]["refName"], spec["region"]["start"], spec["region"]["end"]
+    c = Canvas()
+    left, y, widest = 24, 28, width
+    c.say(left, y, f"{name}.gfa", 13, weight="bold")
+    for w in (line.split("\t") for line in (FIGURES / f"{name}.gfa").read_text().splitlines()):
+        if w[0] == "W":
+            y += 20
+            widest = max(widest, mono_line(c, left + 12, y, w, bold={4, 5}))
+    c.down(left + 18, y + 12, 34)
+    command = " ".join(["gfa-to-tabix", f"{name}.gfa", *spec["options"], "-o", PREFIX])
+    c.say(left + 40, y + 34, command, 12, weight="bold")
+    y += 78
+    c.say(left, y, f"{PREFIX}.{REF}.walks.gz", 13, weight="bold")
+    for f in shown:
+        y += 20
+        widest = max(widest, mono_line(c, left + 12, y, f, 11.5, {1, 2}, tint(f)))
+    c.down(left + 18, y + 12, 34)
+    c.say(left + 40, y + 34, f"{contig}:{start + 1}-{end}", 12, weight="bold")
+    y += 60
+    c.out.append(f'<svg x="{left}" y="{y}" {drawing}')
+    return c.svg(left + widest + 36, y + height + 12)
+
+
 def generate(binary):
     with tempfile.TemporaryDirectory() as tmp:
         out = f"{tmp}/{PREFIX}"
@@ -462,10 +618,20 @@ def generate(binary):
         subprocess.run([binary, FIGURES / "walks.gfa", "--walks", "--refs", REF, "-o", out], **quiet)
         walk_file = f"{out}.{REF}.walks.gz"
         walk_rows, header = read_rows(walk_file), read_header(walk_file)
+        built = {}
+        for name in BANDAGE_FIGURES:
+            subprocess.run([binary, FIGURES / f"{name}.gfa", *bandage_spec(name)["options"], "-o", out], **quiet)
+            with gzip.open(walk_file, "rt") as f:
+                built[name] = [line.rstrip("\n").split("\t") for line in f]
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, simple, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
+    simple_rows = [r for _, rows in units_of(built["walks-simple"]) for r in rows if r[0] != "#entry"]
+    leave_rows = list(dict.fromkeys(tuple(r) for _, rows in units_of(built["walks-leave"]) for r in rows if r[0] != "#entry"))
     return {
+        "walks-simple-figure": bandage_figure("walks-simple", built["walks-simple"], simple_rows, lambda f: None),
+        "walks-leave-figure": bandage_figure("walks-leave", built["walks-leave"], [list(r) for r in leave_rows],
+                                             lambda f: HIGHLIGHT if f[3] == "departure" else None),
         "outputs": {},
         "overview": overview_svg(segs, links),
         "walks": {
