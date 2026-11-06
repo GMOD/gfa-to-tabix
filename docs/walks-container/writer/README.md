@@ -10,6 +10,11 @@ with the converter's output for the same graphs
 `~/work/arb-format-opus/in/{mc22,pggbY}.gfa`, the GFAs those 3.0.0 files
 were built from.
 
+The branch was rebased onto main's c4ed804 after these runs, which changed
+docs only; the commits named here are the rebased ones, and the
+`results/*commit*.txt` files keep the hashes the runs were built from
+(fbc5f6b is 76ff987, 9078506 is 86d1006, ec0e611 is 9205d9c).
+
 ## Results
 
 - **Release checks:** both files pass, with the unit and line counts the
@@ -58,10 +63,10 @@ were built from.
     starts at the breakpoint, and the writer that of the end step's own
     node, as the ADR words it ([walks-format.md](../../walks-format.md#departure))
 
-## ownTiles, at ec0e611
+## ownTiles, at 9205d9c
 
 Departure records gained `ownTiles` after the results above, which are at
-9078506. `scripts/owntiles-run.sh` rebuilt both graphs
+86d1006. `scripts/owntiles-run.sh` rebuilt both graphs
 (`results/own.*`):
 
 - `verify7.py` and `verify7.mjs` pass on both, with the same unit and line
@@ -74,19 +79,19 @@ Departure records gained `ownTiles` after the results above, which are at
   one on MC, 425,040 on pggb, all matching; no two tile or detail units
   share a name (`results/own.*.audit.txt`)
 - the files are 58.50 MB and 186.95 MB (`results/own.sizes.txt`)
-- `fuzz7.sh 1 300` at ec0e611, with `verify7.py` and the `ownTiles` check,
-  found no failure in 1,800 builds (`results/fuzz7.ec0e611.txt`)
+- `fuzz7.sh 1 300` at 9205d9c, with `verify7.py` and the `ownTiles` check,
+  found no failure in 1,800 builds (`results/fuzz7.9205d9c.txt`)
 
 ## Scripts
 
-- `scripts/owntiles-run.sh`: the writer at ec0e611 on both graphs, both
+- `scripts/owntiles-run.sh`: the writer at 9205d9c on both graphs, both
   release checkers, `audit7.py`, and its lines against `final-run.sh`'s;
   `results/own.*`
-- `scripts/final-run.sh`: the writer at 9078506 on both graphs,
+- `scripts/final-run.sh`: the writer at 86d1006 on both graphs,
   `verify7.mjs`, and every comparison below; `results/final.*`
-- `scripts/first-run.sh`: the same at fbc5f6b, the first commit, which
+- `scripts/first-run.sh`: the same at 76ff987, the first commit, which
   wrote at level 6; `results/first-run*.txt`
-- `scripts/levels-setup.sh`, `levels.sh`, `levels-mc.sh`: fbc5f6b with the
+- `scripts/levels-setup.sh`, `levels.sh`, `levels-mc.sh`: 76ff987 with the
   level read from `$LEVEL`, built at levels 7 to 9 on pggb and 6, 7 and 9
   on MC; `results/levels.txt`
 - `scripts/compare7.py`: two format 7 files unit by unit
