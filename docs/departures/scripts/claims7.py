@@ -225,6 +225,7 @@ claim('U6', 'within a departure block lines are in order of start, end, then tex
 claim('U7', 'every departure line overlaps each block it is in, or, a point, lies at the block\'s start')
 claim('U8', 'a table\'s #unit line runs from 0 to |S|, where its sequence\'s last ref row ends, and is named .')
 claim('U9', 'a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks departure')
+claim('U10', 'every sequence in the file has at least one tile, so no table is empty')
 claim('H1', '#haplotype lists each haplotype with walk or abridged rows, sample#haplotype, once each in byte order, '
       'and no other')
 claim('H2', 'revisited:i:0 means no ref row has a pass count above 1 and no walk or abridged row has @k or :k')
@@ -241,6 +242,9 @@ claim('T1', 'a route is stored the way round whose handles sort first: entry (no
 claim('T2', 'each distinct route is written once per tile or detail unit, a route and its flip counting as one')
 claim('T3', 'a route with no entry or no exit has a non-empty interior')
 claim('T4', 'a route\'s entry and exit lie on R')
+claim('T5', 'every route row of a tile or detail unit is taken by one of its walk rows')
+claim('T6', 'route rows are in order of the first position in R of their entry\'s or exit\'s node, whichever is '
+      'first, a route with neither last, then by entry (none first), interior and exit')
 claim('W1', 'every walk row decodes by the spec\'s rules to nsteps steps')
 claim('W2', 'the tool writes @k and :k only where they differ from the defaults, so a file has one encoding')
 claim('W3', 'a walk continues along R where R\'s next position is the step\'s, and takes a route with an empty '
@@ -258,6 +262,7 @@ claim('A3', 'a W line\'s moved pieces in one tile share one detail record')
 claim('A4', 'a detail unit holds the moved pieces of one W line')
 claim('A5', 'a tile\'s detail numbers run from 0 with none missing')
 claim('A6', 'a tile or detail unit holds a nodes row exactly when its routes have an interior step, and at most one')
+claim('A7', 'a tile\'s detail records are numbered from 0 in order of cost, the costliest W line first')
 claim('D1', 'a departure record\'s ownTiles are tile names of its sequence that exist, in no repeat')
 claim('D2', 'a record has at most two ownTiles')
 claim('D3', 'a departure record\'s extent holds both breakpoints and is at least the breakpoint stretch')
@@ -274,6 +279,8 @@ claim('O4', 'the own steps in the file lie in the tiles ownTiles names or in ano
       'plus missingBp is at most ownBp')
 claim('L1', 'a record\'s leave step is the last step on R of its piece, and its rejoin step the first on R of its '
       'piece')
+claim('D6', 'a departure line\'s start end runs from the first base of its end nodes to the last, widened to the '
+      'breakpoint stretch where that is wider')
 
 header = {}
 haplotypes_listed = []
@@ -306,6 +313,7 @@ copies_seen = 0
 points = []        # (seq, kind, name, p, lo, hi): units whose rows cover no base
 tables = {}        # seq -> (lo, hi, name) of its table's #unit line
 held_tiles = {}   # (seq, tile name) -> Tile, for the tiles with abridged rows
+detail_cost = {}  # (seq, cs, d) -> the cost of the record's pieces
 
 
 def finish_unit(u):
@@ -318,6 +326,12 @@ def finish_unit(u):
         if t.kinds.count('nodes') != (1 if interior else 0):
             bad('A6', (u['seq'], kind, u['name'], 'nodes rows', t.kinds.count('nodes'), 'interior', interior))
         seen('A6')
+        unused = set(range(len(t.routes))) - u.get('routes_used', set())
+        if unused and not u.get('broken'):
+            bad('T5', (u['seq'], kind, u['name'], 'routes no walk row takes', sorted(unused)[:5]))
+        seen('T5')
+    if kind == 'detail':
+        detail_cost[(u['seq'], u['cs'], u['d'])] = u.get('cost', 0)
         walks = [w for w in u.get('walk_keys', [])]
         if kind == 'tile' and walks != sorted(walks):
             bad('G1', (u['seq'], u['name'], next(a for a, b in zip(walks, walks[1:]) if a > b)))
@@ -516,7 +530,15 @@ with gzip.open(args.file, 'rt') as f:
             used = sorted({h >> 1 for r in t.routes for h in r[1]})
             if used != u.get('nodes_ids', []):
                 bad('N1', (t.seq, t.name, 'nodes row', u.get('nodes_ids', [])[:5], 'interiors', used[:5]))
-            for k in ('T1', 'T2', 'T3', 'T4', 'N1'):
+
+            def anchor(r):
+                firsts = [t.occ[h >> 1][0] for h in (r[0], r[2]) if h is not None and (h >> 1) in t.occ]
+                return min(firsts) if firsts else len(t.h)
+            order = [(anchor(r), keyf(r)) for r in t.routes]
+            if order != sorted(order):
+                k = next(k for k in range(len(order) - 1) if order[k] > order[k + 1])
+                bad('T6', (t.seq, t.name, 'route', k, t.routes[k], 'before', t.routes[k + 1]))
+            for k in ('T1', 'T2', 'T3', 'T4', 'T6', 'N1'):
                 seen(k)
         if kind == 'walk':
             path, frag, piece = c[4], int(c[5]), int(c[7])
@@ -547,8 +569,8 @@ with gzip.open(args.file, 'rt') as f:
             u.setdefault('spans', []).append((a, b))
             if u['kind'] == 'tile':
                 u.setdefault('walk_keys', []).append((path.encode(), frag, int(c[6]), piece))
-            if u['kind'] == 'tile':
-                u['cost'] = u.get('cost', 0) + len(steps) + 4 * sum(len(t.routes[r][1]) for r, *_ in choices)
+            u['cost'] = u.get('cost', 0) + len(steps) + 4 * sum(len(t.routes[r][1]) for r, *_ in choices)
+            u.setdefault('routes_used', set()).update(r for r, *_ in choices)
             if u['kind'] == 'tile':
                 haplotypes_with_rows.add('#'.join(path.split('#')[:2]))
                 if piece in pieces[(path, frag)]:
@@ -599,6 +621,8 @@ for seq, us in units_of.items():
     kinds = [k for k, *_ in us]
     if kinds[-1] != 'table' or kinds.count('table') != 1:
         bad('U1', (seq, 'table not last or not one'))
+    if 'tile' not in kinds:
+        bad('U10', (seq, 'no tile'))
     body = us[:-1]
     first_detail = next((k for k, u in enumerate(body) if u[0] == 'detail'), len(body))
     if any(u[0] != 'detail' for u in body[first_detail:]):
@@ -623,6 +647,7 @@ for seq, us in units_of.items():
             bad('U4', (seq, kind, name, lo, hi, 'not a point'))
 seen('U1')
 seen('U8')
+seen('U10')
 for seq, kind, name, p, lo, hi in points:
     length = tables.get(seq, (0, 0))[1]
     beside = (0, 0) if length == 0 else (p - 1, p) if p == length else (p, p + 1)
@@ -682,7 +707,10 @@ for key, paths in detail_paths.items():
 for key, ds in named.items():
     if sorted(ds) != list(range(len(ds))):
         bad('A5', (key, sorted(ds)))
-for k in ('A2', 'A3', 'A4', 'A5'):
+    costs = [detail_cost.get(key + (d,), 0) for d in sorted(ds)]
+    if any(a < b for a, b in zip(costs, costs[1:])):
+        bad('A7', (key, 'costs by record number', costs[:8]))
+for k in ('A2', 'A3', 'A4', 'A5', 'A7'):
     seen(k)
 
 # D1-D5
@@ -780,7 +808,21 @@ if args.own:
             piece = [j for j in range(len(steps)) if steps[j][:2] == steps[k][:2] and steps[j][8] is not None]
             if k != (piece[-1] if last else piece[0]):
                 bad('L1', (seq, c[4:15], 'leave' if last else 'rejoin', steps[k][:3]))
-    for k in ('O1', 'O2', 'O4', 'L1'):
+        S = seq_end[seq]
+
+        def stretch(bp, at_end):
+            if S == 0:
+                return 0, 0
+            if at_end and bp > 0:
+                return bp - 1, bp
+            return (S - 1, S) if bp + 1 > S else (bp, bp + 1)
+        ends = [steps[li][8][:2], steps[ri][8][:2],
+                stretch(lp, (ls == '+') and steps[li][8][0] < steps[li][8][1]),
+                stretch(rp, (rs == '-') and steps[ri][8][0] < steps[ri][8][1])]
+        extent = (min(a for a, _ in ends), max(b for _, b in ends))
+        if extent != (int(c[1]), int(c[2])):
+            bad('D6', (seq, c[1:3], 'from its ends', extent, c[4:15]))
+    for k in ('O1', 'O2', 'O4', 'L1', 'D6'):
         seen(k)
 
 print(f'# {args.file}: {sum(len(v) for v in units_of.values())} units, {len(recs)} departure records, '
