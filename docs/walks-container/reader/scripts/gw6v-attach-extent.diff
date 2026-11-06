@@ -1,0 +1,31 @@
+559a560
+>       const wantedCs = new Map<number, Set<string>>()
+560a562,568
+>         const cs = Math.floor(base / tile) * tile
+>         const home = units.find(u => u.kind === "tile" && Number(u.name) === cs)
+>         if (!home || !decodedFor(home, departure.name)) {
+>           wantedCs.set(cs, (wantedCs.get(cs) ?? new Set()).add(departure.name))
+>         }
+>       }
+>       for (const [cs, names] of [...wantedCs].slice(0, attachFetches)) {
+562,572c570,573
+<           if (
+<             unit.kind === 'tile' &&
+<             unit.length > 0 &&
+<             unit.start <= base &&
+<             base < unit.end &&
+<             !decodedFor(unit, departure.name)
+<           ) {
+<             fetches.set(
+<               unit,
+<               (fetches.get(unit) ?? new Set()).add(departure.name),
+<             )
+---
+>           if (unit.kind === "tile" && unit.length > 0 && unit.start < cs + tile && unit.end > cs - tile) {
+>             for (const n of names) {
+>               fetches.set(unit, (fetches.get(unit) ?? new Set()).add(n))
+>             }
+576c577
+<       const wanted = [...fetches].slice(0, attachFetches)
+---
+>       const wanted = [...fetches]

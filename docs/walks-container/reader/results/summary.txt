@@ -1,0 +1,18 @@
+# graph-walks 6 (format7-reader a6269e4; bb859cc moves the attach rule into attachTiles, same behaviour) on gfa-to-tabix 4.0's final.{mc22,pggbY}.GRCh38.walks.gz (format7-writer 67346ca), ada ~/work/impl-reader.
+# scripts/all.sh <d> wrote results/; tally: gunzip results into a directory, python3 scripts/tally7.py <d> <random96|targets0> <dir>;
+# bytes: python3 scripts/summarize7.py m7.<d>.jsonl. vs5 = graph-walks 5.0.2 over format 6 rows of the same units (arbiter A's BASELINE=units);
+# vsFixed = arbiter A's 5.0.2 copy with the attach-decode fix; '5.0.2 attach extent' = graph-walks 6 with scripts/gw6v-attach-extent.diff applied.
+{"dataset": "mc22", "set": "random96", "windows": 90, "identical5": 89, "identicalFixed": 90, "vs5: 6 attaches own steps 5.0.2 lost, nothing else": 1, "vs5: windows with steps only in 6": 1, "vs5: windows with steps only in 5.0.2": 0}
+{"dataset": "mc22", "set": "targets0", "windows": 365, "identical5": 193, "identicalFixed": 360, "vs5: other": 5, "vs5: windows with steps only in 6": 171, "vs5: windows with steps only in 5.0.2": 0, "vsFixed: matches with 5.0.2 attach extent": 5, "vsFixed: windows with steps only in 6": 0, "vsFixed: windows with steps only in fixed": 0, "vs5: 6 attaches own steps 5.0.2 lost, nothing else": 167}
+{"dataset": "pggbY", "set": "random96", "windows": 90, "identical5": 20, "identicalFixed": 74, "vs5: other": 16, "vs5: windows with steps only in 6": 70, "vs5: windows with steps only in 5.0.2": 0, "vsFixed: matches with 5.0.2 attach extent": 16, "vsFixed: windows with steps only in 6": 0, "vsFixed: windows with steps only in fixed": 0, "vs5: 6 attaches own steps 5.0.2 lost, nothing else": 54}
+{"dataset": "pggbY", "set": "targets0", "windows": 365, "identical5": 32, "identicalFixed": 297, "vs5: 6 attaches own steps 5.0.2 lost, nothing else": 262, "vs5: windows with steps only in 6": 333, "vs5: windows with steps only in 5.0.2": 0, "vs5: other": 71, "vsFixed: matches with 5.0.2 attach extent": 68, "vsFixed: windows with steps only in 6": 1, "vsFixed: windows with steps only in fixed": 0}
+res-w/m7.mc22.jsonl {'open': {'requests': 3, 'bytes': 47632}}
+      1000 n=300 errors=0 read KB 29/52/165 with attach KB 30/240/447 requests first read 1 with attach 1/10 trips max 2
+     10000 n=300 errors=0 read KB 29/62/185 with attach KB 31/153/523 requests first read 1 with attach 1/8 trips max 2
+    100000 n=300 errors=0 read KB 75/126/260 with attach KB 85/256/628 requests first read 1 with attach 1/10 trips max 2
+   1000000 n=300 errors=0 read KB 500/684/1381 with attach KB 508/763/1469 requests first read 1 with attach 1/9 trips max 2
+res-w/m7.pggbY.jsonl {'open': {'requests': 3, 'bytes': 21610}}
+      1000 n=300 errors=0 read KB 69/245/1621 with attach KB 386/1347/1872 requests first read 2 with attach 10/12 trips max 2
+     10000 n=300 errors=0 read KB 69/266/1832 with attach KB 416/1399/2083 requests first read 2 with attach 10/12 trips max 2
+    100000 n=300 errors=0 read KB 120/482/2651 with attach KB 538/1459/2902 requests first read 2 with attach 10/12 trips max 2
+   1000000 n=300 errors=0 read KB 734/3536/5952 with attach KB 1503/3787/6203 requests first read 3 with attach 10/12 trips max 2

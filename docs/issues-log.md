@@ -983,3 +983,38 @@ Where the findings have come from so far, and the rule each gives:
   meaning depends on the read, documented as "the bp the cut read". Open
   for the consumer ports: check the walk-row gap labels on a window that
   starts a tile. Guard: graph-walks' tests now expect the format 7 values
+- **2026-11-05, the genome-wide format 7 check.** The attach fetch reads the
+  tile whose extent holds a record's leave base, but a record's own steps
+  can lie at its rejoin side: NA19185#2's jump back on CHM13 chr14 (leave
+  13,472,637, rejoin 13,135,857) has them in tile 13,107,200, and own steps
+  that lead a W line take the tile of the first step after them. Source: a
+  read rule written from where format 6 usually files steps, not from the
+  writer's rule. graph-walks 6 keeps the rule in one function,
+  `attachTiles`, for the field naming the tile of a record's own steps that
+  the writer is adding. Two cases: where the cut lacks the leave piece,
+  `attachTiles` naming that tile fixes it (tried by hand); where the cut
+  holds the leave piece and not the rejoin piece, `walkCut` reports nothing
+  unattached, so it must also report a record whose own steps it did not
+  find. Open until the field lands. Guard: graph-walks test "a jump back
+  whose own steps lie in the rejoin piece gets them attached" on
+  `test_data/jumpback.GRCh38.gfa` (a jump back from 90 to 20 across W
+  lines), marked expected to fail until then
+- **2026-11-05, the genome-wide format 7 check.** CHM13's format 7 file is
+  1.78 GB, and Node refuses a buffer over 2 GiB, so any reader of a whole
+  file fails on a larger one. graph-walks 6 reads the data file only by
+  byte ranges, one unit run at a time, parses offsets as numbers checked
+  `Number.isSafeInteger`, and `pnpm release-check` opens files through
+  `WalkReader.open`. Guard: graph-walks test "a file past 4 GiB is read at
+  its exact offsets" (units past 2^32)
+- **2026-11-05, graph-walks 6's real-data cut check.** Against graph-walks
+  5.0.2 over format 6's rows for the same units, graph-walks 6's cut on the
+  writer's MC chr22 and pggb chrY files differs only where 5.0.2's
+  attach-decode bug dropped own steps, and, against 5.0.2 with that bug
+  fixed, only where 5.0.2's attach read (the chunk before and the leave
+  chunk) holds more pieces of the attached walks, which join two fragments
+  through steps outside the drawn stretch or attach steps whose leave node
+  straddles a tile; rerun with 5.0.2's attach extent, every such window is
+  identical. Source: the ADR's attach rule reading less than graph-walks 5,
+  as the genome-wide check also found for the lookback chunk. Counts,
+  windows and scripts: `docs/walks-container/reader/`. Guard: the
+  scripts there, rerun on each release candidate
