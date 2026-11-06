@@ -14,7 +14,8 @@
 # - no two tile or detail units of a sequence share a name
 # - every line starts with its unit's sequence; a tile's or detail unit's
 #   lines lie in its extent, which is the union of its ref rows' stretches
-#   and its pieces' spans, and its other rows state the extent
+#   and its pieces' spans, or where that covers no base the base beside its
+#   point, and its other rows state the extent
 # - a departure block is aligned, and each record is in every block of its
 #   cover and no other
 # Usage: verify7.py walks.gz [tile]; prints a JSON summary, exits 1 on the
@@ -113,7 +114,8 @@ def check_unit(at, length, text):
             fail(f'a {c[3]} row not stating its unit\'s extent: {line[:80]}')
         if stretch:
             union = stretch if union is None else (min(union[0], stretch[0]), max(union[1], stretch[1]))
-    if kind != 'departures' and union != (lo, hi):
+    point = union is not None and union[0] == union[1] and hi - lo == 1 and union[0] in (lo, hi)
+    if kind != 'departures' and union != (lo, hi) and not point:
         fail(f'the {kind} unit at {at} has extent {lo} {hi}, its lines {union}')
 
 

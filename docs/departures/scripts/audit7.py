@@ -484,8 +484,8 @@ def emit(path, S, d, needs):
 
 def reachable(seq, cs, lo, hi):
     # whether every window over [lo, hi) reads tile `cs`, a unit read when
-    # its extent overlaps the window: when the extent holds the stretch. A
-    # window is over a point, lo == hi, when it holds bases on both sides
+    # its extent overlaps the window: when the extent holds the stretch. For
+    # a departure at a point, the caller asks for either base beside it
     a, b = tile_extent[(seq, cs)]
     return a <= lo and hi <= b
 
@@ -539,7 +539,7 @@ for path, ps in pieces.items():
                     lo, hi = min(lend[0], rejoin[0]), max(lend[0], rejoin[0], min(lend[0], rejoin[0]) + 1)
                     needs = lkey != key
                     empty = lend[0] == rejoin[0]
-                    ok = reachable(S, lend[4], lo, lo if empty else hi)
+                    ok = (reachable(S, lend[4], lo, lo + 1) or reachable(S, lend[4], lo - 1, lo)) if empty else reachable(S, lend[4], lo, hi)
                     if not needs and not ok:
                         unreachable.append((path, lend, rejoin))
                     emit(path, S, dict(hap_start=after, own_bp=own_bp, leave=lend, rejoin=rejoin,

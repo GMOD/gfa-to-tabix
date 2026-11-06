@@ -130,7 +130,8 @@ fn cover(lo: u64, hi: u64, tile: u64) -> Vec<(u64, u64)> {
 // unit's sequence; no two tiles or detail records of a sequence share a
 // name; a departure record lies in every block of its cover and no other,
 // and other lines within their unit's extent, which is the union of its ref
-// rows' stretches and its pieces' spans
+// rows' stretches and its pieces' spans, or where that covers no base the
+// base beside its point
 fn verify(data: &[u8], directory: &str, tile: u64) {
     let lines: Vec<Vec<&str>> = directory.lines().map(|l| l.split('\t').collect()).collect();
     let walks = &lines[0];
@@ -252,7 +253,9 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
             }
         }
         if kind != "departures" {
-            assert_eq!(union, Some((lo, hi)), "{head:?}");
+            let (a, b) = union.unwrap();
+            let point = a == b && (hi - lo, lo == a || hi == a) == (1, true);
+            assert!(union == Some((lo, hi)) || point, "{head:?} {union:?}");
         }
     }
     assert_eq!(
@@ -1648,6 +1651,62 @@ fn a_reference_sequence_with_no_units_has_an_empty_table() {
             "#unit R#0#chrE 0 0 table .",
         ])
     );
+}
+
+// zerotile.gfa, the verifier's: R's chr is 1, of 10 bp, then 91 and 92, of
+// 0 bp, all at 10, where chr ends; 93 is chr2. Tile 10 holds only the 0 bp
+// nodes, so its stretches cover no base, and its extent is the base beside
+// 10 that lies on chr, 9-10, where every window over that base reads it.
+// J leaves 91 at 10 for chr2's 93 and rejoins at 92's end, 10, against
+// chr: both ends at chr's end, so the record's breakpoint stretch is the
+// base before, 9-10, in block 0-10, where a stretch clipped to chr would be
+// empty and in no block
+#[test]
+fn a_unit_or_record_at_a_point_takes_the_base_beside_it() {
+    let built = build_text(
+        "zerotile",
+        &[
+            "S 1 AAAAAAAAAA",
+            "S 91 * LN:i:0",
+            "S 92 * LN:i:0",
+            "S 93 GGGGG",
+            "W R 0 chr 0 10 >1>91>92",
+            "W R 0 chr2 0 5 >93",
+            "W H 1 h 0 10 >1>91>92",
+            "W I 1 i 0 10 >1<92",
+            "W J 1 j 0 15 >1>91>93<92",
+            "W K 1 k 0 5 <92>93",
+        ],
+        &["--refs", "R", "--stay", "0"],
+    );
+    assert!(built.output.status.success());
+    let r = built.file("R");
+    assert_eq!(
+        unit(r, "tile", "10").lines().next(),
+        Some("#unit\tR#0#chr\t9\t10\ttile\t10")
+    );
+    assert!(departures(r).contains(&tsv(&[
+        "R#0#chr 9 10 departure J#1#j 10 5 0 10 + 1 10 - 1 ."
+    ])));
+    assert!(unit(r, "departures", "10").contains("\tJ#1#j\t"));
+}
+
+// A `#` in a W line's sample or haplotype would split its PanSN name
+// differently from its columns
+#[test]
+fn a_hash_in_a_w_lines_sample_or_haplotype_is_refused() {
+    for line in ["W H#x 1 h 0 6 >1", "W H 1#2 h 0 6 >1"] {
+        let built = build_text(
+            "hash-sample",
+            &["S 1 AAAAAA", "W R 0 chr 0 6 >1", line],
+            &["--refs", "R"],
+        );
+        assert_eq!(built.output.status.code(), Some(1), "{line}");
+        assert!(
+            String::from_utf8_lossy(&built.output.stderr).contains("holds a #"),
+            "{line}"
+        );
+    }
 }
 
 // A path whose name starts with `#` would read as a header or `#unit` line

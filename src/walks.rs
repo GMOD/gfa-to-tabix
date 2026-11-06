@@ -91,14 +91,21 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
             if cols.len() < 6 {
                 return Err("W line with too few fields".into());
             }
-            named(PathLine {
-                sample: cols[0],
-                name: [cols[0], cols[1], cols[2]].join(&b'#'),
-                start: parse_u64(cols[3], "W line start")?,
-                end: Some(parse_u64(cols[4], "W line end")?),
-                steps: cols[5],
-                walk: true,
-            })
+            if let Some(bad) = cols[..2].iter().find(|c| c.contains(&b'#')) {
+                Err(format!(
+                    "W line sample or haplotype {} holds a #, which PanSN keeps to separate sample, haplotype and contig",
+                    text(bad)
+                ))
+            } else {
+                named(PathLine {
+                    sample: cols[0],
+                    name: [cols[0], cols[1], cols[2]].join(&b'#'),
+                    start: parse_u64(cols[3], "W line start")?,
+                    end: Some(parse_u64(cols[4], "W line end")?),
+                    steps: cols[5],
+                    walk: true,
+                })
+            }
         }
         Some(b"P") => {
             let cols: Vec<&[u8]> = cols.take(3).collect();
@@ -1448,22 +1455,31 @@ const SORT_BUDGET: usize = 512 << 20;
 const DEPARTURE_SORT_BUDGET: usize = 128 << 20;
 
 // A tile's or a detail record's lines, each starting with the sequence and
-// its piece's span, or for a row of the tile's dictionary the unit's extent:
-// the union of its ref rows' stretches and its pieces' spans
+// its piece's span, or for a ref, nodes or route row the unit's extent: the
+// union of its ref rows' stretches and its pieces' spans. Where that union
+// covers no base, at `p` on a sequence ending at `end`, the extent is the
+// base beside `p`, after it or, at the end, before it
 struct Unit {
     extent: Span,
     text: Vec<u8>,
     lines: u64,
 }
 
-fn unit_of(seq: &[u8], rows: &[(Stretch, &[u8])]) -> Option<Unit> {
-    let extent = rows
+fn unit_of(seq: &[u8], end: u64, rows: &[(Stretch, &[u8])]) -> Option<Unit> {
+    let (lo, hi) = rows
         .iter()
         .filter_map(|&(stretch, _)| match stretch {
             Stretch::Piece(span) | Stretch::Ref(span) => Some(span),
             Stretch::Dictionary => None,
         })
         .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)))?;
+    let extent = if lo < hi {
+        (lo, hi)
+    } else if lo < end {
+        (lo, lo + 1)
+    } else {
+        (lo.saturating_sub(1), lo)
+    };
     let mut text = Vec::new();
     for &(stretch, row) in rows {
         let (lo, hi) = match stretch {
@@ -1857,7 +1873,8 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                 (stretch, row)
             })
             .collect();
-        let tile = unit_of(seq, &rows).ok_or("a tile with no step on the reference")?;
+        let end = chunks.end[name as usize];
+        let tile = unit_of(seq, end, &rows).ok_or("a tile with no step on the reference")?;
         let details = details
             .iter()
             .map(|record| {
@@ -1865,7 +1882,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                     .iter()
                     .map(|(span, row)| (*span, row.as_slice()))
                     .collect();
-                unit_of(seq, &rows).ok_or("a detail record with no step on the reference")
+                unit_of(seq, end, &rows).ok_or("a detail record with no step on the reference")
             })
             .collect::<Result<_, _>>()?;
         Ok((tile, details, counts))
