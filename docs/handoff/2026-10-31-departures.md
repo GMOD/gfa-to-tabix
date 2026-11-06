@@ -156,16 +156,17 @@ things are.
       `id@start`); bandage-core takes a node's orientation from the first
       link naming it, so the new link orientation flips some node ids
       (check against graph-walks 6). Release gates as below
-    - **The README figures** on branches `fig7-a`, `fig7-b`, `fig7-c` and
-      `fig7-riffs` (off af005be; rebase onto main): the user wants figure
-      1 to be a simple graph (an extra node, a skipped node, a swapped
-      node) shown as its W lines, the walk-file lines and one Bandage
-      drawing of graph-walks' cut with node names, then a leave-and-rejoin
-      figure. `scripts/bandage-figure.mjs` on `fig7-riffs` draws them
-      through graph-walks and bandage-core; redraw with the fixed reader,
-      whose arrows now follow the walks. The comparison page of 2026-11-06
-      was published from the `~/.claude2` config's account, which this
-      config can't open; publish anew
+    - **Done the same afternoon: the README figures.** Figure 1 (a simple
+      graph: an extra node, a skipped node, a swapped node, as its W
+      lines, the file's eight lines and one Bandage drawing of
+      graph-walks' cut with node names) is in the README, and figure 2
+      (a leave and rejoin across a tile edge, the departure line
+      highlighted) in walks-format.md's departure section, both drawn
+      through `scripts/bandage-figure.mjs` with graph-walks main and
+      bandage-core 13.0.1 and guarded by `figures.py --check`. Page:
+      https://claude.ai/artifact/GkBjCV19vkK5pQkFA5ZaMe (the 2026-11-06
+      comparison page lives under the `~/.claude2` config's account). The
+      first drafts stay on `fig7-a`, `fig7-b` and `fig7-c`
     - **The genome-wide rebuild and cutover** as the superseding note
       above says
     - Worktrees to remove once main is pushed: `gfa-to-tabix-format7-tidy`
