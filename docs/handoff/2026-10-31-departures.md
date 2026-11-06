@@ -134,6 +134,45 @@ things are.
     the others are a format 7 and a rebuild. Resume the cutover only once
     the ADR is decided, and fold its outcome into one rebuild and one
     rollout
+  - **State, 2026-11-06 midday: format 7 landed on both mains, unpushed.**
+    gfa-to-tabix main holds the format 7 writer (4.0.0), its spec with a
+    claim ID on every normative sentence, [claims7.md](../departures/claims7.md)
+    with a check per claim (143 rows), `scripts/check-claims.py` and
+    `scripts/check-walks.sh` in CI, the widened fuzz generator, the
+    build-time checks of the partition, tables, names, containment and
+    departure cover, and ADR 0010's Costs decided (route orientation, the
+    header's missing `#unit` line, bubbles across a tile edge, the checks'
+    cost). graph-walks main (ab8ecd0, 17 commits past origin) holds graph-walks
+    6: the format 7 reader and the reader audit's fixes (attach fetches take
+    own steps only, 0 bp own steps attached, every record over the window
+    returned, `referenceNodes` gives every pass, links the way walks take
+    them, 37 of 37 mutations killed), its release gate green with 260
+    tests. On ada, `~/work/tidy7/` holds the final MC chr22 and pggb chrY
+    builds: `verify7.py`, `claims7.py` and `audit7.py` clean on both, the
+    `--own` shards' results in `final.*.own*.txt`. Next, in order:
+    - **T3, the consumer ports to graph-walks 6**, with two changes the
+      reader fixes force: the JBrowse plugin keys nodes by id alone, so
+      the repeat passes `referenceNodes` now returns collide (key by
+      `id@start`); bandage-core takes a node's orientation from the first
+      link naming it, so the new link orientation flips some node ids
+      (check against graph-walks 6). Release gates as below
+    - **The README figures** on branches `fig7-a`, `fig7-b`, `fig7-c` and
+      `fig7-riffs` (off af005be; rebase onto main): the user wants figure
+      1 to be a simple graph (an extra node, a skipped node, a swapped
+      node) shown as its W lines, the walk-file lines and one Bandage
+      drawing of graph-walks' cut with node names, then a leave-and-rejoin
+      figure. `scripts/bandage-figure.mjs` on `fig7-riffs` draws them
+      through graph-walks and bandage-core; redraw with the fixed reader,
+      whose arrows now follow the walks. The comparison page of 2026-11-06
+      was published from the `~/.claude2` config's account, which this
+      config can't open; publish anew
+    - **The genome-wide rebuild and cutover** as the superseding note
+      above says
+    - Worktrees to remove once main is pushed: `gfa-to-tabix-format7-tidy`
+      and `-format7-adr` (landed), `-rev7-claims`, `-rev7-reader`,
+      `-format7-reader-log`, `-format7-writer` (all in main's history),
+      `-trial`; graph-walks `format7-reader`, `format7-reader-tidy`,
+      `format7-reader-fix` (landed)
   - **Release gates, after a vibe check the same afternoon** found the
     libraries released before any consumer had compiled against them
     (the ports then found two graph-walks bugs within the hour, fixed in
