@@ -559,6 +559,7 @@ For a window `[s, e)` with context `c`, the stretch `D = [s − c, e + c)`
 - Under the overlap rule, a reader can see two fragments of a path where
   format 6's lookback joined them through steps 80–92 kb outside the
   window, with nothing in the window missing
+  ([ADR 0010](adr/0010-walks-unit-table.md#genome-wide))
 
 ## What the writer guarantees
 
