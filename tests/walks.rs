@@ -871,7 +871,11 @@ fn assert_rebuilds(gfa: &str, built: &Built, samples: &[&str]) {
         assert!(!decoded.paths.is_empty(), "{sample}");
         let on_reference: BTreeSet<&String> = paths
             .iter()
-            .filter(|(_, handles)| handles.iter().any(|h| decoded.reference.contains(&(h >> 1))))
+            .filter(|(_, handles)| {
+                handles
+                    .iter()
+                    .any(|h| decoded.reference.contains(&(h >> 1)))
+            })
             .map(|(path, _)| path)
             .collect();
         assert_eq!(
