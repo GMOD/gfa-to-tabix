@@ -129,8 +129,8 @@ fn cover(lo: u64, hi: u64, tile: u64) -> Vec<(u64, u64)> {
 // names every table, sequences in byte order; every line starts with its
 // unit's sequence; a departure block is named `.`, and no two units of a
 // kind and sequence share any other name; a departure record lies in every
-// block of its cover and no other,
-// and other lines within their unit's extent, which is the union of its ref
+// block of its cover and no other, overlapping each, and tile and detail
+// lines within their unit's extent, which is the union of its ref
 // rows' stretches and its pieces' spans, or where that covers no base the
 // base beside its point
 fn verify(data: &[u8], directory: &str, tile: u64) {
@@ -249,7 +249,14 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
                     None
                 }
             };
-            assert!(kind == "departures" || (lo <= a && b <= hi), "{row}");
+            assert!(
+                if kind == "departures" {
+                    a < hi && lo < b
+                } else {
+                    lo <= a && b <= hi
+                },
+                "{row}"
+            );
             if let Some((a, b)) = stretch {
                 union = Some(union.map_or((a, b), |(x, y)| (x.min(a), y.max(b))));
             }

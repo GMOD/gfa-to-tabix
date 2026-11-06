@@ -579,10 +579,10 @@ The tool checks each of these as it writes:
 - Each table lists every unit of its sequence, in file order, before it,
   with lengths above 0; the directory lists every reference sequence
 - A tile's extent is the union of its `ref` rows' stretches, or the base
-  beside its point where they cover none; every line lies within its
-  unit's `start end`; every
-  departure record is in every block of its cover, and its `ownTiles` are
-  the tiles the tool filed its own steps in
+  beside its point where they cover none; every tile and detail line lies
+  within its unit's `start end`, and every departure line overlaps each
+  block it is in; every departure record is in every block of its cover,
+  and its `ownTiles` are the tiles the tool filed its own steps in
 - Each walk and abridged row's `start end` is the span of the steps it
   decodes to: the tool decodes every row it writes, as format 6's
   encoder did, compares the steps and their positions, and takes the span

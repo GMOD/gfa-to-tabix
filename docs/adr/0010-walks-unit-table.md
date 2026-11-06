@@ -142,8 +142,9 @@ zcat f.walks.gz | awk -F'\t' '$1=="GRCh38#0#chr22" && $2<20001000 && $3>20000000
 - The header, the units, the tables and the EOF block partition the file;
   every unit starts and ends a gzip member and starts with its `#unit` line
 - Each table lists every unit of its sequence, in file order, before it
-- A tile's extent is the union of its lines' extents; every line lies
-  within its unit's `start end`; every step placed on the reference in
+- A tile's extent is the union of its lines' extents; every tile and
+  detail line lies within its unit's `start end`, and every departure line
+  overlaps each block it is in; every step placed on the reference in
   `[a, b)` is in a tile whose extent overlaps `[a, b)`; every departure
   record is in every block of its cover
 - Each line's `start end` agrees with its decoded steps, checked at build
@@ -370,3 +371,8 @@ and measured it against format 6
   every unit's name is unique within its kind and sequence, false while
   departure blocks of one size shared a name, now reads: every name other
   than `.`
+- 2026-11-06, amended: the guarantee that every line lies within its
+  unit's `start end` was false for departure lines, which go in every
+  block of their cover and run past them. It now reads: every tile and
+  detail line lies within its unit's `start end`, and every departure line
+  overlaps each block it is in. Found drawing the format for the README

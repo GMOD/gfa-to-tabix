@@ -16,8 +16,8 @@
 #   lines lie in its extent, which is the union of its ref rows' stretches
 #   and its pieces' spans, or where that covers no base the base beside its
 #   point, and its other rows state the extent
-# - a departure block is named `.` and aligned, and each record is in every
-#   block of its cover and no other
+# - a departure block is named `.` and aligned, each of its lines overlaps
+#   it, and each record is in every block of its cover and no other
 # Usage: verify7.py walks.gz [tile]; prints a JSON summary, exits 1 on the
 # first failure.
 import hashlib
@@ -101,6 +101,8 @@ def check_unit(at, length, text):
                 fail(f'departure block {lo} {hi} named {name}, not .')
             if lo % (hi - lo):
                 fail(f'departure block {lo} {hi} is not aligned')
+            if not (a < hi and lo < b):
+                fail(f'a departure line not overlapping its block {lo} {hi}: {line[:80]}')
             key = hashlib.blake2b(line.encode(), digest_size=12).digest()
             state['records'].setdefault(key, [a, b, []])[2].append((lo, hi - lo))
             continue

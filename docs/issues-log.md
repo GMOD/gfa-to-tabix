@@ -1066,3 +1066,16 @@ Where the findings have come from so far, and the rule each gives:
   checks exempt `.` instead of a kind. Guard: writer test "a departure
   block is named dot and every other name is unique", on a build with
   several tiles and detail records per tile, and the two checks
+- **2026-11-06, the format 7 README figures, three drawings of the
+  format.** The spec ("What the writer guarantees") and ADR 0010 said every
+  line lies within its unit's `start end`. A departure line goes in every
+  block of its cover and runs past each, so the statement was false for
+  departure blocks, and `verify()` and `verify7.py` skipped those lines
+  rather than check what does hold. Source: a guarantee written for tiles
+  and stated for every unit. Fix: both say every tile and detail line lies
+  within its unit's `start end`, and every departure line overlaps each
+  block it is in. The writer has no build-time check of either: a unit's
+  extent is the union of its lines' and a record's blocks are its cover,
+  so both hold by construction. Guard: `verify()` in `tests/walks.rs`, run
+  on every file the tests build, and `verify7.py` check within for tile
+  and detail lines and overlap for departure lines
