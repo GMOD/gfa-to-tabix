@@ -896,3 +896,15 @@ Where the findings have come from so far, and the rule each gives:
   its columns, so `#haplotype` names `H#x` for path `H#x#1#ctg`. Older
   than format 7; PanSN forbids it. Fix: the build refuses a W line whose
   sample or haplotype holds `#`. Guard: a test
+- **2026-11-06, graph-walks 6's measurements (the reader's entry on
+  `format7-reader-log`, c69c9bc, holds the bytes).** The spec's line "an
+  own step of a piece the tile abridged lies in its detail unit", beside
+  "an attach fetch reads the tiles `ownTiles` names", led the reader to
+  expand every abridged piece an attach fetch decoded; graph-walks 5 never
+  did. ADR 0010's reading rule puts the two clauses side by side the same
+  way. Source: a true statement of where steps are, read as a rule for
+  when to fetch them. Fix: the spec and the ADR say that an attach fetch
+  takes the own steps the named tiles hold, that an abridged piece there
+  stays abridged, and that its own steps come only when a viewer expands
+  that path's `detail` unit. Guard: graph-walks 6 (17ed0a6) expands only
+  on request, with its test
