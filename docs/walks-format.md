@@ -80,8 +80,8 @@ taken flipped, and its departure records.
 - **Departure record:** the line for one place a path departs from S
   ([departure](#departure)). A **detail record** is an abridged path's
   moved pieces in one tile, a `detail` unit
-- **Own steps:** a departure record's path's steps between its leave and
-  its rejoin
+- **Own steps:** a departure record's path's steps strictly between its
+  leave step and its rejoin step, a step of 0 bp included
 - **Attach fetch:** a reader's read of the tiles holding a departure
   record's own steps, for a record whose own steps lie in no tile the
   window read; it reads no `detail` unit ([departure](#departure))
@@ -505,7 +505,8 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   Only an end on a node of 0 bp makes it wider, and a record whose ends
   are 0 bp nodes at `|S|` has the extent `[|S| − 1, |S|)`
 - `ownTiles` lists the tiles of S that hold the record's own steps, the
-  steps between its leave and its rejoin, by their starts (the `name` of
+  steps strictly between its leave step and its rejoin step, by their
+  starts (the `name` of
   their `tile` units), comma-separated, in the path's order; `.` for none.
   The placement rules decide which they are, not the breakpoints'
   positions, so a jump back is no different:
@@ -522,8 +523,10 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   cover, the same text in each, and a reader drops exact duplicates
 - An attach fetch, for a record whose own steps the window holds no piece
   of, reads the tiles `ownTiles` names and takes the own steps those tiles
-  hold: the path's steps between `hapStart` and `hapStart + ownBp` on its
-  contig. A piece there that the tile abridged stays abridged, its
+  hold: the path's steps after its leave step and before its rejoin step,
+  which start at `hapStart` on its contig and span `ownBp`. A step of 0 bp
+  there is an own step, so a record with `ownBp` 0 can name a tile. A piece
+  there that the tile abridged stays abridged, its
   `abridged` row standing for it. Its own steps come only when a viewer
   expands that path's `detail` unit, on request, never as part of an
   attach fetch

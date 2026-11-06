@@ -1203,7 +1203,8 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
 // line ends with 4 and its next, from 30, starts with 5 before 1: steps
 // leading a line take the tile of the first reference step after them, the
 // rejoin's, 0, where a read at the leave would miss them. K's first line
-// ends with 6 after 4 and its next starts with 7 before 1, so both
+// ends with 6 after 4 and its next starts with 7 before 1, so both. G walks
+// 9, of 0 bp, after 4: no own bp, but an own step, in tile 10
 #[test]
 fn a_record_names_the_tiles_holding_its_own_steps() {
     let built = build_text(
@@ -1216,12 +1217,14 @@ fn a_record_names_the_tiles_holding_its_own_steps() {
             "S 5 CCCCCCCC",
             "S 6 GGGGGGGG",
             "S 7 TTTTTTTT",
+            "S 9 * LN:i:0",
             "W R 0 chr 0 24 >1>2>3>4",
             "W J 1 j 0 38 >1>2>3>4>5>1",
             "W H 1 h 0 24 >1>2>3>4",
             "W H 1 h 30 44 >5>1",
             "W K 1 k 0 32 >1>2>3>4>6",
             "W K 1 k 40 54 >7>1",
+            "W G 1 g 0 30 >1>2>3>4>9>1",
         ],
         &["--refs", "R"],
     );
@@ -1229,6 +1232,7 @@ fn a_record_names_the_tiles_holding_its_own_steps() {
     assert_eq!(
         departures(built.file("R")),
         tsv(&[
+            "R#0#chr 0 24 departure G#1#g 24 0 0 24 + 1 0 + 1 10",
             "R#0#chr 0 24 departure H#1#h 24 14 6 24 + 1 0 + 1 0",
             "R#0#chr 0 24 departure J#1#j 24 8 0 24 + 1 0 + 1 10",
             "R#0#chr 0 24 departure K#1#k 24 24 8 24 + 1 0 + 1 10,0",
