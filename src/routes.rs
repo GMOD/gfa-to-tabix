@@ -673,6 +673,19 @@ fn encode_all<'p>(
     Ok(Encoded { routes, walks })
 }
 
+// The most deflate can make of `raw` bytes in BGZF blocks: each block can
+// grow by a stored block's headers
+fn deflate_bound(raw: u64) -> u64 {
+    raw + raw / 2048 + 16 * raw.div_ceil(BGZF_BLOCK as u64).max(1)
+}
+
+// Whether rows compress, in BGZF blocks at level 6, to more than the budget
+fn over_bytes(budget: Budget, text: &[u8]) -> bool {
+    budget.bytes > 0
+        && deflate_bound(text.len() as u64) > budget.bytes
+        && compressed_len(text) > budget.bytes
+}
+
 fn compressed_len(text: &[u8]) -> u64 {
     use flate2::Compression;
     use flate2::write::DeflateEncoder;
@@ -703,10 +716,10 @@ struct Group {
     routes: Vec<usize>,
 }
 
-// The paths whose pieces leave the chunk, costliest first, until the rest fit
-// the budget. `raw` is the length of the chunk's rows, and `ratio` how far
-// they compress.
-fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64, ratio: f64) -> Vec<Group> {
+// The chunk's paths, costliest first, and how many must leave it for the rest
+// to fit the budget: all of the cost, and the bytes as far as `ratio`, how far
+// the chunk's `raw` bytes of rows compress, estimates them.
+fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64, ratio: f64) -> (Vec<Group>, usize) {
     let mut by_path: FastMap<(&[u8], u64), usize> = FastMap::default();
     let mut groups: Vec<Group> = Vec::new();
     for (k, (piece, walk, _)) in enc.walks.iter().enumerate() {
@@ -739,11 +752,9 @@ fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64, ratio: f64) -> Vec<G
     let mut cost: u64 = groups.iter().map(|g| g.cost).sum();
     let mut raw = raw;
     groups.sort_by_key(|g| std::cmp::Reverse(g.cost));
-    let mut moved = Vec::new();
-    for group in groups {
-        if !over_cost(cost) && !over_bytes(raw) {
-            break;
-        }
+    let mut moving = 0;
+    while moving < groups.len() && (over_cost(cost) || over_bytes(raw)) {
+        let group = &groups[moving];
         cost -= group.cost;
         raw = raw.saturating_sub(group.raw);
         for &r in &group.routes {
@@ -752,9 +763,9 @@ fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64, ratio: f64) -> Vec<G
                 raw = raw.saturating_sub(route_raw(r));
             }
         }
-        moved.push(group);
+        moving += 1;
     }
-    moved
+    (groups, moving)
 }
 
 // Writes the rows of a chunk's pieces, `raw` as the sort holds them, through
@@ -824,31 +835,55 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         .sum();
     let over_cost = budget.cost > 0 && total > budget.cost * STEPS_PER_INTERIOR;
     let raw = text.len() as u64;
-    let over_bytes = budget.bytes > 0 && raw > budget.bytes;
-    if !over_cost && !over_bytes {
+    let compressed = (budget.bytes > 0 && deflate_bound(raw) > budget.bytes)
+        .then(|| compressed_len(&text))
+        .filter(|&n| n > budget.bytes);
+    let moved = if over_cost || compressed.is_some() {
+        let ratio = compressed.map_or(1.0, |n| n as f64 / raw as f64);
+        drop(text);
+        let (mut groups, mut moving) = abridged_groups(&enc, budget, raw, ratio);
+        drop(enc);
+        loop {
+            let mut gone = vec![false; pieces.len()];
+            for group in &groups[..moving] {
+                for &k in &group.pieces {
+                    gone[k] = true;
+                }
+            }
+            let kept = encode_all(&path, &pieces, (0..pieces.len()).filter(|&k| !gone[k]))?;
+            let (mut text, mut stretches, mut kept_counts) =
+                (Vec::new(), Vec::new(), Counts::default());
+            emit_rows(
+                &path,
+                &references,
+                &kept,
+                nodes,
+                sequence,
+                &mut kept_counts,
+                &mut |stretch, row| {
+                    text.extend_from_slice(row);
+                    stretches.push(stretch);
+                    Ok(())
+                },
+            )?;
+            if moving < groups.len() && over_bytes(budget, &text) {
+                moving += 1;
+            } else {
+                *counts += kept_counts;
+                for (row, stretch) in text.split_inclusive(|&b| b == b'\n').zip(stretches) {
+                    emit(stretch, row)?;
+                }
+                groups.truncate(moving);
+                break groups;
+            }
+        }
+    } else {
         *counts += scratch;
         for (row, stretch) in text.split_inclusive(|&b| b == b'\n').zip(stretches) {
             emit(stretch, row)?;
         }
-        return Ok(());
-    }
-    let ratio = if over_bytes {
-        compressed_len(&text) as f64 / raw as f64
-    } else {
-        1.0
+        Vec::new()
     };
-    drop(text);
-    let moved = abridged_groups(&enc, budget, raw, ratio);
-    drop(enc);
-    let mut gone = vec![false; pieces.len()];
-    for group in &moved {
-        for &k in &group.pieces {
-            gone[k] = true;
-        }
-    }
-    let kept = encode_all(&path, &pieces, (0..pieces.len()).filter(|&k| !gone[k]))?;
-    emit_rows(&path, &references, &kept, nodes, sequence, counts, emit)?;
-    drop(kept);
     let mut detail_counts = Counts::default();
     for (k, group) in moved.iter().enumerate() {
         let mut members = group.pieces.clone();

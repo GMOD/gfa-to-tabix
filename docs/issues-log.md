@@ -1173,3 +1173,20 @@ Where the findings have come from so far, and the rule each gives:
   tiles of S holding the steps strictly between. Guard: the test itself,
   on every file `decode_file` reads, and `claims7.py`'s O1 on the fuzz
   batch
+- **2026-11-06, the format 7 claims audit (claim 8).** The spec said
+  `--abridge-bytes` moves a tile's costliest paths until the rest compress
+  to at most that many bytes. The writer moved them by an estimate, each
+  path's raw bytes times the tile's whole compression ratio, and never
+  compressed what it kept, so 1 of 1,600 fuzz files kept walk rows at 306
+  bytes against a budget of 300; and it entered the rule only where the
+  rows' raw length passed the budget, which a tile whose deflated rows
+  outgrow it never does. The test beside the rule said the estimate could
+  leave a path. Source: 200c0a5, format 5's docs, written from the
+  intent while the code took an estimate; carried through two rewrites.
+  Fix: the writer deflates the rows it keeps, as `abridgebytes` measures
+  them, and moves the next costliest path until they fit or no walk row is
+  left, and it compresses any tile whose rows could deflate past the
+  budget; the spec states the measure, the tile's rows other than its
+  `abridged` rows from `kind` on, at level 6 in 65,280-byte blocks. Guard:
+  the test "a tile that keeps walk rows fits its budgets", which fails on
+  the old writer, and `claims7.py`'s B1 on the fuzz batch

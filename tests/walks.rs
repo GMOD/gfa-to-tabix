@@ -778,6 +778,7 @@ fn gfa_paths(gfa: &str) -> HashMap<String, Vec<u32>> {
         })
         .collect()
 }
+
 // A decoded walk step: see `decode_file`
 struct Placed {
     order: (u64, u64, usize),
@@ -821,7 +822,6 @@ fn own_tiles(steps: &[Placed], seq: &str, cols: &[&str]) -> Vec<u64> {
     }
     tiles
 }
-
 
 // Every path rebuilds from its rows, and from its first step on a sequence to
 // its last every base of it lies in one piece's stretch on R or one record's
@@ -894,6 +894,56 @@ fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
         }
         let samples: Vec<&str> = refs.split(',').collect();
         assert_rebuilds(&fs::read_to_string(fixture(gfa)).unwrap(), &built, &samples);
+    }
+}
+
+// Under --abridge-bytes n, every tile that keeps a walk row has rows, other
+// than its abridged rows and from kind on, that deflate at level 6 in blocks
+// of 65,280 bytes to at most n bytes
+#[test]
+fn a_tile_that_keeps_walk_rows_fits_its_budgets() {
+    use flate2::write::DeflateEncoder;
+    let deflated = |text: &str| -> usize {
+        text.as_bytes()
+            .chunks(65280)
+            .map(|block| {
+                let mut encoder = DeflateEncoder::new(Vec::new(), Compression::new(6));
+                encoder.write_all(block).unwrap();
+                encoder.finish().unwrap().len()
+            })
+            .sum()
+    };
+    for gfa in [
+        "walks-repeat.gfa",
+        "walks-loop.gfa",
+        "walks-records.gfa",
+        "walks-contig-ends.gfa",
+    ] {
+        for budget in [40, 80, 120, 160, 200, 240, 300] {
+            let built = build(
+                gfa,
+                &[
+                    "--refs",
+                    "R",
+                    "--tile",
+                    "20",
+                    "--abridge-bytes",
+                    &budget.to_string(),
+                ],
+            );
+            assert!(built.output.status.success(), "{gfa}");
+            for (head, lines) in units(built.file("R")) {
+                let rows: Vec<&str> = lines
+                    .iter()
+                    .filter(|l| l.split('\t').nth(3) != Some("abridged"))
+                    .map(|l| l.splitn(4, '\t').nth(3).unwrap())
+                    .collect();
+                if head[3] == "tile" && rows.iter().any(|r| r.starts_with("walk\t")) {
+                    let text: String = rows.iter().map(|r| format!("{r}\n")).collect();
+                    assert!(deflated(&text) <= budget, "{gfa} {budget}: {head:?}");
+                }
+            }
+        }
     }
 }
 
