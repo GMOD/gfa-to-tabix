@@ -282,7 +282,7 @@ and measured it against format 6
   README's walk figure is drawn from the writer's output
 - **graph-walks 6:** a source that reads the directory, the tables and
   byte ranges in place of `TabixIndexedFile`, with `WalkReader.open(url)`
-  and `WalkReader.fromFilehandles({ data, table })` so a consumer's change
+  and `WalkReader.fromFilehandles({ data, directory })` so a consumer's change
   is one line; tiles addressed by extent and `decoded` keyed by unit, never
   by `floor(base / chunk)`; no chunk-before rule, `maxnode`, `#long` or
   reach; refuses format 6; `pnpm release-check` reads format 7. The
@@ -376,3 +376,6 @@ and measured it against format 6
   block of their cover and run past them. It now reads: every tile and
   detail line lies within its unit's `start end`, and every departure line
   overlaps each block it is in. Found drawing the format for the README
+- 2026-11-06, corrected: graph-walks 6 takes
+  `WalkReader.fromFilehandles({ data, directory })`, the data file and
+  its `.idx`, not `{ data, table }` as Consequences first said

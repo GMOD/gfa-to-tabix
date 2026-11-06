@@ -1079,3 +1079,12 @@ Where the findings have come from so far, and the rule each gives:
   so both hold by construction. Guard: `verify()` in `tests/walks.rs`, run
   on every file the tests build, and `verify7.py` check within for tile
   and detail lines and overlap for departure lines
+- **2026-11-06, the format 7 README figures, three drawings of the
+  format.** The spec's Readers section and ADR 0010's Consequences named
+  graph-walks 6's constructor `WalkReader.fromFilehandles({ data, table })`;
+  graph-walks 6 (`src/walkReader.ts`) takes `{ data, directory }`, the
+  data file and its `.idx`, since a reader finds each sequence's table
+  through the directory. Source: an API named in the ADR before it was
+  written and copied into the spec. Fix: both say `{ data, directory }`.
+  Guard: none in this repository; graph-walks' README states the same
+  signature its code exports

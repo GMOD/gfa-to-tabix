@@ -726,7 +726,7 @@ R#0#chr  0   24  departure  D#1#d    24 0  0  24  +  1  0  +  1  .
 
 - [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 6 reads format
   7, with `WalkReader.open(url)` or
-  `WalkReader.fromFilehandles({ data, table })`. graph-walks 5 reads format
+  `WalkReader.fromFilehandles({ data, directory })`. graph-walks 5 reads format
   6 only, and refuses a format 7 file
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
