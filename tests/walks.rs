@@ -104,11 +104,12 @@ fn gunzip(bytes: &[u8]) -> String {
     text
 }
 
-// The pyramid blocks covering [lo, hi) widened to whole tiles, as (start, size)
+// The pyramid blocks covering [lo, hi) widened to whole tiles, and to at
+// least the tile holding `lo`, as (start, size)
 fn cover(lo: u64, hi: u64, tile: u64) -> Vec<(u64, u64)> {
     let mut blocks = Vec::new();
     let mut at = lo / tile * tile;
-    let end = hi.div_ceil(tile) * tile;
+    let end = (hi.div_ceil(tile) * tile).max(at + tile);
     while at < end {
         let size = [512, 64, 8, 1]
             .map(|n| n * tile)
@@ -263,7 +264,7 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
             };
             assert!(
                 if kind == "departures" {
-                    a < hi && lo < b
+                    a < hi && (lo < b || a == b)
                 } else {
                     lo <= a && b <= hi
                 },
@@ -1889,6 +1890,36 @@ fn a_w_line_with_no_steps_is_skipped() {
         String::from_utf8_lossy(&refused.output.stderr)
             .contains("path H#1#h ends at 6, but its steps from 5 end at 5")
     );
+}
+
+// A sequence of 0 bp has no base: chr0's tile, table and record, H's leave
+// at 1 for chr2's 3 and rejoin at 2, all state [0, 0), which no window
+// selects, and the record is in the block of the tile holding 0
+#[test]
+fn a_sequence_of_0_bp_states_0_0() {
+    let built = build_text(
+        "zeroseq",
+        &[
+            "S 1 * LN:i:0",
+            "S 2 * LN:i:0",
+            "S 3 AAAAAA",
+            "W R 0 chr0 0 0 >1>2",
+            "W R 0 chr2 0 6 >3",
+            "W H 1 h 0 6 >1>3>2",
+        ],
+        &["--refs", "R", "--stay", "0"],
+    );
+    assert!(built.output.status.success());
+    let r = built.file("R");
+    assert_eq!(
+        unit(r, "tile", "0").lines().next(),
+        Some("#unit\tR#0#chr0\t0\t0\ttile\t0")
+    );
+    assert!(r.contains(&tsv(&["#unit R#0#chr0 0 0 table ."])));
+    assert!(r.contains(&tsv(&[
+        "#unit R#0#chr0 0 10 departures .",
+        "R#0#chr0 0 0 departure H#1#h 0 6 0 0 + 1 0 + 1 ."
+    ])));
 }
 
 // zerotile.gfa, the verifier's: R's chr is 1, of 10 bp, then 91 and 92, of

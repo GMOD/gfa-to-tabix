@@ -240,11 +240,17 @@ whole file as text.
   `|S|`, as a departure's breakpoint stretch does. Every window holding
   that base reads it, and its rows' spans, `[p, p)`, lie inside it. At
   `|S|` such a tile's extent begins before the tile
+- A sequence of 0 bp has no base, so there is none beside `p` to take: its
+  units, its table and its departure lines state `[0, 0)`, the tool
+  invents no base, and since `D` starts at 0 or later, no window selects
+  them. Its rows are in the file for a reader of the whole file
 - **The departure pyramid** has blocks of `tile × 8^L` bp for L from 0 to
   3 (64 kb, 512 kb, 4 Mb and 32 Mb at the default tile), each at a
   multiple of its size. A record's cover runs from `floor(start / tile) ×
-  tile` to `ceil(end / tile) × tile` over its line's `start end`, taking
-  at each point the largest block aligned there that fits. Its line is in
+  tile` to `ceil(end / tile) × tile` over its line's `start end`, and at
+  least to the end of the tile holding `start`, which only a line `[0, 0)`
+  on a sequence of 0 bp needs, taking at each point the largest block
+  aligned there that fits. Its line is in
   every block of its cover, the same text in each. Within a block lines
   are in order of `start`, `end`, then text
 - **A table** lists each unit of its sequence before it, in file order, as
@@ -512,9 +518,10 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   breakpoint stretch runs from the base beside one breakpoint to the base
   beside the other, each clamped into S: `[bp − 1, bp)` where the
   breakpoint is the node's end, `[bp, bp + 1)` where it is its start or
-  the node has 0 bp, and `[|S| − 1, |S|)` where that would lie past S.
-  Only an end on a node of 0 bp makes it wider, and a record whose ends
-  are 0 bp nodes at `|S|` has the extent `[|S| − 1, |S|)`
+  the node has 0 bp, and `[|S| − 1, |S|)` where that would lie past S,
+  or `[0, 0)` where S has 0 bp. Only an end on a node of 0 bp makes it
+  wider, and a record whose ends are 0 bp nodes at `|S|` has the extent
+  `[|S| − 1, |S|)`
 - `ownTiles` lists the tiles of S that hold the record's own steps, the
   steps strictly between its leave step and its rejoin step, by their
   starts (the `name` of
@@ -544,8 +551,8 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)).
 
 ## Reading a window
 
-For a window `[s, e)` with context `c`, the stretch `D = [s − c, e + c)`
-([ADR 0010](adr/0010-walks-unit-table.md)):
+For a window `[s, e)` with context `c`, the stretch `D = [max(0, s − c),
+e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
 
 - **At open:** GET the directory and refuse any format but 7. GET the
   header unit and the sequence's table in parallel. Refuse when the

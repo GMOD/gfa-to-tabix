@@ -14,8 +14,9 @@ pub struct End {
     pub bp: u64,
     // whether the step runs against S's orientation at its pass
     pub against: bool,
-    // the base of the node beside the breakpoint, clipped to S
-    pub base: u64,
+    // the base of the node beside the breakpoint, clipped to S, as a
+    // stretch: empty on a sequence of 0 bp, which has no base
+    pub beside: (u64, u64),
     // the stretch of S the step's node covers at its pass
     pub node: (u64, u64),
     // how many times the reference's paths pass the step's node: above 1,
@@ -57,11 +58,12 @@ pub struct Departure<'a> {
 // The pyramid's block sizes, in tiles, largest first
 const BLOCK_TILES: [u64; 4] = [512, 64, 8, 1];
 
-// Cuts [lo, hi), widened to whole tiles, into the largest aligned blocks of
-// the pyramid that fit, as (start, size)
+// Cuts [lo, hi), widened to whole tiles and to at least the tile holding
+// `lo`, into the largest aligned blocks of the pyramid that fit, as (start,
+// size)
 pub fn cover(lo: u64, hi: u64, tile: u64, mut each: impl FnMut(u64, u64)) {
     let mut at = lo / tile * tile;
-    let end = hi.div_ceil(tile) * tile;
+    let end = (hi.div_ceil(tile) * tile).max(at + tile);
     while at < end {
         let size = BLOCK_TILES
             .into_iter()
@@ -81,12 +83,16 @@ impl Departure<'_> {
     // From the first base of one end's node to the last of the other's, or
     // the bases beside the breakpoints where wider
     fn extent(&self) -> (u64, u64) {
-        let (a, b) = (self.leave.base, self.rejoin.base);
+        let (leave, rejoin) = (&self.leave, &self.rejoin);
         (
-            a.min(b).min(self.leave.node.0).min(self.rejoin.node.0),
-            (a.max(b) + 1)
-                .max(self.leave.node.1)
-                .max(self.rejoin.node.1),
+            [leave.beside.0, rejoin.beside.0, leave.node.0, rejoin.node.0]
+                .into_iter()
+                .min()
+                .expect("four starts"),
+            [leave.beside.1, rejoin.beside.1, leave.node.1, rejoin.node.1]
+                .into_iter()
+                .max()
+                .expect("four ends"),
         )
     }
 

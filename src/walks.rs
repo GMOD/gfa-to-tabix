@@ -1222,11 +1222,12 @@ fn step_end(chunks: &Chunks, handle: u32, at: Visit, length: u64, passes: u32, l
     } else {
         at.offset + length
     };
-    let base = if length == 0 || on_start { bp } else { bp - 1 };
+    let end = chunks.end[at.name as usize];
+    let base = if length == 0 || on_start { bp } else { bp - 1 }.min(end.saturating_sub(1));
     End {
         bp,
         against,
-        base: base.min(chunks.end[at.name as usize].saturating_sub(1)),
+        beside: (base, (base + 1).min(end)),
         node: (at.offset, at.offset + length),
         passes,
     }

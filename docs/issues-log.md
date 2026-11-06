@@ -1233,3 +1233,21 @@ Where the findings have come from so far, and the rule each gives:
   graphs `vg convert` writes. Guard: the test "a W line with no steps is
   skipped", which builds with and without four empty lines and compares
   the files; the widened fuzz generator writes empty lines
+- **2026-11-06, the format 7 claims audit (claims 42 and 111).** The
+  point rule gave a unit covering no base `[p, p + 1)`, or `[p − 1, p)`
+  at `|S|`; where `|S|` is 0 neither exists, and the tile came out
+  `[0, 0)`, which no window selects, while the spec and ADR 0010 said
+  every window over the base beside a point reads it. A departure on such
+  a sequence came out `[0, 1)`, a base S doesn't have. `verify()` and
+  `verify7.py` accepted `[0, 0)` because they took a unit whose extent
+  equals its rows' hull before testing the point rule. Source: the F2
+  amendment (1a0646f) and ADR 0010's, written for a 0 bp tile on a
+  sequence with bases; no fixture or fuzz graph had a sequence of 0 bp.
+  Fix: no invented coordinate. On a sequence of 0 bp the units, the table
+  and the departure lines state `[0, 0)`, a departure line goes in the
+  block of the tile holding 0, the cover reaching at least that tile, and
+  the spec says that `D`, which starts at 0 or later, selects none of
+  them, so no window shows a sequence with no base. Guard: the test "a
+  sequence of 0 bp states 0 0"; `verify()`, `verify7.py` and
+  `claims7.py` accept `[0, 0)` only where the table states `|S|` 0; the
+  widened fuzz generator writes sequences of 0 bp
