@@ -10,6 +10,7 @@ import zlib from 'node:zlib'
 import { LocalFile } from './gw6/node_modules/generic-filehandle2/esm/index.js'
 import { WalkReader as Reader6 } from './gw6/src/index.ts'
 import { WalkReader as Reader5 } from './gw5/src/index.ts'
+import { WalkReader as Reader6old } from './gw6old/src/index.ts'
 import { WalkReader as Reader5fixed } from '../arb-arbA/gw/src/index.ts'
 import { TabixIndexedFile } from './gw5/node_modules/@gmod/tabix/esm/index.js'
 
@@ -116,6 +117,7 @@ const compare = (x, y) => {
 const lifted = { stepBudget: Infinity, byteBudget: Infinity, departureByteBudget: Infinity, attachFetches: 64 }
 const data = new Counted(S7)
 const reader6 = Reader6.fromFilehandles({ data, directory: new LocalFile(`${S7}.idx`) })
+const reader6old = Reader6old.fromFilehandles({ data: new LocalFile(S7), directory: new LocalFile(`${S7}.idx`) })
 await reader6.header()
 const units = await reader6.units(SEQ)
 data.reads = []
@@ -136,6 +138,7 @@ for (const w of windows) {
     const base = digest(await reader5.cut(SEQ, region, lifted))
     for (const s of [src, srcFixed]) s.state.first = true
     const fixed = digest(await reader5fixed.cut(SEQ, region, lifted))
+    const old6 = digest(await reader6old.cut(SEQ, region, lifted))
     data.reads = []
     const mine = digest(await reader6.cut(SEQ, region, lifted))
     row.reads = data.reads.length
@@ -145,6 +148,8 @@ for (const w of windows) {
     row.departures = mine.departures.length
     row.vs5 = compare(base, mine)
     row.vsFixed = compare(fixed, mine)
+    row.vsOld6 = compare(old6, mine)
+    tally.sameOld6 = (tally.sameOld6 ?? 0) + row.vsOld6.identical
     tally.same5 += row.vs5.identical
     tally.sameFixed += row.vsFixed.identical
   } catch (e) {

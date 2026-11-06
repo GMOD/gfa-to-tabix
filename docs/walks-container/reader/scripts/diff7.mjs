@@ -12,6 +12,7 @@ import zlib from 'node:zlib'
 import { LocalFile } from './gw6/node_modules/generic-filehandle2/esm/index.js'
 import { WalkReader as Reader6 } from './gw6/src/index.ts'
 import { WalkReader as Reader5 } from './gw5/src/index.ts'
+import { WalkReader as Reader6old } from './gw6old/src/index.ts'
 import { WalkReader as Reader5fixed } from '../arb-arbA/gw/src/index.ts'
 import { TabixIndexedFile } from './gw5/node_modules/@gmod/tabix/esm/index.js'
 
@@ -161,6 +162,7 @@ function classify(a, b) {
 const lifted = { stepBudget: Infinity, byteBudget: Infinity, departureByteBudget: Infinity, attachFetches: 64 }
 const data = new Counted(S7)
 const reader6 = Reader6.fromFilehandles({ data, directory: new LocalFile(`${S7}.idx`) })
+const reader6old = Reader6old.fromFilehandles({ data: new LocalFile(S7), directory: new LocalFile(`${S7}.idx`) })
 await reader6.header()
 const units = await reader6.units(SEQ)
 data.reads = []
@@ -181,9 +183,12 @@ for (const w of windows) {
     const baseCut = await reader5.cut(SEQ, region, lifted)
     for (const s of [src, srcFixed]) s.state.first = true
     const fixedCut = await reader5fixed.cut(SEQ, region, lifted)
+    const old6Cut = await reader6old.cut(SEQ, region, lifted)
     data.reads = []
     const mineCut = await reader6.cut(SEQ, region, lifted)
-    const [base, fixed, mine] = [baseCut, fixedCut, mineCut].map(digest)
+    const [base, fixed, old6, mine] = [baseCut, fixedCut, old6Cut, mineCut].map(digest)
+    row.vsOld6 = { identical: stable(old6) === stable(mine) }
+    row.classOld6 = row.vsOld6.identical ? undefined : classify(old6Cut, mineCut)
     row.class5 = stable(base) === stable(mine) ? undefined : classify(baseCut, mineCut)
     row.classFixed = stable(fixed) === stable(mine) ? undefined : classify(fixedCut, mineCut)
     row.reads = data.reads.length

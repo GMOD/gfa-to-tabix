@@ -1,0 +1,18 @@
+# graph-walks 6 at 17ed0a6 (ownTiles attach, no expansion on attach) on own.{mc22,pggbY}.GRCh38.walks.gz (format7-writer c25765e, a921511 after its rebase).
+# scripts/all.sh; vsOld6 = graph-walks 6 at a6269e4 (leave-base attach rule). Tallies from scripts/tally7.py, bytes from scripts/summarize7.py.
+{"dataset": "mc22", "set": "random96", "windows": 90, "identical5": 84, "identicalFixed": 84, "identicalOld6": 84, "vsOld6: other": 6, "vsOld6: records given steps": 0, "vsOld6: records losing steps": 0, "vs5: other": 6, "vs5: windows with steps only in 6": 1, "vs5: windows with steps only in 5.0.2": 0, "vsFixed: matches with 5.0.2 attach extent": 6, "vsFixed: windows with steps only in 6": 0, "vsFixed: windows with steps only in fixed": 0}
+{"dataset": "mc22", "set": "targets0", "windows": 365, "identical5": 145, "identicalFixed": 225, "identicalOld6": 230, "vs5: other": 131, "vs5: windows with steps only in 6": 179, "vs5: windows with steps only in 5.0.2": 0, "vsFixed: matches with 5.0.2 attach extent": 140, "vsFixed: windows with steps only in 6": 31, "vsFixed: windows with steps only in fixed": 0, "vsOld6: only own steps the ownTiles rule attaches": 7, "vsOld6: records given steps": 31, "vsOld6: records losing steps": 0, "vs5: 6 attaches own steps 5.0.2 lost, nothing else": 89, "vsOld6: other": 128}
+{"dataset": "pggbY", "set": "random96", "windows": 90, "identical5": 20, "identicalFixed": 74, "identicalOld6": 90, "vs5: other": 16, "vs5: windows with steps only in 6": 70, "vs5: windows with steps only in 5.0.2": 0, "vsFixed: matches with 5.0.2 attach extent": 16, "vsFixed: windows with steps only in 6": 0, "vsFixed: windows with steps only in fixed": 0, "vs5: 6 attaches own steps 5.0.2 lost, nothing else": 54}
+{"dataset": "pggbY", "set": "targets0", "windows": 365, "identical5": 32, "identicalFixed": 297, "identicalOld6": 361, "vs5: 6 attaches own steps 5.0.2 lost, nothing else": 259, "vs5: windows with steps only in 6": 333, "vs5: windows with steps only in 5.0.2": 0, "vs5: other": 74, "vsFixed: matches with 5.0.2 attach extent": 68, "vsFixed: windows with steps only in 6": 1, "vsFixed: windows with steps only in fixed": 0, "vsOld6: other": 4, "vsOld6: records given steps": 0, "vsOld6: records losing steps": 0}
+res-o/m7.mc22.jsonl {'open': {'requests': 3, 'bytes': 47637}}
+      1000 n=300 errors=0 read KB 29/52/165 with attach KB 30/273/420 requests first read 1 with attach 1/10 trips max 2
+     10000 n=300 errors=0 read KB 29/62/185 with attach KB 31/159/496 requests first read 1 with attach 1/9 trips max 2
+    100000 n=300 errors=0 read KB 75/126/261 with attach KB 85/263/600 requests first read 1 with attach 1/10 trips max 2
+   1000000 n=300 errors=0 read KB 501/684/1383 with attach KB 508/798/1455 requests first read 1 with attach 1/10 trips max 2
+res-o/m7.pggbY.jsonl {'open': {'requests': 3, 'bytes': 21607}}
+      1000 n=300 errors=0 read KB 70/246/1628 with attach KB 388/1348/1879 requests first read 2 with attach 10/12 trips max 2
+     10000 n=300 errors=0 read KB 70/269/1841 with attach KB 416/1400/2092 requests first read 2 with attach 10/12 trips max 2
+    100000 n=300 errors=0 read KB 121/485/2672 with attach KB 538/1460/2922 requests first read 2 with attach 10/12 trips max 2
+   1000000 n=300 errors=0 read KB 737/3551/5989 with attach KB 1511/3802/6240 requests first read 3 with attach 10/12 trips max 2
+# 6a0a78a (attach fetches expand abridged pieces) on own.{mc22,pggbY}.GRCh38.walks.gz: *.expand.jsonl, killed during pggb 1 Mb (19 of 300);
+# the same without that expansion, pggb 1 kb: m7.pggbY.1k.noexpand.jsonl. scripts/measure7.mjs, scripts/summarize7.py.
