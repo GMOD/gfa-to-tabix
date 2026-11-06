@@ -11,7 +11,7 @@
 #   every unit starts on a gzip member with its `#unit` line
 # - each table lists exactly the units of its sequence since the last
 #   table, in file order, as they are, at their offsets and lengths
-# - no two tile or detail units of a sequence share a name
+# - no two units of a kind and sequence share a name other than `.`
 # - every line starts with its unit's sequence; a tile's or detail unit's
 #   lines lie in its extent, which is the union of its ref rows' stretches
 #   and its pieces' spans, or where that covers no base the base beside its
@@ -85,7 +85,7 @@ def check_unit(at, length, text):
         return
     stats['units'] += 1
     state['units'].append('\t'.join([seq, head[2], head[3], kind, name, str(at), str(length)]))
-    if kind != 'departures' and (kind, name) in state['names']:
+    if name != '.' and (kind, name) in state['names']:
         fail(f'two {kind} units of {seq} named {name}')
     state['names'].add((kind, name))
     union = None

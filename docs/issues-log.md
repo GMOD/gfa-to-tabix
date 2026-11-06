@@ -1053,5 +1053,16 @@ Where the findings have come from so far, and the rule each gives:
   lines point at a unit by, `.` where nothing does. `verify7.py`,
   `verify7.mjs` and `compare7.py`, which read the size from the name, take
   it from `start end`. Guard: writer test "a departure block is named
-  dot", and `verify()` in `tests/walks.rs` and `verify7.py` refuse any
+  dot and every other name is unique", and `verify()` in `tests/walks.rs` and `verify7.py` refuse any
   other name
+- **2026-11-06, the format 7 README figures, three drawings of the
+  format.** ADR 0010 guaranteed every unit's name unique within its kind
+  and sequence, but every departure block of one size shared that size as
+  its name, and the checks (`verify()` in `tests/walks.rs`, `verify7.py`)
+  exempted the `departures` kind rather than the name. Source: a guarantee
+  written for the units readers look up by name and stated for all.
+  Fix: with departure blocks named `.`, ADR 0010 and the spec say every
+  name other than `.` is unique within its kind and sequence, and both
+  checks exempt `.` instead of a kind. Guard: writer test "a departure
+  block is named dot and every other name is unique", on a build with
+  several tiles and detail records per tile, and the two checks

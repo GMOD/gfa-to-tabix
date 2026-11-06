@@ -153,7 +153,7 @@ zcat f.walks.gz | awk -F'\t' '$1=="GRCh38#0#chr22" && $2<20001000 && $3>20000000
 - Offsets and lengths are exact integers below 2^53; files pass 2 GiB
   (CHM13's is 1.78 GB), so writers, readers and checks stream and never
   hold a whole file
-- Every unit's name is unique within its kind and sequence
+- Every unit name other than `.` is unique within its kind and sequence
 - The data file is written, then the directory, each under a temporary
   name and renamed
 
@@ -366,4 +366,7 @@ and measured it against format 6
   which `start end` already gives. A unit's `name` is now only the key
   other lines point at it by, a tile's start for `ownTiles` and `cs:d` for
   an `abridged` row, and `.` where nothing does. Found drawing the format
-  for the README ([issues log](../issues-log.md))
+  for the README ([issues log](../issues-log.md)). So the guarantee that
+  every unit's name is unique within its kind and sequence, false while
+  departure blocks of one size shared a name, now reads: every name other
+  than `.`

@@ -221,7 +221,8 @@ whole file as text.
 - **A unit's `name`** is the key other lines use to point at it: a tile's
   start, which a departure record's `ownTiles` lists, and a detail unit's
   `cs:d`, which an `abridged` row's `detail` and its tile's start give. It
-  is `.` where nothing points at the unit, a departure block or a table
+  is `.` where nothing points at the unit, a departure block or a table.
+  Every other name is unique within its kind and sequence
 - **A tile's extent** is the union of its `ref` rows' stretches; every
   piece's span lies inside it, since every placed step is on R. So a node
   longer than a tile, or a pass that runs past the tile's end, needs no

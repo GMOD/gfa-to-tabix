@@ -127,8 +127,9 @@ fn cover(lo: u64, hi: u64, tile: u64) -> Vec<(u64, u64)> {
 // gzip members starting with its `#unit` line; each table lists its
 // sequence's units before it, in file order, as they are, and the directory
 // names every table, sequences in byte order; every line starts with its
-// unit's sequence; no two tiles or detail records of a sequence share a
-// name; a departure record lies in every block of its cover and no other,
+// unit's sequence; a departure block is named `.`, and no two units of a
+// kind and sequence share any other name; a departure record lies in every
+// block of its cover and no other,
 // and other lines within their unit's extent, which is the union of its ref
 // rows' stretches and its pieces' spans, or where that covers no base the
 // base beside its point
@@ -217,7 +218,7 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
             "the unit at {from} is not listed as it is"
         );
         assert!(
-            kind == "departures"
+            head[5] == "."
                 || names.insert((seq.to_string(), kind.to_string(), head[5].to_string())),
             "two units named {head:?}"
         );
@@ -973,18 +974,24 @@ fn a_departure_between_pieces_has_a_record_and_one_inside_a_piece_has_none() {
     assert_eq!(departures(&whole.walks), "");
 }
 
-// No line points at a departure block, so it is named `.`. At --tile 1 the
-// records of walks-two-refs.gfa cover blocks of 1 and 8 bp, several of each
-// size and two at 16
+// No line points at a departure block, so it is named `.`; a tile's start
+// and a detail record's `cs:d`, which `ownTiles` and `abridged` rows point
+// at, are unique within their kind and sequence. At --tile 1 the records of
+// walks-two-refs.gfa cover blocks of 1 and 8 bp, several of each size and
+// two at 16, and --abridge-bytes 1 moves pieces to several detail records
+// per tile
 #[test]
-fn a_departure_block_is_named_dot() {
-    let built = build("walks-two-refs.gfa", &["--tile", "1"]);
+fn a_departure_block_is_named_dot_and_every_other_name_is_unique() {
+    let built = build(
+        "walks-two-refs.gfa",
+        &["--tile", "1", "--abridge-bytes", "1"],
+    );
     assert!(built.output.status.success());
-    let blocks: Vec<Vec<&str>> = units(&built.walks)
+    let heads: Vec<Vec<&str>> = units(&built.walks)
         .into_iter()
         .map(|(head, _)| head)
-        .filter(|head| head[3] == "departures")
         .collect();
+    let blocks: Vec<&Vec<&str>> = heads.iter().filter(|h| h[3] == "departures").collect();
     let sizes: BTreeMap<u64, usize> = blocks.iter().fold(BTreeMap::new(), |mut sizes, head| {
         let (lo, hi): (u64, u64) = (head[1].parse().unwrap(), head[2].parse().unwrap());
         *sizes.entry(hi - lo).or_default() += 1;
@@ -993,6 +1000,14 @@ fn a_departure_block_is_named_dot() {
     assert!(sizes.values().all(|&n| n > 1), "{sizes:?}");
     assert_eq!(sizes.keys().collect::<Vec<_>>(), [&1, &8]);
     assert!(blocks.iter().all(|head| head[4] == "."), "{blocks:?}");
+    let named: Vec<(&str, &str, &str)> = heads
+        .iter()
+        .filter(|h| h[4] != ".")
+        .map(|h| (h[0], h[3], h[4]))
+        .collect();
+    let kinds: BTreeSet<&str> = named.iter().map(|n| n.1).collect();
+    assert_eq!(kinds, BTreeSet::from(["detail", "tile"]));
+    assert_eq!(named.iter().collect::<BTreeSet<_>>().len(), named.len());
 }
 
 // R has chr1 (1 2) and chr2 (3 4); H walks 1 2 3 4, then 5 of its own. On
