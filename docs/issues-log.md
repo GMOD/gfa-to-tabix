@@ -835,3 +835,33 @@ Where the findings have come from so far, and the rule each gives:
   reads the tile, the window over a point being one that holds bases on
   both sides. Guard: `fuzz7.sh` over 300 seeds; walks-format.md states
   the empty extent
+- **2026-11-05, the genome-wide format 7 check (CHM13 chr14 13.20 Mb).**
+  A departure record's own steps can lie in the rejoin's tile, where the
+  ADR and the spec send an attach fetch to the tile holding the leave base.
+  NA19185#2#CM087748.1 leaves at 13,472,637 at the end of one W line and
+  rejoins at 13,135,857 in the next. That line starts with its own steps,
+  which take the tile of the first reference step after them, the
+  rejoin's (13,107,200); format 6's chunk-before read happened to hold
+  them. Within one W line, own steps after the leave take the leave's tile;
+  across lines, the next line's lead takes the rejoin's, and both can.
+  Source: a reader rule written from where own steps usually are, not
+  from the placement rules. Fix: each record names the tiles holding its
+  own steps on its sequence, in a column `ownTiles`, and the spec says
+  which they are. Guard: a test with a jump back across W lines, one
+  within a line and one with own steps on both sides; `audit7.py` checks
+  every record's `ownTiles` against the tiles its decoded own steps lie in
+- **2026-11-05, the genome-wide format 7 check.** CHM13's file is 1.78 GB,
+  and the prototype scripts read whole files, which Node refuses past
+  2 GiB; `verify7.mjs` is one of them, and `walks-truth.py cost` read
+  whole files too. Source: scripts sized on chromosome files. Fix: a
+  streaming `verify7.py` with the release checks, which `fuzz7.sh` runs;
+  `walks-truth.py cost` reads units by offset. The writer streams through
+  the BGZF writer and keeps offsets as u64. Guard: a unit test writing a
+  unit file whose blocks start past 2^32, checked through its table and
+  directory
+- **2026-11-05, the genome-wide format 7 check.** The converter's detail
+  name collisions reach 10,993 of 66,981 detail units on GRCh38. `verify`
+  in the tests refuses duplicate unit names, but `audit7.py`, which runs
+  on real files, didn't check. Source: a guard placed only where the
+  fixtures are. Fix: `audit7.py` and `verify7.py` count tiles and detail
+  units sharing a name. Guard: both fail a file with any
