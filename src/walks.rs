@@ -485,7 +485,8 @@ fn record(path: &PathLine, name: u32, end: u64) -> Result<Record, String> {
 // Pass 1: node lengths (and sequences), every reference sample's paths,
 // which give each node they visit a reference coordinate, every path's claim
 // on the nodes off the references, and the record of every path with steps,
-// in file order.
+// in file order. A path with no steps is checked and then skipped: it names
+// no sequence and has no record.
 fn first_pass(
     gfa: &str,
     options: &Options,
@@ -563,40 +564,41 @@ fn first_pass(
                 let Some(path) = path_line(line)? else {
                     return Ok(());
                 };
-                samples.id(path.sample);
                 parse_steps(&path, &mut handles)?;
-                let name = names.id(&path.name);
-                ids.clear();
-                ids.extend(handles.iter().map(|h| h >> 1));
-                if ids
-                    .iter()
-                    .all(|&id| lengths.get(id as usize).is_some_and(|&l| l != NONE))
-                {
-                    let end = stable.visit(names, name, path.start, &ids, &lengths);
-                    let record = record(&path, name, end)?;
-                    if !ids.is_empty() {
-                        records.push(record);
-                    }
+                if handles.is_empty() {
+                    record(&path, NONE, path.start)?;
                 } else {
-                    deferred.push((number, records.len()));
-                    records.push(Record {
-                        name,
-                        start: path.start,
-                        end: path.start,
-                    });
-                }
-                if let Some(reference) = options
-                    .refs
-                    .iter()
-                    .position(|r| r.as_bytes() == path.sample)
-                {
-                    walks[reference] += 1;
-                    ref_walks.push(RefWalk {
-                        reference,
-                        name,
-                        start: path.start,
-                        handles: handles.clone(),
-                    });
+                    samples.id(path.sample);
+                    let name = names.id(&path.name);
+                    ids.clear();
+                    ids.extend(handles.iter().map(|h| h >> 1));
+                    if ids
+                        .iter()
+                        .all(|&id| lengths.get(id as usize).is_some_and(|&l| l != NONE))
+                    {
+                        let end = stable.visit(names, name, path.start, &ids, &lengths);
+                        records.push(record(&path, name, end)?);
+                    } else {
+                        deferred.push((number, records.len()));
+                        records.push(Record {
+                            name,
+                            start: path.start,
+                            end: path.start,
+                        });
+                    }
+                    if let Some(reference) = options
+                        .refs
+                        .iter()
+                        .position(|r| r.as_bytes() == path.sample)
+                    {
+                        walks[reference] += 1;
+                        ref_walks.push(RefWalk {
+                            reference,
+                            name,
+                            start: path.start,
+                            handles: handles.clone(),
+                        });
+                    }
                 }
             }
             _ => {}

@@ -107,10 +107,16 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus, and
   and `piece`, and joins consecutive pieces back into one walk
 - A contig can span several W lines, one per stretch the graph holds, as
   where Minigraph-Cactus clips a haplotype. On its first read of the GFA
-  the tool refuses two W lines of a contig that overlap or start at the
-  same base, and a W line whose end column is not its start plus its
-  nodes' lengths. The lines are the same for any order of the W lines,
-  which `vg convert` changes from run to run
+  the tool refuses a W line whose end column is not its start plus its
+  nodes' lengths, and two W lines of a contig with steps that overlap or
+  start at the same base. The lines are the same for any order of the W
+  lines, which `vg convert` changes from run to run
+- A W or P line with no steps is skipped once its end column is checked:
+  it has no rows, no departure record and no `#hole`, it names no
+  reference sequence, it is not counted on stderr, and the overlap refusal
+  doesn't apply to it. It covers no base, so a contig's records count the
+  same own sequence with or without it. Refusing it would turn away graphs
+  `vg convert` writes for nothing a reader gains
 - A path that visits no node of a reference has no rows in that reference's
   file, and the tool counts these paths on stderr
 - A node the reference passes once has that pass as its position. For a node

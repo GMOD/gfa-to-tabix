@@ -1218,3 +1218,18 @@ Where the findings have come from so far, and the rule each gives:
   needed `|S|`. Fix: a table's `#unit` line runs from 0 to `|S|`, where
   the sequence's last line ends. Guard: `verify()` and `verify7.py` check
   it equals the end of the sequence's last `ref` row's stretch
+- **2026-11-06, the format 7 claims audit (claim 17).** The spec said the
+  tool refuses two W lines of a contig that overlap or start at the same
+  base; `first_pass` never recorded a W line with no steps, so two empty
+  lines starting at one base, or an empty line where a line with steps
+  starts, were built without a word. An empty line of the reference
+  sample still named a sequence, which then had a table and no units, and
+  stretched `|S|` to its start. Source: c5d388c; the refusal test used
+  lines with steps, and no fuzz graph had an empty line. Fix: a W or P
+  line with no steps is skipped once its end column is checked, the
+  reference's included, and the spec says so and limits the overlap
+  refusal to lines with steps. Skipping, not refusing: the line covers no
+  base, so no row, record or own bp changes, and refusing would turn away
+  graphs `vg convert` writes. Guard: the test "a W line with no steps is
+  skipped", which builds with and without four empty lines and compares
+  the files; the widened fuzz generator writes empty lines

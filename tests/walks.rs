@@ -1834,21 +1834,35 @@ fn sequences_adds_the_bases_of_ref_and_nodes_rows() {
 
 // R's chrE is a line with no steps: no tile, departure or detail unit, but
 // the directory lists it, and its table holds only its `#unit` line
+// A W line with no steps is skipped: chrE, the reference's only line of it,
+// names no sequence, and H's three empty lines, two starting at 5 and one
+// where H's line with steps starts, are neither refused nor seen. The table
+// of chr states its 18 bp, though H's jump from 1 to 4 lies in the departure
+// block 10-20
 #[test]
-fn a_reference_sequence_with_no_units_has_an_empty_table() {
-    let built = build_text(
+fn a_w_line_with_no_steps_is_skipped() {
+    let lines = [
+        "S 1 AAAAAA",
+        "S 2 AAAAAA",
+        "S 4 AAAAAA",
+        "W R 0 chr 0 18 >1>2>4",
+        "W H 1 h 0 12 >1>4",
+    ];
+    let empty = [
+        "W R 0 chrE 0 0 ",
+        "W H 1 h 5 5 ",
+        "W H 1 h 5 5 ",
+        "W H 1 h 0 0 ",
+    ];
+    let without = build_text("steps", &lines, &["--refs", "R"]);
+    let with = build_text(
         "empty",
-        &[
-            "S 1 AAAAAA",
-            "S 2 AAAAAA",
-            "W R 0 chr 0 12 >1>2",
-            "W R 0 chrE 0 0 ",
-            "W H 1 h 0 12 >1>2",
-        ],
+        &[&lines[..], &empty[..]].concat(),
         &["--refs", "R"],
     );
-    assert!(built.output.status.success());
-    let tables = unit(built.file("R"), "table", ".");
+    assert!(with.output.status.success());
+    assert_eq!(with.files, without.files);
+    let tables = unit(with.file("R"), "table", ".");
     let without_offsets = tables.lines().map(|l| {
         if l.starts_with("#entry") {
             l.rsplitn(3, '\t').last().unwrap()
@@ -1859,10 +1873,21 @@ fn a_reference_sequence_with_no_units_has_an_empty_table() {
     assert_eq!(
         joined(without_offsets),
         tsv(&[
-            "#unit R#0#chr 0 12 table .",
+            "#unit R#0#chr 0 18 table .",
             "#entry R#0#chr 0 12 tile 0",
-            "#unit R#0#chrE 0 0 table .",
+            "#entry R#0#chr 0 10 departures .",
+            "#entry R#0#chr 12 18 tile 10",
+            "#entry R#0#chr 10 20 departures .",
         ])
+    );
+    let refused = build_text(
+        "ends",
+        &[&lines[..], &["W H 1 h 5 6 "][..]].concat(),
+        &["--refs", "R"],
+    );
+    assert!(
+        String::from_utf8_lossy(&refused.output.stderr)
+            .contains("path H#1#h ends at 6, but its steps from 5 end at 5")
     );
 }
 
