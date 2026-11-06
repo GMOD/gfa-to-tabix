@@ -84,7 +84,7 @@ taken flipped, and its departure records.
   its rejoin
 - **Attach fetch:** a reader's read of the tiles holding a departure
   record's own steps, for a record whose own steps lie in no tile the
-  window read ([departure](#departure))
+  window read; it reads no `detail` unit ([departure](#departure))
 
 ## Tiles and pieces
 
@@ -518,13 +518,15 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   - a record can have both, and so two tiles, the leave's first
   - own steps on the reference's other sequences lie in their tiles, and
     own sequence in no W line has no steps; neither is listed
-- An own step of a piece the tile abridged lies in its detail unit, which
-  the tile's `abridged` row names. A reader takes from the tiles listed the
-  path's steps between `hapStart` and `hapStart + ownBp` on its contig
 - The record's line is in every [pyramid](#units) block of that extent's
-  cover, the same text in each, and a reader drops exact duplicates. An
-  attach fetch, for a record whose own steps the window holds no piece of,
-  reads the tiles `ownTiles` names
+  cover, the same text in each, and a reader drops exact duplicates
+- An attach fetch, for a record whose own steps the window holds no piece
+  of, reads the tiles `ownTiles` names and takes the own steps those tiles
+  hold: the path's steps between `hapStart` and `hapStart + ownBp` on its
+  contig. A piece there that the tile abridged stays abridged, its
+  `abridged` row standing for it. Its own steps come only when a viewer
+  expands that path's `detail` unit, on request, never as part of an
+  attach fetch
 
 ## Reading a window
 
@@ -541,8 +543,11 @@ For a window `[s, e)` with context `c`, the stretch `D = [s − c, e + c)`
   multi-range one
 - Gunzip each unit. Decode a tile's rows from `kind` on by the rules below.
   Keep the departure lines overlapping `D` and drop exact duplicates
-- An attach fetch reads the tiles a record's `ownTiles` names; expanding
-  an abridged piece reads the `detail` unit `cs:d`
+- An attach fetch reads the tiles a record's `ownTiles` names and takes
+  the own steps they hold; an abridged piece there stays abridged
+  ([departure](#departure))
+- Expanding an abridged piece, which a viewer does on request, reads the
+  `detail` unit `cs:d`
 - There is no chunk-before rule, no `maxnode`, no `#long` widening and no
   reach
 - The read gives every piece over `D` and every departure inside them: both
@@ -616,8 +621,8 @@ The tool checks each of these as it writes:
   other and its steps
 - The moved pieces' rows go to the `detail` unit `cs:d` of the tile's
   sequence, `d` the record's number. A window read names only `tile` and
-  `departures` units, so it reads no record, and a viewer fetches a record
-  on request
+  `departures` units and an attach fetch only tiles, so neither reads a
+  detail record; a viewer fetches one on request
 - A record holds a `nodes` row, `route` rows and `walk` rows. The tool numbers
   its routes from 0 and chains their tokens from 0, as for a tile of its own,
   and its walk rows decode against the R of tile `cs` of `seq`
