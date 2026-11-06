@@ -1682,7 +1682,7 @@ fn peak_memory() -> Option<f64> {
 
 pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     if gfa == "-" {
-        return Err("--walks reads the GFA twice, so it needs a file, not stdin".into());
+        return Err("--walks reads the GFA more than once, so it needs a file, not stdin".into());
     }
     let clock = Instant::now();
     let elapsed = || {

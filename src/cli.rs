@@ -81,8 +81,9 @@ pub struct Cli {
 
     /// Instead write PREFIX.SAMPLE.walks.gz and its directory
     /// PREFIX.SAMPLE.walks.gz.idx for each SAMPLE in --refs, in walk format 7.
-    /// Each file lists every haplotype's path in SAMPLE's coordinates. Reads
-    /// the GFA twice
+    /// Each file lists every path line with a node on SAMPLE in SAMPLE's
+    /// coordinates. Reads the GFA twice, three times when a path line comes
+    /// before an S line it uses
     #[arg(long, requires = "refs", help_heading = WALKS)]
     pub walks: bool,
 

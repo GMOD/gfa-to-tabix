@@ -1150,3 +1150,13 @@ Where the findings have come from so far, and the rule each gives:
     `#unit` line, and neither is measured
 
   Guard: none; each stands until the ADR named reopens it
+- **2026-11-06, the format 7 claims audit (claims 105 and 115).** The
+  spec's Scale, the README and `--help` said `--walks` reads the GFA
+  twice; `first_pass` reads it a third time when a path line comes before
+  an S line it uses, to visit the paths it deferred. Source: performance
+  prose from format 5's docs (200c0a5), carried through two rewrites and
+  never checked. Fix: the help, the stdin message, the spec and the
+  README say twice, three times when a path line comes before an S line
+  it uses. Guard: claims C105 and C115, checked by the test "records of a
+  contig that overlap or share a start are refused", which builds a GFA
+  whose path lines come first

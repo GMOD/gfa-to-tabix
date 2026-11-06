@@ -176,7 +176,8 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - For the node and link index, the tool holds the whole graph in memory:
   HPRC's whole-genome SV rGFA indexes in under a minute in about a gigabyte,
   and HPRC's pggb chr22 in 6.5 minutes and 18.7 GB
-- `--walks` streams the paths from disk, reading the GFA twice; HPRC v2.1's
+- `--walks` streams the paths from disk, reading the GFA twice, or three
+  times when a path line comes before an S line it uses; HPRC v2.1's
   Minigraph-Cactus graph took 29 minutes and 13 GB on 24 cores
 - A Tabix index holds coordinates up to 512 Mb, so a file with a row past that,
   such as one on wheat's 830 Mb chromosome 3B, gets a `.csi` index instead,

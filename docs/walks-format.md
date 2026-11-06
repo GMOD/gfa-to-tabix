@@ -708,7 +708,8 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
 
 ## Scale
 
-- The tool reads the GFA twice, so it takes a file path and refuses stdin;
+- The tool reads the GFA twice, or three times when a path line comes
+  before an S line it uses, so it takes a file path and refuses stdin;
   gzip input works
 - The tool holds about 16 bytes per node, 24 more per node for each reference,
   and with `--sequences` the graph's bases
