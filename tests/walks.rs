@@ -570,9 +570,11 @@ fn decode_file(text: &str) -> Decoded {
     };
     let mut pieces: BTreeMap<String, BTreeMap<u64, Vec<u32>>> = BTreeMap::new();
     let mut stretches: BTreeMap<(String, String), Vec<(u64, u64)>> = BTreeMap::new();
-    // every walk step a tile holds, as (sequence, path, start on its contig,
-    // end, tile)
-    let mut placed: Vec<(String, String, u64, u64, u64)> = Vec::new();
+    // every walk step a tile or detail unit holds, by path, as its W line's
+    // start, its piece and its place there, its stretch of the contig, its
+    // sequence and tile, and where it lies on R its stretch there and
+    // whether it runs against R
+    let mut placed: BTreeMap<String, Vec<Placed>> = BTreeMap::new();
     let mut decode_rows = |seq: &str, cs: u64, path: &RefPath, rows: &[Vec<&str>], detail: bool| {
         let mut previous = 0i64;
         let routes: Vec<Route> = rows
@@ -606,9 +608,17 @@ fn decode_file(text: &str) -> Decoded {
             let offset: u64 = cols[6].parse().unwrap();
             if cols[3] == "walk" {
                 let mut at = offset;
-                for &(h, _) in &steps {
+                let (frag, piece): (u64, u64) =
+                    (cols[5].parse().unwrap(), cols[7].parse().unwrap());
+                for (k, &(h, i)) in steps.iter().enumerate() {
                     let end = at + lengths[&(h >> 1)];
-                    placed.push((seq.to_string(), cols[4].to_string(), at, end, cs));
+                    placed.entry(cols[4].to_string()).or_default().push(Placed {
+                        order: (frag, piece, k),
+                        contig: (at, end),
+                        seq: seq.to_string(),
+                        tile: cs,
+                        on_r: i.map(|i| (path.stretches[i], path.handles[i] != h)),
+                    });
                     at = end;
                 }
             }
@@ -714,24 +724,20 @@ fn decode_file(text: &str) -> Decoded {
     for (key, stretch) in abridged_stretches {
         stretches.entry(key).or_default().push(stretch);
     }
+    for steps in placed.values_mut() {
+        steps.sort_by_key(|p| p.order);
+    }
     for (seq, cols) in records {
         let (start, own): (u64, u64) = (cols[2].parse().unwrap(), cols[3].parse().unwrap());
-        let mut holding: Vec<u64> = placed
-            .iter()
-            .filter(|p| p.0 == seq && p.1 == cols[1] && start <= p.2 && p.3 <= start + own)
-            .map(|p| p.4)
-            .collect();
-        holding.sort_unstable();
-        holding.dedup();
-        let mut named: Vec<u64> = if cols[11] == "." {
+        let holding = own_tiles(&placed[cols[1]], &seq, &cols);
+        let named: Vec<u64> = if cols[11] == "." {
             Vec::new()
         } else {
             cols[11].split(',').map(|t| t.parse().unwrap()).collect()
         };
-        named.sort_unstable();
         assert_eq!(
             named, holding,
-            "a record's ownTiles are the tiles holding its own steps: {cols:?}"
+            "a record's ownTiles are the tiles of S holding the steps strictly between its leave and its rejoin, in the path's order: {cols:?}"
         );
         stretches
             .entry((seq, cols[1].to_string()))
@@ -772,6 +778,50 @@ fn gfa_paths(gfa: &str) -> HashMap<String, Vec<u32>> {
         })
         .collect()
 }
+// A decoded walk step: see `decode_file`
+struct Placed {
+    order: (u64, u64, usize),
+    contig: (u64, u64),
+    seq: String,
+    tile: u64,
+    on_r: Option<((u64, u64), bool)>,
+}
+
+// The tiles of S holding a record's own steps, the steps of its path strictly
+// between its leave step and its rejoin step, in the path's order. The leave
+// is a step on S ending at `hapStart` on its contig, at `leavePos` and
+// `leaveStrand`; the rejoin is the path's next step on S, starting
+// `ownBp` later, at `rejoinPos` and `rejoinStrand`.
+fn own_tiles(steps: &[Placed], seq: &str, cols: &[&str]) -> Vec<u64> {
+    let number = |k: usize| cols[k].parse::<u64>().unwrap();
+    let (start, own, leave_pos, rejoin_pos) = (number(2), number(3), number(5), number(8));
+    let on_s: Vec<usize> = (0..steps.len())
+        .filter(|&k| steps[k].seq == seq && steps[k].on_r.is_some())
+        .collect();
+    let end = |k: usize, leave: bool, strand: &str| {
+        let ((lo, hi), against) = steps[k].on_r.unwrap();
+        let bp = if against == leave { lo } else { hi };
+        (bp, if against { "-" } else { "+" })
+            == (if leave { leave_pos } else { rejoin_pos }, strand)
+    };
+    let pair = on_s.windows(2).rev().find(|w| {
+        steps[w[0]].contig.1 == start
+            && end(w[0], true, cols[6])
+            && steps[w[1]].contig.0 == start + own
+            && end(w[1], false, cols[9])
+    });
+    let (leave, rejoin) = pair
+        .map(|w| (w[0], w[1]))
+        .unwrap_or_else(|| panic!("no leave and rejoin step for {cols:?}"));
+    let mut tiles = Vec::new();
+    for step in &steps[leave + 1..rejoin] {
+        if step.seq == seq && !tiles.contains(&step.tile) {
+            tiles.push(step.tile);
+        }
+    }
+    tiles
+}
+
 
 // Every path rebuilds from its rows, and from its first step on a sequence to
 // its last every base of it lies in one piece's stretch on R or one record's

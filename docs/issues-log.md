@@ -1160,3 +1160,16 @@ Where the findings have come from so far, and the rule each gives:
   it uses. Guard: claims C105 and C115, checked by the test "records of a
   contig that overlap or share a start are refused", which builds a GFA
   whose path lines come first
+- **2026-11-06, the format 7 claims audit (claim 97).** The spec said
+  `tests/walks.rs` checks every record's `ownTiles` against the tiles its
+  decoded own steps lie in; the test took own steps by the bp range
+  `[hapStart, hapStart + ownBp)` (`tests/walks.rs:721`), the definition
+  W1 replaced, and compared the tiles sorted. The two differ on 5,735 fuzz
+  records, and the fixtures have no 0 bp end in another tile, so the test
+  still passed. Source: W1 (108bab7) changed the spec's definition and not
+  the test's. Fix: the test finds each record's leave step, the path's
+  step on S ending at `hapStart` at `leavePos` and `leaveStrand`, and its
+  rejoin, the next step on S, and compares `ownTiles` in order with the
+  tiles of S holding the steps strictly between. Guard: the test itself,
+  on every file `decode_file` reads, and `claims7.py`'s O1 on the fuzz
+  batch
