@@ -20,7 +20,8 @@ against the writer in `src/` at the same commit (gfa-to-tabix 4.0.0).
   `E5`, below)
 - **Result:** on the test fixtures (20 files), 1,600 fuzz files (seeds 1 to
   200 under 8 option sets) and the real files MC chr22 and pggb chrY on
-  GRCh38, built on ada by this commit's writer
+  GRCh38, built on ada by this commit's writer; the `--own` checks (O1 to O4)
+  on 1/64 of each real file's paths, which is what fits in 30 GB
 
 Of the 115 claims, 34 had no check before this audit. 15 are false, 13 of them
 distinct (111 restates 42, 115 restates 105), and 7 are ambiguous. 9 of
@@ -134,10 +135,10 @@ numbers are lines.
 | 81 | Adjacent steps depart nowhere; a 0 bp step between changes nothing | wf 489 | `Holes::adjacent` | `a_step_on_a_node_of_0_bp_between_two_lines_is_no_departure`, A | | holds |
 | 82 | A contig's sequence before its first step on S or after its last has no record | wf 492 | `record_contig_departures` | `a_contig_that_leaves_a_sequence_for_good_has_no_record` | | holds |
 | 83 | A record's extent: end nodes, widened to the breakpoint stretch, clamped into S | wf 503-511 | `Departure::extent`, `step_end` | A, point test | C:D3 | holds |
-| 84 | `ownTiles`: the tiles of S holding the own steps, in path order, `.` for none | wf 512 | `tiles_of` | `decode_file` (bp definition), A | C:O1, D1 | holds (fuzz, fixtures, real shards) |
+| 84 | `ownTiles`: the tiles of S holding the own steps, in path order, `.` for none | wf 512 | `tiles_of` | `decode_file` (bp definition), A | C:O1, D1 | holds (fuzz, fixtures, 1/64 of each real file's paths) |
 | 85 | Own steps after the leave in its W line take the leave's tile | wf 518 | `assign_chunks` | none | C:O2, E2 | **false**: an off-reference own step after a step on another reference sequence takes that sequence's tile (E2) |
 | 86 | Own steps leading the next W line take the rejoin's tile; a record can have both, the leave's first | wf 521-524 | `record_contig_departures` | none | C:O2, D2 | holds |
-| 87 | Own steps on other sequences and own sequence in no W line are not listed | wf 525 | `tiles_of` filters by S | none | C:O4 | **ambiguous**: own steps in a W line with no reference node are in no tile at all, and steps after another sequence's step lie in its tiles; neither is said (`walks-records.gfa`, E2) |
+| 87 | Own steps on other sequences and own sequence in no W line are not listed | wf 525 | `tiles_of` filters by S | none | C:O4 | **ambiguous**: own steps in a W line with no reference node are in no tile at all, and steps after another sequence's step lie in its tiles; neither is said (`walks-records.gfa`, E2; on pggb chrY, 85 records in 1/64 of the paths have own steps in `chrY_KI270740v1_random`'s tiles, which an attach fetch on chrY doesn't read) |
 | 88 | A record's line is in every block of its cover, the same text in each | wf 527 | `Departure::file` | V, P | | holds |
 | 89 | Every departure line overlaps each block it is in | wf 584 (tidy) | follows from the cover | V, P (tidy) | C:U7 | holds |
 | 90 | A departure inside a piece lies in its tile's extent | wf 561 | construction | A | | holds |
