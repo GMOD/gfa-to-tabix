@@ -1,4 +1,4 @@
-# graph-walks 6 (format7-reader a6269e4; bb859cc moves the attach rule into attachTiles, same behaviour) on gfa-to-tabix 4.0's final.{mc22,pggbY}.GRCh38.walks.gz (format7-writer 67346ca), ada ~/work/impl-reader.
+# graph-walks 6 (format7-reader a6269e4; bb859cc moves the attach rule into attachTiles, same behaviour) on gfa-to-tabix 4.0's final.{mc22,pggbY}.GRCh38.walks.gz (format7-writer 67346ca, fa73b9d after its rebase), ada ~/work/impl-reader.
 # scripts/all.sh <d> wrote results/; tally: gunzip results into a directory, python3 scripts/tally7.py <d> <random96|targets0> <dir>;
 # bytes: python3 scripts/summarize7.py m7.<d>.jsonl. vs5 = graph-walks 5.0.2 over format 6 rows of the same units (arbiter A's BASELINE=units);
 # vsFixed = arbiter A's 5.0.2 copy with the attach-decode fix; '5.0.2 attach extent' = graph-walks 6 with scripts/gw6v-attach-extent.diff applied.

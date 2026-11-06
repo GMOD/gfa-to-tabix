@@ -996,7 +996,7 @@ Where the findings have come from so far, and the rule each gives:
   holds the leave piece and not the rejoin piece, `walkCut` reports nothing
   unattached, so it must also report a record whose own steps it did not
   find. Fixed with gfa-to-tabix's `ownTiles` column (format7-writer
-  c25765e): `attachTiles` returns the tiles a record's `ownTiles` names,
+  a921511): `attachTiles` returns the tiles a record's `ownTiles` names,
   `walkCut` reports a record lacking its leave piece or its rejoin piece,
   and own steps in an abridged piece come only for a walk the cut
   expands, as in graph-walks 5: reading the detail units on every attach
