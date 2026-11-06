@@ -1,0 +1,1 @@
+{"file":"final.mc22.GRCh38.walks.gz","ok":true,"units":3837,"tables":1,"lines":1958554,"departureLines":54050}

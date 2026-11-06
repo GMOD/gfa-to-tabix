@@ -1,0 +1,14 @@
+-rw-rw-r-- 1 cdiesh cdiesh 186823424 Nov  5 16:30 lv7.GRCh38.walks.gz
+pggbY level 7: 118.13 s, 6924208 KB peak
+-rw-rw-r-- 1 cdiesh cdiesh 184599208 Nov  5 16:32 lv8.GRCh38.walks.gz
+pggbY level 8: 138.45 s, 6944632 KB peak
+-rw-rw-r-- 1 cdiesh cdiesh 189581796 Nov  5 16:34 lv9.GRCh38.walks.gz
+pggbY level 9: 145.59 s, 7312656 KB peak
+done
+-rw-rw-r-- 1 cdiesh cdiesh 60048384 Nov  5 16:32 lvmc6.GRCh38.walks.gz
+mc22 level 6: 78.72 s, 4056376 KB peak
+-rw-rw-r-- 1 cdiesh cdiesh 58485123 Nov  5 16:34 lvmc7.GRCh38.walks.gz
+mc22 level 7: 69.74 s, 4068056 KB peak
+-rw-rw-r-- 1 cdiesh cdiesh 57664876 Nov  5 16:35 lvmc9.GRCh38.walks.gz
+mc22 level 9: 63.97 s, 4068912 KB peak
+done

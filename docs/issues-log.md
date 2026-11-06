@@ -783,9 +783,15 @@ Where the findings have come from so far, and the rule each gives:
   `cs:d` by looking up the path's last `abridged` row, so two records of one
   path in a tile (two of its contigs abridged there) both take the last
   number. On walks-records.gfa at `--tile 7 --abridge-bytes 1`, unit `0:2`
-  appears twice and `0:1` never. Found by comparing the writer's output
-  with the converter's on every test GFA and on fuzz graphs. Source:
-  evidence on one graph (the converter checked on MC and pggb only).
+  appears twice and `0:1` never. On MC chr22, 355 of the 2,468 detail
+  numbers that `abridged` rows name reach, in the converter's file, a unit
+  holding another path's rows or no unit
+  ([walks-container/writer/](walks-container/writer/README.md)). So the
+  converter's files, `~/work/arb-arbA/out/` and the genome-wide build from
+  the same scripts, can't test expanding an abridged piece. Found by
+  comparing the writer's output with the converter's on every test GFA
+  and on fuzz graphs. Source: evidence on one graph (the converter checked
+  on MC and pggb, and pggb has no such tile).
   Fixed in the writer, which numbers records as `routes.rs` makes them.
   Guard: `verify` refuses two tiles or two detail units of a sequence
   with one name. The 'abridged' tests build walks-records.gfa at a byte
@@ -807,3 +813,25 @@ Where the findings have come from so far, and the rule each gives:
   fuzz graphs with no 0 bp node. Source: a spec read two ways. Decided:
   the ADR's reading, stated in walks-format.md. Guard: none needed in
   readers, which keep lines overlapping their window either way
+- **2026-11-05, the format 7 writer.** ADR 0010's file sizes (59.31 MB on
+  MC chr22, 187.92 MB on pggb chrY) are the converter's, compressed by
+  Node's bundled zlib. The writer at zlib-rs level 6, the level the walk
+  writer had always used, wrote 60.05 and 196.58 MB from the same blocks;
+  deflated again by one zlib, the two files agree within 0.3 KB. Source: a
+  format choice made without measurement, the compression level, never
+  measured for walk files. Fixed: walk files at zlib-rs level 7, its first
+  on `deflate_slow`, 58.49 and 186.82 MB in the same time
+  ([walks-container/writer/](walks-container/writer/README.md)). Guard: the
+  writer's results list sizes by compressor and level, so a later change
+  of crate or level is measured against them
+- **2026-11-05, the format 7 writer.** `audit6.py`'s reach rule for a
+  departure inside a piece at one point (leave and rejoin breakpoints
+  equal) asked that a window one base either side read the piece's chunk.
+  In format 7 a tile whose reference nodes all have 0 bp has an empty
+  extent, `[p, p)`, which the read rule's overlap fetches only for a
+  window holding bases on both sides of `p`; a fuzz graph (seed 10) has
+  one. Source: a rule carried from a mechanism (the chunk-before read) that
+  format 7 removes. Fixed in `audit7.py`: every window over the stretch
+  reads the tile, the window over a point being one that holds bases on
+  both sides. Guard: `fuzz7.sh` over 300 seeds; walks-format.md states
+  the empty extent

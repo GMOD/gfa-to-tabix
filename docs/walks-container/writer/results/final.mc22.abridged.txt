@@ -1,0 +1,2 @@
+{"file": "final.mc22.GRCh38.walks.gz", "detail numbers named by abridged rows": 2468, "whose unit holds other paths or none": 0, "examples": []}
+{"file": "/home/cdiesh/work/arb-arbA/out/mc22/s7.walks.gz", "detail numbers named by abridged rows": 2468, "whose unit holds other paths or none": 355, "examples": [["GRCh38#0#chr22", "11796480:1"], ["GRCh38#0#chr22", "11796480:2"], ["GRCh38#0#chr22", "11796480:3"]]}

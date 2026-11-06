@@ -1,0 +1,2 @@
+{"file": "final.pggbY.GRCh38.walks.gz", "bytes": 186823424, "blocks": 25514, "uncompressed": 1607938050, "recompressed by zlib 1.2.11": {"6": 193504755}}
+{"file": "/home/cdiesh/work/arb-arbA/out/pggbY/s7.walks.gz", "bytes": 187920198, "blocks": 25514, "uncompressed": 1607938058, "recompressed by zlib 1.2.11": {"6": 193504482}}

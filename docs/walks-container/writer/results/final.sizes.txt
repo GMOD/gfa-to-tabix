@@ -1,0 +1,6 @@
+-rw-rw-r-- 1 cdiesh cdiesh  58485123 Nov  5 16:37 final.mc22.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       159 Nov  5 16:37 final.mc22.GRCh38.walks.gz.idx
+-rw-rw-r-- 1 cdiesh cdiesh 186823424 Nov  5 16:39 final.pggbY.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       210 Nov  5 16:39 final.pggbY.GRCh38.walks.gz.idx
+-rw-rw-r-- 1 cdiesh cdiesh  59305793 Nov  5 15:31 /home/cdiesh/work/arb-arbA/out/mc22/s7.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh 187920198 Nov  5 15:32 /home/cdiesh/work/arb-arbA/out/pggbY/s7.walks.gz

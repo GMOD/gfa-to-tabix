@@ -24,6 +24,10 @@ The reviews, arbitrations and measurements behind
   `csi_write.py`), `arbB/results/` its per-window results
 - `prior-art-review.md`: an independent prior-art and failure-mode review
   of S7, whose changes S7 took
+- `writer/`: gfa-to-tabix 4.0's format 7 writer checked against arbiter A's
+  converter and `verify7.mjs` on MC chr22, pggb chrY, the test GFAs and
+  fuzz graphs, and its compression level measured
+  ([writer/README.md](writer/README.md))
 
 The candidate files themselves are on ada under `~/work/arb-arbA/out/` and
 `~/work/arb-arbB/`; the inputs were the gfa-to-tabix 3.0.0 builds of HPRC

@@ -1,0 +1,2 @@
+{"file": "final.mc22.GRCh38.walks.gz", "bytes": 58485123, "blocks": 9013, "uncompressed": 428785820, "recompressed by zlib 1.2.11": {"6": 60478357}}
+{"file": "/home/cdiesh/work/arb-arbA/out/mc22/s7.walks.gz", "bytes": 59305793, "blocks": 9013, "uncompressed": 428786189, "recompressed by zlib 1.2.11": {"6": 60478561}}

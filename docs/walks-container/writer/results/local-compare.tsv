@@ -1,0 +1,544 @@
+cactus	10		{"units": [33, 33], "lines": [123, 123], "differences": {}}	.
+cactus	7	--abridge-bytes 1	{"units": [90, 90], "lines": [247, 247], "differences": {}}	.
+cactus	1000	--abridge-steps 1	{"units": [7, 7], "lines": [25, 25], "differences": {}}	.
+cactus	3	--stay 0 --abridge-bytes 300	{"units": [55, 55], "lines": [184, 184], "differences": {}}	.
+diploid	10		{"units": [4, 4], "lines": [5, 5], "differences": {}}	.
+diploid	7	--abridge-bytes 1	{"units": [5, 5], "lines": [7, 7], "differences": {}}	.
+diploid	1000	--abridge-steps 1	{"units": [4, 4], "lines": [5, 5], "differences": {}}	.
+diploid	3	--stay 0 --abridge-bytes 300	{"units": [7, 7], "lines": [12, 12], "differences": {}}	.
+ecoli_pggb_subgraph	10		{"units": [51, 51], "lines": [212, 212], "differences": {}}	.
+ecoli_pggb_subgraph	7	--abridge-bytes 1	{"units": [113, 113], "lines": [356, 356], "differences": {}}	.
+ecoli_pggb_subgraph	1000	--abridge-steps 1	{"units": [6, 6], "lines": [38, 38], "differences": {}}	.
+ecoli_pggb_subgraph	3	--stay 0 --abridge-bytes 300	{"units": [109, 109], "lines": [364, 364], "differences": {}}	.
+genome	10		{"units": [2, 2], "lines": [2, 2], "differences": {}}	.
+genome	7	--abridge-bytes 1	{"units": [2, 2], "lines": [2, 2], "differences": {}}	.
+genome	1000	--abridge-steps 1	{"units": [2, 2], "lines": [2, 2], "differences": {}}	.
+genome	3	--stay 0 --abridge-bytes 300	{"units": [3, 3], "lines": [4, 4], "differences": {}}	.
+haplotype	10		{"units": [4, 4], "lines": [4, 4], "differences": {}}	.
+haplotype	7	--abridge-bytes 1	{"units": [4, 4], "lines": [4, 4], "differences": {}}	.
+haplotype	1000	--abridge-steps 1	{"units": [4, 4], "lines": [4, 4], "differences": {}}	.
+haplotype	3	--stay 0 --abridge-bytes 300	{"units": [5, 5], "lines": [6, 6], "differences": {}}	.
+order	10		{"units": [2, 2], "lines": [6, 6], "differences": {}}	.
+order	7	--abridge-bytes 1	{"units": [4, 4], "lines": [12, 12], "differences": {}}	.
+order	1000	--abridge-steps 1	{"units": [4, 4], "lines": [12, 12], "differences": {}}	.
+order	3	--stay 0 --abridge-bytes 300	{"units": [7, 7], "lines": [23, 23], "differences": {}}	.
+paths	10		{"units": [2, 2], "lines": [5, 5], "differences": {}}	.
+paths	7	--abridge-bytes 1	{"units": [3, 3], "lines": [7, 7], "differences": {}}	.
+paths	1000	--abridge-steps 1	{"units": [3, 3], "lines": [7, 7], "differences": {}}	.
+paths	3	--stay 0 --abridge-bytes 300	{"units": [7, 7], "lines": [16, 16], "differences": {}}	.
+reversed	10		{"units": [2, 2], "lines": [5, 5], "differences": {}}	.
+reversed	7	--abridge-bytes 1	{"units": [3, 3], "lines": [7, 7], "differences": {}}	.
+reversed	1000	--abridge-steps 1	{"units": [3, 3], "lines": [7, 7], "differences": {}}	.
+reversed	3	--stay 0 --abridge-bytes 300	{"units": [7, 7], "lines": [16, 16], "differences": {}}	.
+walks-contig-ends	10		{"units": [5, 5], "lines": [16, 16], "differences": {}}	.
+walks-contig-ends	7	--abridge-bytes 1	{"units": [12, 12], "lines": [32, 32], "differences": {}}	.
+walks-contig-ends	1000	--abridge-steps 1	{"units": [4, 4], "lines": [12, 12], "differences": {}}	.
+walks-contig-ends	3	--stay 0 --abridge-bytes 300	{"units": [7, 7], "lines": [22, 22], "differences": {}}	.
+walks	10		{"units": [2, 2], "lines": [5, 5], "differences": {}}	.
+walks	7	--abridge-bytes 1	{"units": [7, 7], "lines": [16, 16], "differences": {}}	.
+walks	1000	--abridge-steps 1	{"units": [3, 3], "lines": [7, 7], "differences": {}}	.
+walks	3	--stay 0 --abridge-bytes 300	{"units": [7, 7], "lines": [16, 16], "differences": {}}	.
+walks-loop	10		{"units": [10, 10], "lines": [51, 51], "differences": {}}	.
+walks-loop	7	--abridge-bytes 1	{"units": [36, 36], "lines": [112, 112], "differences": {}}	.
+walks-loop	1000	--abridge-steps 1	{"units": [7, 7], "lines": [25, 25], "differences": {}}	.
+walks-loop	3	--stay 0 --abridge-bytes 300	{"units": [22, 22], "lines": [95, 95], "differences": {}}	.
+walks-records	10		{"units": [6, 6], "lines": [17, 17], "differences": {}}	.
+walks-records	7	--abridge-bytes 1	{"units": [14, 14], "lines": [34, 34], "differences": {"detail unit only in the converter's": 1, "table unit lines": 1, "detail unit extent": 1, "detail unit lines": 1, "detail unit only in the writer's": 1}}	{"same up to names": true, "detail units": [6, 6], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "0"], "0:2"]]}
+walks-records	1000	--abridge-steps 1	{"units": [5, 5], "lines": [13, 13], "differences": {}}	.
+walks-records	3	--stay 0 --abridge-bytes 300	{"units": [11, 11], "lines": [30, 30], "differences": {}}	.
+walks-repeat	10		{"units": [5, 5], "lines": [12, 12], "differences": {}}	.
+walks-repeat	7	--abridge-bytes 1	{"units": [11, 11], "lines": [25, 25], "differences": {}}	.
+walks-repeat	1000	--abridge-steps 1	{"units": [3, 3], "lines": [5, 5], "differences": {}}	.
+walks-repeat	3	--stay 0 --abridge-bytes 300	{"units": [7, 7], "lines": [18, 18], "differences": {}}	.
+walks-skip	10		{"units": [13, 13], "lines": [42, 42], "differences": {}}	.
+walks-skip	7	--abridge-bytes 1	{"units": [28, 28], "lines": [76, 76], "differences": {}}	.
+walks-skip	1000	--abridge-steps 1	{"units": [4, 4], "lines": [11, 11], "differences": {}}	.
+walks-skip	3	--stay 0 --abridge-bytes 300	{"units": [16, 16], "lines": [51, 51], "differences": {}}	.
+walks-two-refs	10		{"units": [7, 7], "lines": [39, 39], "differences": {}}	.
+walks-two-refs	7	--abridge-bytes 1	{"units": [23, 23], "lines": [85, 85], "differences": {}}	.
+walks-two-refs	1000	--abridge-steps 1	{"units": [6, 6], "lines": [21, 21], "differences": {}}	.
+walks-two-refs	3	--stay 0 --abridge-bytes 300	{"units": [15, 15], "lines": [69, 69], "differences": {}}	.
+walks-two-refs-p	10		{"units": [7, 7], "lines": [39, 39], "differences": {}}	.
+walks-two-refs-p	7	--abridge-bytes 1	{"units": [23, 23], "lines": [85, 85], "differences": {}}	.
+walks-two-refs-p	1000	--abridge-steps 1	{"units": [6, 6], "lines": [21, 21], "differences": {}}	.
+walks-two-refs-p	3	--stay 0 --abridge-bytes 300	{"units": [15, 15], "lines": [69, 69], "differences": {}}	.
+fuzz1	20		{"units": [52, 52], "lines": [189, 192], "differences": {"departures unit lines": 21}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz1	16	--stay 8	{"units": [60, 60], "lines": [238, 239], "differences": {"departures unit lines": 17}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz1	32	--abridge-steps 3	{"units": [44, 44], "lines": [161, 162], "differences": {"departures unit lines": 16}}	{"same up to names": true, "detail units": [4, 4], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz1	8	--stay 40 --abridge-steps 1	{"units": [107, 107], "lines": [355, 356], "differences": {"departures unit lines": 32}}	{"same up to names": true, "detail units": [11, 11], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz2	20		{"units": [172, 168], "lines": [655, 648], "differences": {"departures unit only in the writer's": 4, "departures unit lines": 7, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz2	16	--stay 8	{"units": [187, 187], "lines": [723, 727], "differences": {"departures unit lines": 12}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz2	32	--abridge-steps 3	{"units": [140, 140], "lines": [571, 573], "differences": {"departures unit lines": 11, "detail unit only in the converter's": 1, "table unit lines": 1, "detail unit extent": 1, "detail unit lines": 1, "detail unit only in the writer's": 1}}	{"same up to names": true, "detail units": [15, 15], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "320"], "320:1"]]}
+fuzz2	8	--stay 40 --abridge-steps 1	{"units": [307, 306], "lines": [1094, 1094], "differences": {"detail unit only in the writer's": 1, "departures unit lines": 18, "departures unit only in the writer's": 1, "detail unit extent": 1, "detail unit lines": 1, "detail unit only in the converter's": 1, "table unit lines": 1, "unit order": 1}}	{"same up to names": true, "detail units": [41, 41], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "2608"], "2608:2"]]}
+fuzz3	20		{"units": [61, 61], "lines": [170, 170], "differences": {}}	.
+fuzz3	16	--stay 8	{"units": [66, 66], "lines": [182, 182], "differences": {}}	.
+fuzz3	32	--abridge-steps 3	{"units": [44, 44], "lines": [134, 134], "differences": {}}	.
+fuzz3	8	--stay 40 --abridge-steps 1	{"units": [93, 93], "lines": [236, 236], "differences": {}}	.
+fuzz4	20		{"units": [55, 55], "lines": [225, 227], "differences": {"departures unit lines": 12}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz4	16	--stay 8	{"units": [61, 61], "lines": [249, 252], "differences": {"departures unit lines": 15}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz4	32	--abridge-steps 3	{"units": [49, 49], "lines": [192, 194], "differences": {"departures unit lines": 8}}	{"same up to names": true, "detail units": [10, 10], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz4	8	--stay 40 --abridge-steps 1	{"units": [107, 107], "lines": [367, 371], "differences": {"departures unit lines": 20}}	{"same up to names": true, "detail units": [16, 16], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz5	20		{"units": [155, 155], "lines": [572, 572], "differences": {"departures unit lines": 15}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz5	16	--stay 8	{"units": [195, 202], "lines": [775, 785], "differences": {"departures unit lines": 31, "departures unit only in the converter's": 7, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz5	32	--abridge-steps 3	{"units": [156, 157], "lines": [603, 605], "differences": {"table unit lines": 1, "departures unit lines": 22, "departures unit only in the converter's": 1}}	{"same up to names": true, "detail units": [20, 20], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz5	8	--stay 40 --abridge-steps 1	{"units": [307, 312], "lines": [1106, 1109], "differences": {"departures unit lines": 37, "table unit lines": 1, "departures unit only in the converter's": 5}}	{"same up to names": true, "detail units": [54, 54], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz6	20		{"units": [94, 94], "lines": [226, 226], "differences": {}}	.
+fuzz6	16	--stay 8	{"units": [104, 104], "lines": [249, 249], "differences": {}}	.
+fuzz6	32	--abridge-steps 3	{"units": [84, 84], "lines": [201, 201], "differences": {"detail unit extent": 1, "detail unit lines": 1, "detail unit only in the writer's": 1, "detail unit only in the converter's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [7, 7], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "1152"], "1152:1"]]}
+fuzz6	8	--stay 40 --abridge-steps 1	{"units": [151, 151], "lines": [360, 360], "differences": {"detail unit only in the converter's": 1, "detail unit lines": 1, "table unit lines": 1, "detail unit only in the writer's": 1, "unit order": 1}}	{"same up to names": true, "detail units": [11, 11], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "1152"], "1152:2"]]}
+fuzz7	20		{"units": [49, 49], "lines": [189, 189], "differences": {}}	.
+fuzz7	16	--stay 8	{"units": [70, 70], "lines": [269, 275], "differences": {"departures unit lines": 8}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz7	32	--abridge-steps 3	{"units": [49, 49], "lines": [181, 181], "differences": {"detail unit only in the converter's": 1, "detail unit only in the writer's": 1, "table unit lines": 1, "detail unit lines": 1}}	{"same up to names": true, "detail units": [8, 8], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "704"], "704:1"]]}
+fuzz7	8	--stay 40 --abridge-steps 1	{"units": [123, 123], "lines": [399, 404], "differences": {"detail unit only in the converter's": 2, "departures unit lines": 8, "detail unit lines": 2, "table unit lines": 1, "detail unit only in the writer's": 2}}	{"same up to names": true, "detail units": [22, 22], "names whose unit differs": 2, "names the second file gives more than once": 2, "examples": [[["R#0#chr", "704"], "704:1"], [["R#0#chr", "712"], "712:1"]]}
+fuzz8	20		{"units": [74, 74], "lines": [375, 375], "differences": {"departures unit lines": 10}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz8	16	--stay 8	{"units": [99, 99], "lines": [511, 512], "differences": {"departures unit lines": 28}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz8	32	--abridge-steps 3	{"units": [80, 80], "lines": [401, 401], "differences": {"departures unit lines": 20}}	{"same up to names": true, "detail units": [17, 17], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz8	8	--stay 40 --abridge-steps 1	{"units": [179, 176], "lines": [704, 696], "differences": {"departures unit lines": 30, "departures unit only in the writer's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [46, 46], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz9	20		{"units": [80, 80], "lines": [211, 211], "differences": {}}	.
+fuzz9	16	--stay 8	{"units": [102, 102], "lines": [254, 254], "differences": {}}	.
+fuzz9	32	--abridge-steps 3	{"units": [79, 79], "lines": [208, 208], "differences": {}}	.
+fuzz9	8	--stay 40 --abridge-steps 1	{"units": [128, 128], "lines": [316, 316], "differences": {}}	.
+fuzz10	20		{"units": [144, 144], "lines": [497, 500], "differences": {"departures unit lines": 29}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz10	16	--stay 8	{"units": [167, 167], "lines": [612, 615], "differences": {"departures unit lines": 35}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz10	32	--abridge-steps 3	{"units": [127, 127], "lines": [475, 476], "differences": {"departures unit lines": 26}}	{"same up to names": true, "detail units": [18, 18], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz10	8	--stay 40 --abridge-steps 1	{"units": [265, 260], "lines": [864, 861], "differences": {"departures unit lines": 47, "departures unit only in the writer's": 5, "table unit lines": 1}}	{"same up to names": true, "detail units": [37, 37], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz11	20		{"units": [92, 92], "lines": [284, 284], "differences": {"departures unit lines": 9}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz11	16	--stay 8	{"units": [118, 118], "lines": [362, 362], "differences": {"departures unit lines": 15}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz11	32	--abridge-steps 3	{"units": [78, 78], "lines": [232, 232], "differences": {"departures unit lines": 7}}	{"same up to names": true, "detail units": [8, 8], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz11	8	--stay 40 --abridge-steps 1	{"units": [180, 180], "lines": [515, 519], "differences": {"departures unit lines": 26}}	{"same up to names": true, "detail units": [19, 19], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz12	20		{"units": [95, 91], "lines": [346, 350], "differences": {"departures unit lines": 33, "departures unit only in the writer's": 4, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz12	16	--stay 8	{"units": [97, 98], "lines": [363, 377], "differences": {"departures unit lines": 30, "departures unit only in the converter's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz12	32	--abridge-steps 3	{"units": [86, 83], "lines": [318, 320], "differences": {"departures unit lines": 25, "departures unit only in the writer's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [15, 15], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz12	8	--stay 40 --abridge-steps 1	{"units": [164, 159], "lines": [547, 556], "differences": {"departures unit only in the writer's": 6, "departures unit lines": 44, "departures unit only in the converter's": 1, "detail unit lines": 1, "detail unit only in the writer's": 1, "detail unit only in the converter's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [31, 31], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "552"], "552:1"]]}
+fuzz13	20		{"units": [46, 46], "lines": [140, 140], "differences": {"departures unit lines": 10}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz13	16	--stay 8	{"units": [57, 57], "lines": [174, 174], "differences": {"departures unit lines": 12}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz13	32	--abridge-steps 3	{"units": [47, 47], "lines": [135, 135], "differences": {"departures unit lines": 11}}	{"same up to names": true, "detail units": [1, 1], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz13	8	--stay 40 --abridge-steps 1	{"units": [81, 83], "lines": [239, 222], "differences": {"departures unit lines": 21, "table unit lines": 1, "departures unit only in the converter's": 2}}	{"same up to names": true, "detail units": [6, 6], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz14	20		{"units": [46, 46], "lines": [293, 293], "differences": {}}	.
+fuzz14	16	--stay 8	{"units": [57, 57], "lines": [363, 363], "differences": {}}	.
+fuzz14	32	--abridge-steps 3	{"units": [47, 47], "lines": [245, 245], "differences": {}}	.
+fuzz14	8	--stay 40 --abridge-steps 1	{"units": [116, 116], "lines": [504, 504], "differences": {}}	.
+fuzz15	20		{"units": [44, 45], "lines": [142, 145], "differences": {"departures unit lines": 10, "table unit lines": 1, "departures unit only in the converter's": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz15	16	--stay 8	{"units": [44, 46], "lines": [147, 151], "differences": {"departures unit lines": 9, "table unit lines": 1, "departures unit only in the converter's": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz15	32	--abridge-steps 3	{"units": [36, 37], "lines": [133, 135], "differences": {"departures unit lines": 12, "table unit lines": 1, "departures unit only in the converter's": 1}}	{"same up to names": true, "detail units": [4, 4], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz15	8	--stay 40 --abridge-steps 1	{"units": [76, 80], "lines": [249, 259], "differences": {"detail unit only in the writer's": 1, "departures unit only in the converter's": 4, "departures unit lines": 17, "detail unit lines": 1, "table unit lines": 1, "detail unit only in the converter's": 1}}	{"same up to names": true, "detail units": [11, 11], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "336"], "336:1"]]}
+fuzz16	20		{"units": [119, 124], "lines": [320, 329], "differences": {"departures unit lines": 24, "departures unit only in the converter's": 6, "departures unit only in the writer's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz16	16	--stay 8	{"units": [136, 137], "lines": [391, 393], "differences": {"departures unit lines": 11, "departures unit only in the converter's": 9, "table unit lines": 1, "departures unit only in the writer's": 8}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz16	32	--abridge-steps 3	{"units": [99, 101], "lines": [289, 292], "differences": {"departures unit lines": 15, "departures unit only in the writer's": 2, "departures unit only in the converter's": 4, "table unit lines": 1}}	{"same up to names": true, "detail units": [3, 3], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz16	8	--stay 40 --abridge-steps 1	{"units": [174, 174], "lines": [490, 491], "differences": {"departures unit lines": 17, "table unit lines": 1, "departures unit only in the writer's": 7, "departures unit only in the converter's": 7}}	{"same up to names": true, "detail units": [3, 3], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz17	20		{"units": [99, 99], "lines": [245, 246], "differences": {"departures unit lines": 5}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz17	16	--stay 8	{"units": [111, 111], "lines": [298, 299], "differences": {"departures unit lines": 7}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz17	32	--abridge-steps 3	{"units": [91, 91], "lines": [242, 242], "differences": {"departures unit lines": 4}}	{"same up to names": true, "detail units": [2, 2], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz17	8	--stay 40 --abridge-steps 1	{"units": [161, 164], "lines": [403, 409], "differences": {"table unit lines": 1, "departures unit lines": 3, "departures unit only in the converter's": 3}}	{"same up to names": true, "detail units": [7, 7], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz18	20		{"units": [84, 90], "lines": [387, 400], "differences": {"departures unit only in the converter's": 6, "departures unit lines": 2, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz18	16	--stay 8	{"units": [104, 104], "lines": [501, 503], "differences": {"departures unit lines": 3}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz18	32	--abridge-steps 3	{"units": [82, 86], "lines": [354, 363], "differences": {"departures unit only in the converter's": 4, "table unit lines": 1, "departures unit lines": 2}}	{"same up to names": true, "detail units": [15, 15], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz18	8	--stay 40 --abridge-steps 1	{"units": [196, 196], "lines": [772, 775], "differences": {"departures unit lines": 4}}	{"same up to names": true, "detail units": [43, 43], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz19	20		{"units": [119, 119], "lines": [335, 335], "differences": {}}	.
+fuzz19	16	--stay 8	{"units": [132, 132], "lines": [359, 359], "differences": {}}	.
+fuzz19	32	--abridge-steps 3	{"units": [91, 91], "lines": [264, 264], "differences": {}}	.
+fuzz19	8	--stay 40 --abridge-steps 1	{"units": [191, 191], "lines": [497, 497], "differences": {}}	.
+fuzz20	20		{"units": [179, 179], "lines": [667, 669], "differences": {"departures unit lines": 11}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz20	16	--stay 8	{"units": [191, 191], "lines": [743, 743], "differences": {"departures unit lines": 4}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz20	32	--abridge-steps 3	{"units": [147, 147], "lines": [571, 571], "differences": {"departures unit lines": 6}}	{"same up to names": true, "detail units": [12, 12], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz20	8	--stay 40 --abridge-steps 1	{"units": [305, 305], "lines": [1001, 1005], "differences": {"departures unit lines": 14}}	{"same up to names": true, "detail units": [31, 31], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz21	20		{"units": [96, 96], "lines": [500, 511], "differences": {"departures unit lines": 39}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz21	16	--stay 8	{"units": [112, 112], "lines": [550, 563], "differences": {"departures unit lines": 40}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz21	32	--abridge-steps 3	{"units": [88, 88], "lines": [432, 432], "differences": {"departures unit lines": 25}}	{"same up to names": true, "detail units": [14, 14], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz21	8	--stay 40 --abridge-steps 1	{"units": [195, 198], "lines": [762, 773], "differences": {"departures unit lines": 55, "detail unit lines": 1, "departures unit only in the converter's": 3, "table unit lines": 1, "detail unit only in the converter's": 1, "detail unit only in the writer's": 1}}	{"same up to names": true, "detail units": [46, 46], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "552"], "552:4"]]}
+fuzz22	20		{"units": [125, 125], "lines": [353, 353], "differences": {}}	.
+fuzz22	16	--stay 8	{"units": [148, 148], "lines": [418, 418], "differences": {}}	.
+fuzz22	32	--abridge-steps 3	{"units": [105, 105], "lines": [301, 301], "differences": {}}	.
+fuzz22	8	--stay 40 --abridge-steps 1	{"units": [202, 202], "lines": [550, 550], "differences": {}}	.
+fuzz23	20		{"units": [106, 106], "lines": [288, 288], "differences": {"departures unit lines": 11}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz23	16	--stay 8	{"units": [134, 134], "lines": [415, 415], "differences": {"departures unit lines": 10}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz23	32	--abridge-steps 3	{"units": [84, 84], "lines": [237, 237], "differences": {"departures unit lines": 9}}	{"same up to names": true, "detail units": [6, 6], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz23	8	--stay 40 --abridge-steps 1	{"units": [182, 182], "lines": [503, 503], "differences": {"departures unit lines": 13}}	{"same up to names": true, "detail units": [9, 9], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz24	20		{"units": [98, 98], "lines": [309, 309], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz24	16	--stay 8	{"units": [108, 108], "lines": [354, 354], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz24	32	--abridge-steps 3	{"units": [76, 76], "lines": [259, 259], "differences": {}}	.
+fuzz24	8	--stay 40 --abridge-steps 1	{"units": [177, 177], "lines": [520, 521], "differences": {"departures unit lines": 3}}	{"same up to names": true, "detail units": [22, 22], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz25	20		{"units": [64, 69], "lines": [270, 263], "differences": {"departures unit only in the converter's": 5, "departures unit lines": 13, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz25	16	--stay 8	{"units": [74, 77], "lines": [318, 311], "differences": {"departures unit lines": 14, "departures unit only in the converter's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz25	32	--abridge-steps 3	{"units": [60, 62], "lines": [236, 235], "differences": {"departures unit lines": 11, "detail unit only in the converter's": 1, "detail unit lines": 1, "table unit lines": 1, "departures unit only in the converter's": 2, "detail unit only in the writer's": 1}}	{"same up to names": true, "detail units": [11, 11], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "256"], "256:2"]]}
+fuzz25	8	--stay 40 --abridge-steps 1	{"units": [147, 150], "lines": [527, 535], "differences": {"departures unit only in the converter's": 3, "departures unit lines": 20, "detail unit only in the converter's": 1, "detail unit only in the writer's": 1, "detail unit lines": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [29, 29], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "272"], "272:1"]]}
+fuzz26	20		{"units": [60, 60], "lines": [158, 159], "differences": {"departures unit lines": 6}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz26	16	--stay 8	{"units": [67, 67], "lines": [178, 178], "differences": {"departures unit lines": 7}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz26	32	--abridge-steps 3	{"units": [50, 50], "lines": [136, 136], "differences": {"departures unit lines": 4}}	{"same up to names": true, "detail units": [2, 2], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz26	8	--stay 40 --abridge-steps 1	{"units": [112, 111], "lines": [288, 281], "differences": {"departures unit lines": 12, "table unit lines": 1, "departures unit only in the writer's": 1}}	{"same up to names": true, "detail units": [6, 6], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz27	20		{"units": [105, 105], "lines": [353, 355], "differences": {"departures unit lines": 13}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz27	16	--stay 8	{"units": [117, 116], "lines": [401, 394], "differences": {"departures unit lines": 16, "departures unit only in the converter's": 1, "departures unit only in the writer's": 2, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz27	32	--abridge-steps 3	{"units": [93, 93], "lines": [305, 305], "differences": {"departures unit lines": 6}}	{"same up to names": true, "detail units": [11, 11], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz27	8	--stay 40 --abridge-steps 1	{"units": [193, 193], "lines": [597, 600], "differences": {"departures unit lines": 28}}	{"same up to names": true, "detail units": [20, 20], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz28	20		{"units": [67, 67], "lines": [233, 233], "differences": {}}	.
+fuzz28	16	--stay 8	{"units": [67, 67], "lines": [255, 255], "differences": {}}	.
+fuzz28	32	--abridge-steps 3	{"units": [58, 58], "lines": [212, 212], "differences": {}}	.
+fuzz28	8	--stay 40 --abridge-steps 1	{"units": [113, 113], "lines": [351, 351], "differences": {}}	.
+fuzz29	20		{"units": [118, 118], "lines": [364, 364], "differences": {}}	.
+fuzz29	16	--stay 8	{"units": [129, 129], "lines": [409, 409], "differences": {}}	.
+fuzz29	32	--abridge-steps 3	{"units": [85, 85], "lines": [305, 305], "differences": {}}	.
+fuzz29	8	--stay 40 --abridge-steps 1	{"units": [174, 174], "lines": [533, 533], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [14, 14], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz30	20		{"units": [121, 123], "lines": [473, 477], "differences": {"departures unit lines": 6, "table unit lines": 1, "departures unit only in the converter's": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz30	16	--stay 8	{"units": [147, 149], "lines": [632, 636], "differences": {"table unit lines": 1, "departures unit lines": 9, "departures unit only in the converter's": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz30	32	--abridge-steps 3	{"units": [117, 118], "lines": [453, 455], "differences": {"detail unit only in the writer's": 2, "detail unit only in the converter's": 2, "departures unit lines": 8, "departures unit only in the converter's": 1, "detail unit extent": 2, "detail unit lines": 2, "table unit lines": 1, "unit order": 1}}	{"same up to names": true, "detail units": [21, 21], "names whose unit differs": 2, "names the second file gives more than once": 2, "examples": [[["R#0#chr", "1408"], "1408:3"], [["R#0#chr", "1472"], "1472:2"]]}
+fuzz30	8	--stay 40 --abridge-steps 1	{"units": [264, 267], "lines": [910, 916], "differences": {"departures unit lines": 10, "table unit lines": 1, "departures unit only in the converter's": 3}}	{"same up to names": true, "detail units": [49, 49], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz31	20		{"units": [43, 43], "lines": [168, 172], "differences": {"departures unit lines": 8}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz31	16	--stay 8	{"units": [49, 50], "lines": [186, 193], "differences": {"departures unit lines": 10, "departures unit only in the converter's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz31	32	--abridge-steps 3	{"units": [42, 42], "lines": [161, 164], "differences": {"departures unit lines": 6}}	{"same up to names": true, "detail units": [12, 12], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz31	8	--stay 40 --abridge-steps 1	{"units": [91, 92], "lines": [283, 295], "differences": {"departures unit lines": 17, "table unit lines": 1, "departures unit only in the converter's": 1}}	{"same up to names": true, "detail units": [23, 23], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz32	20		{"units": [58, 58], "lines": [162, 163], "differences": {"departures unit lines": 9}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz32	16	--stay 8	{"units": [61, 61], "lines": [164, 165], "differences": {"departures unit lines": 7}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz32	32	--abridge-steps 3	{"units": [43, 43], "lines": [117, 117], "differences": {"departures unit lines": 6}}	{"same up to names": true, "detail units": [1, 1], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz32	8	--stay 40 --abridge-steps 1	{"units": [96, 96], "lines": [242, 245], "differences": {"departures unit lines": 13}}	{"same up to names": true, "detail units": [4, 4], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz33	20		{"units": [139, 140], "lines": [387, 389], "differences": {"departures unit lines": 5, "departures unit only in the converter's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz33	16	--stay 8	{"units": [151, 152], "lines": [439, 442], "differences": {"departures unit lines": 11, "departures unit only in the converter's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz33	32	--abridge-steps 3	{"units": [111, 111], "lines": [334, 334], "differences": {"departures unit lines": 6}}	{"same up to names": true, "detail units": [10, 10], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz33	8	--stay 40 --abridge-steps 1	{"units": [206, 209], "lines": [581, 588], "differences": {"departures unit only in the converter's": 3, "departures unit lines": 8, "table unit lines": 1}}	{"same up to names": true, "detail units": [25, 25], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz34	20		{"units": [96, 96], "lines": [332, 332], "differences": {"departures unit lines": 5}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz34	16	--stay 8	{"units": [112, 112], "lines": [426, 428], "differences": {"departures unit lines": 10}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz34	32	--abridge-steps 3	{"units": [87, 87], "lines": [317, 318], "differences": {"departures unit lines": 8}}	{"same up to names": true, "detail units": [12, 12], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz34	8	--stay 40 --abridge-steps 1	{"units": [197, 197], "lines": [627, 631], "differences": {"departures unit lines": 12}}	{"same up to names": true, "detail units": [24, 24], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz35	20		{"units": [153, 153], "lines": [727, 729], "differences": {"departures unit lines": 19}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz35	16	--stay 8	{"units": [181, 181], "lines": [977, 979], "differences": {"departures unit lines": 23}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz35	32	--abridge-steps 3	{"units": [138, 138], "lines": [635, 636], "differences": {"departures unit lines": 17}}	{"same up to names": true, "detail units": [22, 22], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz35	8	--stay 40 --abridge-steps 1	{"units": [299, 296], "lines": [1243, 1231], "differences": {"departures unit lines": 32, "departures unit only in the writer's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [46, 46], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz36	20		{"units": [151, 151], "lines": [455, 455], "differences": {}}	.
+fuzz36	16	--stay 8	{"units": [177, 177], "lines": [534, 534], "differences": {}}	.
+fuzz36	32	--abridge-steps 3	{"units": [127, 127], "lines": [405, 405], "differences": {}}	.
+fuzz36	8	--stay 40 --abridge-steps 1	{"units": [232, 232], "lines": [680, 680], "differences": {}}	.
+fuzz37	20		{"units": [46, 45], "lines": [240, 240], "differences": {"departures unit lines": 8, "table unit lines": 1, "departures unit only in the writer's": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz37	16	--stay 8	{"units": [59, 56], "lines": [284, 283], "differences": {"departures unit lines": 11, "departures unit only in the writer's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz37	32	--abridge-steps 3	{"units": [61, 61], "lines": [248, 252], "differences": {"detail unit only in the converter's": 2, "departures unit lines": 10, "detail unit only in the writer's": 2, "detail unit extent": 2, "detail unit lines": 2, "table unit lines": 1, "unit order": 1}}	{"same up to names": true, "detail units": [23, 23], "names whose unit differs": 2, "names the second file gives more than once": 2, "examples": [[["R#0#chr", "576"], "576:3"], [["R#0#chr", "608"], "608:2"]]}
+fuzz37	8	--stay 40 --abridge-steps 1	{"units": [145, 139], "lines": [536, 528], "differences": {"departures unit lines": 14, "detail unit extent": 1, "detail unit lines": 1, "detail unit only in the writer's": 1, "departures unit only in the writer's": 6, "detail unit only in the converter's": 1, "table unit lines": 1, "unit order": 1}}	{"same up to names": true, "detail units": [51, 51], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "576"], "576:3"]]}
+fuzz38	20		{"units": [51, 51], "lines": [139, 139], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz38	16	--stay 8	{"units": [61, 61], "lines": [165, 165], "differences": {"departures unit lines": 3}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz38	32	--abridge-steps 3	{"units": [38, 38], "lines": [103, 103], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [3, 3], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz38	8	--stay 40 --abridge-steps 1	{"units": [103, 103], "lines": [268, 268], "differences": {"departures unit lines": 4}}	{"same up to names": true, "detail units": [6, 6], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz39	20		{"units": [70, 70], "lines": [267, 269], "differences": {"departures unit lines": 6}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz39	16	--stay 8	{"units": [75, 75], "lines": [285, 287], "differences": {"departures unit lines": 8}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz39	32	--abridge-steps 3	{"units": [62, 62], "lines": [229, 230], "differences": {"departures unit lines": 5}}	{"same up to names": true, "detail units": [9, 9], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz39	8	--stay 40 --abridge-steps 1	{"units": [125, 125], "lines": [422, 419], "differences": {"departures unit lines": 12}}	{"same up to names": true, "detail units": [18, 18], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz40	20		{"units": [79, 79], "lines": [313, 313], "differences": {"departures unit lines": 17}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz40	16	--stay 8	{"units": [95, 95], "lines": [379, 379], "differences": {"departures unit lines": 19}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz40	32	--abridge-steps 3	{"units": [77, 77], "lines": [290, 290], "differences": {"departures unit lines": 10}}	{"same up to names": true, "detail units": [11, 11], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz40	8	--stay 40 --abridge-steps 1	{"units": [163, 164], "lines": [568, 566], "differences": {"departures unit lines": 30, "detail unit extent": 1, "detail unit lines": 1, "departures unit only in the converter's": 1, "detail unit only in the writer's": 1, "detail unit only in the converter's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [21, 21], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "240"], "240:3"]]}
+fuzz41	20		{"units": [92, 92], "lines": [351, 357], "differences": {"departures unit lines": 23}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz41	16	--stay 8	{"units": [106, 106], "lines": [404, 412], "differences": {"departures unit lines": 21}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz41	32	--abridge-steps 3	{"units": [75, 75], "lines": [294, 298], "differences": {"departures unit lines": 16}}	{"same up to names": true, "detail units": [10, 10], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz41	8	--stay 40 --abridge-steps 1	{"units": [166, 164], "lines": [573, 573], "differences": {"departures unit lines": 26, "departures unit only in the writer's": 2, "table unit lines": 1}}	{"same up to names": true, "detail units": [22, 22], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz42	20		{"units": [109, 109], "lines": [340, 340], "differences": {}}	.
+fuzz42	16	--stay 8	{"units": [141, 141], "lines": [445, 445], "differences": {}}	.
+fuzz42	32	--abridge-steps 3	{"units": [95, 95], "lines": [299, 299], "differences": {}}	.
+fuzz42	8	--stay 40 --abridge-steps 1	{"units": [190, 190], "lines": [564, 564], "differences": {}}	.
+fuzz43	20		{"units": [50, 52], "lines": [178, 184], "differences": {"departures unit lines": 11, "departures unit only in the converter's": 2, "table unit extent": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz43	16	--stay 8	{"units": [58, 60], "lines": [238, 245], "differences": {"departures unit lines": 15, "departures unit only in the converter's": 2, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz43	32	--abridge-steps 3	{"units": [44, 45], "lines": [161, 166], "differences": {"departures unit lines": 13, "departures unit only in the converter's": 1, "table unit extent": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [4, 4], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz43	8	--stay 40 --abridge-steps 1	{"units": [97, 96], "lines": [285, 287], "differences": {"departures unit lines": 14, "departures unit only in the writer's": 6, "departures unit only in the converter's": 5, "table unit lines": 1}}	{"same up to names": true, "detail units": [6, 6], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz44	20		{"units": [101, 101], "lines": [273, 274], "differences": {"departures unit lines": 20}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz44	16	--stay 8	{"units": [103, 103], "lines": [274, 274], "differences": {"departures unit lines": 17}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz44	32	--abridge-steps 3	{"units": [81, 81], "lines": [227, 227], "differences": {"departures unit lines": 11}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz44	8	--stay 40 --abridge-steps 1	{"units": [152, 154], "lines": [376, 380], "differences": {"departures unit lines": 29, "table unit lines": 1, "departures unit only in the converter's": 2}}	{"same up to names": true, "detail units": [4, 4], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz45	20		{"units": [63, 63], "lines": [318, 318], "differences": {"departures unit lines": 17}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz45	16	--stay 8	{"units": [81, 83], "lines": [381, 386], "differences": {"table unit lines": 1, "departures unit lines": 20, "departures unit only in the converter's": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz45	32	--abridge-steps 3	{"units": [72, 72], "lines": [315, 317], "differences": {"departures unit lines": 11}}	{"same up to names": true, "detail units": [24, 24], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz45	8	--stay 40 --abridge-steps 1	{"units": [160, 164], "lines": [578, 587], "differences": {"detail unit only in the converter's": 1, "departures unit lines": 32, "departures unit only in the converter's": 4, "table unit lines": 1, "detail unit extent": 1, "detail unit lines": 1, "detail unit only in the writer's": 1, "unit order": 1}}	{"same up to names": true, "detail units": [48, 48], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "64"], "64:5"]]}
+fuzz46	20		{"units": [84, 84], "lines": [265, 265], "differences": {"departures unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz46	16	--stay 8	{"units": [98, 98], "lines": [296, 296], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz46	32	--abridge-steps 3	{"units": [72, 72], "lines": [248, 248], "differences": {"departures unit lines": 5}}	{"same up to names": true, "detail units": [7, 7], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz46	8	--stay 40 --abridge-steps 1	{"units": [154, 154], "lines": [457, 458], "differences": {"departures unit lines": 11}}	{"same up to names": true, "detail units": [13, 13], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz47	20		{"units": [77, 77], "lines": [202, 202], "differences": {}}	.
+fuzz47	16	--stay 8	{"units": [92, 92], "lines": [283, 283], "differences": {}}	.
+fuzz47	32	--abridge-steps 3	{"units": [64, 64], "lines": [186, 186], "differences": {}}	.
+fuzz47	8	--stay 40 --abridge-steps 1	{"units": [126, 126], "lines": [372, 372], "differences": {}}	.
+fuzz48	20		{"units": [121, 118], "lines": [481, 482], "differences": {"departures unit lines": 26, "departures unit only in the writer's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz48	16	--stay 8	{"units": [152, 149], "lines": [595, 602], "differences": {"departures unit lines": 35, "departures unit only in the writer's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz48	32	--abridge-steps 3	{"units": [107, 101], "lines": [431, 424], "differences": {"departures unit lines": 23, "departures unit only in the writer's": 6, "table unit lines": 1}}	{"same up to names": true, "detail units": [10, 10], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz48	8	--stay 40 --abridge-steps 1	{"units": [225, 213], "lines": [786, 773], "differences": {"departures unit lines": 40, "table unit lines": 1, "departures unit only in the writer's": 12}}	{"same up to names": true, "detail units": [28, 28], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz49	20		{"units": [40, 40], "lines": [238, 238], "differences": {"departures unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz49	16	--stay 8	{"units": [44, 44], "lines": [259, 259], "differences": {"departures unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz49	32	--abridge-steps 3	{"units": [44, 44], "lines": [226, 226], "differences": {"departures unit lines": 1}}	{"same up to names": true, "detail units": [16, 16], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz49	8	--stay 40 --abridge-steps 1	{"units": [95, 95], "lines": [401, 401], "differences": {"departures unit lines": 2, "detail unit only in the writer's": 1, "table unit lines": 1, "detail unit only in the converter's": 1, "detail unit extent": 1, "detail unit lines": 1, "unit order": 1}}	{"same up to names": true, "detail units": [34, 34], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "0"], "0:4"]]}
+fuzz50	20		{"units": [111, 118], "lines": [473, 480], "differences": {"departures unit lines": 11, "departures unit only in the converter's": 7, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz50	16	--stay 8	{"units": [124, 130], "lines": [535, 543], "differences": {"departures unit lines": 14, "departures unit only in the converter's": 6, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz50	32	--abridge-steps 3	{"units": [98, 98], "lines": [363, 368], "differences": {"departures unit lines": 13}}	{"same up to names": true, "detail units": [16, 16], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz50	8	--stay 40 --abridge-steps 1	{"units": [213, 215], "lines": [772, 778], "differences": {"table unit lines": 1, "departures unit only in the converter's": 2, "departures unit lines": 15}}	{"same up to names": true, "detail units": [46, 46], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz51	20		{"units": [106, 104], "lines": [335, 335], "differences": {"departures unit lines": 22, "table unit lines": 1, "departures unit only in the writer's": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz51	16	--stay 8	{"units": [111, 109], "lines": [380, 385], "differences": {"departures unit only in the writer's": 2, "departures unit lines": 19, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz51	32	--abridge-steps 3	{"units": [93, 92], "lines": [302, 298], "differences": {"table unit lines": 1, "departures unit lines": 16, "departures unit only in the writer's": 1}}	{"same up to names": true, "detail units": [6, 6], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz51	8	--stay 40 --abridge-steps 1	{"units": [164, 160], "lines": [486, 483], "differences": {"departures unit lines": 26, "departures unit only in the writer's": 4, "table unit lines": 1}}	{"same up to names": true, "detail units": [15, 15], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz52	20		{"units": [78, 78], "lines": [367, 370], "differences": {"departures unit lines": 7}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz52	16	--stay 8	{"units": [86, 86], "lines": [459, 464], "differences": {"departures unit lines": 8}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz52	32	--abridge-steps 3	{"units": [73, 73], "lines": [311, 314], "differences": {"departures unit lines": 5}}	{"same up to names": true, "detail units": [16, 16], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz52	8	--stay 40 --abridge-steps 1	{"units": [160, 158], "lines": [682, 676], "differences": {"departures unit lines": 11, "detail unit only in the converter's": 1, "detail unit extent": 1, "detail unit lines": 1, "table unit lines": 1, "departures unit only in the writer's": 2, "detail unit only in the writer's": 1, "unit order": 1}}	{"same up to names": true, "detail units": [35, 35], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "72"], "72:6"]]}
+fuzz53	20		{"units": [154, 157], "lines": [535, 543], "differences": {"departures unit only in the converter's": 3, "departures unit lines": 11, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz53	16	--stay 8	{"units": [189, 191], "lines": [648, 654], "differences": {"departures unit lines": 18, "departures unit only in the converter's": 2, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz53	32	--abridge-steps 3	{"units": [132, 133], "lines": [490, 493], "differences": {"departures unit lines": 13, "table unit lines": 1, "departures unit only in the converter's": 1}}	{"same up to names": true, "detail units": [10, 10], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz53	8	--stay 40 --abridge-steps 1	{"units": [263, 267], "lines": [814, 825], "differences": {"departures unit lines": 16, "table unit lines": 1, "departures unit only in the converter's": 4}}	{"same up to names": true, "detail units": [18, 18], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz54	20		{"units": [99, 99], "lines": [257, 258], "differences": {"departures unit lines": 13}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz54	16	--stay 8	{"units": [123, 123], "lines": [322, 324], "differences": {"departures unit lines": 13}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz54	32	--abridge-steps 3	{"units": [86, 86], "lines": [227, 228], "differences": {"departures unit lines": 11}}	{"same up to names": true, "detail units": [1, 1], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz54	8	--stay 40 --abridge-steps 1	{"units": [152, 150], "lines": [393, 388], "differences": {"departures unit lines": 10, "departures unit only in the converter's": 2, "departures unit only in the writer's": 4, "table unit lines": 1}}	{"same up to names": true, "detail units": [5, 5], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz55	20		{"units": [64, 64], "lines": [188, 188], "differences": {"departures unit lines": 16}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz55	16	--stay 8	{"units": [85, 85], "lines": [251, 238], "differences": {"departures unit lines": 24}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz55	32	--abridge-steps 3	{"units": [57, 57], "lines": [175, 175], "differences": {"departures unit lines": 12}}	{"same up to names": true, "detail units": [2, 2], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz55	8	--stay 40 --abridge-steps 1	{"units": [103, 104], "lines": [289, 291], "differences": {"departures unit only in the converter's": 1, "departures unit lines": 24, "table unit lines": 1}}	{"same up to names": true, "detail units": [3, 3], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz56	20		{"units": [121, 115], "lines": [433, 401], "differences": {"departures unit lines": 18, "table unit lines": 1, "departures unit only in the writer's": 7, "departures unit only in the converter's": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz56	16	--stay 8	{"units": [143, 141], "lines": [535, 532], "differences": {"departures unit lines": 20, "departures unit only in the converter's": 1, "departures unit only in the writer's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz56	32	--abridge-steps 3	{"units": [106, 109], "lines": [398, 404], "differences": {"departures unit lines": 19, "departures unit only in the converter's": 3, "table unit lines": 1}}	{"same up to names": true, "detail units": [10, 10], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz56	8	--stay 40 --abridge-steps 1	{"units": [216, 211], "lines": [734, 726], "differences": {"departures unit only in the writer's": 6, "departures unit lines": 31, "table unit lines": 1, "departures unit only in the converter's": 1}}	{"same up to names": true, "detail units": [19, 19], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz57	20		{"units": [59, 59], "lines": [309, 309], "differences": {"departures unit lines": 4}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz57	16	--stay 8	{"units": [69, 69], "lines": [374, 374], "differences": {"departures unit lines": 5}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz57	32	--abridge-steps 3	{"units": [54, 54], "lines": [274, 274], "differences": {"departures unit lines": 3}}	{"same up to names": true, "detail units": [13, 13], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz57	8	--stay 40 --abridge-steps 1	{"units": [151, 151], "lines": [594, 594], "differences": {"departures unit lines": 8, "table unit lines": 1, "detail unit extent": 1, "detail unit lines": 3, "detail unit only in the writer's": 3, "detail unit only in the converter's": 3, "unit order": 1}}	{"same up to names": true, "detail units": [38, 38], "names whose unit differs": 3, "names the second file gives more than once": 3, "examples": [[["R#0#chr", "512"], "512:4"], [["R#0#chr", "696"], "696:4"], [["R#0#chr", "704"], "704:4"]]}
+fuzz58	20		{"units": [72, 72], "lines": [311, 311], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz58	16	--stay 8	{"units": [79, 79], "lines": [339, 339], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz58	32	--abridge-steps 3	{"units": [66, 66], "lines": [265, 265], "differences": {"departures unit lines": 2}}	{"same up to names": true, "detail units": [16, 16], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz58	8	--stay 40 --abridge-steps 1	{"units": [158, 158], "lines": [551, 551], "differences": {"departures unit lines": 3}}	{"same up to names": true, "detail units": [37, 37], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz59	20		{"units": [75, 76], "lines": [264, 262], "differences": {"departures unit lines": 9, "departures unit only in the converter's": 1, "table unit lines": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz59	16	--stay 8	{"units": [96, 93], "lines": [339, 328], "differences": {"departures unit lines": 11, "table unit lines": 1, "departures unit only in the writer's": 4, "departures unit only in the converter's": 1}}	{"same up to names": true, "detail units": [0, 0], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz59	32	--abridge-steps 3	{"units": [73, 73], "lines": [262, 265], "differences": {"departures unit lines": 10}}	{"same up to names": true, "detail units": [6, 6], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz59	8	--stay 40 --abridge-steps 1	{"units": [147, 147], "lines": [507, 504], "differences": {"departures unit lines": 15}}	{"same up to names": true, "detail units": [20, 20], "names whose unit differs": 0, "names the second file gives more than once": 0, "examples": []}
+fuzz60	20		{"units": [63, 63], "lines": [167, 167], "differences": {}}	.
+fuzz60	16	--stay 8	{"units": [72, 72], "lines": [192, 192], "differences": {}}	.
+fuzz60	32	--abridge-steps 3	{"units": [63, 63], "lines": [163, 163], "differences": {}}	.
+fuzz60	8	--stay 40 --abridge-steps 1	{"units": [88, 88], "lines": [235, 235], "differences": {}}	.
+nozero1	20		{"units": [53, 53], "lines": [200, 200], "differences": {}}	.
+nozero1	16	--stay 8	{"units": [66, 66], "lines": [252, 252], "differences": {}}	.
+nozero1	32	--abridge-steps 3	{"units": [47, 47], "lines": [172, 172], "differences": {}}	.
+nozero1	8	--stay 40 --abridge-steps 1	{"units": [111, 111], "lines": [367, 367], "differences": {}}	.
+nozero2	20		{"units": [170, 170], "lines": [659, 659], "differences": {}}	.
+nozero2	16	--stay 8	{"units": [189, 189], "lines": [735, 735], "differences": {}}	.
+nozero2	32	--abridge-steps 3	{"units": [141, 141], "lines": [575, 575], "differences": {"table unit lines": 1, "detail unit extent": 1, "detail unit lines": 1, "detail unit only in the converter's": 1, "detail unit only in the writer's": 1}}	{"same up to names": true, "detail units": [15, 15], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "320"], "320:1"]]}
+nozero2	8	--stay 40 --abridge-steps 1	{"units": [317, 317], "lines": [1129, 1129], "differences": {}}	.
+nozero3	20		{"units": [59, 59], "lines": [166, 166], "differences": {}}	.
+nozero3	16	--stay 8	{"units": [62, 62], "lines": [171, 171], "differences": {}}	.
+nozero3	32	--abridge-steps 3	{"units": [43, 43], "lines": [133, 133], "differences": {}}	.
+nozero3	8	--stay 40 --abridge-steps 1	{"units": [94, 94], "lines": [237, 237], "differences": {}}	.
+nozero4	20		{"units": [57, 57], "lines": [236, 236], "differences": {}}	.
+nozero4	16	--stay 8	{"units": [63, 63], "lines": [251, 251], "differences": {}}	.
+nozero4	32	--abridge-steps 3	{"units": [49, 49], "lines": [201, 201], "differences": {}}	.
+nozero4	8	--stay 40 --abridge-steps 1	{"units": [118, 118], "lines": [383, 383], "differences": {}}	.
+nozero5	20		{"units": [154, 154], "lines": [569, 569], "differences": {}}	.
+nozero5	16	--stay 8	{"units": [182, 182], "lines": [748, 748], "differences": {}}	.
+nozero5	32	--abridge-steps 3	{"units": [155, 155], "lines": [605, 605], "differences": {}}	.
+nozero5	8	--stay 40 --abridge-steps 1	{"units": [301, 301], "lines": [1071, 1071], "differences": {}}	.
+nozero6	20		{"units": [91, 91], "lines": [219, 219], "differences": {}}	.
+nozero6	16	--stay 8	{"units": [106, 106], "lines": [251, 251], "differences": {}}	.
+nozero6	32	--abridge-steps 3	{"units": [86, 86], "lines": [201, 201], "differences": {"detail unit only in the writer's": 1, "table unit lines": 1, "detail unit only in the converter's": 1, "detail unit extent": 1, "detail unit lines": 1}}	{"same up to names": true, "detail units": [7, 7], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "1152"], "1152:1"]]}
+nozero6	8	--stay 40 --abridge-steps 1	{"units": [151, 151], "lines": [357, 357], "differences": {}}	.
+nozero7	20		{"units": [50, 50], "lines": [191, 191], "differences": {}}	.
+nozero7	16	--stay 8	{"units": [68, 68], "lines": [262, 262], "differences": {}}	.
+nozero7	32	--abridge-steps 3	{"units": [47, 47], "lines": [178, 178], "differences": {"detail unit only in the converter's": 1, "detail unit only in the writer's": 1, "table unit lines": 1, "detail unit extent": 1, "detail unit lines": 1}}	{"same up to names": true, "detail units": [7, 7], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "704"], "704:1"]]}
+nozero7	8	--stay 40 --abridge-steps 1	{"units": [123, 123], "lines": [407, 407], "differences": {"detail unit only in the converter's": 2, "detail unit only in the writer's": 2, "detail unit lines": 2, "table unit lines": 1}}	{"same up to names": true, "detail units": [20, 20], "names whose unit differs": 2, "names the second file gives more than once": 2, "examples": [[["R#0#chr", "712"], "712:1"], [["R#0#chr", "720"], "720:1"]]}
+nozero8	20		{"units": [76, 76], "lines": [394, 394], "differences": {}}	.
+nozero8	16	--stay 8	{"units": [101, 101], "lines": [518, 518], "differences": {}}	.
+nozero8	32	--abridge-steps 3	{"units": [80, 80], "lines": [411, 411], "differences": {}}	.
+nozero8	8	--stay 40 --abridge-steps 1	{"units": [186, 186], "lines": [747, 747], "differences": {}}	.
+nozero9	20		{"units": [81, 81], "lines": [212, 212], "differences": {}}	.
+nozero9	16	--stay 8	{"units": [98, 98], "lines": [251, 251], "differences": {}}	.
+nozero9	32	--abridge-steps 3	{"units": [76, 76], "lines": [196, 196], "differences": {}}	.
+nozero9	8	--stay 40 --abridge-steps 1	{"units": [120, 120], "lines": [293, 293], "differences": {}}	.
+nozero10	20		{"units": [150, 150], "lines": [532, 532], "differences": {}}	.
+nozero10	16	--stay 8	{"units": [167, 167], "lines": [639, 639], "differences": {}}	.
+nozero10	32	--abridge-steps 3	{"units": [136, 136], "lines": [501, 501], "differences": {}}	.
+nozero10	8	--stay 40 --abridge-steps 1	{"units": [261, 261], "lines": [848, 848], "differences": {}}	.
+nozero11	20		{"units": [87, 87], "lines": [262, 262], "differences": {}}	.
+nozero11	16	--stay 8	{"units": [134, 134], "lines": [381, 381], "differences": {}}	.
+nozero11	32	--abridge-steps 3	{"units": [79, 79], "lines": [227, 227], "differences": {}}	.
+nozero11	8	--stay 40 --abridge-steps 1	{"units": [168, 168], "lines": [472, 472], "differences": {"detail unit only in the writer's": 1, "table unit lines": 1, "detail unit extent": 1, "detail unit lines": 1, "detail unit only in the converter's": 1, "unit order": 1}}	{"same up to names": true, "detail units": [18, 18], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "1008"], "1008:2"]]}
+nozero12	20		{"units": [96, 96], "lines": [341, 341], "differences": {}}	.
+nozero12	16	--stay 8	{"units": [95, 95], "lines": [363, 363], "differences": {}}	.
+nozero12	32	--abridge-steps 3	{"units": [84, 84], "lines": [313, 313], "differences": {}}	.
+nozero12	8	--stay 40 --abridge-steps 1	{"units": [160, 160], "lines": [544, 544], "differences": {"detail unit lines": 1, "table unit lines": 1, "detail unit only in the converter's": 1, "detail unit only in the writer's": 1}}	{"same up to names": true, "detail units": [30, 30], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "560"], "560:1"]]}
+nozero13	20		{"units": [51, 51], "lines": [148, 148], "differences": {}}	.
+nozero13	16	--stay 8	{"units": [60, 60], "lines": [179, 179], "differences": {}}	.
+nozero13	32	--abridge-steps 3	{"units": [48, 48], "lines": [136, 136], "differences": {}}	.
+nozero13	8	--stay 40 --abridge-steps 1	{"units": [84, 84], "lines": [244, 244], "differences": {}}	.
+nozero14	20		{"units": [46, 46], "lines": [293, 293], "differences": {}}	.
+nozero14	16	--stay 8	{"units": [57, 57], "lines": [363, 363], "differences": {}}	.
+nozero14	32	--abridge-steps 3	{"units": [47, 47], "lines": [245, 245], "differences": {}}	.
+nozero14	8	--stay 40 --abridge-steps 1	{"units": [116, 116], "lines": [504, 504], "differences": {}}	.
+nozero15	20		{"units": [42, 42], "lines": [141, 141], "differences": {}}	.
+nozero15	16	--stay 8	{"units": [45, 45], "lines": [157, 157], "differences": {}}	.
+nozero15	32	--abridge-steps 3	{"units": [36, 36], "lines": [133, 133], "differences": {}}	.
+nozero15	8	--stay 40 --abridge-steps 1	{"units": [75, 75], "lines": [255, 255], "differences": {"detail unit extent": 1, "detail unit lines": 1, "detail unit only in the writer's": 1, "table unit lines": 1, "detail unit only in the converter's": 1}}	{"same up to names": true, "detail units": [9, 9], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "784"], "784:1"]]}
+nozero16	20		{"units": [120, 120], "lines": [320, 320], "differences": {}}	.
+nozero16	16	--stay 8	{"units": [134, 134], "lines": [387, 387], "differences": {}}	.
+nozero16	32	--abridge-steps 3	{"units": [97, 97], "lines": [284, 284], "differences": {}}	.
+nozero16	8	--stay 40 --abridge-steps 1	{"units": [184, 184], "lines": [514, 514], "differences": {}}	.
+nozero17	20		{"units": [104, 104], "lines": [256, 256], "differences": {}}	.
+nozero17	16	--stay 8	{"units": [111, 111], "lines": [294, 294], "differences": {}}	.
+nozero17	32	--abridge-steps 3	{"units": [91, 91], "lines": [239, 239], "differences": {}}	.
+nozero17	8	--stay 40 --abridge-steps 1	{"units": [150, 150], "lines": [373, 373], "differences": {}}	.
+nozero18	20		{"units": [84, 84], "lines": [386, 386], "differences": {}}	.
+nozero18	16	--stay 8	{"units": [104, 104], "lines": [500, 500], "differences": {}}	.
+nozero18	32	--abridge-steps 3	{"units": [82, 82], "lines": [353, 353], "differences": {}}	.
+nozero18	8	--stay 40 --abridge-steps 1	{"units": [197, 197], "lines": [773, 773], "differences": {}}	.
+nozero19	20		{"units": [118, 118], "lines": [330, 330], "differences": {}}	.
+nozero19	16	--stay 8	{"units": [129, 129], "lines": [352, 352], "differences": {}}	.
+nozero19	32	--abridge-steps 3	{"units": [90, 90], "lines": [260, 260], "differences": {}}	.
+nozero19	8	--stay 40 --abridge-steps 1	{"units": [177, 177], "lines": [458, 458], "differences": {}}	.
+nozero20	20		{"units": [171, 171], "lines": [641, 641], "differences": {}}	.
+nozero20	16	--stay 8	{"units": [200, 200], "lines": [773, 773], "differences": {}}	.
+nozero20	32	--abridge-steps 3	{"units": [155, 155], "lines": [609, 609], "differences": {}}	.
+nozero20	8	--stay 40 --abridge-steps 1	{"units": [290, 290], "lines": [991, 991], "differences": {}}	.
+nozero21	20		{"units": [98, 98], "lines": [500, 500], "differences": {}}	.
+nozero21	16	--stay 8	{"units": [114, 114], "lines": [567, 567], "differences": {}}	.
+nozero21	32	--abridge-steps 3	{"units": [90, 90], "lines": [444, 444], "differences": {}}	.
+nozero21	8	--stay 40 --abridge-steps 1	{"units": [212, 212], "lines": [792, 792], "differences": {"detail unit lines": 1, "table unit lines": 1, "detail unit only in the converter's": 1, "detail unit only in the writer's": 1}}	{"same up to names": true, "detail units": [45, 45], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "552"], "552:4"]]}
+nozero22	20		{"units": [129, 129], "lines": [360, 360], "differences": {}}	.
+nozero22	16	--stay 8	{"units": [155, 155], "lines": [448, 448], "differences": {}}	.
+nozero22	32	--abridge-steps 3	{"units": [106, 106], "lines": [307, 307], "differences": {}}	.
+nozero22	8	--stay 40 --abridge-steps 1	{"units": [210, 210], "lines": [567, 567], "differences": {}}	.
+nozero23	20		{"units": [105, 105], "lines": [288, 288], "differences": {}}	.
+nozero23	16	--stay 8	{"units": [135, 135], "lines": [407, 407], "differences": {}}	.
+nozero23	32	--abridge-steps 3	{"units": [86, 86], "lines": [245, 245], "differences": {}}	.
+nozero23	8	--stay 40 --abridge-steps 1	{"units": [186, 186], "lines": [499, 499], "differences": {}}	.
+nozero24	20		{"units": [97, 97], "lines": [305, 305], "differences": {}}	.
+nozero24	16	--stay 8	{"units": [112, 112], "lines": [363, 363], "differences": {}}	.
+nozero24	32	--abridge-steps 3	{"units": [74, 74], "lines": [254, 254], "differences": {}}	.
+nozero24	8	--stay 40 --abridge-steps 1	{"units": [174, 174], "lines": [510, 510], "differences": {}}	.
+nozero25	20		{"units": [68, 68], "lines": [283, 283], "differences": {}}	.
+nozero25	16	--stay 8	{"units": [72, 72], "lines": [310, 310], "differences": {}}	.
+nozero25	32	--abridge-steps 3	{"units": [62, 62], "lines": [231, 231], "differences": {"detail unit only in the converter's": 2, "detail unit only in the writer's": 2, "detail unit extent": 2, "detail unit lines": 2, "table unit lines": 1}}	{"same up to names": true, "detail units": [12, 12], "names whose unit differs": 2, "names the second file gives more than once": 2, "examples": [[["R#0#chr", "256"], "256:2"], [["R#0#chr", "32"], "32:2"]]}
+nozero25	8	--stay 40 --abridge-steps 1	{"units": [132, 132], "lines": [463, 463], "differences": {"detail unit only in the converter's": 1, "table unit lines": 1, "detail unit only in the writer's": 1, "detail unit lines": 1}}	{"same up to names": true, "detail units": [27, 27], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "280"], "280:1"]]}
+nozero26	20		{"units": [63, 63], "lines": [160, 160], "differences": {}}	.
+nozero26	16	--stay 8	{"units": [71, 71], "lines": [186, 186], "differences": {}}	.
+nozero26	32	--abridge-steps 3	{"units": [48, 48], "lines": [125, 125], "differences": {}}	.
+nozero26	8	--stay 40 --abridge-steps 1	{"units": [116, 116], "lines": [290, 290], "differences": {}}	.
+nozero27	20		{"units": [99, 99], "lines": [338, 338], "differences": {}}	.
+nozero27	16	--stay 8	{"units": [117, 117], "lines": [412, 412], "differences": {}}	.
+nozero27	32	--abridge-steps 3	{"units": [94, 94], "lines": [309, 309], "differences": {}}	.
+nozero27	8	--stay 40 --abridge-steps 1	{"units": [202, 202], "lines": [619, 619], "differences": {}}	.
+nozero28	20		{"units": [67, 67], "lines": [233, 233], "differences": {}}	.
+nozero28	16	--stay 8	{"units": [67, 67], "lines": [256, 256], "differences": {}}	.
+nozero28	32	--abridge-steps 3	{"units": [58, 58], "lines": [212, 212], "differences": {}}	.
+nozero28	8	--stay 40 --abridge-steps 1	{"units": [113, 113], "lines": [354, 354], "differences": {}}	.
+nozero29	20		{"units": [119, 119], "lines": [373, 373], "differences": {}}	.
+nozero29	16	--stay 8	{"units": [132, 132], "lines": [416, 416], "differences": {}}	.
+nozero29	32	--abridge-steps 3	{"units": [87, 87], "lines": [300, 300], "differences": {}}	.
+nozero29	8	--stay 40 --abridge-steps 1	{"units": [190, 190], "lines": [565, 565], "differences": {}}	.
+nozero30	20		{"units": [120, 120], "lines": [473, 473], "differences": {}}	.
+nozero30	16	--stay 8	{"units": [147, 147], "lines": [641, 641], "differences": {}}	.
+nozero30	32	--abridge-steps 3	{"units": [118, 118], "lines": [457, 457], "differences": {"detail unit only in the converter's": 2, "detail unit extent": 2, "detail unit lines": 2, "detail unit only in the writer's": 2, "table unit lines": 1, "unit order": 1}}	{"same up to names": true, "detail units": [22, 22], "names whose unit differs": 2, "names the second file gives more than once": 2, "examples": [[["R#0#chr", "1408"], "1408:3"], [["R#0#chr", "1472"], "1472:2"]]}
+nozero30	8	--stay 40 --abridge-steps 1	{"units": [270, 270], "lines": [935, 935], "differences": {}}	.
+nozero31	20		{"units": [42, 42], "lines": [169, 169], "differences": {}}	.
+nozero31	16	--stay 8	{"units": [49, 49], "lines": [186, 186], "differences": {}}	.
+nozero31	32	--abridge-steps 3	{"units": [42, 42], "lines": [163, 163], "differences": {}}	.
+nozero31	8	--stay 40 --abridge-steps 1	{"units": [89, 89], "lines": [273, 273], "differences": {}}	.
+nozero32	20		{"units": [59, 59], "lines": [165, 165], "differences": {}}	.
+nozero32	16	--stay 8	{"units": [62, 62], "lines": [163, 163], "differences": {}}	.
+nozero32	32	--abridge-steps 3	{"units": [50, 50], "lines": [133, 133], "differences": {}}	.
+nozero32	8	--stay 40 --abridge-steps 1	{"units": [85, 85], "lines": [216, 216], "differences": {}}	.
+nozero33	20		{"units": [141, 141], "lines": [394, 394], "differences": {}}	.
+nozero33	16	--stay 8	{"units": [153, 153], "lines": [437, 437], "differences": {}}	.
+nozero33	32	--abridge-steps 3	{"units": [112, 112], "lines": [334, 334], "differences": {}}	.
+nozero33	8	--stay 40 --abridge-steps 1	{"units": [213, 213], "lines": [595, 595], "differences": {}}	.
+nozero34	20		{"units": [96, 96], "lines": [334, 334], "differences": {}}	.
+nozero34	16	--stay 8	{"units": [107, 107], "lines": [430, 430], "differences": {}}	.
+nozero34	32	--abridge-steps 3	{"units": [83, 83], "lines": [310, 310], "differences": {}}	.
+nozero34	8	--stay 40 --abridge-steps 1	{"units": [174, 174], "lines": [589, 589], "differences": {}}	.
+nozero35	20		{"units": [158, 158], "lines": [721, 721], "differences": {}}	.
+nozero35	16	--stay 8	{"units": [182, 182], "lines": [969, 969], "differences": {}}	.
+nozero35	32	--abridge-steps 3	{"units": [138, 138], "lines": [632, 632], "differences": {}}	.
+nozero35	8	--stay 40 --abridge-steps 1	{"units": [310, 310], "lines": [1305, 1305], "differences": {}}	.
+nozero36	20		{"units": [146, 146], "lines": [472, 472], "differences": {}}	.
+nozero36	16	--stay 8	{"units": [172, 172], "lines": [531, 531], "differences": {}}	.
+nozero36	32	--abridge-steps 3	{"units": [131, 131], "lines": [418, 418], "differences": {}}	.
+nozero36	8	--stay 40 --abridge-steps 1	{"units": [235, 235], "lines": [676, 676], "differences": {}}	.
+nozero37	20		{"units": [49, 49], "lines": [255, 255], "differences": {}}	.
+nozero37	16	--stay 8	{"units": [63, 63], "lines": [298, 298], "differences": {}}	.
+nozero37	32	--abridge-steps 3	{"units": [66, 66], "lines": [262, 262], "differences": {"detail unit only in the converter's": 1, "table unit lines": 1, "detail unit only in the writer's": 1, "detail unit extent": 1, "detail unit lines": 1, "unit order": 1}}	{"same up to names": true, "detail units": [24, 24], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "576"], "576:3"]]}
+nozero37	8	--stay 40 --abridge-steps 1	{"units": [153, 153], "lines": [541, 541], "differences": {"detail unit only in the converter's": 1, "table unit lines": 1, "detail unit extent": 1, "detail unit lines": 1, "detail unit only in the writer's": 1, "unit order": 1}}	{"same up to names": true, "detail units": [55, 55], "names whose unit differs": 1, "names the second file gives more than once": 1, "examples": [[["R#0#chr", "576"], "576:3"]]}
+nozero38	20		{"units": [51, 51], "lines": [145, 145], "differences": {}}	.
+nozero38	16	--stay 8	{"units": [63, 63], "lines": [172, 172], "differences": {}}	.
+nozero38	32	--abridge-steps 3	{"units": [38, 38], "lines": [105, 105], "differences": {}}	.
+nozero38	8	--stay 40 --abridge-steps 1	{"units": [98, 98], "lines": [262, 262], "differences": {}}	.
+nozero39	20		{"units": [70, 70], "lines": [265, 265], "differences": {}}	.
+nozero39	16	--stay 8	{"units": [72, 72], "lines": [269, 269], "differences": {}}	.
+nozero39	32	--abridge-steps 3	{"units": [61, 61], "lines": [227, 227], "differences": {}}	.
+nozero39	8	--stay 40 --abridge-steps 1	{"units": [122, 122], "lines": [416, 416], "differences": {}}	.
+nozero40	20		{"units": [76, 76], "lines": [319, 319], "differences": {}}	.
+nozero40	16	--stay 8	{"units": [92, 92], "lines": [377, 377], "differences": {}}	.
+nozero40	32	--abridge-steps 3	{"units": [69, 69], "lines": [271, 271], "differences": {}}	.
+nozero40	8	--stay 40 --abridge-steps 1	{"units": [170, 170], "lines": [597, 597], "differences": {}}	.
+nozero41	20		{"units": [93, 93], "lines": [353, 353], "differences": {}}	.
+nozero41	16	--stay 8	{"units": [113, 113], "lines": [430, 430], "differences": {}}	.
+nozero41	32	--abridge-steps 3	{"units": [81, 81], "lines": [329, 329], "differences": {}}	.
+nozero41	8	--stay 40 --abridge-steps 1	{"units": [164, 164], "lines": [573, 573], "differences": {}}	.
+nozero42	20		{"units": [112, 112], "lines": [350, 350], "differences": {}}	.
+nozero42	16	--stay 8	{"units": [138, 138], "lines": [442, 442], "differences": {}}	.
+nozero42	32	--abridge-steps 3	{"units": [98, 98], "lines": [306, 306], "differences": {}}	.
+nozero42	8	--stay 40 --abridge-steps 1	{"units": [192, 192], "lines": [578, 578], "differences": {}}	.
+nozero43	20		{"units": [51, 51], "lines": [183, 183], "differences": {}}	.
+nozero43	16	--stay 8	{"units": [59, 59], "lines": [240, 240], "differences": {}}	.
+nozero43	32	--abridge-steps 3	{"units": [44, 44], "lines": [161, 161], "differences": {}}	.
+nozero43	8	--stay 40 --abridge-steps 1	{"units": [98, 98], "lines": [290, 290], "differences": {}}	.
+nozero44	20		{"units": [98, 98], "lines": [260, 260], "differences": {}}	.
+nozero44	16	--stay 8	{"units": [106, 106], "lines": [279, 279], "differences": {}}	.
+nozero44	32	--abridge-steps 3	{"units": [85, 85], "lines": [236, 236], "differences": {}}	.
+nozero44	8	--stay 40 --abridge-steps 1	{"units": [154, 154], "lines": [389, 389], "differences": {}}	.
+nozero45	20		{"units": [67, 67], "lines": [333, 333], "differences": {}}	.
+nozero45	16	--stay 8	{"units": [84, 84], "lines": [392, 392], "differences": {}}	.
+nozero45	32	--abridge-steps 3	{"units": [68, 68], "lines": [299, 299], "differences": {}}	.
+nozero45	8	--stay 40 --abridge-steps 1	{"units": [164, 164], "lines": [615, 615], "differences": {}}	.
+nozero46	20		{"units": [90, 90], "lines": [291, 291], "differences": {}}	.
+nozero46	16	--stay 8	{"units": [97, 97], "lines": [305, 305], "differences": {}}	.
+nozero46	32	--abridge-steps 3	{"units": [67, 67], "lines": [217, 217], "differences": {}}	.
+nozero46	8	--stay 40 --abridge-steps 1	{"units": [173, 173], "lines": [503, 503], "differences": {}}	.
+nozero47	20		{"units": [78, 78], "lines": [204, 204], "differences": {}}	.
+nozero47	16	--stay 8	{"units": [95, 95], "lines": [290, 290], "differences": {}}	.
+nozero47	32	--abridge-steps 3	{"units": [63, 63], "lines": [184, 184], "differences": {}}	.
+nozero47	8	--stay 40 --abridge-steps 1	{"units": [127, 127], "lines": [375, 375], "differences": {}}	.
+nozero48	20		{"units": [121, 121], "lines": [485, 485], "differences": {}}	.
+nozero48	16	--stay 8	{"units": [151, 151], "lines": [600, 600], "differences": {}}	.
+nozero48	32	--abridge-steps 3	{"units": [107, 107], "lines": [432, 432], "differences": {}}	.
+nozero48	8	--stay 40 --abridge-steps 1	{"units": [225, 225], "lines": [791, 791], "differences": {}}	.
+nozero49	20		{"units": [41, 41], "lines": [244, 244], "differences": {}}	.
+nozero49	16	--stay 8	{"units": [43, 43], "lines": [259, 259], "differences": {}}	.
+nozero49	32	--abridge-steps 3	{"units": [44, 44], "lines": [226, 226], "differences": {}}	.
+nozero49	8	--stay 40 --abridge-steps 1	{"units": [102, 102], "lines": [418, 418], "differences": {}}	.
+nozero50	20		{"units": [113, 113], "lines": [471, 471], "differences": {}}	.
+nozero50	16	--stay 8	{"units": [130, 130], "lines": [546, 546], "differences": {}}	.
+nozero50	32	--abridge-steps 3	{"units": [101, 101], "lines": [369, 369], "differences": {}}	.
+nozero50	8	--stay 40 --abridge-steps 1	{"units": [215, 215], "lines": [774, 774], "differences": {}}	.
+nozero51	20		{"units": [109, 109], "lines": [341, 341], "differences": {}}	.
+nozero51	16	--stay 8	{"units": [129, 129], "lines": [427, 427], "differences": {}}	.
+nozero51	32	--abridge-steps 3	{"units": [95, 95], "lines": [298, 298], "differences": {}}	.
+nozero51	8	--stay 40 --abridge-steps 1	{"units": [183, 183], "lines": [539, 539], "differences": {}}	.
+nozero52	20		{"units": [78, 78], "lines": [365, 365], "differences": {}}	.
+nozero52	16	--stay 8	{"units": [88, 88], "lines": [459, 459], "differences": {}}	.
+nozero52	32	--abridge-steps 3	{"units": [72, 72], "lines": [316, 316], "differences": {}}	.
+nozero52	8	--stay 40 --abridge-steps 1	{"units": [159, 159], "lines": [636, 636], "differences": {"detail unit only in the writer's": 2, "detail unit lines": 2, "table unit lines": 1, "detail unit only in the converter's": 2, "detail unit extent": 1, "unit order": 1}}	{"same up to names": true, "detail units": [36, 36], "names whose unit differs": 2, "names the second file gives more than once": 2, "examples": [[["R#0#chr", "72"], "72:3"], [["R#0#chr", "88"], "88:4"]]}
+nozero53	20		{"units": [158, 158], "lines": [549, 549], "differences": {}}	.
+nozero53	16	--stay 8	{"units": [193, 193], "lines": [655, 655], "differences": {}}	.
+nozero53	32	--abridge-steps 3	{"units": [131, 131], "lines": [487, 487], "differences": {}}	.
+nozero53	8	--stay 40 --abridge-steps 1	{"units": [270, 270], "lines": [817, 817], "differences": {}}	.
+nozero54	20		{"units": [102, 102], "lines": [262, 262], "differences": {}}	.
+nozero54	16	--stay 8	{"units": [126, 126], "lines": [327, 327], "differences": {}}	.
+nozero54	32	--abridge-steps 3	{"units": [88, 88], "lines": [233, 233], "differences": {}}	.
+nozero54	8	--stay 40 --abridge-steps 1	{"units": [157, 157], "lines": [403, 403], "differences": {}}	.
+nozero55	20		{"units": [64, 64], "lines": [188, 188], "differences": {}}	.
+nozero55	16	--stay 8	{"units": [85, 85], "lines": [251, 251], "differences": {}}	.
+nozero55	32	--abridge-steps 3	{"units": [57, 57], "lines": [175, 175], "differences": {}}	.
+nozero55	8	--stay 40 --abridge-steps 1	{"units": [103, 103], "lines": [289, 289], "differences": {}}	.
+nozero56	20		{"units": [133, 133], "lines": [459, 459], "differences": {}}	.
+nozero56	16	--stay 8	{"units": [146, 146], "lines": [535, 535], "differences": {}}	.
+nozero56	32	--abridge-steps 3	{"units": [108, 108], "lines": [396, 396], "differences": {}}	.
+nozero56	8	--stay 40 --abridge-steps 1	{"units": [223, 223], "lines": [732, 732], "differences": {}}	.
+nozero57	20		{"units": [60, 60], "lines": [316, 316], "differences": {}}	.
+nozero57	16	--stay 8	{"units": [65, 65], "lines": [364, 364], "differences": {}}	.
+nozero57	32	--abridge-steps 3	{"units": [54, 54], "lines": [276, 276], "differences": {}}	.
+nozero57	8	--stay 40 --abridge-steps 1	{"units": [152, 152], "lines": [604, 604], "differences": {"table unit lines": 1, "detail unit lines": 3, "detail unit extent": 1, "detail unit only in the converter's": 3, "detail unit only in the writer's": 3, "unit order": 1}}	{"same up to names": true, "detail units": [38, 38], "names whose unit differs": 3, "names the second file gives more than once": 3, "examples": [[["R#0#chr", "512"], "512:4"], [["R#0#chr", "696"], "696:4"], [["R#0#chr", "704"], "704:4"]]}
+nozero58	20		{"units": [74, 74], "lines": [317, 317], "differences": {}}	.
+nozero58	16	--stay 8	{"units": [79, 79], "lines": [341, 341], "differences": {}}	.
+nozero58	32	--abridge-steps 3	{"units": [66, 66], "lines": [265, 265], "differences": {}}	.
+nozero58	8	--stay 40 --abridge-steps 1	{"units": [152, 152], "lines": [535, 535], "differences": {}}	.
+nozero59	20		{"units": [80, 80], "lines": [283, 283], "differences": {}}	.
+nozero59	16	--stay 8	{"units": [94, 94], "lines": [354, 354], "differences": {}}	.
+nozero59	32	--abridge-steps 3	{"units": [75, 75], "lines": [276, 276], "differences": {}}	.
+nozero59	8	--stay 40 --abridge-steps 1	{"units": [133, 133], "lines": [457, 457], "differences": {}}	.
+nozero60	20		{"units": [64, 64], "lines": [168, 168], "differences": {}}	.
+nozero60	16	--stay 8	{"units": [73, 73], "lines": [195, 195], "differences": {}}	.
+nozero60	32	--abridge-steps 3	{"units": [63, 63], "lines": [163, 163], "differences": {}}	.
+nozero60	8	--stay 40 --abridge-steps 1	{"units": [89, 89], "lines": [237, 237], "differences": {}}	.

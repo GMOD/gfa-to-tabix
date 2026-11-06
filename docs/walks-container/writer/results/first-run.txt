@@ -1,0 +1,17 @@
+== mc22
+[  62.4 s, 3.9 GiB peak] 1958554 lines in 3837 units -> mc22.GRCh38.walks.gz (+ .idx): 786690 routes, 250281 walk rows, 0 copies named; 2468 paths abridged to 2572 detail walk rows
+mc22: 62.44 s, 4068464 KB peak
+{"file":"mc22.GRCh38.walks.gz","ok":true,"units":3837,"tables":1,"lines":1958554,"departureLines":54050}
+{"units": [3838, 3838], "lines": [1962391, 1962391], "differences": {"detail unit extent": 124, "detail unit lines": 170, "detail unit only in the writer's": 185, "detail unit only in the converter's": 185, "table unit lines": 1, "unit order": 1}}
+== pggbY
+[ 121.5 s, 6.6 GiB peak] 3126030 lines in 1492 units -> pggbY.GRCh38.walks.gz (+ .idx): 130039 routes, 360212 walk rows, 299916 copies named; 669 paths abridged to 110886 detail walk rows
+pggbY: 121.65 s, 6947452 KB peak
+{"file":"pggbY.GRCh38.walks.gz","ok":true,"units":1492,"tables":2,"lines":3126030,"departureLines":1558946}
+{"units": [1494, 1494], "lines": [3127522, 3127522], "differences": {}}
+== sizes
+-rw-rw-r-- 1 cdiesh cdiesh  59305793 Nov  5 15:31 /home/cdiesh/work/arb-arbA/out/mc22/s7.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh 187920198 Nov  5 15:32 /home/cdiesh/work/arb-arbA/out/pggbY/s7.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh  60048384 Nov  5 16:16 mc22.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       159 Nov  5 16:16 mc22.GRCh38.walks.gz.idx
+-rw-rw-r-- 1 cdiesh cdiesh 196576732 Nov  5 16:18 pggbY.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       210 Nov  5 16:18 pggbY.GRCh38.walks.gz.idx

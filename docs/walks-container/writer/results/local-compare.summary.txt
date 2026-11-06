@@ -1,0 +1,3 @@
+test GFAs: 64 builds; identical 63; only detail unit names 1
+fuzz: 240 builds; differ in departures 174; differ in departures, detail 16; identical 47; only detail unit names 3
+nozero: 240 builds; identical 225; only detail unit names 15

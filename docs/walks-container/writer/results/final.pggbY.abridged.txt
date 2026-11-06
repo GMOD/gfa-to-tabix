@@ -1,0 +1,2 @@
+{"file": "final.pggbY.GRCh38.walks.gz", "detail numbers named by abridged rows": 669, "whose unit holds other paths or none": 0, "examples": []}
+{"file": "/home/cdiesh/work/arb-arbA/out/pggbY/s7.walks.gz", "detail numbers named by abridged rows": 669, "whose unit holds other paths or none": 0, "examples": []}
