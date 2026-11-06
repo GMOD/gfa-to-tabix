@@ -1373,7 +1373,7 @@ fn rehome(
                 let nearest = *here
                     .iter()
                     .min_by_key(|v| distance(v))
-                    .expect("a pass in the home chunk");
+                    .expect("a pass in the home tile");
                 (nearest, distance(&nearest))
             });
             match nearest {

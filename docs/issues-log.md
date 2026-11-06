@@ -1088,3 +1088,11 @@ Where the findings have come from so far, and the rule each gives:
   written and copied into the spec. Fix: both say `{ data, directory }`.
   Guard: none in this repository; graph-walks' README states the same
   signature its code exports
+- **2026-11-06, the format 7 README figures, three drawings of the
+  format.** `--help` described `--stay` and `--abridge-steps` in format 6's
+  word, a path's piece kept "in its chunk" and "a chunk's costliest
+  paths", where format 7, `--tile` and the spec say tile; a panic message
+  said "home chunk" too. Source: help text left when `--chunk` became
+  `--tile`. Fix: the help strings and the message say tile; the spec's
+  option table already did. Guard: writer test "help says tile not
+  chunk"

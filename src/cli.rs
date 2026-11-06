@@ -99,14 +99,14 @@ pub struct Cli {
     #[arg(long, requires = "walks", help_heading = WALKS)]
     pub sequences: bool,
 
-    /// Keep a path's piece in its chunk across a stretch elsewhere that
+    /// Keep a path's piece in its tile across a stretch elsewhere that
     /// returns to it with at most BP of reference nodes, all passed more than
-    /// once, each moved to a pass in the chunk within BP of where the path
+    /// once, each moved to a pass in the tile within BP of where the path
     /// predicts it (default 311; 0 off)
     #[arg(long, value_name = "BP", requires = "walks", help_heading = WALKS)]
     pub stay: Option<u64>,
 
-    /// Move a chunk's costliest paths to its detail rows until the rest cost
+    /// Move a tile's costliest paths to its detail rows until the rest cost
     /// at most N interior steps, a step along the reference counting as a
     /// quarter of one (default 1000000; 0 off)
     #[arg(long, value_name = "N", requires = "walks", help_heading = WALKS)]

@@ -1832,6 +1832,19 @@ fn cap_and_settle_are_gone() {
     }
 }
 
+// Format 7's word for the unit a reader fetches whole is tile; chunk was
+// format 6's
+#[test]
+fn help_says_tile_not_chunk() {
+    let output = Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix"))
+        .arg("--help")
+        .output()
+        .unwrap();
+    let help = String::from_utf8_lossy(&output.stdout).to_lowercase();
+    assert!(help.contains("--stay") && help.contains("tile"), "{help}");
+    assert!(!help.contains("chunk"), "{help}");
+}
+
 // walks-records.gfa: R#0#chr is 1 2 3 4, 6 bp each, so tile 0-10 holds 1 and
 // 2 and tile 10-20 holds 3 and 4. H#1#h has three W lines: 1 2 over 0-12, 5 6
 // over 20-26, which visits no R node and has no rows, and 2 3 4 over 40-58,
