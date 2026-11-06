@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Builds random graphs in walk format 7, runs the release checks and the
-# audit on each; prints any seed whose build, checks or audit fail.
+# Builds random graphs in walk format 7, runs the release checks
+# (verify7.py) and the audit on each; prints any seed whose build, checks or
+# audit fail.
 # Usage: FUZZ_DIR=dir GFA_TO_TABIX=binary fuzz7.sh [from] [to]
 HERE=$(dirname "$(readlink -f "$0")")
 A=$HERE/audit7.py
 G=$HERE/fuzz6-gen.py
-V=$HERE/../../walks-container/arbA/scripts/verify7.mjs
+V=$HERE/verify7.py
 B=$(readlink -f "$(command -v "${GFA_TO_TABIX:?set GFA_TO_TABIX to the writer binary}")")
 cd "${FUZZ_DIR:?set FUZZ_DIR to a scratch directory}"
 from=${1:-1}; to=${2:-200}
@@ -17,11 +18,11 @@ for seed in $(seq $from $to); do
     if ! $B g$seed.gfa --walks --refs R --tile $tile $opts -o o$seed.$tag > o$seed.$tag.log 2>&1; then
       echo "seed $seed $tag BUILD: $(grep -v '^\[' o$seed.$tag.log | tail -1)"; continue
     fi
-    if ! checks=$(node $V o$seed.$tag.R.walks.gz $tile 2>&1); then
-      echo "seed $seed $tag RELEASE CHECKS: $(echo "$checks" | grep -m1 Error)"; continue
+    if ! checks=$(python3 -I $V o$seed.$tag.R.walks.gz $tile 2>&1); then
+      echo "seed $seed $tag RELEASE CHECKS: $checks"; continue
     fi
     out=$(python3 -I $A o$seed.$tag.R.walks.gz --window 64 --point 16 2>&1)
-    bad=$(echo "$out" | grep -E "MISSING|field mismatch|decode:|differ from|Traceback|Error|^[1-9][0-9]*\s+departures inside a piece reaching|^[1-9][0-9]*\s+records with no|^[1-9][0-9]*\s+bases uncovered|^[1-9][0-9]*\s+.*\(must be 0\)|differs from the row|another sequence|two extents|detail unit of a tile")
+    bad=$(echo "$out" | grep -E "MISSING|field mismatch|decode:|differ from|Traceback|Error|^[1-9][0-9]*\s+departures inside a piece reaching|^[1-9][0-9]*\s+records with no|^[1-9][0-9]*\s+bases uncovered|^[1-9][0-9]*\s+.*\(must be 0\)|differs from the row|another sequence|two extents|detail unit of a tile|own_tiles")
     if [ -n "$bad" ]; then echo "seed $seed $tag: $(echo "$bad" | tr '\n' ' ')"; else rm -f o$seed.$tag.*; fi
   done
   [ -z "$(ls o$seed.* 2>/dev/null)" ] && rm -f g$seed.gfa

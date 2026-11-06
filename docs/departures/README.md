@@ -23,12 +23,19 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
 - `audit7.py walks.gz [--truth dep.tsv] [--shard I/N] [--seq NAME]`:
   `audit6.py`'s checks on a walk format 7 file, read by unit. It adds a
   check of each walk and abridged row's `start end` against its decoded
-  steps. It also checks that a departure inside a piece lies within its
+  steps, of each record's `ownTiles` against the tiles its decoded own
+  steps lie in, and of unique tile and detail names. It also checks that a departure inside a piece lies within its
   tile's extent, and costs windows as format 7 reads them, from the unit
   tables. Needs the file's `.idx` beside it
+- `verify7.py walks.gz [tile]`: the release checks of a walk format 7 file
+  and its directory, those of arbiter A's
+  [`verify7.mjs`](../walks-container/arbA/scripts/verify7.mjs) and more
+  (each table exactly its sequence's units, unique tile and detail names,
+  each departure record in every block of its cover). It reads the file a
+  gzip member at a time, so it checks files past the 2 GiB that
+  `verify7.mjs`, which reads whole files, can't
 - `fuzz7.sh` with `fuzz6-gen.py`: random graphs built in walk format 7 in
-  six option modes; each file gets arbiter A's release checks
-  (`docs/walks-container/arbA/scripts/verify7.mjs`) and `audit7.py`
+  six option modes; each file gets `verify7.py` and `audit7.py`
 - `audit6.py walks.bed.gz [--truth dep.tsv] [--shard I/N] [--seq NAME]`:
   reads a format 6 file, from gfa-to-tabix 3.x, as a reader would and
   checks it, as the rebuild's README describes. `--shard` splits the paths so a large graph fits in

@@ -72,6 +72,14 @@ impl Writer {
         }
     }
 
+    // Counts compressed offsets from `offset`, as if that many bytes came
+    // before the file's first block
+    #[cfg(test)]
+    pub fn starting_at(mut self, offset: u64) -> Writer {
+        self.starts = VecDeque::from([offset]);
+        self
+    }
+
     pub fn position(&self) -> Position {
         (
             self.written + self.full.len() as u64,

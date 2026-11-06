@@ -35,7 +35,8 @@ to its reference, and measure what a window costs to read.
       budgets (8 MB, 32 M steps read).
 
 A last piece's length is unknown from the walk rows, so it takes the record's
-mean bp per step. Walk files are read whole.
+mean bp per step. `score` streams the walk file; `cost` reads its units by
+offset.
 """
 
 import argparse
@@ -282,17 +283,21 @@ def score(args):
 
 
 def cost(args):
-    data = open(args.walks, "rb").read()
+    data = open(args.walks, "rb")
+
+    def unit(offset, length):
+        data.seek(int(offset))
+        return gzip.decompress(data.read(int(length))).decode().splitlines()[1:]
+
     directory = [line.split("\t") for line in open(args.walks + ".idx").read().splitlines()]
     size = tile_of("\t".join(directory[0]))
     units = []
     for seq, offset, length in (c for c in directory[1:] if c[0] != "#header"):
-        table = gzip.decompress(data[int(offset) : int(offset) + int(length)]).decode().splitlines()[1:]
-        for entry in table:
+        for entry in unit(offset, length):
             _, _, lo, hi, kind, _, at, n = entry.split("\t")
             rows = steps = 0
             if kind == "tile":
-                for line in gzip.decompress(data[int(at) : int(at) + int(n)]).decode().splitlines()[1:]:
+                for line in unit(at, n):
                     c = line.split("\t", 9)
                     if c[3] == "walk":
                         rows += 1

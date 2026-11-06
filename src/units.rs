@@ -65,10 +65,20 @@ impl UnitFile {
     pub fn create(path: &str, header: &[u8], threads: usize) -> Result<UnitFile, String> {
         let temp = Temp::new(path);
         let file = File::create(&temp.0).map_err(|e| format!("{path}: {e}"))?;
+        let sink = parallel_bgzf::Writer::new(file, Compression::new(LEVEL), threads);
+        UnitFile::start(path, temp, sink, header)
+    }
+
+    fn start(
+        path: &str,
+        temp: Temp,
+        sink: parallel_bgzf::Writer,
+        header: &[u8],
+    ) -> Result<UnitFile, String> {
         let mut out = UnitFile {
             path: path.to_string(),
             temp,
-            sink: parallel_bgzf::Writer::new(file, Compression::new(LEVEL), threads),
+            sink,
             walks: header
                 .split(|&b| b == b'\n')
                 .next()
@@ -214,4 +224,84 @@ fn unit_line(seq: &[u8], lo: u64, hi: u64, kind: &str, name: &str) -> Vec<u8> {
     line.extend_from_slice(seq);
     line.extend_from_slice(format!("\t{lo}\t{hi}\t{kind}\t{name}\n").as_bytes());
     line
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use flate2::read::MultiGzDecoder;
+    use std::io::Read;
+
+    // Writes a file whose offsets count from `base`, as if `base` bytes of
+    // units came first, with units of incompressible text big enough to span
+    // blocks; each table entry and directory line, less `base`, must give the
+    // unit's place in the file as written
+    fn units_read_back_at(base: u64) {
+        let dir = std::env::temp_dir().join(format!("units-{}-{base}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("f.walks.gz").to_str().unwrap().to_string();
+        let temp = Temp::new(&path);
+        let sink =
+            parallel_bgzf::Writer::new(File::create(&temp.0).unwrap(), Compression::new(LEVEL), 2)
+                .starting_at(base);
+        let mut out = UnitFile::start(&path, temp, sink, b"#walks\tformat:i:7\n").unwrap();
+        let mut noise = 1u64;
+        for k in 0..4u64 {
+            out.begin(b"s", (k, k + 1), "tile", &k.to_string()).unwrap();
+            let text: String = (0..150_000)
+                .map(|_| {
+                    noise = noise
+                        .wrapping_mul(6364136223846793005)
+                        .wrapping_add(1442695040888963407);
+                    char::from(b'a' + (noise >> 59) as u8)
+                })
+                .collect();
+            out.write(text.as_bytes()).unwrap();
+            out.write(b"\n").unwrap();
+            out.end().unwrap();
+        }
+        out.table(b"s").unwrap();
+        out.finish().unwrap();
+        let data = fs::read(&path).unwrap();
+        let directory = fs::read_to_string(format!("{path}.idx")).unwrap();
+        fs::remove_dir_all(&dir).unwrap();
+        let unit = |offset: u64, length: u64| {
+            let from = (offset - base) as usize;
+            let mut text = String::new();
+            MultiGzDecoder::new(&data[from..from + length as usize])
+                .read_to_string(&mut text)
+                .unwrap();
+            text
+        };
+        let line: Vec<u64> = directory
+            .lines()
+            .nth(2)
+            .unwrap()
+            .split('\t')
+            .skip(1)
+            .map(|n| n.parse().unwrap())
+            .collect();
+        let table = unit(line[0], line[1]);
+        let entries: Vec<Vec<&str>> = table
+            .lines()
+            .skip(1)
+            .map(|l| l.split('\t').collect())
+            .collect();
+        assert_eq!(entries.len(), 4);
+        for (k, e) in entries.iter().enumerate() {
+            let (offset, length): (u64, u64) = (e[6].parse().unwrap(), e[7].parse().unwrap());
+            assert!(offset > base);
+            assert!(
+                unit(offset, length).starts_with(&format!("#unit\ts\t{k}\t{}\ttile\t{k}\n", k + 1))
+            );
+        }
+        assert!(directory.starts_with(&format!("#walks\tformat:i:7\tbytes:i:{}\n", data.len())));
+    }
+
+    #[test]
+    fn offsets_past_2_to_the_31_and_32_round_trip() {
+        for base in [(1 << 31) - 70_000, (1 << 32) - 70_000, 1 << 40] {
+            units_read_back_at(base);
+        }
+    }
 }
