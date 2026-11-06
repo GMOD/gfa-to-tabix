@@ -768,8 +768,11 @@ Where the findings have come from so far, and the rule each gives:
   - **Holding a sequence's detail records on disk until its main rows are
     written:** Tabix needed each sequence's rows together. Kept, since a
     table lists its units in file order
-  - **`bed::Writer`'s `.partial` name and rename:** kept, as `.tmp-<pid>`
-    for both files, the data file renamed before the directory is written
+  - **`bed::Writer`'s `.partial` name and rename, and its removal of the
+    partial files when a build fails:** kept, as `.tmp-<pid>` for both
+    files, the data file renamed before the directory is written. The
+    first commit dropped the removal; the test "a failed write leaves no
+    temporary file" guards it
 
   The `maxnode` test is gone with the header line. Source: rewrites that
   drop what the old code compensated for. Guard: `tests/walks.rs`'s

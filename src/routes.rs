@@ -157,7 +157,7 @@ impl<'a> Piece<'a> {
                     previous += unzigzag(n - 1);
                     let j = path.index_at(h, previous as u64).ok_or_else(|| {
                         format!(
-                            "{}: a step on node {} placed at {previous} is not on the chunk's reference path",
+                            "{}: a step on node {} placed at {previous} is not on the tile's reference path",
                             String::from_utf8_lossy(name),
                             h >> 1
                         )
@@ -648,7 +648,7 @@ fn encode_all<'p>(
         let (handles, targets) = (&piece.handles, &piece.targets);
         let walk = encode(path, handles, targets, &mut routes).ok_or_else(|| {
             format!(
-                "{}: a piece with no step on the reference path in its chunk",
+                "{}: a piece with no step on the reference path in its tile",
                 name()
             )
         })?;

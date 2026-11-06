@@ -71,6 +71,18 @@ struct PathLine<'a> {
     walk: bool,
 }
 
+// Refuses a name a walk file's line would read as a header or `#unit` line
+fn named(path: PathLine) -> Result<Option<PathLine>, String> {
+    if path.name.first() == Some(&b'#') {
+        Err(format!(
+            "path {} starts with #, which marks a walk file's header and unit lines",
+            text(&path.name)
+        ))
+    } else {
+        Ok(Some(path))
+    }
+}
+
 fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
     let mut cols = line.split(|&b| b == b'\t');
     match cols.next() {
@@ -79,14 +91,14 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
             if cols.len() < 6 {
                 return Err("W line with too few fields".into());
             }
-            Ok(Some(PathLine {
+            named(PathLine {
                 sample: cols[0],
                 name: [cols[0], cols[1], cols[2]].join(&b'#'),
                 start: parse_u64(cols[3], "W line start")?,
                 end: Some(parse_u64(cols[4], "W line end")?),
                 steps: cols[5],
                 walk: true,
-            }))
+            })
         }
         Some(b"P") => {
             let cols: Vec<&[u8]> = cols.take(3).collect();
@@ -104,14 +116,14 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
                 )));
             }
             let (name, start) = split_path_name(cols[0]);
-            Ok(Some(PathLine {
+            named(PathLine {
                 sample: name.split(|&b| b == b'#').next().unwrap_or(name),
                 name: name.to_vec(),
                 start,
                 end: None,
                 steps: cols[1],
                 walk: false,
-            }))
+            })
         }
         _ => Ok(None),
     }
@@ -544,12 +556,6 @@ fn first_pass(
                 let Some(path) = path_line(line)? else {
                     return Ok(());
                 };
-                if path.name.first() == Some(&b'#') {
-                    return Err(format!(
-                        "path {} starts with #, which marks a walk file's header and unit lines",
-                        text(&path.name)
-                    ));
-                }
                 samples.id(path.sample);
                 parse_steps(&path, &mut handles)?;
                 let name = names.id(&path.name);
@@ -797,7 +803,7 @@ impl Chunks {
         let mut starts = Vec::new();
         let count: u64 = sequences.iter().map(|&(_, _, _, end)| end / size + 1).sum();
         if count >= u64::from(NONE) {
-            return Err("more than 2^32 chunks; use a larger --tile".into());
+            return Err("more than 2^32 tiles; use a larger --tile".into());
         }
         for (_, name, reference, end) in sequences {
             first[name as usize] = starts.len() as u32;
@@ -1616,12 +1622,13 @@ impl Outputs<'_> {
     fn finish(mut self) -> Result<Vec<(String, u64, routes::Counts, u64)>, String> {
         self.close_before(None)?;
         if self.departures.peek().is_some() {
-            return Err("departure lines of no reference sequence are left unwritten".into());
+            Err("departure lines of no reference sequence are left unwritten".into())
+        } else {
+            self.outputs
+                .into_iter()
+                .map(|out| Ok((out.path, out.lines, out.counts, out.file.finish()?)))
+                .collect()
         }
-        self.outputs
-            .into_iter()
-            .map(|out| Ok((out.path, out.lines, out.counts, out.file.finish()?)))
-            .collect()
     }
 }
 

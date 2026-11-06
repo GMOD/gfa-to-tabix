@@ -10,6 +10,11 @@ use flate2::Compression;
 
 use crate::parallel_bgzf;
 
+// zlib-rs's first level on deflate_slow, zlib's lazy matching, where 3 to 6 use
+// deflate_medium: on MC chr22 and pggb chrY 2.6% and 5.0% smaller than level
+// 6 in the same time (docs/walks-container/writer/)
+const LEVEL: u32 = 7;
+
 // A unit by the blocks it spans, [from, to)
 struct Entry {
     lo: u64,
@@ -20,9 +25,32 @@ struct Entry {
     to: u64,
 }
 
+// A file under its temporary name, removed unless `rename` moves it into place
+struct Temp(String);
+
+impl Temp {
+    fn new(path: &str) -> Temp {
+        Temp(format!("{path}.tmp-{}", std::process::id()))
+    }
+
+    fn rename(mut self, path: &str) -> std::io::Result<()> {
+        fs::rename(&self.0, path)?;
+        self.0.clear();
+        Ok(())
+    }
+}
+
+impl Drop for Temp {
+    fn drop(&mut self) {
+        if !self.0.is_empty() {
+            let _ = fs::remove_file(&self.0);
+        }
+    }
+}
+
 pub struct UnitFile {
     path: String,
-    temp: String,
+    temp: Temp,
     sink: parallel_bgzf::Writer,
     walks: Vec<u8>,
     directory: Vec<u8>,
@@ -32,19 +60,15 @@ pub struct UnitFile {
     units: u64,
 }
 
-fn temp_name(path: &str) -> String {
-    format!("{path}.tmp-{}", std::process::id())
-}
-
 impl UnitFile {
     // `header` is the header unit's text, its `#walks` line first
     pub fn create(path: &str, header: &[u8], threads: usize) -> Result<UnitFile, String> {
-        let temp = temp_name(path);
-        let file = File::create(&temp).map_err(|e| format!("{path}: {e}"))?;
+        let temp = Temp::new(path);
+        let file = File::create(&temp.0).map_err(|e| format!("{path}: {e}"))?;
         let mut out = UnitFile {
             path: path.to_string(),
             temp,
-            sink: parallel_bgzf::Writer::new(file, Compression::new(6), threads),
+            sink: parallel_bgzf::Writer::new(file, Compression::new(LEVEL), threads),
             walks: header
                 .split(|&b| b == b'\n')
                 .next()
@@ -63,8 +87,8 @@ impl UnitFile {
         Ok(out)
     }
 
-    fn io(&self) -> impl Fn(std::io::Error) -> String + '_ {
-        |e| format!("{}: {e}", self.path)
+    fn failed(&self, e: std::io::Error) -> String {
+        format!("{}: {e}", self.path)
     }
 
     fn block(&self) -> u64 {
@@ -72,14 +96,11 @@ impl UnitFile {
     }
 
     fn cut(&mut self) -> Result<(), String> {
-        self.sink.cut().map_err(|e| format!("{}: {e}", self.path))?;
-        Ok(())
+        self.sink.cut().map(drop).map_err(|e| self.failed(e))
     }
 
     fn resolve_all(&mut self) -> Result<(), String> {
-        self.sink
-            .flush_all()
-            .map_err(|e| format!("{}: {e}", self.path))
+        self.sink.flush_all().map_err(|e| self.failed(e))
     }
 
     fn start_of(&self, block: u64) -> Result<u64, String> {
@@ -89,8 +110,7 @@ impl UnitFile {
     }
 
     pub fn write(&mut self, text: &[u8]) -> Result<(), String> {
-        self.sink.write(text).map_err(self.io())?;
-        Ok(())
+        self.sink.write(text).map(drop).map_err(|e| self.failed(e))
     }
 
     // Starts a unit, writing its `#unit` line; its lines follow through `write`
@@ -175,16 +195,16 @@ impl UnitFile {
         } = self;
         let io = |e: std::io::Error| format!("{path}: {e}");
         sink.finish().map_err(io)?;
-        let bytes = fs::metadata(&temp).map_err(io)?.len();
-        fs::rename(&temp, &path).map_err(io)?;
+        let bytes = fs::metadata(&temp.0).map_err(io)?.len();
+        temp.rename(&path).map_err(io)?;
         let index = format!("{path}.idx");
-        let index_temp = temp_name(&index);
+        let index_temp = Temp::new(&index);
         let mut text = walks;
         text.extend_from_slice(format!("\tbytes:i:{bytes}\n").as_bytes());
         text.extend_from_slice(&directory);
         let io = |e: std::io::Error| format!("{index}: {e}");
-        fs::write(&index_temp, text).map_err(io)?;
-        fs::rename(&index_temp, &index).map_err(io)?;
+        fs::write(&index_temp.0, text).map_err(io)?;
+        index_temp.rename(&index).map_err(io)?;
         Ok(units)
     }
 }

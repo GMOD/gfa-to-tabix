@@ -501,7 +501,7 @@ struct Decoded {
 }
 
 fn decode_file(text: &str) -> Decoded {
-    let mut chunks: BTreeMap<(String, u64), Vec<Vec<&str>>> = BTreeMap::new();
+    let mut tiles: BTreeMap<(String, u64), Vec<Vec<&str>>> = BTreeMap::new();
     // by sequence, tile and record
     let mut details: BTreeMap<(String, u64, u64), Vec<Vec<&str>>> = BTreeMap::new();
     let mut records: BTreeSet<(String, Vec<&str>)> = BTreeSet::new();
@@ -509,7 +509,7 @@ fn decode_file(text: &str) -> Decoded {
         let seq = head[0].to_string();
         let mut rows = lines.into_iter().map(|l| l.split('\t').collect::<Vec<_>>());
         match head[3] {
-            "tile" => chunks
+            "tile" => tiles
                 .entry((seq, head[4].parse().unwrap()))
                 .or_default()
                 .extend(rows),
@@ -528,7 +528,7 @@ fn decode_file(text: &str) -> Decoded {
     }
     // node lengths from the `ref` and `nodes` rows
     let mut lengths: HashMap<u32, u64> = HashMap::new();
-    for cols in chunks.values().chain(details.values()).flatten() {
+    for cols in tiles.values().chain(details.values()).flatten() {
         let (ids, bps) = match cols[3] {
             "ref" => (deltas(cols[9], &mut 0), cols[10]),
             "nodes" => {
@@ -613,7 +613,7 @@ fn decode_file(text: &str) -> Decoded {
         decoded
     };
     let mut abridged_stretches = Vec::new();
-    for ((seq, cs), rows) in &chunks {
+    for ((seq, cs), rows) in &tiles {
         let mut refs: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "ref").collect();
         refs.sort_by_key(|c| c[6].parse::<u64>().unwrap());
         let path = RefPath {
@@ -917,13 +917,13 @@ fn a_path_that_jumps_over_the_reference_has_a_departure_record_over_the_stretch(
     }
 }
 
-// walks-two-refs.gfa at --chunk 10. Q carries 6 in place of 2, 6 bp of its
+// walks-two-refs.gfa at --tile 10. Q carries 6 in place of 2, 6 bp of its
 // own between 1's end at 6 and 3's start at 12. I leaves 1 for 3 inverted,
 // rejoining at 3's end at 18, then leaves 2 inverted at its start at 6 for 4
 // at 18; between its <3 and <2 it follows R backwards, so there is no
 // departure. D jumps back from 4's end at 24 to 1's start. H's insertion of 7
-// lies inside its piece in chunk 10, where the walk row shows it. With every
-// path in one chunk no departure lies between pieces, and there are none.
+// lies inside its piece in tile 10, where the walk row shows it. With every
+// path in one tile no departure lies between pieces, and there are none.
 #[test]
 fn a_departure_between_pieces_has_a_record_and_one_inside_a_piece_has_none() {
     let built = build("walks-two-refs.gfa", &[]);
@@ -1048,7 +1048,7 @@ fn steps_either_side_of_a_hole_in_the_reference_are_adjacent() {
     );
 }
 
-// R walks 1 2 3 2 3 4 with 10 bp nodes, all in one chunk. H walks 3 4, which
+// R walks 1 2 3 2 3 4 with 10 bp nodes, all in one tile. H walks 3 4, which
 // placement puts on the second 3, at 40, beside 4. The default copy is R's
 // first, so the row names occurrence 1, and then follows R with no route.
 #[test]
@@ -1071,7 +1071,7 @@ fn a_walk_row_names_the_copy_it_starts_on_where_it_is_not_the_first() {
     );
 }
 
-// R walks 1 2 3 2 3 4 with 10 bp nodes, all in one chunk. H carries 25 bp of
+// R walks 1 2 3 2 3 4 with 10 bp nodes, all in one tile. H carries 25 bp of
 // its own on node 5 between 1 and 3, so placement predicts 3 at 35 and puts
 // it on the second 3, at 40, though the occurrence nearest the route's entry
 // is the first: the choice names occurrence 1. Abridged, the row's end names
@@ -1165,16 +1165,16 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
     }
 }
 
-// A chunk's ref row lists its reference steps and their lengths, and its
+// A tile's ref row lists its reference steps and their lengths, and its
 // nodes row the ids and lengths of the nodes its routes visit off R. H's
-// insertion of 7 between 3 and 4 is the chunk's one route, and H's walk row
+// insertion of 7 between 3 and 4 is the tile's one route, and H's walk row
 // names it after starting on 3. Q's 6 in place of 2 is a route off R that
-// leaves R at 1 and does not return in chunk 0-10; stored the way round whose
+// leaves R at 1 and does not return in tile 0-10; stored the way round whose
 // handles sort first, it reads 6 reversed back onto 1 reversed, and Q's walk
-// row takes it flipped. With --stay 0, D and I file each return to chunk 0-10
+// row takes it flipped. With --stay 0, D and I file each return to tile 0-10
 // as a piece of its own.
 #[test]
-fn a_chunk_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
+fn a_tile_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
     let built = build("walks-two-refs.gfa", &["--stay", "0"]);
     let r = built.file("R");
     assert_eq!(
@@ -1206,8 +1206,8 @@ fn a_chunk_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
 // walks-repeat.gfa: R#0#chr walks 1 2 3 2 3 4, a two-node repeat collapsed
 // into one copy. Nodes 1-3 are 6 bp and node 4 is 15 bp, so R reaches them at
 // 0, 6, 12, 18, 24 and 30 and ends at 45. H#1#h takes the same steps. Placed by
-// first visit, the repeat's second pass would be filed under chunk 0-10 and
-// 10-20 again; on R's own path each step takes the chunk of its own offset.
+// first visit, the repeat's second pass would be filed under tile 0-10 and
+// 10-20 again; on R's own path each step takes the tile of its own offset.
 // H, following R, takes each pass of the repeat in turn and is filed as R is.
 #[test]
 fn a_reference_files_its_own_revisits_at_its_own_offset() {
@@ -1237,7 +1237,7 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     );
 }
 
-// walks-loop.gfa, in one chunk: R walks 1 2 3 2 3 4. A takes the repeat three
+// walks-loop.gfa, in one tile: R walks 1 2 3 2 3 4. A takes the repeat three
 // times. Following R from 1 until a 3 would stop a pass early, at R's first,
 // so A's route token names the occurrence it leaves from, `:1`, the second.
 // F inserts 5 inside the second copy and leaves R from the second 2 likewise.
@@ -1263,7 +1263,7 @@ fn a_walk_the_default_rule_would_misread_names_the_copy_it_leaves_from() {
 }
 
 #[test]
-fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
+fn a_walk_back_into_a_tile_starts_a_new_piece_there() {
     let built = build("walks-two-refs.gfa", &["--stay", "0"]);
     assert_eq!(
         rows_of(&built.walks, "R#0#chr", "walk", "D#1#d"),
@@ -1278,12 +1278,12 @@ fn a_walk_back_into_a_chunk_starts_a_new_piece_there() {
 }
 
 // K takes walks-repeat.gfa's collapsed repeat three times. Placed nearest, its
-// steps fall in chunks 0 0 10 10 20 10 20 30, at 0 6 12 18 24 18 24 30: the 3
-// at 24 is a 6 bp stretch in chunk 20-30 between two of chunk 10-20's steps.
-// --stay 12 keeps it in K's piece at 10-20 on that chunk's 3, at 12, 12 bp
+// steps fall in tiles 0 0 10 10 20 10 20 30, at 0 6 12 18 24 18 24 30: the 3
+// at 24 is a 6 bp stretch in tile 20-30 between two of tile 10-20's steps.
+// --stay 12 keeps it in K's piece at 10-20 on that tile's 3, at 12, 12 bp
 // from the 24 its previous step predicts, so the piece walks 3 2 3 2. --stay 6
 // refuses that, but keeps the next stretch, the 2 at 18 between two steps of
-// chunk 20-30, as route interior, since chunk 20-30's R has no 2; the piece
+// tile 20-30, as route interior, since tile 20-30's R has no 2; the piece
 // there reads 3 <route through 2> 3 on R's one 3. --stay 5 keeps neither, so
 // K takes six pieces and a record for its jump back from 3's end at 30 to 2's
 // start at 18, both nodes R passes twice.
@@ -1332,7 +1332,7 @@ fn a_short_stretch_over_a_revisited_node_stays_in_its_piece_on_a_pass_there() {
 // In walks-repeat.gfa R passes 2 and 3 twice and 1 and 4 once. X follows R
 // to 4's end at 45 and jumps back to 2's second pass at 18: its leave is on a
 // node R passes once and its rejoin on one R passes twice, which the record
-// states end by end, and the chunks' ref rows state for every step of R
+// states end by end, and the tiles' ref rows state for every step of R
 #[test]
 fn a_record_states_how_many_times_the_reference_passes_each_end() {
     let gfa = fs::read_to_string(fixture("walks-repeat.gfa")).unwrap()
@@ -1367,7 +1367,7 @@ fn a_pass_count_counts_every_sequence_of_the_reference() {
 
 // R walks 1 2 3 4 3 5 on chr, passing 3 at 12 and 24, and 8 9 8 on chrU. B
 // leaves 5 for a 3 and G leaves 4 for chrU's 8; R passes both nodes twice but
-// neither in the piece's chunk, so each stretch stays in the piece as route
+// neither in the piece's tile, so each stretch stays in the piece as route
 // interior. C's stretch also visits 2, K's chrU's 9 and N's 4, which R passes
 // once, so each starts pieces of its own. With R walking 1 2 3 4 6 7 3 5, F's
 // stretch visits 6 and 7, and does the same. A node longer than a tile lies in
@@ -1429,7 +1429,7 @@ fn a_stay_refuses_a_stretch_over_a_node_the_reference_passes_once() {
     }
 }
 
-// D spends 12 bp on chunk 10-20's reference nodes before coming back to chunk
+// D spends 12 bp on tile 10-20's reference nodes before coming back to tile
 // 0-10, but R and Q pass each node once, so no stay keeps that stretch in D's
 // piece: every file of a reference that passes no node twice holds the rows
 // --stay 0 writes.
@@ -1598,6 +1598,29 @@ fn a_path_name_starting_with_a_hash_is_refused() {
     assert!(built.walks.is_empty());
 }
 
+// A directory in the data file's place fails the rename that puts the data
+// file there, and the build leaves no file under a temporary name
+#[test]
+fn a_failed_write_leaves_no_temporary_file() {
+    let dir = std::env::temp_dir().join(format!("walks-blocked-{}", std::process::id()));
+    fs::create_dir_all(dir.join("out.R.walks.gz").join("x")).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix"))
+        .arg(fixture("walks-two-refs.gfa"))
+        .arg("-o")
+        .arg(dir.join("out"))
+        .args(["--walks", "--refs", "R"])
+        .output()
+        .unwrap();
+    let left: Vec<String> = fs::read_dir(&dir)
+        .unwrap()
+        .flatten()
+        .map(|e| e.file_name().into_string().unwrap())
+        .collect();
+    fs::remove_dir_all(&dir).unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(left, ["out.R.walks.gz"]);
+}
+
 #[test]
 fn walks_reads_a_file_not_stdin() {
     let built = build("-", &[]);
@@ -1628,10 +1651,10 @@ fn cap_and_settle_are_gone() {
     }
 }
 
-// walks-records.gfa: R#0#chr is 1 2 3 4, 6 bp each, so chunk 0-10 holds 1 and
-// 2 and chunk 10-20 holds 3 and 4. H#1#h has three W lines: 1 2 over 0-12, 5 6
+// walks-records.gfa: R#0#chr is 1 2 3 4, 6 bp each, so tile 0-10 holds 1 and
+// 2 and tile 10-20 holds 3 and 4. H#1#h has three W lines: 1 2 over 0-12, 5 6
 // over 20-26, which visits no R node and has no rows, and 2 3 4 over 40-58,
-// which starts in chunk 0-10 and ends in 10-20. G#1#g has 1 2 over 0-12 and 4
+// which starts in tile 0-10 and ends in 10-20. G#1#g has 1 2 over 0-12 and 4
 // over 30-36. Each contig's departure from one W line to the next is recorded
 // once: H's jumps back from 2's end at 12 to 2's start at 6, over 28 bp of its
 // own, 2 steps on 5 and 6 and the 22 bp no line covers; G's jumps forward from
