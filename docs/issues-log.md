@@ -1106,3 +1106,44 @@ Where the findings have come from so far, and the rule each gives:
   Guard: writer test "the spec's example quotes the tool's lines", which
   reads the Example from `docs/walks-format.md` and finds each line in the
   build
+- **2026-11-06, the format 7 README figures, three drawings of the
+  format.** Findings the drawings raised that format 7 keeps as costs, not
+  fixed, each with where it was decided or measured. ADR 0010 does not
+  justify three of them, the routes' storage, a record for a bubble across
+  a tile edge and the header's missing `#unit` line, and their items say
+  so:
+  - route rows chained by deltas, so a row is not readable alone: ADR 0010
+    keeps the route dictionary and the delta ids inside a tile, and
+    measured the alternative, self-contained lines (Srel, Sabs), at 3.1×
+    and 4.5× the bytes on MC (Alternatives rejected)
+  - departure lines copied into every block of their cover: ADR 0010's
+    `departures` units and its genome-wide check, lines repeated 2.12× and
+    2.14×, 3.3% to 3.6% of the file (Genome-wide); the alternative without
+    the pyramid, O, read 281 against 70 KB at pggb 1 kb (Alternatives
+    rejected)
+  - the `.idx` → table → unit hops: ADR 0010's Files and Reading a window;
+    measured at 48.6 KB in 2 round trips at open on MC against T64b's
+    87 KB in 1, and at most two round trips per window against three (Size
+    and open cost, Bytes per window, Genome-wide)
+  - routes stored the way round whose handles sort first, so the leave
+    side of a route with no exit reads reversed: not ADR 0010's choice,
+    which keeps format 6's columns and decoding rules unchanged (Decides),
+    and no ADR records why routes are stored that way round or measures it
+  - a departure line's extent covering both end nodes while its leave →
+    rejoin stretch is narrower: ADR 0010's Lines table decides it, in
+    place of format 6's reach of `maxnode` (Context, Supersedes); arbiter
+    A measured filing over end nodes against reach widening at 288 → 187
+    KB, pggb 1 kb median (`walks-container/arbA/decision.md`, "The 2.7×")
+  - a bubble across a tile edge becomes a departure record, where inside a
+    tile it is a route: not ADR 0010's choice. ADR 0009 decides that a
+    departure inside one piece has no record and one between pieces does,
+    and rejects records for departures inside a piece; ADR 0001 cuts
+    pieces at tiles. No ADR measures how many records are bubbles across
+    a tile edge
+  - the header unit has no `#unit` line, and `#walks` appears both in the
+    `.idx` and in the header: ADR 0010's Files and Units decide both. The
+    copy lets a reader refuse a directory and data file from different
+    builds (Reading a window). No reason is given for the header lacking a
+    `#unit` line, and neither is measured
+
+  Guard: none; each stands until the ADR named reopens it
