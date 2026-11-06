@@ -865,3 +865,34 @@ Where the findings have come from so far, and the rule each gives:
   on real files, didn't check. Source: a guard placed only where the
   fixtures are. Fix: `audit7.py` and `verify7.py` count tiles and detail
   units sharing a name. Guard: both fail a file with any
+- **2026-11-05, the format 7 verifier (F1).** The spec's departure extent
+  clipped each breakpoint stretch to S, which leaves a record whose ends
+  are 0 bp nodes at S's end with an empty extent and no block, findable by
+  no reader. The writer clamps the base beside the breakpoint into S and
+  files it at `[|S| − 1, |S|)`. Source: the spec written from the ADR's
+  words, not from `step_end`. Fix: the spec states the clamp. Guard: a
+  test with such a record (the verifier's zerotile.gfa)
+- **2026-11-05, the format 7 verifier (F2).** A tile whose reference nodes
+  all have 0 bp had the empty extent `[p, p)`, which the overlap rule
+  fetches for no window starting or ending at `p`, against ADR 0010's
+  guarantee that every placed step is in a tile whose extent overlaps
+  it; a detail unit of only such steps likewise. Source: a choice made to
+  keep the converter's lines, documented instead of checked against the
+  ADR. Fix: a unit whose stretches cover no base takes the base beside
+  `p`, `[p, p + 1)`, or `[p − 1, p)` at S's end, as a departure's
+  breakpoint stretch does; `audit7.py` asks again that a window over
+  either base beside a point reads its tile. Guard: the zerotile test;
+  `verify` in the tests and `verify7.py` accept an empty union only as
+  that base
+- **2026-11-05, the format 7 verifier (F3, F4).** The spec used S, R,
+  "file order", "dictionary rows", "the leave base", "attach fetch", span,
+  stretch and extent before or without defining them, called a departure
+  record a record in the abridged section, and said pieces' spans widen a
+  tile's extent, which they can't: every placed step is on R. Source:
+  prose written section by section. Fix: a terms list ahead of the rows,
+  and the sentences corrected. Guard: the verifier's read
+- **2026-11-05, the format 7 verifier (F5).** A `#` in a W line's sample
+  or haplotype column makes the path's PanSN name split differently from
+  its columns, so `#haplotype` names `H#x` for path `H#x#1#ctg`. Older
+  than format 7; PanSN forbids it. Fix: the build refuses a W line whose
+  sample or haplotype holds `#`. Guard: a test
