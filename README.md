@@ -40,7 +40,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - The command writes one file per `--refs` sample, here `chr22.GRCh38.walks.gz` and `chr22.CHM13.walks.gz`, each with a `.walks.gz.idx` directory
 - Each file is a series of gzip units: a header, one per 64 kb tile the reference covers, one per block of departure records, one per detail record of a path moved out of a tile, and one table per reference sequence listing their byte ranges. <!-- C114 --> A reader fetches the tiles and departure blocks over a region, which hold the rows it needs to rebuild every haplotype's path through that region. [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) rebuilds them, and BandageJS and the JBrowse graph plugin draw through it
 
-![Four haplotype paths through a bubble, the rows the GRCh38 file has for one 64 kb tile of chr1, and the paths a reader rebuilds from those rows](docs/figures/walks.svg)
+![The W lines of a small GFA on chr1, the lines gfa-to-tabix writes for them in the GRCh38 walk file, and the graph graph-walks cuts for chr1:1-60 drawn by bandage-core: GRCh38's nodes 1 to 6 in a row, HG002#1's own node 7 and HG002#2's node 8 below it, and a key giving CHM13 as 10 bp shorter than GRCh38 and HG002#1 as 15 bp longer](docs/figures/walks-simple-figure.svg)
 
 ## FAQ
 
