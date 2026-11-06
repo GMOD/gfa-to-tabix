@@ -485,7 +485,8 @@ def emit(path, S, d, needs):
 def reachable(seq, cs, lo, hi):
     # whether every window over [lo, hi) reads tile `cs`, a unit read when
     # its extent overlaps the window: when the extent holds the stretch. For
-    # a departure at a point, the caller asks for either base beside it
+    # a departure at a point, the caller asks for either base beside it, or,
+    # on a sequence of 0 bp, which has none, for the point itself
     a, b = tile_extent[(seq, cs)]
     return a <= lo and hi <= b
 
@@ -539,7 +540,12 @@ for path, ps in pieces.items():
                     lo, hi = min(lend[0], rejoin[0]), max(lend[0], rejoin[0], min(lend[0], rejoin[0]) + 1)
                     needs = lkey != key
                     empty = lend[0] == rejoin[0]
-                    ok = (reachable(S, lend[4], lo, lo + 1) or reachable(S, lend[4], lo - 1, lo)) if empty else reachable(S, lend[4], lo, hi)
+                    if not empty:
+                        ok = reachable(S, lend[4], lo, hi)
+                    elif seq_len[S] == 0:
+                        ok = reachable(S, lend[4], lo, lo)
+                    else:
+                        ok = reachable(S, lend[4], lo, lo + 1) or reachable(S, lend[4], lo - 1, lo)
                     if not needs and not ok:
                         unreachable.append((path, lend, rejoin))
                     emit(path, S, dict(hap_start=after, own_bp=own_bp, leave=lend, rejoin=rejoin,
@@ -829,7 +835,7 @@ for seq, units in (units_by_seq.items() if SHARD == 0 else []):
         print(f'{label} windows: {len(res)}')
         for i, name in ((1, 'departure records kept'), (5, 'tiles read'), (2, 'requests'), (3, 'bytes read'),
                         (4, 'departure block bytes read')):
-            v = [x[i] for x in res]
+            v = [x[i] for x in res] or [0]
             print(f'  {name}: median {q(v, .5)} p95 {q(v, .95)} max {max(v)}')
         if label == '64 kb':
             for w, nrec, requests, nbytes, dep_bytes, ntiles in sorted(res, key=lambda x: -x[3])[:args.top]:

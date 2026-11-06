@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# Checks walk format 7's normative claims that neither the writer's tests nor
-# verify7.py and audit7.py check, on any file the writer builds
-# (docs/departures/claims7.md lists every claim and which check covers it).
-# Each check prints `<count>\t<id> <claim>`; a count above 0 is a case where
-# the file contradicts the claim, with examples below it. Reads the file as
-# text a line at a time and decodes each tile's walk rows by the spec's
-# decoding rules, holding one sequence's abridged rows and, with
-# --own, the steps of the paths in its shard.
+# Checks walk format 7's claims about a file, each from the sentence of
+# docs/walks-format.md that states it, not from the writer's code, and with
+# no case exempted (docs/departures/claims7.md names the claim each check
+# stands for). Each check prints `<count>\t<id> <claim>`; a count above 0 is
+# a case where the file contradicts the claim, with examples below it, and
+# the script then exits 1. Reads the file as text a line at a time and
+# decodes each tile's walk rows by the spec's decoding rules, holding one
+# sequence's abridged rows and, with --own, the steps of the paths in its
+# shard.
 #
 # Usage: claims7.py walks.gz [--own] [--shard I/N] [--examples 3]
 import argparse
@@ -213,67 +214,66 @@ def span(t, positions):
 
 claim('U1', 'units in file order: header; sequences in byte order; per sequence its tile and departures '
       'units by start, a tile before the blocks starting there, smaller blocks first; then detail units; then its table')
-claim('U2', 'a tile\'s name is its start, a multiple of tile, and every ref step\'s offset lies in [name, name + tile)')
-claim('U3', 'a tile\'s extent is its ref rows\' stretches\' union (min to max), or the base beside its point')
-claim('U3g', 'a tile\'s ref rows\' stretches are one interval, so their union is the extent '
-      '(count: tiles whose ref stretches leave a gap inside the extent)')
-claim('U4', 'a unit at a point p takes [p, p+1), or [p-1, p) where p is |S| (|S| from the ref rows); a unit has an extent of at least 1 bp')
+claim('U2', 'a tile\'s name is its start, a multiple of tile written in decimal with no leading zero, and every ref '
+      'step\'s offset lies in [name, name + tile)')
+claim('U3', 'a tile\'s extent runs from the first base its ref rows\' stretches cover to the last')
+claim('U4', 'a tile or detail unit whose rows cover no base, at p, takes [p, p+1), [p-1, p) where p is |S|, or [0, 0) '
+      'where |S| is 0; every other unit has an extent of at least 1 bp')
 claim('U5', 'a tile lists ref rows, then at most one nodes row, then route rows, then walk rows, then abridged rows; '
       'a detail unit holds at most one nodes row, route rows and walk rows')
 claim('U6', 'within a departure block lines are in order of start, end, then text')
-claim('U7', 'every departure line overlaps each block it is in')
-claim('U8', 'a table\'s #unit line is 0 to the largest end of its units, named .')
+claim('U7', 'every departure line overlaps each block it is in, or, a point, lies at the block\'s start')
+claim('U8', 'a table\'s #unit line runs from 0 to |S|, where its sequence\'s last ref row ends, and is named .')
 claim('U9', 'a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks departure')
 claim('H1', '#haplotype lists each haplotype with walk or abridged rows, sample#haplotype, once each in byte order, '
       'and no other')
 claim('H2', 'revisited:i:0 means no ref row has a pass count above 1 and no walk or abridged row has @k or :k')
 claim('R1', 'a ref row\'s lengths and passes have one entry per step, passes . exactly when every count is 1')
-claim('R3', 'a tile of S holds ref rows of S only (unstated; graph-walks keeps only those)')
-claim('R2', 'a tile\'s ref rows are written in hapOffset order (unstated)')
+claim('R3', 'a tile of S holds at least one ref row, and ref rows of S only')
+claim('R2', 'a tile\'s ref rows are written in hapOffset order')
+claim('G1', 'a tile\'s walk rows are in order of path name in bytes, then fragStart, hapOffset and piece')
+claim('G4', 'every node id is below 2^31')
+claim('G5', '#hole lines are in order of sequence name in bytes, then start, each start below its end, and no two '
+      'of a sequence overlap')
 claim('N1', 'a nodes row lists the nodes the tile\'s route interiors visit, ids strictly ascending, and no other')
 claim('N2', 'no route interior holds a node the reference passes once (ADR 0009, nearest-pass placement)')
 claim('T1', 'a route is stored the way round whose handles sort first: entry (none first), interior, exit')
 claim('T2', 'each distinct route is written once per tile or detail unit, a route and its flip counting as one')
-claim('T3', 'a route with no entry or no exit has a non-empty interior (unstated)')
-claim('T4', 'a route\'s entry and exit lie on R (unstated)')
+claim('T3', 'a route with no entry or no exit has a non-empty interior')
+claim('T4', 'a route\'s entry and exit lie on R')
 claim('W1', 'every walk row decodes by the spec\'s rules to nsteps steps')
 claim('W2', 'the tool writes @k and :k only where they differ from the defaults, so a file has one encoding')
 claim('W3', 'a walk continues along R where R\'s next position is the step\'s, and takes a route with an empty '
       'interior only where it is not')
 claim('W4', 'a walk row\'s start end is the span of all its placed steps')
-claim('W4b', 'Terms: a walk row\'s span runs from the first base of its first step on R to the last base of its '
-      'last (count: rows where that differs from the span of all its placed steps, which the writer states)')
-claim('B1', 'a tile over abridgebytes moves paths out until the rest compress to at most abridgebytes (count: tiles '
-      'still holding walk rows whose rows but abridged ones, from kind on, deflate in 65280-byte blocks at level 6 to more)')
-claim('B2', 'a tile over abridge moves paths out until the rest cost at most abridge interior steps (count: tiles '
-      'still holding walk rows that cost more)')
+claim('B1', 'a tile that keeps a walk row has rows, other than its abridged rows and from kind on, that deflate at '
+      'level 6 in 65,280-byte blocks to at most abridgebytes')
+claim('B2', 'a tile that keeps a walk row has pieces costing at most abridge interior steps: each piece\'s routes\' '
+      'interior steps once per use, plus a quarter of all its steps')
 claim('W5', 'each (path, fragStart, piece) has one walk or abridged row in the file, pieces numbered from 0 '
       'with none missing along one W line')
-claim('A1', 'an abridged row\'s start end is the span of its start and end steps on R (walks-format)')
-claim('A1b', 'an abridged row\'s start end is the moved piece\'s stretch on the reference path, the span of all its '
-      'placed steps (ADR 0010\'s Lines table; count: rows where the two readings differ)')
+claim('A1', 'an abridged row\'s start end is the span of its start and end steps on R')
 claim('A2', 'every abridged row names a detail unit cs:d of its tile that exists, and every detail unit is named by one')
-claim('A3', 'a path\'s moved pieces in one tile share one detail record (count: tile and path with more than one)')
-claim('A4', 'a detail unit holds one path\'s moved pieces (count: detail units with walk rows of several paths, '
-      'or of several W lines of one contig)')
-claim('A5', 'a tile\'s detail numbers run from 0 with none missing (unstated)')
-claim('A6', 'a detail unit holds a nodes row')
+claim('A3', 'a W line\'s moved pieces in one tile share one detail record')
+claim('A4', 'a detail unit holds the moved pieces of one W line')
+claim('A5', 'a tile\'s detail numbers run from 0 with none missing')
+claim('A6', 'a tile or detail unit holds a nodes row exactly when its routes have an interior step, and at most one')
 claim('D1', 'a departure record\'s ownTiles are tile names of its sequence that exist, in no repeat')
 claim('D2', 'a record has at most two ownTiles')
 claim('D3', 'a departure record\'s extent holds both breakpoints and is at least the breakpoint stretch')
-claim('D4', 'R holds one node ending at a + leave\'s or - rejoin\'s breakpoint and one starting at the other '
-      'kind\'s (ADR 0009); count: ends where the file\'s R holds several, or none')
+claim('D4', 'the ref rows of S hold a node ending at a + leave\'s or - rejoin\'s breakpoint and one starting at the '
+      'other kind\'s')
 claim('D5', 'a departure line\'s ownBp >= missingBp; strands are + or -; passes >= 1')
 
 # --own
 claim('O1', 'ownTiles are the tiles of S holding the record\'s own steps, the steps strictly between its leave step '
       'and its rejoin step, in the path\'s order')
-claim('O2', 'own steps after the leave in its W line take the leave\'s tile, own steps leading the next W line the '
-      'rejoin\'s (count: own steps on S\'s tiles in neither)')
-claim('O3', 'own steps by the bp range [hapStart, hapStart + ownBp) are the steps strictly between leave and rejoin '
-      '(W1; count: records where the two definitions give different steps)')
-claim('O4', 'an attach fetch of ownTiles finds every own step (count: records with own steps in no tile of S, '
-      'such as on another sequence\'s tiles or in a W line with no rows)')
+claim('O2', 'an own step not placed on the reference takes the tile of the last step placed on the reference before it in its W line, or, '
+      'leading its W line, of the first after it')
+claim('O4', 'the own steps in the file lie in the tiles ownTiles names or in another sequence\'s tiles, and their bp '
+      'plus missingBp is at most ownBp')
+claim('L1', 'a record\'s leave step is the last step on R of its piece, and its rejoin step the first on R of its '
+      'piece')
 
 header = {}
 haplotypes_listed = []
@@ -303,6 +303,8 @@ def in_shard(path):
 
 tile_size = None
 copies_seen = 0
+points = []        # (seq, kind, name, p, lo, hi): units whose rows cover no base
+tables = {}        # seq -> (lo, hi, name) of its table's #unit line
 held_tiles = {}   # (seq, tile name) -> Tile, for the tiles with abridged rows
 
 
@@ -311,8 +313,15 @@ def finish_unit(u):
         return
     kind = u['kind']
     t = u['tile']
-    if kind == 'detail' and t is not None and 'nodes' not in t.kinds:
-        bad('A6', (u['seq'], u['name'], t.kinds[:4]))
+    if kind in ('tile', 'detail') and t is not None:
+        interior = any(r[1] for r in t.routes)
+        if t.kinds.count('nodes') != (1 if interior else 0):
+            bad('A6', (u['seq'], kind, u['name'], 'nodes rows', t.kinds.count('nodes'), 'interior', interior))
+        seen('A6')
+        walks = [w for w in u.get('walk_keys', [])]
+        if kind == 'tile' and walks != sorted(walks):
+            bad('G1', (u['seq'], u['name'], next(a for a, b in zip(walks, walks[1:]) if a > b)))
+        seen('G1')
     if kind in ('tile', 'detail') and t is not None:
         order = ['ref', 'nodes', 'route', 'walk', 'abridged'] if kind == 'tile' else ['nodes', 'route', 'walk']
         if not kinds_in_order(t.kinds, order):
@@ -335,25 +344,19 @@ def finish_unit(u):
     seen('B2')
     if kind == 'tile':
         if t.refs:
-            stretches = sorted((s, s + sum(lens)) for s, _, lens, _ in t.refs)
-            lo, hi = stretches[0][0], max(b for _, b in stretches)
-            if lo < hi:
-                if (t.lo, t.hi) != (lo, hi):
-                    bad('U3', (t.seq, t.name, (t.lo, t.hi), (lo, hi)))
-            else:
-                if (t.lo, t.hi) not in ((lo, lo + 1), (lo - 1, lo)):
-                    bad('U3', (t.seq, t.name, (t.lo, t.hi), 'point', lo))
-                u['point'] = lo
-            reach = stretches[0][1]
-            for a, b in stretches[1:]:
-                if a > reach:
-                    bad('U3g', (t.seq, t.name, stretches[:6]))
-                    break
-                reach = max(reach, b)
+            lo = min(s for s, _, _, _ in t.refs)
+            hi = max(s + sum(lens) for s, _, lens, _ in t.refs)
+            if lo < hi and (t.lo, t.hi) != (lo, hi):
+                bad('U3', (t.seq, t.name, (t.lo, t.hi), (lo, hi)))
+            if lo == hi:
+                points.append((t.seq, kind, t.name, lo, t.lo, t.hi))
         else:
-            bad('U3', (t.seq, t.name, 'no ref row'))
+            bad('R3', (t.seq, t.name, 'no ref row'))
+    if kind == 'detail' and u.get('spans'):
+        lo, hi = min(a for a, _ in u['spans']), max(b for _, b in u['spans'])
+        if lo == hi:
+            points.append((u['seq'], kind, u['name'], lo, u['lo'], u['hi']))
     seen('U3')
-    seen('U3g')
 
 
 def kinds_in_order(kinds, order):
@@ -377,6 +380,13 @@ with gzip.open(args.file, 'rt') as f:
                 haplotypes_listed.append(c[1])
             elif c[0] == '#hole':
                 holes.append((c[1], int(c[2]), int(c[3])))
+            elif c[0] == '#unit' and c[4] == 'table':
+                finish_unit(unit)
+                unit = dict(kind='table', name=c[5], seq=c[1], lo=int(c[2]), hi=int(c[3]), tile=None)
+                tables[c[1]] = (int(c[2]), int(c[3]), c[5])
+                if not sequences or sequences[-1] != c[1]:
+                    sequences.append(c[1])
+                units_of[c[1]].append(('table', c[5], int(c[2]), int(c[3])))
             elif c[0] == '#unit':
                 finish_unit(unit)
                 seq, lo, hi, kind, name = c[1], int(c[2]), int(c[3]), c[4], c[5]
@@ -412,7 +422,7 @@ with gzip.open(args.file, 'rt') as f:
                 bad('U6', (u['seq'], u['lo'], dep_prev[:2], key[:2]))
             seen('U6')
             dep_prev = key
-            if not (a < u['hi'] and b > u['lo']):
+            if not (a < u['hi'] and (b > u['lo'] or a == b == u['lo'])):
                 bad('U7', (u['seq'], u['lo'], u['hi'], line[:80]))
             seen('U7')
             records.append((u['seq'], u['lo'], c))
@@ -455,6 +465,8 @@ with gzip.open(args.file, 'rt') as f:
                 if not (int(t.name) <= at < int(t.name) + tile_size):
                     bad('U2', (t.seq, t.name, 'ref step at', at))
                 ref_any.add(h >> 1)
+                if h >> 1 >= 1 << 31:
+                    bad('G4', (t.seq, t.name, h >> 1))
                 if p == 1:
                     ref_pass_one.add(h >> 1)
                 if p > 1 and header.get('revisited') == '0':
@@ -528,9 +540,13 @@ with gzip.open(args.file, 'rt') as f:
             if span(t, placed) != (a, b):
                 bad('W4', (t.seq, t.name, span(t, placed), line[:100]))
             seen('W4')
-            if span(t, [placed[0], placed[-1]]) != (a, b):
-                bad('W4b', (t.seq, t.name, 'first and last', span(t, [placed[0], placed[-1]]), 'row', (a, b)))
-            seen('W4b')
+            for h, _ in steps:
+                if h >> 1 >= 1 << 31:
+                    bad('G4', (t.seq, t.name, h >> 1))
+            seen('G4')
+            u.setdefault('spans', []).append((a, b))
+            if u['kind'] == 'tile':
+                u.setdefault('walk_keys', []).append((path.encode(), frag, int(c[6]), piece))
             if u['kind'] == 'tile':
                 u['cost'] = u.get('cost', 0) + len(steps) + 4 * sum(len(t.routes[r][1]) for r, *_ in choices)
             if u['kind'] == 'tile':
@@ -599,18 +615,29 @@ for seq, us in units_of.items():
     if sequences.index(seq) and sequences[sequences.index(seq) - 1].encode() >= seq.encode():
         bad('U1', (seq, 'sequences not in byte order'))
     t_kind, t_name, t_lo, t_hi = us[-1]
-    if (t_lo, t_name) != (0, '.') or t_hi != max((u[3] for u in body), default=0):
-        bad('U8', (seq, us[-1]))
+    if (t_lo, t_hi, t_name) != (0, seq_end[seq], '.'):
+        bad('U8', (seq, us[-1], '|S| from the ref rows', seq_end[seq]))
+    at_points = {(kind, name) for s_, kind, name, *_ in points if s_ == seq}
     for kind, name, lo, hi in body:
-        if hi - lo < 1:
-            bad('U4', (seq, kind, name, lo, hi, '|S|', seq_end[seq]))
+        if hi - lo < 1 and (kind, name) not in at_points:
+            bad('U4', (seq, kind, name, lo, hi, 'not a point'))
 seen('U1')
-seen('U4')
 seen('U8')
+for seq, kind, name, p, lo, hi in points:
+    length = tables.get(seq, (0, 0))[1]
+    beside = (0, 0) if length == 0 else (p - 1, p) if p == length else (p, p + 1)
+    if (lo, hi) != beside:
+        bad('U4', (seq, kind, name, 'point', p, 'extent', (lo, hi), '|S|', length))
+seen('U4')
 
-# U4: point extents against |S|; the unit lines don't say whether a tile is a point, so recheck from tiles
-# whose extent is 1 bp and whose ref stretches are all empty
-# (finish_unit recorded mismatches; here only the end rule)
+# G5
+for (s1, a1, b1), (s2, a2, b2) in zip(holes, holes[1:]):
+    if (s1.encode(), a1) >= (s2.encode(), a2) or (s1 == s2 and b1 > a2):
+        bad('G5', ((s1, a1, b1), (s2, a2, b2)))
+for s_, a_, b_ in holes:
+    if a_ >= b_:
+        bad('G5', (s_, a_, b_))
+seen('G5')
 
 # H1
 if haplotypes_listed != sorted(set(haplotypes_listed), key=lambda s: s.encode()):
@@ -640,14 +667,12 @@ for seq, cs, path, frag, piece, d, (a, b) in abridged:
     if held is None or (path, frag, piece) not in held:
         bad('A2', (seq, cs, d, path, piece))
         continue
-    if held[(path, frag, piece)] != (a, b):
-        bad('A1b', (seq, cs, path, piece, 'abridged', (a, b), 'all placed steps', held[(path, frag, piece)]))
 for key in detail_pieces:
     if key[2] not in named.get(key[:2], ()):
         bad('A2', ('detail unit no abridged row names', key))
 by_tile_path = collections.defaultdict(set)
 for seq, cs, path, frag, piece, d, _ in abridged:
-    by_tile_path[(seq, cs, path)].add(d)
+    by_tile_path[(seq, cs, path, frag)].add(d)
 for key, ds in by_tile_path.items():
     if len(ds) > 1:
         bad('A3', (key, sorted(ds)))
@@ -657,7 +682,7 @@ for key, paths in detail_paths.items():
 for key, ds in named.items():
     if sorted(ds) != list(range(len(ds))):
         bad('A5', (key, sorted(ds)))
-for k in ('A1b', 'A2', 'A3', 'A4', 'A5', 'A6'):
+for k in ('A2', 'A3', 'A4', 'A5'):
     seen(k)
 
 # D1-D5
@@ -685,12 +710,12 @@ for (seq, _), c in recs.items():
     for bp, strand, leave in ((lp, ls, True), (rp, rs, False)):
         side = 'end' if (strand == '+') == leave else 'start'
         held = {x for x in breakpoints[seq].get(bp, ()) if x[0] == side}
-        if len(held) != 1:
+        if not held:
             bad('D4', (seq, bp, strand, 'leave' if leave else 'rejoin', sorted(held)[:4]))
 for k in ('D1', 'D2', 'D3', 'D4', 'D5'):
     seen(k)
 
-# O1-O4: own steps from the decoded rows of the shard's paths
+# O1, O2, O4, L1: own steps from the decoded rows of the shard's paths
 if args.own:
     index = {}
     for path, steps in own_steps.items():
@@ -740,19 +765,22 @@ if args.own:
         stated = [] if c[14] == '.' else c[14].split(',')
         if stated != tiles:
             bad('O1', (seq, c[4:15], 'decoded', tiles))
-        lo = bisect.bisect_left(at_lo, hs)
-        hi = bisect.bisect_right(at_hi, hs + own)
-        by_bp = [k for k in range(lo, hi) if hs <= at_lo[k] and at_hi[k] <= hs + own]
-        if by_bp != list(range(li + 1, ri)):
-            bad('O3', (seq, c[4:15], 'strictly between', ri - li - 1, 'by bp', len(by_bp)))
-        sides = {steps[li][6], steps[ri][6]}
-        if any(st[5] == seq and st[6] not in sides for st in between):
-            bad('O2', (seq, c[4:15]))
+        for k in [k for k in range(li + 1, ri) if steps[k][8] is None]:
+            line = [j for j in range(len(steps)) if steps[j][0] == steps[k][0] and steps[j][8] is not None]
+            before = [j for j in line if j < k]
+            after = [j for j in line if j > k]
+            by = before[-1] if before else after[0] if after else None
+            if by is None or (steps[by][5], steps[by][6]) != (steps[k][5], steps[k][6]):
+                bad('O2', (seq, c[4:15], 'own step', steps[k][:3], 'in', steps[k][5:7],
+                           'placed step', None if by is None else steps[by][5:7]))
         decoded_bp = sum(st[4] - st[3] for st in between)
-        if any(st[5] != seq for st in between) or decoded_bp < own - int(c[7]):
-            bad('O4', (seq, c[4:15], 'own bp', own, 'missing', c[7], 'decoded own bp', decoded_bp,
-                       'on other sequences', sum(1 for st in between if st[5] != seq)))
-    for k in ('O1', 'O2', 'O3', 'O4'):
+        if any(st[5] == seq and st[6] not in stated for st in between) or decoded_bp + int(c[7]) > own:
+            bad('O4', (seq, c[4:15], 'own bp', own, 'missing', c[7], 'decoded own bp', decoded_bp))
+        for k, last in ((li, True), (ri, False)):
+            piece = [j for j in range(len(steps)) if steps[j][:2] == steps[k][:2] and steps[j][8] is not None]
+            if k != (piece[-1] if last else piece[0]):
+                bad('L1', (seq, c[4:15], 'leave' if last else 'rejoin', steps[k][:3]))
+    for k in ('O1', 'O2', 'O4', 'L1'):
         seen(k)
 
 print(f'# {args.file}: {sum(len(v) for v in units_of.values())} units, {len(recs)} departure records, '
@@ -762,3 +790,4 @@ for key in CLAIMS:
         print(f'{counts[key]}\t{key} {CLAIMS[key]}')
         for e in examples[key]:
             print('   ', e)
+sys.exit(1 if any(counts.values()) else 0)

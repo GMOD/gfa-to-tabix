@@ -10,14 +10,18 @@
 # - the header, the units, the tables and the EOF block partition the file;
 #   every unit starts on a gzip member with its `#unit` line
 # - each table lists exactly the units of its sequence since the last
-#   table, in file order, as they are, at their offsets and lengths
+#   table, in file order, as they are, at their offsets and lengths, each
+#   above 0 bytes, and its `#unit` line runs from 0 to `|S|`, where the
+#   sequence's last `ref` row ends
 # - no two units of a kind and sequence share a name other than `.`
 # - every line starts with its unit's sequence; a tile's or detail unit's
-#   lines lie in its extent, which is the union of its ref rows' stretches
-#   and its pieces' spans, or where that covers no base the base beside its
-#   point, and its other rows state the extent
+#   lines lie in its extent, which runs from the first base its ref rows'
+#   stretches and its pieces' spans cover to the last, or where they cover
+#   no base is the base after their point `p`, the base before it where `p`
+#   is `|S|`, or `[0, 0)` where `|S|` is 0; its other rows state the extent
 # - a departure block is named `.` and aligned, each of its lines overlaps
-#   it, and each record is in every block of its cover and no other
+#   it, or lies at its start where the line is a point, and each record is
+#   in every block of its cover and no other
 # Usage: verify7.py walks.gz [tile]; prints a JSON summary, exits 1 on the
 # first failure.
 import hashlib
@@ -50,7 +54,8 @@ sizes = [tile * n for n in (512, 64, 8, 1)]
 
 
 def cover(lo, hi):
-    out, at, end = [], lo // tile * tile, -(-hi // tile) * tile
+    out, at = [], lo // tile * tile
+    end = max(-(-hi // tile) * tile, at + tile)
     while at < end:
         s = next(s for s in sizes if at % s == 0 and at + s <= end)
         out.append((at, s))
@@ -71,7 +76,7 @@ def members(f):
 
 
 stats = dict(units=0, tables=0, lines=0, departure_lines=0)
-state = dict(units=[], names=set(), records={}, table=0)
+state = dict(units=[], names=set(), records={}, table=0, ref_end=0, points=[])
 
 
 def check_unit(at, length, text):
@@ -81,7 +86,7 @@ def check_unit(at, length, text):
     head = lines[0].split('\t')
     seq, lo, hi, kind, name = head[1], int(head[2]), int(head[3]), head[4], head[5]
     if kind == 'table':
-        check_table(at, length, seq, lines[1:-1])
+        check_table(at, length, seq, lo, hi, lines[1:-1])
         return
     stats['units'] += 1
     state['units'].append('\t'.join([seq, head[2], head[3], kind, name, str(at), str(length)]))
@@ -101,7 +106,7 @@ def check_unit(at, length, text):
                 fail(f'departure block {lo} {hi} named {name}, not .')
             if lo % (hi - lo):
                 fail(f'departure block {lo} {hi} is not aligned')
-            if not (a < hi and lo < b):
+            if not (a < hi and (lo < b or a == b)):
                 fail(f'a departure line not overlapping its block {lo} {hi}: {line[:80]}')
             key = hashlib.blake2b(line.encode(), digest_size=12).digest()
             state['records'].setdefault(key, [a, b, []])[2].append((lo, hi - lo))
@@ -112,18 +117,24 @@ def check_unit(at, length, text):
         if c[3] == 'ref':
             start = int(c[6])
             stretch = (start, start + sum(int(x) for x in c[10].split(',')))
+            state['ref_end'] = max(state['ref_end'], stretch[1])
         elif c[3] in ('walk', 'abridged'):
             stretch = (a, b)
         if c[3] in ('ref', 'nodes', 'route') and (a, b) != (lo, hi):
             fail(f'a {c[3]} row not stating its unit\'s extent: {line[:80]}')
         if stretch:
             union = stretch if union is None else (min(union[0], stretch[0]), max(union[1], stretch[1]))
-    point = union is not None and union[0] == union[1] and hi - lo == 1 and union[0] in (lo, hi)
-    if kind != 'departures' and union != (lo, hi) and not point:
-        fail(f'the {kind} unit at {at} has extent {lo} {hi}, its lines {union}')
+    if kind != 'departures':
+        if union is None:
+            fail(f'the {kind} unit at {at} has no ref row and no piece')
+        if union[0] < union[1]:
+            if union != (lo, hi):
+                fail(f'the {kind} unit at {at} has extent {lo} {hi}, its lines {union}')
+        else:
+            state['points'].append((at, kind, union[0], lo, hi))
 
 
-def check_table(at, length, seq, lines):
+def check_table(at, length, seq, head_lo, head_hi, lines):
     if state['table'] >= len(tables) or tables[state['table']] != (seq, at, length):
         fail(f'the table of {seq} at {at} is not the directory\'s next')
     state['table'] += 1
@@ -131,10 +142,19 @@ def check_table(at, length, seq, lines):
     listed = ['\t'.join(l.split('\t')[1:]) for l in lines]
     if any(not l.startswith('#entry\t') for l in lines) or listed != state['units']:
         fail(f'the table of {seq} does not list its units as they are, in file order')
+    if any(int(l.split('\t')[7]) <= 0 for l in lines):
+        fail(f'the table of {seq} lists a unit of 0 bytes')
+    length = state['ref_end']
+    if (head_lo, head_hi) != (0, length):
+        fail(f'the table of {seq} states {head_lo} {head_hi}, not 0 and |S| {length}')
+    for unit_at, kind, p, lo, hi in state['points']:
+        beside = (0, 0) if length == 0 else (p - 1, p) if p == length else (p, p + 1)
+        if (lo, hi) != beside:
+            fail(f'the {kind} unit at {unit_at} covers no base at {p}, and its extent {lo} {hi} is not {beside}')
     for a, b, blocks in state['records'].values():
         if sorted(blocks) != cover(a, b):
             fail(f'a departure record of {seq} over {a} {b} is in blocks {sorted(blocks)}, not its cover')
-    state.update(units=[], names=set(), records={})
+    state.update(units=[], names=set(), records={}, ref_end=0, points=[])
 
 
 with open(path, 'rb') as f:

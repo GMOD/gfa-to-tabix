@@ -34,8 +34,17 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
   each departure record in every block of its cover). It reads the file a
   gzip member at a time, so it checks files past the 2 GiB that
   `verify7.mjs`, which reads whole files, can't
-- `fuzz7.sh` with `fuzz6-gen.py`: random graphs built in walk format 7 in
-  six option modes; each file gets `verify7.py` and `audit7.py`
+- `fuzz7.sh [from] [to]` with `fuzz7-gen.py`: random graphs built in walk
+  format 7 with two references, R and Q, under eight option sets; each file
+  gets `verify7.py`, `claims7.py --own` and `audit7.py`, and the script
+  exits 1 on any failure. A graph has one to three reference sequences,
+  some of 0 bp, holes between the reference's lines, 0 bp nodes, W lines
+  with no steps, abutting W lines, paths that cross sequences, paths off
+  one or both references, and sometimes its path lines before its S lines.
+  CI runs seeds 1 to 6 (`scripts/check-walks.sh`)
+- `claims7.py walks.gz [--own] [--shard I/N]`: each claim of
+  [claims7.md](claims7.md) that a file can show, checked from the spec's
+  sentence; exits 1 where the file contradicts one
 - `audit6.py walks.bed.gz [--truth dep.tsv] [--shard I/N] [--seq NAME]`:
   reads a format 6 file, from gfa-to-tabix 3.x, as a reader would and
   checks it, as the rebuild's README describes. `--shard` splits the paths so a large graph fits in
