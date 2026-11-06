@@ -357,3 +357,8 @@ and measured it against format 6
   with `ownTiles`, the tiles of its sequence that hold its own steps, by
   their starts, `.` for none; the writer knows them, so a reader never
   infers them ([walks-format.md](../walks-format.md#departure))
+- 2026-11-05, amended: a unit whose stretches cover no base, a tile whose
+  reference nodes all have 0 bp at `p`, takes the base beside `p` as its
+  extent, `[p, p + 1)` or `[p − 1, p)` at the sequence's end, so the
+  guarantee that every placed step is in a tile whose extent overlaps it
+  holds for steps of 0 bp as well (the format 7 verifier's F2)

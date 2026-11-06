@@ -60,6 +60,32 @@ for it.
 [Example](#example) lists a harder tile, whose one route has no entry and is
 taken flipped, and its departure records.
 
+## Terms
+
+- **S:** one reference sequence, a path name of the reference sample such
+  as `GRCh38#0#chr22`. A file holds every sequence of its reference, and
+  `|S|` is where S's last node or line ends
+- **Tile:** the `tile` bp of S from a multiple of `tile`, and the unit
+  holding the rows of the pieces filed there
+- **R:** a tile's reference path, its `ref` rows' steps joined in offset
+  order ([ref](#ref))
+- **Stretch:** a run of bases, on S unless a contig is named: a `ref`
+  row's runs from its `hapOffset` over its steps' lengths
+- **Span:** a walk or abridged row's stretch of S, from the first base of
+  its first step on R to the last base of its last ([Rows](#rows))
+- **Extent:** a unit's `start end` ([Units](#units)) or a departure line's
+  ([departure](#departure))
+- **File order:** the order of the units in the data file, as
+  [Files and units](#files-and-units) gives it
+- **Departure record:** the line for one place a path departs from S
+  ([departure](#departure)). A **detail record** is an abridged path's
+  moved pieces in one tile, a `detail` unit
+- **Own steps:** a departure record's path's steps between its leave and
+  its rejoin
+- **Attach fetch:** a reader's read of the tiles holding a departure
+  record's own steps, for a record whose own steps lie in no tile the
+  window read ([departure](#departure))
+
 ## Tiles and pieces
 
 [ADR 0001](adr/0001-step-placement.md) gives the reasons for these rules, the
@@ -192,14 +218,17 @@ whole file as text.
 | `detail` | the union of its walk rows' spans | `cs:d`, the tile's start and the `abridged` rows' `detail` | one abridged path's moved pieces in tile `cs` |
 | `table` | 0 to the largest end of its units | `.` | one `#entry` line per unit of the sequence |
 
-- **A tile's extent** is the union of its `ref` rows' stretches and its
-  pieces' spans. Every step placed in the tile lies inside it, so a node
+- **A tile's extent** is the union of its `ref` rows' stretches; every
+  piece's span lies inside it, since every placed step is on R. So a node
   longer than a tile, or a pass that runs past the tile's end, needs no
   widening by a reader. Readers address tiles by extent, never by
   `floor(base / tile)`
-- A tile whose reference nodes all have 0 bp has an empty extent `[p, p)`,
-  as do its rows. The read rule below fetches it for a window holding bases
-  on both sides of `p`
+- A unit whose stretches cover no base, a tile whose reference nodes all
+  have 0 bp at `p` or a detail unit of steps on such nodes, takes the base
+  beside `p` as its extent: `[p, p + 1)`, or `[p − 1, p)` where `p` is
+  `|S|`, as a departure's breakpoint stretch does. Every window holding
+  that base reads it, and its rows' spans, `[p, p)`, lie inside it. At
+  `|S|` such a tile's extent begins before the tile
 - **The departure pyramid** has blocks of `tile × 8^L` bp for L from 0 to
   3 (64 kb, 512 kb, 4 Mb and 32 Mb at the default tile), each at a
   multiple of its size. A record's cover runs from `floor(start / tile) ×
@@ -291,7 +320,7 @@ index key, so `zcat | grep` places any line.
 |---|---|
 | `walk` | the piece's span: the first base of its first step placed on R to the last base of its last, over all its placed steps. Route interiors that hold another tile's reference nodes lie outside it |
 | `abridged` | the span of the piece's first and last steps on R, as its `start` and `end` decode |
-| `ref`, `nodes`, `route` | the unit's extent: these are the tile's dictionary rows, with no span of their own |
+| `ref`, `nodes`, `route` | the unit's extent: these rows describe the tile, not a piece, and have no span of their own |
 | `departure` | from the first base of its leave or rejoin node, whichever is first, to the last base of the other, or the breakpoint stretch where wider |
 
 A tile lists its `ref` rows, then at most one `nodes` row, then its `route`
@@ -412,11 +441,11 @@ seq start end abridged path fragStart hapOffset piece nsteps bp start[@k] end[@k
   `end` step ends, as a reader trims a walk row's piece to its steps on R.
   Steps of its own before `start` or after `end`, at its contig's start or
   end or beside a step on another sequence, lie outside it
-- A record leaves at a piece's last step on S and rejoins at a piece's
-  first, so no record's own bp share a base with an abridged row's stretch,
-  and a reader that leaves the piece unexpanded nets `bp` against the R
-  between `start` and `end` and takes the departures at its ends from their
-  records
+- A departure record leaves at a piece's last step on S and rejoins at a
+  piece's first, so no departure record's own bp share a base with an
+  abridged row's stretch, and a reader that leaves the piece unexpanded
+  nets `bp` against the R between `start` and `end` and takes the
+  departures at its ends from their departure records
 - `nsteps` counts all the piece's steps, those outside the stretch included:
   the steps its detail record's walk row decodes, which a reader that reads
   the record bounds its work by
@@ -469,10 +498,12 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)).
 - `start end` is the record's extent: from the first base of the end
   nodes, each the end step's own node at its pass, to the last base of the
   other, widened to the breakpoint stretch where that is wider. The
-  breakpoint stretch runs from one base beside one breakpoint to one beside
-  the other: `[bp − 1, bp)` where the breakpoint is the node's end and
-  `[bp, bp + 1)` where it is its start, for a node of 0 bp `[bp, bp + 1)`,
-  each clipped to S. Only an end on a node of 0 bp makes it wider
+  breakpoint stretch runs from the base beside one breakpoint to the base
+  beside the other, each clamped into S: `[bp − 1, bp)` where the
+  breakpoint is the node's end, `[bp, bp + 1)` where it is its start or
+  the node has 0 bp, and `[|S| − 1, |S|)` where that would lie past S.
+  Only an end on a node of 0 bp makes it wider, and a record whose ends
+  are 0 bp nodes at `|S|` has the extent `[|S| − 1, |S|)`
 - `ownTiles` lists the tiles of S that hold the record's own steps, the
   steps between its leave and its rejoin, by their starts (the `name` of
   their `tile` units), comma-separated, in the path's order; `.` for none.
@@ -533,8 +564,9 @@ The tool checks each of these as it writes:
   `#unit` line
 - Each table lists every unit of its sequence, in file order, before it,
   with lengths above 0; the directory lists every reference sequence
-- A tile's extent is the union of its `ref` rows' stretches and its
-  pieces' spans; every line lies within its unit's `start end`; every
+- A tile's extent is the union of its `ref` rows' stretches, or the base
+  beside its point where they cover none; every line lies within its
+  unit's `start end`; every
   departure record is in every block of its cover, and its `ownTiles` are
   the tiles the tool filed its own steps in
 - Each walk and abridged row's `start end` is the span of the steps it
@@ -620,9 +652,10 @@ row needs `@k` or `:k`.
 ## Example
 
 `tests/walks.rs` builds `tests/data/walks-two-refs.gfa` with `--tile 10
---stay 0` and checks every row. Part of R's file: the directory, the tile
-at 0, and the departure block 0-10, with the byte offsets and lengths, which
-depend on the compressor, elided:
+--stay 0` and checks every row. Part of R's file: the directory, part of
+the tile at 0 (D's and I's walk rows left out) and two of the departure
+block 0-10's four lines, with the byte offsets and lengths, which depend
+on the compressor, elided:
 
 ```
 #walks  format:i:7  tile:i:10  revisited:i:0  stay:i:0  abridge:i:1000000  abridgebytes:i:3000000  bytes:i:…
