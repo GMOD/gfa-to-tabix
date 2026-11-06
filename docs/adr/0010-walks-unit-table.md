@@ -76,7 +76,7 @@ its sequence and the stretch of it the line is about.
   rule. `name` is the nominal start. Readers address tiles by extent, never
   by `floor(base / tile)`
 - **`departures`:** one block of the departure pyramid, 64 kb × 8^L (64 kb,
-  512 kb, 4 Mb, 32 Mb). `start end` is the block, `name` its size. A record
+  512 kb, 4 Mb, 32 Mb). `start end` is the block, `name` `.`. A record
   goes in the largest aligned blocks inside its tile-rounded extent: from
   `floor(start / T) × T` to `ceil(end / T) × T`, taking at each point the
   largest block aligned there that fits. Its lines in different blocks are
@@ -362,3 +362,8 @@ and measured it against format 6
   extent, `[p, p + 1)` or `[p − 1, p)` at the sequence's end, so the
   guarantee that every placed step is in a tile whose extent overlaps it
   holds for steps of 0 bp as well (the format 7 verifier's F2)
+- 2026-11-06, amended: a departure block's `name` is `.`, not its size,
+  which `start end` already gives. A unit's `name` is now only the key
+  other lines point at it by, a tile's start for `ownTiles` and `cs:d` for
+  an `abridged` row, and `.` where nothing does. Found drawing the format
+  for the README ([issues log](../issues-log.md))

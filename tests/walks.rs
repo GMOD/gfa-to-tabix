@@ -229,10 +229,11 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
             assert!(a <= b, "{row}");
             let stretch = match c[3] {
                 "departure" => {
-                    assert_eq!(kind, "departures");
-                    let size: u64 = head[5].parse().unwrap();
-                    assert_eq!(hi, lo + size);
-                    blocks.entry(row.to_string()).or_default().push((lo, size));
+                    assert_eq!((kind, head[5]), ("departures", "."));
+                    blocks
+                        .entry(row.to_string())
+                        .or_default()
+                        .push((lo, hi - lo));
                     None
                 }
                 "ref" => {
@@ -972,6 +973,28 @@ fn a_departure_between_pieces_has_a_record_and_one_inside_a_piece_has_none() {
     assert_eq!(departures(&whole.walks), "");
 }
 
+// No line points at a departure block, so it is named `.`. At --tile 1 the
+// records of walks-two-refs.gfa cover blocks of 1 and 8 bp, several of each
+// size and two at 16
+#[test]
+fn a_departure_block_is_named_dot() {
+    let built = build("walks-two-refs.gfa", &["--tile", "1"]);
+    assert!(built.output.status.success());
+    let blocks: Vec<Vec<&str>> = units(&built.walks)
+        .into_iter()
+        .map(|(head, _)| head)
+        .filter(|head| head[3] == "departures")
+        .collect();
+    let sizes: BTreeMap<u64, usize> = blocks.iter().fold(BTreeMap::new(), |mut sizes, head| {
+        let (lo, hi): (u64, u64) = (head[1].parse().unwrap(), head[2].parse().unwrap());
+        *sizes.entry(hi - lo).or_default() += 1;
+        sizes
+    });
+    assert!(sizes.values().all(|&n| n > 1), "{sizes:?}");
+    assert_eq!(sizes.keys().collect::<Vec<_>>(), [&1, &8]);
+    assert!(blocks.iter().all(|head| head[4] == "."), "{blocks:?}");
+}
+
 // R has chr1 (1 2) and chr2 (3 4); H walks 1 2 3 4, then 5 of its own. On
 // chr1 H leaves at 2's end and never comes back, and on chr2 it arrives from
 // chr1 and goes on to 5: no step on either sequence lies on both sides of
@@ -1692,7 +1715,11 @@ fn a_unit_or_record_at_a_point_takes_the_base_beside_it() {
     assert!(departures(r).contains(&tsv(&[
         "R#0#chr 9 10 departure J#1#j 10 5 0 10 + 1 10 - 1 ."
     ])));
-    assert!(unit(r, "departures", "10").contains("\tJ#1#j\t"));
+    assert!(unit(r, "departures", ".").starts_with(&tsv(&[
+        "#unit R#0#chr 0 10 departures .",
+        "R#0#chr 0 10 departure I#1#i 10 0 0 10 + 1 10 - 1 .",
+        "R#0#chr 9 10 departure J#1#j 10 5 0 10 + 1 10 - 1 ."
+    ])));
 }
 
 // A `#` in a W line's sample or haplotype would split its PanSN name

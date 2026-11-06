@@ -214,10 +214,14 @@ whole file as text.
 | kind | `start end` | `name` | holds |
 |---|---|---|---|
 | `tile` | the tile's extent | the tile's start, a multiple of `tile` | its `ref`, `nodes`, `route`, `walk` and `abridged` rows |
-| `departures` | the block | the block's size | the departure records of one block of the pyramid |
+| `departures` | the block | `.` | the departure records of one block of the pyramid |
 | `detail` | the union of its walk rows' spans | `cs:d`, the tile's start and the `abridged` rows' `detail` | one abridged path's moved pieces in tile `cs` |
 | `table` | 0 to the largest end of its units | `.` | one `#entry` line per unit of the sequence |
 
+- **A unit's `name`** is the key other lines use to point at it: a tile's
+  start, which a departure record's `ownTiles` lists, and a detail unit's
+  `cs:d`, which an `abridged` row's `detail` and its tile's start give. It
+  is `.` where nothing points at the unit, a departure block or a table
 - **A tile's extent** is the union of its `ref` rows' stretches; every
   piece's span lies inside it, since every placed step is on R. So a node
   longer than a tile, or a pass that runs past the tile's end, needs no

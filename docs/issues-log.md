@@ -1043,3 +1043,15 @@ Where the findings have come from so far, and the rule each gives:
   pass, as well as by the nodes on it. Guard: graph-walks test "a cut's
   drawn stretch takes every pass over the window, not one per node" on
   `test_data/loop.R.gfa`, which fails before the fix
+- **2026-11-06, the format 7 README figures, three drawings of the
+  format.** A departure block's `#unit` line named the block by its size,
+  which its `start end` already gives, so `name` meant two things: the key
+  `ownTiles` and `abridged` rows point at a unit by, and for departure
+  blocks a copy of `end − start`. Source: a column filled because it was
+  there. Fix: the writer names a departure block `.`, as a table already
+  was; the spec's Units table and ADR 0010 say `name` is the key other
+  lines point at a unit by, `.` where nothing does. `verify7.py`,
+  `verify7.mjs` and `compare7.py`, which read the size from the name, take
+  it from `start end`. Guard: writer test "a departure block is named
+  dot", and `verify()` in `tests/walks.rs` and `verify7.py` refuse any
+  other name

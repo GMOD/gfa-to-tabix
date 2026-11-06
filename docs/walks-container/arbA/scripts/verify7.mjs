@@ -89,7 +89,7 @@ for (const u of scanned) {
     if (c[0] !== seq) fail(`a line of another sequence in unit ${u.at}`)
     if (kind === 'departures') {
       stats.departureLines++
-      if (!cover(+c[1], +c[2]).includes(`${lo}:${name}`) || +lo !== +name * Math.floor(+lo / +name) || +hi !== +lo + +name) fail(`departure line outside its cover: ${l.slice(0, 80)}`)
+      if (!cover(+c[1], +c[2]).includes(`${lo}:${hi - lo}`)) fail(`departure line outside its cover: ${l.slice(0, 80)}`)
     } else {
       if (+c[1] < +lo || +c[2] > +hi) fail(`a line outside its unit's extent: ${l.slice(0, 80)}`)
       if (c[3] === 'walk' || c[3] === 'abridged' || c[3] === 'ref') {

@@ -1604,7 +1604,7 @@ impl Outputs<'_> {
                 }
                 let (start, size) = filed.block;
                 out.file
-                    .begin(seq, (start, start + size), "departures", &size.to_string())?;
+                    .begin(seq, (start, start + size), "departures", ".")?;
                 open = Some(filed.block);
             }
             line.clear();

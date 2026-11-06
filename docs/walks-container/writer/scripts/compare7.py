@@ -2,8 +2,8 @@
 # Compares two walk format 7 files unit by unit: the header, every unit's
 # `#unit` line and lines (a departures unit's as a set), each table's entries
 # without offsets and lengths, the directory's sequences, and the unit order.
-# Units are keyed by sequence, kind and name (and start, for departure
-# blocks). Holds a hash per unit, then reads back the units that differ to
+# Units are keyed by sequence, kind and name, or for a departure block its
+# start and end. Holds a hash per unit, then reads back the units that differ to
 # show up to --show of each kind of difference. Prints a JSON summary last.
 # usage: compare7.py writer.walks.gz converter.walks.gz [--show 5]
 import argparse
@@ -46,7 +46,7 @@ def scan(path, wanted=None):
             if line.startswith('#unit\t'):
                 close()
                 c = line.split('\t')
-                state.update(key=(c[1], c[4], c[5], c[2] if c[4] == 'departures' else ''), extent=(c[2], c[3]), lines=[])
+                state.update(key=(c[1], c[4], f'{c[2]}-{c[3]}' if c[4] == 'departures' else c[5]), extent=(c[2], c[3]), lines=[])
             elif state['key'] is None:
                 header.append(line)
             else:
