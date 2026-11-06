@@ -2,25 +2,31 @@
 
 - **Status:** accepted, 2026-11-05; confirmed genome-wide on GRCh38 and
   CHM13 the same day ([Genome-wide](#genome-wide)), which also amended how
-  a reader finds a departure's own steps. Walk format 7, for gfa-to-tabix
-  4.0 and graph-walks 6, being written
+  a reader finds a departure's own steps; amended 2026-11-06 by the claims
+  audit ([History](#history)), which also decided the costs the format
+  carried unmeasured ([Costs decided](#costs-decided)). Walk format 7, for
+  gfa-to-tabix 4.0 and graph-walks 6. The normative sentences here carry
+  the claim IDs of [walks-format.md](../walks-format.md), whose rows in
+  [claims7.md](../departures/claims7.md) name their checks; where the two
+  pages differ, walks-format.md is the format
 - **Decides:** how a walk file is stored and indexed, what the first three
   columns of its lines mean, how a reader finds the rows for a window, and
   what a writer guarantees. The rows' own columns and decoding rules stay
   format 6's ([ADR 0009](0009-departure-records.md))
 - **Measured by:** four independent reviews, two independent arbiters who
-  each built every candidate and measured it with their own HTTP
+  both built all the candidates and measured them with their own HTTP
   range-logging harness on the same seeded windows, a cross-examination in
-  which each arbiter rebuilt and measured the other's winner, and an
+  which the arbiters rebuilt and measured one another's winner, and an
   independent prior-art and failure-mode review. Inputs: the gfa-to-tabix
   3.0.0 files for HPRC v2.1 Minigraph-Cactus chr22 and HPRC release 2 pggb
   chrY, on GRCh38. Everything is in [docs/walks-container/](../walks-container/)
-- **Supersedes:** format 6's filing of every row at its chunk's first base
+- **Supersedes:** format 6's filing of all of a chunk's rows at its first base
   (`seq cs cs+1`), its `.tbi`, the `seq~departure` and `seq~cs` sibling
   sequences, the `#long` and `maxnode` header lines, and the readers'
   chunk-before rule
 
 ## Context
+<!-- record -->
 
 - Format 6 files every row of a 64 kb chunk at `seq cs cs+1`. Drawing the
   file's real rows for the README made the problem plain: every row of the
@@ -46,86 +52,100 @@
 
 The walk file is a series of gzip units with a table of their byte ranges,
 the structure of a CRAM file's containers and its `.crai`. Every line states
-its sequence and the stretch of it the line is about.
+its sequence and the stretch of it the line is about. <!-- C54 -->
 
 ### Files
 
 - `<prefix>.<sample>.walks.gz`: the data, a series of units, each a whole
-  run of gzip (BGZF) members, then a BGZF EOF block
+  run of gzip (BGZF) members, then a BGZF EOF block <!-- C28 C29 -->
 - `<prefix>.<sample>.walks.gz.idx`: the directory, plain text:
   - line 1: the data file's `#walks` line plus `bytes:i:<data file length>`
+    <!-- C47 -->
   - `#header 0 <length>`
   - one `seq <offset> <length>` line per reference sequence, giving its
-    table unit. Every reference sequence is listed; one with no units has a
-    table holding only its `#unit` line
+    table unit. Every reference sequence is listed, in file order
+    <!-- C48 -->, and every one has at least one tile, so no table is
+    empty <!-- C46 -->
 
 ### Units
 
 - **The header unit,** first, from byte 0: `#walks format:i:7 tile:i:65536
   revisited:i: stay:i: abridge:i: abridgebytes:i:`, then the `#reference`,
-  `#haplotype` and `#hole` lines. No `#long`, `chunk` or `maxnode`
-- **Per reference sequence,** in file order: its `tile`, `departures` and
-  `detail` units, then its `table` unit
+  `#haplotype` and `#hole` lines. No `#long`, `chunk` or `maxnode`, and no
+  `#unit` line ([Costs decided](#costs-decided)) <!-- C30 -->
+- **Per reference sequence,** in byte order of the names <!-- C31 -->: its
+  `tile` and `departures` units by start, then its `detail` units, then
+  its `table` unit <!-- C32 -->
 - **Every unit but the header** starts with `#unit seq start end kind
   name`, so the file delimits itself and the tables can be rebuilt by
   walking its gzip members, as a `.fai` can be rebuilt from its FASTA
+  <!-- C34 -->
 - **`tile`:** one tile of `tile:i:` bp, holding the rows format 6 writes for
-  a chunk. `start end` is the tile's true extent, the union of its rows':
-  it can begin after the nominal start and run past the tile's end, so a
-  node or a pass longer than a tile needs no `#long` line and no reach
-  rule. `name` is the nominal start. Readers address tiles by extent, never
-  by `floor(base / tile)`
-- **`departures`:** one block of the departure pyramid, 64 kb × 8^L (64 kb,
-  512 kb, 4 Mb, 32 Mb). `start end` is the block, `name` `.`. A record
-  goes in the largest aligned blocks inside its tile-rounded extent: from
-  `floor(start / T) × T` to `ceil(end / T) × T`, taking at each point the
-  largest block aligned there that fits. Its lines in different blocks are
-  identical. The pyramid is the writer's choice; readers only fetch the
-  units overlapping their window
-- **`detail`:** one abridged path's moved pieces in one tile, ADR 0009's
-  detail record. `name` is `cs:d`, the tile's nominal start and the
-  `abridged` row's detail number; `start end` is the union of its pieces'
-  spans
-- **`table`:** after its `#unit` line, one line per unit of the sequence in
-  file order, `#entry seq start end kind name offset length`, the offset
-  and length in compressed bytes as decimal text. Readers scan it
+  a chunk. `start end` is the tile's extent, from the first base its `ref`
+  rows' stretches cover to the last: it can begin after the nominal start
+  and run past the tile's end, so a node or a pass longer than a tile
+  needs no `#long` line and no reach rule. <!-- C40 --> `name` is the
+  nominal start. Readers address tiles by extent, never by
+  `floor(base / tile)` <!-- C145 -->
+- **`departures`:** one block of the departure pyramid, `tile × 8^L` bp for
+  L from 0 to 3 (64 kb, 512 kb, 4 Mb and 32 Mb at the default tile), each
+  at a multiple of its size; `start end` is the block, `name` `.`.
+  <!-- C43 --> A record's line is in every block of its cover and no
+  other, the largest aligned blocks inside its tile-rounded extent, the
+  same text in each. <!-- C88 --> The pyramid is the writer's choice;
+  readers fetch only the units overlapping their window <!-- C134 -->
+- **`detail`:** one W line's moved pieces in one tile, ADR 0009's detail
+  record, one record per W line. <!-- C76 --> `name` is `cs:d`, the tile's
+  nominal start and the `abridged` row's detail number; `start end` runs
+  from the first base its walk rows' spans cover to the last <!-- C37 -->
+- **`table`:** after its `#unit` line, which runs from 0 to `|S|`, where
+  the sequence's last line ends <!-- C38 -->, one line per unit of the
+  sequence in file order, `#entry seq start end kind name offset length`,
+  the offset and length in compressed bytes as decimal text, each length
+  above 0. Readers scan it <!-- C45 -->
 
 ### Lines
 
 Every line not starting with `#` begins `seq start end`, the reference
 sequence and the stretch of it the line is about, then format 6's columns
 from `kind` on, unchanged but for one column a departure record gains,
-`ownTiles` (amended below). These columns are data, not an index key, so
-`zcat | grep` places any line.
+`ownTiles` (amended below). <!-- C54 --> These columns are data, not an
+index key, so `zcat | grep` places any line.
 
 | kind | `start end` |
 |---|---|
-| `walk` | the piece's span on the tile's reference path: the first base of its first placed step to the last base of its last; route interiors that hold another chunk's reference nodes lie outside it |
-| `abridged` | the moved piece's stretch on the reference path |
+| `walk` | the piece's span: the first base its steps placed on R cover to the last, over all of them; route interiors that hold another tile's reference nodes lie outside it |
+| `abridged` | the span of the piece's first and last steps on R, as its `start` and `end` decode |
 | `ref`, `nodes`, `route` | the tile's extent: these are the tile's dictionary rows and have no span of their own |
-| `departure` | the first base of its first end node to the last base of its other end node, or the breakpoint stretch if wider |
+| `departure` | the first base of its first end node to the last base of its other end node, or the breakpoint stretch where wider |
+
+<!-- C55 C56 C57 C58 -->
 
 ### Reading a window
 
-For a window `[s, e)` with context `c`, `D = [s − c, e + c)`:
+For a window `[s, e)` with context `c`, `D = [max(0, s − c), e + c)`
+([walks-format.md](../walks-format.md#reading-a-window) gives the rule in
+full):
 
 - At open, GET the directory and refuse any format but 7; GET the header
   unit and the sequence's table in parallel; refuse when the directory's
   line 1 differs from the header's `#walks` line or its `bytes` from the
-  Content-Range total
+  Content-Range total, where the reader can learn it <!-- C122 -->
 - Select the `tile` and `departures` units with `start < D.end` and
   `end > D.start`, skipping any of length 0; merge byte ranges that touch,
   and GET each as one single-range request, never a multi-range one
-- Gunzip each unit. Decode a tile's rows from `kind` on by format 6's
-  rules. Keep the departure lines overlapping `D` and drop exact
-  duplicates
+  <!-- C134 -->
+- Gunzip each unit. <!-- C149 --> Decode a tile's rows from `kind` on by
+  format 6's rules. Keep the departure lines overlapping `D` and drop
+  exact duplicates <!-- C149 -->
 - An attach fetch reads the tiles the record names in `ownTiles` and
-  takes the own steps they hold. A piece there that is abridged stays
-  abridged: its own steps come only when a viewer expands that path's
-  `detail` unit `cs:d`, on request. The tiles are not always the one
-  holding the leave base: for a record that jumps back along the
-  reference, the contig's piece order can file its own steps on the rejoin
-  side ([Genome-wide](#genome-wide)), and a record can name both
+  takes the record's own steps from them and nothing else. <!-- C117 -->
+  A piece there that is abridged stays abridged: its own steps come only
+  when a viewer expands that path's `detail` unit `cs:d`, on request.
+  <!-- C133 --> The tiles are not always the one holding the leave base:
+  for a record that jumps back along the reference, the contig's piece
+  order can file its own steps on the rejoin side
+  ([Genome-wide](#genome-wide)), and a record can name both <!-- C86 -->
 - There is no chunk-before rule, no `maxnode`, no `#long` widening and no
   reach
 
@@ -139,33 +159,98 @@ zcat f.walks.gz | awk -F'\t' '$1=="GRCh38#0#chr22" && $2<20001000 && $3>20000000
 
 ### What a writer guarantees
 
+[walks-format.md](../walks-format.md#what-the-writer-guarantees) lists the
+guarantees and says which the build checks and which the tests and the
+file checks do. In short:
+
 - The header, the units, the tables and the EOF block partition the file;
-  every unit starts and ends a gzip member and starts with its `#unit` line
-- Each table lists every unit of its sequence, in file order, before it
-- A tile's extent is the union of its lines' extents; every tile and
-  detail line lies within its unit's `start end`, and every departure line
-  overlaps each block it is in; every step placed on the reference in
-  `[a, b)` is in a tile whose extent overlaps `[a, b)`; every departure
-  record is in every block of its cover
-- Each line's `start end` agrees with its decoded steps, checked at build
-  as format 6's encode-decode check is, on every row
-- Names hold no tab or newline and don't start with `#`; the build refuses
-  any that do
+  every unit starts and ends a gzip member and starts with its `#unit`
+  line <!-- C93 -->
+- Each table lists every unit of its sequence, in file order, before it,
+  with lengths above 0, and its `#unit` line states `|S|` <!-- C94 -->
+- A tile's extent runs from the first base its `ref` rows' stretches cover
+  to the last; every tile and detail line lies within its unit's
+  `start end` <!-- C137 -->; every departure line overlaps each block it
+  is in, and every departure record is in every block of its cover
+  <!-- C89 -->; every piece's span lies inside its tile's extent, since
+  every placed step is on R <!-- C41 -->
+- Each walk and abridged row's `start end` is the span of the steps it
+  decodes to, checked at build by decoding the row; no other row's extent
+  is checked at build: a `ref`, `nodes` or `route` row states its unit's
+  extent, and a departure line's comes from its ends, which the tests and
+  `verify7.py` check <!-- C112 -->
+- Path names hold no tab or newline and don't start with `#`; the build
+  refuses any that do <!-- C95 -->
 - Offsets and lengths are exact integers below 2^53; files pass 2 GiB
   (CHM13's is 1.78 GB), so writers, readers and checks stream and never
-  hold a whole file
+  hold a whole file <!-- C98 -->
 - Every unit name other than `.` is unique within its kind and sequence
+  <!-- C136 -->
 - The data file is written, then the directory, each under a temporary
-  name and renamed
+  name and renamed <!-- C96 -->
 
 ### Hosting
+<!-- background -->
 
 - Versioned file names, so a data file and a directory from different
   builds never meet
 - Single-range requests only: CloudFront answers a multi-range request
   with the whole object
 
+## Costs decided
+
+Choices the claims audit ([claims7.md](../departures/claims7.md),
+2026-11-06) found carried into format 7 from earlier formats with no
+reason or measurement recorded. They are decided here, measured with
+gfa-to-tabix 4.0.0's writer (format7-tidy at 033ce81) on ada, on HPRC v2.1
+Minigraph-Cactus chr22 and HPRC release 2 pggb chrY on GRCh38
+(`~/work/tidy7/` on ada; the counts are in
+[claims7.md](../departures/claims7.md#measurements-the-leads-asked-for)).
+
+- **A route is stored the way round whose handles sort first**
+  ([route](../walks-format.md#route)). It came in with format 2 (677ed02
+  and 08ffa5a, 2026-10-12) and was carried through formats 5, 6 and 7
+  unmeasured. Measured against a writer that stores a route the way the
+  first walk of the tile to take it does (a four-line change to
+  `Routes::intern`, the tile's walk rows being in path order): the data
+  file is 58,494,956 against 58,552,425 bytes on MC chr22, 0.10% smaller
+  as stored, and 187,163,025 against 186,168,430 on pggb chrY, 0.53%
+  larger. Kept: the bytes go both ways and neither moves a window's read,
+  and the stored orientation makes a tile's route rows, their ids and
+  their order depend on the routes alone, not on which walk comes first
+  <!-- C68 -->
+- **The header unit has no `#unit` line**
+  ([Files and units](../walks-format.md#files-and-units)). Consistent
+  between spec and writer since format 7's first draft, with no reason
+  given. Kept: it costs no byte, and a `#unit` line there would state a
+  `seq start end` for a unit about no sequence and no stretch, a made-up
+  coordinate, which the format forbids. A reader that rebuilds the tables
+  by walking the gzip members takes the header as the members before the
+  first `#unit` line <!-- C30 -->
+- **A bubble across a tile edge is a departure record**, where inside a
+  tile the same bubble is a route: ADR 0001 files a step in one tile and
+  ADR 0009 gives a departure between two pieces a record. Measured with
+  [bubbles7.py](../departures/scripts/bubbles7.py): on MC chr22, 23,586 of
+  the 24,648 records (95.7%) are bubbles across a tile edge, both ends
+  passed once, on one strand, rejoining at or after the leave with nothing
+  missing, and 21,177 (86%) of them span at most 1 kb of reference; on
+  pggb chrY 6,785 of 425,040 (1.6%), the rest being collapsed-repeat hops.
+  The departure blocks cost 891,207 bytes, 1.5% of MC chr22's file, and
+  14,618,280 bytes, 7.8% of pggb chrY's. Kept: holding both ends of such
+  a bubble in one tile would file steps in two tiles, which ADR 0001
+  rejects, to save at most 1.5% of the MC file; a record whose leave and
+  rejoin pieces the window's read holds needs no attach fetch, and a
+  reader draws it as it draws a route
+- **The build-time checks** the claims audit added (claim C93: the
+  partition, the tables, the names, containment and the departure cover)
+  cost nothing the timing can see: eight alternating runs of MC chr22 on ada, the
+  machine shared with other jobs, took at least 50.12 s of wall and
+  82.86 s of CPU before them and 49.65 s and 82.87 s after, at 4.07 GB
+  peak either way; pggb chrY, one run each, 114.1 against 94.2 s and 7.32
+  against 7.00 GB
+
 ## Evidence
+<!-- record -->
 
 All from [docs/walks-container/](../walks-container/). The arbiters'
 tables come from per-window results under `arbA/results/` and
@@ -265,6 +350,7 @@ and measured it against format 6
   so nothing above depends on it. The writer names them uniquely
 
 ## Consequences
+<!-- record -->
 
 - **Walk format 7 is a format break.** The rows inside a tile decode as
   format 6's, so graph-walks' `cut` keeps its return shape: the five
@@ -276,8 +362,9 @@ and measured it against format 6
   `chunk` and `maxnode` and gains `tile`; departure records keep
   `departures.rs`'s cover, filed in pyramid units with their end-node
   extents; detail records become `detail` units; no `.tbi`. The writer
-  checks every line's extent against its decoded steps, and the release
-  checks of `verify7.mjs` become tests and an audit step.
+  checks the extent of the walk and abridged rows it writes against their
+  decoded steps, and the release checks of `verify7.mjs` become tests and
+  an audit step.
   [walks-format.md](../walks-format.md) is rewritten for format 7, and the
   README's walk figure is drawn from the writer's output
 - **graph-walks 6:** a source that reads the directory, the tables and
@@ -305,6 +392,7 @@ and measured it against format 6
   ([open problems](../open-problems.md))
 
 ## Alternatives rejected
+<!-- record -->
 
 - **Format 6 with reader fixes (F6p):** the same bytes as Tabix filed at
   the chunk's span, which shows the one-base key never saved anything; it
@@ -344,6 +432,7 @@ and measured it against format 6
   bytes
 
 ## History
+<!-- record -->
 
 - 2026-10-08: 10d3ae1 files walk rows at whole chunk spans; 3953bb1 files
   them at `seq cs cs+1` the same day, with no measurement; 842a19b makes
@@ -379,3 +468,16 @@ and measured it against format 6
 - 2026-11-06, corrected: graph-walks 6 takes
   `WalkReader.fromFilehandles({ data, directory })`, the data file and
   its `.idx`, not `{ data, table }` as Consequences first said
+- 2026-11-06, amended by the claims audit
+  ([claims7.md](../departures/claims7.md), [issues log](../issues-log.md)):
+  a detail unit holds one W line's moved pieces, not one path's, since a
+  W line is the unit of contiguity; a table's `#unit` line runs from 0
+  to `|S|`, which no line stated before; a sequence of 0 bp states
+  `[0, 0)` in its units, its table and its departure lines, which no
+  window selects, instead of a base it doesn't have; an `abridged` row's
+  `start end` is the span of its first and last steps on R, as
+  walks-format.md said and this page's Lines table did not; the build
+  checks the extents of walk and abridged rows, not of every line; a W or
+  P line with no steps is skipped; the build now checks the partition, the
+  tables, the names, containment and the departure cover; and the costs
+  the format carried unmeasured are decided above
