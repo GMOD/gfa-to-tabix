@@ -1251,3 +1251,72 @@ Where the findings have come from so far, and the rule each gives:
   sequence of 0 bp states 0 0"; `verify()`, `verify7.py` and
   `claims7.py` accept `[0, 0)` only where the table states `|S|` 0; the
   widened fuzz generator writes sequences of 0 bp
+- **2026-11-06, the format 7 reader audit (graph-walks a1dc38a).** An
+  attach fetch decoded the fetched tile into the cut's rows, so every
+  piece of the walk there joined its fragment: a cut of MC chr22 at 18.16
+  Mb returned a fragment running to 20.36 Mb and 452 computed departures
+  there, and a fragment depended on `attachFetches` and on which other
+  walks the cut kept. Source: the reader audit,
+  [rules7.md](walks-container/reader/rules7.md) (Failing inputs); the
+  decode came in with graph-walks 5's attach fetch (43910ec) and the spec
+  sentence "takes the own steps those tiles hold" was written for detail
+  units without looking at the rows downstream. Fix: a1dc38a, walkCut
+  takes a fetched tile's rows as attach runs, indexed for records' leave
+  and rejoin pieces alone. Guard: graph-walks test "a tile fetched to
+  attach gives its record the own steps and nothing else"
+- **2026-11-06, the format 7 reader audit (graph-walks 7afced7).** walkCut
+  attached own steps only to records with `ownBp` above `missingBp`, so a
+  record with a 0 bp own step and `ownBp` 0, which W1 decided is an own
+  step and `ownTiles` names, never got it. Source: the reader audit
+  (rules7.md, Failing inputs); W1's entry said graph-walks follows the
+  steps, which held for `ownTiles` and not for the gate. Fix: 7afced7,
+  every record within `attachBp` looks for its own steps between its
+  leave and rejoin. Guard: graph-walks test "a 0 bp own step is attached",
+  on the `ownzero.R` fixture, W1's path G
+- **2026-11-06, the format 7 reader audit (graph-walks 5b9cba6).** walkCut
+  returned a record only where its stretch overlapped the reference nodes
+  over the window or touched a fragment's edge, so a window inside a
+  `#hole` lost the record over it; and it kept a computed departure inside
+  a fragment's span or at its edge far outside the window. Source: the
+  reader audit (rules7.md); the spec's reading rule was written from ADR
+  0010, not from `walkCut` (86d1006). Fix: 5b9cba6, a cut returns every
+  record read over D and computes departures over the drawn stretch only.
+  Guard: graph-walks tests "a cut returns every record whose line overlaps
+  its window, in a hole too" and "a cut computes no departure outside its
+  drawn stretch, even inside a fragment", on `hole.R` and `excursion.R`
+- **2026-11-06, the format 7 reader audit (graph-walks 6236988).**
+  `referenceNodes` kept one pass per node, so on `loop.R` a region of 0-36
+  lacked node 2 at 18-24 and node 3 at 24-30; the JBrowse plugin calls it.
+  Source: the reader audit (rules7.md); R1's one-pass pattern in a
+  function the R1 fix didn't touch. Fix: 6236988, it returns every pass
+  whose node overlaps the region. Guard: graph-walks test "referenceNodes
+  gives every pass of the reference over the region"
+- **2026-11-06, the format 7 reader audit (graph-walks 5e7db36).**
+  `canonicalLink` wrote each link with the smaller first handle, so a
+  walk `>7>3` gave `L 3 - 7 -` and Bandage drew the figure cuts' arrows
+  backwards. Source: the reader audit (rules7.md, Links); format 1's links
+  file rule (c4ff08d), never revisited. Fix: 5e7db36, a link goes the way
+  round with more `+` ends, by the old rule on a tie; the spec's Readers
+  says so. Guard: graph-walks test "a cut's links run the way a walk along
+  the reference takes them"
+- **2026-11-06, the format 7 reader audit (graph-walks 55dfdc8).** 13 of
+  37 mutations of graph-walks' format 7 rules passed every test: `:k`,
+  `@k`, `start@k`, the `@k` tie, an abridged row's default end, R's
+  `hapOffset` order, path-first placement, the hole squeeze, records kept
+  by their text, the `#unit` refusal, the departure-line filter and the
+  length-0 skip, though pggb chrY's file uses the copies on 109,697 walk
+  rows. Source: the reader audit (rules7.md, `rules7-mutate.py`); no
+  graph-walks fixture had ever held a walk row with `@` or `:`. Fix:
+  55dfdc8, fixtures `copies.R`, `copyends.R`, `zerostep.R` and
+  `holetile.R` and tests for each; the mutation score goes from 24/37 to
+  37/37. Guard: those tests. With all six fixes, graph-walks' cut matches
+  the reference cut on ada in every set:
+
+  | Set | Windows | Differences before | Now |
+  |---|---|---|---|
+  | MC chr22 1 kb | 100 | 0 | 0 |
+  | MC chr22 100 kb | 100 | 452 | 0 |
+  | MC chr22 1 Mb | 30 | 49, plus 7 unchecked | 0 |
+  | pggb chrY 1 kb | 100 | 55 | 0 |
+  | pggb chrY 100 kb | 100 | 28,940 | 0 |
+  | pggb chrY 1 Mb | 30 | 5,192 | 0 |
