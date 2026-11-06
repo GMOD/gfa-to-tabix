@@ -1096,3 +1096,13 @@ Where the findings have come from so far, and the rule each gives:
   `--tile`. Fix: the help strings and the message say tile; the spec's
   option table already did. Guard: writer test "help says tile not
   chunk"
+- **2026-11-06, the format 7 README figures, three drawings of the
+  format.** The spec's Example named its reference sample `R`, so its
+  lines read `R#0#chr` beside prose where R is the defined term, a tile's
+  reference path. Source: a test fixture's
+  one-letter sample quoted into the spec. Fix: `walks-two-refs.gfa` and
+  its P-line twin name the sample GRCh38, the tests that build them say
+  `GRCh38#0#chr`, and the Example's lines are regenerated from the tool.
+  Guard: writer test "the spec's example quotes the tool's lines", which
+  reads the Example from `docs/walks-format.md` and finds each line in the
+  build

@@ -1,10 +1,10 @@
 // --walks over walks-two-refs.gfa, every row checked by hand. Five nodes of
-// 6 bp make the reference R#0#chr: 1 2 3 4 5 at 0, 6, 12, 18 and 24. Q#0#chr
-// takes 6 in place of 2. With --tile 10, nodes 1 and 2 lie in tile 0-10, 3
-// and 4 in 10-20, and 5 in 20-30; each tile's rows are one unit, whose extent
-// is the stretch its ref rows and pieces cover. H#1#h inserts 7 (3 bp)
-// between 3 and 4, I#1#i inverts 2-3, D#1#d repeats 1-4, and U#1#u visits
-// only 8 and 9. walks-two-refs-p.gfa says the same in P lines.
+// 6 bp make the reference GRCh38#0#chr: 1 2 3 4 5 at 0, 6, 12, 18 and 24.
+// Q#0#chr takes 6 in place of 2. With --tile 10, nodes 1 and 2 lie in tile
+// 0-10, 3 and 4 in 10-20, and 5 in 20-30; each tile's rows are one unit,
+// whose extent is the stretch its ref rows and pieces cover. H#1#h inserts 7
+// (3 bp) between 3 and 4, I#1#i inverts 2-3, D#1#d repeats 1-4, and U#1#u
+// visits only 8 and 9. walks-two-refs-p.gfa says the same in P lines.
 //
 // A handle is 2 * id + 1 when reversed. In a ref row and a route row each
 // handle is written as 2 * (id - previous id) + reverse; a walk row names its
@@ -59,7 +59,7 @@ fn build(fixture_name: &str, args: &[&str]) -> Built {
         .arg(input)
         .arg("-o")
         .arg(dir.join("out"))
-        .args(["--walks", "--refs", "R,Q", "--tile", "10"])
+        .args(["--walks", "--refs", "GRCh38,Q", "--tile", "10"])
         .args(args)
         .output()
         .unwrap();
@@ -802,9 +802,9 @@ fn assert_tiles(stretches: &[(u64, u64)], what: &str) {
 #[test]
 fn every_path_rebuilds_from_its_rows() {
     for (gfa, refs, tile) in [
-        ("walks-two-refs.gfa", "R,Q", "10"),
-        ("walks-two-refs.gfa", "R,Q", "7"),
-        ("walks-two-refs.gfa", "R,Q", "1000"),
+        ("walks-two-refs.gfa", "GRCh38,Q", "10"),
+        ("walks-two-refs.gfa", "GRCh38,Q", "7"),
+        ("walks-two-refs.gfa", "GRCh38,Q", "1000"),
         ("walks-repeat.gfa", "R", "10"),
         ("walks-repeat.gfa", "R", "1000"),
         ("walks-loop.gfa", "R", "10"),
@@ -826,7 +826,7 @@ fn every_path_rebuilds_from_its_rows() {
 #[test]
 fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
     for (gfa, refs) in [
-        ("walks-two-refs.gfa", "R,Q"),
+        ("walks-two-refs.gfa", "GRCh38,Q"),
         ("walks-repeat.gfa", "R"),
         ("walks-loop.gfa", "R"),
         ("walks-records.gfa", "R"),
@@ -856,23 +856,23 @@ fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
 #[test]
 fn an_abridged_row_stands_for_one_piece_and_names_its_detail_record() {
     let built = build("walks-two-refs.gfa", &["--abridge-bytes", "1"]);
-    let r = built.file("R");
+    let r = built.file("GRCh38");
     assert_eq!(
-        rows_of(r, "R#0#chr", "abridged", "D#1#d"),
+        rows_of(r, "GRCh38#0#chr", "abridged", "D#1#d"),
         tsv(&[
-            "R#0#chr 0 12 abridged D#1#d 0 0 0 2 12 2 4 1",
-            "R#0#chr 0 12 abridged D#1#d 0 24 2 2 12 2 4 1",
-            "R#0#chr 12 24 abridged D#1#d 0 12 1 2 12 6 8 1",
-            "R#0#chr 12 24 abridged D#1#d 0 36 3 2 12 6 8 1",
-            "R#0#chr 24 30 abridged D#1#d 0 48 4 1 6 10 10 0",
+            "GRCh38#0#chr 0 12 abridged D#1#d 0 0 0 2 12 2 4 1",
+            "GRCh38#0#chr 0 12 abridged D#1#d 0 24 2 2 12 2 4 1",
+            "GRCh38#0#chr 12 24 abridged D#1#d 0 12 1 2 12 6 8 1",
+            "GRCh38#0#chr 12 24 abridged D#1#d 0 36 3 2 12 6 8 1",
+            "GRCh38#0#chr 24 30 abridged D#1#d 0 48 4 1 6 10 10 0",
         ])
     );
     assert_eq!(
         unit(r, "detail", "0:1"),
         tsv(&[
-            "#unit R#0#chr 0 12 detail 0:1",
-            "R#0#chr 0 12 walk D#1#d 0 0 0 2 2 .",
-            "R#0#chr 0 12 walk D#1#d 0 24 2 2 2 .",
+            "#unit GRCh38#0#chr 0 12 detail 0:1",
+            "GRCh38#0#chr 0 12 walk D#1#d 0 0 0 2 2 .",
+            "GRCh38#0#chr 0 12 walk D#1#d 0 24 2 2 2 .",
         ])
     );
 }
@@ -919,7 +919,7 @@ fn an_abridged_row_spans_its_piece_from_its_first_step_on_r_to_its_last() {
 #[test]
 fn each_reference_has_one_file_holding_only_its_rows() {
     let built = build("walks-two-refs.gfa", &[]);
-    assert_eq!(built.files.keys().collect::<Vec<_>>(), ["Q", "R"]);
+    assert_eq!(built.files.keys().collect::<Vec<_>>(), ["GRCh38", "Q"]);
     for (sample, text) in &built.files {
         let anchor = format!("{sample}#0#chr");
         let rows: Vec<&str> = text.lines().filter(|l| !l.starts_with('#')).collect();
@@ -943,7 +943,7 @@ fn each_reference_has_one_file_holding_only_its_rows() {
 // the other as itself, so it has no departure.
 #[test]
 fn a_path_that_jumps_over_the_reference_has_a_departure_record_over_the_stretch() {
-    let built = build("walks-skip.gfa", &[]);
+    let built = build("walks-skip.gfa", &["--refs", "R,Q"]);
     for sample in ["R", "Q"] {
         let anchor = format!("{sample}#0#chr");
         assert_eq!(
@@ -968,12 +968,12 @@ fn a_path_that_jumps_over_the_reference_has_a_departure_record_over_the_stretch(
 fn a_departure_between_pieces_has_a_record_and_one_inside_a_piece_has_none() {
     let built = build("walks-two-refs.gfa", &[]);
     assert_eq!(
-        departures(built.file("R")),
+        departures(built.file("GRCh38")),
         tsv(&[
-            "R#0#chr 0 18 departure I#1#i 6 0 0 6 + 1 18 - 1 .",
-            "R#0#chr 0 18 departure Q#0#chr 6 6 0 6 + 1 12 + 1 0",
-            "R#0#chr 0 24 departure D#1#d 24 0 0 24 + 1 0 + 1 .",
-            "R#0#chr 6 24 departure I#1#i 18 0 0 6 - 1 18 + 1 .",
+            "GRCh38#0#chr 0 18 departure I#1#i 6 0 0 6 + 1 18 - 1 .",
+            "GRCh38#0#chr 0 18 departure Q#0#chr 6 6 0 6 + 1 12 + 1 0",
+            "GRCh38#0#chr 0 24 departure D#1#d 24 0 0 24 + 1 0 + 1 .",
+            "GRCh38#0#chr 6 24 departure I#1#i 18 0 0 6 - 1 18 + 1 .",
         ])
     );
     let whole = build("walks-two-refs.gfa", &["--tile", "1000"]);
@@ -1226,18 +1226,18 @@ fn a_walk_row_names_the_copy_it_leaves_r_from_where_stepping_would_stop_early() 
 #[test]
 fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
     let built = build("walks-two-refs.gfa", &[]);
-    for (sample, other) in [("R", "Q"), ("Q", "R")] {
-        assert_eq!(
-            header(built.file(sample)),
-            tsv(&[
-                "#walks format:i:7 tile:i:10 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000",
-                &format!("#reference {sample}"),
-                "#haplotype D#1",
-                "#haplotype H#1",
-                "#haplotype I#1",
-                &format!("#haplotype {other}#0"),
-            ])
-        );
+    for (sample, haplotypes) in [
+        ("GRCh38", ["D#1", "H#1", "I#1", "Q#0"]),
+        ("Q", ["D#1", "GRCh38#0", "H#1", "I#1"]),
+    ] {
+        let walks = "#walks format:i:7 tile:i:10 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000";
+        let reference = format!("#reference {sample}");
+        let listed = haplotypes.map(|h| format!("#haplotype {h}"));
+        let lines: Vec<&str> = [walks, &reference]
+            .into_iter()
+            .chain(listed.iter().map(String::as_str))
+            .collect();
+        assert_eq!(header(built.file(sample)), tsv(&lines));
     }
 }
 
@@ -1297,29 +1297,29 @@ fn a_record_names_the_tiles_holding_its_own_steps() {
 #[test]
 fn a_tile_holds_its_reference_its_routes_and_a_walk_row_per_piece() {
     let built = build("walks-two-refs.gfa", &["--stay", "0"]);
-    let r = built.file("R");
+    let r = built.file("GRCh38");
     assert_eq!(
         unit(r, "tile", "0"),
         tsv(&[
-            "#unit R#0#chr 0 12 tile 0",
-            "R#0#chr 0 12 ref R#0#chr 0 0 0 2 2,2 6,6 .",
-            "R#0#chr 0 12 nodes 6 6",
-            "R#0#chr 0 12 route . 13 -9",
-            "R#0#chr 0 12 walk D#1#d 0 0 0 2 2 .",
-            "R#0#chr 0 12 walk D#1#d 0 24 2 2 2 .",
-            "R#0#chr 0 12 walk H#1#h 100 100 0 2 2 .",
-            "R#0#chr 0 6 walk I#1#i 0 0 0 1 2 .",
-            "R#0#chr 6 12 walk I#1#i 0 12 2 1 5 .",
-            "R#0#chr 0 6 walk Q#0#chr 0 0 0 2 2 1",
+            "#unit GRCh38#0#chr 0 12 tile 0",
+            "GRCh38#0#chr 0 12 ref GRCh38#0#chr 0 0 0 2 2,2 6,6 .",
+            "GRCh38#0#chr 0 12 nodes 6 6",
+            "GRCh38#0#chr 0 12 route . 13 -9",
+            "GRCh38#0#chr 0 12 walk D#1#d 0 0 0 2 2 .",
+            "GRCh38#0#chr 0 12 walk D#1#d 0 24 2 2 2 .",
+            "GRCh38#0#chr 0 12 walk H#1#h 100 100 0 2 2 .",
+            "GRCh38#0#chr 0 6 walk I#1#i 0 0 0 1 2 .",
+            "GRCh38#0#chr 6 12 walk I#1#i 0 12 2 1 5 .",
+            "GRCh38#0#chr 0 6 walk Q#0#chr 0 0 0 2 2 1",
         ])
     );
     assert_eq!(
-        rows_of(r, "R#0#chr", "route", "6") + &rows_of(r, "R#0#chr", "walk", "H#1#h"),
+        rows_of(r, "GRCh38#0#chr", "route", "6") + &rows_of(r, "GRCh38#0#chr", "walk", "H#1#h"),
         tsv(&[
-            "R#0#chr 12 24 route 6 8 -6",
-            "R#0#chr 0 12 walk H#1#h 100 100 0 2 2 .",
-            "R#0#chr 12 24 walk H#1#h 100 112 1 3 6 0",
-            "R#0#chr 24 30 walk H#1#h 100 127 2 1 10 .",
+            "GRCh38#0#chr 12 24 route 6 8 -6",
+            "GRCh38#0#chr 0 12 walk H#1#h 100 100 0 2 2 .",
+            "GRCh38#0#chr 12 24 walk H#1#h 100 112 1 3 6 0",
+            "GRCh38#0#chr 24 30 walk H#1#h 100 127 2 1 10 .",
         ])
     );
 }
@@ -1387,15 +1387,50 @@ fn a_walk_the_default_rule_would_misread_names_the_copy_it_leaves_from() {
 fn a_walk_back_into_a_tile_starts_a_new_piece_there() {
     let built = build("walks-two-refs.gfa", &["--stay", "0"]);
     assert_eq!(
-        rows_of(&built.walks, "R#0#chr", "walk", "D#1#d"),
+        rows_of(&built.walks, "GRCh38#0#chr", "walk", "D#1#d"),
         tsv(&[
-            "R#0#chr 0 12 walk D#1#d 0 0 0 2 2 .",
-            "R#0#chr 0 12 walk D#1#d 0 24 2 2 2 .",
-            "R#0#chr 12 24 walk D#1#d 0 12 1 2 6 .",
-            "R#0#chr 12 24 walk D#1#d 0 36 3 2 6 .",
-            "R#0#chr 24 30 walk D#1#d 0 48 4 1 10 .",
+            "GRCh38#0#chr 0 12 walk D#1#d 0 0 0 2 2 .",
+            "GRCh38#0#chr 0 12 walk D#1#d 0 24 2 2 2 .",
+            "GRCh38#0#chr 12 24 walk D#1#d 0 12 1 2 6 .",
+            "GRCh38#0#chr 12 24 walk D#1#d 0 36 3 2 6 .",
+            "GRCh38#0#chr 24 30 walk D#1#d 0 48 4 1 10 .",
         ])
     );
+}
+
+// docs/walks-format.md's Example quotes GRCh38's file of this build: its
+// directory, with offsets and lengths elided, then lines of its units, each
+// with its columns aligned by spaces
+#[test]
+fn the_specs_example_quotes_the_tools_lines() {
+    let built = build("walks-two-refs.gfa", &["--stay", "0"]);
+    let spec = fs::read_to_string(format!(
+        "{}/docs/walks-format.md",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap();
+    let example = &spec[spec.find("\n## Example\n").unwrap()..];
+    let blocks: Vec<&str> = example.split("```\n").skip(1).step_by(2).take(2).collect();
+    let quoted = |block: &str| -> Vec<String> {
+        block
+            .lines()
+            .map(|l| l.split_whitespace().collect::<Vec<_>>().join("\t"))
+            .collect()
+    };
+    let directory = quoted(blocks[0]);
+    assert_eq!(
+        directory[1..],
+        ["#header\t0\t…", "GRCh38#0#chr\t…\t…"],
+        "{directory:?}"
+    );
+    assert!(directory[0].ends_with("\tbytes:i:…"));
+    let lines: BTreeSet<&str> = built.file("GRCh38").lines().collect();
+    assert!(lines.contains(directory[0].strip_suffix("\tbytes:i:…").unwrap()));
+    let rows = quoted(blocks[1]);
+    assert_eq!(rows.len(), 9);
+    for row in &rows {
+        assert!(lines.contains(row.as_str()), "{row}");
+    }
 }
 
 // K takes walks-repeat.gfa's collapsed repeat three times. Placed nearest, its
@@ -1556,7 +1591,10 @@ fn a_stay_refuses_a_stretch_over_a_node_the_reference_passes_once() {
 // --stay 0 writes.
 #[test]
 fn a_stay_leaves_a_reference_that_passes_each_node_once_alone() {
-    for (gfa, refs) in [("walks-two-refs.gfa", "R,Q"), ("walks-records.gfa", "R")] {
+    for (gfa, refs) in [
+        ("walks-two-refs.gfa", "GRCh38,Q"),
+        ("walks-records.gfa", "R"),
+    ] {
         for tile in ["7", "10", "1000"] {
             let none = build(gfa, &["--refs", refs, "--tile", tile, "--stay", "0"]);
             let stay = build(gfa, &["--refs", refs, "--tile", tile, "--stay", "1000"]);
@@ -1588,7 +1626,7 @@ fn a_haplotype_with_two_contigs_is_listed_once() {
     let built = build(path.to_str().unwrap(), &[]);
     fs::remove_file(&path).unwrap();
     assert!(built.output.status.success());
-    assert!(header(built.file("R")).ends_with(&tsv(&[
+    assert!(header(built.file("GRCh38")).ends_with(&tsv(&[
         "#haplotype D#1",
         "#haplotype H#1",
         "#haplotype H#2",
@@ -1602,7 +1640,7 @@ fn a_path_off_every_reference_is_counted_and_left_out() {
     let built = build("walks-two-refs.gfa", &[]);
     let stderr = String::from_utf8_lossy(&built.output.stderr);
     assert!(
-        stderr.contains("1 paths visit no R node and are left out"),
+        stderr.contains("1 paths visit no GRCh38 node and are left out"),
         "{stderr}"
     );
     assert!(!built.walks.contains("U#1#u"));
@@ -1618,7 +1656,10 @@ fn p_lines_give_the_rows_w_lines_do() {
 
 #[test]
 fn the_order_of_the_paths_changes_no_row() {
-    for (name, refs) in [("walks-two-refs.gfa", "R,Q"), ("walks-records.gfa", "R")] {
+    for (name, refs) in [
+        ("walks-two-refs.gfa", "GRCh38,Q"),
+        ("walks-records.gfa", "R"),
+    ] {
         let gfa = fs::read_to_string(fixture(name)).unwrap();
         let (paths, rest): (Vec<&str>, Vec<&str>) = gfa.lines().partition(|l| l.starts_with('W'));
         let reversed: Vec<&str> = paths.iter().rev().copied().collect();
@@ -1661,11 +1702,11 @@ fn gzipped_input_gives_the_same_rows() {
 #[test]
 fn sequences_adds_the_bases_of_ref_and_nodes_rows() {
     let built = build("walks-two-refs.gfa", &["--sequences"]);
-    let r = built.file("R");
+    let r = built.file("GRCh38");
     assert!(r.contains(&tsv(&[
-        "R#0#chr 0 12 ref R#0#chr 0 0 0 2 2,2 6,6 . SQ:Z:AAAAAACCCCCC"
+        "GRCh38#0#chr 0 12 ref GRCh38#0#chr 0 0 0 2 2,2 6,6 . SQ:Z:AAAAAACCCCCC"
     ])));
-    assert!(r.contains(&tsv(&["R#0#chr 12 24 nodes 7 3 SQ:Z:GGG"])));
+    assert!(r.contains(&tsv(&["GRCh38#0#chr 12 24 nodes 7 3 SQ:Z:GGG"])));
 }
 
 // R's chrE is a line with no steps: no tile, departure or detail unit, but
@@ -1784,12 +1825,12 @@ fn a_path_name_starting_with_a_hash_is_refused() {
 #[test]
 fn a_failed_write_leaves_no_temporary_file() {
     let dir = std::env::temp_dir().join(format!("walks-blocked-{}", std::process::id()));
-    fs::create_dir_all(dir.join("out.R.walks.gz").join("x")).unwrap();
+    fs::create_dir_all(dir.join("out.GRCh38.walks.gz").join("x")).unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix"))
         .arg(fixture("walks-two-refs.gfa"))
         .arg("-o")
         .arg(dir.join("out"))
-        .args(["--walks", "--refs", "R"])
+        .args(["--walks", "--refs", "GRCh38"])
         .output()
         .unwrap();
     let left: Vec<String> = fs::read_dir(&dir)
@@ -1799,7 +1840,7 @@ fn a_failed_write_leaves_no_temporary_file() {
         .collect();
     fs::remove_dir_all(&dir).unwrap();
     assert_eq!(output.status.code(), Some(1));
-    assert_eq!(left, ["out.R.walks.gz"]);
+    assert_eq!(left, ["out.GRCh38.walks.gz"]);
 }
 
 #[test]
@@ -1811,11 +1852,11 @@ fn walks_reads_a_file_not_stdin() {
 
 #[test]
 fn an_unknown_reference_lists_the_samples() {
-    let built = build("walks-two-refs.gfa", &["--refs", "R,X"]);
+    let built = build("walks-two-refs.gfa", &["--refs", "GRCh38,X"]);
     assert_eq!(built.output.status.code(), Some(1));
     assert!(
         String::from_utf8_lossy(&built.output.stderr)
-            .contains("--refs X matches no path's sample; have: R, Q, H, I, D, U")
+            .contains("--refs X matches no path's sample; have: GRCh38, Q, H, I, D, U")
     );
     assert!(built.walks.is_empty());
 }

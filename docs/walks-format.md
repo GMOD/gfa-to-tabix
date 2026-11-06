@@ -666,27 +666,27 @@ row needs `@k` or `:k`.
 ## Example
 
 `tests/walks.rs` builds `tests/data/walks-two-refs.gfa` with `--tile 10
---stay 0` and checks every row. Part of R's file: the directory, part of
+--stay 0` and checks every row. Part of GRCh38's file: the directory, part of
 the tile at 0 (D's and I's walk rows left out) and two of the departure
 block 0-10's four lines, with the byte offsets and lengths, which depend
 on the compressor, elided:
 
 ```
 #walks  format:i:7  tile:i:10  revisited:i:0  stay:i:0  abridge:i:1000000  abridgebytes:i:3000000  bytes:i:…
-#header 0  …
-R#0#chr …  …
+#header  0  …
+GRCh38#0#chr  …  …
 ```
 
 ```
-#unit    R#0#chr  0   12  tile       0
-R#0#chr  0   12  ref        R#0#chr  0    0    0  2  2,2  6,6  .
-R#0#chr  0   12  nodes      6  6
-R#0#chr  0   12  route      .  13  -9
-R#0#chr  0   12  walk       H#1#h    100  100  0  2  2  .
-R#0#chr  0   6   walk       Q#0#chr  0    0    0  2  2  1
-#unit    R#0#chr  0   10  departures 10
-R#0#chr  0   18  departure  Q#0#chr  6  6  0  6   +  1  12 +  1  0
-R#0#chr  0   24  departure  D#1#d    24 0  0  24  +  1  0  +  1  .
+#unit  GRCh38#0#chr  0  12  tile        0
+GRCh38#0#chr  0  12  ref        GRCh38#0#chr  0    0    0  2   2,2  6,6  .
+GRCh38#0#chr  0  12  nodes      6             6
+GRCh38#0#chr  0  12  route      .             13   -9
+GRCh38#0#chr  0  12  walk       H#1#h         100  100  0  2   2    .
+GRCh38#0#chr  0  6   walk       Q#0#chr       0    0    0  2   2    1
+#unit  GRCh38#0#chr  0  10  departures  .
+GRCh38#0#chr  0  18  departure  Q#0#chr       6    6    0  6   +    1    12  +  1  0
+GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  1  .
 ```
 
 - R is `>1 >2`, nodes of 6 bp at 0 and 6: tokens `2` and `2` are ids 1
