@@ -1135,8 +1135,9 @@ Where the findings have come from so far, and the rule each gives:
   - a departure line's extent covering both end nodes while its leave →
     rejoin stretch is narrower: ADR 0010's Lines table decides it, in
     place of format 6's reach of `maxnode` (Context, Supersedes); arbiter
-    A measured filing over end nodes against reach widening at 288 → 187
-    KB, pggb 1 kb median (`walks-container/arbA/decision.md`, "The 2.7×")
+    A measured filing over end nodes against reach widening at 292 → 187
+    KB, pggb 1 kb median (`walks-container/arbA/decision.md`, "The 2.7×";
+    its second table says 288, see the entry on the two medians below)
   - a bubble across a tile edge becomes a departure record, where inside a
     tile it is a route: not ADR 0010's choice. ADR 0009 decides that a
     departure inside one piece has no record and one between pieces does,
@@ -1320,3 +1321,129 @@ Where the findings have come from so far, and the rule each gives:
   | pggb chrY 1 kb | 100 | 55 | 0 |
   | pggb chrY 100 kb | 100 | 28,940 | 0 |
   | pggb chrY 1 Mb | 30 | 5,192 | 0 |
+- **2026-11-06, the format 7 claims audit (claim 4).** The spec said every
+  walk file lists the same paths; a path with no step on a node of a
+  reference has no rows in that reference's file, and never had. Source:
+  200c0a5, 2026-10-21, merging walks.md into the spec: the same commit's
+  page said a path off the reference is left out, and the sentence
+  survived formats 5, 6 and 7 because no check compared two references'
+  files. Fix: the spec says a file lists every W or P line with a step on
+  a node of its reference, that a line with none has no rows there while
+  its contig's other lines keep theirs, and that a reader lists the
+  haplotypes with rows in the file. Guard: claim C4's row in claims7.md,
+  checked on the two-reference fixtures and the widened fuzz graphs
+- **2026-11-06, the format 7 claims audit (claim 76).** The spec and ADR
+  0010 said a path's moved pieces in one tile share one detail record,
+  "one per contig"; the writer writes one per W line, `(path,
+  fragStart)`, and MC chr22 has 170 tile and path pairs where a contig's
+  W lines give two or three records in one tile. Source: 86d1006, the
+  format 7 rewrite, which added "one per contig" to format 6's sentence;
+  `abridged_groups` had grouped by W line since a57515d, and no check
+  counted records per path and tile. Fix: one record per W line, which is
+  the unit of contiguity, stated in the spec's `abridged` rows and Terms
+  and in ADR 0010's `detail` unit. Guard: claim C76's row
+- **2026-11-06, the format 7 claims audit (claim 85).** The spec said an
+  own step on no reference node takes the leave's tile; `assign_chunks`
+  gives it the tile of the last step before it with a position on any
+  sequence of the reference, so after a step on another sequence it lies
+  in that sequence's tile. Source: c4caa2f, `ownTiles`: the fuzz graphs
+  had one reference sequence, so no path crossed sequences, and the test
+  compared `ownTiles` against the writer's own placement. Fix: the spec's
+  placement rule and `ownTiles` bullets say so, and that a W line with no
+  step on the reference has no tile. Guard: claim C85's row, on fuzz
+  graphs with several sequences
+- **2026-11-06, the format 7 claims audit (claim 91).** ADR 0009 said R
+  holds one node ending at a `+` leave's or `-` rejoin's breakpoint and
+  one starting at the other kind's; with 0 bp nodes several do, at 11,029
+  ends in the fuzz batch. Source: f672193, an explanatory sentence never
+  treated as a guarantee, written while 0 bp nodes on the reference were
+  already legal and tested. Fix: the spec and ADR 0009 say "a node", and
+  that with 0 bp nodes several can. Guard: claim C91's row
+- **2026-11-06, the format 7 claims audit (claim 102).** The spec said a
+  detail record holds a `nodes` row, then `route` and `walk` rows;
+  `emit_rows` writes `nodes` only where a route has an interior step, so
+  5,309 fuzz detail units and 44 on the fixtures have none. Source:
+  c00c433, format 5's docs, carried through three rewrites, and no check
+  read a detail unit's row kinds. Fix: the spec says a record holds at
+  most one `nodes` row, one exactly when its routes have an interior
+  step. Guard: claim C102's row
+- **2026-11-06, the format 7 claims audit (claim 109).** ADR 0010's
+  Lines table gave an `abridged` row's `start end` as "the moved piece's
+  stretch on the reference path", which reads as the span of all its
+  placed steps; the writer and walks-format.md give the span of its
+  first and last steps on R, which is narrower on 70,765 of pggb chrY's
+  110,886 abridged rows. Source: 2b0f7a5, the ADR written before the
+  writer and never re-read against it, while ADR 0009's final review had
+  already defined the span by the end steps. Fix: ADR 0010's table says
+  what the spec says. Guard: claim C56's row, shared by both pages
+- **2026-11-06, the format 7 claims audit (claim 112).** ADR 0010's
+  writer guarantees said each line's `start end` is checked at build
+  against its decoded steps, "on every row"; the build decodes walk and
+  abridged rows only, and no `ref`, `nodes`, `route` or departure line
+  has a build check of its extent. Source: 2b0f7a5, "every row" written
+  for the rows a decoder checks. Fix: the spec and ADR 0010 say the walk
+  and abridged rows are checked at build, and that the other rows'
+  extents are checked by the tests and `verify7.py`. Guard: claim
+  C112's row
+- **2026-11-06, the format 7 claims audit (the ambiguous claims 1, 10,
+  21, 40 and 107, 87, 114).** Six sentences held under one reading and
+  not another: a reader rebuilds every path "from the tiles whose
+  extents overlap" the window (it also needs attach fetches and detail
+  units); a walk row's span runs "from its first step on R to its last"
+  (its placed steps span more on 170,648 pggb chrY rows; the span is over
+  all of them); "the first pass" when a sequence has none (the pass of
+  the reference line whose name sorts first in bytes, at its lowest
+  offset); a tile's extent is "the union of its ref rows' stretches"
+  (the hull: 166 fuzz tiles' stretches leave a gap inside it); own
+  steps on other sequences "are not listed" (nor are they in any tile
+  an attach fetch reads); and the README's "one unit per tile and per
+  departure block" (also a header, detail units and a table per
+  sequence). Source: each written from the common case, where the
+  readings agree. Fix: each sentence says the one reading the writer
+  has (claims C1, C10, C21, C40, C87, C114). Guard: their rows
+- **2026-11-06, the format 7 claims audit (arbiter A's 292 and 288
+  KB).** `walks-container/arbA/decision.md` gives F6p's pggb 1 kb median
+  as 292 KB in its first table and 288 in its second, and this log cited
+  288. The committed results (`arbA/results/res/pggbY.f6p.jsonl.gz`,
+  300 windows) sort to 288.9 KB at index 149 and 292.4 at index 150;
+  arbiter A's `summarize.py` and `summarize2.py` both take index 150,
+  so 292 is the figure its rule gives, and 288 is the lower middle value
+  of the same windows. Source: a number typed from one summary into a
+  second table. Fix: this log says 292 and where 288 came from; ADR 0010
+  already said 292; the arbiter's record is left as written. Guard: none
+  beyond the rule in Sources, no number in prose without the file and the
+  script that wrote it
+- **2026-11-06, the format 7 claims audit (the costs with no ADR).** The
+  review of the format drawings (above, 2026-11-06) found four choices
+  no ADR had decided or measured: routes stored the way round whose
+  handles sort first, the header unit's missing `#unit` line, bubbles
+  across a tile edge becoming departure records, and the cost of the
+  build-time checks. Each is now measured on MC chr22 and pggb chrY and
+  decided in ADR 0010's Costs decided: the orientation is kept, the two
+  files differing by 0.10% one way and 0.53% the other against a
+  first-walk orientation; the header keeps no `#unit` line, since one
+  would carry a made-up coordinate; the records stay, costing 1.5% of
+  MC chr22's file and 7.8% of pggb chrY's; the checks cost nothing the
+  timing can see. Guard: the ADR's section, which claims C30 and C68
+  cite
+- **2026-11-06, the format 7 claims audit (the mechanism).** Two audits
+  of format 7, one of the spec against the writer (claims7.md: 115
+  claims, 15 false, 7 ambiguous, 34 with no check of any kind) and one
+  of the reader against the spec (rules7.md), gave the same five causes.
+  The prose was written from the design and the checks from the code, so
+  a check restating the writer's formula could not catch a sentence the
+  code contradicts; checks exempted the cases they could not state
+  instead of failing on them; a definition changed in the spec and not
+  in the checks (W1 and the ownTiles test); the fuzz graphs had one
+  reference sequence, one reference and no empty W line; and rewrites
+  carried old sentences forward unread (the format 7 rewrite was 514
+  lines in one commit). Fix: every normative sentence of walks-format.md
+  and ADR 0010 carries a claim ID (`<!-- C76 -->`), and claims7.md keeps
+  one row per ID naming the check behind it, written from the sentence;
+  `scripts/check-claims.py` fails CI on an ID with no row, a row with no
+  check that exists, or a sentence saying every, each, never, always,
+  only, unique or exactly with no ID; `claims7.py` checks each claim
+  with no exemption; `fuzz7.sh` writes several sequences, two references,
+  empty and abutting W lines and sequences of 0 bp; and
+  `scripts/check-walks.sh` runs the file checks on every fixture and a
+  fuzz batch in CI. Guard: CI, on every push
