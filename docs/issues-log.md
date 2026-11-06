@@ -929,3 +929,57 @@ Where the findings have come from so far, and the rule each gives:
   steps strictly between the leave step and the rejoin step, a 0 bp step
   included, which start at `hapStart` and span `ownBp`. Guard: a writer
   test for path G, `ownBp` 0 and `ownTiles` 10
+- **2026-11-05, porting graph-walks to walk format 7.** graph-walks 5.0.2's
+  attach fetch was skipped when the chunk holding the leave base had been
+  read, though a leave step on a node straddling the chunk boundary files
+  its piece under the chunk before: on `header.GRCh38` a cut of 2100-2600
+  reads chunks 1000-2000, HG002#1's record leaves at 1200 (base 1199,
+  chunk 1000, node 2 at 600-1200 filed under chunk 0) and came back with
+  no own steps. Source: tests shaped by the implementation; the attach
+  test's leave node sat inside one chunk. Fixed in graph-walks 6 by format
+  7's addressing: an attach fetch reads every tile whose extent holds the
+  leave base, and tile 0's extent is 0-1200. Guard: test "a cut reads the
+  tiles and departure blocks its window overlaps, in one read where they
+  touch, and fetches the tile holding a leave base" (HG002#1 with `>7`)
+- **2026-11-05, porting graph-walks to walk format 7.** What graph-walks
+  5's read rules compensated for, and where each went (ADR 0010 removes
+  the rules):
+  - the chunk-before rule (`chunkQueryStart`, one chunk at least): a node
+    straddling a chunk boundary, filed under the chunk of its start, is
+    now in the extent of the tile holding it; the detour a walk takes into
+    the window's first node, now the departure record over the window and
+    its attach fetch; the stay guard, gone since format 6. Not carried: a
+    reference node the window's tiles hold only as a route interior, whose
+    reference pass lies in a tile outside the window, is placed off R in
+    that walk's coordinates (the `stays` fixture at 16-32 placed node 2 at
+    4 by reading the chunk before; the test now cuts 12-32, which reaches
+    that tile). It lies outside the drawn stretch, so the cut does not draw
+    it on the reference either way, and arbiter A's comparison found the
+    shipped rule's extra nodes came from this habit
+  - `maxnode` lookback (`lookbackChunks`) and `#long` widening
+    (`walkQueryStart`): a node longer than a chunk, filed chunks back, is
+    now inside the extent of its tile. Guard: test "a node longer than a
+    tile is read from the tile whose extent holds it" (`maxnode.GRCh38`)
+  - the departure read's reach, the drawn stretch ± `maxnode`: walkCut
+    keeps records over the nodes on the window, which can run a node past
+    the context; a departure line now states its end nodes' whole extents,
+    so a record ending on such a node overlaps the drawn stretch
+  - the `seq~departure` sibling and the `seq~cs` detail sequences at
+    `d × 16384`: Tabix needed a sequence and a leaf bin for each; now the
+    `departures` units and the `detail` unit named `cs:d`
+  - `bytesForRegions`' estimates for the byte budgets: now the table's
+    exact unit lengths
+  - the attach fetch's read from the chunk before the leave base's: now the
+    tiles whose extents hold the base (the entry above)
+  - `checkRange` stays: a NaN window would select no unit and return an
+    empty cut without saying why
+- **2026-11-05, porting graph-walks to walk format 7.** A fragment's
+  `trimmedBefore` and `trimmedAfter` count the bp of its walk the cut read
+  and left out, so they shrink when a cut reads less: without the chunk
+  before, a fragment starting on the window's first tile now says 0 where
+  graph-walks 5 said up to a chunk. bandage-core's `gapParts` labels a
+  gap's trimmed bp from these, so some bp it labelled trimmed it now
+  labels elsewhere. The return shape is unchanged. Source: a value whose
+  meaning depends on the read, documented as "the bp the cut read". Open
+  for the consumer ports: check the walk-row gap labels on a window that
+  starts a tile. Guard: graph-walks' tests now expect the format 7 values
