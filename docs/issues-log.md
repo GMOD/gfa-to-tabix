@@ -998,14 +998,17 @@ Where the findings have come from so far, and the rule each gives:
   find. Fixed with gfa-to-tabix's `ownTiles` column (format7-writer
   c25765e): `attachTiles` returns the tiles a record's `ownTiles` names,
   `walkCut` reports a record lacking its leave piece or its rejoin piece,
-  and an attach fetch reads an abridged piece's detail unit for its own
-  steps, which graph-walks 5 left unattached. Guard: graph-walks tests "a
+  and own steps in an abridged piece come only for a walk the cut
+  expands, as in graph-walks 5: reading the detail units on every attach
+  fetch, as the spec's reader rule has it, took pggb chrY's 1 kb windows
+  from 1,348 to 26,951 KB at p90 with attach fetches, and up to 112
+  requests (`docs/walks-container/reader/results-own/`). Guard: graph-walks tests "a
   jump back whose own steps lie in the rejoin piece gets them attached" at
   50-60 (neither piece read) and 80-90 (the leave piece read) on
   `test_data/jumpback.GRCh38.gfa`, each failing on the leave-base rule; "a
   record's own steps come from its leave and rejoin pieces, and a record
   lacking either is asked for"; "an attach fetch reads an abridged piece's
-  detail unit for its own steps" on `ownends.R`, failing without it
+  own steps where the cut expands the walk" on `ownends.R`
 - **2026-11-05, the genome-wide format 7 check.** CHM13's format 7 file is
   1.78 GB, and Node refuses a buffer over 2 GiB, so any reader of a whole
   file fails on a larger one. graph-walks 6 reads the data file only by
