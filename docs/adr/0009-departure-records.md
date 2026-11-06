@@ -102,7 +102,7 @@ seq~departure  a  b  departure  path hapStart ownBp missingBp
   the piece's steps. A record and a computed departure never stand for the
   same departure, so a reader needs no key to match them
 - Every row of one record repeats the same columns, and a reader dedups on
-  all of them but `a` and `b`
+  all of them but `a` and `b` <!-- C92 -->
 
 ### Positions
 
@@ -127,7 +127,7 @@ sequence.
   the stay moves no step more than `stay` bp from its prediction. This
   amends ADR 0001's rule 2 and [ADR 0003](0003-long-node-lookback.md)'s
   guard. Under nearest-pass placement no step on a node the reference
-  passes once is therefore route interior
+  passes once is therefore route interior <!-- C27 -->
 - The reference's own paths lie at their offsets and have no departures
 - [ADR 0001](0001-step-placement.md)'s rule 3 places route-interior nodes
   at a `ref` row's position for drawing only, never a haplotype's steps

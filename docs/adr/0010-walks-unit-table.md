@@ -246,8 +246,8 @@ Minigraph-Cactus chr22 and HPRC release 2 pggb chrY on GRCh38
   cost nothing the timing can see: eight alternating runs of MC chr22 on ada, the
   machine shared with other jobs, took at least 50.12 s of wall and
   82.86 s of CPU before them and 49.65 s and 82.87 s after, at 4.07 GB
-  peak either way; pggb chrY, one run each, 114.1 against 94.2 s and 7.32
-  against 7.00 GB
+  peak either way; pggb chrY, in a single run of both, 114.1 against 94.2 s
+  and 7.32 against 7.00 GB
 
 ## Evidence
 <!-- record -->
