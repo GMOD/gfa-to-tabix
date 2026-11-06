@@ -908,3 +908,14 @@ Where the findings have come from so far, and the rule each gives:
   stays abridged, and that its own steps come only when a viewer expands
   that path's `detail` unit. Guard: graph-walks 6 (17ed0a6) expands only
   on request, with its test
+- **2026-11-06, the format 7 verifier (W1).** The spec defined a record's
+  own steps twice: for `ownTiles` as the steps between its leave and its
+  rejoin, for the attach fetch as the path's steps in `[hapStart,
+  hapStart + ownBp)`. They disagree on a 0 bp own step: path G of the
+  verifier's `jumpback.gfa` (`>1>2>3>4>9>1`, node 9 of 0 bp) has `ownBp`
+  0 and `ownTiles` 10, where the bp range is empty. The writer, `audit7.py`
+  and graph-walks 6 follow the steps. Source: a bp range written as
+  shorthand for a run of steps. Fix: the spec says the own steps are the
+  steps strictly between the leave step and the rejoin step, a 0 bp step
+  included, which start at `hapStart` and span `ownBp`. Guard: a writer
+  test for path G, `ownBp` 0 and `ownTiles` 10
