@@ -9,29 +9,30 @@ to its reference, and measure what a window costs to read.
 
   walks-truth.py score lift.tsv WALKS [--haps H,H,...] [--regions R.tsv]
       For each haplotype path in both, compares where its pieces are filed
-      with where their bases align. A window at chunk c reads chunks c - L to
-      c, L the file's lookback (max(chunk, maxnode) rounded up to chunks), so
-      a piece filed at f is visible where its bases align, at c, when
-      0 <= c - f <= L. It prints:
+      with where their bases align. A window over tile c, [c, c + tile),
+      reads every tile whose extent overlaps it (walk format 7), so a piece
+      in tile f is visible where its bases align, at c, when f's extent
+      overlaps c's stretch. It prints:
         placement  aligned piece bp visible where they align, and the same
                    over query bases counted once (the truth maps a base to
                    several copies in segmental duplications)
         piece      pieces with aligned bases, and the share of them with some
                    aligned bases visible where filed
-        recall     (haplotype, chunk) pairs holding --present aligned bp that
+        recall     (haplotype, tile) pairs holding --present aligned bp that
                    a window there sees: "listed" when any piece of the
-                   haplotype is filed in reach, "strict" when such a piece's
-                   own bases align into the chunk
+                   haplotype is in a tile it reads, "strict" when such a
+                   piece's own bases align into the tile
         lost       strict misses by whether the pair's aligned bases sit in
                    pieces filed out of reach (elsewhere) or in none (absent)
-        pieces     pieces per filed (haplotype, chunk) pair: 1 when each
-                   haplotype enters each chunk once
+        pieces     pieces per filed (haplotype, tile) pair: 1 when each
+                   haplotype enters each tile once
       R.tsv (name, sequence, start, end) repeats the figures per region.
 
   walks-truth.py cost WALKS
-      Per window of L + 1 chunks: walk rows, rows' bytes gzipped chunk by chunk
-      (about what BGZF reads) and walk steps, against the readers' budgets
-      (8 MB, 32 M steps read).
+      Per window of one tile at each tile's start: the walk rows and steps of
+      the tiles it reads, and the compressed bytes of those tiles and of the
+      departure blocks it reads, from the unit tables, against the readers'
+      budgets (8 MB, 32 M steps read).
 
 A last piece's length is unknown from the walk rows, so it takes the record's
 mean bp per step. Walk files are read whole.
@@ -42,7 +43,6 @@ import bisect
 import gzip
 import re
 import sys
-import zlib
 from collections import defaultdict
 
 CIGAR = re.compile(rb"(\d+)([=XIDM])")
@@ -137,31 +137,31 @@ def read_lift(path, names):
     return truth
 
 
-def header_of(line, size, maxnode):
-    if line.startswith("#walks"):
-        size = int(re.search(r"chunk:i:(\d+)", line).group(1))
-        m = re.search(r"maxnode:i:(\d+)", line)
-        maxnode = int(m.group(1)) if m else maxnode
-    return size, maxnode
+def tile_of(line):
+    return int(re.search(r"tile:i:(\d+)", line).group(1))
 
 
-def lookback(size, maxnode):
-    return -(-max(size, maxnode) // size)
-
-
-def walk_rows(path, haps, size, maxnode):
-    """Pieces by path, sorted: [(record start, hapOffset, nsteps, seq, chunk start, bp)]."""
+def walk_rows(path, haps):
+    """Pieces by path, sorted: [(record start, hapOffset, nsteps, seq, tile start, bp)];
+    each tile's extent by (seq, tile start); and the tile size."""
     rows = defaultdict(list)
-    opener = gzip.open if path.endswith(".gz") else open
-    with opener(path, "rt") as f:
+    extents, size, tile = {}, None, None
+    with gzip.open(path, "rt") as f:
         for line in f:
-            if line[0] == "#":
-                size, maxnode = header_of(line, size, maxnode)
+            if line.startswith("#walks"):
+                size = tile_of(line)
+            if line.startswith("#unit\t"):
+                c = line.rstrip("\n").split("\t")
+                tile = (c[1], int(c[5])) if c[4] == "tile" else None
+                if tile:
+                    extents[tile] = (int(c[2]), int(c[3]))
+                continue
+            if line[0] == "#" or tile is None:
                 continue
             c = line.split("\t", 9)
             if c[3] != "walk" or c[4].rsplit("#", 1)[0] not in haps:
                 continue
-            rows[c[4]].append((int(c[5]), int(c[6]), int(c[8]), c[0], int(c[1])))
+            rows[c[4]].append((int(c[5]), int(c[6]), int(c[8]), c[0], tile[1]))
     pieces = {}
     for name, ps in rows.items():
         ps.sort()
@@ -177,7 +177,7 @@ def walk_rows(path, haps, size, maxnode):
                 bp = round(nsteps * (off - ps[first][1]) / steps) if steps else nsteps * 30
             out.append((rec, off, nsteps, seq, cs, bp))
         pieces[name] = out
-    return pieces, size, maxnode
+    return pieces, extents, size
 
 
 def union(intervals):
@@ -195,8 +195,7 @@ def pct(a, b):
 
 def score(args):
     haps = set(args.haps.split(","))
-    pieces, size, maxnode = walk_rows(args.walks, haps, args.chunk, 0)
-    reach = (args.lookback if args.lookback is not None else lookback(size, maxnode)) * size
+    pieces, extents, size = walk_rows(args.walks, haps)
     truth = read_lift(args.lift, set(pieces))
     regions = []
     if args.regions:
@@ -209,7 +208,8 @@ def score(args):
         return next((n for n, s, a, b in regions if s == seq and a < cs + size and cs < b), "elsewhere")
 
     def visible(seq, filed, tseq, tc):
-        return seq == tseq and 0 <= tc - filed <= reach
+        lo, hi = extents[(seq, filed)]
+        return seq == tseq and lo < tc + size and hi > tc
 
     total = defaultdict(int)
     by_region = defaultdict(lambda: defaultdict(int))
@@ -252,7 +252,7 @@ def score(args):
         for (tseq, c), n in present.items():
             if n < args.present:
                 continue
-            listed = any(0 <= c - f <= reach for f in filed[tseq])
+            listed = any(visible(tseq, f, tseq, c) for f in filed[tseq])
             strict = seen_from[(tseq, c)] > 0
             for d in (total, by_region[region_of(tseq, c)]):
                 d["recall pairs"] += 1
@@ -260,8 +260,8 @@ def score(args):
                 d["recall strict"] += strict
                 if not strict:
                     d["lost elsewhere"] += 1
-        for seq, chunks in filed.items():
-            for cs in chunks:
+        for seq, tiles in filed.items():
+            for cs in tiles:
                 by_region[region_of(seq, cs)]["filed pairs"] += 1
                 total["filed pairs"] += 1
 
@@ -272,7 +272,7 @@ def score(args):
               f" of {d['recall pairs']}, lost elsewhere {d['lost elsewhere']}"
               f" | pieces {d['pieces'] / max(d['filed pairs'], 1):.2f} per pair")
 
-    print(f"{args.walks}: lookback {reach // size} chunk(s); {total['paths']} haplotype paths scored; "
+    print(f"{args.walks}: tile {size}; {total['paths']} haplotype paths scored; "
           f"{total['paths without alignments']} without alignments hold {total['pieces without alignments']} pieces; "
           f"{pct(total['aligned bp'], total['piece bp'])} of scored piece bp align")
     report(total, "all")
@@ -282,41 +282,40 @@ def score(args):
 
 
 def cost(args):
-    size, maxnode = args.chunk, 0
-    rows, bytes_, steps = defaultdict(int), defaultdict(int), defaultdict(int)
-    key, packer = None, None
-
-    def close():
-        if packer is not None:
-            bytes_[key] += len(packer.flush())
-
-    opener = gzip.open if args.walks.endswith(".gz") else open
-    with opener(args.walks, "rt") as f:
-        for line in f:
-            if line[0] == "#":
-                size, maxnode = header_of(line, size, maxnode)
-                continue
-            c = line.split("\t", 9)
-            at = (c[0], int(c[1]))
-            if at != key:
-                close()
-                key, packer = at, zlib.compressobj(6, zlib.DEFLATED, 31)
-            bytes_[key] += len(packer.compress(line.encode()))
-            if c[3] == "walk":
-                rows[key] += 1
-                steps[key] += int(c[8])
-    close()
-    back = lookback(size, maxnode)
+    data = open(args.walks, "rb").read()
+    directory = [line.split("\t") for line in open(args.walks + ".idx").read().splitlines()]
+    size = tile_of("\t".join(directory[0]))
+    units = []
+    for seq, offset, length in (c for c in directory[1:] if c[0] != "#header"):
+        table = gzip.decompress(data[int(offset) : int(offset) + int(length)]).decode().splitlines()[1:]
+        for entry in table:
+            _, _, lo, hi, kind, _, at, n = entry.split("\t")
+            rows = steps = 0
+            if kind == "tile":
+                for line in gzip.decompress(data[int(at) : int(at) + int(n)]).decode().splitlines()[1:]:
+                    c = line.split("\t", 9)
+                    if c[3] == "walk":
+                        rows += 1
+                        steps += int(c[8])
+            if kind in ("tile", "departures"):
+                units.append((seq, int(lo), int(hi), kind, int(n), rows, steps))
+    by_seq = defaultdict(list)
+    for u in units:
+        by_seq[u[0]].append(u)
     windows = []
-    for seq, cs in bytes_:
-        span = [(seq, cs - k * size) for k in range(back + 1)]
-        windows.append((sum(bytes_.get(s, 0) for s in span), sum(steps.get(s, 0) for s in span), sum(rows.get(s, 0) for s in span), seq, cs))
+    for seq, us in by_seq.items():
+        for _, lo, _, kind, *_ in us:
+            if kind != "tile":
+                continue
+            cs = lo - lo % size
+            read = [u for u in us if u[1] < cs + size and u[2] > cs]
+            windows.append((sum(u[4] for u in read), sum(u[6] for u in read), sum(u[5] for u in read), seq, cs))
     windows.sort()
 
     def q(i, p):
         return sorted(w[i] for w in windows)[min(len(windows) - 1, int(p * len(windows)))]
 
-    print(f"{args.walks}: chunk {size}, maxnode {maxnode}, windows read {back + 1} chunks; {len(windows)} windows")
+    print(f"{args.walks}: tile {size}; {len(windows)} windows of one tile")
     for i, label in ((2, "walk rows"), (0, "gz bytes"), (1, "steps")):
         print(f"  {label:10} median {q(i, 0.5):>12,}  p90 {q(i, 0.9):>12,}  p99 {q(i, 0.99):>12,}  max {q(i, 1):>14,}")
     print(f"  windows over {BYTE_BUDGET >> 20} MB: {sum(w[0] > BYTE_BUDGET for w in windows)}; "
@@ -338,11 +337,8 @@ def main():
     b.add_argument("--haps", required=True, help="PanSN sample#haplotype list")
     b.add_argument("--regions")
     b.add_argument("--present", type=int, default=300)
-    b.add_argument("--lookback", type=int, help="chunks a window reads before it; default from the header")
-    b.add_argument("--chunk", type=int, default=65536, help="chunk size when WALKS has no header")
     c = sub.add_parser("cost")
     c.add_argument("walks")
-    c.add_argument("--chunk", type=int, default=65536)
     c.add_argument("--top", type=int, default=5)
     args = p.parse_args()
     {"lift": lift, "score": score, "cost": cost}[args.cmd](args)
