@@ -1028,3 +1028,18 @@ Where the findings have come from so far, and the rule each gives:
   as the genome-wide check also found for the lookback chunk. Counts,
   windows and scripts: `docs/walks-container/reader/`. Guard: the
   scripts there, rerun on each release candidate
+- **2026-11-06, the format 7 verifier (R1).** `walkCut` took the drawn
+  stretch from the graph's node map, which holds one placement per node, so
+  where the reference passes a node twice inside the window the other pass
+  did not widen it: on `walks-loop.gfa` (R `>1>2>3>2>3>4`, 6 bp nodes,
+  node 2 at 6-12 and 18-24) a cut of 8-20 kept R's fragment at 6-18 and
+  dropped its step at 18-24, trimmed the walks there likewise, and left out
+  F's record at 24 (its own node 5 after that pass). graph-walks 5.0.2 on
+  the format 6 build at `--chunk 10` gives the same cut (R `>2>3` at 6-18,
+  no F record), so the bug predates format 7. Source: tests shaped by the
+  implementation: no fixture passed a node twice inside one window.
+  Fixed in graph-walks 6: `walkCut` widens the stretch by every step of
+  the cut's runs placed on the window and its context, each at its own
+  pass, as well as by the nodes on it. Guard: graph-walks test "a cut's
+  drawn stretch takes every pass over the window, not one per node" on
+  `test_data/loop.R.gfa`, which fails before the fix
