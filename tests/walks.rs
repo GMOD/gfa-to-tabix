@@ -534,6 +534,8 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<(u32, Opt
 struct Decoded {
     paths: BTreeMap<String, Vec<u32>>,
     stretches: BTreeMap<(String, String), Vec<(u64, u64)>>,
+    // the nodes the ref rows hold
+    reference: BTreeSet<u32>,
 }
 
 fn decode_file(text: &str) -> Decoded {
@@ -564,9 +566,14 @@ fn decode_file(text: &str) -> Decoded {
     }
     // node lengths from the `ref` and `nodes` rows
     let mut lengths: HashMap<u32, u64> = HashMap::new();
+    let mut reference = BTreeSet::new();
     for cols in tiles.values().chain(details.values()).flatten() {
         let (ids, bps) = match cols[3] {
-            "ref" => (deltas(cols[9], &mut 0), cols[10]),
+            "ref" => {
+                let handles = deltas(cols[9], &mut 0);
+                reference.extend(handles.iter().map(|h| h >> 1));
+                (handles, cols[10])
+            }
             "nodes" => {
                 let mut id = 0u32;
                 let ids = cols[4].split(',').map(|d| {
@@ -775,7 +782,11 @@ fn decode_file(text: &str) -> Decoded {
             (path, pieces.into_values().flatten().collect())
         })
         .collect();
-    Decoded { paths, stretches }
+    Decoded {
+        paths,
+        stretches,
+        reference,
+    }
 }
 
 // The handles of each W line, by `sample#hap#contig@start`.
@@ -847,15 +858,27 @@ fn own_tiles(steps: &[Placed], seq: &str, cols: &[&str]) -> Vec<u64> {
     tiles
 }
 
-// Every path rebuilds from its rows, and from its first step on a sequence to
-// its last every base of it lies in one piece's stretch on R or one record's
-// own bp, so a reader that nets an abridged piece over its stretch and takes
-// the departures at its ends from their records counts each base once
+// Each reference's file lists every W line with a step on a node of that
+// reference and no other, every path rebuilds from its rows, and from its
+// first step on a sequence to its last every base of it lies in one piece's
+// stretch on R or one record's own bp, so a reader that nets an abridged
+// piece over its stretch and takes the departures at its ends from their
+// records counts each base once
 fn assert_rebuilds(gfa: &str, built: &Built, samples: &[&str]) {
     let paths = gfa_paths(gfa);
     for sample in samples {
         let decoded = decode_file(built.file(sample));
         assert!(!decoded.paths.is_empty(), "{sample}");
+        let on_reference: BTreeSet<&String> = paths
+            .iter()
+            .filter(|(_, handles)| handles.iter().any(|h| decoded.reference.contains(&(h >> 1))))
+            .map(|(path, _)| path)
+            .collect();
+        assert_eq!(
+            decoded.paths.keys().collect::<BTreeSet<_>>(),
+            on_reference,
+            "{sample}: the lines with a step on a node of the reference"
+        );
         for (path, steps) in &decoded.paths {
             assert_eq!(steps, &paths[path], "{sample}: {path}");
         }
@@ -1863,6 +1886,14 @@ fn a_w_line_with_no_steps_is_skipped() {
     );
     assert!(with.output.status.success());
     assert_eq!(with.files, without.files);
+    let counted = |built: &Built| -> Vec<String> {
+        String::from_utf8_lossy(&built.output.stderr)
+            .lines()
+            .map(|l| l.split_once("] ").map_or(l, |(_, rest)| rest).to_string())
+            .filter(|l| l.contains("paths") && !l.contains("->"))
+            .collect()
+    };
+    assert_eq!(counted(&with), counted(&without));
     let tables = unit(with.file("R"), "table", ".");
     let without_offsets = tables.lines().map(|l| {
         if l.starts_with("#entry") {
@@ -1890,6 +1921,128 @@ fn a_w_line_with_no_steps_is_skipped() {
         String::from_utf8_lossy(&refused.output.stderr)
             .contains("path H#1#h ends at 6, but its steps from 5 end at 5")
     );
+}
+
+// walks-two-refs.gfa plus X#1#x, which steps on 6, a node of Q and not of
+// GRCh38: it is in Q's file and its header, and not in GRCh38's
+#[test]
+fn a_line_on_one_references_nodes_is_in_that_references_file_alone() {
+    let gfa = fs::read_to_string(fixture("walks-two-refs.gfa")).unwrap() + "W\tX\t1\tx\t0\t6\t>6\n";
+    let path = std::env::temp_dir().join(format!("walks-one-ref-{}.gfa", std::process::id()));
+    fs::write(&path, &gfa).unwrap();
+    let built = build(path.to_str().unwrap(), &[]);
+    fs::remove_file(&path).unwrap();
+    assert!(built.output.status.success());
+    assert!(header(built.file("Q")).contains("#haplotype\tX#1\n"));
+    assert_eq!(
+        rows_of(built.file("Q"), "Q#0#chr", "walk", "X#1#x"),
+        tsv(&["Q#0#chr 6 12 walk X#1#x 0 0 0 1 12 ."])
+    );
+    assert!(!built.file("GRCh38").contains("X#1"));
+    assert_rebuilds(&gfa, &built, &["GRCh38", "Q"]);
+}
+
+// Built with no option but --refs, a file's header states the defaults
+#[test]
+fn the_defaults_are_65536_311_1000000_and_3000000() {
+    let dir = std::env::temp_dir().join(format!("walks-defaults-{}", std::process::id()));
+    fs::create_dir_all(&dir).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix"))
+        .arg(fixture("walks-two-refs.gfa"))
+        .arg("-o")
+        .arg(dir.join("out"))
+        .args(["--walks", "--refs", "GRCh38"])
+        .output()
+        .unwrap();
+    let directory = fs::read_to_string(dir.join("out.GRCh38.walks.gz.idx")).unwrap();
+    fs::remove_dir_all(&dir).unwrap();
+    assert!(output.status.success());
+    assert!(
+        directory.starts_with(
+            "#walks\tformat:i:7\ttile:i:65536\trevisited:i:0\tstay:i:311\tabridge:i:1000000\tabridgebytes:i:3000000\tbytes:i:"
+        ),
+        "{directory}"
+    );
+}
+
+// R walks 1 2 3 2 4 on chr, 10 bp nodes, passing 2 at 10 and 30, and 8 5 8
+// on chrU, passing 8 at 0 and 20. H's 10 bp of its own after 1 predict 2 at
+// 20, as near the pass at 10 as the one at 30: the lower offset wins, so H's
+// route lands on R's first 2 and spans 0-20. G's 8 after 1 is predicted at
+// 10 on chr, which has no 8, so it takes the node's first pass, chrU's at 0,
+// and G's 2 after it is predicted on chrU, which has no 2, so it takes chr's
+// first 2 at 10: the record leaves 1 at 10 and rejoins 2 at 10, a node R
+// passes twice, with 8's 10 bp as its own, in no tile of chr
+#[test]
+fn a_step_takes_the_lower_pass_on_a_tie_and_the_first_pass_where_its_sequence_has_none() {
+    let built = build_text(
+        "tie",
+        &[
+            "S 1 AAAAAAAAAA",
+            "S 2 AAAAAAAAAA",
+            "S 3 AAAAAAAAAA",
+            "S 4 AAAAAAAAAA",
+            "S 5 AAAAAAAAAA",
+            "S 6 CCCCCCCCCC",
+            "S 8 GGGGGGGGGG",
+            "W R 0 chr 0 50 >1>2>3>2>4",
+            "W R 0 chrU 0 30 >8>5>8",
+            "W H 1 h 0 30 >1>6>2",
+            "W G 1 g 0 30 >1>8>2",
+        ],
+        &["--refs", "R", "--tile", "1000", "--stay", "0"],
+    );
+    assert!(built.output.status.success());
+    let r = built.file("R");
+    assert_eq!(
+        rows_of(r, "R#0#chr", "route", "2") + &rows_of(r, "R#0#chr", "walk", "H#1#h"),
+        tsv(&[
+            "R#0#chr 0 50 route 2 10 -8",
+            "R#0#chr 0 20 walk H#1#h 0 0 0 3 2 0",
+        ])
+    );
+    assert_eq!(
+        rows_of(r, "R#0#chrU", "walk", "G#1#g") + &rows_of(r, "R#0#chr", "walk", "G#1#g"),
+        tsv(&[
+            "R#0#chrU 0 10 walk G#1#g 0 10 1 1 16 .",
+            "R#0#chr 0 10 walk G#1#g 0 0 0 1 2 .",
+            "R#0#chr 10 20 walk G#1#g 0 20 2 1 4 .",
+        ])
+    );
+    assert_eq!(
+        departures(r),
+        tsv(&["R#0#chr 0 20 departure G#1#g 10 10 0 10 + 1 10 + 2 ."])
+    );
+}
+
+#[test]
+fn sequences_refuses_a_segment_with_no_bases() {
+    let built = build_text(
+        "no-bases",
+        &["S 1 * LN:i:6", "W R 0 chr 0 6 >1"],
+        &["--refs", "R", "--sequences"],
+    );
+    assert_eq!(built.output.status.code(), Some(1));
+    assert!(
+        String::from_utf8_lossy(&built.output.stderr)
+            .contains("segment 1 has no bases, so --sequences can't write them")
+    );
+    assert!(built.walks.is_empty());
+}
+
+#[test]
+fn a_node_id_of_2_to_the_31_is_refused() {
+    let built = build_text(
+        "big-id",
+        &["S 2147483648 AAAAAA", "W R 0 chr 0 6 >2147483648"],
+        &["--refs", "R"],
+    );
+    assert_eq!(built.output.status.code(), Some(1));
+    assert!(
+        String::from_utf8_lossy(&built.output.stderr)
+            .contains("--walks needs integer node ids below 2^31")
+    );
+    assert!(built.walks.is_empty());
 }
 
 // A sequence of 0 bp has no base: chr0's tile, table and record, H's leave

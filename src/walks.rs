@@ -2000,3 +2000,14 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{DEPARTURE_SORT_BUDGET, SORT_BUDGET};
+
+    #[test]
+    fn the_sorts_wait_in_512_and_128_mb() {
+        assert_eq!(SORT_BUDGET, 512 << 20);
+        assert_eq!(DEPARTURE_SORT_BUDGET, 128 << 20);
+    }
+}
