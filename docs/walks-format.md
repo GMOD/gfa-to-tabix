@@ -427,7 +427,7 @@ seq start end abridged path fragStart hapOffset piece nsteps bp start[@k] end[@k
 ### departure
 
 ```
-seq start end departure path hapStart ownBp missingBp leavePos leaveStrand leavePasses rejoinPos rejoinStrand rejoinPasses
+seq start end departure path hapStart ownBp missingBp leavePos leaveStrand leavePasses rejoinPos rejoinStrand rejoinPasses ownTiles
 ```
 
 A record for each place a path departs from a reference sequence S that its
@@ -473,10 +473,27 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)).
   the other: `[bp − 1, bp)` where the breakpoint is the node's end and
   `[bp, bp + 1)` where it is its start, for a node of 0 bp `[bp, bp + 1)`,
   each clipped to S. Only an end on a node of 0 bp makes it wider
+- `ownTiles` lists the tiles of S that hold the record's own steps, the
+  steps between its leave and its rejoin, by their starts (the `name` of
+  their `tile` units), comma-separated, in the path's order; `.` for none.
+  The placement rules decide which they are, not the breakpoints'
+  positions, so a jump back is no different:
+  - own steps after the leave in its W line take the leave's tile, as
+    steps off the reference take the tile of the last reference step
+    before them
+  - own steps leading the next W line, for a record across W lines, take
+    the rejoin's tile, as steps leading a line take the tile of the first
+    reference step after them
+  - a record can have both, and so two tiles, the leave's first
+  - own steps on the reference's other sequences lie in their tiles, and
+    own sequence in no W line has no steps; neither is listed
+- An own step of a piece the tile abridged lies in its detail unit, which
+  the tile's `abridged` row names. A reader takes from the tiles listed the
+  path's steps between `hapStart` and `hapStart + ownBp` on its contig
 - The record's line is in every [pyramid](#units) block of that extent's
   cover, the same text in each, and a reader drops exact duplicates. An
-  attach fetch, for an end the window holds no piece of, reads the tile
-  whose extent holds the base beside the leave breakpoint
+  attach fetch, for a record whose own steps the window holds no piece of,
+  reads the tiles `ownTiles` names
 
 ## Reading a window
 
@@ -493,8 +510,8 @@ For a window `[s, e)` with context `c`, the stretch `D = [s − c, e + c)`
   multi-range one
 - Gunzip each unit. Decode a tile's rows from `kind` on by the rules below.
   Keep the departure lines overlapping `D` and drop exact duplicates
-- An attach fetch reads the tile whose extent holds the leave base;
-  expanding an abridged piece reads the `detail` unit `cs:d`
+- An attach fetch reads the tiles a record's `ownTiles` names; expanding
+  an abridged piece reads the `detail` unit `cs:d`
 - There is no chunk-before rule, no `maxnode`, no `#long` widening and no
   reach
 - The read gives every piece over `D` and every departure inside them: both
@@ -503,6 +520,9 @@ For a window `[s, e)` with context `c`, the stretch `D = [s − c, e + c)`
   `D`, each once, when a reader computes departures only between
   consecutive steps of one piece: one between two pieces is a record, even
   where it read both
+- Under the overlap rule, a reader can see two fragments of a path where
+  format 6's lookback joined them through steps 80–92 kb outside the
+  window, with nothing in the window missing
 
 ## What the writer guarantees
 
@@ -515,7 +535,8 @@ The tool checks each of these as it writes:
   with lengths above 0; the directory lists every reference sequence
 - A tile's extent is the union of its `ref` rows' stretches and its
   pieces' spans; every line lies within its unit's `start end`; every
-  departure record is in every block of its cover
+  departure record is in every block of its cover, and its `ownTiles` are
+  the tiles the tool filed its own steps in
 - Each walk and abridged row's `start end` is the span of the steps it
   decodes to: the tool decodes every row it writes, as format 6's
   encoder did, compares the steps and their positions, and takes the span
@@ -528,9 +549,15 @@ The tool checks each of these as it writes:
   written
 - `tests/walks.rs` runs the release checks of
   [`verify7.mjs`](walks-container/arbA/scripts/verify7.mjs) on every file
-  its tests build, and
-  [`fuzz7.sh`](departures/scripts/fuzz7.sh) runs them and
+  its tests build, and checks every record's `ownTiles` against the tiles
+  its decoded own steps lie in.
+  [`verify7.py`](departures/scripts/verify7.py) runs the release checks on
+  a file of any size, reading it a gzip member at a time, and
+  [`fuzz7.sh`](departures/scripts/fuzz7.sh) runs it and
   [`audit7.py`](departures/scripts/audit7.py) on random graphs
+- Offsets and lengths are the BGZF writer's u64 block starts, written as
+  decimal, so a file past 2^32 bytes needs nothing different; a unit test
+  writes one whose blocks start past 2^31, 2^32 and 2^40
 
 ## Hosting
 
@@ -611,8 +638,8 @@ R#0#chr  0   12  route      .  13  -9
 R#0#chr  0   12  walk       H#1#h    100  100  0  2  2  .
 R#0#chr  0   6   walk       Q#0#chr  0    0    0  2  2  1
 #unit    R#0#chr  0   10  departures 10
-R#0#chr  0   18  departure  Q#0#chr  6  6  0  6   +  1  12 +  1
-R#0#chr  0   24  departure  D#1#d    24 0  0  24  +  1  0  +  1
+R#0#chr  0   18  departure  Q#0#chr  6  6  0  6   +  1  12 +  1  0
+R#0#chr  0   24  departure  D#1#d    24 0  0  24  +  1  0  +  1  .
 ```
 
 - R is `>1 >2`, nodes of 6 bp at 0 and 6: tokens `2` and `2` are ids 1
@@ -628,9 +655,9 @@ R#0#chr  0   24  departure  D#1#d    24 0  0  24  +  1  0  +  1
 - Q leaves R at 1's end, 6, walks 6 bp of its own, node 6, and rejoins at
   3's start, 12, in a piece filed under tile 10. Its record's extent runs
   from 1's first base to 3's last, 0-18, so it lies in blocks 0-10 and
-  10-20
+  10-20. Its own step, 6, is in its piece in tile 0, so `ownTiles` is 0
 - D jumps back from 4's end, 24, to 1's start, 0, over nothing of its own:
-  0-24, in the blocks at 0, 10 and 20
+  0-24, in the blocks at 0, 10 and 20, with `ownTiles` `.`
 
 ## Scale
 

@@ -218,6 +218,7 @@ records = []
 dep_rows = []   # (seq, block start, block end, record index, line bytes)
 rec_extent = {}   # record index -> its line's start and end
 tile_extent = {}   # (seq, tile start) -> its unit's start and end
+unit_names = collections.Counter()   # (seq, kind, name) of tile and detail units
 header = {}
 holes = collections.defaultdict(list)
 kinds = collections.Counter()
@@ -244,7 +245,7 @@ def steps_of(r, segs, nodes):
                 if n is None:
                     raise Bad('interior node without a length')
                 bp += n
-            out.append(('I', len(s[1]), bp))
+            out.append(('I', len(s[1]), bp, r.seq, r.start))
         else:
             _, i0, i1, against = s
             lo, hi = min(i0, i1), max(i0, i1)
@@ -312,6 +313,8 @@ with gzip.open(args.file, 'rt') as f:
                 holes[c[1]].append((int(c[2]), int(c[3])))
             elif c[0] == '#unit':
                 unit = None if args.seq is not None and c[1] != args.seq else (c[1], c[4], c[5], int(c[2]), int(c[3]))
+                if unit is not None and unit[1] in ('tile', 'detail'):
+                    unit_names[unit[:3]] += 1
                 if unit is None or unit[1] in ('departures', 'table'):
                     continue
                 routes, route_prev, nodes = [], 0, {}
@@ -422,6 +425,10 @@ for k, v in sorted(text_bytes.items(), key=lambda kv: -kv[1]):
 size = os.path.getsize(args.file)
 print(f'{size}\tfile bytes; {os.path.getsize(args.file + ".idx")} directory bytes')
 print(f'{sum(len(v) for v in holes.values())}\t#hole lines')
+shared = sum(n for n in unit_names.values() if n > 1)
+print(f'{shared}\ttile and detail units sharing a name with another of their sequence (must be 0)')
+for k in [k for k, n in unit_names.items() if n > 1][:args.examples]:
+    print('   shared name', k)
 
 tile_size = int(header['tile'])
 unreachable = []
@@ -443,9 +450,10 @@ def end_of(step, against, leave, chunk):
 
 def parse_record(rec):
     # departure path hapStart ownBp missingBp leavePos leaveStrand leavePasses rejoinPos rejoinStrand
-    # rejoinPasses [tags]
+    # rejoinPasses ownTiles [tags]
     return dict(path=rec[1], hap_start=int(rec[2]), own_bp=int(rec[3]), missing=int(rec[4]),
-                leave=(int(rec[5]), rec[6], int(rec[7])), rejoin=(int(rec[8]), rec[9], int(rec[10])))
+                leave=(int(rec[5]), rec[6], int(rec[7])), rejoin=(int(rec[8]), rec[9], int(rec[10])),
+                own_tiles=[] if rec[11] == '.' else [int(t) for t in rec[11].split(',')])
 
 
 parsed = [parse_record(rec) for rec in records]
@@ -492,7 +500,7 @@ for path, ps in pieces.items():
         at = offset
         for s in steps:
             if s[0] == 'I':
-                stream.append(('I', frag, at, s[1], s[2]))
+                stream.append(('I', frag, at, s[1], s[2], s[3], s[4]))
                 at += s[2]
             else:
                 _, seq, cs, first, last, against, n, bp, lo, hi = s
@@ -503,6 +511,7 @@ for path, ps in pieces.items():
     for S in seqs:
         leave = None   # (end tuple, hap after, frag, piece key)
         own_bp = missing = 0
+        own_tiles = []
         hap = None
         for s in stream:
             if s[0] == 'I':
@@ -511,6 +520,8 @@ for path, ps in pieces.items():
                     missing += s[2] - hap
                 own_bp += s[4]
                 hap = s[2] + s[4]
+                if s[5] == S and s[6] not in own_tiles:
+                    own_tiles.append(s[6])
                 continue
             _, frag, at, seq, cs, first, last, against, n, bp, key = s
             if hap is not None and at != hap:
@@ -532,10 +543,11 @@ for path, ps in pieces.items():
                     if not needs and not ok:
                         unreachable.append((path, lend, rejoin))
                     emit(path, S, dict(hap_start=after, own_bp=own_bp, leave=lend, rejoin=rejoin,
-                                       missing=missing, gap=lfrag != frag),
+                                       missing=missing, own_tiles=own_tiles, gap=lfrag != frag),
                          needs or lfrag != frag)
             leave = (end_of(last, against, True, cs), at + bp, frag, key)
             own_bp = missing = 0
+            own_tiles = []
             hap = at + bp
 for v in coverage.values():
     v.sort()
@@ -554,7 +566,7 @@ matched = set()
 
 
 def differences(rec, d):
-    diffs = [f for f in ('own_bp', 'missing') if rec[f] != d[f]]
+    diffs = [f for f in ('own_bp', 'missing', 'own_tiles') if rec[f] != d[f]]
     for side in ('leave', 'rejoin'):
         names = ['Pos', 'Strand', 'Passes']
         diffs += [side + names[i] for i in range(3) if rec[side][i] != d[side][i]]

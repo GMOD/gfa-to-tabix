@@ -42,13 +42,16 @@ impl std::ops::Add for Own {
     }
 }
 
-// `own` starts at `hap_start` on the contig, right after the leave
+// `own` starts at `hap_start` on the contig, right after the leave.
+// `own_tiles` are the starts of S's tiles that hold the steps between the
+// leave and the rejoin, in path order
 pub struct Departure<'a> {
     pub path: &'a [u8],
     pub hap_start: u64,
     pub own: Own,
     pub leave: End,
     pub rejoin: End,
+    pub own_tiles: &'a [u64],
 }
 
 // The pyramid's block sizes, in tiles, largest first
@@ -88,7 +91,7 @@ impl Departure<'_> {
     }
 
     // `departure path hapStart ownBp missingBp leavePos leaveStrand
-    // leavePasses rejoinPos rejoinStrand rejoinPasses`
+    // leavePasses rejoinPos rejoinStrand rejoinPasses ownTiles`
     fn body(&self, out: &mut Vec<u8>) {
         out.extend_from_slice(b"departure\t");
         out.extend_from_slice(self.path);
@@ -101,6 +104,16 @@ impl Departure<'_> {
             push_u64(out, end.bp);
             out.extend_from_slice(if end.against { b"\t-\t" } else { b"\t+\t" });
             push_u64(out, u64::from(end.passes));
+        }
+        out.push(b'\t');
+        if self.own_tiles.is_empty() {
+            out.push(b'.');
+        }
+        for (k, &tile) in self.own_tiles.iter().enumerate() {
+            if k > 0 {
+                out.push(b',');
+            }
+            push_u64(out, tile);
         }
     }
 

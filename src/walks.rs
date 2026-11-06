@@ -830,13 +830,14 @@ impl Chunks {
 // A record's first and last steps on one reference sequence S, as a rejoin
 // and a leave, and its own sequence for S before the first and after the
 // last, which the departures across the contig's records and at its ends
-// take up
-#[derive(Clone, Copy)]
+// take up, with the tiles of S that hold its steps
 struct RecordEnds {
     first: End,
     last: End,
     lead: Own,
     tail: Own,
+    lead_tiles: Vec<u64>,
+    tail_tiles: Vec<u64>,
 }
 
 // The record after one on its contig, NONE for the last.
@@ -1083,6 +1084,17 @@ impl Builder {
             bp: before[to] - before[from],
             missing: 0,
         };
+        let (chunk_of, chunks) = (&self.chunk_of, &self.chunks);
+        let tiles_of = |s: u32, steps: std::ops::Range<usize>| {
+            let mut tiles: Vec<u64> = Vec::new();
+            for k in steps {
+                let (name, start) = chunks.starts[chunk_of[k] as usize];
+                if name == s && !tiles.contains(&start) {
+                    tiles.push(start);
+                }
+            }
+            tiles
+        };
         // by sequence: its first and last steps so far
         let mut on: Vec<(u32, usize, usize)> = Vec::new();
         let mut filed = (0, 0);
@@ -1096,12 +1108,14 @@ impl Builder {
                     if piece_of(i) != piece_of(j)
                         && !reference.holes[&s].adjacent(between.bp, &leave, &rejoin)
                     {
+                        let own_tiles = tiles_of(s, i + 1..j);
                         let departure = Departure {
                             path: &path.name,
                             hap_start: path.start + before[i + 1],
                             own: between,
                             leave,
                             rejoin,
+                            own_tiles: &own_tiles,
                         };
                         filed.0 += 1;
                         filed.1 += departure.file(
@@ -1124,6 +1138,8 @@ impl Builder {
                     last: end(last, true),
                     lead: own(0, first),
                     tail: own(last + 1, n),
+                    lead_tiles: tiles_of(s, 0..first),
+                    tail_tiles: tiles_of(s, last + 1..n),
                 },
             );
         }
@@ -1151,12 +1167,20 @@ impl Builder {
                     let there = &ends[&(next, s)];
                     let own = here.tail + between + there.lead;
                     if !self.references[r].holes[&s].adjacent(own.bp, &here.last, &there.first) {
+                        let mut own_tiles = here.tail_tiles.clone();
+                        own_tiles.extend(
+                            there
+                                .lead_tiles
+                                .iter()
+                                .filter(|t| !here.tail_tiles.contains(t)),
+                        );
                         let departure = Departure {
                             path: &self.names[record.name as usize],
                             hap_start: record.end - here.tail.bp,
                             own,
                             leave: here.last,
                             rejoin: there.first,
+                            own_tiles: &own_tiles,
                         };
                         filed.0 += 1;
                         filed.1 += departure.file(

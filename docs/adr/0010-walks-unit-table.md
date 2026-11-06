@@ -94,7 +94,8 @@ its sequence and the stretch of it the line is about.
 
 Every line not starting with `#` begins `seq start end`, the reference
 sequence and the stretch of it the line is about, then format 6's columns
-from `kind` on, unchanged. These columns are data, not an index key, so
+from `kind` on, unchanged but for one column a departure record gains,
+`ownTiles` (amended below). These columns are data, not an index key, so
 `zcat | grep` places any line.
 
 | kind | `start end` |
@@ -118,11 +119,13 @@ For a window `[s, e)` with context `c`, `D = [s − c, e + c)`:
 - Gunzip each unit. Decode a tile's rows from `kind` on by format 6's
   rules. Keep the departure lines overlapping `D` and drop exact
   duplicates
-- An attach fetch reads the tile holding the record's own steps, which
-  the record names; expanding an abridged piece reads the `detail` unit
-  `cs:d`. The tile is not always the one holding the leave base: for a
-  record that jumps back along the reference, the contig's piece order
-  can file its own steps on the rejoin side ([Genome-wide](#genome-wide))
+- An attach fetch reads the tiles the record names in `ownTiles` and
+  takes the own steps they hold. A piece there that is abridged stays
+  abridged: its own steps come only when a viewer expands that path's
+  `detail` unit `cs:d`, on request. The tiles are not always the one
+  holding the leave base: for a record that jumps back along the
+  reference, the contig's piece order can file its own steps on the rejoin
+  side ([Genome-wide](#genome-wide)), and a record can name both
 - There is no chunk-before rule, no `maxnode`, no `#long` widening and no
   reach
 
@@ -347,3 +350,10 @@ and measured it against format 6
 - 2026-11-05: format 6 ships in gfa-to-tabix 3.0.0. Drawing its real rows
   for the README raised the question; four reviews, two arbiters, a
   cross-examination and a prior-art review settled it
+- 2026-11-05, amended: a genome-wide check on CHM13 found a record whose
+  own steps lie in the rejoin's tile (chr14, a jump back across two W
+  lines of NA19185#2's contig), where the rule above as first written, the
+  tile holding the leave base, missed them. Each departure record now ends
+  with `ownTiles`, the tiles of its sequence that hold its own steps, by
+  their starts, `.` for none; the writer knows them, so a reader never
+  infers them ([walks-format.md](../walks-format.md#departure))

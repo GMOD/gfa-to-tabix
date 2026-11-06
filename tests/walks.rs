@@ -558,7 +558,10 @@ fn decode_file(text: &str) -> Decoded {
     };
     let mut pieces: BTreeMap<String, BTreeMap<u64, Vec<u32>>> = BTreeMap::new();
     let mut stretches: BTreeMap<(String, String), Vec<(u64, u64)>> = BTreeMap::new();
-    let mut decode_rows = |seq: &str, path: &RefPath, rows: &[Vec<&str>], detail: bool| {
+    // every walk step a tile holds, as (sequence, path, start on its contig,
+    // end, tile)
+    let mut placed: Vec<(String, String, u64, u64, u64)> = Vec::new();
+    let mut decode_rows = |seq: &str, cs: u64, path: &RefPath, rows: &[Vec<&str>], detail: bool| {
         let mut previous = 0i64;
         let routes: Vec<Route> = rows
             .iter()
@@ -589,6 +592,14 @@ fn decode_file(text: &str) -> Decoded {
             }
             assert_eq!(steps.len(), cols[8].parse::<usize>().unwrap(), "{cols:?}");
             let offset: u64 = cols[6].parse().unwrap();
+            if cols[3] == "walk" {
+                let mut at = offset;
+                for &(h, _) in &steps {
+                    let end = at + lengths[&(h >> 1)];
+                    placed.push((seq.to_string(), cols[4].to_string(), at, end, cs));
+                    at = end;
+                }
+            }
             if cols[3] == "walk" && !detail {
                 let (start, end, _, _) = on_r(offset, &steps);
                 stretches
@@ -630,14 +641,14 @@ fn decode_file(text: &str) -> Decoded {
                 })
                 .collect(),
         };
-        decode_rows(seq, &path, rows, false);
+        decode_rows(seq, *cs, &path, rows, false);
         let abridged: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "abridged").collect();
         let mut held: Vec<u64> = abridged.iter().map(|c| c[12].parse().unwrap()).collect();
         held.dedup();
         for k in held {
             let record = &details[&(seq.clone(), *cs, k)];
             assert!(record.iter().all(|c| c[3] != "ref" && c[3] != "abridged"));
-            let decoded = decode_rows(seq, &path, record, true);
+            let decoded = decode_rows(seq, *cs, &path, record, true);
             let stands: Vec<&&Vec<&str>> = abridged
                 .iter()
                 .filter(|c| c[12].parse::<u64>().unwrap() == k)
@@ -693,6 +704,23 @@ fn decode_file(text: &str) -> Decoded {
     }
     for (seq, cols) in records {
         let (start, own): (u64, u64) = (cols[2].parse().unwrap(), cols[3].parse().unwrap());
+        let mut holding: Vec<u64> = placed
+            .iter()
+            .filter(|p| p.0 == seq && p.1 == cols[1] && start <= p.2 && p.3 <= start + own)
+            .map(|p| p.4)
+            .collect();
+        holding.sort_unstable();
+        holding.dedup();
+        let mut named: Vec<u64> = if cols[11] == "." {
+            Vec::new()
+        } else {
+            cols[11].split(',').map(|t| t.parse().unwrap()).collect()
+        };
+        named.sort_unstable();
+        assert_eq!(
+            named, holding,
+            "a record's ownTiles are the tiles holding its own steps: {cols:?}"
+        );
         stretches
             .entry((seq, cols[1].to_string()))
             .or_default()
@@ -909,8 +937,8 @@ fn a_path_that_jumps_over_the_reference_has_a_departure_record_over_the_stretch(
         assert_eq!(
             departures(built.file(sample)),
             tsv(&[
-                &format!("{anchor} 10 80 departure B#1#b 10 0 0 70 - 1 20 - 1"),
-                &format!("{anchor} 10 80 departure D#1#d 20 0 0 20 + 1 70 + 1"),
+                &format!("{anchor} 10 80 departure B#1#b 10 0 0 70 - 1 20 - 1 ."),
+                &format!("{anchor} 10 80 departure D#1#d 20 0 0 20 + 1 70 + 1 ."),
             ]),
             "{sample}"
         );
@@ -930,10 +958,10 @@ fn a_departure_between_pieces_has_a_record_and_one_inside_a_piece_has_none() {
     assert_eq!(
         departures(built.file("R")),
         tsv(&[
-            "R#0#chr 0 18 departure I#1#i 6 0 0 6 + 1 18 - 1",
-            "R#0#chr 0 18 departure Q#0#chr 6 6 0 6 + 1 12 + 1",
-            "R#0#chr 0 24 departure D#1#d 24 0 0 24 + 1 0 + 1",
-            "R#0#chr 6 24 departure I#1#i 18 0 0 6 - 1 18 + 1",
+            "R#0#chr 0 18 departure I#1#i 6 0 0 6 + 1 18 - 1 .",
+            "R#0#chr 0 18 departure Q#0#chr 6 6 0 6 + 1 12 + 1 0",
+            "R#0#chr 0 24 departure D#1#d 24 0 0 24 + 1 0 + 1 .",
+            "R#0#chr 6 24 departure I#1#i 18 0 0 6 - 1 18 + 1 .",
         ])
     );
     let whole = build("walks-two-refs.gfa", &["--tile", "1000"]);
@@ -1044,7 +1072,7 @@ fn steps_either_side_of_a_hole_in_the_reference_are_adjacent() {
     );
     assert_eq!(
         departures(walks),
-        tsv(&["R#0#chr 6 26 departure G#1#g 12 8 0 12 + 1 20 + 1"])
+        tsv(&["R#0#chr 6 26 departure G#1#g 12 8 0 12 + 1 20 + 1 0"])
     );
 }
 
@@ -1163,6 +1191,47 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
             ])
         );
     }
+}
+
+// R is 1 2 3 4, 6 bp each, so tile 0-10 holds 1 and 2 and tile 10-20 holds
+// 3 and 4; 5, 6 and 7 are 8 bp of a path's own. Each path jumps back from
+// 4's end at 24 to 1's start at 0, its own steps between. J's line walks 5
+// after 4: own steps after the leave take the leave's tile, 10. H's first
+// line ends with 4 and its next, from 30, starts with 5 before 1: steps
+// leading a line take the tile of the first reference step after them, the
+// rejoin's, 0, where a read at the leave would miss them. K's first line
+// ends with 6 after 4 and its next starts with 7 before 1, so both
+#[test]
+fn a_record_names_the_tiles_holding_its_own_steps() {
+    let built = build_text(
+        "own-tiles",
+        &[
+            "S 1 AAAAAA",
+            "S 2 AAAAAA",
+            "S 3 AAAAAA",
+            "S 4 AAAAAA",
+            "S 5 CCCCCCCC",
+            "S 6 GGGGGGGG",
+            "S 7 TTTTTTTT",
+            "W R 0 chr 0 24 >1>2>3>4",
+            "W J 1 j 0 38 >1>2>3>4>5>1",
+            "W H 1 h 0 24 >1>2>3>4",
+            "W H 1 h 30 44 >5>1",
+            "W K 1 k 0 32 >1>2>3>4>6",
+            "W K 1 k 40 54 >7>1",
+        ],
+        &["--refs", "R"],
+    );
+    assert!(built.output.status.success());
+    assert_eq!(
+        departures(built.file("R")),
+        tsv(&[
+            "R#0#chr 0 24 departure H#1#h 24 14 6 24 + 1 0 + 1 0",
+            "R#0#chr 0 24 departure J#1#j 24 8 0 24 + 1 0 + 1 10",
+            "R#0#chr 0 24 departure K#1#k 24 24 8 24 + 1 0 + 1 10,0",
+        ])
+    );
+    decode_file(built.file("R"));
 }
 
 // A tile's ref row lists its reference steps and their lengths, and its
@@ -1325,7 +1394,7 @@ fn a_short_stretch_over_a_revisited_node_stays_in_its_piece_on_a_pass_there() {
     );
     assert_eq!(
         departures(cut.file("R")),
-        tsv(&["R#0#chr 18 30 departure K#1#k 30 0 0 30 + 2 18 + 2"])
+        tsv(&["R#0#chr 18 30 departure K#1#k 30 0 0 30 + 2 18 + 2 ."])
     );
 }
 
@@ -1343,7 +1412,7 @@ fn a_record_states_how_many_times_the_reference_passes_each_end() {
     fs::remove_file(&path).unwrap();
     assert_eq!(
         departures(built.file("R")),
-        tsv(&["R#0#chr 18 45 departure X#1#x 45 0 0 45 + 1 18 + 2"])
+        tsv(&["R#0#chr 18 45 departure X#1#x 45 0 0 45 + 1 18 + 2 ."])
     );
 }
 
@@ -1361,7 +1430,7 @@ fn a_pass_count_counts_every_sequence_of_the_reference() {
     assert!(built.file("R").contains("\trevisited:i:1\t"));
     assert_eq!(
         departures(built.file("R")),
-        tsv(&["R#0#chr 0 20 departure X#1#x 20 0 0 20 + 2 0 + 1"])
+        tsv(&["R#0#chr 0 20 departure X#1#x 20 0 0 20 + 2 0 + 1 ."])
     );
 }
 
@@ -1684,8 +1753,8 @@ fn a_contig_departs_once_from_each_w_line_to_the_next_with_a_step_on_r() {
     assert_eq!(
         departures(walks),
         tsv(&[
-            "R#0#chr 6 12 departure H#1#h 12 28 22 12 + 1 6 + 1",
-            "R#0#chr 6 24 departure G#1#g 12 18 18 12 + 1 18 + 1",
+            "R#0#chr 6 12 departure H#1#h 12 28 22 12 + 1 6 + 1 .",
+            "R#0#chr 6 24 departure G#1#g 12 18 18 12 + 1 18 + 1 .",
         ])
     );
 }
