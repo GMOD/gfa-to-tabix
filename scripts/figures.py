@@ -3,8 +3,9 @@
 
 Runs the tool on docs/figures/*.gfa and redraws docs/figures/*.svg from the
 lines it writes. The script draws the overview figure itself, the walks
-figures by filling the marked regions of their .dot files for Graphviz, and
-the outputs figure from its .dot file as written.
+detail figure by filling the marked regions of its .dot file for Graphviz,
+the outputs figure from its .dot file as written, and the walks figures from
+the tool's lines and the drawings scripts/bandage-figure.mjs left beside them.
 With --check, exits 1 if a figure differs from what the tool writes now.
 """
 
@@ -333,10 +334,7 @@ def walks(rows, w_lines):
     def rebuilt_row(path, cells, label=""):
         return tr([td(path, border=0, align="RIGHT"), *cells, td(label, border=0, align="LEFT")])
 
-    def node(h):
-        return f"{h[0]}{'-' if h[1] else ''}"
-
-    table, simple = [], []
+    table = []
     rebuilt = [rebuilt_row(reference, [td(h[0], BLUE[0], width=60) for h in R])]
     route_id = 0
     for row in rows:
@@ -344,7 +342,6 @@ def walks(rows, w_lines):
         meaning, bg = "", None
         if kind == "ref":
             meaning, bg = f"R, the reference path: {' '.join(handle(h) for h in R)}", BLUE[0]
-            simple.append(tr([td(reference, bg), td(" → ".join(node(h) for h in R), align="LEFT")]))
         elif kind == "nodes":
             ids, total = [], 0
             for d in rest[0].split(","):
@@ -357,8 +354,6 @@ def walks(rows, w_lines):
             via = f"through {' '.join(handle(h) for h in interior)} to" if interior else "straight to"
             meaning = f"route {route_id}: from {handle(entry)} {via} {handle(exit_)}"
             bg = route_colors(routes[route_id])[0]
-            nodes = [entry, *interior, exit_]
-            simple.append(tr([td(f"route {route_id}", bg), td(" → ".join(node(h) for h in nodes if h), align="LEFT")]))
             route_id += 1
         elif kind == "walk":
             start = int(rest[5])
@@ -374,28 +369,13 @@ def walks(rows, w_lines):
                 f'<FONT POINT-SIZE="11" COLOR="{route_colors(routes[c])[-1]}">route {c}</FONT>' for c, _ in choices
             )
             rebuilt.append(rebuilt_row(path, cells, label))
-            simple.append(tr([td(path), td(taken or f"{REF}'s path", align="LEFT")]))
         columns = " ".join(rest)
         table.append(tr([
             td(kind, bg),
             td(f'<FONT FACE="Courier" POINT-SIZE="11">{columns}</FONT>', align="LEFT"),
             td(meaning, align="LEFT"),
         ]))
-    return table, simple, rebuilt
-
-
-def tile_size(header):
-    return int(next(f for f in header[0] if f.startswith("tile:i:")).split(":")[2])
-
-
-def walks_label(header, rows):
-    contig = rows[0][0].rsplit("#", 1)[1]
-    grey = '<FONT POINT-SIZE="12" COLOR="#555555">'
-    return [
-        f'label=<<B>2. {PREFIX}.{REF}.walks.gz</B><BR ALIGN="LEFT"/>'
-        f"{grey}for each {tile_size(header) // 1024} kb tile of {contig}: {REF}'s path, each route off it, and the routes each haplotype takes</FONT>"
-        f'<BR ALIGN="LEFT"/>>'
-    ]
+    return table, rebuilt
 
 
 def walks_caption(header, rows):
@@ -624,7 +604,7 @@ def generate(binary):
             with gzip.open(walk_file, "rt") as f:
                 built[name] = [line.rstrip("\n").split("\t") for line in f]
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
-    table, simple, rebuilt = walks(walk_rows, paths)
+    table, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
     simple_rows = [r for _, rows in units_of(built["walks-simple"]) for r in rows if r[0] != "#entry"]
     leave_rows = list(dict.fromkeys(tuple(r) for _, rows in units_of(built["walks-leave"]) for r in rows if r[0] != "#entry"))
@@ -634,13 +614,6 @@ def generate(binary):
                                              lambda f: HIGHLIGHT if f[3] == "departure" else None),
         "outputs": {},
         "overview": overview_svg(segs, links),
-        "walks": {
-            "graph": walks_nodes,
-            "label": walks_label(header, walk_rows),
-            "rows": simple,
-            "rebuilt": rebuilt,
-            "arrows": walks_arrows,
-        },
         "walks-detail": {
             "graph": walks_nodes,
             "rows": table,
