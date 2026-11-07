@@ -1831,3 +1831,55 @@ Where the findings have come from so far, and the rule each gives:
   checker cases.tsv names fails each by its exit status with no
   traceback. Main's checkers pass 11 of them. Guard: check-walks.sh runs
   broken.sh first
+- **2026-11-07, the fundamentals review (no consumer on known truth).**
+  Nothing ran the real reader on the writer's output over a known graph:
+  graph-walks' unit tests read hand-packed files, its release-check reads
+  hosted data with no GFA, and check-walks.sh's checkers read the file
+  alone or recompute the writer's rules in Python. Source: the
+  fundamentals review. Fix: scripts/graph-walks-rebuild.mjs imports
+  @jbrowse/graph-walks 6's sources, builds every fixture under
+  check-walks.sh's option sets, cuts each reference sequence whole with
+  every budget lifted and every abridged walk expanded, and demands every
+  fragment be a run of whole steps of its GFA line with the GFA's handles,
+  every step on a reference node back exactly once over all sequences,
+  every placed step at a pass of its sequence, and in a revisited:i:0
+  file every departure as the GFA states it, with the header's holes and
+  haplotypes, the nodes' placements and the bases besides. All 50 fixture
+  builds pass. walk-span-wrong, wide, u2-leading-zero, table-S-wrong,
+  nodes-extra, owntiles-wrong, passes-second-row, g1-walk-order,
+  block-misaligned, empty-block and abridged-nsteps pass it and stay with
+  the file checks: a whole cut never reads a walk row's `start end`, a
+  tile's name or extent, a table's `|S|` or a record's `ownTiles`; the
+  reader takes a `nodes` row's extra node, a walk row's order, a block's
+  extent and an empty block as they come, keeps the first ref row's
+  `passes`, and expands the abridged piece whose `nsteps` lies. Guard: the
+  `rebuild` job of push.yml, on GMOD/graph-walks at c0d8a23; the script
+  first requires 26 of the broken files to fail it
+- **2026-11-07, the fundamentals review (no step-for-step rebuild on a
+  file).** The only check that rebuilt a line from a file against the GFA
+  was `tests/walks.rs`'s decoder, on ten fixture builds. On any file,
+  `walks-truth.py pieces` summed each line's bp, so a wrong node of the
+  same length, a flipped strand or a swapped choice passed it, and passed
+  verify7, claims7 and audit7, which read the file alone; audit7's "every
+  base in one piece's stretch or one record's own bp" is a bp cover too.
+  No real-data run had ever compared the file's steps with the GFA's.
+  Source: the fundamentals review, after the user asked for fundamentals
+  over edge cases. Fix: `walks-truth.py rebuild WALKS GFA [--shard I/N]`
+  decodes every walk row and detail unit by the spec's rules, hashes each
+  piece's handles (and a ref row's lengths), and compares each line's
+  pieces in order with the GFA's steps, 0 bp segments dropped, the set of
+  lines included; the decoder also refuses a step off the end of R, where
+  it wrapped to R's last position. `broken/corrupt.py` repacks a file from
+  edited text so a broken file is reproducible. Guard: check-walks.sh and
+  fuzz7.sh run it on every build; broken.sh on `interior-flipped`,
+  `detail-interior-flipped` and `ref-strand-flipped`, which every other
+  checker passes, and on five older broken files; the release check on
+  ada (`writer/scripts/release-check.sh`) runs it in shards on MC chr22
+  and pggb chrY, which has not yet run: ada refused ssh all day
+- **2026-11-07, the fundamentals review (thread count).** Nothing had
+  shown the bytes independent of the machine: MC chr22 was compared across
+  commits on one host. Source: the fundamentals review. Fix: none needed;
+  95 files from the ten walk fixtures under five option sets and five fuzz
+  graphs under three, built at 1, 2 and 16 threads, are byte-identical.
+  Guard: none in CI; `docs/handoff/2026-11-07-fundamentals.md` records
+  the run

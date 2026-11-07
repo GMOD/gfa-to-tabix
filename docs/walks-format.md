@@ -674,7 +674,15 @@ build where it doesn't hold; **tests**, `verify()` and the other checks in
 and `claims7.py` on any file, which `scripts/check-walks.sh` runs in CI on
 every fixture under four option sets and on random graphs
 ([claims7.md](departures/claims7.md) lists each claim's check).
-<!-- C151 -->
+<!-- C151 --> `walks-truth.py rebuild` runs there too, with the GFA: it
+decodes every walk row and detail unit by the rules of this page and
+demands every W or P line back step for step, the reference's own lines
+from their `ref` rows with their lengths, and no line more or fewer; it
+shards by path, so it runs on a whole chromosome. <!-- C1 --> A reader
+check, `scripts/graph-walks-rebuild.mjs`, opens every fixture's files with
+@jbrowse/graph-walks 6 in CI, cuts each reference sequence whole and
+demands every path, placement and departure back as the GFA states them.
+<!-- C1 -->
 
 - The header, the units, the tables and the EOF block partition the data
   file; every unit starts and ends a gzip member and starts with its
