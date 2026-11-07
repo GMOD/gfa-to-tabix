@@ -1,0 +1,12 @@
+#walks	format:i:7	tile:i:10	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	bytes:i:5810
+#header	0	162
+R#0#chr1	593	127
+R#0#chr10	1142	128
+R#0#chr11	1708	131
+R#0#chr2	2270	131
+R#0#chr22	2842	132
+R#0#chr3	3411	130
+R#0#chr9	3958	130
+R#0#chrM	4518	130
+R#0#chrX	5079	133
+R#0#chrY	5650	132

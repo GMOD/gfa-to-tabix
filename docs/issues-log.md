@@ -1679,3 +1679,155 @@ Where the findings have come from so far, and the rule each gives:
   bound at all. Guard: `a_tile_that_keeps_walk_rows_fits_its_budgets` and
   `a_tile_over_its_byte_budget_moves_the_fewest_paths_that_bring_it_within`
   count raw bytes, which any checker can count the same
+- **2026-11-06, the checker bug hunt (verify7's header).** verify7.py
+  checked the directory's `#header 0 <length>` only when a gzip member
+  started exactly at that length, so a directory stating `#header 0 100`
+  over a header ending at byte 139 passed all three checkers, and so did
+  one whose `#walks` line differed from the data's. Source: the spec
+  review's corrupted files `hdr-len-idx-only` and `walks-differ-len100`.
+  Fix: verify7 fails when the stated length ends inside a member or runs
+  past the units. Guard: verify7, on every fixture; both files now fail
+- **2026-11-06, the checker bug hunt (claims7 G1, dead code).** claims7's
+  walk-row order check sat inside `if kind == 'detail'` and tested `kind
+  == 'tile'`, so it never ran; mutant O1, `piece` sorted ahead of
+  `fragStart` and `hapOffset`, changed nearly every fuzz file and passed.
+  Source: the spec review (`g1-walk-order`, H's and D's rows swapped in
+  tile 0) and the mutant run. Fix: G1 runs on every tile. Guard: claims7
+  G1; O1 now fails check-walks.sh
+- **2026-11-06, the checker bug hunt (claims7 U2).** U2 read a tile's
+  name with `int()`, so `tile 010` passed. Source: the spec review's
+  `u2-leading-zero`. Fix: U2 requires `0` or a decimal with no leading
+  zero. Guard: claims7 U2
+- **2026-11-06, the checker bug hunt (audit7's pass counts and exit
+  status).** audit7 kept one stated pass count per node, the first, so a
+  second ref row of node 2 in walks-repeat stating 3 where the first
+  states 2 gave only the tally "one node with two pass counts", which
+  fuzz7.sh's grep did not match; and fuzz7.sh ignored audit7's exit
+  status, failing on whatever its grep of the output matched. The grep
+  compensated for audit7 printing counts with no exit status. Source:
+  the spec review (`passes-second-row`). Fix: audit7 checks every count
+  each ref row states against the positions holding the node, prints
+  each check that must find nothing as `(must be 0)` and exits 1 when
+  one finds something; fuzz7.sh and check-walks.sh fail on its exit
+  status. Guard: audit7; a writer that restates one missingBp one lower
+  per file fails 54 of 54 fuzz runs of seeds 1 to 6 and passed main's
+  fuzz7.sh
+- **2026-11-06, the checker bug hunt (audit7's "steps unseen").** audit7
+  excused any record whose missingBp was below the gap it recomputed, so
+  G's record in walks-records restated from 18 to 5 passed. The excuse
+  compensated for one real case: a W line with no step on the reference
+  has no rows in the file (C4), so the bp it covers between two lines
+  that do look missing to a reader of the file alone (H's `>5>6` line at
+  20 to 26 in walks-records). Source: the spec review
+  (`missing-understated-G`). Fix: audit7 takes `--gfa`, the graph, and
+  counts as missing only the bp no W or P line of the contig covers;
+  with it no understated missingBp is excused, and without it the case is
+  printed as unverified, not passed. check-walks.sh and fuzz7.sh pass the
+  graph. Guard: audit7 `field mismatch`; the file now fails
+- **2026-11-06, the checker bug hunt (audit7 not run on fixtures).**
+  check-walks.sh ran audit7 only inside fuzz7.sh, so a record stating
+  leavePasses 2 in a `revisited:i:0` file passed every fixture check.
+  Source: the spec review (`record-leavepasses`). Fix: check-walks.sh
+  runs audit7, given the fixture, on every fixture file, and claims7 H2
+  also fails a record stating passes above 1 under `revisited:i:0`.
+  Guard: both; the file fails each
+- **2026-11-06, the checker bug hunt (holes, C52).** claims7 G5 checked
+  the `#hole` lines' order only, so a hole at GRCh38#0#chr 3 to 5, over
+  bases the ref rows cover, passed; and audit7 removed a hole only from
+  positions past its end, the writer's own rule, so it could not see the
+  writer's records 10 to 15 and 15 to 20 over a 0 bp line inside the
+  hole 10 to 20. Source: the spec review (`hole-bogus`) and the units
+  review (`hole-inside.gfa`, `hole-trailing.gfa`). Fix: G5 requires the
+  holes of each sequence to be exactly the stretches before `|S|` that no
+  ref row covers; audit7 squeezes a position inside a hole to the hole's
+  start. Guard: claims7 G5 fails `hole-bogus` and the writer's missing
+  hole 10 to 20 beside the 0 bp line at 20; audit7 fails the records
+  inside the hole. Both writer cases are 0 bp lines, which the writer
+  fix dropping 0 bp segments removes
+- **2026-11-06, the checker bug hunt (a point departure line).** verify7
+  and claims7 U7 accepted a departure line `[p, p)` anywhere in its
+  block, since `a == b` stood in for overlap; only a line `[0, 0)` on a
+  sequence of 0 bp may sit in a block it does not overlap, at the
+  block's start. Source: the spec review. Fix: a point line must lie at
+  its block's start. Guard: verify7 and claims7 U7 fail a copy of I's
+  record at 5 5 in the block 0 to 10
+- **2026-11-06, the checker bug hunt (check-claims' test: checks).**
+  `exists()` accepted `test:f` from `src/`, against claims7.md's legend,
+  so C98 and C106 named unit tests of `src/` as tests of
+  `tests/walks.rs`. Source: the spec review. Fix: `test:f` must be in
+  tests/walks.rs and a new `unit:f` names a `#[test]` function of `src/`;
+  both rows use it. Guard: check-claims.py fails both rows written as
+  `test:`
+- **2026-11-06, the checker bug hunt (walks-truth.py).** `score` read
+  only walk rows, so an abridged piece counted nowhere, and gave a W
+  line's last piece `nsteps × 30` bp or its record's mean bp per step.
+  Source: the spec review. Fix: it decodes every walk row, a detail
+  record's against its tile's R, and sums its steps' lengths; its new
+  `pieces` command fails a W or P line with rows whose pieces' bp differ
+  from its length in the GFA. Guard: check-walks.sh and fuzz7.sh run
+  `pieces` on every file; main's piece reading fails it on all 4 lines of
+  walks-two-refs at `--abridge-bytes 1`, reading none of them, and on all
+  6 of walks-loop at `--tile 7 --abridge-steps 2`
+- **2026-11-06, the checker bug hunt (extents, C41, C137, C43).** The
+  build's out-of-extent check takes the extent from the same spans it
+  tests, and verify7 widened a tile's extent by its pieces' spans too,
+  so a walk row and its tile both widened past R passed. C43's
+  `test:cover` copies `departures::cover`, and verify7's cover was the
+  same algorithm. Source: the writer-vs-spec review. Fix: verify7 takes
+  a tile's extent from its ref rows alone and a detail unit's from its
+  pieces; it checks a record's blocks against the sentence, aligned
+  pyramid blocks tiling the stretch with no larger aligned block fitting
+  at a block's start, not by rebuilding them. Guard: verify7 fails tile 0
+  of walks-two-refs widened from 0 12 to 0 15; mutant Y3 (blocks of 256
+  tiles) fails it on the new fixture walks-long-jump.gfa, whose H
+  departs over 600 tiles of 10 bp
+- **2026-11-06, the checker bug hunt (abridging stops at the fewest
+  lines, C100 and C7).** claims7 B1 and B2 checked only that a tile's
+  kept rows fit, so a writer moving more W lines than needed passed:
+  mutant B1 (`>=` for `>`) abridged walks-loop's one tile at a cost of
+  exactly 1, and the writer moves 40 of 60 lines of
+  walks-abridge-bytes.gfa at `--abridge-bytes 600` where, with the last
+  one put back, the kept rows deflate to 437 bytes. Source: the mutant
+  run and the writer-vs-spec review. Fix: claims7 B3 puts the
+  last-numbered detail record back, re-encodes the tile's routes, nodes
+  and walk rows by the spec's rules (a tile re-encoded with nothing put
+  back is byte-identical to the writer's on all 248 files of the
+  fixtures and 25 fuzz graphs), and fails where it would fit both
+  budgets, or where a kept line costs more than a moved one. Guard: B3,
+  on the fixture walks-abridge-bytes.gfa and fuzz option set `i`. It
+  fails on the current writer until the writer measures instead of
+  estimating; mutant B1 and a cheapest-first writer fail it
+- **2026-11-06, the checker bug hunt (coverage).** No fixture had a
+  departure over 512 tiles (mutant Y3 survived), or three or more
+  sequences out of byte order and holes needing a sort (mutants O2 and
+  H4 were caught from fuzz seed 5 by HashMap order alone); the fuzz
+  generator wrote reference lines forward only, no P lines, no bases and
+  0 bp nodes by default; and `#reference` was checked by nothing (a file
+  naming CHM13 passed). Source: the mutant run, the writer-vs-spec review
+  and the spec review (`reference-wrong`). Fix: fixtures
+  walks-long-jump.gfa and walks-sequences.gfa (ten sequences, chr9 to
+  chrY in no order, each with a hole 8 to 12); fuzz7-gen.py writes
+  reverse and mixed-strand reference lines, P lines named with `[start]`,
+  `[start-end]`, `#start` and `:start-end`, bases on every segment, one
+  to three W lines per contig, and 0 bp nodes only with `--zero`;
+  fuzz7.sh adds an option set with `--sequences`; claims7 H3 checks
+  `#reference` against every ref row's sample, and audit7 checks each
+  `SQ:Z:` against the GFA. Guard: check-walks.sh. Nodes shared across
+  reference sequences wait for the placement decision
+- **2026-11-06, the checker bug hunt (deflate is not one size).** The
+  spec's "deflate at level 6" does not fix a size: tile 128 of Q in fuzz
+  seed 8 (`--zero`, `--tile 64 --abridge-bytes 300`) deflates to 300
+  bytes under the writer's zlib-rs and 301 under zlib 1.3.1, which
+  claims7 uses, so B1 fails a tile the writer measured as fitting. Source:
+  this hunt. Fix: none yet; the spec has to name the deflate the measure
+  uses, and the writer and claims7 use it. Guard: B1 and B3 measure with
+  zlib; no fuzz seed of 1 to 80 without `--zero` sits on that byte
+- **2026-11-06, the checker bug hunt (proofs that left with the
+  session).** Each repaired check above was shown failing on a corrupted
+  file under the reviewers' scratch folders, outside the repo, so nothing
+  would show a later edit had made it pass again. Source: this hunt.
+  Fix: the 37 broken files, with the corruption each holds, are in
+  docs/departures/scripts/broken/, and broken.sh fails unless every
+  checker cases.tsv names fails each by its exit status with no
+  traceback. Main's checkers pass 11 of them. Guard: check-walks.sh runs
+  broken.sh first

@@ -18,14 +18,22 @@
 # its tile's extent, so any window over it reads the tile, and costs each
 # window as format 7 reads it: the tiles and departure blocks whose extents
 # overlap it, from the unit tables, in requests of touching byte ranges.
+# With --gfa, the graph the file was built from: each record's missingBp is
+# the bp between the path's rows that no W or P line of its contig covers,
+# and each SQ:Z: tag holds its nodes' bases as the S lines give them.
+# Without it, a missingBp below the gap between the rows is unverified, as
+# the gap may hold a W line with no step on the reference, which has no rows.
+# Prints each check that must find nothing as `<count>\t<what> (must be 0)`,
+# and exits 1 if any finds something.
 #
-# Usage: audit7.py walks.gz [--seq NAME] [--window 65536] [--point 1024] [--top 1]
+# Usage: audit7.py walks.gz [--gfa g.gfa] [--seq NAME] [--window 65536] [--point 1024] [--top 1]
 import argparse
 import bisect
 import collections
 import gzip
 import os
-import struct
+import re
+import sys
 import zlib
 
 ap = argparse.ArgumentParser()
@@ -35,6 +43,7 @@ ap.add_argument('--point', type=int, default=1024, help='spacing of the 1 bp win
 ap.add_argument('--top', type=int, default=1, help='windows to break down')
 ap.add_argument('--examples', type=int, default=5)
 ap.add_argument('--truth', help="dep.rs's dep.tsv for the same graph and reference")
+ap.add_argument('--gfa', help='the GFA the file was built from, for missingBp and SQ:Z: tags')
 ap.add_argument('--seq', help='audit one reference sequence and its siblings only, so a genome-wide file fits in '
                 'memory; a departure across sequences then counts the bp on the others as unseen')
 ap.add_argument('--shard', default='0/1', help='I/N: check only the paths whose name hashes to I of N; '
@@ -45,6 +54,62 @@ SHARD, SHARDS = map(int, args.shard.split('/'))
 
 def in_shard(path):
     return zlib.crc32(path.encode()) % SHARDS == SHARD
+
+
+failures = []
+
+
+def must_be_0(n, text):
+    print(f'{n}\t{text} (must be 0)')
+    if n:
+        failures.append(text)
+
+
+def path_start(name):
+    # A P line's contig and start: `[start]` or `[start-end]`, `#start` after
+    # three fields, or `:start-end`; else the whole name, from 0
+    bracket = re.fullmatch(r'(.*)\[(\d+)(?:-[^\]]*)?\]', name)
+    hashed = re.fullmatch(r'([^#]*#[^#]*#[^#]*)#(\d+)', name)
+    colon = re.fullmatch(r'(.*):(\d+)-(\d+)', name)
+    match = bracket or hashed or colon
+    return (match.group(1), int(match.group(2))) if match else (name, 0)
+
+
+def read_gfa(path):
+    lengths, bases, lines = {}, {}, collections.defaultdict(list)
+    paths = []
+    opener = gzip.open if path.endswith('.gz') else open
+    with opener(path, 'rt') as f:
+        for line in f:
+            c = line.rstrip('\n').split('\t')
+            if c[0] == 'S':
+                ln = next((int(t[5:]) for t in c[3:] if t.startswith('LN:i:')), None)
+                lengths[int(c[1])] = len(c[2]) if c[2] != '*' else ln
+                if c[2] != '*':
+                    bases[int(c[1])] = c[2]
+            elif c[0] == 'W' and c[6]:
+                paths.append((f'{c[1]}#{c[2]}#{c[3]}', int(c[4]), [int(x) for x in re.findall(r'[<>](\d+)', c[6])]))
+            elif c[0] == 'P' and c[2] not in ('', '*'):
+                name, start = path_start(c[1])
+                paths.append((name, start, [int(x.rstrip('+-')) for x in c[2].split(',')]))
+    for name, start, steps in paths:
+        lines[name].append((start, start + sum(lengths[x] for x in steps)))
+    return bases, lines
+
+
+gfa_bases, gfa_lines = read_gfa(args.gfa) if args.gfa else (None, None)
+
+
+def unlined(path, lo, hi):
+    if gfa_lines is None or hi <= lo:
+        return hi - lo
+    return hi - lo - sum(max(0, min(b, hi) - max(a, lo)) for a, b in gfa_lines.get(path, []))
+
+
+def check_bases(c, ids):
+    sq = next((t[5:] for t in c[4:] if t.startswith('SQ:Z:')), None)
+    if gfa_bases is not None and sq is not None and sq != ''.join(gfa_bases.get(x, '') for x in ids):
+        bad[f'{c[3]} row: SQ:Z: differs from its nodes\' bases in the GFA'] += 1
 
 def handles(field, prev):
     out = []
@@ -227,7 +292,8 @@ seq_len = collections.Counter()
 bad = collections.Counter()
 bad_examples = []
 abridged_rows = []   # (path, frag, offset, piece, steps, bp, (start, end), (seq, cs, detail))
-stated_passes = {}   # node -> the count its ref rows state
+stated_passes = {}   # node -> the count its first ref row states
+stated_counts = collections.defaultdict(set)   # node -> every count its ref rows state
 held_passes = collections.Counter()   # node -> positions of the file's ref rows holding it
 keep_r = {}
 record_index = {}
@@ -355,9 +421,12 @@ with gzip.open(args.file, 'rt') as f:
                 continue
             if kind == 'nodes':
                 prev = 0
+                ids = []
                 for d_, n in zip(ints(c[4]), ints(c[5])):
                     prev += d_
                     nodes[prev] = n
+                    ids.append(prev)
+                check_bases(c, ids)
             elif kind == 'route':
                 e, route_prev = handles(c[4], route_prev) if c[4] != '.' else ([None], route_prev)
                 inter, route_prev = handles(c[5], route_prev)
@@ -377,8 +446,9 @@ with gzip.open(args.file, 'rt') as f:
                 bad['ref row: pass counts not one per step'] += 1
             for h, n in zip(hs, counts):
                 held_passes[h >> 1] += 1
-                if stated_passes.setdefault(h >> 1, n) != n:
-                    bad['ref rows: one node with two pass counts'] += 1
+                stated_passes.setdefault(h >> 1, n)
+                stated_counts[h >> 1].add(n)
+            check_bases(c, [h >> 1 for h in hs])
             r.add(int(c[6]), hs, lengths)
             seq_len[seq] = max(seq_len[seq], r.off[-1] + r.len[-1])
             for h in hs:
@@ -389,9 +459,12 @@ with gzip.open(args.file, 'rt') as f:
             indexed = True
         if kind == 'nodes':
             prev = 0
+            ids = []
             for d_, n in zip(ints(c[4]), ints(c[5])):
                 prev += d_
                 nodes[prev] = n
+                ids.append(prev)
+            check_bases(c, ids)
         elif kind == 'route':
             e, route_prev = handles(c[4], route_prev) if c[4] != '.' else ([None], route_prev)
             inter, route_prev = handles(c[5], route_prev)
@@ -426,7 +499,7 @@ size = os.path.getsize(args.file)
 print(f'{size}\tfile bytes; {os.path.getsize(args.file + ".idx")} directory bytes')
 print(f'{sum(len(v) for v in holes.values())}\t#hole lines')
 shared = sum(n for n in unit_names.values() if n > 1)
-print(f'{shared}\ttile and detail units sharing a name with another of their sequence (must be 0)')
+must_be_0(shared, 'tile and detail units sharing a name with another of their sequence')
 for k in [k for k, n in unit_names.items() if n > 1][:args.examples]:
     print('   shared name', k)
 
@@ -435,7 +508,9 @@ unreachable = []
 
 
 def squeeze(seq, bp):
-    return bp - sum(b - a for a, b in holes.get(seq, []) if b <= bp)
+    # bp with the holes' bases before it removed: a position inside a hole
+    # squeezes to the hole's start
+    return bp - sum(min(b, bp) - a for a, b in holes.get(seq, []) if a < bp)
 
 
 # Departures recomputed from the decoded rows, per path and sequence. An end
@@ -518,7 +593,7 @@ for path, ps in pieces.items():
             if s[0] == 'I':
                 if hap is not None and s[2] != hap:
                     own_bp += s[2] - hap
-                    missing += s[2] - hap
+                    missing += unlined(path, hap, s[2])
                 own_bp += s[4]
                 hap = s[2] + s[4]
                 if s[5] == S and s[6] not in own_tiles:
@@ -527,7 +602,7 @@ for path, ps in pieces.items():
             _, frag, at, seq, cs, first, last, against, n, bp, key = s
             if hap is not None and at != hap:
                 own_bp += at - hap
-                missing += at - hap
+                missing += unlined(path, hap, at)
             if seq != S:
                 own_bp += bp
                 hap = at + bp
@@ -607,8 +682,8 @@ for path, S, d, needs in computed:
     matched.add(k)
     if not needs:
         tally[f'{kind}: recorded though the reader computes it'] += 1
-    if diffs and set(diffs) <= {'missing'} and rec['missing'] < d['missing']:
-        tally[f'{kind}: over a W line the file holds no row of (steps unseen)'] += 1
+    if diffs and set(diffs) <= {'missing'} and rec['missing'] < d['missing'] and gfa_lines is None:
+        tally[f'{kind}: missingBp below the gap between rows, unverified without --gfa'] += 1
     elif diffs:
         tally[f'{kind}: field mismatch'] += 1
         for x in diffs:
@@ -621,19 +696,27 @@ unmatched = [k for k, d in enumerate(parsed) if k not in matched and in_shard(d[
 tally['records with no recomputed departure'] = len(unmatched)
 for k in unmatched[:args.examples]:
     bad_examples.append(('unmatched record', parsed[k]))
+failing = ('MISSING RECORD', 'field mismatch', 'recorded though the reader computes it',
+           'records with no recomputed departure')
 for k, v in sorted(tally.items()):
-    print(f'{v}\t{k}')
-print(f'{len(unreachable)}\tdepartures inside a piece reaching past its tile\'s extent (must be 0)')
+    if any(f in k for f in failing):
+        must_be_0(v, k)
+    else:
+        print(f'{v}\t{k}')
+must_be_0(len(unreachable), 'departures inside a piece reaching past its tile\'s extent')
 print('# pass counts and abridged rows')
-under = sum(1 for node, n in stated_passes.items() if n < held_passes[node])
-over = sum(1 for node, n in stated_passes.items() if n > held_passes[node])
-print(f'{under}\tnodes whose ref rows state fewer passes than the file\'s ref rows hold (must be 0)')
-print(f'{over}\tnodes whose ref rows state more passes than the {"sequence" if args.seq else "file"}\'s ref rows hold'
-      + ('' if args.seq else ' (must be 0)'))
+under = sum(1 for node, ns in stated_counts.items() if min(ns) < held_passes[node])
+over = sum(1 for node, ns in stated_counts.items() if max(ns) > held_passes[node])
+must_be_0(sum(1 for ns in stated_counts.values() if len(ns) > 1), 'nodes whose ref rows state two pass counts')
+must_be_0(under, 'nodes with a ref row stating fewer passes than the file\'s ref rows hold')
+if args.seq:
+    print(f'{over}\tnodes with a ref row stating more passes than the sequence\'s ref rows hold')
+else:
+    must_be_0(over, 'nodes with a ref row stating more passes than the file\'s ref rows hold')
 revisited = sum(1 for n in stated_passes.values() if n > 1)
 print(f'{revisited}\tnodes stated as passed more than once; the header says {header.get("revisited")}')
 if args.seq is None and str(revisited) != header.get('revisited'):
-    print('1\theader revisited differs from the ref rows (must be 0)')
+    must_be_0(1, 'header revisited differs from the ref rows')
 # each piece's offset and bp trimmed to its stretch from its first step on R
 # to its last, and its steps; and by sequence and path those stretches and
 # the records' own bp
@@ -658,32 +741,32 @@ for key, spans in stretches.items():
     if any(a[1] != b[0] for a, b in zip(spans, spans[1:])):
         untiled.append((key, spans))
 stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4]) != (row[2], row[4], row[5])]
-print(f'{len(stray)}\tabridged rows unlike the stretch on R and the steps of the piece their detail record holds (must be 0)')
+must_be_0(len(stray), 'abridged rows unlike the stretch on R and the steps of the piece their detail record holds')
 for row in stray[:args.examples]:
     print('   abridged', row, held_pieces.get(row[:2] + row[3:4]))
 misplaced = [row for row in abridged_rows if detail_of.get(row[:2] + row[3:4]) != row[7]]
-print(f'{len(misplaced)}\tabridged rows whose piece is not in the detail record they name (must be 0)')
+must_be_0(len(misplaced), 'abridged rows whose piece is not in the detail record they name')
 for row in misplaced[:args.examples]:
     print('   misplaced', row, detail_of.get(row[:2] + row[3:4]))
 wrong_ends = [row for row in abridged_rows
               if row[:2] + row[3:4] in detail_ends and detail_ends[row[:2] + row[3:4]] != row[6]]
-print(f'{len(wrong_ends)}\tabridged rows whose start or end is not their piece\'s first or last step on R, '
-      'by position in R and strand (must be 0)')
+must_be_0(len(wrong_ends), 'abridged rows whose start or end is not their piece\'s first or last step on R, '
+          'by position in R and strand')
 for row in wrong_ends[:args.examples]:
     print('   ends', row, detail_ends[row[:2] + row[3:4]])
 rowed = {row[:2] + row[3:4] for row in abridged_rows}
 unrowed = [k for k in detail_of if k not in rowed]
-print(f'{len(unrowed)}\tdetail pieces with no abridged row (must be 0)')
+must_be_0(len(unrowed), 'detail pieces with no abridged row')
 for k in unrowed[:args.examples]:
     print('   unrowed', k)
-print(f'{len(untiled)}\tpaths on a sequence whose bases from their first step on it to their last are not each in '
-      'one piece\'s stretch on R or one record\'s own bp (must be 0)')
+must_be_0(len(untiled), 'paths on a sequence whose bases from their first step on it to their last are not each '
+          'in one piece\'s stretch on R or one record\'s own bp')
 for key, spans in untiled[:args.examples]:
     print('   untiled', key, spans[:12])
 for u in unreachable[:args.examples]:
     print('   unreachable', u)
 for k, v in sorted(bad.items()):
-    print(f'{v}\t{k}')
+    must_be_0(v, k)
 for e in bad_examples:
     print('   example', e)
 
@@ -778,8 +861,8 @@ for k, d in enumerate(parsed):
     if miss:
         uncovered_records += 1
         uncovered_bases += miss
-print(f'{uncovered_bases}\tbases uncovered, over {uncovered_records} records (must be 0)')
-print(f'{outside_extent}\trecords whose breakpoints lie outside their line\'s extent (must be 0)')
+must_be_0(uncovered_bases, f'bases uncovered, over {uncovered_records} records')
+must_be_0(outside_extent, 'records whose breakpoints lie outside their line\'s extent')
 
 
 # Window costs, as format 7 reads a window: the tile and departure units
@@ -841,3 +924,5 @@ for seq, units in (units_by_seq.items() if SHARD == 0 else []):
             for w, nrec, requests, nbytes, dep_bytes, ntiles in sorted(res, key=lambda x: -x[3])[:args.top]:
                 print(f'  costliest window {seq}:{w}-{w + size}: {nbytes} bytes in {requests} requests, '
                       f'{ntiles} tiles, {dep_bytes} departure block bytes, {nrec} departure records')
+print(f'audit7: {len(failures)} failed checks' + ''.join(f'\n   {f}' for f in failures))
+sys.exit(1 if failures else 0)

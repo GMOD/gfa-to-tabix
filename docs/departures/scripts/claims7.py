@@ -14,6 +14,7 @@ import argparse
 import bisect
 import collections
 import gzip
+import re
 import sys
 import zlib
 
@@ -228,14 +229,16 @@ claim('U9', 'a unit holds only lines of its own kinds: tiles ref/nodes/route/wal
 claim('U10', 'every sequence in the file has at least one tile, so no table is empty')
 claim('H1', '#haplotype lists each haplotype with walk or abridged rows, sample#haplotype, once each in byte order, '
       'and no other')
-claim('H2', 'revisited:i:0 means no ref row has a pass count above 1 and no walk or abridged row has @k or :k')
+claim('H2', 'revisited:i:0 means no ref row or departure record has a pass count above 1 and no walk or abridged '
+      'row has @k or :k')
+claim('H3', '#reference names the reference sample, the sample of every ref row\'s path')
 claim('R1', 'a ref row\'s lengths and passes have one entry per step, passes . exactly when every count is 1')
 claim('R3', 'a tile of S holds at least one ref row, and ref rows of S only')
 claim('R2', 'a tile\'s ref rows are written in hapOffset order')
 claim('G1', 'a tile\'s walk rows are in order of path name in bytes, then fragStart, hapOffset and piece')
 claim('G4', 'every node id is below 2^31')
-claim('G5', '#hole lines are in order of sequence name in bytes, then start, each start below its end, and no two '
-      'of a sequence overlap')
+claim('G5', '#hole lines are the stretches of each sequence before |S| that no ref row\'s stretch covers, in order '
+      'of sequence name in bytes, then start')
 claim('N1', 'a nodes row lists the nodes the tile\'s route interiors visit, ids strictly ascending, and no other')
 claim('N2', 'no route interior holds a node the reference passes once (ADR 0009, nearest-pass placement)')
 claim('T1', 'a route is stored the way round whose handles sort first: entry (none first), interior, exit')
@@ -254,6 +257,9 @@ claim('B1', 'a tile that keeps a walk row has rows, other than its abridged rows
       'level 6 in 65,280-byte blocks to at most abridgebytes')
 claim('B2', 'a tile that keeps a walk row has pieces costing at most abridge interior steps: each piece\'s routes\' '
       'interior steps once per use, plus a quarter of all its steps')
+claim('B3', 'a tile moves the fewest W lines it can, costliest first: every moved line costs at least as much as '
+      'every kept one, and with its last-numbered detail record put back, the tile would cost more than abridge or '
+      'its rows would deflate to more than abridgebytes')
 claim('W5', 'each (path, fragStart, piece) has one walk or abridged row in the file, pieces numbered from 0 '
       'with none missing along one W line')
 claim('A1', 'an abridged row\'s start end is the span of its start and end steps on R')
@@ -313,6 +319,10 @@ copies_seen = 0
 points = []        # (seq, kind, name, p, lo, hi): units whose rows cover no base
 tables = {}        # seq -> (lo, hi, name) of its table's #unit line
 held_tiles = {}   # (seq, tile name) -> Tile, for the tiles with abridged rows
+held_rows = {}    # (seq, tile name) -> the rows and costs of a tile with abridged rows, for B3
+detail_rows = {}  # (seq, cs, d) -> a detail unit's routes, nodes and walk rows, for B3
+ref_stretches = collections.defaultdict(list)  # seq -> the stretches its ref rows cover
+reference = None
 detail_cost = {}  # (seq, cs, d) -> the cost of the record's pieces
 
 
@@ -332,8 +342,15 @@ def finish_unit(u):
         seen('T5')
     if kind == 'detail':
         detail_cost[(u['seq'], u['cs'], u['d'])] = u.get('cost', 0)
-        walks = [w for w in u.get('walk_keys', [])]
-        if kind == 'tile' and walks != sorted(walks):
+        if t is not None:
+            detail_rows[(u['seq'], u['cs'], u['d'])] = dict(routes=t.routes, nodes=t.nodes, sq=u.get('sq', {}),
+                                                            walks=u.get('walks', []))
+    if kind == 'tile' and 'abridged' in t.kinds:
+        held_rows[(u['seq'], u['name'])] = dict(tile=t, cols=u['cols'], walks=u.get('walks', []), sq=u.get('sq', {}),
+                                                cost=u.get('cost', 0), line_cost=u.get('line_cost', {}))
+    if kind == 'tile':
+        walks = u.get('walk_keys', [])
+        if walks != sorted(walks):
             bad('G1', (u['seq'], u['name'], next(a for a, b in zip(walks, walks[1:]) if a > b)))
         seen('G1')
     if kind in ('tile', 'detail') and t is not None:
@@ -394,6 +411,8 @@ with gzip.open(args.file, 'rt') as f:
                 haplotypes_listed.append(c[1])
             elif c[0] == '#hole':
                 holes.append((c[1], int(c[2]), int(c[3])))
+            elif c[0] == '#reference':
+                reference = c[1]
             elif c[0] == '#unit' and c[4] == 'table':
                 finish_unit(unit)
                 unit = dict(kind='table', name=c[5], seq=c[1], lo=int(c[2]), hi=int(c[3]), tile=None)
@@ -413,7 +432,9 @@ with gzip.open(args.file, 'rt') as f:
                     tile_names[seq].add(name)
                     if args.own:
                         tile_tile[(seq, name)] = None
-                    if int(name) % tile_size:
+                    if not re.fullmatch('0|[1-9][0-9]*', name):
+                        bad('U2', (seq, name, 'not decimal with no leading zero'))
+                    elif int(name) % tile_size:
                         bad('U2', (seq, name, 'not a multiple of tile'))
                 elif kind == 'detail':
                     cs, d = name.split(':')
@@ -436,7 +457,7 @@ with gzip.open(args.file, 'rt') as f:
                 bad('U6', (u['seq'], u['lo'], dep_prev[:2], key[:2]))
             seen('U6')
             dep_prev = key
-            if not (a < u['hi'] and (b > u['lo'] or a == b == u['lo'])):
+            if not (u['lo'] < b and a < u['hi'] if a < b else a == u['lo']):
                 bad('U7', (u['seq'], u['lo'], u['hi'], line[:80]))
             seen('U7')
             records.append((u['seq'], u['lo'], c))
@@ -457,6 +478,8 @@ with gzip.open(args.file, 'rt') as f:
         t.kinds.append(kind)
         if u['kind'] == 'tile' and kind != 'abridged' and int(header.get('abridgebytes', 0)):
             u.setdefault('rows', []).append('\t'.join(c[3:]) + '\n')
+        if kind != 'abridged':
+            u.setdefault('cols', []).append(c)
         if kind == 'ref':
             hs, _ = deltas(c[9])
             lens = ints(c[10])
@@ -473,6 +496,9 @@ with gzip.open(args.file, 'rt') as f:
             if c[4] != t.seq:
                 bad('R3', (t.seq, t.name, c[4]))
             seen('R3')
+            if c[4].split('#')[0] != reference:
+                bad('H3', (reference, c[4]))
+            seen('H3')
             t.refs.append((int(c[6]), hs, lens, passes))
             at = int(c[6])
             for h, n, p in zip(hs, lens, pc):
@@ -489,6 +515,7 @@ with gzip.open(args.file, 'rt') as f:
                 breakpoints[t.seq][at + n].add(('end', h >> 1, at))
                 at += n
             seq_end[t.seq] = max(seq_end[t.seq], at)
+            ref_stretches[t.seq].append((int(c[6]), at))
             seen('U2')
             continue
         if kind == 'nodes':
@@ -500,6 +527,12 @@ with gzip.open(args.file, 'rt') as f:
             for x, n in zip(ids, ints(c[5])):
                 t.nodes[x] = n
             u['nodes_ids'] = ids
+            bases = next((x[5:] for x in c[6:] if x.startswith('SQ:Z:')), None)
+            if bases is not None:
+                at = 0
+                for x, n in zip(ids, ints(c[5])):
+                    u.setdefault('sq', {})[x] = bases[at:at + n]
+                    at += n
             continue
         if kind == 'route':
             e, t.route_prev = deltas(c[4], t.route_prev) if c[4] != '.' else ([None], t.route_prev)
@@ -569,7 +602,10 @@ with gzip.open(args.file, 'rt') as f:
             u.setdefault('spans', []).append((a, b))
             if u['kind'] == 'tile':
                 u.setdefault('walk_keys', []).append((path.encode(), frag, int(c[6]), piece))
-            u['cost'] = u.get('cost', 0) + len(steps) + 4 * sum(len(t.routes[r][1]) for r, *_ in choices)
+            piece_cost = len(steps) + 4 * sum(len(t.routes[r][1]) for r, *_ in choices)
+            u['cost'] = u.get('cost', 0) + piece_cost
+            u.setdefault('line_cost', collections.Counter())[(path, frag)] += piece_cost
+            u.setdefault('walks', []).append((c, choices))
             u.setdefault('routes_used', set()).update(r for r, *_ in choices)
             if u['kind'] == 'tile':
                 haplotypes_with_rows.add('#'.join(path.split('#')[:2]))
@@ -656,12 +692,25 @@ for seq, kind, name, p, lo, hi in points:
 seen('U4')
 
 # G5
+def uncovered(stretches, end):
+    out, at = [], 0
+    for a, b in sorted(x for x in stretches if x[0] < x[1]):
+        if a > at:
+            out.append((at, a))
+        at = max(at, b)
+    return out + ([(at, end)] if at < end else [])
+
+
 for (s1, a1, b1), (s2, a2, b2) in zip(holes, holes[1:]):
-    if (s1.encode(), a1) >= (s2.encode(), a2) or (s1 == s2 and b1 > a2):
-        bad('G5', ((s1, a1, b1), (s2, a2, b2)))
+    if (s1.encode(), a1) >= (s2.encode(), a2):
+        bad('G5', ('out of order', (s1, a1, b1), (s2, a2, b2)))
+stated_holes = collections.defaultdict(list)
 for s_, a_, b_ in holes:
-    if a_ >= b_:
-        bad('G5', (s_, a_, b_))
+    stated_holes[s_].append((a_, b_))
+for seq in sorted(set(units_of) | set(stated_holes)):
+    expected = uncovered(ref_stretches[seq], seq_end[seq])
+    if sorted(stated_holes.get(seq, [])) != expected:
+        bad('G5', (seq, 'stated', sorted(stated_holes.get(seq, []))[:4], 'uncovered by ref rows', expected[:4]))
 seen('G5')
 
 # H1
@@ -713,6 +762,82 @@ for key, ds in named.items():
 for k in ('A2', 'A3', 'A4', 'A5', 'A7'):
     seen(k)
 
+
+# B3: the tile's rows with its last-numbered detail record put back, encoded
+# by the spec's rules
+def handle_tokens(hs, prev):
+    out = []
+    for h in hs:
+        out.append(str(2 * ((h >> 1) - prev) + (h & 1)))
+        prev = h >> 1
+    return out, prev
+
+
+def deflated(text):
+    size = 0
+    for k in range(0, len(text), 65280):
+        z = zlib.compressobj(6, zlib.DEFLATED, -15)
+        size += len(z.compress(text[k:k + 65280]) + z.flush())
+    return size
+
+
+def rows_put_back(held, record):
+    t = held['tile']
+
+    def keyf(r):
+        return (-1 if r[0] is None else r[0]), tuple(r[1]), (-1 if r[2] is None else r[2])
+
+    def anchor(r):
+        firsts = [t.occ[h >> 1][0] for h in (r[0], r[2]) if h is not None and (h >> 1) in t.occ]
+        return min(firsts) if firsts else len(t.h)
+    frozen = lambda r: (r[0], tuple(r[1]), r[2])
+    routes = sorted({frozen(r) for r in t.routes + record['routes']}, key=lambda r: (anchor(r), keyf(r)))
+    rank = {r: k for k, r in enumerate(routes)}
+    nodes = {**t.nodes, **record['nodes']}
+    sq = {**held['sq'], **record['sq']}
+    out = ['\t'.join(c[3:]) + '\n' for c in held['cols'] if c[3] == 'ref']
+    if nodes:
+        ids = sorted(nodes)
+        row = ['nodes', ','.join(str(b - a) for a, b in zip([0] + ids, ids)), ','.join(str(nodes[x]) for x in ids)]
+        if sq:
+            row.append('SQ:Z:' + ''.join(sq[x] for x in ids))
+        out.append('\t'.join(row) + '\n')
+    prev = 0
+    for e, inter, x in routes:
+        cols = ['route']
+        for part in ([e], inter, [x]):
+            tokens, prev = handle_tokens([h for h in part if h is not None], prev)
+            cols.append(','.join(tokens) or '.')
+        out.append('\t'.join(cols) + '\n')
+    walks = []
+    for c, choices, own_routes in ([(c, ch, t.routes) for c, ch in held['walks']]
+                                   + [(c, ch, record['routes']) for c, ch in record['walks']]):
+        tokens, prev = [], 0
+        for rid, flip, ek, xk in choices:
+            new = rank[frozen(own_routes[rid])]
+            tokens.append(str(2 * (new - prev) + flip) + (f':{ek}' if ek is not None else '')
+                          + (f'@{xk}' if xk is not None else ''))
+            prev = new
+        walks.append(((c[4].encode(), int(c[5]), int(c[6]), int(c[7])), c[3:10] + [','.join(tokens) or '.'] + c[11:]))
+    out += ['\t'.join(cols) + '\n' for _, cols in sorted(walks)]
+    return ''.join(out).encode()
+
+
+cost_budget, bytes_budget = int(header.get('abridge', 0)), int(header.get('abridgebytes', 0))
+for (seq, cs), held in held_rows.items():
+    ds = sorted(named.get((seq, cs), ()))
+    records_of = [detail_rows.get((seq, cs, d)) for d in ds]
+    if not ds or None in records_of:
+        continue
+    moved = [detail_cost.get((seq, cs, d), 0) for d in ds]
+    if held['line_cost'] and min(moved) < max(held['line_cost'].values()):
+        bad('B3', (seq, cs, 'a kept line costs', max(held['line_cost'].values()) / 4, 'a moved one', min(moved) / 4))
+    back_cost = held['cost'] + moved[-1]
+    back_bytes = deflated(rows_put_back(held, records_of[-1])) if bytes_budget else 0
+    if (not cost_budget or back_cost <= 4 * cost_budget) and (not bytes_budget or back_bytes <= bytes_budget):
+        bad('B3', (seq, cs, f'record {ds[-1]} put back costs', back_cost / 4, 'and deflates to', back_bytes))
+seen('B3')
+
 # D1-D5
 recs = {}
 for seq, block, c in records:
@@ -735,6 +860,8 @@ for (seq, _), c in recs.items():
         bad('D3', (seq, 'breakpoint outside', c[:9]))
     if own < missing or ls not in '+-' or rs not in '+-' or lpass < 1 or rpass < 1:
         bad('D5', (seq, c[3:]))
+    if header.get('revisited') == '0' and (lpass > 1 or rpass > 1):
+        bad('H2', (seq, c[3:]))
     for bp, strand, leave in ((lp, ls, True), (rp, rs, False)):
         side = 'end' if (strand == '+') == leave else 'start'
         held = {x for x in breakpoints[seq].get(bp, ()) if x[0] == side}

@@ -17,7 +17,8 @@ history, or `<!-- background -->`, about graphs, hosts or other software
 rather than the file; the script names each section it skips.
 
 A check is `kind:what`, in backticks in the row's Check column:
-- `build:f` and `test:f`, a function `f` in src/ or tests/
+- `build:f`, a function `f` in src/; `unit:f`, a `#[test]` function `f`
+  in src/; `test:f`, a function `f` in tests/walks.rs
 - `claims7:ID`, a claim of docs/departures/scripts/claims7.py
 - `verify7:text` and `audit7:text`, text in verify7.py or audit7.py
 - `script:path`, a file of the repository that runs the check
@@ -124,7 +125,7 @@ for n, line in enumerate(TABLE.read_text().split('\n'), 1):
 
 sources = {
     'src': '\n'.join(p.read_text() for p in (ROOT / 'src').glob('*.rs')),
-    'tests': '\n'.join(p.read_text() for p in (ROOT / 'tests').glob('*.rs')),
+    'tests': text_of('tests/walks.rs'),
     'claims7': text_of('docs/departures/scripts/claims7.py'),
     'verify7': text_of('docs/departures/scripts/verify7.py'),
     'audit7': text_of('docs/departures/scripts/audit7.py'),
@@ -135,8 +136,10 @@ reader_tests = set(TESTS.read_text().split('\n')) - {''}
 def exists(kind, what):
     if kind == 'build':
         return re.search(rf'\bfn {re.escape(what)}\b', sources['src'])
+    if kind == 'unit':
+        return re.search(rf'#\[test\]\s*fn {re.escape(what)}\b', sources['src'])
     if kind == 'test':
-        return re.search(rf'\bfn {re.escape(what)}\b', sources['tests'] + sources['src'])
+        return re.search(rf'\bfn {re.escape(what)}\b', sources['tests'])
     if kind == 'claims7':
         return f"claim('{what}'," in sources['claims7']
     if kind in ('verify7', 'audit7'):

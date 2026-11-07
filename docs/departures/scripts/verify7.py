@@ -5,8 +5,9 @@
 # checks what arbiter A's verify7.mjs does, which reads files whole and so
 # none past 2 GiB, and more:
 # - the directory's line 1 is the header's `#walks` line with the data
-#   file's length; `#header 0 <length>` is the header unit; then one line
-#   per sequence naming its table, in file order
+#   file's length; `#header 0 <length>` is the header unit, which ends where
+#   a gzip member starts; then one line per sequence naming its table, in
+#   file order
 # - the header, the units, the tables and the EOF block partition the file;
 #   every unit starts on a gzip member with its `#unit` line
 # - each table lists exactly the units of its sequence since the last
@@ -15,13 +16,17 @@
 #   sequence's last `ref` row ends
 # - no two units of a kind and sequence share a name other than `.`
 # - every line starts with its unit's sequence; a tile's or detail unit's
-#   lines lie in its extent, which runs from the first base its ref rows'
-#   stretches and its pieces' spans cover to the last, or where they cover
-#   no base is the base after their point `p`, the base before it where `p`
-#   is `|S|`, or `[0, 0)` where `|S|` is 0; its other rows state the extent
+#   lines lie in its extent, which runs, for a tile, from the first base its
+#   ref rows' stretches cover to the last, and for a detail unit from the
+#   first base its pieces' spans cover to the last, or where they cover no
+#   base is the base after their point `p`, the base before it where `p` is
+#   `|S|`, or `[0, 0)` where `|S|` is 0; its other rows state the extent
 # - a departure block is named `.` and aligned, each of its lines overlaps
 #   it, or lies at its start where the line is a point, and each record is
-#   in every block of its cover and no other
+#   in every block of its cover and no other: blocks of `tile × 8^L` bp,
+#   each at a multiple of its size, that tile the record's stretch widened
+#   to whole tiles, and to at least the tile holding its start, with no
+#   larger block aligned at a block's start that would fit
 # Usage: verify7.py walks.gz [tile]; prints a JSON summary, exits 1 on the
 # first failure.
 import hashlib
@@ -53,14 +58,19 @@ tile = int(sys.argv[2]) if len(sys.argv) > 2 else int(next(t for t in walks if t
 sizes = [tile * n for n in (512, 64, 8, 1)]
 
 
-def cover(lo, hi):
-    out, at = [], lo // tile * tile
-    end = max(-(-hi // tile) * tile, at + tile)
-    while at < end:
-        s = next(s for s in sizes if at % s == 0 and at + s <= end)
-        out.append((at, s))
-        at += s
-    return out
+def not_cover(lo, hi, blocks):
+    start = lo // tile * tile
+    end = max(-(-hi // tile) * tile, start + tile)
+    at = start
+    for a, s in blocks:
+        if s not in sizes or a % s:
+            return f'block {a} of {s} bp is no aligned pyramid block'
+        if a != at:
+            return f'blocks leave {at} uncovered or overlap there'
+        if any(t > s and a % t == 0 and a + t <= end for t in sizes):
+            return f'block {a} of {s} bp where a larger one fits'
+        at = a + s
+    return None if at == end else f'blocks end at {at}, not {end}'
 
 
 def members(f):
@@ -106,7 +116,7 @@ def check_unit(at, length, text):
                 fail(f'departure block {lo} {hi} named {name}, not .')
             if lo % (hi - lo):
                 fail(f'departure block {lo} {hi} is not aligned')
-            if not (a < hi and (lo < b or a == b)):
+            if not (lo < b and a < hi if a < b else a == lo):
                 fail(f'a departure line not overlapping its block {lo} {hi}: {line[:80]}')
             key = hashlib.blake2b(line.encode(), digest_size=12).digest()
             state['records'].setdefault(key, [a, b, []])[2].append((lo, hi - lo))
@@ -118,7 +128,7 @@ def check_unit(at, length, text):
             start = int(c[6])
             stretch = (start, start + sum(int(x) for x in c[10].split(',')))
             state['ref_end'] = max(state['ref_end'], stretch[1])
-        elif c[3] in ('walk', 'abridged'):
+        elif c[3] in ('walk', 'abridged') and kind == 'detail':
             stretch = (a, b)
         if c[3] in ('ref', 'nodes', 'route') and (a, b) != (lo, hi):
             fail(f'a {c[3]} row not stating its unit\'s extent: {line[:80]}')
@@ -129,7 +139,8 @@ def check_unit(at, length, text):
             fail(f'the {kind} unit at {at} has no ref row and no piece')
         if union[0] < union[1]:
             if union != (lo, hi):
-                fail(f'the {kind} unit at {at} has extent {lo} {hi}, its lines {union}')
+                fail(f'the {kind} unit at {at} has extent {lo} {hi}, where its '
+                     f'{"ref rows" if kind == "tile" else "pieces"} cover {union}')
         else:
             state['points'].append((at, kind, union[0], lo, hi))
 
@@ -152,8 +163,9 @@ def check_table(at, length, seq, head_lo, head_hi, lines):
         if (lo, hi) != beside:
             fail(f'the {kind} unit at {unit_at} covers no base at {p}, and its extent {lo} {hi} is not {beside}')
     for a, b, blocks in state['records'].values():
-        if sorted(blocks) != cover(a, b):
-            fail(f'a departure record of {seq} over {a} {b} is in blocks {sorted(blocks)}, not its cover')
+        wrong = not_cover(a, b, sorted(blocks))
+        if wrong:
+            fail(f'a departure record of {seq} over {a} {b} is in blocks {sorted(blocks)}, not its cover: {wrong}')
     state.update(units=[], names=set(), records={}, ref_end=0, points=[])
 
 
@@ -161,13 +173,17 @@ with open(path, 'rb') as f:
     header = b''
     unit = None
     eof = None
+    header_read = False
     for at, n, text in members(f):
         if eof is not None:
             fail(f'a member after the EOF block at {eof}')
         if at < header_end:
             header += text
             continue
-        if at == header_end:
+        if not header_read:
+            if at != header_end:
+                fail(f'#header 0 {header_end} ends inside the member at {at}')
+            header_read = True
             lines = header.decode().split('\n')
             if lines[0] != '\t'.join(walks[:-1]):
                 fail('the directory\'s line 1 differs from the header\'s #walks line')
@@ -187,6 +203,8 @@ with open(path, 'rb') as f:
             unit[2] += text
         else:
             fail(f'the member at {at} belongs to no unit')
+    if not header_read:
+        fail(f'#header 0 {header_end} runs past the units')
     if eof is None or eof + 28 != size:
         fail('no EOF block at the end')
     if state['table'] != len(tables):

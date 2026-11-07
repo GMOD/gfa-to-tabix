@@ -28,15 +28,20 @@ to its reference, and measure what a window costs to read.
                    haplotype enters each tile once
       R.tsv (name, sequence, start, end) repeats the figures per region.
 
+  walks-truth.py pieces WALKS GFA
+      Checks the bp it reads for each piece: every W or P line with rows in
+      the file has pieces summing to its length in the GFA. Exits 1 if any
+      line's do not.
+
   walks-truth.py cost WALKS
       Per window of one tile at each tile's start: the walk rows and steps of
       the tiles it reads, and the compressed bytes of those tiles and of the
       departure blocks it reads, from the unit tables, against the readers'
       budgets (8 MB, 32 M steps read).
 
-A last piece's length is unknown from the walk rows, so it takes the record's
-mean bp per step. `score` streams the walk file; `cost` reads its units by
-offset.
+Each piece's bp is its steps' lengths, from its walk row decoded by the
+spec's rules, in its tile or, for an abridged piece, its detail record.
+`score` streams the walk file; `cost` reads its units by offset.
 """
 
 import argparse
@@ -142,43 +147,135 @@ def tile_of(line):
     return int(re.search(r"tile:i:(\d+)", line).group(1))
 
 
+def handles(field, prev=0):
+    out = []
+    for token in [] if field == "." else field.split(","):
+        prev += int(token) >> 1
+        out.append(2 * prev + (int(token) & 1))
+    return out, prev
+
+
+class Tile:
+    """A tile's R, routes and route interior lengths, to decode its walk rows."""
+
+    def __init__(self):
+        self.refs, self.routes, self.nodes, self.prev, self.abridged = [], [], {}, 0, False
+
+    def add(self, c):
+        if c[3] == "ref":
+            self.refs.append((int(c[6]), handles(c[9])[0], [int(x) for x in c[10].split(",")]))
+        elif c[3] == "nodes":
+            ids = [0]
+            for d in c[4].split(","):
+                ids.append(ids[-1] + int(d))
+            self.nodes.update(zip(ids[1:], (int(x) for x in c[5].split(","))))
+        elif c[3] == "route":
+            ends = []
+            for field in c[4:7]:
+                hs, self.prev = handles(field, self.prev)
+                ends.append(hs)
+            self.routes.append((ends[0][0] if ends[0] else None, ends[1], ends[2][0] if ends[2] else None))
+        elif c[3] == "abridged":
+            self.abridged = True
+
+    def index(self):
+        self.h, self.len = [], []
+        for _, hs, lens in sorted(self.refs):
+            self.h += hs
+            self.len += lens
+        self.occ = defaultdict(list)
+        for i, h in enumerate(self.h):
+            self.occ[h >> 1].append(i)
+        return self
+
+    def detail(self):
+        """A detail record of this tile: its R, with routes of its own."""
+        d = Tile()
+        if not hasattr(self, "h"):
+            self.index()
+        d.h, d.len, d.occ = self.h, self.len, self.occ
+        return d
+
+    def bp(self, c):
+        """The bp of a walk row's steps, by the spec's decoding rules."""
+        nsteps = int(c[8])
+        start, _, k = c[9].partition("@")
+        choices = []
+        prev = 0
+        for token in [] if c[10] == "." else c[10].split(","):
+            token, _, exit_k = token.partition("@")
+            token, _, entry_k = token.partition(":")
+            prev += int(token) >> 1
+            choices.append((prev, int(token) & 1, entry_k, exit_k))
+
+        def oriented(rid, flip):
+            e, inter, x = self.routes[rid]
+            return (x ^ 1 if x is not None else None, [g ^ 1 for g in reversed(inter)],
+                    e ^ 1 if e is not None else None) if flip else (e, inter, x)
+
+        def along(i, h):
+            return (i + 1, self.h[i + 1]) if self.h[i] == h else (i - 1, self.h[i - 1] ^ 1)
+
+        total = count = 0
+        if choices and oriented(*choices[0][:2])[0] is None:
+            inter = oriented(*choices[0][:2])[1]
+            total, count, choices = sum(self.nodes[g >> 1] for g in inter), len(inter), choices[1:]
+        h = int(start)
+        i = self.occ[h >> 1][int(k) if k else 0]
+        total, count = total + self.len[i], count + 1
+        for rid, flip, entry_k, exit_k in choices:
+            e, inter, x = oriented(rid, flip)
+            target = self.occ[e >> 1][int(entry_k)] if entry_k else None
+            while (i != target) if entry_k else (h != e):
+                i, h = along(i, h)
+                total, count = total + self.len[i], count + 1
+            total, count = total + sum(self.nodes[g >> 1] for g in inter), count + len(inter)
+            if x is None:
+                break
+            near = min(reversed(self.occ[x >> 1]), key=lambda j: abs(j - i))
+            i, h = (self.occ[x >> 1][int(exit_k)] if exit_k else near), x
+            total, count = total + self.len[i], count + 1
+        while count < nsteps:
+            i, h = along(i, h)
+            total, count = total + self.len[i], count + 1
+        return total
+
+
 def walk_rows(path, haps):
-    """Pieces by path, sorted: [(record start, hapOffset, nsteps, seq, tile start, bp)];
-    each tile's extent by (seq, tile start); and the tile size."""
+    """Pieces by path, sorted: [(record start, hapOffset, nsteps, seq, tile start, bp)],
+    abridged pieces from their detail records; each tile's extent by (seq,
+    tile start); and the tile size. Holds a tile's R past the tile only
+    where it has abridged rows."""
     rows = defaultdict(list)
-    extents, size, tile = {}, None, None
+    extents, size, tiles = {}, None, {}
+    unit = filed = None
     with gzip.open(path, "rt") as f:
         for line in f:
             if line.startswith("#walks"):
                 size = tile_of(line)
             if line.startswith("#unit\t"):
                 c = line.rstrip("\n").split("\t")
-                tile = (c[1], int(c[5])) if c[4] == "tile" else None
-                if tile:
-                    extents[tile] = (int(c[2]), int(c[3]))
+                if filed in tiles and not tiles[filed].abridged:
+                    del tiles[filed]
+                unit = filed = None
+                if c[4] == "tile":
+                    filed = (c[1], int(c[5]))
+                    extents[filed] = (int(c[2]), int(c[3]))
+                    unit = tiles[filed] = Tile()
+                elif c[4] == "detail":
+                    filed = (c[1], int(c[5].split(":")[0]))
+                    unit = tiles[filed].detail()
                 continue
-            if line[0] == "#" or tile is None:
+            if line[0] == "#" or unit is None:
                 continue
-            c = line.split("\t", 9)
-            if c[3] != "walk" or c[4].rsplit("#", 1)[0] not in haps:
-                continue
-            rows[c[4]].append((int(c[5]), int(c[6]), int(c[8]), c[0], tile[1]))
-    pieces = {}
-    for name, ps in rows.items():
-        ps.sort()
-        out = []
-        first = 0
-        for k, (rec, off, nsteps, seq, cs) in enumerate(ps):
-            if k and ps[k - 1][0] != rec:
-                first = k
-            if k + 1 < len(ps) and ps[k + 1][0] == rec:
-                bp = ps[k + 1][1] - off
-            else:
-                steps = sum(p[2] for p in ps[first:k])
-                bp = round(nsteps * (off - ps[first][1]) / steps) if steps else nsteps * 30
-            out.append((rec, off, nsteps, seq, cs, bp))
-        pieces[name] = out
-    return pieces, extents, size
+            c = line.rstrip("\n").split("\t")
+            if c[3] != "walk":
+                unit.add(c)
+            elif haps is None or c[4].rsplit("#", 1)[0] in haps:
+                if not hasattr(unit, "h"):
+                    unit.index()
+                rows[c[4]].append((int(c[5]), int(c[6]), int(c[8]), c[0], filed[1], unit.bp(c)))
+    return {name: sorted(ps) for name, ps in rows.items()}, extents, size
 
 
 def union(intervals):
@@ -329,6 +426,38 @@ def cost(args):
         print(f"    {w[3]}:{w[4]}  {w[0]:,} gz bytes  {w[1]:,} steps  {w[2]:,} walk rows")
 
 
+def pieces(args):
+    lengths, lines = {}, {}
+    with open(args.gfa) as f:
+        for line in f:
+            c = line.rstrip("\n").split("\t")
+            if c[0] == "S":
+                lengths[c[1]] = len(c[2]) if c[2] != "*" else int(next(t[5:] for t in c[3:] if t.startswith("LN:i:")))
+            elif c[0] == "W":
+                lines[(f"{c[1]}#{c[2]}#{c[3]}", int(c[4]))] = re.findall(r"[<>]([^<>]+)", c[6])
+            elif c[0] == "P":
+                named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", c[1]) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", c[1])
+                         or re.fullmatch(r"(.*):(\d+)-\d+", c[1]))
+                key = (named.group(1), int(named.group(2))) if named else (c[1], 0)
+                lines[key] = [x.rstrip("+-") for x in c[2].split(",")]
+    rows, _, _ = walk_rows(args.walks, None)
+    read = defaultdict(int)
+    for name, ps in rows.items():
+        for rec, _, _, _, _, bp in ps:
+            read[(name, rec)] += bp
+    with gzip.open(args.walks, "rt") as f:
+        for line in f:
+            c = line.split("\t", 6)
+            if line[0] != "#" and c[3] in ("walk", "abridged") and (c[4], int(c[5])) not in read:
+                read[(c[4], int(c[5]))] = 0
+    wrong = [(k, n, sum(lengths[x] for x in lines.get(k, []))) for k, n in sorted(read.items())
+             if n != sum(lengths[x] for x in lines.get(k, []))]
+    for (name, start), n, want in wrong:
+        print(f"  {name} line at {start}: pieces hold {n} bp, the line {want}")
+    print(f"{args.walks}: {len(read)} W lines with rows, {len(wrong)} whose pieces' bp differ from the line")
+    sys.exit(1 if wrong else 0)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -342,11 +471,14 @@ def main():
     b.add_argument("--haps", required=True, help="PanSN sample#haplotype list")
     b.add_argument("--regions")
     b.add_argument("--present", type=int, default=300)
+    d = sub.add_parser("pieces")
+    d.add_argument("walks")
+    d.add_argument("gfa")
     c = sub.add_parser("cost")
     c.add_argument("walks")
     c.add_argument("--top", type=int, default=5)
     args = p.parse_args()
-    {"lift": lift, "score": score, "cost": cost}[args.cmd](args)
+    {"lift": lift, "score": score, "pieces": pieces, "cost": cost}[args.cmd](args)
 
 
 if __name__ == "__main__":

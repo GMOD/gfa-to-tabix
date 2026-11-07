@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Builds fuzz7-gen.py's random graphs under eight option sets, with two
+# Builds fuzz7-gen.py's random graphs under nine option sets, with two
 # references, R and Q, and runs on each file the release checks
-# (verify7.py), the claims checks (claims7.py --own) and the audit
-# (audit7.py); prints every seed whose build or checks fail, and exits 1 if
-# any does. Keeps the failing seeds' graphs and outputs.
+# (verify7.py), the claims checks (claims7.py --own), the audit (audit7.py,
+# given the graph) and walks-truth.py's piece bp; prints every seed whose
+# build or checks fail, each by its exit status, and exits 1 if any does.
+# Keeps the failing seeds' graphs and outputs.
 # Usage: FUZZ_DIR=dir GFA_TO_TABIX=binary fuzz7.sh [from] [to]
 set -u
 HERE=$(dirname "$(readlink -f "$0")")
@@ -16,7 +17,8 @@ for seed in $(seq "$from" "$to"); do
   python3 -I "$HERE/fuzz7-gen.py" "$seed" > "g$seed.gfa"
   kept=0
   for v in "a:20:" "b:16:--stay 8" "c:32:--abridge-steps 3" "d:20:--stay 40" "e:64:--abridge-steps 2" \
-           "f:8:--stay 40 --abridge-steps 1" "g:64:--abridge-bytes 300" "h:128:--abridge-bytes 600"; do
+           "f:8:--stay 40 --abridge-steps 1" "g:64:--abridge-bytes 300" "h:128:--abridge-bytes 600" \
+           "i:24:--sequences --abridge-bytes 400"; do
     tag=${v%%:*}; rest=${v#*:}; tile=${rest%%:*}; read -r -a opts <<< "${rest#*:}"
     out=o$seed.$tag
     if ! "$B" "g$seed.gfa" --walks --refs R,Q --tile "$tile" "${opts[@]}" -o "$out" > "$out.log" 2>&1; then
@@ -27,9 +29,10 @@ for seed in $(seq "$from" "$to"); do
       f=$out.$r.walks.gz
       checks=$(python3 -I "$HERE/verify7.py" "$f" 2>&1) || bad="$bad $r verify7: $checks;"
       claims=$(python3 -I "$HERE/claims7.py" "$f" --own 2>&1) || bad="$bad $r claims7: $(echo "$claims" | grep -E '^[1-9][0-9]*'$'\t''|Traceback|Error' | tr '\n' ' ');"
-      audit=$(python3 -I "$HERE/audit7.py" "$f" --window 64 --point 16 2>&1)
-      found=$(echo "$audit" | grep -E "MISSING|field mismatch|decode:|differ from|Traceback|Error|^[1-9][0-9]*\s+departures inside a piece reaching|^[1-9][0-9]*\s+records with no|^[1-9][0-9]*\s+bases uncovered|^[1-9][0-9]*\s+.*\(must be 0\)|differs from the row|another sequence|two extents|detail unit of a tile|own_tiles")
-      [ -n "$found" ] && bad="$bad $r audit7: $(echo "$found" | tr '\n' ' ');"
+      audit=$(python3 -I "$HERE/audit7.py" "$f" --gfa "g$seed.gfa" --window 64 --point 16 2>&1) ||
+        bad="$bad $r audit7: $(echo "$audit" | sed -n '/^audit7: /,$p' | tr '\n' ' ')$(echo "$audit" | grep -E 'Traceback|Error' | tr '\n' ' ');"
+      truth=$(python3 -I "$HERE/../../../scripts/walks-truth.py" pieces "$f" "g$seed.gfa" 2>&1) ||
+        bad="$bad $r walks-truth: $(echo "$truth" | tr '\n' ' ');"
     done
     if [ -n "$bad" ]; then echo "seed $seed $tag:$bad"; failed=1; kept=1; else rm -f "$out".*; fi
   done

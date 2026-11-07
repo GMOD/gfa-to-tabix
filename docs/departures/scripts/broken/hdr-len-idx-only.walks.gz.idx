@@ -1,0 +1,3 @@
+#walks	format:i:7	tile:i:10	revisited:i:0	stay:i:0	abridge:i:1000000	abridgebytes:i:3000000	bytes:i:1202
+#header	0	100
+GRCh38#0#chr	1016	158
