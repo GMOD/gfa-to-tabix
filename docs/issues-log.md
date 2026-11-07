@@ -1575,3 +1575,21 @@ Where the findings have come from so far, and the rule each gives:
   chr22 with `--refs GRCh38` went from 52.5 s and 4.07 GB peak to 52.0 s
   and 1.11 GB, the files byte-identical
   (walks-container/writer/results/node-ids.mc22.txt)
+- **2026-11-06, the nine-reviewer bug hunt (`--abridge-bytes` moved too
+  many).** C100 says a tile moves its costliest W lines' pieces until the
+  rest are within the byte budget, measured by deflating them. The writer
+  estimated how many to move from `40 + 4 × choices` bytes a path and the
+  tile's compression ratio, then only ever added to that count: on 60
+  haplotypes with long contig names over one tile it moved 40 paths at
+  600 bytes where 29 fit, and 15 at 900 where 10 fit (writer-vs-spec.md,
+  `long.gfa`). Source: a check of the upper bound only (B1, B2 and
+  `a_tile_that_keeps_walk_rows_fits_its_budgets`), so an overshoot passed.
+  Fix: `write_chunk` starts from the estimate and, where the kept rows fit,
+  puts paths back one at a time while they still fit, down to the count
+  the step budget needs; where they don't, it moves more as before.
+  Fixtures and fuzz seeds 1-60 build to the same bytes. Guard: the test
+  `a_tile_over_its_byte_budget_moves_the_fewest_paths_that_bring_it_within`
+  on that graph (now tests/data/walks-abridge-bytes.gfa) at 300, 600 and
+  900 bytes, which deflates the kept rows to at most the budget and, with
+  the last moved path's walk row put back, to more; it fails on the old
+  writer
