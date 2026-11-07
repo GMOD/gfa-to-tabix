@@ -1629,3 +1629,19 @@ Where the findings have come from so far, and the rule each gives:
   refused as "longer than 2^32 − 1 bp". Guard: the test
   `a_segment_of_2_to_the_32_bp_is_refused_and_one_less_builds`; the old
   writer refuses 2^32 − 1 with the old message
+- **2026-11-06, the nine-reviewer bug hunt (reader rules the spec
+  lacked).** The spec review found no rule for a unit whose `#unit` line
+  differs from its table entry, or for a unit cut short, and the graph-
+  walks reader fixes made since refuse five kinds of corrupt file that no
+  claim named: a `#unit` line not stating its entry's seq, start, end, kind
+  and name; a unit not ending in a newline; a row of another sequence or
+  of a kind its unit doesn't hold; a table not starting with its own
+  `#unit` line; a table line that isn't an `#entry` (spec.md, the
+  coordinator). The spec sentence "`#reference` names the reference
+  sample" also had no ID, though the checker now checks it (H3). Source:
+  reader behaviour written in code and tests, not in the spec. Fix: claims
+  C154 to C156 beside C49 and C123, which also say a table missing a
+  unit's entry can't be told, and C157 on `#reference`;
+  graph-walks-tests.txt regenerated from graph-walks main, with C34's and
+  C122's rows naming the two tests it renamed. Guard: the rows' graph-walks
+  tests, which check-claims.py requires to exist

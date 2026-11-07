@@ -340,6 +340,17 @@ The header unit's lines start with `#`:
   and a file with a row kind or a placement rule this page doesn't give is
   another format. <!-- C49 --> A unit kind this page doesn't give is a
   later addition, which a reader skips <!-- C123 -->
+- A reader refuses a unit whose `#unit` line doesn't state its table
+  entry's `seq start end kind name`, or whose text doesn't end in a
+  newline, as a unit cut short does <!-- C154 -->
+- A reader refuses a row of a unit that belongs to another sequence, or
+  is of a kind its unit doesn't hold: a tile holds `ref`, `nodes`,
+  `route`, `walk` and `abridged` rows, a departure block `departure`
+  rows, a detail unit `nodes`, `route` and `walk` rows <!-- C155 -->
+- A reader refuses a table that doesn't start with its own
+  `#unit seq 0 |S| table .` line, or holds a line that isn't an `#entry`.
+  A table that leaves out a unit's entry altogether reads as a sequence
+  without that unit, which a reader can't tell <!-- C156 -->
 - `tile` is the tile size in bp
 - `revisited` is how many nodes the reference's paths pass more than once,
   all its sequences counted. <!-- C50 --> 0 means every position in the
@@ -352,7 +363,7 @@ The header unit's lines start with `#`:
 - Tags a reader doesn't know it ignores, on any row, in any order after
   the fixed columns, and on header lines too. Later additions are tags,
   unit kinds or files <!-- C124 -->
-- `#reference` names the reference sample
+- `#reference` names the reference sample <!-- C157 -->
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
   `sample#haplotype`, once each in byte order <!-- C51 -->
 - `#hole` gives each stretch of a reference sequence that no line of the
