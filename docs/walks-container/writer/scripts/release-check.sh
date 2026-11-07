@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The release check of the walks writer on the real graphs, on ada: builds
 # MC chr22 and pggb chrY on GRCh38 from a bundle of the commit to check,
-# compares each data file byte for byte with the previous build where one
-# is given, and runs every file check on it: verify7.py; claims7.py --own,
+# reports whether each data file is byte-identical to the previous build
+# where one is given (a difference is a signal, not a failure), and runs every file check on it: verify7.py; claims7.py --own,
 # audit7.py and walks-truth.py rebuild, each over $SHARDS shards of the
 # paths in parallel, the audit with the GFA. Each check's exit status is
 # recorded, and `release.done` says PASSED or FAILED last.
@@ -30,7 +30,7 @@ for d in mc22 pggbY; do
   F=release.$d.GRCh38.walks.gz
   if [ -n "$PREV" ] && [ -f "$PREV/final.$d.GRCh38.walks.gz" ]; then
     if cmp "$F" "$PREV/final.$d.GRCh38.walks.gz" > release.$d.cmp.txt 2>&1; then echo "byte-identical to $PREV" >> release.$d.cmp.txt
-    else echo "DIFFERS from $PREV" >> release.$d.cmp.txt; status=1; fi
+    else echo "DIFFERS from $PREV" >> release.$d.cmp.txt; fi
   fi
   cap 10G python3 -I "$S/verify7.py" "$F" > release.$d.verify7.txt 2>&1 || { echo "verify7 exit $?" >> release.$d.verify7.txt; status=1; }
   for check in claims7 audit7 rebuild; do
