@@ -33,15 +33,19 @@ for d in mc22 pggbY; do
     else echo "DIFFERS from $PREV" >> release.$d.cmp.txt; fi
   fi
   cap 10G python3 -I "$S/verify7.py" "$F" > release.$d.verify7.txt 2>&1 || { echo "verify7 exit $?" >> release.$d.verify7.txt; status=1; }
-  for check in claims7 audit7 rebuild; do
+  for check in rebuild audit7 claims7; do
+    case $check in
+      claims7) at_once=4; limit=28G ;;
+      *) at_once=8; limit=20G ;;
+    esac
     for i in $(seq 0 $((SHARDS - 1))); do
       out=release.$d.$check.$i.txt
       case $check in
-        claims7) (cap 20G python3 -I "$S/claims7.py" "$F" --own --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
-        audit7) (cap 20G python3 -I "$S/audit7.py" "$F" --gfa "$G" --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
-        rebuild) (cap 20G python3 -I "$T" rebuild "$F" "$G" --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
+        claims7) (cap $limit python3 -I "$S/claims7.py" "$F" --own --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
+        audit7) (cap $limit python3 -I "$S/audit7.py" "$F" --gfa "$G" --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
+        rebuild) (cap $limit python3 -I "$T" rebuild "$F" "$G" --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
       esac
-      [ $(( (i + 1) % 8 )) = 0 ] && wait
+      [ $(( (i + 1) % at_once )) = 0 ] && wait
     done
     wait
     failed=0
