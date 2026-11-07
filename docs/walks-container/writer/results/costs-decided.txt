@@ -1,0 +1,70 @@
+# ADR 0010's Costs decided: the data, copied 2026-11-06 from ~/work/tidy7 on
+# ada, where gfa-to-tabix at 033ce81 (new) and the writer before the
+# build-time checks (old) were built. `route` is new with Routes::intern
+# storing a route the way the tile's first walk takes it.
+== file sizes (ls -l), bytes
+58494956 new.mc22.1.GRCh38.walks.gz
+58552425 route.mc22.GRCh38.walks.gz
+187163025 new.pggbY.GRCh38.walks.gz
+186168430 route.pggbY.GRCh38.walks.gz
+== departures units, the sum of their #entry lengths
+# zcat f | awk -F'\t' '$1=="#entry" && $5=="departures" {s+=$8} END {print s}'
+new.mc22.1.GRCh38.walks.gz departures units: 891207 bytes
+new.pggbY.GRCh38.walks.gz departures units: 14618280 bytes
+== cost.sh
+#!/bin/bash
+# Builds old and new writers, then times MC chr22 three times each, alternating
+cd ~/work/tidy7
+for v in old new; do (cd $v && cargo build --release --locked -q) || exit 1; done
+IN=~/work/arb-format-opus/in
+cap() { systemd-run --user --scope -q -p MemoryMax=100G -p MemorySwapMax=0 "$@"; }
+for k in 1 2 3; do
+  for v in old new; do
+    cap /usr/bin/time -f "$v run $k: %e s, %M KB peak" $v/target/release/gfa-to-tabix $IN/mc22.gfa --walks --refs GRCh38 -o $v.mc22.$k > $v.mc22.$k.log 2>&1
+    tail -1 $v.mc22.$k.log >> cost.txt
+  done
+done
+for v in old new; do
+  cap /usr/bin/time -f "$v pggbY: %e s, %M KB peak" $v/target/release/gfa-to-tabix $IN/pggbY.gfa --walks --refs GRCh38 -o $v.pggbY > $v.pggbY.log 2>&1
+  tail -1 $v.pggbY.log >> cost.txt
+done
+echo done >> cost.txt
+== cost.txt (runs 1-3 and pggb chrY)
+old run 1: 50.36 s, 4048560 KB peak
+new run 1: 49.65 s, 4069220 KB peak
+old run 2: 50.92 s, 4068840 KB peak
+new run 2: 54.95 s, 4069264 KB peak
+old run 3: 55.33 s, 4069076 KB peak
+new run 3: 61.47 s, 4069068 KB peak
+old pggbY: 114.10 s, 7324548 KB peak
+new pggbY: 94.22 s, 6998144 KB peak
+done
+== cost2.txt (runs 4-8)
+old run 4: 50.62 s wall, 83.44 s user, 4068088 KB peak
+new run 4: 50.18 s wall, 83.16 s user, 4068420 KB peak
+old run 5: 50.12 s wall, 82.86 s user, 4069176 KB peak
+new run 5: 50.19 s wall, 82.87 s user, 4069292 KB peak
+old run 6: 50.12 s wall, 83.59 s user, 4069476 KB peak
+new run 6: 55.91 s wall, 90.38 s user, 4068856 KB peak
+old run 7: 74.94 s wall, 111.31 s user, 4073228 KB peak
+new run 7: 70.71 s wall, 108.42 s user, 4072704 KB peak
+old run 8: 56.84 s wall, 91.24 s user, 4069252 KB peak
+new run 8: 53.36 s wall, 89.63 s user, 4068604 KB peak
+cost-done
+== bubbles7.py
+new.mc22.1.GRCh38.walks.gz: 24648 departure records; 23586 (95.7%) are a bubble across a tile edge
+  reference bp between the ends 0: 2417
+  reference bp between the ends 1-50: 18255
+  reference bp between the ends 51-1000: 505
+  reference bp between the ends 1001-10000: 383
+  reference bp between the ends >10000: 2026
+  ownBp 0: 4444
+  ownBp > 0: 19142
+new.pggbY.GRCh38.walks.gz: 425040 departure records; 6785 (1.6%) are a bubble across a tile edge
+  reference bp between the ends 0: 191
+  reference bp between the ends 1-50: 1084
+  reference bp between the ends 51-1000: 2
+  reference bp between the ends 1001-10000: 579
+  reference bp between the ends >10000: 4929
+  ownBp 0: 1376
+  ownBp > 0: 5409

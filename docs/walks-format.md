@@ -245,7 +245,7 @@ it alone, and `zcat` reads the whole file as text.
 - **The header unit,** first, from byte 0: the [header](#header) lines,
   with no `#unit` line <!-- C30 -->
 - **Per reference sequence,** in byte order of the names <!-- C31 -->: its
-  `tile` and `departures` units, by start; then its `detail` units; then
+  `tile` and `departures` units, in order of a tile's `name`, its start, and a block's `start`; then its `detail` units; then
   its `table` unit, which lists them. <!-- C32 --> At one start a tile comes
   before the departure blocks that start there, and smaller blocks before
   larger <!-- C33 -->

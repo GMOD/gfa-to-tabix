@@ -1645,3 +1645,19 @@ Where the findings have come from so far, and the rule each gives:
   graph-walks-tests.txt regenerated from graph-walks main, with C34's and
   C122's rows naming the two tests it renamed. Guard: the rows' graph-walks
   tests, which check-claims.py requires to exist
+- **2026-11-06, the nine-reviewer bug hunt (ADR facts).** ADR 0010's C98
+  said files pass 2 GiB, though the largest built is CHM13's at 1.78 GB;
+  its C112 named `verify7.py` as checking departure extents from their
+  ends, which `claims7.py`'s D6 does; its Costs decided gave sizes,
+  departure-block bytes, bubble counts and timings with no data file in
+  the repository, only `~/work/tidy7/` on ada; ADR 0009 read as in force
+  for format 6's filing, header and extension rules; and "units, by start"
+  could mean a unit's `start` column or a tile's name, where the writer
+  orders tiles by name (spec.md, cleanroom.md). Source: prose written from
+  memory of the data, and an ADR left unmarked when a later one replaced
+  part of it. Fix: C98 states the 1.78 GB; C112 names D6; the Costs
+  decided numbers are in walks-container/writer/results/costs-decided.txt,
+  each recomputed on ada from the files and logs there; ADR 0009's status
+  names the sections ADR 0010 replaced and the ones still in force; C32
+  says a tile's name and a block's start. Guard: none beyond the rule in
+  Sources, no number in prose without a committed data file

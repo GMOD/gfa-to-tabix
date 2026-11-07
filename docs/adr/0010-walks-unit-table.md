@@ -74,7 +74,7 @@ its sequence and the stretch of it the line is about. <!-- C54 -->
   `#haplotype` and `#hole` lines. No `#long`, `chunk` or `maxnode`, and no
   `#unit` line ([Costs decided](#costs-decided)) <!-- C30 -->
 - **Per reference sequence,** in byte order of the names <!-- C31 -->: its
-  `tile` and `departures` units by start, then its `detail` units, then
+  `tile` and `departures` units in order of a tile's `name`, its start, and a block's `start`, then its `detail` units, then
   its `table` unit <!-- C32 -->
 - **Every unit but the header** starts with `#unit seq start end kind
   name`, so the file delimits itself and the tables can be rebuilt by
@@ -178,12 +178,13 @@ file checks do. In short:
   decodes to, checked at build by decoding the row; no other row's extent
   is checked at build: a `ref`, `nodes` or `route` row states its unit's
   extent, and a departure line's comes from its ends, which the tests and
-  `verify7.py` check <!-- C112 -->
+  `claims7.py`'s D6 check <!-- C112 -->
 - Path names hold no tab or newline and don't start with `#`; the build
   refuses any that do <!-- C95 -->
-- Offsets and lengths are exact integers below 2^53; files pass 2 GiB
-  (CHM13's is 1.78 GB), so writers, readers and checks stream and never
-  hold a whole file <!-- C98 -->
+- Offsets and lengths are exact integers below 2^53. The largest file
+  built so far is CHM13's, 1.78 GB, and nothing changes past 2^31 or
+  2^32 bytes, so writers, readers and checks stream and never hold a
+  whole file <!-- C98 -->
 - Every unit name other than `.` is unique within its kind and sequence
   <!-- C136 -->
 - The data file is written, then the directory, each under a temporary
@@ -203,9 +204,10 @@ Choices the claims audit ([claims7.md](../departures/claims7.md),
 2026-11-06) found carried into format 7 from earlier formats with no
 reason or measurement recorded. They are decided here, measured with
 gfa-to-tabix 4.0.0's writer (format7-tidy at 033ce81) on ada, on HPRC v2.1
-Minigraph-Cactus chr22 and HPRC release 2 pggb chrY on GRCh38
-(`~/work/tidy7/` on ada; the counts are in
-[claims7.md](../departures/claims7.md#measurements-the-leads-asked-for)).
+Minigraph-Cactus chr22 and HPRC release 2 pggb chrY on GRCh38. The
+sizes, the departure blocks' bytes, the bubble counts and the timings are
+in [costs-decided.txt](../walks-container/writer/results/costs-decided.txt),
+copied from `~/work/tidy7/` on ada, with the commands that wrote them.
 
 - **A route is stored the way round whose handles sort first**
   ([route](../walks-format.md#route)). It came in with format 2 (677ed02

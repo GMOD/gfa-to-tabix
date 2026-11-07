@@ -63,7 +63,7 @@ in, and the root cause.
 | C29 | Each unit is a whole run of gzip members: it starts and ends a member | `build:starting` `verify7:belongs to no unit` `test:verify` | `UnitFile::end` cuts | holds |
 | C30 | The header unit is first, from byte 0, with no `#unit` line | `verify7:a header line that is not a header line` `test:verify` | `UnitFile::start` | holds |
 | C31 | Sequences in byte order of their names | `claims7:U1` `test:verify` | `Chunks::new` | holds |
-| C32 | Per sequence: its tile and departures units by start, then its detail units, then its table | `claims7:U1` | `Outputs` | holds |
+| C32 | Per sequence: its tile and departures units in order of a tile's name and a block's start, then its detail units, then its table | `claims7:U1` | `Outputs` | holds |
 | C33 | At one start a tile before the blocks that start there, and smaller blocks before larger | `claims7:U1` | `Outputs::tile`, the departure sort key | holds |
 | C34 | Every unit but the header starts with `#unit seq start end kind name` | `verify7:belongs to no unit` `test:verify` `graph-walks:walkReader.test.ts: a tile with %s is refused` | `UnitFile::begin` | holds |
 | C35 | A tile unit: its extent; named by its start in decimal with no leading zero; its ref, nodes, route, walk and abridged rows | `claims7:U2` `claims7:U3` `claims7:U9` | `Outputs::tile` | holds |

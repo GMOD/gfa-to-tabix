@@ -3,7 +3,17 @@
 - **Status:** accepted, 2026-10-31; simplified on 2026-11-03 by the
   rebuild and on 2026-11-04 by the port, then to the minimal record,
   amended on 2026-11-05 to state pass counts and write an abridged row per
-  piece, see [History](#history). Ported to gfa-to-tabix 3.0, not released
+  piece, see [History](#history). Ported to gfa-to-tabix 3.0, not released.
+  Superseded in part by [ADR 0010](0010-walks-unit-table.md), format 7,
+  which keeps format 6's rows from `kind` on. Still in force: The record,
+  with `ownTiles` added and no 0 bp node since 0 bp segments are dropped
+  on read; Positions; Walk rows name the copy; Pass counts; Abridged rows
+  stand for one piece; Walk rows carry no neighbour tags; Reference holes;
+  Scope of the projection. Replaced: What a reader is promised and
+  Filing, by format 7's departure pyramid and attach fetch; Header, by
+  format 7's header with no `chunk`, `maxnode` or `#long`; Extension
+  rules, where a reader refuses any format but 7 and later additions are
+  tags, unit kinds or files; Readers, by graph-walks 6
 - **Decides:** what a walk file holds for every place a haplotype's path
   does not follow the reference between two of its steps on it, how the
   records are filed so that any window finds them, which copy of a node a
