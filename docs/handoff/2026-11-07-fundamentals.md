@@ -70,3 +70,19 @@ numbering). Commit the `release.*.txt` files under
 
 Beware on ada: cap every python with the script's `systemd-run` scopes;
 don't `pkill -f` a pattern that appears in your own ssh command line.
+
+## Side quests, not for this session
+
+Ideas raised on 2026-11-07 and parked, each with where it is written up:
+
+- **odgi's path-Jaccard placement** as a graph-only rule for collapsed
+  repeats: candidate and criteria in
+  [open-problems.md](../open-problems.md#placement-of-steps-on-nodes-the-reference-passes-more-than-once).
+  Measure only when someone asks for pggb tracks
+- **Fix `agree.py`'s caveats and rerun** the nearest-pass versus
+  alignment-guided scores, so the impg-based figures are trustworthy before
+  any pggb placement decision (caveats listed in open-problems.md)
+- **odgi viz / bin** as prior art for a zoomed-out summary row kind, if a
+  coarse tier for walk files is ever wanted; no trigger today
+- **Push graph-walks** so the new `rebuild` CI job, pinned to c0d8a23, can
+  run on GitHub

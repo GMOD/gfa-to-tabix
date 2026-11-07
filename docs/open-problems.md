@@ -228,6 +228,24 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   chain-based single-copy projection is what they would endorse for a
   browser; and how they would want sequence shown that matches several
   copies
+- **Unmeasured candidate: odgi position's path-Jaccard rule.** `odgi
+  position --jaccard-context N` lifts a query step onto a reference that
+  passes its node more than once by walking up to N bp (default 10,000)
+  along the query and along each candidate pass, and taking the pass whose
+  surrounding node set has the highest Jaccard overlap with the query's
+  (`src/algorithms/path_jaccard.hpp` in the odgi checkout under
+  ~/src/vendor). It needs only the graph, as nearest pass does, where the
+  projection above needs an alignment input. Nobody here has measured it.
+  Criteria, written before any measurement, for it to replace nearest
+  pass as the writer's rule on pggb graphs: scored by `agree.py` with its
+  caveats above fixed, its agreement with Minigraph-Cactus's placement on
+  pggb chrY and chr22 must reach the alignment-guided projection's figures
+  within 5 points in every stratum, with no stratum below nearest pass;
+  its departure records on chr22 must fall by at least half from nearest
+  pass's; every path must rebuild from its rows; and build time must stay
+  within twice nearest pass's. Measure it as a third column of the spike
+  only when someone asks for pggb walk tracks, per ADR 0011. This is a
+  placement rule, so adopting it is a format change under the ADR's gate
 
 ### Placing nothing there instead, measured and rejected on 2026-11-06
 
