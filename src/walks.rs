@@ -72,13 +72,16 @@ struct PathLine<'a> {
     walk: bool,
 }
 
-// Refuses a name a walk file's line would read as a header or `#unit` line
+// Refuses a name a walk file's line would read as a header or `#unit` line,
+// and one holding a NUL byte, which ends a name in the writer's sort
 fn named(path: PathLine) -> Result<Option<PathLine>, String> {
     if path.name.first() == Some(&b'#') {
         Err(format!(
             "path {} starts with #, which marks a walk file's header and unit lines",
             text(&path.name)
         ))
+    } else if path.name.contains(&0) {
+        Err(format!("path {} holds a NUL byte", text(&path.name)))
     } else {
         Ok(Some(path))
     }

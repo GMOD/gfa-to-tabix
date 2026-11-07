@@ -2150,6 +2150,23 @@ fn a_path_name_starting_with_a_hash_is_refused() {
     assert!(built.walks.is_empty());
 }
 
+// The writer's sort ends a name at its first NUL byte, so one inside a name
+// read every later field from the wrong place and panicked
+#[test]
+fn a_nul_byte_in_a_path_name_is_refused() {
+    for line in ["W H\0X 1 c 0 6 >1", "P H\0X 1+ *"] {
+        let built = build_text(
+            "nul",
+            &["S 1 AAAAAA", "W R 0 chr 0 6 >1", line],
+            &["--refs", "R"],
+        );
+        let stderr = String::from_utf8_lossy(&built.output.stderr);
+        assert_eq!(built.output.status.code(), Some(1), "{stderr}");
+        assert!(stderr.contains("holds a NUL byte"), "{stderr}");
+        assert!(built.walks.is_empty());
+    }
+}
+
 // A directory in the data file's place fails the rename that puts the data
 // file there, and the build leaves no file under a temporary name
 #[test]

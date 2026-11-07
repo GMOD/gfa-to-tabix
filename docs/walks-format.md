@@ -697,9 +697,10 @@ every fixture under four option sets and on random graphs
   <!-- C139 -->
 - A line left out of a reference's file is one W or P line; its contig's
   other lines keep their rows (tests) <!-- C140 -->
-- Path names hold no tab or newline and don't start with `#`; the build
-  refuses a GFA with a path name starting with `#`, and a GFA line has no
-  field with a tab or newline (build) <!-- C95 -->
+- Path names hold no tab, newline or NUL byte and don't start with `#`;
+  the build refuses a GFA with a path name starting with `#` or holding a
+  NUL byte, and a GFA line has no field with a tab or newline (build)
+  <!-- C95 -->
 - The data file is written under a temporary name and renamed, then the
   directory likewise, so a directory never names a data file still being
   written (build, tests) <!-- C96 -->

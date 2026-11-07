@@ -1593,3 +1593,12 @@ Where the findings have come from so far, and the rule each gives:
   900 bytes, which deflates the kept rows to at most the budget and, with
   the last moved path's walk row put back, to more; it fails on the old
   writer
+- **2026-11-06, the nine-reviewer bug hunt (NUL in a path name).** A W
+  line whose sample was `H\0X` panicked the writer at `routes.rs:74`,
+  index out of bounds: the sort keys a piece by its name and a NUL
+  terminator, so `Piece::read` cut the name at the NUL and read every
+  later field from the wrong place (cold.md, `f_nul.gfa`). Source: a name
+  check that knew `#` and tab but not the byte the writer's own sort
+  reserves. Fix: `named` refuses a path name holding a NUL byte, W or P,
+  as it refuses one starting with `#`; C95 says so. Guard: the test
+  `a_nul_byte_in_a_path_name_is_refused`, which fails on the old writer
