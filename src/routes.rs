@@ -220,10 +220,8 @@ impl Path {
 
     // The position in R of the step on `handle`'s node at `offset`
     fn index_at(&self, handle: u32, offset: u64) -> Option<usize> {
-        let from = self.offsets.partition_point(|&o| o < offset);
-        (from..self.offsets.len())
-            .take_while(|&j| self.offsets[j] == offset)
-            .find(|&j| self.handles[j] >> 1 == handle >> 1)
+        let j = self.offsets.partition_point(|&o| o < offset);
+        (self.offsets.get(j) == Some(&offset) && self.handles[j] >> 1 == handle >> 1).then_some(j)
     }
 
     // A node's positions in R, in order

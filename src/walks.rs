@@ -485,8 +485,9 @@ fn record(path: &PathLine, name: u32, end: u64) -> Result<Record, String> {
 // Pass 1: node lengths (and sequences), every reference sample's paths,
 // which give each node they visit a reference coordinate, every path's claim
 // on the nodes off the references, and the record of every path with steps,
-// in file order. A path with no steps is checked and then skipped: it names
-// no sequence and has no record.
+// in file order. A step on a segment of 0 bp leaves its path, and a path
+// left with no steps is checked and then skipped: it names no sequence and
+// has no record.
 fn first_pass(
     gfa: &str,
     options: &Options,
@@ -496,7 +497,6 @@ fn first_pass(
     let mut sequence_at: Vec<u64> = Vec::new();
     let mut bases = Vec::new();
     let mut ref_walks: Vec<RefWalk> = Vec::new();
-    let mut walks = vec![0u64; options.refs.len()];
     let mut handles = Vec::new();
     let mut ids = Vec::new();
     let mut samples = Interner::default();
@@ -565,6 +565,12 @@ fn first_pass(
                     return Ok(());
                 };
                 parse_steps(&path, &mut handles)?;
+                let known = handles
+                    .iter()
+                    .all(|&h| lengths.get((h >> 1) as usize).is_some_and(|&l| l != NONE));
+                if known {
+                    handles.retain(|&h| lengths[(h >> 1) as usize] > 0);
+                }
                 if handles.is_empty() {
                     record(&path, NONE, path.start)?;
                 } else {
@@ -572,10 +578,7 @@ fn first_pass(
                     let name = names.id(&path.name);
                     ids.clear();
                     ids.extend(handles.iter().map(|h| h >> 1));
-                    if ids
-                        .iter()
-                        .all(|&id| lengths.get(id as usize).is_some_and(|&l| l != NONE))
-                    {
+                    if known {
                         let end = stable.visit(names, name, path.start, &ids, &lengths);
                         records.push(record(&path, name, end)?);
                     } else {
@@ -591,7 +594,6 @@ fn first_pass(
                         .iter()
                         .position(|r| r.as_bytes() == path.sample)
                     {
-                        walks[reference] += 1;
                         ref_walks.push(RefWalk {
                             reference,
                             name,
@@ -629,12 +631,38 @@ fn first_pass(
                         text(&path.name)
                     ));
                 }
-                ids.push(id);
+                if lengths[id as usize] > 0 {
+                    ids.push(id);
+                }
             }
-            let end = stable.visit(names, name, path.start, &ids, &lengths);
-            records[at] = record(&path, name, end)?;
+            records[at] = if ids.is_empty() {
+                record(&path, NONE, path.start)?
+            } else {
+                let end = stable.visit(names, name, path.start, &ids, &lengths);
+                record(&path, name, end)?
+            };
             Ok(())
         })?;
+        records.retain(|r| r.name != NONE);
+    }
+    for walk in &mut ref_walks {
+        if let Some(id) = walk
+            .handles
+            .iter()
+            .map(|h| h >> 1)
+            .find(|&id| lengths.get(id as usize).is_none_or(|&l| l == NONE))
+        {
+            return Err(format!(
+                "path {} visits segment {id}, which has no S line",
+                text(&names[walk.name as usize])
+            ));
+        }
+        walk.handles.retain(|&h| lengths[(h >> 1) as usize] > 0);
+    }
+    ref_walks.retain(|w| !w.handles.is_empty());
+    let mut walks = vec![0u64; options.refs.len()];
+    for walk in &ref_walks {
+        walks[walk.reference] += 1;
     }
     for (reference, count) in walks.iter().enumerate() {
         if *count == 0 {
@@ -681,15 +709,6 @@ fn first_pass(
     for walk in &ref_walks {
         ids.clear();
         ids.extend(walk.handles.iter().map(|h| h >> 1));
-        if let Some(id) = ids
-            .iter()
-            .find(|&&id| lengths.get(id as usize).is_none_or(|&l| l == NONE))
-        {
-            return Err(format!(
-                "path {} visits segment {id}, which has no S line",
-                text(&names[walk.name as usize])
-            ));
-        }
         on_reference[walk.reference].visit(names, walk.name, walk.start, &ids, &lengths);
         let length: u64 = ids.iter().map(|&id| u64::from(lengths[id as usize])).sum();
         covers[walk.reference]
@@ -810,7 +829,7 @@ impl Chunks {
         let mut owner = vec![NONE; names.len()];
         let mut ends = vec![0; names.len()];
         let mut starts = Vec::new();
-        let count: u64 = sequences.iter().map(|&(_, _, _, end)| end / size + 1).sum();
+        let count: u64 = sequences.iter().map(|&(_, _, _, end)| end.div_ceil(size)).sum();
         if count >= u64::from(NONE) {
             return Err("more than 2^32 tiles; use a larger --tile".into());
         }
@@ -818,7 +837,7 @@ impl Chunks {
             first[name as usize] = starts.len() as u32;
             owner[name as usize] = reference;
             ends[name as usize] = end;
-            for c in 0..=end / size {
+            for c in 0..end.div_ceil(size) {
                 starts.push((name, c * size));
             }
         }
@@ -893,6 +912,8 @@ impl Builder {
     fn path(&mut self, path: &PathLine) -> Result<(), String> {
         let mut handles = std::mem::take(&mut self.handles);
         parse_steps(path, &mut handles)?;
+        let lengths = &self.graph.lengths;
+        handles.retain(|&h| lengths.get((h >> 1) as usize) != Some(&0));
         let result = self.cut_path(path, &handles);
         self.handles = handles;
         result
@@ -1088,7 +1109,7 @@ impl Builder {
         let reference = &self.references[r];
         let end = |i: usize, leave: bool| {
             let passes = reference.passes((handles[i] >> 1) as usize);
-            step_end(&self.chunks, handles[i], pass[i], length(i), passes, leave)
+            step_end(handles[i], pass[i], length(i), passes, leave)
         };
         let piece_of = |i: usize| pieces.partition_point(|&(_, b)| b <= i);
         let own = |from: usize, to: usize| Own {
@@ -1214,20 +1235,15 @@ impl Builder {
 
 // One end of a departure: the step `handle`, of `length` bp, on the pass
 // `at` of the reference's `passes` over its node, as the leave or the rejoin
-fn step_end(chunks: &Chunks, handle: u32, at: Visit, length: u64, passes: u32, leave: bool) -> End {
+fn step_end(handle: u32, at: Visit, length: u64, passes: u32, leave: bool) -> End {
     let against = (handle & 1 == 1) != at.reverse;
-    let on_start = against == leave;
-    let bp = if on_start {
-        at.offset
-    } else {
-        at.offset + length
-    };
-    let end = chunks.end[at.name as usize];
-    let base = if length == 0 || on_start { bp } else { bp - 1 }.min(end.saturating_sub(1));
     End {
-        bp,
+        bp: if against == leave {
+            at.offset
+        } else {
+            at.offset + length
+        },
         against,
-        beside: (base, (base + 1).min(end)),
         node: (at.offset, at.offset + length),
         passes,
     }
@@ -1463,10 +1479,8 @@ const DEPARTURE_SORT_BUDGET: usize = 128 << 20;
 
 // A tile's or a detail record's lines, each starting with the sequence and
 // its piece's span, or for a ref, nodes or route row the unit's extent: from
-// the first base its ref rows' stretches and its pieces' spans cover to the
-// last. Where they cover no base, at `p` on a sequence of `length` bp, the
-// extent is the base beside `p`, after it or, at the end, before it, and
-// `[0, 0)` on a sequence of 0 bp, which has no base. Fails where a piece's
+// the first base its ref rows' stretches cover to the last, or in a detail
+// record, which has no ref rows, its pieces' spans. Fails where a piece's
 // span leaves the extent.
 struct Unit {
     extent: Span,
@@ -1474,22 +1488,23 @@ struct Unit {
     lines: u64,
 }
 
-fn unit_of(seq: &[u8], length: u64, rows: &[(Stretch, &[u8])]) -> Result<Unit, String> {
-    let (lo, hi) = rows
-        .iter()
-        .filter_map(|&(stretch, _)| match stretch {
-            Stretch::Piece(span) | Stretch::Ref(span) => Some(span),
-            Stretch::Dictionary => None,
-        })
-        .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)))
-        .ok_or("a unit with no step on the reference")?;
-    let extent = if lo < hi {
-        (lo, hi)
-    } else if lo < length {
-        (lo, lo + 1)
-    } else {
-        (lo.saturating_sub(1), lo)
+fn unit_of(seq: &[u8], rows: &[(Stretch, &[u8])]) -> Result<Unit, String> {
+    let union = |of: fn(Stretch) -> Option<Span>| {
+        rows.iter()
+            .filter_map(|&(stretch, _)| of(stretch))
+            .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)))
     };
+    let extent = union(|s| match s {
+        Stretch::Ref(span) => Some(span),
+        _ => None,
+    })
+    .or_else(|| {
+        union(|s| match s {
+            Stretch::Piece(span) => Some(span),
+            _ => None,
+        })
+    })
+    .ok_or("a unit with no step on the reference")?;
     let outside = rows.iter().find_map(|&(stretch, _)| match stretch {
         Stretch::Piece((a, b)) if a < extent.0 || b > extent.1 => Some((a, b)),
         _ => None,
@@ -1631,7 +1646,7 @@ impl Outputs<'_> {
             departures::cover(lo, hi, self.chunks.size, |at, s| {
                 covered |= (at, s) == (start, size);
             });
-            let overlaps = lo < start + size && (hi > start || lo == hi);
+            let overlaps = lo < start + size && hi > start;
             if !(covered && overlaps && row != previous.as_slice()) {
                 Err(format!(
                     "the writer broke its guarantee that a departure line overlaps each block of its cover, once: {}",
@@ -1926,8 +1941,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                 (stretch, row)
             })
             .collect();
-        let end = chunks.end[name as usize];
-        let tile = unit_of(seq, end, &rows)?;
+        let tile = unit_of(seq, &rows)?;
         let details = details
             .iter()
             .map(|record| {
@@ -1935,7 +1949,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                     .iter()
                     .map(|(span, row)| (*span, row.as_slice()))
                     .collect();
-                unit_of(seq, end, &rows)
+                unit_of(seq, &rows)
             })
             .collect::<Result<_, _>>()?;
         Ok((tile, details, counts))

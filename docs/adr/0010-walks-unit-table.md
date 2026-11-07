@@ -117,7 +117,7 @@ index key, so `zcat | grep` places any line.
 | `walk` | the piece's span: the first base its steps placed on R cover to the last, over all of them; route interiors that hold another tile's reference nodes lie outside it |
 | `abridged` | the span of the piece's first and last steps on R, as its `start` and `end` decode |
 | `ref`, `nodes`, `route` | the tile's extent: these are the tile's dictionary rows and have no span of their own |
-| `departure` | the first base of its first end node to the last base of its other end node, or the breakpoint stretch where wider |
+| `departure` | the first base of its first end node to the last base of its other end node |
 
 <!-- C55 C56 C57 C58 -->
 
@@ -132,7 +132,7 @@ full):
   line 1 differs from the header's `#walks` line or its `bytes` from the
   Content-Range total, where the reader can learn it <!-- C122 -->
 - Select the `tile` and `departures` units with `start < D.end` and
-  `end > D.start`, skipping any of length 0; merge byte ranges that touch,
+  `end > D.start`; merge byte ranges that touch,
   and GET each as one single-range request, never a multi-range one
   <!-- C134 -->
 - Gunzip each unit. <!-- C149 --> Decode a tile's rows from `kind` on by
@@ -481,3 +481,13 @@ and measured it against format 6
   P line with no steps is skipped; the build now checks the partition, the
   tables, the names, containment and the departure cover; and the costs
   the format carried unmeasured are decided above
+- 2026-11-06, amended after a nine-reviewer bug hunt
+  ([issues log](../issues-log.md)): the tool drops every segment of 0 bp
+  as it reads the GFA, so its steps leave every line, a line left with no
+  steps is skipped, and a sequence left with no bases has no units. Six of
+  the nine reviews traced defects to 0 bp nodes, in the writer, the reader
+  and the spec, and neither HPRC's Minigraph-Cactus chr22 nor pggb's chrY
+  has one. The two amendments above for them no longer apply: no unit
+  covers no base, and no sequence has 0 bp, so no unit or departure line
+  states a point or `[0, 0)`, and a record's extent is its end nodes,
+  with no breakpoint stretch

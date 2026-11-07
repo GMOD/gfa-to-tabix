@@ -1,0 +1,5 @@
+# 2026-11-06, on ada, ~/work/arb-format-opus/in: S lines, those of 0 bp
+# (an empty sequence, or * with LN:i:0) and the range of their ids
+# awk -F'\t' '$1=="S"{n++; ln=length($3); if($3=="*"){ln=-1; for(i=4;i<=NF;i++) if($i ~ /^LN:i:/) ln=substr($i,6)+0} if(ln==0) z++; id=$2+0; if(min==""||id<min)min=id; if(id>max)max=id} END{...}'
+mc22.gfa	3122495 segments	0 of 0 bp	ids 120283403 to 127929432
+pggbY.gfa	4122486 segments	0 of 0 bp	ids 1 to 4122486

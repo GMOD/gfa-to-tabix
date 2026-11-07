@@ -104,12 +104,12 @@ fn gunzip(bytes: &[u8]) -> String {
     text
 }
 
-// The pyramid blocks covering [lo, hi) widened to whole tiles, and to at
-// least the tile holding `lo`, as (start, size)
+// The pyramid blocks covering [lo, hi) widened to whole tiles, as (start,
+// size)
 fn cover(lo: u64, hi: u64, tile: u64) -> Vec<(u64, u64)> {
     let mut blocks = Vec::new();
     let mut at = lo / tile * tile;
-    let end = (hi.div_ceil(tile) * tile).max(at + tile);
+    let end = hi.div_ceil(tile) * tile;
     while at < end {
         let size = [512, 64, 8, 1]
             .map(|n| n * tile)
@@ -131,12 +131,9 @@ fn cover(lo: u64, hi: u64, tile: u64) -> Vec<(u64, u64)> {
 // directory names every table, sequences in byte order; every line starts
 // with its unit's sequence; a departure block is named `.`, and no two units
 // of a kind and sequence share any other name; a departure record lies in
-// every block of its cover and no other, overlapping each, or at its start
-// where it is a point; tile and detail lines lie within their unit's
-// extent, which runs from the first base its ref rows' stretches and its
-// pieces' spans cover to the last, or where they cover no base is the base
-// after their point `p`, the base before it where `p` is `|S|`, or `[0, 0)`
-// where `|S|` is 0
+// every block of its cover and no other, overlapping each; tile and detail
+// lines lie within their unit's extent, which runs from the first base its
+// ref rows' stretches and its pieces' spans cover to the last
 fn verify(data: &[u8], directory: &str, tile: u64) {
     let lines: Vec<Vec<&str>> = directory.lines().map(|l| l.split('\t').collect()).collect();
     let walks = &lines[0];
@@ -238,7 +235,7 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
             let c: Vec<&str> = row.split('\t').collect();
             assert_eq!(c[0], seq, "{row}");
             let (a, b): (u64, u64) = (c[1].parse().unwrap(), c[2].parse().unwrap());
-            assert!(a <= b, "{row}");
+            assert!(a < b, "{row}");
             let stretch = match c[3] {
                 "departure" => {
                     assert_eq!((kind, head[5]), ("departures", "."));
@@ -264,7 +261,7 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
             };
             assert!(
                 if kind == "departures" {
-                    a < hi && (lo < b || a == b)
+                    a < hi && lo < b
                 } else {
                     lo <= a && b <= hi
                 },
@@ -275,17 +272,7 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
             }
         }
         if kind != "departures" {
-            let (a, b) = union.unwrap();
-            let length = lengths[seq];
-            let beside = match a {
-                0 if length == 0 => (0, 0),
-                p if p == length => (p - 1, p),
-                p => (p, p + 1),
-            };
-            assert!(
-                (a < b && (a, b) == (lo, hi)) || (a == b && (lo, hi) == beside),
-                "{head:?} {union:?}"
-            );
+            assert_eq!(union, Some((lo, hi)), "{head:?}");
         }
     }
     for (seq, length) in lengths {
@@ -1204,40 +1191,6 @@ fn a_contig_that_leaves_a_sequence_for_good_has_no_record() {
     );
 }
 
-// H's first line ends with node 5, of 0 bp, and its second line starts where
-// the first ends. 2's end and 3's start are the same base and the step on 5
-// carries no sequence, so the two steps are adjacent and the contig has no
-// record there; the first piece's route from 2 onto 5, taken flipped, shows
-// the step.
-#[test]
-fn a_step_on_a_node_of_0_bp_between_two_lines_is_no_departure() {
-    let built = build_text(
-        "zero",
-        &[
-            "S 1 AAAAAA",
-            "S 2 AAAAAA",
-            "S 3 AAAAAA",
-            "S 4 AAAAAA",
-            "S 5 * LN:i:0",
-            "W R 0 chr 0 24 >1>2>3>4",
-            "W H 1 h 0 12 >1>2>5",
-            "W H 1 h 12 24 >3>4",
-        ],
-        &["--refs", "R"],
-    );
-    assert!(built.output.status.success());
-    assert_eq!(departures(&built.walks), "");
-    assert_eq!(
-        rows_of(built.file("R"), "R#0#chr", "route", ".")
-            + &rows_of(built.file("R"), "R#0#chr", "walk", "H#1#h"),
-        tsv(&[
-            "R#0#chr 0 12 route . 11 -5",
-            "R#0#chr 0 12 walk H#1#h 0 0 0 3 2 1",
-            "R#0#chr 12 24 walk H#1#h 12 12 0 2 6 .",
-        ])
-    );
-}
-
 // R's chr has two lines, 0-12 and 20-32, so 12-20 is a hole, and a third line
 // at 16 with no steps, which covers nothing. H steps from 2, ending at 12, to
 // 3, starting at 20: adjacent once the hole is removed, so it has no record.
@@ -1399,8 +1352,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
 // line ends with 4 and its next, from 30, starts with 5 before 1: steps
 // leading a line take the tile of the first reference step after them, the
 // rejoin's, 0, where a read at the leave would miss them. K's first line
-// ends with 6 after 4 and its next starts with 7 before 1, so both. G walks
-// 9, of 0 bp, after 4: no own bp, but an own step, in tile 10
+// ends with 6 after 4 and its next starts with 7 before 1, so both
 #[test]
 fn a_record_names_the_tiles_holding_its_own_steps() {
     let built = build_text(
@@ -1413,14 +1365,12 @@ fn a_record_names_the_tiles_holding_its_own_steps() {
             "S 5 CCCCCCCC",
             "S 6 GGGGGGGG",
             "S 7 TTTTTTTT",
-            "S 9 * LN:i:0",
             "W R 0 chr 0 24 >1>2>3>4",
             "W J 1 j 0 38 >1>2>3>4>5>1",
             "W H 1 h 0 24 >1>2>3>4",
             "W H 1 h 30 44 >5>1",
             "W K 1 k 0 32 >1>2>3>4>6",
             "W K 1 k 40 54 >7>1",
-            "W G 1 g 0 30 >1>2>3>4>9>1",
         ],
         &["--refs", "R"],
     );
@@ -1428,7 +1378,6 @@ fn a_record_names_the_tiles_holding_its_own_steps() {
     assert_eq!(
         departures(built.file("R")),
         tsv(&[
-            "R#0#chr 0 24 departure G#1#g 24 0 0 24 + 1 0 + 1 10",
             "R#0#chr 0 24 departure H#1#h 24 14 6 24 + 1 0 + 1 0",
             "R#0#chr 0 24 departure J#1#j 24 8 0 24 + 1 0 + 1 10",
             "R#0#chr 0 24 departure K#1#k 24 24 8 24 + 1 0 + 1 10,0",
@@ -2049,78 +1998,6 @@ fn a_node_id_of_2_to_the_31_is_refused() {
     assert!(built.walks.is_empty());
 }
 
-// A sequence of 0 bp has no base: chr0's tile, table and record, H's leave
-// at 1 for chr2's 3 and rejoin at 2, all state [0, 0), which no window
-// selects, and the record is in the block of the tile holding 0
-#[test]
-fn a_sequence_of_0_bp_states_0_0() {
-    let built = build_text(
-        "zeroseq",
-        &[
-            "S 1 * LN:i:0",
-            "S 2 * LN:i:0",
-            "S 3 AAAAAA",
-            "W R 0 chr0 0 0 >1>2",
-            "W R 0 chr2 0 6 >3",
-            "W H 1 h 0 6 >1>3>2",
-        ],
-        &["--refs", "R", "--stay", "0"],
-    );
-    assert!(built.output.status.success());
-    let r = built.file("R");
-    assert_eq!(
-        unit(r, "tile", "0").lines().next(),
-        Some("#unit\tR#0#chr0\t0\t0\ttile\t0")
-    );
-    assert!(r.contains(&tsv(&["#unit R#0#chr0 0 0 table ."])));
-    assert!(r.contains(&tsv(&[
-        "#unit R#0#chr0 0 10 departures .",
-        "R#0#chr0 0 0 departure H#1#h 0 6 0 0 + 1 0 + 1 ."
-    ])));
-}
-
-// zerotile.gfa, the verifier's: R's chr is 1, of 10 bp, then 91 and 92, of
-// 0 bp, all at 10, where chr ends; 93 is chr2. Tile 10 holds only the 0 bp
-// nodes, so its stretches cover no base, and its extent is the base beside
-// 10 that lies on chr, 9-10, where every window over that base reads it.
-// J leaves 91 at 10 for chr2's 93 and rejoins at 92's end, 10, against
-// chr: both ends at chr's end, so the record's breakpoint stretch is the
-// base before, 9-10, in block 0-10, where a stretch clipped to chr would be
-// empty and in no block
-#[test]
-fn a_unit_or_record_at_a_point_takes_the_base_beside_it() {
-    let built = build_text(
-        "zerotile",
-        &[
-            "S 1 AAAAAAAAAA",
-            "S 91 * LN:i:0",
-            "S 92 * LN:i:0",
-            "S 93 GGGGG",
-            "W R 0 chr 0 10 >1>91>92",
-            "W R 0 chr2 0 5 >93",
-            "W H 1 h 0 10 >1>91>92",
-            "W I 1 i 0 10 >1<92",
-            "W J 1 j 0 15 >1>91>93<92",
-            "W K 1 k 0 5 <92>93",
-        ],
-        &["--refs", "R", "--stay", "0"],
-    );
-    assert!(built.output.status.success());
-    let r = built.file("R");
-    assert_eq!(
-        unit(r, "tile", "10").lines().next(),
-        Some("#unit\tR#0#chr\t9\t10\ttile\t10")
-    );
-    assert!(departures(r).contains(&tsv(&[
-        "R#0#chr 9 10 departure J#1#j 10 5 0 10 + 1 10 - 1 ."
-    ])));
-    assert!(unit(r, "departures", ".").starts_with(&tsv(&[
-        "#unit R#0#chr 0 10 departures .",
-        "R#0#chr 0 10 departure I#1#i 10 0 0 10 + 1 10 - 1 .",
-        "R#0#chr 9 10 departure J#1#j 10 5 0 10 + 1 10 - 1 ."
-    ])));
-}
-
 // A `#` in a W line's sample or haplotype would split its PanSN name
 // differently from its columns
 #[test]
@@ -2327,4 +2204,288 @@ fn a_w_line_whose_end_disagrees_with_its_steps_is_refused() {
             "{stderr}"
         );
     }
+}
+
+// The tool drops a segment of 0 bp as it reads the GFA: its steps leave every
+// W and P line, a line left with no steps is skipped, and a reference
+// sequence left with no bases has no units. So `lines` give the same files as
+// `stripped`, the same graph with its 0 bp segments removed by hand.
+fn assert_same_without_0_bp(name: &str, lines: &[&str], stripped: &[&str], args: &[&str]) {
+    let with = build_text(&format!("{name}-0bp"), lines, args);
+    let without = build_text(name, stripped, args);
+    assert!(
+        without.output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&without.output.stderr)
+    );
+    assert!(
+        with.output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&with.output.stderr)
+    );
+    assert_eq!(with.files, without.files);
+}
+
+// Every step between H's first and third steps is 0 bp, so its two
+// departures from 1 to 2 there had the same text, and the build aborted
+#[test]
+fn steps_of_0_bp_with_the_same_departure_text_twice_build() {
+    assert_same_without_0_bp(
+        "dup",
+        &[
+            "S 1 * LN:i:0",
+            "S 2 * LN:i:0",
+            "S 5 AAAAAAAAAAAAAAAAAAAA",
+            "W R 0 chr 0 20 >1>5>2",
+            "W H 1 c 0 0 >1>2>1>2",
+        ],
+        &[
+            "S 5 AAAAAAAAAAAAAAAAAAAA",
+            "W R 0 chr 0 20 >5",
+            "W H 1 c 0 0 ",
+        ],
+        &["--refs", "R"],
+    );
+}
+
+// R passed 2, of 0 bp, at 4 on both strands: H's `<2` took the `<2` pass in
+// its departure records and the `>2` pass in its walk row
+#[test]
+fn a_node_of_0_bp_passed_twice_at_one_offset_leaves_the_lines() {
+    assert_same_without_0_bp(
+        "z2",
+        &[
+            "S 1 AAAA",
+            "S 2 * LN:i:0",
+            "S 3 CCCC",
+            "S 4 GGGG",
+            "S 5 TTT",
+            "W R 0 chr1 0 12 >1>2<2>3>4",
+            "W H 1 chr1 0 11 >4<5<2<1",
+        ],
+        &[
+            "S 1 AAAA",
+            "S 3 CCCC",
+            "S 4 GGGG",
+            "S 5 TTT",
+            "W R 0 chr1 0 12 >1>3>4",
+            "W H 1 chr1 0 11 >4<5<1",
+        ],
+        &["--refs", "R", "--tile", "4", "--stay", "0"],
+    );
+}
+
+// R's line at 20 held only 2, of 0 bp: the file stated no hole 10-20, and
+// H's step from 1 to 2 got a record
+#[test]
+fn a_reference_line_of_0_bp_after_the_last_is_no_line() {
+    assert_same_without_0_bp(
+        "hole-trailing",
+        &[
+            "S 1 AAAAAAAAAA",
+            "S 2 * LN:i:0",
+            "W R 0 chr 0 10 >1",
+            "W R 0 chr 20 20 >2",
+            "W H 1 h 0 10 >1>2",
+        ],
+        &[
+            "S 1 AAAAAAAAAA",
+            "W R 0 chr 0 10 >1",
+            "W R 0 chr 20 20 ",
+            "W H 1 h 0 10 >1",
+        ],
+        &["--refs", "R", "--tile", "4"],
+    );
+}
+
+// R's line at 15 held only 2, of 0 bp, inside the hole 10-20: H's steps
+// from 1 to 3 got two records, 10 to 15 and 15 to 20, across the hole
+#[test]
+fn a_reference_line_of_0_bp_inside_a_hole_is_no_line() {
+    assert_same_without_0_bp(
+        "hole-inside",
+        &[
+            "S 1 AAAAAAAAAA",
+            "S 2 * LN:i:0",
+            "S 3 CCCCC",
+            "W R 0 chr 0 10 >1",
+            "W R 0 chr 15 15 >2",
+            "W R 0 chr 20 25 >3",
+            "W H 1 h 0 15 >1>2>3",
+        ],
+        &[
+            "S 1 AAAAAAAAAA",
+            "S 3 CCCCC",
+            "W R 0 chr 0 10 >1",
+            "W R 0 chr 15 15 ",
+            "W R 0 chr 20 25 >3",
+            "W H 1 h 0 15 >1>3",
+        ],
+        &["--refs", "R", "--tile", "4"],
+    );
+}
+
+// Tile 5 held 2, of 0 bp, at 5 and 3 at 7-9: its extent was 5-9
+#[test]
+fn a_reference_step_of_0_bp_widens_no_tile() {
+    assert_same_without_0_bp(
+        "zmix",
+        &[
+            "S 1 * LN:i:5",
+            "S 2 * LN:i:0",
+            "S 3 * LN:i:2",
+            "S 4 * LN:i:5",
+            "S 5 * LN:i:3",
+            "W R 0 chr 0 5 >1>2",
+            "W R 0 chr 7 9 >3",
+            "W R 0 chr 12 17 >4",
+            "W H 1 h 0 6 >5>2>5",
+            "W H 2 h 0 15 >1>2>5>3>4",
+        ],
+        &[
+            "S 1 * LN:i:5",
+            "S 3 * LN:i:2",
+            "S 4 * LN:i:5",
+            "S 5 * LN:i:3",
+            "W R 0 chr 0 5 >1",
+            "W R 0 chr 7 9 >3",
+            "W R 0 chr 12 17 >4",
+            "W H 1 h 0 6 >5>5",
+            "W H 2 h 0 15 >1>5>3>4",
+        ],
+        &["--refs", "R", "--tile", "5", "--stay", "0"],
+    );
+}
+
+// Tile 5 held only 2 and 3, of 0 bp, at 5 and 7: its extent was 5-7
+#[test]
+fn reference_steps_of_0_bp_alone_make_no_tile() {
+    assert_same_without_0_bp(
+        "zgap",
+        &[
+            "S 1 * LN:i:5",
+            "S 2 * LN:i:0",
+            "S 3 * LN:i:0",
+            "S 4 * LN:i:5",
+            "S 5 * LN:i:3",
+            "W R 0 chr 0 5 >1>2",
+            "W R 0 chr 7 7 >3",
+            "W R 0 chr 12 17 >4",
+            "W H 1 h 0 13 >1>2>5>3>4",
+            "W H 2 h 0 6 >5>3>5",
+        ],
+        &[
+            "S 1 * LN:i:5",
+            "S 4 * LN:i:5",
+            "S 5 * LN:i:3",
+            "W R 0 chr 0 5 >1",
+            "W R 0 chr 7 7 ",
+            "W R 0 chr 12 17 >4",
+            "W H 1 h 0 13 >1>5>4",
+            "W H 2 h 0 6 >5>5",
+        ],
+        &["--refs", "R", "--tile", "5", "--stay", "0"],
+    );
+}
+
+// A line holding only 2, of 0 bp, inside another line of its contig was
+// refused as an overlap
+#[test]
+fn a_line_of_0_bp_inside_another_is_no_overlap() {
+    let segments = ["S 1 * LN:i:5", "S 2 * LN:i:0", "S 3 * LN:i:4"];
+    for (name, lines, stripped) in [
+        (
+            "ov2",
+            ["W R 0 chr 0 9 >1>3", "W H 1 h 0 9 >1>3", "W H 1 h 5 5 >2"],
+            ["W R 0 chr 0 9 >1>3", "W H 1 h 0 9 >1>3", "W H 1 h 5 5 "],
+        ),
+        (
+            "ov3",
+            ["W R 0 chr 0 9 >1>3", "W H 1 h 0 9 >1>3", "W H 1 h 3 3 >2"],
+            ["W R 0 chr 0 9 >1>3", "W H 1 h 0 9 >1>3", "W H 1 h 3 3 "],
+        ),
+        (
+            "ov5",
+            ["W R 0 chr 0 9 >1>3", "W R 0 chr 5 5 >2", "W H 1 h 0 9 >1>3"],
+            ["W R 0 chr 0 9 >1>3", "W R 0 chr 5 5 ", "W H 1 h 0 9 >1>3"],
+        ),
+    ] {
+        assert_same_without_0_bp(
+            name,
+            &[&segments[..], &lines[..]].concat(),
+            &[&[segments[0], segments[2]][..], &stripped[..]].concat(),
+            &["--refs", "R", "--tile", "5", "--stay", "0"],
+        );
+    }
+}
+
+// R's chr0 holds only 1 and 2, of 0 bp: it has no units and no table, and
+// H's steps on them leave its line. Tile 10 of chr held only 91 and 92, of
+// 0 bp, at chr's end, so its extent was the base before, 9-10, and J's step
+// from 91 to chr3 and back to 92 had a record there
+#[test]
+fn a_sequence_of_0_bp_has_no_units_and_steps_of_0_bp_make_no_tile() {
+    assert_same_without_0_bp(
+        "zeroseq",
+        &[
+            "S 1 * LN:i:0",
+            "S 2 * LN:i:0",
+            "S 3 AAAAAA",
+            "S 4 AAAAAAAAAA",
+            "S 91 * LN:i:0",
+            "S 92 * LN:i:0",
+            "S 93 GGGGG",
+            "W R 0 chr0 0 0 >1>2",
+            "W R 0 chr2 0 6 >3",
+            "W R 0 chr 0 10 >4>91>92",
+            "W R 0 chr3 0 5 >93",
+            "W H 1 h 0 6 >1>3>2",
+            "W I 1 i 0 10 >4<92",
+            "W J 1 j 0 15 >4>91>93<92",
+            "W K 1 k 0 5 <92>93",
+        ],
+        &[
+            "S 3 AAAAAA",
+            "S 4 AAAAAAAAAA",
+            "S 93 GGGGG",
+            "W R 0 chr0 0 0 ",
+            "W R 0 chr2 0 6 >3",
+            "W R 0 chr 0 10 >4",
+            "W R 0 chr3 0 5 >93",
+            "W H 1 h 0 6 >3",
+            "W I 1 i 0 10 >4",
+            "W J 1 j 0 15 >4>93",
+            "W K 1 k 0 5 >93",
+        ],
+        &["--refs", "R", "--stay", "0"],
+    );
+}
+
+// H's two lines meet at 12, the first ending with 5, of 0 bp: the steps on
+// 2 and 3 either side are adjacent, and no route shows 5
+#[test]
+fn a_step_on_a_node_of_0_bp_between_two_lines_is_no_departure() {
+    assert_same_without_0_bp(
+        "zero",
+        &[
+            "S 1 AAAAAA",
+            "S 2 AAAAAA",
+            "S 3 AAAAAA",
+            "S 4 AAAAAA",
+            "S 5 * LN:i:0",
+            "W R 0 chr 0 24 >1>2>3>4",
+            "W H 1 h 0 12 >1>2>5",
+            "W H 1 h 12 24 >3>4",
+        ],
+        &[
+            "S 1 AAAAAA",
+            "S 2 AAAAAA",
+            "S 3 AAAAAA",
+            "S 4 AAAAAA",
+            "W R 0 chr 0 24 >1>2>3>4",
+            "W H 1 h 0 12 >1>2",
+            "W H 1 h 12 24 >3>4",
+        ],
+        &["--refs", "R"],
+    );
 }

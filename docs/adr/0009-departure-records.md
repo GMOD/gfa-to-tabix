@@ -92,9 +92,9 @@ seq~departure  a  b  departure  path hapStart ownBp missingBp
   placement's choice: another pass would put it elsewhere or make it no
   departure. The far end of a record often lies outside the walk read, so
   only the record can say so (see [Pass counts](#pass-counts))
-- No column names an end's node or chunk. R holds a node ending at a `+`
-  leave's or `-` rejoin's breakpoint and one starting at the other kind's,
-  and with 0 bp nodes there several can <!-- C91 -->; the step's piece is filed under the chunk of that node's pass, which is
+- No column names an end's node or chunk. R holds one node ending at a `+`
+  leave's or `-` rejoin's breakpoint and one starting at the other kind's
+  <!-- C91 -->; the step's piece is filed under the chunk of that node's pass, which is
   the chunk holding the base beside the breakpoint or, for a node
   straddling a chunk boundary, the one before: both in the walk read of any
   window over the end

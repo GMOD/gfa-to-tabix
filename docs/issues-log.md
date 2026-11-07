@@ -1513,3 +1513,41 @@ Where the findings have come from so far, and the rule each gives:
     session, after the owner has read the briefs
   - **Checker evidence:** an ADR may cite a checker only alongside that
     checker's recorded failure on a broken writer
+- **2026-11-06, the nine-reviewer bug hunt (0 bp segments).** Six of the
+  nine reviews traced defects to segments of 0 bp. The build aborted on
+  two departures of H with the same text, `0 0 0 0 + 1 20 + 1 .`, because
+  every step between them was 0 bp (writer-vs-spec.md, `dup.gfa`). R
+  passed node 2, of 0 bp, at offset 4 on both strands, and H's `<2` took
+  one pass in its records and the other in its walk row, so the records
+  stated a strand switch the rows don't show (cleanroom.md, `min/z2.gfa`).
+  A reference line of 0 bp at 20 after R's last base removed the hole
+  10-20, and one at 15 inside the hole 10-20 split H's step across it into
+  two records (units.md, `hole-trailing`, `hole-inside`). A tile holding 2,
+  of 0 bp, at 5 and 3 at 7-9 had the extent 5-9, wider than C40 said, and
+  a 0 bp line at 5 inside a line 0-9 of the same contig was refused as an
+  overlap (placement.md, `zmix`, `zgap`, `ov2`, `ov3`, `ov5`). The spec
+  carried rules for 0 bp alone: a point extent, a sequence of 0 bp stating
+  `[0, 0)`, a breakpoint stretch wider than the end nodes, a cover widened
+  to a whole tile, a 0 bp own step. Source: a degenerate input the format
+  kept every rule for, though HPRC's Minigraph-Cactus chr22 (3,122,495
+  segments) and pggb's chrY (4,122,486) have none
+  (walks-container/writer/results/zero-bp.txt). Fix: the tool drops every
+  0 bp segment as it reads the GFA, its steps leaving every W and P line,
+  a line left with no steps skipped as C118 says, a sequence left with no
+  bases given no units (C152). Deleted with it: claims C42 and C121, the
+  0 bp clauses of C11, C43, C81, C83, C89, C91, C132 and C137, the
+  breakpoint stretch (`End::beside`), the point extents in `unit_of`, the
+  cover's widening to a tile, the hole filter for 0 bp lines, the point
+  case of the block overlap check, the clamps in `step_end` and the scan
+  over equal offsets in `index_at`. A tile's extent now comes from its
+  `ref` rows alone, so `unit_of`'s check that every piece lies inside it
+  can fail, where it compared the extent with the spans it was built from.
+  What the old mechanisms compensated for: a 0 bp step had no base to
+  file, overlap or bound a block by, and each rule gave it one; with no 0
+  bp step there is nothing left to compensate. Every tests/data and
+  docs/figures GFA builds to the same bytes before and after (126 builds
+  under six option sets), and on fuzz7-gen seeds the new writer on each
+  graph gives the bytes the old one gives on the graph with its 0 bp
+  segments removed. Guard: one test per repro, each asserting the files
+  equal those of the same graph with its 0 bp segments removed by hand,
+  each failing on the old writer

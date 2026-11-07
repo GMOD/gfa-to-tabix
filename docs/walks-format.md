@@ -90,7 +90,7 @@ taken flipped, and its departure records.
   ([departure](#departure)). A **detail record** is one W line's moved
   pieces in one tile, a `detail` unit
 - **Own steps:** a departure record's path's steps strictly between its
-  leave step and its rejoin step, a step of 0 bp included <!-- C11 -->
+  leave step and its rejoin step <!-- C11 -->
 - **Attach fetch:** a reader's read of the tiles a departure record's
   `ownTiles` names, for a record whose leave piece or rejoin piece the
   window's read lacks. It takes the record's own steps from them and
@@ -130,6 +130,13 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus, and
   overlap or start at the same base. <!-- C17 --> The lines are the same
   for any order of the W lines, which `vg convert` changes from run to run
   <!-- C19 -->
+- The tool drops every segment of 0 bp as it reads the GFA: its steps
+  leave every W and P line, so the steps either side of one become
+  consecutive, and a line left with no steps is skipped as the next rule
+  says. <!-- C152 --> A reference sequence left with no bases has no
+  units and no directory line. Neither HPRC's Minigraph-Cactus chr22 nor pggb's chrY
+  has a segment of 0 bp ([counts](walks-container/writer/results/zero-bp.txt)),
+  so no rule below speaks of one <!-- C152 -->
 - A W or P line with no steps is skipped once its end column is checked:
   it has no rows, no departure record and no `#hole`, it names no
   reference sequence, it is not counted on stderr, and the overlap refusal
@@ -261,31 +268,17 @@ it alone, and `zcat` reads the whole file as text.
   `cs:d`, which an `abridged` row's `detail` and its tile's start give. It
   is `.` where nothing points at the unit, a departure block or a table.
   Every other name is unique within its kind and sequence <!-- C39 -->
-- **A tile's extent** runs from the first base its `ref` rows' stretches
-  cover to the last; a `ref` row of one W line of the reference can leave
-  a gap before the next's. <!-- C40 --> Every piece's span lies inside it,
-  since every placed step is on R <!-- C41 -->. So a node longer than a
-  tile, or a pass that runs past the tile's end, needs no widening by a
-  reader. Readers address tiles by extent, never by `floor(base / tile)`
-  <!-- C145 -->
-- A unit whose stretches cover no base, a tile whose reference nodes all
-  have 0 bp at `p` or a detail unit of steps on such nodes, takes the base
-  beside `p` as its extent: `[p, p + 1)`, or `[p − 1, p)` where `p` is
-  `|S|`, as a departure's breakpoint stretch does. <!-- C42 --> Every
-  window holding that base reads it, and its rows' spans, `[p, p)`, lie inside it.
-  <!-- C42 --> At
-  `|S|` such a tile's extent begins before the tile <!-- C42 -->
-- A sequence of 0 bp has no base, so there is none beside `p` to take: its
-  units, its table and its departure lines state `[0, 0)`, the tool
-  invents no base, and since `D` starts at 0 or later, no window selects
-  them. Its rows are in the file for a reader of the whole file <!-- C121 -->
+- **A tile's extent** runs from the first base of its `ref` rows' steps
+  to the last, over any gap between two lines of the reference.
+  <!-- C40 --> Every piece's span lies inside it, since every placed step
+  is on R <!-- C41 -->. So a node longer than a tile, or a pass that runs
+  past the tile's end, needs no widening by a reader. Readers address
+  tiles by extent, never by `floor(base / tile)` <!-- C145 -->
 - **The departure pyramid** has blocks of `tile × 8^L` bp for L from 0 to
   3 (64 kb, 512 kb, 4 Mb and 32 Mb at the default tile), each at a
   multiple of its size. <!-- C43 --> A record's cover runs from `floor(start / tile) ×
-  tile` to `ceil(end / tile) × tile` over its line's `start end`, and at
-  least to the end of the tile holding `start`, which only a line `[0, 0)`
-  on a sequence of 0 bp needs, taking at each point the largest block
-  aligned there that fits. <!-- C43 --> Its line is in every block of its
+  tile` to `ceil(end / tile) × tile` over its line's `start end`, taking
+  at each point the largest block aligned there that fits. <!-- C43 --> Its line is in every block of its
   cover and no other, the same text in each. <!-- C88 --> Within a block
   lines are in order of `start`, `end`, then text <!-- C44 -->
 - **A table** lists each unit of its sequence before it, in file order, as
@@ -379,7 +372,7 @@ not an index key, so `zcat | grep` places any line.
 | `walk` | the piece's span: the first base its steps placed on R cover to the last, over all of them. Route interiors that hold another tile's reference nodes lie outside it |
 | `abridged` | the span of the piece's first and last steps on R, as its `start` and `end` decode |
 | `ref`, `nodes`, `route` | the unit's extent: these rows describe the tile, not a piece, and have no span of their own |
-| `departure` | from the first base of its leave or rejoin node, whichever is first, to the last base of the other, or the breakpoint stretch where wider |
+| `departure` | from the first base of its leave or rejoin node, whichever is first, to the last base of the other |
 
 <!-- C55 C56 C57 C58 -->
 
@@ -570,7 +563,7 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
   <!-- C80 -->
 - Two consecutive steps on S are adjacent, and depart nowhere, when `ownBp`
   is 0, the strands are equal and the breakpoints are equal, [holes](#header)
-  removed. A step on a node of 0 bp between them changes nothing <!-- C81 -->
+  removed <!-- C81 -->
 - A contig's sequence before its first step on S or after its last is no
   departure and has no record <!-- C82 -->: the piece holding that step
   shows where the path comes from or goes on, as a route with no entry or
@@ -582,19 +575,11 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
   between adjacent steps; any other case is a jump forward. Positions
   compare with the holes before them removed. `ownBp` 0 is a direct jump;
   `missingBp` above 0 is sequence the graph lacks
-- `start end` is the record's extent: from the first base of the end
+- `start end` is the record's extent: from the first base of its end
   nodes, each the end step's own node at its pass, to the last base of the
-  other, widened to the breakpoint stretch where that is wider. <!-- C83 -->
-  The breakpoint stretch runs from the base beside one breakpoint to the
-  base beside the other, each clamped into S: `[bp − 1, bp)` where the
-  breakpoint is the node's end, `[bp, bp + 1)` where it is its start or
-  the node has 0 bp, and `[|S| − 1, |S|)` where that would lie past S,
-  or `[0, 0)` where S has 0 bp. <!-- C83 --> Only an end on a node of 0 bp makes it
-  wider, and a record whose ends are 0 bp nodes at `|S|` has the extent
-  `[|S| − 1, |S|)` <!-- C83 -->
-- The ref rows of S hold a node ending at a `+` leave's or `-` rejoin's
-  breakpoint and one starting at the other kind's; with 0 bp nodes there
-  several can <!-- C91 -->
+  other <!-- C83 -->
+- The ref rows of S hold one node ending at a `+` leave's or `-` rejoin's
+  breakpoint and one starting at the other kind's <!-- C91 -->
 - `ownTiles` lists the tiles of S that hold the record's own steps, by
   their starts (the `name` of their `tile` units), comma-separated, in the
   path's order; `.` for none. <!-- C84 --> The placement rules decide which
@@ -620,8 +605,7 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
   record's own steps from them: the path's steps after its leave step and
   before its rejoin step, which start at `hapStart` on its contig and span
   `ownBp`. Nothing else it reads joins a fragment or yields a computed
-  departure. A step of 0 bp there is an own step, so a record with `ownBp`
-  0 can name a tile and get its steps. <!-- C132 --> A piece there that
+  departure <!-- C132 -->. A piece there that
   the tile abridged stays abridged, its `abridged` row standing for it,
   unless the cut was asked to expand that path, when the reader reads its
   `detail` unit as it does in the window's read <!-- C133 -->
@@ -637,7 +621,7 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
   `bytes` from the Content-Range total where the reader can learn it
   ([The directory](#the-directory))
 - **The read:** select the `tile` and `departures` units with
-  `start < D.end` and `end > D.start`, skipping any of length 0. Merge byte
+  `start < D.end` and `end > D.start`. Merge byte
   ranges that touch, and GET each as one single-range request, never a
   multi-range one <!-- C134 -->
 - Gunzip each unit. <!-- C149 --> Decode a tile's rows from `kind` on by the rules below.
@@ -685,15 +669,12 @@ every fixture under four option sets and on random graphs
   directory; tests and files for `|S|`) <!-- C94 -->
 - No two units of a kind and sequence share a name other than `.` (build,
   tests, files) <!-- C136 -->
-- A tile's extent runs from the first base its `ref` rows' stretches cover
-  to the last, or is the base beside its point where they cover none, or
-  `[0, 0)` on a sequence of 0 bp (tests, files); every tile and detail
-  line lies within its unit's `start end` (build, tests, files)
-  <!-- C137 -->
-- Every departure line overlaps each block it is in, or, a point on a
-  sequence of 0 bp, lies at the block's start; every departure record is
-  in every block of its cover and no other (build, tests, files)
-  <!-- C89 -->
+- A tile's extent runs from the first base of its `ref` rows' steps to
+  the last (tests, files); every tile and detail line lies within
+  its unit's `start end` (build, tests, files) <!-- C137 -->
+- Every departure line overlaps each block it is in; every departure
+  record is in every block of its cover and no other (build, tests,
+  files) <!-- C89 -->
 - Each walk and abridged row's `start end` is the span of the steps it
   decodes to: the tool decodes every walk row it writes, compares the
   steps and their positions, and takes the span from them, and decodes
