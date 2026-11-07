@@ -34,27 +34,29 @@ for d in mc22 pggbY; do
   fi
   cap 10G python3 -I "$S/verify7.py" "$F" > release.$d.verify7.txt 2>&1 || { echo "verify7 exit $?" >> release.$d.verify7.txt; status=1; }
   for check in rebuild audit7 claims7; do
+    [ -f release.$d.$check.txt ] && grep -q ", 0 failed;" release.$d.$check.txt && continue
     case $check in
-      claims7) at_once=4; limit=28G ;;
-      *) at_once=8; limit=20G ;;
+      rebuild) n=$SHARDS; at_once=8; limit=20G ;;
+      audit7) n=1; at_once=1; limit=60G ;;
+      claims7) n=$SHARDS; at_once=4; limit=28G ;;
     esac
-    for i in $(seq 0 $((SHARDS - 1))); do
+    for i in $(seq 0 $((n - 1))); do
       out=release.$d.$check.$i.txt
       case $check in
-        claims7) (cap $limit python3 -I "$S/claims7.py" "$F" --own --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
-        audit7) (cap $limit python3 -I "$S/audit7.py" "$F" --gfa "$G" --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
-        rebuild) (cap $limit python3 -I "$T" rebuild "$F" "$G" --shard $i/$SHARDS > $out 2>&1; echo $? > $out.rc) & ;;
+        claims7) (cap $limit python3 -I "$S/claims7.py" "$F" --own --shard $i/$n > $out 2>&1; echo $? > $out.rc) & ;;
+        audit7) (cap $limit python3 -I "$S/audit7.py" "$F" --gfa "$G" > $out 2>&1; echo $? > $out.rc) & ;;
+        rebuild) (cap $limit python3 -I "$T" rebuild "$F" "$G" --shard $i/$n > $out 2>&1; echo $? > $out.rc) & ;;
       esac
       [ $(( (i + 1) % at_once )) = 0 ] && wait
     done
     wait
     failed=0
-    for i in $(seq 0 $((SHARDS - 1))); do
+    for i in $(seq 0 $((n - 1))); do
       [ "$(cat release.$d.$check.$i.txt.rc)" = 0 ] && ! grep -q Traceback release.$d.$check.$i.txt || failed=$((failed + 1))
     done
     {
-      echo "# $check on $F, $SHARDS shards, $failed failed; a shard's exit status, then its last line"
-      for i in $(seq 0 $((SHARDS - 1))); do echo "shard $i: exit $(cat release.$d.$check.$i.txt.rc): $(tail -1 release.$d.$check.$i.txt)"; done
+      echo "# $check on $F, $n shards, $failed failed; a shard's exit status, then its last line"
+      for i in $(seq 0 $((n - 1))); do echo "shard $i: exit $(cat release.$d.$check.$i.txt.rc): $(tail -1 release.$d.$check.$i.txt)"; done
       echo "# lines of any shard that aren't a 0 count, a comment or a summary:"
       grep -hvE '^0'$'\t''|^#|^\S+: shard' release.$d.$check.[0-9]*.txt | sort | uniq -c | sort -rn | head -40
     } > release.$d.$check.txt
