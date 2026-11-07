@@ -53,7 +53,7 @@ chr22.CHM13.walks.gz   chr22.CHM13.walks.gz.idx
 | `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
 | `--stay <bp>`     | Keep a piece in its tile across a short stretch elsewhere over nodes the reference passes more than once, each moved to a pass in the tile. Default 311, the `-k 311` minimum match of the HPRC pggb graphs; 0 turns it off. |
 | `--abridge-steps <n>` | Move a tile's costliest paths to its detail records until the rest cost at most n interior steps. Default 1000000; 0 turns it off. |
-| `--abridge-bytes <bytes>` | ...and until the rest compress to at most this many bytes, measured as [Abridged tiles](#abridged-tiles) says. Default 3000000; 0 turns it off. |
+| `--abridge-bytes <bytes>` | ...and until the rest hold at most this many bytes of rows, uncompressed, as [Abridged tiles](#abridged-tiles) says. Default 3000000; 0 turns it off. |
 
 <!-- C6 C7 C8 -->
 
@@ -741,11 +741,12 @@ every fixture under four option sets and on random graphs
   graph-walks decodes a step along R faster, but a cut still keeps and
   draws it
 - When a tile's pieces cost more than `abridge` interior steps, or its rows
-  other than `abridged` rows, from `kind` on, deflate at level 6 in blocks
-  of 65,280 bytes to more than `abridgebytes`, the tool moves whole W
-  lines' pieces out of the tile, costliest first, until the rest are
-  within both or no `walk` row is left. It deflates the rows it keeps to
-  measure them, not an estimate <!-- C100 -->
+  other than `abridged` rows, from `kind` on with their newlines, hold more
+  than `abridgebytes` bytes, the tool moves whole W lines' pieces out of
+  the tile, costliest first, the fewest that bring the rest within both,
+  or all of them where none do. It counts the bytes of the rows it keeps,
+  not an estimate, and uncompressed, so any reader or check counts the
+  same <!-- C100 -->
 - The tile keeps its `ref` rows, its other pieces' `nodes`, `route` and
   `walk` rows, encoded without the moved pieces, and an `abridged` row per
   moved piece with its first and last handles on R, the bp from one to the

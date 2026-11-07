@@ -493,3 +493,15 @@ and measured it against format 6
   covers no base, and no sequence has 0 bp, so no unit or departure line
   states a point or `[0, 0)`, and a record's extent is its end nodes,
   with no breakpoint stretch
+- 2026-11-06, amended: `--abridge-bytes` counts a tile's kept rows in
+  uncompressed bytes, from `kind` on, where it deflated them at level 6.
+  The same tile deflates to 300 bytes under the writer's zlib-rs and 301
+  under zlib 1.3.1, so a budget in deflated bytes could not be checked
+  exactly by any other implementation, and measuring it cost a deflate
+  per candidate. The writer moves the fewest paths that bring a tile
+  within it. On MC chr22 the files are the same as with no byte budget
+  at all; on pggb chrY two tiles hold more than 3,000,000 bytes of rows
+  (at most 0.88 MB compressed) and move 15 more paths, the file growing
+  0.07%, from 186,949,768 to 187,082,886 bytes. The default stays
+  3,000,000, now uncompressed, which also bounds the compressed fetch
+  ([abridge-bytes.txt](../walks-container/writer/results/abridge-bytes.txt))

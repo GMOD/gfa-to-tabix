@@ -1661,3 +1661,21 @@ Where the findings have come from so far, and the rule each gives:
   names the sections ADR 0010 replaced and the ones still in force; C32
   says a tile's name and a block's start. Guard: none beyond the rule in
   Sources, no number in prose without a committed data file
+- **2026-11-06, the format checker's B3 (a budget no checker can
+  reproduce).** The checker's new B3, which puts back the last moved W
+  line and fails if the tile still fits, failed on
+  `walks-abridge-bytes.gfa` and on fuzz seeds 1 and 3 under
+  `--sequences`, the overshoot fixed above; and it found the same tile
+  deflating to 300 bytes under the writer's zlib-rs and 301 under zlib
+  1.3.1, so `--abridge-bytes`, defined as deflated size, could put B1 and
+  B3 a byte off the writer (the coordinator). Source: a budget defined by
+  one library's output. Fix: the budget counts the kept rows' bytes
+  uncompressed, from `kind` on with their newlines (C100, ADR 0010's
+  amendment); `deflate_bound`, `compressed_len` and the ratio estimate are
+  gone. On ada MC chr22 is unchanged and pggb chrY moves 15 more paths
+  from two tiles over 3,000,000 bytes of rows, 0.07% more file
+  (walks-container/writer/results/abridge-bytes.txt), and with the
+  minimality fix and the deflated budget neither graph's byte budget
+  bound at all. Guard: `a_tile_that_keeps_walk_rows_fits_its_budgets` and
+  `a_tile_over_its_byte_budget_moves_the_fewest_paths_that_bring_it_within`
+  count raw bytes, which any checker can count the same

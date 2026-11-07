@@ -1,0 +1,22 @@
+# 2026-11-06, ada, ~/work/fixer-acb84: gfa-to-tabix --walks --refs GRCh38 on
+# ~/work/arb-format-opus/in/{mc22,pggbY}.gfa under four byte budgets.
+# md5 is of the data file's lines less #walks and #entry, which state the
+# budget and the byte offsets.
+# def: a989245, --abridge-bytes 3000000 deflated, the estimate only added to
+# nob: a989245, --abridge-bytes 0
+# min: 4a207f1, --abridge-bytes 3000000 deflated, the fewest paths
+# raw: 4a207f1 with the budget counted in uncompressed bytes, 3000000
+graph  run  paths abridged  md5 of rows                       data file bytes
+mc22   def  2468            7311d107923c440c090b5dff3f8ffe61
+mc22   nob  2468            7311d107923c440c090b5dff3f8ffe61
+mc22   min  2468            7311d107923c440c090b5dff3f8ffe61  58494956
+mc22   raw  2468            7311d107923c440c090b5dff3f8ffe61  58494956
+pggbY  def  693             3342539387fb39f3826c4ebd2276ee91
+pggbY  nob  669             e25599cf24800ec7767c78cc8f41ee0e
+pggbY  min  669             e25599cf24800ec7767c78cc8f41ee0e  186949768
+pggbY  raw  684             76088595e1a789671899293eaec7fe7a  187082886
+# Tiles' kept rows after the step budget (nob), from kind on, uncompressed:
+# the largest on mc22 is 2,308,465 bytes; on pggbY 3,472,606 (tile 56885248,
+# 560,968 bytes as a gzip unit) and 3,195,722 (tile 20054016, 884,403), the
+# only two over 3,000,000. No tile on either graph is over 3,000,000 bytes
+# compressed.

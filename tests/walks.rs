@@ -936,28 +936,17 @@ fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
 }
 
 // Under --abridge-bytes n, every tile that keeps a walk row has rows, other
-// than its abridged rows and from kind on, that deflate at level 6 in blocks
-// of 65,280 bytes to at most n bytes
+// than its abridged rows and from kind on, newlines included, of at most n
+// bytes
 #[test]
 fn a_tile_that_keeps_walk_rows_fits_its_budgets() {
-    use flate2::write::DeflateEncoder;
-    let deflated = |text: &str| -> usize {
-        text.as_bytes()
-            .chunks(65280)
-            .map(|block| {
-                let mut encoder = DeflateEncoder::new(Vec::new(), Compression::new(6));
-                encoder.write_all(block).unwrap();
-                encoder.finish().unwrap().len()
-            })
-            .sum()
-    };
     for gfa in [
         "walks-repeat.gfa",
         "walks-loop.gfa",
         "walks-records.gfa",
         "walks-contig-ends.gfa",
     ] {
-        for budget in [40, 80, 120, 160, 200, 240, 300] {
+        for budget in [80, 160, 240, 320, 400, 480, 600] {
             let built = build(
                 gfa,
                 &[
@@ -977,8 +966,8 @@ fn a_tile_that_keeps_walk_rows_fits_its_budgets() {
                     .map(|l| l.splitn(4, '\t').nth(3).unwrap())
                     .collect();
                 if head[3] == "tile" && rows.iter().any(|r| r.starts_with("walk\t")) {
-                    let text: String = rows.iter().map(|r| format!("{r}\n")).collect();
-                    assert!(deflated(&text) <= budget, "{gfa} {budget}: {head:?}");
+                    let bytes: usize = rows.iter().map(|r| r.len() + 1).sum();
+                    assert!(bytes <= budget, "{gfa} {budget}: {head:?}");
                 }
             }
         }
@@ -987,28 +976,17 @@ fn a_tile_that_keeps_walk_rows_fits_its_budgets() {
 
 // walks-abridge-bytes.gfa: 60 haplotypes with long contig names take R's
 // one route-free piece in tile 0. Under a byte budget the tile moves the
-// fewest paths whose leaving brings its rows within it: its kept rows
-// deflate to at most the budget, and with the last moved path's walk row
-// put back, in path order, to more. The writer moved 40 at 600 where 29
-// fit, and 15 at 900 where 10 did, from an estimate it only ever added to
+// fewest paths whose leaving brings its rows within it: its kept rows hold
+// at most the budget, and with the last moved path's walk row put back,
+// more. The writer moved 40 at 600 compressed bytes where 29 fit, and 15
+// at 900 where 10 did, from an estimate it only ever added to
 #[test]
 fn a_tile_over_its_byte_budget_moves_the_fewest_paths_that_bring_it_within() {
-    use flate2::write::DeflateEncoder;
-    let deflated = |rows: &[&str]| -> usize {
-        let text: String = rows.iter().map(|r| format!("{r}\n")).collect();
-        text.as_bytes()
-            .chunks(65280)
-            .map(|block| {
-                let mut encoder = DeflateEncoder::new(Vec::new(), Compression::new(6));
-                encoder.write_all(block).unwrap();
-                encoder.finish().unwrap().len()
-            })
-            .sum()
-    };
     fn from_kind<'a>(line: &&'a str) -> &'a str {
         line.splitn(4, '\t').nth(3).unwrap()
     }
-    for budget in [300, 600, 900] {
+    let bytes = |rows: &[&str]| -> usize { rows.iter().map(|r| r.len() + 1).sum() };
+    for budget in [1000, 2000, 3000] {
         let built = build(
             "walks-abridge-bytes.gfa",
             &[
@@ -1035,25 +1013,14 @@ fn a_tile_over_its_byte_budget_moves_the_fewest_paths_that_bring_it_within() {
             .find(|(head, _)| head[3] == "detail" && head[4] == format!("0:{}", moved - 1))
             .unwrap()
             .1;
-        let mut more = kept.clone();
-        more.extend(last.iter().map(from_kind));
-        let key = |r: &&str| -> (Vec<u8>, u64, u64) {
-            let c: Vec<&str> = r.split('\t').collect();
-            (
-                c[1].as_bytes().to_vec(),
-                c[2].parse().unwrap(),
-                c[3].parse().unwrap(),
-            )
-        };
-        more[1..].sort_by_key(key);
-        assert!(deflated(&kept) <= budget, "{budget}: {moved} moved");
+        let back: Vec<&str> = last.iter().map(from_kind).collect();
+        assert!(bytes(&kept) <= budget, "{budget}: {moved} moved");
         assert!(
-            deflated(&more) > budget,
+            bytes(&kept) + bytes(&back) > budget,
             "{budget}: {moved} moved, one too many"
         );
     }
 }
-
 // D#1#d's pieces 0 and 2 lie in tile 0, with piece 1 in tile 10 between
 // them, so tile 0 has a row for each, both naming the tile's second detail
 // record, unit 0:1, and each row's hapOffset and bp give where its own piece

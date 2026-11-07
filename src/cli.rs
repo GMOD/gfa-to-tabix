@@ -113,7 +113,7 @@ pub struct Cli {
     #[arg(long, value_name = "N", value_parser = value_parser!(u64).range(..=WALK_OPTION_MAX), requires = "walks", help_heading = WALKS)]
     pub abridge_steps: Option<u64>,
 
-    /// ...and at most BYTES compressed (default 3000000; 0 off)
+    /// ...and at most BYTES of rows, uncompressed (default 3000000; 0 off)
     #[arg(long, value_name = "BYTES", value_parser = value_parser!(u64).range(..=WALK_OPTION_MAX), requires = "walks", help_heading = WALKS)]
     pub abridge_bytes: Option<u64>,
 }
