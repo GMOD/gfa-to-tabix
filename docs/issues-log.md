@@ -1447,3 +1447,44 @@ Where the findings have come from so far, and the rule each gives:
   empty and abutting W lines and sequences of 0 bp; and
   `scripts/check-walks.sh` runs the file checks on every fixture and a
   fuzz batch in CI. Guard: CI, on every push
+- **2026-11-06, the reader squad review.** graph-walks refused a
+  directory that did not match its data only in `header()` and `cut()`.
+  `units`, `referenceSequences`, `sequenceFor`, `sequenceLength`,
+  `bytesFor` and `referenceNodes` read the table directly and returned
+  data from a stale `.idx` beside a re-uploaded data file, the case C122
+  exists for. Source: a test shaped by the implementation, since C122's
+  test called `header()` alone. Fixed in graph-walks 569c2c8: every entry
+  point waits on the header check. Guard: the C122 test runs all 8 entry
+  points against a changed `bytes`, a changed `#walks` line and a
+  directory with no `bytes`; on the old code 6 of the 8 returned data
+- **2026-11-06, the reader squad review.** graph-walks read a corrupt
+  table or unit silently. It checked only that a unit began `#unit\t`, so
+  a table length that ended partway through a unit dropped H's piece
+  `>3>4` from window [12,24) with no error, and two tiles with their
+  byte ranges swapped returned nothing for [0,6). Source: a reader rule
+  the spec never stated. Fixed in graph-walks 05b7ddd. A unit's `#unit`
+  line must state its `#entry`'s seq, start, end, kind and name, and its
+  text must end in a newline. Each row must be its sequence's and of a
+  kind its unit holds. A table must start with its own `#unit` line, and
+  every other line of it must be an `#entry`. Guard: eight tests that
+  failed on the old code, each check broken once to see a test fail. A
+  table entry left out entirely is still not detectable
+- **2026-11-06, the reader squad review.** A unit cut partway through a
+  gzip member failed with Gunzip's bare `TypeError` rather than a
+  `WalkFormatError`. Fixed in graph-walks 852948c. Guard: a test on a
+  truncated unit
+- **2026-11-06, the reader mutation run.** 10 of 59 mutants of the
+  format 7 reader survived its tests. Seven of them gave a wrong cut or
+  accepted a bad file:
+  - a contig whose W lines joined each other's pieces
+  - a route leaving from the last copy of its entry node instead of the
+    first one reached
+  - an abridged piece at the window's edge returned as a walk
+  - a tag read as an abridged piece's detail-unit name
+  - an unknown unit kind decoded as a tile
+  - a directory with no `bytes` accepted
+  - a piece joined with no `fragStart`
+
+  Source: tests shaped by the implementation. Fixed in graph-walks
+  585a838: a test for each, which fails on its mutant. Guard: the
+  mutants' patches in ~/work/review-2026-11-06/scratchpad/isolated/gw-mutants/
