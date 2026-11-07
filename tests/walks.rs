@@ -1987,6 +1987,33 @@ fn the_defaults_are_65536_311_1000000_and_3000000() {
     );
 }
 
+// A segment's length fits 32 bits: 2^32 − 1 bp builds, one more is refused
+// with a message that says so. The old writer refused 2^32 − 1 too, as
+// "longer than 2^32 bp", since it kept that value to mean no S line
+#[test]
+fn a_segment_of_2_to_the_32_bp_is_refused_and_one_less_builds() {
+    for (length, refused) in [(4294967295u64, false), (4294967296, true)] {
+        let built = build_text(
+            "long-segment",
+            &[
+                &format!("S 1 * LN:i:{length}"),
+                &format!("W R 0 chr 0 {length} >1"),
+            ],
+            &["--refs", "R", "--tile", "1099511627776"],
+        );
+        let stderr = String::from_utf8_lossy(&built.output.stderr);
+        if refused {
+            assert_eq!(built.output.status.code(), Some(1), "{stderr}");
+            assert!(
+                stderr.contains("segment 1 is longer than 2^32 − 1 bp"),
+                "{stderr}"
+            );
+        } else {
+            assert!(built.output.status.success(), "{stderr}");
+        }
+    }
+}
+
 // Each --walks option takes at most 2^40. A tile of 2^55 bp made the
 // pyramid's 512-tile block wrap to 0 bp, so the cover never advanced and
 // filled memory; a step budget of 2^62 wrapped to 0 when counted in

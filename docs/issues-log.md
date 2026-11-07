@@ -1620,3 +1620,12 @@ Where the findings have come from so far, and the rule each gives:
   `each_walks_option_takes_at_most_2_to_the_40`, which runs each option
   just over the bound in a 512 MB address space and expects the CLI's
   refusal; on the old writer `--tile` 2^55 died there on memory
+- **2026-11-06, the nine-reviewer bug hunt (segment length message).** A
+  segment of 4,294,967,295 bp was refused as "longer than 2^32 bp", which
+  it isn't: the writer kept u32::MAX in `lengths` to mean no S line
+  (cold.md, x12). Source: a sentinel's limit reported as the format's.
+  Fix: since segments are numbered densely (a989245) `lengths` holds no
+  sentinel, so a segment of up to 2^32 − 1 bp builds, and one longer is
+  refused as "longer than 2^32 − 1 bp". Guard: the test
+  `a_segment_of_2_to_the_32_bp_is_refused_and_one_less_builds`; the old
+  writer refuses 2^32 − 1 with the old message
