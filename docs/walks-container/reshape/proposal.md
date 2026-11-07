@@ -1,8 +1,13 @@
-# ADR 0011: A step is placed only where its reference passes the node once
+# Proposal: a step is placed only where its reference passes the node once
 
-- **Status:** accepted, 2026-11-06. Walk format 8, for gfa-to-tabix 4.0
-  and graph-walks 6. It amends [ADR 0010](0010-walks-unit-table.md),
-  whose units, tables, directory and window reading all stand
+- **Status:** proposed, not accepted. It was written as ADR 0011 on
+  2026-11-06 and withdrawn the same night, because the session that wrote
+  the proposal also briefed its measurement and its two deciders, and
+  then accepted it minutes after they reported
+  (see docs/issues-log.md, 2026-11-06). It stays a proposal
+  until the owner has read the evidence and the four format 8 reviews.
+  It would be walk format 8, amending
+  [ADR 0010](../../adr/0010-walks-unit-table.md)
 - **Decides:**
   - where a haplotype's steps are placed on a reference that passes some
     nodes more than once
@@ -13,16 +18,16 @@
   arbA window harness, reproducing arbA's 2,400 windows exactly. Two
   independent reviewers each decided from the spike's numbers, and both
   chose this decision. Data, scripts and the patch are in
-  [walks-container/reshape/](../walks-container/reshape/), with
+  this folder, with
   `out/results.txt` as the summary
 - **Supersedes:**
-  - [ADR 0001](0001-step-placement.md)'s nearest-pass placement on
+  - [ADR 0001](../../adr/0001-step-placement.md)'s nearest-pass placement on
     revisited nodes
   - `--stay` and the `stay:i:` header tag
   - the `@k` and `:k` copy names
   - `leavePasses` and `rejoinPasses` on departure records
   - the "Exact and chosen" section of
-    [walks-format.md](../walks-format.md)
+    [walks-format.md](../../walks-format.md)
 
 ## Context
 
@@ -34,14 +39,14 @@ A pggb graph collapses repeats. GRCh38 passes some chrY nodes up to 50
 times, and format 7 placed a haplotype's step on such a node by a rule:
 the nearest pass, kept for `--stay` bp. Only 35.9% of pggb chrY pieces
 land within 10 kb of where the MC graph puts the same contig
-([open problems](../open-problems.md)). Over a collapsed repeat, the rule
+([open problems](../../open-problems.md)). Over a collapsed repeat, the rule
 chose the coordinate.
 
 The rule also wrote most of pggb's departure records. 97% of chrY's
 425,040 records end on a revisited node, and 86.5% carry 0 own bp: they
 are hops between copies the rule picked, not anything a haplotype does.
 Two design reviews traced about half of the issues log to this
-projection ([henli-fundamental.md](../walks-container/reshape/henli-fundamental.md)).
+projection ([henli-fundamental.md](henli-fundamental.md)).
 
 ## Decision
 
@@ -65,7 +70,7 @@ projection ([henli-fundamental.md](../walks-container/reshape/henli-fundamental.
   - There is no format 9 until the JBrowse plugin and bandage-core have
     shipped on format 8 and a hosted file has been viewed.
   - A finding made after the port goes into
-    [open problems](../open-problems.md), not into a format change.
+    [open problems](../../open-problems.md), not into a format change.
   - A review that re-decides the design is no exception.
 
 ## Evidence
@@ -129,7 +134,7 @@ GRCh38 chr1's first view goes from 211 KiB to about 144 KiB.
     about 270 lines
   - drops 0 bp segments on reading
   - writes the detail table
-  - [walks-format.md](../walks-format.md) loses claims C2, C21–C24, C53,
+  - [walks-format.md](../../walks-format.md) loses claims C2, C21–C24, C53,
     C62, C70 and C120, and the Passes part of C79
 - **graph-walks 6** drops the copy decoder and reads the detail table on
   first expansion.
@@ -155,7 +160,7 @@ GRCh38 chr1's first view goes from 211 KiB to about 144 KiB.
   pggb, and windows 0–4% smaller at the median. But 4% of MC's records and
   37–46% of pggb's still need the pyramid, so one departure would be
   encoded two ways, and the change removes no mechanism.
-  [ADR 0009](0009-departure-records.md) had already decided that walk
+  [ADR 0009](../../adr/0009-departure-records.md) had already decided that walk
   rows carry no neighbour tags.
 - **A root table pointing at per-sequence tables.** Format 7 already has
   one: the `.idx` is a 7.9 KB directory of per-sequence tables. The 183 KB

@@ -1488,3 +1488,28 @@ Where the findings have come from so far, and the rule each gives:
   Source: tests shaped by the implementation. Fixed in graph-walks
   585a838: a test for each, which fails on its mutant. Guard: the
   mutants' patches in ~/work/review-2026-11-06/scratchpad/isolated/gw-mutants/
+- **2026-11-06, the format 8 "why we keep fumbling" review.** ADR 0011
+  (walk format 8) was accepted by the process it was meant to end. One
+  session wrote the brief behind the proposal, which planted a wrong
+  figure: "183 KB" for the whole-genome table, which is really chr1's own.
+  The same session briefed the spike with the proposal it was to
+  measure, and gave the two deciders byte-identical briefs: the
+  proposer's persona, a list of B's numbers, and option C labelled
+  "loses pggb". It committed the ADR minutes after they reported. The
+  ADR's validity evidence was "passes verify7.py and claims7.py" on the
+  day those checkers were shown to pass broken files. Source: one session
+  owning proposal, measurement and verdict, on a format with no outside
+  user since format 5. Fix: the ADR is withdrawn to
+  [a proposal](walks-container/reshape/proposal.md) until the owner
+  has read the evidence. Guard: none yet. The review's rules are an open
+  question for the owner:
+  - **Ship gate:** no ADR for format N+1 until a consumer has read format
+    N from a hosted file
+  - **Scope gate:** a trigger must be measured on a hosted graph, or one a
+    named user asked for
+  - **Split briefs:** whoever briefs a proposal doesn't brief its
+    measurement or deciders
+  - **Overnight acceptance:** an ADR is accepted no earlier than the next
+    session, after the owner has read the briefs
+  - **Checker evidence:** an ADR may cite a checker only alongside that
+    checker's recorded failure on a broken writer
