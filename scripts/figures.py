@@ -558,32 +558,73 @@ def bandage_spec(name):
     return json.loads(html.unescape(re.search(r"<metadata>(.*?)</metadata>", svg)[1]))["spec"]
 
 
-def bandage_figure(name, lines, shown, tint):
-    """The GFA's W lines, the command, the walk file's lines a read of the
-    region uses, and bandage-core's drawing of graph-walks' cut there."""
+def overlaps_region(fields, start, end):
+    a, b = int(fields[2]), int(fields[3])
+    return a < end and max(b, a + 1) > start
+
+
+def byte_range(offset, length):
+    return f"bytes {offset}-{offset + length - 1}"
+
+
+def bandage_figure(name, lines, directory, tint):
+    """The GFA's W lines, the command, the walk file's directory line, table
+    entries and units a read of the region fetches, and bandage-core's
+    drawing of graph-walks' cut there."""
     cut = (FIGURES / f"{name}-cut.gfa").read_text()
     check_cut(lines, cut)
     width, height, drawing = bandage_drawing((FIGURES / f"{name}-bandage.svg").read_text())
     spec = bandage_spec(name)
     contig, start, end = spec["region"]["refName"], spec["region"]["start"], spec["region"]["end"]
+    sequence = next(f for f in directory if not f[0].startswith("#") and f[0].endswith(f"#{contig}"))
+    units = units_of(lines)
+    table = next(rows for unit, rows in units if unit[4] == "table" and unit[1] == sequence[0])
+    entries = [e for e in table if overlaps_region(e, start, end)]
+    fetched = [(unit, rows) for unit, rows in units
+               if unit[4] not in ("table", "header") and any(e[4:6] == unit[4:6] for e in entries)]
     c = Canvas()
     left, y, widest = 24, 28, width
-    c.say(left, y, f"{name}.gfa", 13, weight="bold")
+
+    def heading(text):
+        nonlocal y
+        c.say(left, y, text, 13, weight="bold")
+
+    def show(fields, bold, size=11.5, tinted=None):
+        nonlocal y, widest
+        y += 20
+        widest = max(widest, mono_line(c, left + 12, y, fields, size, bold, tinted))
+
+    def arrow(label):
+        nonlocal y
+        c.down(left + 18, y + 12, 34)
+        c.say(left + 40, y + 34, label, 12, weight="bold")
+        y += 78
+
+    heading(f"{name}.gfa")
     for w in (line.split("\t") for line in (FIGURES / f"{name}.gfa").read_text().splitlines()):
         if w[0] == "W":
-            y += 20
-            widest = max(widest, mono_line(c, left + 12, y, w, bold={4, 5}))
-    c.down(left + 18, y + 12, 34)
-    command = " ".join(["gfa-to-tabix", f"{name}.gfa", *spec["options"], "-o", PREFIX])
-    c.say(left + 40, y + 34, command, 12, weight="bold")
-    y += 78
-    c.say(left, y, f"{PREFIX}.{REF}.walks.gz", 13, weight="bold")
-    for f in shown:
-        y += 20
-        widest = max(widest, mono_line(c, left + 12, y, f, 11.5, {1, 2}, tint(f)))
-    c.down(left + 18, y + 12, 34)
-    c.say(left + 40, y + 34, f"{contig}:{start + 1}-{end}", 12, weight="bold")
-    y += 60
+            show(w, {4, 5}, 12)
+    arrow(" ".join(["gfa-to-tabix", f"{name}.gfa", *spec["options"], "-o", PREFIX]))
+    heading(f"{PREFIX}.{REF}.walks.gz.idx")
+    show(sequence, {1, 2})
+    arrow(byte_range(int(sequence[1]), int(sequence[2])))
+    heading(f"{PREFIX}.{REF}.walks.gz")
+    for e in table:
+        show(e, {2, 3, 6, 7} if e in entries else set())
+    spans = []
+    for e in sorted(entries, key=lambda e: int(e[6])):
+        offset, length = int(e[6]), int(e[7])
+        spans = (spans[:-1] + [(spans[-1][0], offset + length - spans[-1][0])]
+                 if spans and sum(spans[-1]) == offset else spans + [(offset, length)])
+    ranges = ", ".join(byte_range(offset, length) for offset, length in spans)
+    arrow(f"{contig}:{start + 1}-{end}: {ranges}")
+    heading(f"{PREFIX}.{REF}.walks.gz")
+    for unit, rows in fetched:
+        show(unit, {4, 5})
+        for f in rows:
+            show(f, {1, 2}, tinted=tint(f))
+    arrow("graph-walks, bandage-core")
+    y -= 18
     c.out.append(f'<svg x="{left}" y="{y}" {drawing}')
     return c.svg(left + widest + 36, y + height + 12)
 
@@ -598,19 +639,19 @@ def generate(binary):
         subprocess.run([binary, FIGURES / "walks.gfa", "--walks", "--refs", REF, "-o", out], **quiet)
         walk_file = f"{out}.{REF}.walks.gz"
         walk_rows, header = read_rows(walk_file), read_header(walk_file)
-        built = {}
+        built, directories = {}, {}
         for name in BANDAGE_FIGURES:
             subprocess.run([binary, FIGURES / f"{name}.gfa", *bandage_spec(name)["options"], "-o", out], **quiet)
             with gzip.open(walk_file, "rt") as f:
                 built[name] = [line.rstrip("\n").split("\t") for line in f]
+            directories[name] = [line.split("\t") for line in Path(f"{walk_file}.idx").read_text().splitlines()]
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
-    simple_rows = [r for _, rows in units_of(built["walks-simple"]) for r in rows if r[0] != "#entry"]
-    leave_rows = list(dict.fromkeys(tuple(r) for _, rows in units_of(built["walks-leave"]) for r in rows if r[0] != "#entry"))
     return {
-        "walks-simple-figure": bandage_figure("walks-simple", built["walks-simple"], simple_rows, lambda f: None),
-        "walks-leave-figure": bandage_figure("walks-leave", built["walks-leave"], [list(r) for r in leave_rows],
+        "walks-simple-figure": bandage_figure("walks-simple", built["walks-simple"], directories["walks-simple"],
+                                              lambda f: None),
+        "walks-leave-figure": bandage_figure("walks-leave", built["walks-leave"], directories["walks-leave"],
                                              lambda f: HIGHLIGHT if f[3] == "departure" else None),
         "outputs": {},
         "overview": overview_svg(segs, links),

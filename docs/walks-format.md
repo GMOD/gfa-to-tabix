@@ -549,7 +549,7 @@ adjacent there at the passes they took and lie in different pieces.
 departure inside one piece has no record: a reader computes it from the
 piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
 
-![The W lines of a GFA where HG002#1 leaves GRCh38 after node 2 and rejoins at node 6 across the tile edge at 30 bp, the tile rows and the departure line gfa-to-tabix writes for it, highlighted, and the graph graph-walks cuts for chr1:1-60 drawn by bandage-core, HG002 running from node 2 through its node 7 below the row to node 6, 25 bp shorter than GRCh38](figures/walks-leave-figure.svg)
+![The W lines of a GFA where HG002#1 leaves GRCh38 after node 2 and rejoins at node 6 across the tile edge at 30 bp; the walk file read for chr1:1-60: the .idx line, chr1's table with two tiles and two departure blocks, and those four units, the departure line highlighted in both blocks; and the graph graph-walks cuts for chr1:1-60 drawn by bandage-core, HG002 running from node 2 through its node 7 below the row to node 6, 25 bp shorter than GRCh38](figures/walks-leave-figure.svg)
 
 - Departures are per reference sequence: for S, the path's steps on S in
   order, with its steps on the reference's other sequences counted as its own
