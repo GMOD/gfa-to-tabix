@@ -3,7 +3,7 @@
 # walk fixture under four option sets, and some under options of their
 # own, and runs on each file the release checks (verify7.py), the claims
 # checks (claims7.py --own), the audit (audit7.py, given the fixture) and
-# walks-truth.py's piece bp; then fuzz7.sh's batch of seeds 1 to $SEEDS (6
+# walks-truth.py's rebuild of every line against the GFA; then fuzz7.sh's batch of seeds 1 to $SEEDS (6
 # by default). Each check fails by its exit status. Exits 1 on any
 # failure, naming it.
 # Usage: scripts/check-walks.sh target/release/gfa-to-tabix
@@ -27,7 +27,7 @@ check() {
       { echo "$label $r:"; echo "$out" | grep -vE '^0'$'\t'; failed=1; }
     out=$(python3 -I "$S/audit7.py" "$f" --gfa "$REPO/tests/data/$gfa" --window 64 --point 16 2>&1) ||
       { echo "$label $r:"; echo "$out" | sed -n '/^audit7: /,$p'; echo "$out" | grep -E 'Traceback|Error'; failed=1; }
-    out=$(python3 -I "$REPO/scripts/walks-truth.py" pieces "$f" "$REPO/tests/data/$gfa" 2>&1) ||
+    out=$(python3 -I "$REPO/scripts/walks-truth.py" rebuild "$f" "$REPO/tests/data/$gfa" 2>&1) ||
       { echo "$label $r: $out"; failed=1; }
   done
   rm -f "$dir"/o.*

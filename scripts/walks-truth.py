@@ -28,10 +28,15 @@ to its reference, and measure what a window costs to read.
                    haplotype enters each tile once
       R.tsv (name, sequence, start, end) repeats the figures per region.
 
-  walks-truth.py pieces WALKS GFA
-      Checks the bp it reads for each piece: every W or P line with rows in
-      the file has pieces summing to its length in the GFA. Exits 1 if any
-      line's do not.
+  walks-truth.py rebuild WALKS GFA
+      Rebuilds every W or P line from the file and compares it with the GFA,
+      step for step: the file holds exactly the lines with a step on a node
+      of the reference's own lines (0 bp segments dropped), each line's
+      pieces, walk rows decoded by the spec's rules and abridged pieces from
+      their detail units, are numbered from 0 and start where the piece
+      before ends, and joined they give the line's handles exactly; the
+      reference's own lines likewise from their ref rows, lengths included.
+      Prints each line that differs and exits 1 if any does.
 
   walks-truth.py cost WALKS
       Per window of one tile at each tile's start: the walk rows and steps of
@@ -47,8 +52,12 @@ spec's rules, in its tile or, for an abridged piece, its detail record.
 import argparse
 import bisect
 import gzip
+import hashlib
+import itertools
 import re
 import sys
+import zlib
+from array import array
 from collections import defaultdict
 
 CIGAR = re.compile(rb"(\d+)([=XIDM])")
@@ -197,7 +206,10 @@ class Tile:
         return d
 
     def bp(self, c):
-        """The bp of a walk row's steps, by the spec's decoding rules."""
+        return sum(self.len[i] if i is not None else self.nodes[h >> 1] for h, i in self.steps(c))
+
+    def steps(self, c):
+        """A walk row's steps as (handle, position in R or None), by the spec's decoding rules."""
         nsteps = int(c[8])
         start, _, k = c[9].partition("@")
         choices = []
@@ -214,45 +226,71 @@ class Tile:
                     e ^ 1 if e is not None else None) if flip else (e, inter, x)
 
         def along(i, h):
-            return (i + 1, self.h[i + 1]) if self.h[i] == h else (i - 1, self.h[i - 1] ^ 1)
+            j = i + 1 if self.h[i] == h else i - 1
+            if not 0 <= j < len(self.h):
+                raise ValueError(f"a step off the end of R from position {i}")
+            return (j, self.h[j]) if j > i else (j, self.h[j] ^ 1)
 
-        total = count = 0
+        out = []
         if choices and oriented(*choices[0][:2])[0] is None:
-            inter = oriented(*choices[0][:2])[1]
-            total, count, choices = sum(self.nodes[g >> 1] for g in inter), len(inter), choices[1:]
+            out = [(g, None) for g in oriented(*choices[0][:2])[1]]
+            choices = choices[1:]
         h = int(start)
         i = self.occ[h >> 1][int(k) if k else 0]
-        total, count = total + self.len[i], count + 1
+        out.append((h, i))
         for rid, flip, entry_k, exit_k in choices:
             e, inter, x = oriented(rid, flip)
             target = self.occ[e >> 1][int(entry_k)] if entry_k else None
             while (i != target) if entry_k else (h != e):
                 i, h = along(i, h)
-                total, count = total + self.len[i], count + 1
-            total, count = total + sum(self.nodes[g >> 1] for g in inter), count + len(inter)
+                out.append((h, i))
+            out += [(g, None) for g in inter]
             if x is None:
                 break
             near = min(reversed(self.occ[x >> 1]), key=lambda j: abs(j - i))
             i, h = (self.occ[x >> 1][int(exit_k)] if exit_k else near), x
-            total, count = total + self.len[i], count + 1
-        while count < nsteps:
+            out.append((h, i))
+        while len(out) < nsteps:
             i, h = along(i, h)
-            total, count = total + self.len[i], count + 1
-        return total
+            out.append((h, i))
+        return out
 
 
-def walk_rows(path, haps):
-    """Pieces by path, sorted: [(record start, hapOffset, nsteps, seq, tile start, bp)],
-    abridged pieces from their detail records; each tile's extent by (seq,
-    tile start); and the tile size. Holds a tile's R past the tile only
-    where it has abridged rows."""
-    rows = defaultdict(list)
-    extents, size, tiles = {}, None, {}
+def digest(handles, lengths=None):
+    return hashlib.blake2b(array("q", handles).tobytes() + (array("q", lengths).tobytes() if lengths else b""),
+                           digest_size=16).digest()
+
+
+class Piece:
+    """One row's piece: its line, where it lies, its bp and a digest of its handles
+    (and lengths, for a ref row), or why it couldn't be decoded."""
+
+    def __init__(self, c, seq, tile, handles=(), bp=0, lengths=None, error=None):
+        self.line = (c[4], int(c[5]))
+        self.offset, self.piece, self.nsteps, self.seq, self.tile = int(c[6]), int(c[7]), int(c[8]), seq, tile
+        self.bp, self.ref, self.error = bp, lengths is not None, error
+        self.decoded, self.ends = len(handles), (handles[0], handles[-1]) if handles else None
+        self.digest = digest(handles, lengths)
+
+    def key(self):
+        return (self.line, self.offset, self.piece)
+
+
+def walk_rows(path, keep):
+    """Pieces by path, for the paths `keep` takes, sorted by hapOffset: walk
+    rows decoded, abridged pieces from their detail records; the reference's
+    own pieces by path, from the ref rows; the reference sample; each tile's
+    extent by (seq, tile start); and the tile size. Holds a tile's R past the
+    tile only where it has abridged rows."""
+    rows, refs = defaultdict(list), defaultdict(list)
+    extents, size, tiles, reference = {}, None, {}, None
     unit = filed = None
     with gzip.open(path, "rt") as f:
         for line in f:
             if line.startswith("#walks"):
                 size = tile_of(line)
+            if line.startswith("#reference\t"):
+                reference = line.rstrip("\n").split("\t")[1]
             if line.startswith("#unit\t"):
                 c = line.rstrip("\n").split("\t")
                 if filed in tiles and not tiles[filed].abridged:
@@ -269,13 +307,25 @@ def walk_rows(path, haps):
             if line[0] == "#" or unit is None:
                 continue
             c = line.rstrip("\n").split("\t")
+            if c[3] == "ref":
+                lengths = [int(x) for x in c[10].split(",")]
+                if keep(c[4]):
+                    refs[c[4]].append(Piece(c, c[0], filed[1], handles(c[9])[0], sum(lengths), lengths))
             if c[3] != "walk":
                 unit.add(c)
-            elif haps is None or c[4].rsplit("#", 1)[0] in haps:
+            elif keep(c[4]):
                 if not hasattr(unit, "h"):
                     unit.index()
-                rows[c[4]].append((int(c[5]), int(c[6]), int(c[8]), c[0], filed[1], unit.bp(c)))
-    return {name: sorted(ps) for name, ps in rows.items()}, extents, size
+                try:
+                    steps = unit.steps(c)
+                    piece = Piece(c, c[0], filed[1], [h for h, _ in steps],
+                                  sum(unit.len[i] if i is not None else unit.nodes[h >> 1] for h, i in steps))
+                except (KeyError, IndexError, ValueError) as e:
+                    piece = Piece(c, c[0], filed[1], error=f"{type(e).__name__}: {e}")
+                rows[c[4]].append(piece)
+    by_key = lambda ps: sorted(ps, key=Piece.key)
+    return ({n: by_key(ps) for n, ps in rows.items()}, {n: by_key(ps) for n, ps in refs.items()},
+            reference, extents, size)
 
 
 def union(intervals):
@@ -293,7 +343,10 @@ def pct(a, b):
 
 def score(args):
     haps = set(args.haps.split(","))
-    pieces, extents, size = walk_rows(args.walks, haps)
+    pieces, _, _, extents, size = walk_rows(args.walks, lambda name: name.rsplit("#", 1)[0] in haps)
+    broken = [p for ps in pieces.values() for p in ps if p.error]
+    if broken:
+        sys.exit(f"{len(broken)} walk rows don't decode, the first {broken[0].line} piece {broken[0].piece}: {broken[0].error}")
     truth = read_lift(args.lift, set(pieces))
     regions = []
     if args.regions:
@@ -321,7 +374,8 @@ def score(args):
         filed = defaultdict(set)
         present = defaultdict(int)
         seen_from = defaultdict(int)
-        for rec, off, nsteps, seq, cs, bp in ps:
+        for piece in ps:
+            off, seq, cs, bp = piece.offset, piece.seq, piece.tile, piece.bp
             filed[seq].add(cs)
             aligned = near = 0
             any_q, near_q = [], []
@@ -426,35 +480,94 @@ def cost(args):
         print(f"    {w[3]}:{w[4]}  {w[0]:,} gz bytes  {w[1]:,} steps  {w[2]:,} walk rows")
 
 
-def pieces(args):
-    lengths, lines = {}, {}
-    with open(args.gfa) as f:
+def gfa_lines(path, reference):
+    """The reference sample's lines, then a generator over every other W or P
+    line, each as (name, start, handles, lengths), 0 bp segments dropped."""
+    lengths, named = {}, {}
+    with open(path) as f:
         for line in f:
-            c = line.rstrip("\n").split("\t")
-            if c[0] == "S":
-                lengths[c[1]] = len(c[2]) if c[2] != "*" else int(next(t[5:] for t in c[3:] if t.startswith("LN:i:")))
-            elif c[0] == "W":
-                lines[(f"{c[1]}#{c[2]}#{c[3]}", int(c[4]))] = re.findall(r"[<>]([^<>]+)", c[6])
-            elif c[0] == "P":
-                named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", c[1]) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", c[1])
-                         or re.fullmatch(r"(.*):(\d+)-\d+", c[1]))
-                key = (named.group(1), int(named.group(2))) if named else (c[1], 0)
-                lines[key] = [x.rstrip("+-") for x in c[2].split(",")]
-    rows, _, _ = walk_rows(args.walks, None)
-    read = defaultdict(int)
-    for name, ps in rows.items():
-        for rec, _, _, _, _, bp in ps:
-            read[(name, rec)] += bp
+            if line.startswith("S\t"):
+                c = line.rstrip("\n").split("\t")
+                lengths[int(c[1])] = len(c[2]) if c[2] != "*" else int(next(t[5:] for t in c[3:] if t.startswith("LN:i:")))
+
+    def parse(line):
+        c = line.rstrip("\n").split("\t")
+        if c[0] == "W":
+            key = (f"{c[1]}#{c[2]}#{c[3]}", int(c[4]))
+            hs = [2 * int(x) + (s == "<") for s, x in re.findall(r"([<>])([^<>]+)", c[6])]
+        else:
+            named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", c[1]) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", c[1])
+                     or re.fullmatch(r"(.*):(\d+)-\d+", c[1]))
+            key = (named.group(1), int(named.group(2))) if named else (c[1], 0)
+            hs = [2 * int(x[:-1]) + (x[-1] == "-") for x in c[2].split(",")] if c[2] != "*" else []
+        hs = [h for h in hs if lengths[h >> 1]]
+        return key, hs, [lengths[h >> 1] for h in hs]
+
+    def lines(sample):
+        with open(path) as f:
+            for line in f:
+                if line[0] in "WP" and line[1] == "\t":
+                    key, hs, ls = parse(line)
+                    if (key[0].split("#")[0] == reference) == sample:
+                        yield key, hs, ls
+
+    return list(lines(True)), lines(False)
+
+
+def handle_text(h):
+    return ("<" if h & 1 else ">") + str(h >> 1)
+
+
+def rebuild(args):
+    shard, shards = map(int, args.shard.split("/"))
+    keep = lambda name: zlib.crc32(name.encode()) % shards == shard
+    rows, refs, reference, _, _ = walk_rows(args.walks, keep)
     with gzip.open(args.walks, "rt") as f:
         for line in f:
             c = line.split("\t", 6)
-            if line[0] != "#" and c[3] in ("walk", "abridged") and (c[4], int(c[5])) not in read:
-                read[(c[4], int(c[5]))] = 0
-    wrong = [(k, n, sum(lengths[x] for x in lines.get(k, []))) for k, n in sorted(read.items())
-             if n != sum(lengths[x] for x in lines.get(k, []))]
-    for (name, start), n, want in wrong:
-        print(f"  {name} line at {start}: pieces hold {n} bp, the line {want}")
-    print(f"{args.walks}: {len(read)} W lines with rows, {len(wrong)} whose pieces' bp differ from the line")
+            if line[0] != "#" and c[3] == "abridged" and keep(c[4]):
+                rows.setdefault(c[4], [])
+    held = defaultdict(list)
+    for ps in list(rows.values()) + list(refs.values()):
+        for p in ps:
+            held[p.line].append(p)
+    reference_lines, other_lines = gfa_lines(args.gfa, reference)
+    on_reference = {h >> 1 for _, hs, _ in reference_lines for h in hs}
+    wrong, expected, seen = [], 0, set()
+    for (name, start), want, lengths in itertools.chain(reference_lines, other_lines):
+        if not keep(name) or not any(h >> 1 in on_reference for h in want):
+            continue
+        expected += 1
+        seen.add((name, start))
+        ps = sorted(held.get((name, start), []), key=lambda p: p.piece)
+        if not ps:
+            wrong.append(f"{name} line at {start}: on the reference, with no rows")
+            continue
+        at, n, faults = start, 0, []
+        if [p.piece for p in ps] != list(range(len(ps))):
+            faults.append(f"pieces numbered {[p.piece for p in ps]}")
+        for p in ps:
+            where = f"piece {p.piece} in tile {p.seq}:{p.tile}"
+            if p.error:
+                faults.append(f"{where} doesn't decode: {p.error}")
+            elif p.nsteps != p.decoded:
+                faults.append(f"{where} says {p.nsteps} steps and decodes to {p.decoded}")
+            if p.offset != at:
+                faults.append(f"{where} starts at {p.offset}, the piece before ends at {at}")
+            if not p.error and p.digest != digest(want[n:n + p.decoded], lengths[n:n + p.decoded] if p.ref else None):
+                gfa = f"the GFA's steps {n} to {n + p.decoded} run {handle_text(want[n])} to {handle_text(want[min(n + p.decoded, len(want)) - 1])}" if n < len(want) else "the GFA's line has ended"
+                faults.append(f"{where} runs {handle_text(p.ends[0])} to {handle_text(p.ends[1])}, {gfa}")
+            n += p.decoded
+            at = p.offset + p.bp
+        if n != len(want) and not faults:
+            faults.append(f"{n} steps rebuilt, the GFA's line has {len(want)}")
+        if faults:
+            wrong.append(f"{name} line at {start}: " + "; ".join(faults[:3]))
+    for name, start in sorted(set(held) - seen):
+        wrong.append(f"{name} line at {start}: rows for a line not on the reference, or not in the GFA")
+    for w in wrong:
+        print("  " + w)
+    print(f"{args.walks}: shard {args.shard}: {len(held)} lines with rows, {expected} on the reference in the GFA, {len(wrong)} wrong")
     sys.exit(1 if wrong else 0)
 
 
@@ -471,14 +584,15 @@ def main():
     b.add_argument("--haps", required=True, help="PanSN sample#haplotype list")
     b.add_argument("--regions")
     b.add_argument("--present", type=int, default=300)
-    d = sub.add_parser("pieces")
+    d = sub.add_parser("rebuild")
     d.add_argument("walks")
     d.add_argument("gfa")
+    d.add_argument("--shard", default="0/1", help="I/N: check the lines whose path name hashes to I of N")
     c = sub.add_parser("cost")
     c.add_argument("walks")
     c.add_argument("--top", type=int, default=5)
     args = p.parse_args()
-    {"lift": lift, "score": score, "pieces": pieces, "cost": cost}[args.cmd](args)
+    {"lift": lift, "score": score, "rebuild": rebuild, "cost": cost}[args.cmd](args)
 
 
 if __name__ == "__main__":

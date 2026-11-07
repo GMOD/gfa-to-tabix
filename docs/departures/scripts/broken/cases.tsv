@@ -2,6 +2,7 @@ abridged-bp	walks-contig-ends.gfa	audit7	an abridged row's bp 12 made 13
 abridged-hapoffset	walks-contig-ends.gfa	audit7	an abridged row's hapOffset 30 made 31
 abridged-nsteps	walks-contig-ends.gfa	audit7	an abridged row's nsteps 5 made 7
 block-misaligned	walks-two-refs.gfa	verify7	the departure block 10 20 stated as 10 19
+detail-interior-flipped	walks-contig-ends.gfa	rebuild	detail 10:0's route interior >12 made <12, so L's abridged piece decodes to >11<12>13 at the same bp
 empty-block	walks-two-refs.gfa	verify7 claims7	an empty departure block after the table
 g1-walk-order	walks-two-refs.gfa	claims7	H's and D's walk rows swapped in tile 0
 hap-dup	walks-two-refs.gfa	claims7	#haplotype D#1 listed twice
@@ -11,9 +12,10 @@ hdr-len-idx-only	walks-two-refs.gfa	verify7	the directory's #header 0 139 stated
 header-len-100	walks-two-refs.gfa	verify7	a header line without # and #header 0 100
 header-len-right-ctl	walks-two-refs.gfa	verify7	a header line without #
 hole-bogus	walks-two-refs.gfa	claims7	a #hole at 3 5 over bases the ref rows cover
-hole-inside	broken/hole-inside.gfa	audit7	the writer's records 10 15 and 15 20 inside the hole 10 20, over a 0 bp line
-hole-trailing	broken/hole-trailing.gfa	claims7	no #hole 10 20 before the writer's 0 bp line at 20
-last-piece-dropped	walks-two-refs.gfa	claims7 audit7	D's piece 3 in tile 10 left out
+hole-inside	broken/hole-inside.gfa	audit7 rebuild	the writer's records 10 15 and 15 20 inside the hole 10 20, over a 0 bp line
+hole-trailing	broken/hole-trailing.gfa	claims7 rebuild	no #hole 10 20 before the writer's 0 bp line at 20
+interior-flipped	walks-two-refs.gfa	rebuild	tile 0's route interior <6 made >6, so Q's piece decodes to >1<6 at the same bp
+last-piece-dropped	walks-two-refs.gfa	claims7 audit7 rebuild	D's piece 3 in tile 10 left out
 missing-understated	walks-records.gfa	audit7	a record's missingBp understated
 missing-understated-G	walks-records.gfa	audit7	G's record with missingBp 18 made 5
 nodes-extra	walks-two-refs.gfa	claims7	tile 0's nodes row lists a node no route visits
@@ -25,8 +27,9 @@ record-bogus-path	walks-two-refs.gfa	audit7	a record of a path with no rows
 record-dropped	walks-two-refs.gfa	audit7	Q's record left out of every block
 record-leavepasses	walks-two-refs.gfa	claims7 audit7	Q's record with leavePasses 2 under revisited:i:0
 record-within-piece	walks-two-refs.gfa	claims7 audit7	a record for H's departure inside one piece
-ref-lengths	walks-two-refs.gfa	claims7 audit7	tile 10's ref lengths 6,6 made 5,7
-reference-wrong	walks-two-refs.gfa	claims7	#reference CHM13 over GRCh38's rows
+ref-lengths	walks-two-refs.gfa	claims7 audit7 rebuild	tile 10's ref lengths 6,6 made 5,7
+ref-strand-flipped	walks-two-refs.gfa	rebuild	tile 20's ref step >5 made <5, and every walk row's start there with it
+reference-wrong	walks-two-refs.gfa	claims7 rebuild	#reference CHM13 over GRCh38's rows
 sqbad	walks-sequences.gfa	audit7	a base of a ref row's SQ:Z: changed
 table-S-wrong	walks-two-refs.gfa	verify7 claims7	the table stating 0 40 for 0 36
 table-named	walks-two-refs.gfa	claims7	the table named x

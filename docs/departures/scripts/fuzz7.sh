@@ -2,7 +2,8 @@
 # Builds fuzz7-gen.py's random graphs under nine option sets, with two
 # references, R and Q, and runs on each file the release checks
 # (verify7.py), the claims checks (claims7.py --own), the audit (audit7.py,
-# given the graph) and walks-truth.py's piece bp; prints every seed whose
+# given the graph) and walks-truth.py's rebuild of every line against the
+# GFA; prints every seed whose
 # build or checks fail, each by its exit status, and exits 1 if any does.
 # Keeps the failing seeds' graphs and outputs.
 # Usage: FUZZ_DIR=dir GFA_TO_TABIX=binary fuzz7.sh [from] [to]
@@ -31,7 +32,7 @@ for seed in $(seq "$from" "$to"); do
       claims=$(python3 -I "$HERE/claims7.py" "$f" --own 2>&1) || bad="$bad $r claims7: $(echo "$claims" | grep -E '^[1-9][0-9]*'$'\t''|Traceback|Error' | tr '\n' ' ');"
       audit=$(python3 -I "$HERE/audit7.py" "$f" --gfa "g$seed.gfa" --window 64 --point 16 2>&1) ||
         bad="$bad $r audit7: $(echo "$audit" | sed -n '/^audit7: /,$p' | tr '\n' ' ')$(echo "$audit" | grep -E 'Traceback|Error' | tr '\n' ' ');"
-      truth=$(python3 -I "$HERE/../../../scripts/walks-truth.py" pieces "$f" "g$seed.gfa" 2>&1) ||
+      truth=$(python3 -I "$HERE/../../../scripts/walks-truth.py" rebuild "$f" "g$seed.gfa" 2>&1) ||
         bad="$bad $r walks-truth: $(echo "$truth" | tr '\n' ' ');"
     done
     if [ -n "$bad" ]; then echo "seed $seed $tag:$bad"; failed=1; kept=1; else rm -f "$out".*; fi
