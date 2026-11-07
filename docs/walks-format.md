@@ -57,6 +57,11 @@ chr22.CHM13.walks.gz   chr22.CHM13.walks.gz.idx
 
 <!-- C6 C7 C8 -->
 
+Each option takes at most 2^40, which the tool refuses above: a pyramid
+block of 512 tiles past any position it reads stays below 2^64, and the
+header states every value exactly for a reader holding numbers as
+doubles. <!-- C153 -->
+
 `--tile` was `--chunk` in 3.x. The option sets the header's `tile:i:` and
 the size of the unit a reader fetches whole, so it takes the format's word
 for it.

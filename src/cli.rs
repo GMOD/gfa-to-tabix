@@ -93,7 +93,7 @@ pub struct Cli {
 
     /// Tile size on the reference (default 65536): each tile's rows are one
     /// unit, which a reader fetches whole
-    #[arg(long, value_name = "BP", value_parser = value_parser!(u64).range(1..), requires = "walks", help_heading = WALKS)]
+    #[arg(long, value_name = "BP", value_parser = value_parser!(u64).range(1..=WALK_OPTION_MAX), requires = "walks", help_heading = WALKS)]
     pub tile: Option<u64>,
 
     /// Add the bases of each reference and route row's nodes as SQ:Z:
@@ -104,19 +104,25 @@ pub struct Cli {
     /// returns to it with at most BP of reference nodes, all passed more than
     /// once, each moved to a pass in the tile within BP of where the path
     /// predicts it (default 311; 0 off)
-    #[arg(long, value_name = "BP", requires = "walks", help_heading = WALKS)]
+    #[arg(long, value_name = "BP", value_parser = value_parser!(u64).range(..=WALK_OPTION_MAX), requires = "walks", help_heading = WALKS)]
     pub stay: Option<u64>,
 
     /// Move a tile's costliest paths to its detail rows until the rest cost
     /// at most N interior steps, a step along the reference counting as a
     /// quarter of one (default 1000000; 0 off)
-    #[arg(long, value_name = "N", requires = "walks", help_heading = WALKS)]
+    #[arg(long, value_name = "N", value_parser = value_parser!(u64).range(..=WALK_OPTION_MAX), requires = "walks", help_heading = WALKS)]
     pub abridge_steps: Option<u64>,
 
     /// ...and at most BYTES compressed (default 3000000; 0 off)
-    #[arg(long, value_name = "BYTES", requires = "walks", help_heading = WALKS)]
+    #[arg(long, value_name = "BYTES", value_parser = value_parser!(u64).range(..=WALK_OPTION_MAX), requires = "walks", help_heading = WALKS)]
     pub abridge_bytes: Option<u64>,
 }
+
+// The most any --walks option takes, 2^40: a pyramid block of 512 tiles
+// past any position the tool reads, below 10^19, stays below 2^64; four
+// times the step budget does too; and the header states every value exactly
+// for a reader holding numbers as doubles, below 2^53
+pub const WALK_OPTION_MAX: u64 = 1 << 40;
 
 const BUILD_ABOUT: &str =
     "Write everything a JBrowse graph track reads, from one read of the graph (gz

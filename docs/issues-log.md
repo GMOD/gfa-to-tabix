@@ -1602,3 +1602,21 @@ Where the findings have come from so far, and the rule each gives:
   reserves. Fix: `named` refuses a path name holding a NUL byte, W or P,
   as it refuses one starting with `#`; C95 says so. Guard: the test
   `a_nul_byte_in_a_path_name_is_refused`, which fails on the old writer
+- **2026-11-06, the nine-reviewer bug hunt (option values that wrap).**
+  `--tile` of 2^55 or more made `cover`'s 512-tile block `512 × tile`
+  wrap to 0, so it never advanced and filled memory, with the same wrap at
+  `start + tile` in `rehome`; `--abridge-steps` of 2^62 or more wrapped to
+  0 when counted in quarter steps, so every path was over budget and
+  abridged (units.md). The header also states `tile`, `stay`, `abridge`
+  and `abridgebytes` as typed, which a reader holding numbers as doubles
+  rounds above 2^53. The cold review's other suspect, the u32 global
+  tile index under tiny tiles, is already refused: `Chunks::new` fails a
+  build of 2^32 tiles or more ("use a larger --tile"). Source: options
+  taken as any u64 into u64 arithmetic. Fix: one bound for every walk
+  option, at most 2^40 (`WALK_OPTION_MAX`), refused by the CLI: a block
+  of 512 tiles past any position the tool reads, below 10^19, stays below
+  2^64, four times the step budget does too, and every header value is
+  exact as a double (C153). Guard: the test
+  `each_walks_option_takes_at_most_2_to_the_40`, which runs each option
+  just over the bound in a 512 MB address space and expects the CLI's
+  refusal; on the old writer `--tile` 2^55 died there on memory

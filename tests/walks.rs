@@ -1987,6 +1987,44 @@ fn the_defaults_are_65536_311_1000000_and_3000000() {
     );
 }
 
+// Each --walks option takes at most 2^40. A tile of 2^55 bp made the
+// pyramid's 512-tile block wrap to 0 bp, so the cover never advanced and
+// filled memory; a step budget of 2^62 wrapped to 0 when counted in
+// quarter steps, so every path was over it and abridged. Run in a 512 MB
+// address space, so the old loop dies instead of filling the machine
+#[test]
+fn each_walks_option_takes_at_most_2_to_the_40() {
+    for (option, over) in [
+        ("--tile", "36028797018963968"),
+        ("--abridge-steps", "4611686018427387904"),
+        ("--stay", "1099511627777"),
+        ("--abridge-bytes", "1099511627777"),
+    ] {
+        let dir = std::env::temp_dir().join(format!("walks-bound-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("ulimit -v 524288 && exec \"$0\" \"$@\"")
+            .arg(env!("CARGO_BIN_EXE_gfa-to-tabix"))
+            .arg(fixture("walks-records.gfa"))
+            .args(["--walks", "--refs", "R", option, over, "-o"])
+            .arg(dir.join("out"))
+            .output()
+            .unwrap();
+        fs::remove_dir_all(&dir).unwrap();
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(output.status.code(), Some(2), "{option}: {stderr}");
+        assert!(stderr.contains("1099511627776"), "{option}: {stderr}");
+    }
+    for option in ["--tile", "--stay", "--abridge-steps", "--abridge-bytes"] {
+        let built = build(
+            "walks-records.gfa",
+            &["--refs", "R", option, "1099511627776"],
+        );
+        assert!(built.output.status.success(), "{option}");
+    }
+}
+
 // R walks 1 2 3 2 4 on chr, 10 bp nodes, passing 2 at 10 and 30, and 8 5 8
 // on chrU, passing 8 at 0 and 20. H's 10 bp of its own after 1 predict 2 at
 // 20, as near the pass at 10 as the one at 30: the lower offset wins, so H's
