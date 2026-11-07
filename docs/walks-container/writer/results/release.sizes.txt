@@ -1,0 +1,4 @@
+-rw-rw-r-- 1 cdiesh cdiesh  58494956 Nov  7 10:15 release.mc22.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       159 Nov  7 10:15 release.mc22.GRCh38.walks.gz.idx
+-rw-rw-r-- 1 cdiesh cdiesh 187082886 Nov  7 10:17 release.pggbY.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       210 Nov  7 10:17 release.pggbY.GRCh38.walks.gz.idx

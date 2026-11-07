@@ -1,0 +1,5 @@
+[  10.1 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[  37.3 s, 0.8 GiB peak] 1131 paths, 630140053 steps
+GRCh38: 253629 pieces, 24648 departure records in 54050 rows, 36 paths visit no GRCh38 node and are left out
+[  42.3 s, 1.0 GiB peak] 1958554 lines in 3837 units -> release.mc22.GRCh38.walks.gz (+ .idx): 786690 routes, 250281 walk rows, 0 copies named; 2468 paths abridged to 2572 detail walk rows
+mc22: 42.32 s, 1078720 KB peak

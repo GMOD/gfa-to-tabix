@@ -1,0 +1,69 @@
+# header
+format:7	tile:65536	revisited:107467	stay:311	abridge:1000000	abridgebytes:3000000
+# rows by kind
+112800	abridged rows
+1558946	departure lines
+684	detail nodes rows
+858584	detail route rows
+112800	detail walk rows
+364	nodes rows
+399	ref rows
+130001	route rows
+358298	walk rows
+# text bytes by kind
+1221293698	route (75.73%)
+171526131	departure (10.64%)
+123021276	nodes (7.63%)
+76935719	walk (4.77%)
+12337572	abridged (0.77%)
+7502487	ref (0.47%)
+187082886	file bytes; 210 directory bytes
+0	#hole lines
+0	tile and detail units sharing a name with another of their sequence (must be 0)
+# departures recomputed from the decoded rows, against the records
+0	records with no recomputed departure (must be 0)
+8127859	within a record: computed by the reader, no record
+425040	within a record: match
+0	departures inside a piece reaching past its tile's extent (must be 0)
+# pass counts and abridged rows
+0	nodes whose ref rows state two pass counts (must be 0)
+0	nodes with a ref row stating fewer passes than the file's ref rows hold (must be 0)
+0	nodes with a ref row stating more passes than the file's ref rows hold (must be 0)
+107467	nodes stated as passed more than once; the header says 107467
+0	abridged rows unlike the stretch on R and the steps of the piece their detail record holds (must be 0)
+0	abridged rows whose piece is not in the detail record they name (must be 0)
+0	abridged rows whose start or end is not their piece's first or last step on R, by position in R and strand (must be 0)
+0	detail pieces with no abridged row (must be 0)
+0	paths on a sequence whose bases from their first step on it to their last are not each in one piece's stretch on R or one record's own bp (must be 0)
+# the reader promise: record stretch bases off the path's pieces under no block of the record
+0	bases uncovered, over 0 records (must be 0)
+0	records whose breakpoints lie outside their line's extent (must be 0)
+# GRCh38#0#chrY: 821 tile and departure units, 420163 departure records
+64 kb windows: 874
+  departure records kept: median 114 p95 18034 max 104479
+  tiles read: median 1 p95 2 max 2
+  requests: median 2 p95 4 max 4
+  bytes read: median 2027 p95 287335 max 1900784
+  departure block bytes read: median 1929 p95 168084 max 821848
+  costliest window GRCh38#0#chrY:20185088-20250624: 1900784 bytes in 4 requests, 2 tiles, 624718 departure block bytes, 63965 departure records
+1 bp windows: 55887
+  departure records kept: median 114 p95 16792 max 104378
+  tiles read: median 1 p95 1 max 1
+  requests: median 2 p95 3 max 4
+  bytes read: median 2027 p95 233472 max 1841365
+  departure block bytes read: median 1929 p95 168084 max 821848
+# GRCh38#0#chrY_KI270740v1_random: 2 tile and departure units, 4877 departure records
+64 kb windows: 1
+  departure records kept: median 4877 p95 4877 max 4877
+  tiles read: median 1 p95 1 max 1
+  requests: median 1 p95 1 max 1
+  bytes read: median 182393 p95 182393 max 182393
+  departure block bytes read: median 51989 p95 51989 max 51989
+  costliest window GRCh38#0#chrY_KI270740v1_random:0-65536: 182393 bytes in 1 requests, 1 tiles, 51989 departure block bytes, 4877 departure records
+1 bp windows: 64
+  departure records kept: median 8 p95 1935 max 2364
+  tiles read: median 1 p95 1 max 1
+  requests: median 1 p95 1 max 1
+  bytes read: median 182393 p95 182393 max 182393
+  departure block bytes read: median 51989 p95 51989 max 51989
+audit7: 0 failed checks

@@ -48,28 +48,24 @@ the fundamentals, not the edge cases. A walk file is sound when:
   bytes with the previous build, and runs verify7, claims7, audit7 and the
   rebuild in shards
 
-## Not done: the real-data release check
+## The real-data release check: done, PASSED
 
-ada answered ping but refused port 22 all day (first "Too many
-authentication failures", then "Connection refused"), so nothing ran on
-MC chr22 or pggb chrY. Run first when it is back:
+ada came back in the afternoon and
+`docs/walks-container/writer/scripts/release-check.sh` ran there on MC
+chr22 and pggb chrY (results and numbers in
+[writer/README.md](../walks-container/writer/README.md#the-release-check-of-2026-11-07),
+files under `writer/results/release.*`). MC chr22 is byte-identical to
+the 11-06 build; both files pass verify7, rebuild every line step for
+step from the file against the GFA in 24 shards, and pass audit7 with
+the GFA. claims7 --own did not run: see the issues log for its memory and
+time on a chromosome, and the script's `CLAIMS7=1`.
 
-```bash
-git bundle create /tmp/writer.bundle main
-ssh ada mkdir -p ~/work/release && scp /tmp/writer.bundle ada:~/work/release/
-ssh ada 'cd ~/work/release && SHARDS=24 nohup bash -c "git clone -q writer.bundle src && bash src/docs/walks-container/writer/scripts/release-check.sh ~/work/release ~/work/arb-format-opus/in ~/work/impl-writer" > release.log 2>&1 &'
-```
-
-`release.done` says PASSED or FAILED; `release.<graph>.<check>.txt`
-summarise each check and `release.<graph>.cmp.txt` says whether the data
-file is byte-identical to the 2026-11-05 build in `~/work/impl-writer`
-(it should be: the writer changes since leave real graphs' bytes
-unchanged, and MC chr22 was shown identical on 11-06 after the dense
-numbering). Commit the `release.*.txt` files under
-`docs/walks-container/writer/results/`.
-
-Beware on ada: cap every python with the script's `systemd-run` scopes;
-don't `pkill -f` a pattern that appears in your own ssh command line.
+To rerun: bundle main, copy it to `ada:~/work/release/writer.bundle`,
+and run `bash ~/work/release/launch.sh` there (it clones the bundle's
+main and starts the script detached; `kill.sh` beside it stops a run).
+`release.done` says PASSED or FAILED. Beware on ada: cap every python
+with the script's `systemd-run` scopes; don't `pkill -f` a pattern that
+appears in your own ssh command line.
 
 ## Side quests, not for this session
 

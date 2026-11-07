@@ -1883,3 +1883,16 @@ Where the findings have come from so far, and the rule each gives:
   graphs under three, built at 1, 2 and 16 threads, are byte-identical.
   Guard: none in CI; `docs/handoff/2026-11-07-fundamentals.md` records
   the run
+- **2026-11-07, the release check on ada (claims7 on a chromosome).**
+  `claims7.py --own` had never completed on a real graph: no result for it
+  exists under writer/results, only fixtures and fuzz. On MC chr22 with 24
+  shards, each shard holds every tile of the file and 18 to 26 GB, six of
+  eight died under a 20 GB cap in nine minutes, and under 28 GB none of
+  four finished in an hour, since the O2 and L1 checks rescan a path's
+  steps for each own step. Source: the first release-check run. Fix: none
+  to the checker yet; `release-check.sh` runs claims7 only with
+  `CLAIMS7=1`, and audit7, which checks `ownTiles` and own bp by its own
+  route, ran unsharded under 60 GB on MC chr22 with the GFA and passed.
+  Guard: none; a claims7 that streams and indexes a path's steps once is
+  owed before its O and L claims count as checked on real data
+

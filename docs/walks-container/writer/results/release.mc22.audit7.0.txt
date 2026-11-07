@@ -1,0 +1,56 @@
+# header
+format:7	tile:65536	revisited:0	stay:311	abridge:1000000	abridgebytes:3000000
+# rows by kind
+2572	abridged rows
+54050	departure lines
+2468	detail nodes rows
+858580	detail route rows
+2572	detail walk rows
+565	nodes rows
+776	ref rows
+786690	route rows
+250281	walk rows
+# text bytes by kind
+180616760	route (42.13%)
+141870742	nodes (33.09%)
+93191476	walk (21.74%)
+6374014	ref (1.49%)
+6312736	departure (1.47%)
+316418	abridged (0.07%)
+58494956	file bytes; 159 directory bytes
+0	#hole lines
+0	tile and detail units sharing a name with another of their sequence (must be 0)
+# departures recomputed from the decoded rows, against the records
+558	across a record gap: match
+0	records with no recomputed departure (must be 0)
+25969042	within a record: computed by the reader, no record
+24090	within a record: match
+0	departures inside a piece reaching past its tile's extent (must be 0)
+# pass counts and abridged rows
+0	nodes whose ref rows state two pass counts (must be 0)
+0	nodes with a ref row stating fewer passes than the file's ref rows hold (must be 0)
+0	nodes with a ref row stating more passes than the file's ref rows hold (must be 0)
+0	nodes stated as passed more than once; the header says 0
+0	abridged rows unlike the stretch on R and the steps of the piece their detail record holds (must be 0)
+0	abridged rows whose piece is not in the detail record they name (must be 0)
+0	abridged rows whose start or end is not their piece's first or last step on R, by position in R and strand (must be 0)
+0	detail pieces with no abridged row (must be 0)
+0	paths on a sequence whose bases from their first step on it to their last are not each in one piece's stretch on R or one record's own bp (must be 0)
+# the reader promise: record stretch bases off the path's pieces under no block of the record
+0	bases uncovered, over 0 records (must be 0)
+0	records whose breakpoints lie outside their line's extent (must be 0)
+# GRCh38#0#chr22: 1369 tile and departure units, 24648 departure records
+64 kb windows: 776
+  departure records kept: median 11 p95 384 max 893
+  tiles read: median 2 p95 2 max 2
+  requests: median 2 p95 3 max 3
+  bytes read: median 51936 p95 102150 max 348345
+  departure block bytes read: median 404 p95 5986 max 14862
+  costliest window GRCh38#0#chr22:11993088-12058624: 348345 bytes in 3 requests, 2 tiles, 12889 departure block bytes, 732 departure records
+1 bp windows: 49664
+  departure records kept: median 0 p95 286 max 675
+  tiles read: median 1 p95 1 max 1
+  requests: median 1 p95 2 max 3
+  bytes read: median 26118 p95 53663 max 304790
+  departure block bytes read: median 404 p95 5986 max 14862
+audit7: 0 failed checks

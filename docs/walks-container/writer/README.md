@@ -104,3 +104,28 @@ Departure records gained `ownTiles` after the results above, which are at
 - `scripts/local-compare.sh`, `both.sh`, `summarize.py`: the test GFA and
   fuzz comparison, run locally with gfa-to-tabix 3.0.0 and graph-walks
   5.0.2's `src/`, which the converter imports
+
+## The release check of 2026-11-07
+
+[`scripts/release-check.sh`](scripts/release-check.sh) ran on ada at
+1e698f4, whose writer is b4f835b's (every commit since is scripts and
+docs), on MC chr22 and pggb chrY, with the checkers repaired on 11-06 and
+the step-for-step rebuild added on 11-07 (`results/release.*`,
+`release.done` says PASSED):
+
+- **MC chr22:** 44 s, 1.05 GiB peak; byte-identical to the 11-06 build
+  (`release.mc22.cmp.txt`); verify7 passes, 3,837 units, 1,958,554 lines;
+  `walks-truth.py rebuild` over 24 shards gives back all 1,095 lines with
+  rows, the writer's 1,131 paths less the 36 it leaves out, step for step,
+  0 wrong (`release.mc22.rebuild.txt`); audit7 with the GFA, unsharded
+  under 60 GB, 0 failed checks (`release.mc22.audit7.txt`, the whole
+  output in `release.mc22.audit7.0.txt`)
+- **pggb chrY:** 97 s, 6.6 GiB peak; differs from the 11-05 build as
+  expected, with 15 more detail units from the abridge-bytes fix: 1,507
+  units, 3,132,876 lines, verify7 passes; the rebuild gives back every
+  line in 24 shards, 0 wrong; audit7 with the GFA, 0 failed checks
+- **Not run: claims7 --own.** Each shard holds every tile and 18 to 26
+  GB, and its own-step checks rescan a path's steps per own step, so no
+  shard of MC chr22 finished in an hour; the script runs it only with
+  `CLAIMS7=1` ([issues log](../../issues-log.md))
+

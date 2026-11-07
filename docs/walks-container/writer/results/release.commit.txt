@@ -1,0 +1,1 @@
+1e698f4 release-check.sh runs claims7 only with CLAIMS7=1: its own-step checks rescan a path's steps per own step, so no shard of MC chr22 finished in an hour

@@ -1,0 +1,26 @@
+# rebuild on release.pggbY.GRCh38.walks.gz, 24 shards, 0 failed; a shard's exit status, then its last line
+shard 0: exit 0: release.pggbY.GRCh38.walks.gz: shard 0/24: 27 lines with rows, 27 on the reference in the GFA, 0 wrong
+shard 1: exit 0: release.pggbY.GRCh38.walks.gz: shard 1/24: 22 lines with rows, 22 on the reference in the GFA, 0 wrong
+shard 2: exit 0: release.pggbY.GRCh38.walks.gz: shard 2/24: 19 lines with rows, 19 on the reference in the GFA, 0 wrong
+shard 3: exit 0: release.pggbY.GRCh38.walks.gz: shard 3/24: 26 lines with rows, 26 on the reference in the GFA, 0 wrong
+shard 4: exit 0: release.pggbY.GRCh38.walks.gz: shard 4/24: 24 lines with rows, 24 on the reference in the GFA, 0 wrong
+shard 5: exit 0: release.pggbY.GRCh38.walks.gz: shard 5/24: 26 lines with rows, 26 on the reference in the GFA, 0 wrong
+shard 6: exit 0: release.pggbY.GRCh38.walks.gz: shard 6/24: 25 lines with rows, 25 on the reference in the GFA, 0 wrong
+shard 7: exit 0: release.pggbY.GRCh38.walks.gz: shard 7/24: 22 lines with rows, 22 on the reference in the GFA, 0 wrong
+shard 8: exit 0: release.pggbY.GRCh38.walks.gz: shard 8/24: 17 lines with rows, 17 on the reference in the GFA, 0 wrong
+shard 9: exit 0: release.pggbY.GRCh38.walks.gz: shard 9/24: 17 lines with rows, 17 on the reference in the GFA, 0 wrong
+shard 10: exit 0: release.pggbY.GRCh38.walks.gz: shard 10/24: 18 lines with rows, 18 on the reference in the GFA, 0 wrong
+shard 11: exit 0: release.pggbY.GRCh38.walks.gz: shard 11/24: 16 lines with rows, 16 on the reference in the GFA, 0 wrong
+shard 12: exit 0: release.pggbY.GRCh38.walks.gz: shard 12/24: 15 lines with rows, 15 on the reference in the GFA, 0 wrong
+shard 13: exit 0: release.pggbY.GRCh38.walks.gz: shard 13/24: 22 lines with rows, 22 on the reference in the GFA, 0 wrong
+shard 14: exit 0: release.pggbY.GRCh38.walks.gz: shard 14/24: 25 lines with rows, 25 on the reference in the GFA, 0 wrong
+shard 15: exit 0: release.pggbY.GRCh38.walks.gz: shard 15/24: 26 lines with rows, 26 on the reference in the GFA, 0 wrong
+shard 16: exit 0: release.pggbY.GRCh38.walks.gz: shard 16/24: 17 lines with rows, 17 on the reference in the GFA, 0 wrong
+shard 17: exit 0: release.pggbY.GRCh38.walks.gz: shard 17/24: 26 lines with rows, 26 on the reference in the GFA, 0 wrong
+shard 18: exit 0: release.pggbY.GRCh38.walks.gz: shard 18/24: 22 lines with rows, 22 on the reference in the GFA, 0 wrong
+shard 19: exit 0: release.pggbY.GRCh38.walks.gz: shard 19/24: 21 lines with rows, 21 on the reference in the GFA, 0 wrong
+shard 20: exit 0: release.pggbY.GRCh38.walks.gz: shard 20/24: 21 lines with rows, 21 on the reference in the GFA, 0 wrong
+shard 21: exit 0: release.pggbY.GRCh38.walks.gz: shard 21/24: 30 lines with rows, 30 on the reference in the GFA, 0 wrong
+shard 22: exit 0: release.pggbY.GRCh38.walks.gz: shard 22/24: 19 lines with rows, 19 on the reference in the GFA, 0 wrong
+shard 23: exit 0: release.pggbY.GRCh38.walks.gz: shard 23/24: 23 lines with rows, 23 on the reference in the GFA, 0 wrong
+# lines of any shard that aren't a 0 count, a comment or a summary:
