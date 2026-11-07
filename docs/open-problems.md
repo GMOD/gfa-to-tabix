@@ -229,6 +229,37 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   browser; and how they would want sequence shown that matches several
   copies
 
+### Placing nothing there instead, measured and rejected on 2026-11-06
+
+The proposal to place a step only on a node its reference passes once,
+which would have been walk format 8
+([proposal](walks-container/reshape/proposal.md), with its data), was
+measured on pggb chrY and reviewed four ways
+([reviews](walks-container/reshape/reviews/)). It leaves MC rows
+byte-identical, and on pggb it does not make the picture true:
+- **The records spanning a repeat are still hops between copies.** The
+  nodes a collapsed repeat's copies pass once are copy-specific variants,
+  so at chrY:23.6 Mb 2,693 of 2,760 records join ends over 1 Mb apart.
+  HG002#1 alone has 561 such records between 21.9 and 26.3 Mb, and a
+  reader draws them as alternating 3.5 Mb losses and duplications. Format 7
+  draws the same hops, plus rows the rule placed
+- **Attach fetches double.** A 1 kb window costs a median 1,070 KB
+  against format 7's 589 KB
+- **Other costs:** the pass count is per reference sample, so a diploid
+  reference or a node on two chromosomes loses its steps. Five chrY
+  contigs disappear without a tally, and graph-walks re-places the
+  unplaced steps at whichever copy's tile it read
+
+Two fixes would make the picture true, and both add to format 7 rather
+than replace it. Take one up only when someone asks for pggb walk tracks:
+- **A table of collapsed runs per reference sequence, plus each record's
+  own bp on reference nodes.** A viewer can then fold a hop between copies
+  of one family into "present, copy unresolved" and draw the reference's
+  copy structure ([biologist review](walks-container/reshape/reviews/biologist.md))
+- **Placement from an alignment of each haplotype to the reference,**
+  which agrees with MC 86.5–99.4% of the time. It needs the pass fields
+  format 7 keeps
+
 ## Collapsed repeats in pggb graphs
 
 - `place.rs` gives a node the reference passes several times one coordinate,

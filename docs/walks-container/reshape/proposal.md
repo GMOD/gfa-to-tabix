@@ -1,13 +1,16 @@
 # Proposal: a step is placed only where its reference passes the node once
 
-- **Status:** proposed, not accepted. It was written as ADR 0011 on
-  2026-11-06 and withdrawn the same night, because the session that wrote
-  the proposal also briefed its measurement and its two deciders, and
-  then accepted it minutes after they reported
-  (see docs/issues-log.md, 2026-11-06). It stays a proposal
-  until the owner has read the evidence and the four format 8 reviews.
-  It would be walk format 8, amending
-  [ADR 0010](../../adr/0010-walks-unit-table.md)
+- **Status:** rejected, 2026-11-06. It was written as ADR 0011, withdrawn
+  the same night, and then rejected after four reviews
+  ([reviews](reviews/)):
+  - It leaves MC rows byte-identical.
+  - On pggb it doesn't make collapsed repeats true: the spanning records
+    are still hops between copies.
+  - It doubles the attach fetches.
+  - It would need at least six amendments to freeze.
+
+  Format 7 is frozen instead ([ADR 0011](../../adr/0011-format-7-is-frozen.md)).
+  This page and its data are kept as the measurement
 - **Decides:**
   - where a haplotype's steps are placed on a reference that passes some
     nodes more than once
