@@ -16,7 +16,7 @@ set -uo pipefail
 W=$1 IN=$2 PREV=${3:-}
 SHARDS=${SHARDS:-24}
 cd "$W"
-if [ -f writer.bundle ]; then rm -rf src && git clone -q writer.bundle src; fi
+if [ -f writer.bundle ]; then rm -rf src && git clone -q -b main writer.bundle src; fi
 git -C src log --oneline -1 > release.commit.txt
 (cd src && cargo build --release -q) > release.build-binary.log 2>&1 || { echo FAILED > release.done; exit 1; }
 B=$W/src/target/release/gfa-to-tabix
