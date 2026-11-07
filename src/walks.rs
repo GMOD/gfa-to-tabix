@@ -19,6 +19,7 @@ use std::time::Instant;
 use crate::departures::{self, Departure, End, Holes, Own};
 use crate::gfa::{blunt_error, is_blunt, parse_u64, split_path_name, text};
 use crate::intern::{FastMap, Interner};
+use crate::node_ids::{NO_SEGMENT, NodeIds, ZERO_BP, permute};
 use crate::routes::{self, PieceRef, Span, Stretch};
 use crate::sorter::{Merged, Sorter};
 use crate::units::UnitFile;
@@ -136,7 +137,20 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
     }
 }
 
-fn parse_steps(path: &PathLine, handles: &mut Vec<u32>) -> Result<(), String> {
+fn no_segment(path: &PathLine, id: u32) -> String {
+    format!(
+        "path {} visits segment {id}, which has no S line",
+        text(&path.name)
+    )
+}
+
+// The line's steps as handles, 2 * index + reverse, a step on a segment of
+// 0 bp left out; returns the first id with no S line, where one has none
+fn parse_steps(
+    path: &PathLine,
+    nodes: &NodeIds,
+    handles: &mut Vec<u32>,
+) -> Result<Option<u32>, String> {
     handles.clear();
     let steps = path.steps;
     let bad = |step: &[u8]| {
@@ -145,6 +159,14 @@ fn parse_steps(path: &PathLine, handles: &mut Vec<u32>) -> Result<(), String> {
             text(&path.name),
             text(step)
         )
+    };
+    let mut take = |id: u32, reverse: u32| match nodes.index(id) {
+        NO_SEGMENT => Some(id),
+        ZERO_BP => None,
+        index => {
+            handles.push(2 * index + reverse);
+            None
+        }
     };
     if path.walk {
         let mut at = 0;
@@ -158,7 +180,9 @@ fn parse_steps(path: &PathLine, handles: &mut Vec<u32>) -> Result<(), String> {
                 .iter()
                 .position(|&b| b == b'>' || b == b'<')
                 .map_or(steps.len(), |p| at + 1 + p);
-            handles.push(2 * node_id(&steps[at + 1..end])? + reverse);
+            if let Some(id) = take(node_id(&steps[at + 1..end])?, reverse) {
+                return Ok(Some(id));
+            }
             at = end;
         }
     } else {
@@ -169,35 +193,27 @@ fn parse_steps(path: &PathLine, handles: &mut Vec<u32>) -> Result<(), String> {
                 _ if step.is_empty() => continue,
                 _ => return Err(bad(step)),
             };
-            handles.push(2 * node_id(&step[..step.len() - 1])? + reverse);
+            if let Some(id) = take(node_id(&step[..step.len() - 1])?, reverse) {
+                return Ok(Some(id));
+            }
         }
     }
-    Ok(())
+    Ok(None)
 }
 
+// By node index: its length and, with --sequences, where its bases start in
+// `bases`
 struct Graph {
-    // NONE: no S line
+    nodes: NodeIds,
     lengths: Vec<u32>,
-    // with --sequences: where each node's sequence starts in `bases`
     sequence_at: Vec<u64>,
     bases: Vec<u8>,
 }
 
 impl Graph {
-    fn length(&self, path: &PathLine, handle: u32) -> Result<u64, String> {
-        let id = (handle >> 1) as usize;
-        match self.lengths.get(id) {
-            Some(&length) if length != NONE => Ok(u64::from(length)),
-            _ => Err(format!(
-                "path {} visits segment {id}, which has no S line",
-                text(&path.name)
-            )),
-        }
-    }
-
     fn sequence(&self, id: usize) -> Option<&[u8]> {
-        let at = *self.sequence_at.get(id)?;
-        (at != u64::MAX).then(|| &self.bases[at as usize..at as usize + self.lengths[id] as usize])
+        let at = *self.sequence_at.get(id)? as usize;
+        Some(&self.bases[at..at + self.lengths[id] as usize])
     }
 }
 
@@ -429,6 +445,14 @@ impl Stable {
         }
     }
 
+    // Moves each node's entry from its index to `new[index]`, for `n` nodes
+    fn renumber(&mut self, new: &[u32], n: usize) {
+        self.name.resize(n, NONE);
+        self.offset.resize(n, 0);
+        self.name = permute(&self.name, new);
+        self.offset = permute(&self.offset, new);
+    }
+
     // Returns where the path ends.
     fn visit(
         &mut self,
@@ -485,25 +509,29 @@ fn record(path: &PathLine, name: u32, end: u64) -> Result<Record, String> {
 // Pass 1: node lengths (and sequences), every reference sample's paths,
 // which give each node they visit a reference coordinate, every path's claim
 // on the nodes off the references, and the record of every path with steps,
-// in file order. A step on a segment of 0 bp leaves its path, and a path
-// left with no steps is checked and then skipped: it names no sequence and
-// has no record.
+// in file order. Segments are numbered densely in id order, and one of 0 bp
+// is no node: its steps leave every path. A path left with no steps is
+// checked and then skipped: it names no sequence and has no record.
 fn first_pass(
     gfa: &str,
     options: &Options,
     names: &mut Interner,
 ) -> Result<(Graph, Vec<Reference>, Vec<Record>), String> {
+    let mut nodes = NodeIds::default();
     let mut lengths: Vec<u32> = Vec::new();
     let mut sequence_at: Vec<u64> = Vec::new();
     let mut bases = Vec::new();
     let mut ref_walks: Vec<RefWalk> = Vec::new();
     let mut handles = Vec::new();
     let mut ids = Vec::new();
+    // in the order their lines appear, and by sample whether a line has steps
     let mut samples = Interner::default();
+    let mut stepped: Vec<bool> = Vec::new();
     let mut stable = Stable::default();
     let mut records: Vec<Record> = Vec::new();
+    let reference_of = |sample: &[u8]| options.refs.iter().position(|r| r.as_bytes() == sample);
     // paths that reach a node before its S line, by line number and record,
-    // visited once lengths are known
+    // visited once every segment is numbered
     let mut deferred: Vec<(u64, usize)> = Vec::new();
     read_lines(gfa, |number, line| {
         match line.first() {
@@ -512,7 +540,7 @@ fn first_pass(
                 let (Some(id), Some(sequence)) = (cols.next(), cols.next()) else {
                     return Err("S line with too few fields".into());
                 };
-                let id = node_id(id)? as usize;
+                let id = node_id(id)?;
                 let length = if sequence == b"*" {
                     cols.find_map(|tag| tag.strip_prefix(b"LN:i:"))
                         .map(|ln| parse_u64(ln, "LN tag"))
@@ -526,24 +554,23 @@ fn first_pass(
                 } else {
                     sequence.len() as u64
                 };
-                if length >= u64::from(NONE) {
-                    return Err(format!("segment {id} is longer than 2^32 bp"));
+                if length > u64::from(u32::MAX) {
+                    return Err(format!("segment {id} is longer than 2^32 − 1 bp"));
                 }
-                if id >= lengths.len() {
-                    lengths.resize(id + 1, NONE);
+                if !nodes.add(id, length == 0) {
+                    return Err(format!("segment {id} has two S lines"));
                 }
-                lengths[id] = length as u32;
-                if options.sequences {
-                    if sequence == b"*" {
-                        return Err(format!(
-                            "segment {id} has no bases, so --sequences can't write them"
-                        ));
+                if length > 0 {
+                    lengths.push(length as u32);
+                    if options.sequences {
+                        if sequence == b"*" {
+                            return Err(format!(
+                                "segment {id} has no bases, so --sequences can't write them"
+                            ));
+                        }
+                        sequence_at.push(bases.len() as u64);
+                        bases.extend_from_slice(sequence);
                     }
-                    if id >= sequence_at.len() {
-                        sequence_at.resize(id + 1, u64::MAX);
-                    }
-                    sequence_at[id] = bases.len() as u64;
-                    bases.extend_from_slice(sequence);
                 }
             }
             Some(b'L') if line.get(1) == Some(&b'\t') => {
@@ -564,41 +591,33 @@ fn first_pass(
                 let Some(path) = path_line(line)? else {
                     return Ok(());
                 };
-                parse_steps(&path, &mut handles)?;
-                let known = handles
-                    .iter()
-                    .all(|&h| lengths.get((h >> 1) as usize).is_some_and(|&l| l != NONE));
-                if known {
-                    handles.retain(|&h| lengths[(h >> 1) as usize] > 0);
-                }
-                if handles.is_empty() {
+                let unknown = parse_steps(&path, &nodes, &mut handles)?;
+                if unknown.is_none() && handles.is_empty() {
                     record(&path, NONE, path.start)?;
                 } else {
-                    samples.id(path.sample);
+                    let sample = samples.id(path.sample) as usize;
+                    stepped.resize(samples.len(), false);
                     let name = names.id(&path.name);
-                    ids.clear();
-                    ids.extend(handles.iter().map(|h| h >> 1));
-                    if known {
+                    if unknown.is_none() {
+                        stepped[sample] = true;
+                        ids.clear();
+                        ids.extend(handles.iter().map(|h| h >> 1));
                         let end = stable.visit(names, name, path.start, &ids, &lengths);
                         records.push(record(&path, name, end)?);
+                        if let Some(reference) = reference_of(path.sample) {
+                            ref_walks.push(RefWalk {
+                                reference,
+                                name,
+                                start: path.start,
+                                handles: handles.clone(),
+                            });
+                        }
                     } else {
                         deferred.push((number, records.len()));
                         records.push(Record {
                             name,
                             start: path.start,
                             end: path.start,
-                        });
-                    }
-                    if let Some(reference) = options
-                        .refs
-                        .iter()
-                        .position(|r| r.as_bytes() == path.sample)
-                    {
-                        ref_walks.push(RefWalk {
-                            reference,
-                            name,
-                            start: path.start,
-                            handles: handles.clone(),
                         });
                     }
                 }
@@ -608,7 +627,18 @@ fn first_pass(
         Ok(())
     })?;
     if lengths.is_empty() {
-        return Err(format!("{gfa}: no S lines"));
+        return Err(format!("{gfa}: no S lines of more than 0 bp"));
+    }
+    let new = nodes.sort();
+    lengths = permute(&lengths, &new);
+    if options.sequences {
+        sequence_at = permute(&sequence_at, &new);
+    }
+    stable.renumber(&new, lengths.len());
+    for walk in &mut ref_walks {
+        for h in &mut walk.handles {
+            *h = 2 * new[(*h >> 1) as usize] + (*h & 1);
+        }
     }
     if !deferred.is_empty() {
         let mut next = deferred.iter().peekable();
@@ -620,54 +650,45 @@ fn first_pass(
             let Some(path) = path_line(line)? else {
                 return Ok(());
             };
-            parse_steps(&path, &mut handles)?;
-            let name = names.id(&path.name);
-            ids.clear();
-            for &h in &handles {
-                let id = h >> 1;
-                if lengths.get(id as usize).is_none_or(|&l| l == NONE) {
-                    return Err(format!(
-                        "path {} visits segment {id}, which has no S line",
-                        text(&path.name)
-                    ));
-                }
-                if lengths[id as usize] > 0 {
-                    ids.push(id);
-                }
+            if let Some(id) = parse_steps(&path, &nodes, &mut handles)? {
+                return Err(no_segment(&path, id));
             }
-            records[at] = if ids.is_empty() {
+            records[at] = if handles.is_empty() {
                 record(&path, NONE, path.start)?
             } else {
+                let name = names.id(&path.name);
+                stepped[samples.get(path.sample).expect("named in the first read") as usize] = true;
+                ids.clear();
+                ids.extend(handles.iter().map(|h| h >> 1));
                 let end = stable.visit(names, name, path.start, &ids, &lengths);
+                if let Some(reference) = reference_of(path.sample) {
+                    ref_walks.push(RefWalk {
+                        reference,
+                        name,
+                        start: path.start,
+                        handles: handles.clone(),
+                    });
+                }
                 record(&path, name, end)?
             };
             Ok(())
         })?;
         records.retain(|r| r.name != NONE);
     }
-    for walk in &mut ref_walks {
-        if let Some(id) = walk
-            .handles
-            .iter()
-            .map(|h| h >> 1)
-            .find(|&id| lengths.get(id as usize).is_none_or(|&l| l == NONE))
-        {
-            return Err(format!(
-                "path {} visits segment {id}, which has no S line",
-                text(&names[walk.name as usize])
-            ));
-        }
-        walk.handles.retain(|&h| lengths[(h >> 1) as usize] > 0);
-    }
-    ref_walks.retain(|w| !w.handles.is_empty());
     let mut walks = vec![0u64; options.refs.len()];
     for walk in &ref_walks {
         walks[walk.reference] += 1;
     }
     for (reference, count) in walks.iter().enumerate() {
         if *count == 0 {
-            let shown: Vec<String> = samples.iter().take(20).map(|s| text(s)).collect();
-            let more = match samples.len().saturating_sub(20) {
+            let have: Vec<&Vec<u8>> = samples
+                .iter()
+                .zip(&stepped)
+                .filter(|&(_, &s)| s)
+                .map(|(s, _)| s)
+                .collect();
+            let shown: Vec<String> = have.iter().take(20).map(|s| text(s)).collect();
+            let more = match have.len().saturating_sub(20) {
                 0 => String::new(),
                 n => format!(" and {n} more"),
             };
@@ -679,7 +700,7 @@ fn first_pass(
         }
     }
 
-    let nodes = lengths.len();
+    let count = lengths.len();
     let mut references: Vec<Reference> = options
         .refs
         .iter()
@@ -687,10 +708,10 @@ fn first_pass(
         .map(|(sample, &walks)| Reference {
             sample: sample.as_bytes().to_vec(),
             walks,
-            placement: vec![NONE; nodes],
-            offset: vec![0; nodes],
-            reverse: Bits::with_len(nodes),
-            revisited: Bits::with_len(nodes),
+            placement: vec![NONE; count],
+            offset: vec![0; count],
+            reverse: Bits::with_len(count),
+            revisited: Bits::with_len(count),
             visits: Vec::new(),
             visits_of: FastMap::default(),
             path_ends: HashMap::new(),
@@ -750,6 +771,7 @@ fn first_pass(
     }
     Ok((
         Graph {
+            nodes,
             lengths,
             sequence_at,
             bases,
@@ -829,7 +851,10 @@ impl Chunks {
         let mut owner = vec![NONE; names.len()];
         let mut ends = vec![0; names.len()];
         let mut starts = Vec::new();
-        let count: u64 = sequences.iter().map(|&(_, _, _, end)| end.div_ceil(size)).sum();
+        let count: u64 = sequences
+            .iter()
+            .map(|&(_, _, _, end)| end.div_ceil(size))
+            .sum();
         if count >= u64::from(NONE) {
             return Err("more than 2^32 tiles; use a larger --tile".into());
         }
@@ -911,10 +936,11 @@ fn haplotype(name: &[u8]) -> &[u8] {
 impl Builder {
     fn path(&mut self, path: &PathLine) -> Result<(), String> {
         let mut handles = std::mem::take(&mut self.handles);
-        parse_steps(path, &mut handles)?;
-        let lengths = &self.graph.lengths;
-        handles.retain(|&h| lengths.get((h >> 1) as usize) != Some(&0));
-        let result = self.cut_path(path, &handles);
+        let result = match parse_steps(path, &self.graph.nodes, &mut handles) {
+            Ok(None) => self.cut_path(path, &handles),
+            Ok(Some(id)) => Err(no_segment(path, id)),
+            Err(e) => Err(e),
+        };
         self.handles = handles;
         result
     }
@@ -924,7 +950,7 @@ impl Builder {
         let mut offset = 0u64;
         for &h in handles {
             self.before.push(offset);
-            offset += self.graph.length(path, h)?;
+            offset += u64::from(self.graph.lengths[(h >> 1) as usize]);
         }
         self.before.push(offset);
         if handles.is_empty() {
@@ -1920,6 +1946,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             raw,
             routes::Nodes {
                 lengths: &graph.lengths,
+                ids: graph.nodes.ids(),
                 passes: &|id| reference.passes(id),
             },
             sequence,

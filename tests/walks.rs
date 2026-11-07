@@ -1998,6 +1998,54 @@ fn a_node_id_of_2_to_the_31_is_refused() {
     assert!(built.walks.is_empty());
 }
 
+// Memory follows the number of segments, not the largest id: a graph of
+// three segments, one of them 2147483647, builds in a 512 MB address space,
+// where arrays by id would need 66 GB. The ids come out as the GFA gives
+// them, in a walk file the same as for ids 1, 2 and 3 but for the tokens
+#[test]
+fn a_node_id_near_2_to_the_31_costs_no_more_memory_than_a_small_one() {
+    let dir = std::env::temp_dir().join(format!("walks-bigid-{}", std::process::id()));
+    fs::create_dir_all(&dir).unwrap();
+    let gfa = dir.join("bigid.gfa");
+    fs::write(
+        &gfa,
+        tsv(&[
+            "S 1 AAAA",
+            "S 2147483647 CC",
+            "S 3 GGG",
+            "W R 0 chr 0 9 >1<2147483647>3",
+            "W H 1 h 0 9 >1>2147483647>3",
+        ]),
+    )
+    .unwrap();
+    let output = Command::new("sh")
+        .arg("-c")
+        .arg("ulimit -v 524288 && exec \"$0\" \"$@\"")
+        .arg(env!("CARGO_BIN_EXE_gfa-to-tabix"))
+        .arg(&gfa)
+        .args(["--walks", "--refs", "R", "--tile", "4", "-o"])
+        .arg(dir.join("out"))
+        .output()
+        .unwrap();
+    let walks = fs::read(dir.join("out.R.walks.gz")).map(|data| gunzip(&data));
+    fs::remove_dir_all(&dir).unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let walks = walks.unwrap();
+    assert_eq!(
+        rows_of(&walks, "R#0#chr", "ref", "R#0#chr") + &rows_of(&walks, "R#0#chr", "walk", "H#1#h"),
+        tsv(&[
+            "R#0#chr 0 4 ref R#0#chr 0 0 0 1 2 4 .",
+            "R#0#chr 4 9 ref R#0#chr 0 4 1 2 4294967295,-4294967288 2,3 .",
+            "R#0#chr 0 4 walk H#1#h 0 0 0 1 2 .",
+            "R#0#chr 4 9 walk H#1#h 0 4 1 2 4294967294 1",
+        ])
+    );
+}
+
 // A `#` in a W line's sample or haplotype would split its PanSN name
 // differently from its columns
 #[test]

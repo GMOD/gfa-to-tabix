@@ -157,9 +157,8 @@ impl<'a> Piece<'a> {
                     previous += unzigzag(n - 1);
                     let j = path.index_at(h, previous as u64).ok_or_else(|| {
                         format!(
-                            "{}: a step on node {} placed at {previous} is not on the tile's reference path",
-                            String::from_utf8_lossy(name),
-                            h >> 1
+                            "{}: a step placed at {previous} is not on the tile's reference path",
+                            String::from_utf8_lossy(name)
                         )
                     })?;
                     targets.push(j as u32);
@@ -535,8 +534,11 @@ fn push_i64(out: &mut Vec<u8>, n: i64) {
 }
 
 // A handle, with `@k` naming its occurrence in R where it is not the default
-fn push_copy(out: &mut Vec<u8>, handle: u32, copy: Option<u32>) {
-    push_i64(out, i64::from(handle));
+fn push_copy(out: &mut Vec<u8>, ids: &[u32], handle: u32, copy: Option<u32>) {
+    push_i64(
+        out,
+        2 * i64::from(ids[(handle >> 1) as usize]) + i64::from(handle & 1),
+    );
     if let Some(k) = copy {
         out.push(b'@');
         push_i64(out, i64::from(k));
@@ -569,11 +571,18 @@ fn differences<'a>(
     })
 }
 
-// Each handle as twice the id change plus the reverse bit.
-fn delta_steps<'a>(handles: &'a [u32], previous: &'a mut i64) -> impl Iterator<Item = i64> + 'a {
-    differences(handles.iter().map(|&h| i64::from(h >> 1)), previous)
-        .zip(handles)
-        .map(|(d, &h)| 2 * d + i64::from(h & 1))
+// Each handle as twice the GFA id change plus the reverse bit.
+fn delta_steps<'a>(
+    handles: &'a [u32],
+    ids: &'a [u32],
+    previous: &'a mut i64,
+) -> impl Iterator<Item = i64> + 'a {
+    differences(
+        handles.iter().map(|&h| i64::from(ids[(h >> 1) as usize])),
+        previous,
+    )
+    .zip(handles)
+    .map(|(d, &h)| 2 * d + i64::from(h & 1))
 }
 
 // `copies` counts the walk rows' `@k` and `:k`
@@ -611,10 +620,12 @@ const STEPS_PER_INTERIOR: u64 = 4;
 // bgzip compresses a stream in blocks of this many bytes
 const BGZF_BLOCK: usize = 65280;
 
-// Each node's length in bp, and how many times the reference's paths pass it
+// By node index: its length in bp, its GFA id, and how many times the
+// reference's paths pass it. Handles hold indexes, which sort as ids do
 #[derive(Clone, Copy)]
 pub struct Nodes<'a> {
     pub lengths: &'a [u32],
+    pub ids: &'a [u32],
     pub passes: &'a dyn Fn(usize) -> u32,
 }
 
@@ -888,7 +899,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         members.sort_by_key(|&k| pieces[k].offset);
         let alone = encode_all(&path, &pieces, members)?;
         for (piece, walk, _) in &alone.walks {
-            let (span, row) = summary_row(&path, piece, walk, lengths, k)?;
+            let (span, row) = summary_row(&path, piece, walk, nodes, k)?;
             emit(Stretch::Piece(span), &row)?;
         }
         let mut record = Vec::new();
@@ -919,9 +930,10 @@ fn summary_row(
     path: &Path,
     piece: &Piece,
     walk: &Walk,
-    lengths: &[u32],
+    nodes: Nodes,
     k: usize,
 ) -> Result<(Span, Vec<u8>), String> {
+    let Nodes { lengths, ids, .. } = nodes;
     let on_r = |t: &u32| *t != NONE;
     let first = piece.targets.iter().position(on_r).expect("a step on R");
     let last = piece.targets.iter().rposition(on_r).expect("a step on R");
@@ -944,11 +956,11 @@ fn summary_row(
         line.extend_from_slice(n.to_string().as_bytes());
     }
     line.push(b'\t');
-    push_copy(&mut line, walk.start, walk.start_copy);
+    push_copy(&mut line, ids, walk.start, walk.start_copy);
     line.push(b'\t');
     let end_copy = (path.nearest(walk.end, walk.start_at) != Some(walk.end_at))
         .then(|| path.rank(walk.end_at));
-    push_copy(&mut line, walk.end, end_copy);
+    push_copy(&mut line, ids, walk.end, end_copy);
     line.push(b'\t');
     line.extend_from_slice(k.to_string().as_bytes());
     line.push(b'\n');
@@ -984,7 +996,11 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     counts: &mut Counts,
     emit: &mut Emit,
 ) -> Result<(), String> {
-    let Nodes { lengths, passes } = nodes;
+    let Nodes {
+        lengths,
+        ids,
+        passes,
+    } = nodes;
     let routes = &enc.routes;
     let walks = &enc.walks;
     let anchor = |route: &Route| {
@@ -1037,7 +1053,7 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
                 .sum::<u64>();
         line.clear();
         piece_columns(&mut line, b"ref", p);
-        push_list(&mut line, delta_steps(&p.handles, &mut 0));
+        push_list(&mut line, delta_steps(&p.handles, ids, &mut 0));
         line.push(b'\t');
         push_list(
             &mut line,
@@ -1072,7 +1088,10 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         line.extend_from_slice(b"nodes\t");
         push_list(
             &mut line,
-            differences(interior.iter().map(|&h| i64::from(h >> 1)), &mut 0),
+            differences(
+                interior.iter().map(|&h| i64::from(ids[(h >> 1) as usize])),
+                &mut 0,
+            ),
         );
         line.push(b'\t');
         push_list(
@@ -1095,7 +1114,7 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
             if part.first() == Some(&NONE) {
                 line.push(b'.');
             } else {
-                push_list(&mut line, delta_steps(part, &mut previous));
+                push_list(&mut line, delta_steps(part, ids, &mut previous));
             }
         }
         line.push(b'\n');
@@ -1104,7 +1123,7 @@ fn emit_rows<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     for (p, walk, span) in walks {
         line.clear();
         piece_columns(&mut line, b"walk", p);
-        push_copy(&mut line, walk.start, walk.start_copy);
+        push_copy(&mut line, ids, walk.start, walk.start_copy);
         counts.copies += u64::from(walk.start_copy.is_some())
             + walk
                 .choices

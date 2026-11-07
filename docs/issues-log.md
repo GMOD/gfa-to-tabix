@@ -1551,3 +1551,24 @@ Where the findings have come from so far, and the rule each gives:
   segments removed. Guard: one test per repro, each asserting the files
   equal those of the same graph with its 0 bp segments removed by hand,
   each failing on the old writer
+- **2026-11-06, the nine-reviewer bug hunt (memory by largest id).** The
+  walk writer held about 31 bytes per id up to the largest, used or not:
+  `lengths` grew to `id + 1`, and each reference's placement, offset and
+  bit arrays matched it. A 6-line GFA with segment 2147483647, which the
+  spec allows (C126), needed about 66 GB, and a reviewer's uncapped run
+  of it is the likely cause of the session's OOM kill (cold.md,
+  placement.md, `bigid.gfa`). MC chr22's ids run from 120,283,403 to
+  127,929,432 over 3,122,495 segments (walks-container/writer/results/zero-bp.txt),
+  so it paid for 128 million slots. Source: arrays indexed by GFA id, a
+  shortcut that holds for ids numbered densely from 1 and for nothing
+  else. Fix: the first read numbers the segments densely (`node_ids.rs`,
+  a paged map of 1024 ids a page, allocated where an id falls), renumbers
+  them in id order once every S line is read, so handles sort as ids do,
+  and maps an index back to its id only where a row writes it. A second S
+  line for one id is now refused, where the last one won. Every fixture
+  and fuzz7-gen seeds 1-60 build to the same bytes as before, plain and
+  with their ids spread 7,919 or 97 apart and their S lines shuffled, half
+  after the path lines. Guard: the test
+  `a_node_id_near_2_to_the_31_costs_no_more_memory_than_a_small_one`,
+  which builds that graph in a 512 MB address space and fails on the old
+  writer with "memory allocation of 8589934592 bytes failed"

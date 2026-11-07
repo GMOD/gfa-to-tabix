@@ -9,6 +9,7 @@ mod fold;
 mod gfa;
 mod intern;
 mod json;
+mod node_ids;
 mod parallel_bgzf;
 mod paths;
 mod place;
