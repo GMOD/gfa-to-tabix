@@ -7,7 +7,7 @@
 - **The consumers** are a JBrowse graph plugin and bandage-core. They still read format 5 (plugin 8.6.0, graph-walks 4). Formats 6 and 7 were built but never reached a user.
 
 ## What is proposed
-[ADR 0011](/home/cdiesh/src/gfa-to-tabix/docs/adr/0011-placement-is-a-fact.md) proposes format 8:
+[ADR 0011, since withdrawn to a proposal](../proposal.md) proposes format 8:
 - **A step is placed only on a node its reference sequence passes once.** Steps on collapsed-repeat nodes become unplaced route interior. A haplotype crossing such a repeat shows as a departure record spanning it.
 - **Detail entries move to a table of their own.**
 - **0 bp segments are dropped on read.**
