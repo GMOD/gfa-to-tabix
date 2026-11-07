@@ -8,7 +8,7 @@
 # recorded, and `release.done` says PASSED or FAILED last.
 # Usage, on ada:
 #   git bundle create writer.bundle main   # locally, then scp it to ~/work/release/
-#   SHARDS=24 bash release-check.sh ~/work/release ~/work/arb-format-opus/in [previous dir]
+#   SHARDS=24 [CLAIMS7=1] bash release-check.sh ~/work/release ~/work/arb-format-opus/in [previous dir]
 # where the previous dir holds final.mc22.GRCh38.walks.gz and
 # final.pggbY.GRCh38.walks.gz from the last run, or is left out. Without a
 # writer.bundle, src/ is used as it is.
@@ -33,7 +33,7 @@ for d in mc22 pggbY; do
     else echo "DIFFERS from $PREV" >> release.$d.cmp.txt; fi
   fi
   cap 10G python3 -I "$S/verify7.py" "$F" > release.$d.verify7.txt 2>&1 || { echo "verify7 exit $?" >> release.$d.verify7.txt; status=1; }
-  for check in rebuild audit7 claims7; do
+  for check in rebuild audit7 ${CLAIMS7:+claims7}; do
     [ -f release.$d.$check.txt ] && grep -q ", 0 failed;" release.$d.$check.txt && continue
     case $check in
       rebuild) n=$SHARDS; at_once=8; limit=20G ;;
