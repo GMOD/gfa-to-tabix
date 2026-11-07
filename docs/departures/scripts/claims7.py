@@ -253,13 +253,13 @@ claim('W2', 'the tool writes @k and :k only where they differ from the defaults,
 claim('W3', 'a walk continues along R where R\'s next position is the step\'s, and takes a route with an empty '
       'interior only where it is not')
 claim('W4', 'a walk row\'s start end is the span of all its placed steps')
-claim('B1', 'a tile that keeps a walk row has rows, other than its abridged rows and from kind on, that deflate at '
-      'level 6 in 65,280-byte blocks to at most abridgebytes')
+claim('B1', 'a tile that keeps a walk row has rows, other than its abridged rows and from kind on, of at most '
+      'abridgebytes bytes uncompressed')
 claim('B2', 'a tile that keeps a walk row has pieces costing at most abridge interior steps: each piece\'s routes\' '
       'interior steps once per use, plus a quarter of all its steps')
 claim('B3', 'a tile moves the fewest W lines it can, costliest first: every moved line costs at least as much as '
       'every kept one, and with its last-numbered detail record put back, the tile would cost more than abridge or '
-      'its rows would deflate to more than abridgebytes')
+      'its rows would be more than abridgebytes bytes')
 claim('W5', 'each (path, fragStart, piece) has one walk or abridged row in the file, pieces numbered from 0 '
       'with none missing along one W line')
 claim('A1', 'an abridged row\'s start end is the span of its start and end steps on R')
@@ -361,11 +361,7 @@ def finish_unit(u):
     if kind == 'tile' and 'walk' in t.kinds:
         budget = int(header.get('abridgebytes', 0))
         if budget:
-            text = ''.join(u['rows']).encode()
-            size = 0
-            for k in range(0, len(text), 65280):
-                z = zlib.compressobj(6, zlib.DEFLATED, -15)
-                size += len(z.compress(text[k:k + 65280]) + z.flush())
+            size = len(''.join(u['rows']).encode())
             if size > budget:
                 bad('B1', (u['seq'], u['name'], size, budget))
         cost = int(header.get('abridge', 0))
@@ -773,14 +769,6 @@ def handle_tokens(hs, prev):
     return out, prev
 
 
-def deflated(text):
-    size = 0
-    for k in range(0, len(text), 65280):
-        z = zlib.compressobj(6, zlib.DEFLATED, -15)
-        size += len(z.compress(text[k:k + 65280]) + z.flush())
-    return size
-
-
 def rows_put_back(held, record):
     t = held['tile']
 
@@ -833,9 +821,9 @@ for (seq, cs), held in held_rows.items():
     if held['line_cost'] and min(moved) < max(held['line_cost'].values()):
         bad('B3', (seq, cs, 'a kept line costs', max(held['line_cost'].values()) / 4, 'a moved one', min(moved) / 4))
     back_cost = held['cost'] + moved[-1]
-    back_bytes = deflated(rows_put_back(held, records_of[-1])) if bytes_budget else 0
+    back_bytes = len(rows_put_back(held, records_of[-1])) if bytes_budget else 0
     if (not cost_budget or back_cost <= 4 * cost_budget) and (not bytes_budget or back_bytes <= bytes_budget):
-        bad('B3', (seq, cs, f'record {ds[-1]} put back costs', back_cost / 4, 'and deflates to', back_bytes))
+        bad('B3', (seq, cs, f'record {ds[-1]} put back costs', back_cost / 4, 'and holds', back_bytes, 'bytes'))
 seen('B3')
 
 # D1-D5
