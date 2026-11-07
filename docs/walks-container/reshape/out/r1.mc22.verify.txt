@@ -1,0 +1,2 @@
+{"file": "r1.mc22.GRCh38.walks.gz", "ok": true, "units": 3837, "tables": 1, "lines": 1958554, "departure_lines": 54050}
+2.05 s 35372 KB

@@ -1,0 +1,47 @@
+# r1.mc22.GRCh38.walks.gz: 3838 units, 24648 departure records, 2572 abridged rows, 0 walk rows with copies
+0	U1 units in file order: header; sequences in byte order; per sequence its tile and departures units by start, a tile before the blocks starting there, smaller blocks first; then detail units; then its table
+0	U2 a tile's name is its start, a multiple of tile written in decimal with no leading zero, and every ref step's offset lies in [name, name + tile)
+0	U3 a tile's extent runs from the first base its ref rows' stretches cover to the last
+0	U4 a tile or detail unit whose rows cover no base, at p, takes [p, p+1), [p-1, p) where p is |S|, or [0, 0) where |S| is 0; every other unit has an extent of at least 1 bp
+0	U5 a tile lists ref rows, then at most one nodes row, then route rows, then walk rows, then abridged rows; a detail unit holds at most one nodes row, route rows and walk rows
+0	U6 within a departure block lines are in order of start, end, then text
+0	U7 every departure line overlaps each block it is in, or, a point, lies at the block's start
+0	U8 a table's #unit line runs from 0 to |S|, where its sequence's last ref row ends, and is named .
+0	U9 a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks departure
+0	U10 every sequence in the file has at least one tile, so no table is empty
+0	H1 #haplotype lists each haplotype with walk or abridged rows, sample#haplotype, once each in byte order, and no other
+0	H2 revisited:i:0 means no ref row has a pass count above 1 and no walk or abridged row has @k or :k
+0	R1 a ref row's lengths and passes have one entry per step, passes . exactly when every count is 1
+0	R3 a tile of S holds at least one ref row, and ref rows of S only
+0	R2 a tile's ref rows are written in hapOffset order
+0	G1 a tile's walk rows are in order of path name in bytes, then fragStart, hapOffset and piece
+0	G4 every node id is below 2^31
+0	G5 #hole lines are in order of sequence name in bytes, then start, each start below its end, and no two of a sequence overlap
+0	N1 a nodes row lists the nodes the tile's route interiors visit, ids strictly ascending, and no other
+0	N2 no route interior holds a node the reference passes once (ADR 0009, nearest-pass placement)
+0	T1 a route is stored the way round whose handles sort first: entry (none first), interior, exit
+0	T2 each distinct route is written once per tile or detail unit, a route and its flip counting as one
+0	T3 a route with no entry or no exit has a non-empty interior
+0	T4 a route's entry and exit lie on R
+0	T5 every route row of a tile or detail unit is taken by one of its walk rows
+0	T6 route rows are in order of the first position in R of their entry's or exit's node, whichever is first, a route with neither last, then by entry (none first), interior and exit
+0	W1 every walk row decodes by the spec's rules to nsteps steps
+0	W2 the tool writes @k and :k only where they differ from the defaults, so a file has one encoding
+0	W3 a walk continues along R where R's next position is the step's, and takes a route with an empty interior only where it is not
+0	W4 a walk row's start end is the span of all its placed steps
+0	B1 a tile that keeps a walk row has rows, other than its abridged rows and from kind on, that deflate at level 6 in 65,280-byte blocks to at most abridgebytes
+0	B2 a tile that keeps a walk row has pieces costing at most abridge interior steps: each piece's routes' interior steps once per use, plus a quarter of all its steps
+0	W5 each (path, fragStart, piece) has one walk or abridged row in the file, pieces numbered from 0 with none missing along one W line
+0	A1 an abridged row's start end is the span of its start and end steps on R
+0	A2 every abridged row names a detail unit cs:d of its tile that exists, and every detail unit is named by one
+0	A3 a W line's moved pieces in one tile share one detail record
+0	A4 a detail unit holds the moved pieces of one W line
+0	A5 a tile's detail numbers run from 0 with none missing
+0	A6 a tile or detail unit holds a nodes row exactly when its routes have an interior step, and at most one
+0	A7 a tile's detail records are numbered from 0 in order of cost, the costliest W line first
+0	D1 a departure record's ownTiles are tile names of its sequence that exist, in no repeat
+0	D2 a record has at most two ownTiles
+0	D3 a departure record's extent holds both breakpoints and is at least the breakpoint stretch
+0	D4 the ref rows of S hold a node ending at a + leave's or - rejoin's breakpoint and one starting at the other kind's
+0	D5 a departure line's ownBp >= missingBp; strands are + or -; passes >= 1
+359.97 s 1539216 KB

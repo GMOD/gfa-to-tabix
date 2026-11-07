@@ -1,0 +1,16 @@
+grch38: directory 8109 B, header 1366 B, 24 primary sequences
+  open now   median 86.7 KB, max 192.2 KB (GRCh38#0#chr9)
+  open R3    median 69.7 KB, max 121.3 KB (GRCh38#0#chr2)
+  all tables 2147161 B
+  GRCh38#0#chr9: open 192.2 -> 69.0 KB; entry kinds gzipped alone tile 40100 departures 26228 detail 125599
+  GRCh38#0#chr1: open 188.2 -> 121.0 KB; entry kinds gzipped alone tile 72542 departures 51388 detail 67817
+  GRCh38#0#chr2: open 182.8 -> 121.3 KB; entry kinds gzipped alone tile 71821 departures 53855 detail 61443
+  GRCh38#0#chr4: open 136.4 -> 96.4 KB; entry kinds gzipped alone tile 56628 departures 41528 detail 39764
+chm13: directory 886 B, header 1366 B, 24 primary sequences
+  open now   median 84.8 KB, max 173.7 KB (CHM13#0#chr1)
+  open R3    median 63.8 KB, max 114.8 KB (CHM13#0#chr1)
+  all tables 2133185 B
+  CHM13#0#chr1: open 173.7 -> 114.8 KB; entry kinds gzipped alone tile 72542 departures 52615 detail 59083
+  CHM13#0#chr2: open 145.9 -> 114.1 KB; entry kinds gzipped alone tile 71825 departures 53964 detail 31163
+  CHM13#0#chr4: open 119.3 -> 90.2 KB; entry kinds gzipped alone tile 57394 departures 41724 detail 28730
+  CHM13#0#chr14: open 116.4 -> 48.9 KB; entry kinds gzipped alone tile 29547 departures 22644 detail 68759

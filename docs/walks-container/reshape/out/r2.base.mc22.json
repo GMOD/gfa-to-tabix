@@ -1,0 +1,49 @@
+{
+ "file": "out/base.mc22.GRCh38.walks.gz",
+ "bytes_old": 58494956,
+ "bytes_new": 57888190,
+ "parts_old": {
+  "tile": 18215724,
+  "departures": 891207,
+  "detail": 39340605
+ },
+ "parts_new": {
+  "tile": 18348533,
+  "departures": 151632,
+  "detail": 39340605
+ },
+ "gap_units": 128,
+ "dep_units_old": 593,
+ "tile_text_added": 1682512,
+ "stats": {
+  "records": 24648,
+  "own0": 4601,
+  "rejoin_starts_piece": 24606,
+  "same_piece": 0,
+  "own_tiles_stated": 34,
+  "gap": 1095
+ },
+ "summary": {
+  "1000": {
+   "med": 27.757,
+   "p90": 49.138,
+   "p99": 149.887,
+   "dep_med": 0.0,
+   "dep_p90": 5.845
+  },
+  "65536": {
+   "med": 55.346,
+   "p90": 111.174,
+   "p99": 260.173,
+   "dep_med": 0.0,
+   "dep_p90": 5.846
+  },
+  "1000000": {
+   "med": 483.009,
+   "p90": 659.424,
+   "p99": 1361.388,
+   "dep_med": 0.0,
+   "dep_p90": 17.536
+  }
+ }
+}

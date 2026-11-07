@@ -1,0 +1,73 @@
+From 120aa05645b8e7759741d876c60bac0341a9833a Mon Sep 17 00:00:00 2001
+From: Colin <colin.diesh@gmail.com>
+Date: Fri, 6 Nov 2026 20:09:06 -0800
+Subject: [PATCH 1/2] Stats: placed steps and bp on stderr, for the reshape
+ measurement
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/walks.rs | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/src/walks.rs b/src/walks.rs
+index b13cd7d..ae082f0 100644
+--- a/src/walks.rs
++++ b/src/walks.rs
+@@ -221,6 +221,7 @@ struct Reference {
+     holes: HashMap<u32, Holes>,
+     pieces: u64,
+     unplaced: u64,
++    stats: [u64; 6],
+     departures: u64,
+     departure_rows: u64,
+     haplotypes: BTreeSet<Vec<u8>>,
+@@ -669,6 +670,7 @@ fn first_pass(
+             holes: HashMap::new(),
+             pieces: 0,
+             unplaced: 0,
++            stats: [0; 6],
+             departures: 0,
+             departure_rows: 0,
+             haplotypes: BTreeSet::new(),
+@@ -923,8 +925,26 @@ impl Builder {
+             });
+             if !self.assign_chunks(r, handles, own) {
+                 self.references[r].unplaced += 1;
++                if own.is_none() {
++                    self.references[r].stats[5] += self.before[handles.len()];
++                }
+                 continue;
+             }
++            if own.is_none() {
++                let reference = &mut self.references[r];
++                reference.stats[4] += self.before[handles.len()];
++                for (i, &h) in handles.iter().enumerate() {
++                    let bp = self.before[i + 1] - self.before[i];
++                    if reference.on_reference((h >> 1) as usize) {
++                        reference.stats[2] += 1;
++                        reference.stats[3] += bp;
++                    }
++                    if self.pass[i].name != NONE {
++                        reference.stats[0] += 1;
++                        reference.stats[1] += bp;
++                    }
++                }
++            }
+             if own.is_none() {
+                 let haplotypes = &mut self.references[r].haplotypes;
+                 let name = haplotype(&path.name);
+@@ -1820,6 +1840,11 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
+             reference.unplaced,
+             text(&reference.sample)
+         );
++        eprintln!(
++            "stats {}: placed_steps {} placed_bp {} refnode_steps {} refnode_bp {} hap_bp_placed_lines {} hap_bp_unplaced_lines {}",
++            text(&reference.sample),
++            reference.stats[0], reference.stats[1], reference.stats[2], reference.stats[3], reference.stats[4], reference.stats[5]
++        );
+     }
+ 
+     let Builder {
+-- 
+2.34.1
+

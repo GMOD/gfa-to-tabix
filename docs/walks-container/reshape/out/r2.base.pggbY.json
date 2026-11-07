@@ -1,0 +1,49 @@
+{
+ "file": "out/base.pggbY.GRCh38.walks.gz",
+ "bytes_old": 187163025,
+ "bytes_new": 184419354,
+ "parts_old": {
+  "tile": 12208604,
+  "departures": 14618280,
+  "detail": 160314425
+ },
+ "parts_new": {
+  "tile": 14088803,
+  "departures": 9994410,
+  "detail": 160314425
+ },
+ "gap_units": 252,
+ "dep_units_old": 424,
+ "tile_text_added": 12838427,
+ "stats": {
+  "records": 425040,
+  "own0": 367486,
+  "rejoin_starts_piece": 425040,
+  "same_piece": 0,
+  "own_tiles_stated": 0,
+  "gap": 159124
+ },
+ "summary": {
+  "1000": {
+   "med": 68.879,
+   "p90": 247.714,
+   "p99": 1258.0,
+   "dep_med": 52.5,
+   "dep_p90": 186.542
+  },
+  "65536": {
+   "med": 118.627,
+   "p90": 463.236,
+   "p99": 2807.698,
+   "dep_med": 67.624,
+   "dep_p90": 289.32
+  },
+  "1000000": {
+   "med": 714.817,
+   "p90": 2573.68,
+   "p99": 5369.136,
+   "dep_med": 329.058,
+   "dep_p90": 1403.665
+  }
+ }
+}

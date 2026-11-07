@@ -1,0 +1,6 @@
+[  13.1 s, 0.3 GiB peak] reference GRCh38: 2 paths, 263414 nodes
+[  32.4 s, 1.1 GiB peak] 1053 paths, 544640313 steps
+GRCh38: 275905 pieces, 246739 departure records in 1073161 rows, 532 paths visit no GRCh38 node and are left out
+stats GRCh38: placed_steps 19738414 placed_bp 1950260308 refnode_steps 175750790 refnode_bp 2815303197 hap_bp_placed_lines 6031352160 hap_bp_unplaced_lines 527490057
+[  73.0 s, 7.3 GiB peak] 2460632 lines in 2388 units -> r1stay0.pggbY.GRCh38.walks.gz (+ .idx): 141596 routes, 159714 walk rows, 0 copies named; 1565 paths abridged to 115792 detail walk rows
+r1stay0 pggbY: 73.07 s, 7626056 KB peak

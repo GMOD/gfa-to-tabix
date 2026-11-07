@@ -1,0 +1,28 @@
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test a_route_exit_and_an_abridged_end_name_the_copy_where_it_is_not_the_nearest ... FAILED
+test a_pass_count_counts_every_sequence_of_the_reference ... FAILED
+test a_reference_files_its_own_revisits_at_its_own_offset ... FAILED
+test a_record_states_how_many_times_the_reference_passes_each_end ... FAILED
+test a_step_takes_the_lower_pass_on_a_tie_and_the_first_pass_where_its_sequence_has_none ... FAILED
+test a_walk_row_names_the_copy_it_leaves_r_from_where_stepping_would_stop_early ... FAILED
+test a_walk_the_default_rule_would_misread_names_the_copy_it_leaves_from ... FAILED
+test a_walk_row_names_the_copy_it_starts_on_where_it_is_not_the_first ... FAILED
+test a_short_stretch_over_a_revisited_node_stays_in_its_piece_on_a_pass_there ... FAILED
+test a_stay_refuses_a_stretch_over_a_node_the_reference_passes_once ... FAILED
+thread 'a_route_exit_and_an_abridged_end_name_the_copy_where_it_is_not_the_nearest' (305400) panicked at tests/walks.rs:1318:5:
+thread 'a_pass_count_counts_every_sequence_of_the_reference' (305387) panicked at tests/walks.rs:1669:5:
+thread 'a_reference_files_its_own_revisits_at_its_own_offset' (305398) panicked at tests/walks.rs:1501:5:
+thread 'a_record_states_how_many_times_the_reference_passes_each_end' (305396) panicked at tests/walks.rs:1651:5:
+thread 'a_step_takes_the_lower_pass_on_a_tie_and_the_first_pass_where_its_sequence_has_none' (305413) panicked at tests/walks.rs:2001:5:
+thread 'a_walk_row_names_the_copy_it_leaves_r_from_where_stepping_would_stop_early' (305824) panicked at tests/walks.rs:1364:5:
+thread 'a_walk_the_default_rule_would_misread_names_the_copy_it_leaves_from' (305878) panicked at tests/walks.rs:1522:5:
+thread 'a_walk_row_names_the_copy_it_starts_on_where_it_is_not_the_first' (305828) panicked at tests/walks.rs:1295:5:
+thread 'a_short_stretch_over_a_revisited_node_stays_in_its_piece_on_a_pass_there' (305404) panicked at tests/walks.rs:1606:5:
+thread 'a_stay_refuses_a_stretch_over_a_node_the_reference_passes_once' (305408) panicked at tests/walks.rs:1734:13:
+test result: FAILED. 41 passed; 10 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s

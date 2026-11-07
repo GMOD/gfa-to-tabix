@@ -1,0 +1,56 @@
+From ae7a40f720681f5f97cf366909f27d1e7346c4d8 Mon Sep 17 00:00:00 2001
+From: Colin <colin.diesh@gmail.com>
+Date: Fri, 6 Nov 2026 20:09:07 -0800
+Subject: [PATCH 2/2] R1: place a step only on a node the reference passes
+ once; steps on revisited nodes are route interior
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/walks.rs | 30 +++++-------------------------
+ 1 file changed, 5 insertions(+), 25 deletions(-)
+
+diff --git a/src/walks.rs b/src/walks.rs
+index ae082f0..91d2607 100644
+--- a/src/walks.rs
++++ b/src/walks.rs
+@@ -1415,32 +1415,12 @@ fn rehome(
+     })
+ }
+ 
+-// Calls `place` with the reference pass each reference step of a path takes.
+-// A node the reference passes once has one. For a node it passes more than
+-// once, the path's last placed step predicts an offset, as far along the
+-// reference as the path has gone since, in the direction their strands agree
+-// on, and the pass nearest it wins. Placing starts at the path's first step
+-// on a node the reference passes once and runs outward both ways, so a path
+-// that follows the reference through a collapsed tandem repeat takes each
+-// copy in turn.
++// Places a step only on a node the reference passes once, at that pass;
++// a step on a node it passes more than once is route interior
+ fn visits_along(along: &Along, mut place: impl FnMut(usize, Visit)) {
+-    let (reference, n) = (along.reference, along.handles.len());
+-    let anchor = (0..n)
+-        .find(|&i| along.on(i) && !reference.revisited.get(along.id(i)))
+-        .or_else(|| (0..n).find(|&i| along.on(i)));
+-    if let Some(anchor) = anchor {
+-        let start = reference.first_visit(along.id(anchor));
+-        place(anchor, start);
+-        let mut from = |order: &mut dyn Iterator<Item = usize>| {
+-            let (mut i, mut at) = (anchor, start);
+-            for j in order.filter(|&j| along.on(j)) {
+-                at = reference.visit_near(along.id(j), at.name, along.predict(i, at, j));
+-                i = j;
+-                place(j, at);
+-            }
+-        };
+-        from(&mut (anchor + 1..n));
+-        from(&mut (0..anchor).rev());
++    let reference = along.reference;
++    for i in (0..along.handles.len()).filter(|&i| along.on(i) && !reference.revisited.get(along.id(i))) {
++        place(i, reference.first_visit(along.id(i)));
+     }
+ }
+ 
+-- 
+2.34.1
+

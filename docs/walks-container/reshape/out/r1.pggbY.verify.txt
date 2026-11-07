@@ -1,0 +1,2 @@
+{"file": "r1.pggbY.GRCh38.walks.gz", "ok": true, "units": 2388, "tables": 2, "lines": 2460632, "departure_lines": 1073161}
+16.85 s 288416 KB
