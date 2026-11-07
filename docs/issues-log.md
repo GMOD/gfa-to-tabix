@@ -1571,4 +1571,7 @@ Where the findings have come from so far, and the rule each gives:
   after the path lines. Guard: the test
   `a_node_id_near_2_to_the_31_costs_no_more_memory_than_a_small_one`,
   which builds that graph in a 512 MB address space and fails on the old
-  writer with "memory allocation of 8589934592 bytes failed"
+  writer with "memory allocation of 8589934592 bytes failed". On ada, MC
+  chr22 with `--refs GRCh38` went from 52.5 s and 4.07 GB peak to 52.0 s
+  and 1.11 GB, the files byte-identical
+  (walks-container/writer/results/node-ids.mc22.txt)

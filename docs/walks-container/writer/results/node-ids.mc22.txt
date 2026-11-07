@@ -1,0 +1,16 @@
+# 2026-11-06, ada: gfa-to-tabix ~/work/arb-format-opus/in/mc22.gfa --walks --refs GRCh38
+# under /usr/bin/time -v; old is 1061737, new a989245 (segments numbered
+# densely). The two outputs are byte-identical (cmp), the data file
+# 58,494,956 bytes. MC chr22's ids run from 120,283,403 to 127,929,432.
+== old
+[  13.4 s, 3.9 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[  45.8 s, 3.9 GiB peak] 1131 paths, 630140053 steps
+[  52.4 s, 3.9 GiB peak] 1958554 lines in 3837 units -> old.GRCh38.walks.gz (+ .idx): 786690 routes, 250281 walk rows, 0 copies named; 2468 paths abridged to 2572 detail walk rows
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:52.53
+	Maximum resident set size (kbytes): 4069312
+== new
+[  12.9 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[  45.2 s, 0.8 GiB peak] 1131 paths, 630140053 steps
+[  52.0 s, 1.1 GiB peak] 1958554 lines in 3837 units -> new.GRCh38.walks.gz (+ .idx): 786690 routes, 250281 walk rows, 0 copies named; 2468 paths abridged to 2572 detail walk rows
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:52.01
+	Maximum resident set size (kbytes): 1105572

@@ -821,8 +821,10 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
 
 - The tool reads the GFA more than once, so it takes a file path and
   refuses stdin; gzip input works <!-- C105 -->
-- The tool holds about 16 bytes per node, 24 more per node per reference,
-  and with `--sequences` the graph's bases
+- What the tool holds per node follows the number of segments, not their
+  ids, and with `--sequences` it holds the graph's bases: MC chr22, whose
+  ids start at 120 million, peaks at 1.1 GB, against 4.1 GB when it held
+  arrays by id ([timing](walks-container/writer/results/node-ids.mc22.txt))
 - Pieces and departure records wait for an external sort in up to 512 MB and
   128 MB of memory and then in compressed runs in a temporary directory
   beside the output. <!-- C106 --> The sort's merge encodes the tiles on
