@@ -1988,3 +1988,18 @@ Where the findings have come from so far, and the rule each gives:
   files now pass 28 of 28. Guard: that fixture test, the release check,
   and the diagnosis scripts under `ada:~/work/genome7/diag/`
 
+- **2026-11-08, the plugin's gap e2e relied on gfa-to-tabix 2's cut tags.**
+  The plugin's `walkRowsGap` e2e fed a GFA whose W lines carried the
+  `ws:Z`/`we:Z` stop tags gfa-to-tabix 2's cuts wrote, and expected the
+  row readout "1.0 kb not in the graph" from them. bandage-core 13 reads a
+  GFA's W lines plain by design: the bp a graph lacks between a contig's
+  lines are a walk file's departure records (ADR 0009), which bandage-core
+  states and tests. The port of 2026-11-07 ran no browser or e2e suite, so
+  the first Push workflow on the pushed port failed there, beside the
+  expected 404s from a hosted config still naming the format 5 file.
+  Source: the plugin's Push workflow on the day of release. Fix: the e2e
+  reads its GFA plain and keeps the row-merging and "outside the extracted
+  subgraph" checks; the hosted HPRC configs were deployed naming the
+  format 7 files before the rerun. Guard: the plugin's `ci-green` refuses a
+  release until that workflow passes on the released commit, which is what
+  caught it; a port should run `RUN_E2E=1 pnpm test:e2e` before landing
