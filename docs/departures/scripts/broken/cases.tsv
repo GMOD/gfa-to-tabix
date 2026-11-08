@@ -1,6 +1,8 @@
-abridged-bp	walks-contig-ends.gfa	audit7	an abridged row's bp 12 made 13
-abridged-hapoffset	walks-contig-ends.gfa	audit7	an abridged row's hapOffset 30 made 31
-abridged-nsteps	walks-contig-ends.gfa	audit7	an abridged row's nsteps 5 made 7
+abridged-bp	walks-contig-ends.gfa	audit7 rebuild	an abridged row's bp 12 made 13
+abridged-end	walks-contig-ends.gfa	audit7 rebuild	L's abridged row in tile 10 with end >4 made >3, its end and bp with it
+abridged-hapoffset	walks-contig-ends.gfa	audit7 rebuild	an abridged row's hapOffset 30 made 31
+abridged-nsteps	walks-contig-ends.gfa	audit7 rebuild	an abridged row's nsteps 5 made 7
+abridged-start	walks-contig-ends.gfa	audit7 rebuild	L's abridged row in tile 10 with start >3 made >4, its start, hapOffset and bp with it
 block-misaligned	walks-two-refs.gfa	verify7	the departure block 10 20 stated as 10 19
 detail-interior-flipped	walks-contig-ends.gfa	rebuild	detail 10:0's route interior >12 made <12, so L's abridged piece decodes to >11<12>13 at the same bp
 empty-block	walks-two-refs.gfa	verify7 claims7	an empty departure block after the table

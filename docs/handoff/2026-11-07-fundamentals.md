@@ -14,6 +14,9 @@ the fundamentals, not the edge cases. A walk file is sound when:
 - the consumer that ships, graph-walks, reads the writer's files back to
   the GFA
 - all of that holds on the hosted graph, MC chr22, not only on fixtures
+- each abridged row says what its detail unit's piece says: start, end,
+  hapOffset, nsteps, bp and the record named. `rebuild` checks this since
+  11-08, beside audit7's check; five `abridged-*` broken files prove both
 
 ## What this session added
 

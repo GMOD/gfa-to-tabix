@@ -1943,4 +1943,23 @@ Where the findings have come from so far, and the rule each gives:
   count; the earlier figure likely came from CHM13 as a haplotype of the
   GRCh38-referenced graph. Guard: the header's `revisited` on every build,
   and the count script beside the paper's bench/paf-vs-minimap2
-
+- **2026-11-08, the abridged-row diagnosis.** `walks-truth.py rebuild`
+  took every abridged piece from its detail unit and never read the
+  `abridged` row's own fields, so a file whose abridged rows misstated
+  their pieces (`start`, `end`, `hapOffset`, `nsteps`, `bp` or `detail`)
+  rebuilt every line. The diagnosis (a graph-walks test,
+  `verify-abridged.test.ts`, over the MC chr22 files: CHM13's 7,481 and
+  GRCh38's 2,572 abridged rows, every one agreeing with its detail unit)
+  said no check in this repo compared them; that overstated it: `audit7.py`
+  has checked each abridged row against the piece its detail record holds
+  since 095b577 (11-06), with the broken files `abridged-bp`,
+  `abridged-hapoffset` and `abridged-nsteps`. Source: the diagnosis. Fix:
+  `rebuild` decodes each abridged row's `start` and `end` to handles and
+  positions on R and compares them, `hapOffset`, `nsteps`, `bp` and
+  `detail` with the piece its detail unit's walk row decodes to, a second
+  decoder beside audit7's, failing the run on any difference. Guard: the
+  five `abridged-*` broken files fail audit7 and `rebuild`, two of them new
+  (`abridged-start`, `abridged-end`: a row's start or end moved one step
+  with its span, hapOffset and bp kept consistent, so verify7 and claims7
+  pass them); `check-walks.sh` and `fuzz7.sh` run `rebuild` on every
+  fixture build and fuzz seed

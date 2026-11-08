@@ -36,7 +36,11 @@ to its reference, and measure what a window costs to read.
       their detail units, are numbered from 0 and start where the piece
       before ends, and joined they give the line's handles exactly; the
       reference's own lines likewise from their ref rows, lengths included.
-      Prints each line that differs and exits 1 if any does.
+      Each abridged row agrees with its piece in the detail unit it names:
+      its start and end are the piece's first and last steps on R, at their
+      positions, its hapOffset and bp the piece's stretch from one to the
+      other, its nsteps all the piece's steps. Prints each line or abridged
+      row that differs and exits 1 if any does.
 
   walks-truth.py cost WALKS
       Per window of one tile at each tile's start: the walk rows and steps of
@@ -208,6 +212,18 @@ class Tile:
     def bp(self, c):
         return sum(self.len[i] if i is not None else self.nodes[h >> 1] for h, i in self.steps(c))
 
+    def nearest(self, node, i):
+        """The position of `node` in R nearest position i, the later on a tie."""
+        return min(reversed(self.occ[node]), key=lambda j: abs(j - i))
+
+    def ends(self, start, end):
+        """An abridged row's start and end as (handle, position in R): start at
+        occurrence k with @k, else the first; end at k with @k, else nearest start's."""
+        h, _, k = start.partition("@")
+        e, _, ke = end.partition("@")
+        i = self.occ[int(h) >> 1][int(k) if k else 0]
+        return (int(h), i), (int(e), self.occ[int(e) >> 1][int(ke)] if ke else self.nearest(int(e) >> 1, i))
+
     def steps(self, c):
         """A walk row's steps as (handle, position in R or None), by the spec's decoding rules."""
         nsteps = int(c[8])
@@ -247,8 +263,7 @@ class Tile:
             out += [(g, None) for g in inter]
             if x is None:
                 break
-            near = min(reversed(self.occ[x >> 1]), key=lambda j: abs(j - i))
-            i, h = (self.occ[x >> 1][int(exit_k)] if exit_k else near), x
+            i, h = (self.occ[x >> 1][int(exit_k)] if exit_k else self.nearest(x >> 1, i)), x
             out.append((h, i))
         while len(out) < nsteps:
             i, h = along(i, h)
@@ -271,20 +286,42 @@ class Piece:
         self.bp, self.ref, self.error = bp, lengths is not None, error
         self.decoded, self.ends = len(handles), (handles[0], handles[-1]) if handles else None
         self.digest = digest(handles, lengths)
+        self.detail = self.stretch = None
 
     def key(self):
         return (self.line, self.offset, self.piece)
 
 
+def stretch(steps, lens, offset):
+    """A detail piece's first and last steps on R, its hapOffset at the first
+    and the bp from the first to the last, or None with no step on R."""
+    on = [k for k, (_, i) in enumerate(steps) if i is not None]
+    return (steps[on[0]], steps[on[-1]], offset + sum(lens[:on[0]]), sum(lens[on[0]:on[-1] + 1])) if on else None
+
+
+class Summary:
+    """An abridged row: its start and end on R as (handle, position), its
+    hapOffset, nsteps, bp and the detail record it names, or why its start
+    or end isn't on R."""
+
+    def __init__(self, c, tile, cs):
+        self.line, self.piece, self.tile = (c[4], int(c[5])), int(c[7]), (c[0], cs)
+        self.offset, self.nsteps, self.bp, self.detail = int(c[6]), int(c[8]), int(c[9]), int(c[12])
+        try:
+            self.ends, self.error = tile.ends(c[10], c[11]), None
+        except (IndexError, ValueError) as e:
+            self.ends, self.error = None, f"{type(e).__name__}: {e}"
+
+
 def walk_rows(path, keep):
     """Pieces by path, for the paths `keep` takes, sorted by hapOffset: walk
     rows decoded, abridged pieces from their detail records; the reference's
-    own pieces by path, from the ref rows; the reference sample; each tile's
-    extent by (seq, tile start); and the tile size. Holds a tile's R past the
-    tile only where it has abridged rows."""
-    rows, refs = defaultdict(list), defaultdict(list)
+    own pieces by path, from the ref rows; the abridged rows by path; the
+    reference sample; each tile's extent by (seq, tile start); and the tile
+    size. Holds a tile's R past the tile only where it has abridged rows."""
+    rows, refs, abridged = defaultdict(list), defaultdict(list), defaultdict(list)
     extents, size, tiles, reference = {}, None, {}, None
-    unit = filed = None
+    unit = filed = detail = None
     with gzip.open(path, "rt") as f:
         for line in f:
             if line.startswith("#walks"):
@@ -295,13 +332,14 @@ def walk_rows(path, keep):
                 c = line.rstrip("\n").split("\t")
                 if filed in tiles and not tiles[filed].abridged:
                     del tiles[filed]
-                unit = filed = None
+                unit = filed = detail = None
                 if c[4] == "tile":
                     filed = (c[1], int(c[5]))
                     extents[filed] = (int(c[2]), int(c[3]))
                     unit = tiles[filed] = Tile()
                 elif c[4] == "detail":
-                    filed = (c[1], int(c[5].split(":")[0]))
+                    cs, d = c[5].split(":")
+                    filed, detail = (c[1], int(cs)), int(d)
                     unit = tiles[filed].detail()
                 continue
             if line[0] == "#" or unit is None:
@@ -313,19 +351,24 @@ def walk_rows(path, keep):
                     refs[c[4]].append(Piece(c, c[0], filed[1], handles(c[9])[0], sum(lengths), lengths))
             if c[3] != "walk":
                 unit.add(c)
-            elif keep(c[4]):
+            if c[3] in ("walk", "abridged") and keep(c[4]):
                 if not hasattr(unit, "h"):
                     unit.index()
-                try:
-                    steps = unit.steps(c)
-                    piece = Piece(c, c[0], filed[1], [h for h, _ in steps],
-                                  sum(unit.len[i] if i is not None else unit.nodes[h >> 1] for h, i in steps))
-                except (KeyError, IndexError, ValueError) as e:
-                    piece = Piece(c, c[0], filed[1], error=f"{type(e).__name__}: {e}")
-                rows[c[4]].append(piece)
+                if c[3] == "abridged":
+                    abridged[c[4]].append(Summary(c, unit, filed[1]))
+                else:
+                    try:
+                        steps = unit.steps(c)
+                        lens = [unit.len[i] if i is not None else unit.nodes[h >> 1] for h, i in steps]
+                        piece = Piece(c, c[0], filed[1], [h for h, _ in steps], sum(lens))
+                        if detail is not None:
+                            piece.detail, piece.stretch = detail, stretch(steps, lens, int(c[6]))
+                    except (KeyError, IndexError, ValueError) as e:
+                        piece = Piece(c, c[0], filed[1], error=f"{type(e).__name__}: {e}")
+                    rows[c[4]].append(piece)
     by_key = lambda ps: sorted(ps, key=Piece.key)
     return ({n: by_key(ps) for n, ps in rows.items()}, {n: by_key(ps) for n, ps in refs.items()},
-            reference, extents, size)
+            dict(abridged), reference, extents, size)
 
 
 def union(intervals):
@@ -343,7 +386,7 @@ def pct(a, b):
 
 def score(args):
     haps = set(args.haps.split(","))
-    pieces, _, _, extents, size = walk_rows(args.walks, lambda name: name.rsplit("#", 1)[0] in haps)
+    pieces, _, _, _, extents, size = walk_rows(args.walks, lambda name: name.rsplit("#", 1)[0] in haps)
     broken = [p for ps in pieces.values() for p in ps if p.error]
     if broken:
         sys.exit(f"{len(broken)} walk rows don't decode, the first {broken[0].line} piece {broken[0].piece}: {broken[0].error}")
@@ -518,15 +561,16 @@ def handle_text(h):
     return ("<" if h & 1 else ">") + str(h >> 1)
 
 
+def place(step):
+    return f"{handle_text(step[0])} at {step[1]}"
+
+
 def rebuild(args):
     shard, shards = map(int, args.shard.split("/"))
     keep = lambda name: zlib.crc32(name.encode()) % shards == shard
-    rows, refs, reference, _, _ = walk_rows(args.walks, keep)
-    with gzip.open(args.walks, "rt") as f:
-        for line in f:
-            c = line.split("\t", 6)
-            if line[0] != "#" and c[3] == "abridged" and keep(c[4]):
-                rows.setdefault(c[4], [])
+    rows, refs, abridged, reference, _, _ = walk_rows(args.walks, keep)
+    for name in abridged:
+        rows.setdefault(name, [])
     held = defaultdict(list)
     for ps in list(rows.values()) + list(refs.values()):
         for p in ps:
@@ -565,9 +609,30 @@ def rebuild(args):
             wrong.append(f"{name} line at {start}: " + "; ".join(faults[:3]))
     for name, start in sorted(set(held) - seen):
         wrong.append(f"{name} line at {start}: rows for a line not on the reference, or not in the GFA")
+    detailed = {(p.line, p.piece): p for ps in rows.values() for p in ps if p.detail is not None}
+    summaries = [s for ss in abridged.values() for s in ss]
+    for s in summaries:
+        where = f"{s.line[0]} line at {s.line[1]}: abridged row of piece {s.piece} in tile {s.tile[0]}:{s.tile[1]}"
+        p = detailed.get((s.line, s.piece))
+        if s.error:
+            wrong.append(f"{where} has a start or end not on R: {s.error}")
+        elif p is None:
+            wrong.append(f"{where} has no walk row in a detail unit")
+        elif p.stretch is None:
+            if not p.error:
+                wrong.append(f"{where}: its walk row in detail unit {p.detail} has no step on R")
+        else:
+            first, last, offset, bp = p.stretch
+            differs = [(what, a, b) for what, a, b in (("start", place(s.ends[0]), place(first)), ("end", place(s.ends[1]), place(last)),
+                                                       ("hapOffset", s.offset, offset), ("nsteps", s.nsteps, p.decoded),
+                                                       ("bp", s.bp, bp), ("detail", s.detail, p.detail)) if a != b]
+            if differs:
+                wrong.append(f"{where} says {', '.join(f'{w} {a}' for w, a, _ in differs)}; "
+                             f"its piece in detail unit {p.detail} has {', '.join(f'{w} {b}' for w, _, b in differs)}")
     for w in wrong:
         print("  " + w)
-    print(f"{args.walks}: shard {args.shard}: {len(held)} lines with rows, {expected} on the reference in the GFA, {len(wrong)} wrong")
+    print(f"{args.walks}: shard {args.shard}: {len(held)} lines with rows, {expected} on the reference in the GFA, "
+          f"{len(summaries)} abridged rows, {len(wrong)} wrong")
     sys.exit(1 if wrong else 0)
 
 
