@@ -1,0 +1,38 @@
+$ vitest run --config release-check/vitest.config.ts
+
+ RUN  v5.0.3 /home/cdiesh/work/genome7/graph-walks-fix
+
+ ✓ release-check/realData.test.ts (28 tests) 109017ms
+   ✓ 18600000-18680000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 4960ms
+   ✓ 21500000-21600000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 5401ms
+   ✓ 23000000-23100000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 4692ms
+   ✓ 30000000-30010000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1069ms
+   ✓ 42100000-42150000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1667ms
+   ✓ 50000000-50100000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 3004ms
+   ✓ 18900000-19000000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 8616ms
+   ✓ 19000000-19100000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 8771ms
+   ✓ 20300000-20400000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 3185ms
+   ✓ 20700000-20800000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 3371ms
+   ✓ 21000000-21100000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 2279ms
+   ✓ 21400000-21500000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 3522ms
+   ✓ 18700000-18750000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1491ms
+   ✓ 22000000-22100000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 2668ms
+   ✓ 22300000-22400000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1752ms
+   ✓ 22500000-22600000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 2626ms
+   ✓ 22800000-22900000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 4104ms
+   ✓ 22000000-22900000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 19701ms
+   ✓ 12345000-12395000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 10153ms
+   ✓ 25500000-25550000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1453ms
+   ✓ 33333000-33383000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1909ms
+   ✓ 38000000-38050000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1934ms
+   ✓ 45678000-45728000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 2178ms
+   ✓ 48000000-48050000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1988ms
+   ✓ 10500000-10550000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 3899ms
+   ✓ 50780000-50818468: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 1776ms
+   ✓ 30000000-30001000: abridged pieces read unexpanded as expanded over the tiles the drawn stretch overlaps, context on both sides, and no form contradicts a member 560ms
+
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  04:33:13
+   Duration  109.21s (tests 100%)
+
