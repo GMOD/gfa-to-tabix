@@ -85,50 +85,99 @@ Ideas raised on 2026-11-07 and parked, each with where it is written up:
 
 ## The consumer ports, done the same evening
 
-Per ADR 0011's next steps, bandage-core and the JBrowse plugin now read
-format 7 through graph-walks 6, each landed on its own `main` as a
-fast-forward, nothing pushed:
+Per ADR 0011's next steps, every consumer now reads format 7 through
+graph-walks 6, each landed on its own `main` as a fast-forward, nothing
+pushed:
 
 - **graph-walks** `e7259ee` (25 commits ahead of origin, 6.0.0 unreleased):
   `bytesFor` refuses a range that is not finite, as the other queries do
-- **bandage-core** `aa479d0` (13.0.1 plus three commits): the walk tests
-  open `test_data/walks7/*.walks.gz` with graph-walks 6, every expectation
-  unchanged; and a fix, `818a1c6`, for a departure hidden behind its flank
-  steps at the default context (issues log). One existing expectation
-  flipped with it: a lone flank beside a departure crossing the window reads
-  stepless, as it already did at context 0, not "goes on"
-- **jbrowse-plugin-graphgenomeviewer** `main` (8.9.0 plus six commits): a
-  two-major port from graph-walks 4.6.0 to 6.0.0 and bandage-core 12.7.1 to
-  13. The walk file is `<prefix>.<ref>.walks.gz` with its directory from the
-  `walksIndex` slot or `<walksLocation>.idx` beside it; `walksUri` resolves
-  both. The byte gate reads `reader.bytesFor`; reference nodes come from
-  `reader.referenceNodes`; lanes read departures in place of skip rows and
-  crossings. The format 5 fixtures were decoded with graph-walks 4.6.0 into
-  GFAs under `src/RgfaTabixAdapter/test_data/walks7/`, rebuilt in format 7
-  by `build.sh` there. Every changed expectation is a documented change of
-  graph-walks 5 or 6 or bandage-core 13, listed in the commit messages
+- **bandage-core** `aa479d0`: the walk tests open `test_data/walks7/*.walks.gz`
+  with graph-walks 6, every expectation unchanged; and a fix, `818a1c6`, for
+  a departure hidden behind its flank steps at the default context (issues
+  log). One existing expectation flipped with it: a lone flank beside a
+  departure crossing the window reads stepless, as it already did at
+  context 0, not "goes on"
+- **jbrowse-plugin-graphgenomeviewer** `8a0242e`: a two-major port from
+  graph-walks 4.6.0 and bandage-core 12.7.1. The walk file is
+  `<prefix>.<ref>.walks.gz` with its directory from the `walksIndex` slot or
+  `<walksLocation>.idx` beside it; `walksUri` resolves both. The byte gate
+  reads `reader.bytesFor`; reference nodes come from `reader.referenceNodes`;
+  lanes read departures in place of skip rows and crossings. The format 5
+  fixtures were decoded with graph-walks 4.6.0 into GFAs under
+  `src/RgfaTabixAdapter/test_data/walks7/`, rebuilt in format 7 by
+  `build.sh` there
+- **BandageJS** `13a3272a`, **sequenceTubeMapModern** `a07e923`,
+  **ggbandage** `2b289c2` (R package, bundle rebuilt byte-identical to its
+  commit), **jb2hubs** `53c77095` (website): each from its earlier
+  graph-walks 5 branch under `~/src/port`, now removed; no expectation
+  changed in any of them. Each names the format 7 HPRC file
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38.GRCh38.walks.gz`,
+  which is not hosted yet
 - **Gates:** typecheck, lint, format check and the full unit suites are
-  green in all three. Not run: the plugin's puppeteer e2e suite, and its
-  chr22 tests, which skip without a local format 7 chr22 file
+  green in all seven; ggbandage's `R CMD check` 0 errors 0 warnings. Not
+  run: browser and e2e suites, and the plugin's chr22 tests, which skip
+  without a local format 7 chr22 file
 
-Both consumers pin the unreleased packages by `file:` tarballs under
+Every consumer pins the unreleased packages by `file:` tarballs under
 `~/src/vendor/walks6-pack/` (graph-walks packed from `e7259ee`,
-bandage-core from `818a1c6`). The release sequence, in order, each step
-gated by the one before:
+bandage-core from `818a1c6`). pnpm writes a `file:` path relative to the
+lockfile, so a lockfile written in a deeper worktree breaks `pnpm install`
+in the main checkout: the four repos ported under `~/src/port` got a
+lockfile commit for that. The bandage-core tarball itself lists graph-walks
+as a `file:` devDependency; swap that before publishing.
 
-- push graph-walks and let gfa-to-tabix's `rebuild` CI job run on GitHub
-- port the other consumers to graph-walks 6 before releasing it: BandageJS
-  (pins 4.4.0 and bandage-core 12.6.2), jb2hubs' website (4.4.0, 12.3.0),
-  ggbandage and the tube map, per the release gates
-- release graph-walks 6.0.0; in bandage-core swap the pin to `^6.0.0`,
-  regenerate the lockfile, release (the row fix is a behaviour change, so
-  at least a minor); in the plugin swap both pins to the published versions
-  and release
-- build the whole-genome MC files with the writer (the GRCh38 source is on
-  ada at `~/hprc_multiway/build/hprc-v2.1-mc-grch38.gfa.gz`; ada's disk was
-  at 96% with 155 GB free on 11-07), host them, and swap the configs, the
-  plugin's `latest/` and the examples in one pass. The plugin's config
-  examples and docs already name
-  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38.GRCh38`, which is not
-  hosted yet; the hosted HPRC walk files are still format 5
-- look at real windows
+### The release sequence, each step gated by the one before
+
+- **Host the genome-wide files.** `ada:~/work/genome7/genome7.sh` builds
+  `hprc-v2.1-mc-grch38.GRCh38.walks.gz` and `hprc-v2.1-mc-chm13.CHM13.walks.gz`
+  (plus `.idx`) with the writer at 1e698f4 from the GFAs genome3 left, and
+  runs verify7 on each; `genome7.done` says PASSED or FAILED. Then
+  `graph-walks` on ada (`~/work/genome7/graph-walks`, main at e7259ee,
+  installed): `WALKS=~/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz pnpm release-check`
+  (REF_NAME chr22 by default). Upload both files and both `.idx` with
+  jbrowse-components' `scripts/deploy-demo.sh <file> hprc/<name>`, never a
+  bare `aws s3 cp`, then run the same release-check with `WALKS` as the
+  hosted URL. The hosted format 5 files stay for old sessions
+- **Push graph-walks** and let gfa-to-tabix's `rebuild` CI job run; tag
+  `v6.0.0` and publish
+- **bandage-core:** pin `^6.0.0`, `pnpm install`, gates, `pnpm version minor`
+  (the row fix changes what a row says), which pushes and publishes through
+  its hooks
+- **The plugin:** pin graph-walks `^6.0.0` and the published bandage-core,
+  gates, push, wait for the Push workflow (`ci-green`), `pnpm version major`
+  (the `walksIndex` slot and format 7 only), then `~/src/jbrowse-plugin-list`
+  `pnpm dep` to rehost `latest/`
+- **BandageJS, the tube map, ggbandage, jb2hubs:** swap pins, install,
+  gates, release each the way its repo does; jb2hubs' `upload.sh` and the
+  `.hprc-grch38-uploaded.json` stamp after the files are hosted
+- **Swap the configs in one pass:** jbrowse-components `demos/hprc/config.json`
+  and `test_data/graphgenomeview/*.json` to the format 7 names, the plugin's
+  `latest/`, and the paper's Data Availability URL
+  (`hprc-v2.1-mc-grch38-f5s.GRCh38.walks.bed.gz` today)
+- **Look at real windows**
+
+## The README schematic, 2026-11-07
+
+`docs/figures/walks-schematic.svg` (README) shows each W line beside its
+stroke and the real rows it became for one tile, the window shaded, one
+request's bytes; `walks-bytes.svg` (spec, "Files and units") shows the
+`.idx`, the data file as a byte bar of units, and the window's two adjacent
+units as one request. Both are drawn by `scripts/figures.py` from the
+writer's output on `walks-schematic.gfa`, so CI's figure check holds them
+to the tool. Chosen from three variants after an independent read; the
+old pipeline figure `walks-simple-figure.svg` is gone.
+
+## The paper, 2026-11-07
+
+`~/paper` `003affe`: reviewer 1's comment 4 (gfa-to-pairwise-paf's shared-node
+alignments, repeated nodes) is answered in
+`reviews/2026-11-03-reviewer1-response.md`, with Method and Results
+sentences and Supplementary Table S7 in `\rev`. GRCh38 passes every node
+of the MC graph once (83,303,684 nodes, counted over the full GFA);
+minimap2 agrees with the graph-derived rows on 99.3 to 99.9% of bases at
+the CFHR window and 99.6% genome-wide for HG00133#1; the one disagreement
+over 1 kb is the breakpoint's place inside the 960 bp repeat pair flanking
+the 84.7 kb deletion. Measurements under `bench/paf-vs-minimap2/` there and
+`ada:~/work/paf-vs-minimap2/`. `make push-response` sends the response
+draft to the Google Doc; not run. Owed: the supplementary figure with both
+alignment sets as rows
