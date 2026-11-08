@@ -92,8 +92,9 @@ Per ADR 0011's next steps, every consumer now reads format 7 through
 graph-walks 6, each landed on its own `main` as a fast-forward, nothing
 pushed:
 
-- **graph-walks** `e7259ee` (25 commits ahead of origin, 6.0.0 unreleased):
-  `bytesFor` refuses a range that is not finite, as the other queries do
+- **graph-walks** `e6e5a74` (27 commits ahead of origin, 6.0.0 unreleased):
+  `bytesFor` refuses a range that is not finite; `pathChains` chains by the
+  untrimmed contig stretch; the release check compares reads on tile extents
 - **bandage-core** `aa479d0`: the walk tests open `test_data/walks7/*.walks.gz`
   with graph-walks 6, every expectation unchanged; and a fix, `818a1c6`, for
   a departure hidden behind its flank steps at the default context (issues
@@ -126,7 +127,7 @@ pushed:
   before trusting its tests, since its node_modules still held graph-walks 4
 
 Every consumer pins the unreleased packages by `file:` tarballs under
-`~/src/vendor/walks6-pack/` (graph-walks packed from `e7259ee`,
+`~/src/vendor/walks6-pack/` (graph-walks packed from `e6e5a74`,
 bandage-core from `818a1c6`). pnpm writes a `file:` path relative to the
 lockfile, so a lockfile written in a deeper worktree breaks `pnpm install`
 in the main checkout: the four repos ported under `~/src/port` got a
@@ -145,9 +146,9 @@ as a `file:` devDependency; swap that before publishing.
   jbrowse-components' `scripts/deploy-demo.sh <file> hprc/<name>`, never a
   bare `aws s3 cp`, then run the same release-check with `WALKS` as the
   hosted URL. The hosted format 5 files stay for old sessions
-- **Release-check result, 2026-11-08:** GRCh38 passes all 28 windows; CHM13
-  fails 3 of 28 (issues log), so host GRCh38 and hold CHM13 until the
-  abridged-walk difference is diagnosed
+- **Release-check result, 2026-11-08:** with graph-walks e6e5a74 both
+  files pass 28 of 28 (the CHM13 failures were the check's assumption and
+  one reader chain fault, issues log); both are ready to host
 - **Push graph-walks** and let gfa-to-tabix's `rebuild` CI job run; tag
   `v6.0.0` and publish
 - **bandage-core:** pin `^6.0.0`, `pnpm install`, gates, `pnpm version minor`

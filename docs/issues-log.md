@@ -1963,3 +1963,28 @@ Where the findings have come from so far, and the rule each gives:
   with its span, hapOffset and bp kept consistent, so verify7 and claims7
   pass them); `check-walks.sh` and `fuzz7.sh` run `rebuild` on every
   fixture build and fuzz seed
+- **2026-11-08, the release check on the genome-wide CHM13 file (the
+  check's own assumption, and a chain the reader broke).** graph-walks'
+  `release-check` expected a window's unexpanded and expanded reads to
+  give the same `net` and `covered` per haplotype; on CHM13 chr22 three
+  windows differ because an abridged piece overlapping the drawn stretch
+  and reaching past it is netted over its whole stretch unexpanded (the
+  spec's "abridged" rule) and trimmed to the drawn stretch expanded (its
+  "Reading a window" rule). GRCh38's 28 windows hold no such piece, so
+  the assumption was never exercised; CHM13 chr22 has 7,389 detail units
+  to GRCh38's 2,468. The writer's rows and the reader's decoding were
+  both right (every abridged row on both files agrees with its detail
+  unit; HG00097#2's pieces match its W line). A second, smaller
+  difference was a reader fault: `pathChains` in graph-walks chained by
+  the trimmed `hapStart`, so a record's rejoin to a piece whose first
+  steps the cut trimmed split the chain unexpanded and not expanded
+  (HG02280#2, NA21110#1, HG03471#1 at chr22:18.9-19.0 Mb). Source: the
+  first release check on a CHM13 build. Fix: graph-walks `f469fc7` chains
+  by each fragment's untrimmed contig stretch, with a fixture
+  (`drawnedge.R.gfa`) shown failing first; `e6e5a74` compares the two
+  reads on the extents of the tiles the drawn stretch overlaps, keeps the
+  context and contradiction checks on the window, and documents the
+  legitimate difference in a test quoting the spec. Both genome-wide
+  files now pass 28 of 28. Guard: that fixture test, the release check,
+  and the diagnosis scripts under `ada:~/work/genome7/diag/`
+
