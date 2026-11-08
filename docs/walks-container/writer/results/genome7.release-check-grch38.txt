@@ -1,0 +1,35 @@
+$ vitest run --config release-check/vitest.config.ts
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.3 [39m[90m/home/cdiesh/work/genome7/graph-walks[39m
+
+ [32m✓[39m release-check/realData.test.ts [2m([22m[2m28 tests[22m[2m)[22m[33m 74989[2mms[22m[39m
+   [33m[2m✓[22m[39m 18600000-18680000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 2479[2mms[22m[39m
+   [33m[2m✓[22m[39m 21500000-21600000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 1871[2mms[22m[39m
+   [33m[2m✓[22m[39m 23000000-23100000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 1865[2mms[22m[39m
+   [33m[2m✓[22m[39m 30000000-30010000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 304[2mms[22m[39m
+   [33m[2m✓[22m[39m 42100000-42150000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 867[2mms[22m[39m
+   [33m[2m✓[22m[39m 50000000-50100000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 1741[2mms[22m[39m
+   [33m[2m✓[22m[39m 18900000-19000000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 3105[2mms[22m[39m
+   [33m[2m✓[22m[39m 19000000-19100000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 3046[2mms[22m[39m
+   [33m[2m✓[22m[39m 20300000-20400000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 4446[2mms[22m[39m
+   [33m[2m✓[22m[39m 20700000-20800000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 2372[2mms[22m[39m
+   [33m[2m✓[22m[39m 21000000-21100000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 1917[2mms[22m[39m
+   [33m[2m✓[22m[39m 21400000-21500000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 2737[2mms[22m[39m
+   [33m[2m✓[22m[39m 18700000-18750000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 5847[2mms[22m[39m
+   [33m[2m✓[22m[39m 22000000-22100000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 2737[2mms[22m[39m
+   [33m[2m✓[22m[39m 22300000-22400000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 2390[2mms[22m[39m
+   [33m[2m✓[22m[39m 22500000-22600000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 2270[2mms[22m[39m
+   [33m[2m✓[22m[39m 22800000-22900000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 4813[2mms[22m[39m
+   [33m[2m✓[22m[39m 22000000-22900000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 24932[2mms[22m[39m
+   [33m[2m✓[22m[39m 25500000-25550000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 1287[2mms[22m[39m
+   [33m[2m✓[22m[39m 33333000-33383000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 741[2mms[22m[39m
+   [33m[2m✓[22m[39m 38000000-38050000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 504[2mms[22m[39m
+   [33m[2m✓[22m[39m 45678000-45728000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 594[2mms[22m[39m
+   [33m[2m✓[22m[39m 48000000-48050000: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 760[2mms[22m[39m
+   [33m[2m✓[22m[39m 50780000-50818468: abridged pieces read unexpanded as expanded, context on both sides, and no form contradicts a member[33m 985[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m28 passed[39m[22m[90m (28)[39m
+[2m   Start at [22m 21:34:15
+[2m   Duration [22m 75.26s[2m (tests 100%)[22m
+

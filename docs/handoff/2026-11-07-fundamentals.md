@@ -138,6 +138,9 @@ as a `file:` devDependency; swap that before publishing.
   jbrowse-components' `scripts/deploy-demo.sh <file> hprc/<name>`, never a
   bare `aws s3 cp`, then run the same release-check with `WALKS` as the
   hosted URL. The hosted format 5 files stay for old sessions
+- **Release-check result, 2026-11-08:** GRCh38 passes all 28 windows; CHM13
+  fails 3 of 28 (issues log), so host GRCh38 and hold CHM13 until the
+  abridged-walk difference is diagnosed
 - **Push graph-walks** and let gfa-to-tabix's `rebuild` CI job run; tag
   `v6.0.0` and publish
 - **bandage-core:** pin `^6.0.0`, `pnpm install`, gates, `pnpm version minor`

@@ -1918,3 +1918,17 @@ Where the findings have come from so far, and the rule each gives:
   Source: the plugin port, which guards the range itself. Fix: graph-walks
   `e7259ee`. Guard: the finite-range test runs over `cut`, `referenceNodes`
   and `bytesFor`
+- **2026-11-08, graph-walks release-check on the genome-wide CHM13 file.**
+  On `hprc-v2.1-mc-chm13.CHM13.walks.gz` (writer 1e698f4, verify7 clean)
+  graph-walks e7259ee's `release-check` passes 25 of its 28 chr22 windows
+  and fails three (chr22:18.9-19.0 Mb, 19.0-19.1 Mb, 12.345-12.395 Mb): an
+  abridged walk read unexpanded differs from the same walk expanded; at
+  18.9-19.0 Mb HG00097#2 covers `[18877346,18898973],[18950922,19077990]`
+  with net 387,953 bp expanded but `[18950922,19077990]` with 388,284 bp
+  unexpanded, so the unexpanded read lacks the walk's first piece in the
+  window. The GRCh38 file passes all 28 (`results/genome7.release-check-*`).
+  Source: the first release check on a CHM13 build. Fix: none yet; not
+  diagnosed (writer, reader, or the check's own assumption on a sequence
+  the reference revisits). Guard: the release check itself; do not host
+  the CHM13 file until this is explained
+
