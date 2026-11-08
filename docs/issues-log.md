@@ -1895,4 +1895,26 @@ Where the findings have come from so far, and the rule each gives:
   route, ran unsharded under 60 GB on MC chr22 with the GFA and passed.
   Guard: none; a claims7 that streams and indexes a path's steps once is
   owed before its O and L claims count as checked on real data
-
+- **2026-11-07, the consumer ports (a departure hidden behind its flanks).**
+  bandage-core 13.0.1 drew a haplotype whose departure spans the window, with
+  a step within the cut's context on each side, as an empty row with no sign
+  of the departure: on the `skip` fixture (HG002#1 `>1>2>9>10`, leaving at
+  20 and rejoining at 80) at chr1:31-60 with graph-walks' default 1000 bp
+  context, the row read `0.0 kb (−30 bp)` with no runs, while the same
+  window at context 0 read "no step on GRCh38 across 60 bp · 0 bp of its
+  own". A lone flank beside a departure crossing the window read "goes on"
+  likewise. On a real graph that is any haplotype with a deletion wider than
+  the window and steps within 1 kb of it. Source: the JBrowse plugin's port
+  to graph-walks 6, whose fixture test asserted the empty row. Fix:
+  bandage-core `818a1c6`, a row is stepless when the slice between its
+  flanks holds no step and one of its departures crosses the reference's
+  bar, whatever the context. Guard: two tests in bandage-core's
+  `src/gfa/graphWalks.test.ts` at context 1000, shown failing first, and the
+  plugin's `walkFiles.test.ts` skip test, which asserts the departure row
+- **2026-11-07, the consumer ports (`bytesFor` on a range that is not
+  finite).** graph-walks 6's `bytesFor` returned 0 for a NaN or infinite
+  bound, where `cut` and `referenceNodes` refuse the range first, so a byte
+  gate fed such a window would pass it and the cut after it would throw.
+  Source: the plugin port, which guards the range itself. Fix: graph-walks
+  `e7259ee`. Guard: the finite-range test runs over `cut`, `referenceNodes`
+  and `bytesFor`

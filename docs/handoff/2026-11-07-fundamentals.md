@@ -80,5 +80,55 @@ Ideas raised on 2026-11-07 and parked, each with where it is written up:
   any pggb placement decision (caveats listed in open-problems.md)
 - **odgi viz / bin** as prior art for a zoomed-out summary row kind, if a
   coarse tier for walk files is ever wanted; no trigger today
-- **Push graph-walks** so the new `rebuild` CI job, pinned to c0d8a23, can
+- **Push graph-walks** so the new `rebuild` CI job, pinned to e7259ee, can
   run on GitHub
+
+## The consumer ports, done the same evening
+
+Per ADR 0011's next steps, bandage-core and the JBrowse plugin now read
+format 7 through graph-walks 6, each landed on its own `main` as a
+fast-forward, nothing pushed:
+
+- **graph-walks** `e7259ee` (25 commits ahead of origin, 6.0.0 unreleased):
+  `bytesFor` refuses a range that is not finite, as the other queries do
+- **bandage-core** `aa479d0` (13.0.1 plus three commits): the walk tests
+  open `test_data/walks7/*.walks.gz` with graph-walks 6, every expectation
+  unchanged; and a fix, `818a1c6`, for a departure hidden behind its flank
+  steps at the default context (issues log). One existing expectation
+  flipped with it: a lone flank beside a departure crossing the window reads
+  stepless, as it already did at context 0, not "goes on"
+- **jbrowse-plugin-graphgenomeviewer** `main` (8.9.0 plus six commits): a
+  two-major port from graph-walks 4.6.0 to 6.0.0 and bandage-core 12.7.1 to
+  13. The walk file is `<prefix>.<ref>.walks.gz` with its directory from the
+  `walksIndex` slot or `<walksLocation>.idx` beside it; `walksUri` resolves
+  both. The byte gate reads `reader.bytesFor`; reference nodes come from
+  `reader.referenceNodes`; lanes read departures in place of skip rows and
+  crossings. The format 5 fixtures were decoded with graph-walks 4.6.0 into
+  GFAs under `src/RgfaTabixAdapter/test_data/walks7/`, rebuilt in format 7
+  by `build.sh` there. Every changed expectation is a documented change of
+  graph-walks 5 or 6 or bandage-core 13, listed in the commit messages
+- **Gates:** typecheck, lint, format check and the full unit suites are
+  green in all three. Not run: the plugin's puppeteer e2e suite, and its
+  chr22 tests, which skip without a local format 7 chr22 file
+
+Both consumers pin the unreleased packages by `file:` tarballs under
+`~/src/vendor/walks6-pack/` (graph-walks packed from `e7259ee`,
+bandage-core from `818a1c6`). The release sequence, in order, each step
+gated by the one before:
+
+- push graph-walks and let gfa-to-tabix's `rebuild` CI job run on GitHub
+- port the other consumers to graph-walks 6 before releasing it: BandageJS
+  (pins 4.4.0 and bandage-core 12.6.2), jb2hubs' website (4.4.0, 12.3.0),
+  ggbandage and the tube map, per the release gates
+- release graph-walks 6.0.0; in bandage-core swap the pin to `^6.0.0`,
+  regenerate the lockfile, release (the row fix is a behaviour change, so
+  at least a minor); in the plugin swap both pins to the published versions
+  and release
+- build the whole-genome MC files with the writer (the GRCh38 source is on
+  ada at `~/hprc_multiway/build/hprc-v2.1-mc-grch38.gfa.gz`; ada's disk was
+  at 96% with 155 GB free on 11-07), host them, and swap the configs, the
+  plugin's `latest/` and the examples in one pass. The plugin's config
+  examples and docs already name
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38.GRCh38`, which is not
+  hosted yet; the hosted HPRC walk files are still format 5
+- look at real windows
