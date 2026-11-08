@@ -192,3 +192,24 @@ the 84.7 kb deletion. Measurements under `bench/paf-vs-minimap2/` there and
 `ada:~/work/paf-vs-minimap2/`. `make push-response` sends the response
 draft to the Google Doc; not run. Owed: the supplementary figure with both
 alignment sets as rows
+
+## The paper, 2026-11-08
+
+`~/paper` `835fd78`: two supplementary figures for reviewer 1, both in
+`\rev`. `fig:bubble-intervals` is the histogram of the reference interval
+each HPRC v2.1 SV rGFA bubble is filed under (comment 3; jb2bench `143b713`
+`scripts/paperfigs/bubble-intervals.R`, drawn by `make plots` as figS11).
+`fig:paf-vs-minimap2` is the CFHR window with the graph-derived rows over
+minimap2's (comment 4): jbrowse-components spec
+`website/scripts/specs/paper-hprc-minimap2.ts`, `paper/hprc_rows_graph_vs_minimap2`,
+which reads `https://jbrowse.org/demos/hprc_multiway/hprc_cfhr_minimap2.pif.gz`.
+That PIF (minimap2 primary rows, PanSN target names, built by
+`bench/paf-vs-minimap2/scripts/make_minimap2_pif.sh`) is at
+`ada:~/work/paf-vs-minimap2/pif/` and is not hosted; the paper's PNG is a
+local render of the same bytes. Hosting it belongs with the hosting pass
+above: `deploy-demo.sh` the two files to `hprc_multiway/`, re-render,
+`pnpm figures:push --filter paper/hprc_rows_graph_vs_minimap2`, then add the
+figure to `figures/sync-website.py`. Also found: the 3 November EC2
+benchmark run (reviewer 1 comments 1 and 2) never ran; jb2bench's
+`results/ec2/2026-11-03-1041/` holds only the preflight log and the instance
+is gone, so it has to be launched again.
