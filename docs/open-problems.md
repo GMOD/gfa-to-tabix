@@ -207,7 +207,12 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
 - Showing every copy stays open: the HPRC pggb team may weigh in. ADR
   0009 holds one placement per file, so other copies could come later as a
   second file, under a header tag naming its rule
-- The question is not pggb's alone. In the genome-wide Minigraph-Cactus
+- The question is not pggb's alone. [Counted on 2026-11-08: in the
+  CHM13-referenced HPRC v2.1 Minigraph-Cactus graph, CHM13 passes each of
+  its 90,761,410 nodes exactly once, and the 11-07 format 7 build of it has
+  `revisited:i:0` and 3.74 M departure lines; the figures below came from
+  another file, likely CHM13 as a haplotype of the GRCh38-referenced graph,
+  and are not reproduced.] In the genome-wide Minigraph-Cactus
   graph CHM13 passes 209,578 nodes more than once, and the format 6 file on
   CHM13 holds 5.5 M departure records in 42.7 M rows against the GRCh38
   file's 1.8 M in 2.1 M: 32.4 M of the rows are on chr9, where 2.2 M

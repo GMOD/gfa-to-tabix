@@ -1931,4 +1931,16 @@ Where the findings have come from so far, and the rule each gives:
   diagnosed (writer, reader, or the check's own assumption on a sequence
   the reference revisits). Guard: the release check itself; do not host
   the CHM13 file until this is explained
+- **2026-11-08, the genome-wide node counts (a doc figure that does not
+  reproduce).** open-problems.md said the genome-wide MC graph's CHM13
+  passes 209,578 nodes more than once with 5.5 M departure records in
+  42.7 M rows. Counting every reference W line of both HPRC v2.1 MC graphs
+  (`ada:~/work/paf-vs-minimap2/nodes*/`): GRCh38 visits 83,303,684 nodes
+  and CHM13 90,761,410, each exactly once, none shared between sequences;
+  both 11-07 format 7 builds say `revisited:i:0`, with 3.81 M and 3.74 M
+  departure lines. Source: the paper's reviewer question on repeated
+  nodes. Fix: the open-problems sentence is bracketed with the measured
+  count; the earlier figure likely came from CHM13 as a haplotype of the
+  GRCh38-referenced graph. Guard: the header's `revisited` on every build,
+  and the count script beside the paper's bench/paf-vs-minimap2
 
