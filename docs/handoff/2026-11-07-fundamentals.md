@@ -213,3 +213,39 @@ figure to `figures/sync-website.py`. Also found: the 3 November EC2
 benchmark run (reviewer 1 comments 1 and 2) never ran; jb2bench's
 `results/ec2/2026-11-03-1041/` holds only the preflight log and the instance
 is gone, so it has to be launched again.
+
+## The release, 2026-11-08: done
+
+The user said to fire the sequence, and it ran in the handoff's order, each
+step gated by the one before:
+
+- **Hosted:** `hprc-v2.1-mc-grch38.GRCh38.walks.gz` (1,562,313,167 bytes)
+  and `hprc-v2.1-mc-chm13.CHM13.walks.gz` (1,760,248,336) with their `.idx`
+  under `jbrowse.org/demos/hprc/`, by `deploy-demo.sh` from ada; graph-walks
+  6.0.0's release check on the hosted URLs passes 28 of 28 on each
+  (`docs/walks-container/writer/results/hosted-check-*.txt`). The format 5
+  files stay hosted for old sessions. Also `hprc_multiway/hprc_cfhr_minimap2.pif.gz`
+  for the paper's figure
+- **Released:** gfa-to-tabix v4.0.0 (the Release workflow on the push of
+  main, Cargo.toml's version), graph-walks 6.0.0 (tag `v6.0.0` on `e6e5a74`,
+  CI publish), bandage-core 13.1.0 (`pnpm version minor` after its Push CI
+  ran BandageJS and the plugin on the packed core from their `core-next`
+  branches), the plugin 9.0.0 (`pnpm version major` after `ci-green`), each
+  consumer on the published versions: BandageJS `a619f9e7` (built and
+  deployed by its CI), sequenceTubeMap `41aeace`, ggbandage `8fa1682`
+  (lockfile regenerated after a rebase onto its auto-bundled main; bundle
+  and R CMD check green), jb2hubs `74c6e835` (pins, two formatted notes,
+  the hprc config uploaded with its stamp). Plugin `latest/` rehosted by
+  jbrowse-plugin-list `8e2728fe` and serves 9.0.0
+- **Configs swapped:** jbrowse-components `demos/hprc/config.json` and
+  `demos/hprc_multiway/config.json` deployed naming the format 7 files
+  (`143a015470`, with `test_data/graphgenomeview/hprc.json` and the README);
+  the hosted hprc demo read a format 7 file with the 8.x plugin for the
+  twenty minutes between that deploy and the rehost, which the plugin's
+  CI gate forced (its host-compat probe reads the hosted config). The
+  paper's Data Availability names the format 7 file and gfa-to-tabix 4.0.0.
+  jbrowse-components main is 14 commits ahead of origin, unpushed as usual
+- **Found on the way:** two plugin e2e faults the port had not run (issues
+  log, 2026-11-08); `~/src/port/plugin` is a leftover worktree whose
+  `core-next` was renamed `core-next-walks5`
+- **Not pushed:** jbrowse-components (the user's), the paper, jb2bench
