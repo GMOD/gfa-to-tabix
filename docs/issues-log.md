@@ -2002,4 +2002,8 @@ Where the findings have come from so far, and the rule each gives:
   subgraph" checks; the hosted HPRC configs were deployed naming the
   format 7 files before the rerun. Guard: the plugin's `ci-green` refuses a
   release until that workflow passes on the released commit, which is what
-  caught it; a port should run `RUN_E2E=1 pnpm test:e2e` before landing
+  caught it; a port should run `RUN_E2E=1 pnpm test:e2e` before landing.
+  The same workflow then failed on the plugin's own host-compat probe and
+  forms-menu e2e, which named the format 5 hosted file themselves; both
+  now read `hprc-v2.1-mc-grch38.GRCh38`, and `grep f5s` over a consumer
+  is part of the swap
