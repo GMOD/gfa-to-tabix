@@ -115,8 +115,12 @@ pushed:
   which is not hosted yet
 - **Gates:** typecheck, lint, format check and the full unit suites are
   green in all seven; ggbandage's `R CMD check` 0 errors 0 warnings. Not
-  run: browser and e2e suites, and the plugin's chr22 tests, which skip
-  without a local format 7 chr22 file
+  run: browser and e2e suites. The plugin's five chr22 real-data tests ran
+  on 11-08 against `~/work/scratch/walks7/chr22.GRCh38.walks.gz` (the
+  release-check MC chr22 build) and `chr22.CHM13.walks.gz` (a copy of the
+  genome-wide CHM13 file), all 22 of `walkFiles.test.ts` pass; after a
+  port landed from a worktree, run `pnpm install` in the main checkout
+  before trusting its tests, since its node_modules still held graph-walks 4
 
 Every consumer pins the unreleased packages by `file:` tarballs under
 `~/src/vendor/walks6-pack/` (graph-walks packed from `e7259ee`,
