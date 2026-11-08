@@ -257,6 +257,8 @@ it alone, and `zcat` reads the whole file as text.
   no stretch, and any `seq start end` it stated would be made up
   ([ADR 0010](adr/0010-walks-unit-table.md#costs-decided))
 
+![The walk file of walks-schematic.gfa, built with --tile 30, read for chr1:31-60: the .idx line giving chr1's table at bytes 828-977, the data file as a bar of its units with their byte offsets, the header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and the table, with tile 30 and departures 30-60 shaded as the one request for bytes 380-606, then the rows those two units hold](figures/walks-bytes.svg)
+
 ### Units
 
 | kind | `start end` | `name` | holds |

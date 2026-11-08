@@ -4,8 +4,9 @@
 Runs the tool on docs/figures/*.gfa and redraws docs/figures/*.svg from the
 lines it writes. The script draws the overview figure itself, the walks
 detail figure by filling the marked regions of its .dot file for Graphviz,
-the outputs figure from its .dot file as written, and the walks figures from
-the tool's lines and the drawings scripts/bandage-figure.mjs left beside them.
+the outputs figure from its .dot file as written, the walks leave figure
+from the tool's lines and the drawing scripts/bandage-figure.mjs left beside
+them, and the walks schematic and bytes figures from the tool's lines alone.
 With --check, exits 1 if a figure differs from what the tool writes now.
 """
 
@@ -438,19 +439,29 @@ def splice_regions(text, regions, name):
 MONO = "Menlo, Consolas, DejaVu Sans Mono, monospace"
 SANS = "Helvetica, Arial, sans-serif"
 INK, MUTED = "#1f2328", "#57606a"
-BANDAGE_FIGURES = ["walks-simple", "walks-leave"]
+BANDAGE_FIGURES = ["walks-leave"]
 
 
 class Canvas:
     def __init__(self):
         self.out = []
 
-    def say(self, x, y, s, size=12, fill=INK, weight="normal", font=MONO):
+    def say(self, x, y, s, size=12, fill=INK, weight="normal", font=MONO, anchor="start"):
+        anchored = "" if anchor == "start" else f' text-anchor="{anchor}"'
         self.out.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" font-weight="{weight}" '
-                        f'font-family="{font}" xml:space="preserve">{s}</text>')
+                        f'font-family="{font}"{anchored} xml:space="preserve">{s}</text>')
 
-    def rect(self, x, y, w, h, fill, rx=0):
-        self.out.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="{fill}"/>')
+    def rect(self, x, y, w, h, fill, rx=0, stroke=None, width=1):
+        stroked = f' stroke="{stroke}" stroke-width="{width}"' if stroke else ""
+        self.out.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="{fill}"{stroked}/>')
+
+    def line(self, x1, y1, x2, y2, stroke=MUTED, width=1):
+        self.out.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" '
+                        f'stroke-width="{width}" stroke-linecap="round"/>')
+
+    def path(self, d, stroke, width=3):
+        self.out.append(f'<path d="{d}" fill="none" stroke="{stroke}" stroke-width="{width}" '
+                        f'stroke-linecap="round" stroke-linejoin="round"/>')
 
     def down(self, x, y, h):
         self.out.append(f'<path d="M{x:.1f},{y:.1f} v{h - 8:.1f}" stroke="{MUTED}" stroke-width="2"/>'
@@ -629,6 +640,303 @@ def bandage_figure(name, lines, directory, tint):
     return c.svg(left + widest + 36, y + height + 12)
 
 
+SCHEMATIC = "walks-schematic"
+SCHEMATIC_OPTIONS = ["--walks", "--refs", REF, "--tile", "30"]
+WINDOW = (30, 60)
+GREY, LINE = "#9aa3ad", "#d0d7de"
+REF_STROKE, REF_FILL = "#575757", "#eceff2"
+
+
+def node_spans(reference, lengths):
+    spans, bp = {}, 0
+    for n in reference:
+        spans[n] = (bp, bp + lengths[n])
+        bp += lengths[n]
+    return spans
+
+
+def detours(spans, path):
+    """Where a path leaves the reference's nodes for nodes of its own:
+    (leave bp, rejoin bp, own nodes)."""
+    out, own, leave = [], [], 0
+    for n in path:
+        if n in spans:
+            if own:
+                out.append((leave, spans[n][0], own))
+                own = []
+            leave = spans[n][1]
+        else:
+            own.append(n)
+    return out
+
+
+def schematic_parts(lines, directory, gfa):
+    """What both schematics draw: the GFA's W lines, the reference's nodes,
+    each haplotype's detours, the walk file's units and the two units a
+    read of the window fetches, adjacent in the file."""
+    lengths, _, paths, contigs = read_gfa(gfa)
+    ref = next(name for name in paths if name.startswith(f"{REF}#"))
+    reference = [str(n) for n in paths[ref]]
+    spans = node_spans(reference, lengths)
+    units = units_of(lines)
+    table = next(rows for unit, rows in units if unit[4] == "table")
+    tile, departures = (next((unit, rows) for unit, rows in units if unit[4] == kind and int(unit[2]) == WINDOW[0])
+                        for kind in ("tile", "departures"))
+    entries = sorted((e for e in table if e[4] in ("tile", "departures") and e[2:4] == tile[0][2:4]),
+                     key=lambda e: int(e[6]))
+    first, last = int(entries[0][6]), int(entries[-1][6]) + int(entries[-1][7])
+    if sum(int(e[7]) for e in entries) != last - first:
+        sys.exit("figures.py: the schematic expects the window's tile and departure block adjacent in the file")
+    return {
+        "w_lines": [f for f in (line.split("\t") for line in gfa.read_text().splitlines()) if f[0] == "W"],
+        "contig": contigs[ref][0],
+        "tile": next(int(f.split(":")[-1]) for f in lines[0] if f.startswith("tile:")),
+        "length": sum(lengths[n] for n in reference),
+        "spans": spans,
+        "lengths": lengths,
+        "haplotypes": [(name, detours(spans, [str(n) for n in paths[name]])) for name in paths if name != ref],
+        "directory": directory,
+        "table": table,
+        "tile_unit": tile,
+        "departures_unit": departures,
+        "entries": entries,
+        "request": (first, last - first),
+    }
+
+
+def mono_row(c, x, y, fields, size=11.5, bold=(), grey=(), glosses=()):
+    """Draws a row's fields two spaces apart, each at its own x, and the
+    glosses (field, text, line) in small sans under their fields; returns
+    the row's right edge and the y below its lowest gloss."""
+    cw = 0.602 * size
+    xs = [x + sum(len(f) + 2 for f in fields[:i]) * cw for i in range(len(fields))]
+    for i, (fx, f) in enumerate(zip(xs, fields)):
+        c.say(fx, y, html.escape(f), size, GREY if i in grey else INK, "bold" if i in bold else "normal")
+    bottom = y
+    for i, text, line in glosses:
+        c.say(xs[i], y + 13 + 11 * line, html.escape(text), 10, MUTED, font=SANS)
+        bottom = max(bottom, y + 13 + 11 * line)
+    return xs[-1] + len(fields[-1]) * cw, bottom
+
+
+def step(h):
+    return f"{'<' if h[1] else '>'}{h[0]}"
+
+
+def glossed(row, routes, spans):
+    """A row's first-look columns, its bold and grey ones and what the
+    bold ones encode, for mono_row."""
+    kind = row[3]
+    if kind == "ref":
+        steps = " ".join(step(h) for h in deltas(row[9])[0])
+        lengths = sorted(set(row[10].split(",")))
+        bp = f"{lengths[0]} bp each" if len(lengths) == 1 else f"{row[10]} bp"
+        spec = dict(bold=(1, 2, 3, 9, 10), grey=(0, 4, 5, 7, 11), glosses=[(9, steps, 0), (10, bp, 0)])
+    elif kind == "route":
+        entry, interior, exit_ = routes[tuple(row)]
+        parts = [[entry], interior, [exit_]]
+        spec = dict(bold=(3, 4, 5, 6), grey=(0,),
+                    glosses=[(4 + i, " ".join(step(h) for h in hs if h), 0) for i, hs in enumerate(parts)])
+    elif kind == "walk":
+        start = int(row[9])
+        taken = ", ".join(f"route {r}" for r, _ in deltas(row[10])[0])
+        text = f"{row[8]} steps from {step((start >> 1, start & 1))}, " + (f"taking {taken}" if taken else "no routes")
+        spec = dict(bold=(1, 2, 3, 4, 8, 9, 10), grey=(0, 5, 7), glosses=[(8, text, 0)])
+    else:
+        leave = next(n for n, (_, end) in spans.items() if end == int(row[8]))
+        rejoin = next(n for n, (start, _) in spans.items() if start == int(row[11]))
+        spec = dict(bold=(1, 2, 3, 4, 6, 8, 9, 11, 12, 14), grey=(0, 7, 10, 13),
+                    glosses=[(1, f">{leave} to >{rejoin}", 0), (6, f"{row[6]} bp of its own", 1),
+                             (8, f"leaves {row[8]}", 0), (11, f"rejoins {row[11]}", 0), (14, "own steps' tile", 1)])
+    return spec
+
+
+def decoded_routes(unit, rows):
+    """A tile's route rows, by row, as entry, interior and exit handles."""
+    return dict(zip((tuple(r) for r in rows if r[3] == "route"), decode_walks(rows)[1])) if unit[4] == "tile" else {}
+
+
+def unit_rows(c, x, y, unit, rows, spans, kinds=None):
+    """A unit's #unit line and its rows, the first-look columns bold and
+    glossed; returns the y below them."""
+    mono_row(c, x, y, unit, bold=(4, 5), grey=(1,))
+    y += 22
+    routes = decoded_routes(unit, rows)
+    for r in rows:
+        if not kinds or r[3] in kinds:
+            y = mono_row(c, x, y, r, **glossed(r, routes, spans))[1] + 20
+    return y
+
+
+def ruler(c, x_of, y, parts):
+    """The contig's coordinates with its tiles bracketed above."""
+    tile, length = parts["tile"], parts["length"]
+    for start in range(0, length, tile):
+        x0, x1 = x_of(start), x_of(start + tile)
+        c.rect(x0 + 1, y - 26, x1 - x0 - 2, 18, "none", 3, LINE)
+        c.say((x0 + x1) / 2, y - 13, f"tile {start}", 11, MUTED, "bold", anchor="middle")
+    c.line(x_of(0), y, x_of(length), y, width=1.2)
+    c.say(x_of(0) - 8, y + 18, parts["contig"], 10, MUTED, "bold", SANS, "end")
+    for bp in range(0, length + 1, 10):
+        tall = bp % tile == 0
+        c.line(x_of(bp), y, x_of(bp), y + (6 if tall else 3))
+        if tall:
+            c.say(x_of(bp), y + 18, str(bp), 10, MUTED, anchor="middle")
+
+
+def window_label(parts):
+    return f"{parts['contig']}:{WINDOW[0] + 1}-{WINDOW[1]}"
+
+
+def window_shade(c, x_of, top, bottom, label=None):
+    s, e = WINDOW
+    c.rect(x_of(s), top, x_of(e) - x_of(s), bottom - top, HIGHLIGHT)
+    if label:
+        c.say((x_of(s) + x_of(e)) / 2, top + 13, label, 11.5, INK, "bold", SANS, "middle")
+
+
+def node_box(c, x0, x1, y, h, label, fill, stroke):
+    c.rect(x0 + 1.5, y, x1 - x0 - 3, h, fill, 4, stroke, 1.2)
+    c.say((x0 + x1) / 2, y + h / 2 + 4, label, 11, INK, "bold", SANS, "middle")
+
+
+def reference_boxes(c, x_of, y, parts):
+    for n, (start, end) in parts["spans"].items():
+        node_box(c, x_of(start), x_of(end), y, 22, n, REF_FILL, REF_STROKE)
+
+
+def hug(c, x_of, y, colours, dips, depth, parts):
+    """A haplotype's line along the reference, dipping to a box of its own
+    nodes wherever it walks away from it."""
+    fill, _, stroke = colours
+    d, boxes = f"M{x_of(0):.1f},{y:.1f}", []
+    for leave, rejoin, own in dips:
+        xl, xr = x_of(leave), x_of(rejoin)
+        w = min(x_of(sum(parts["lengths"][n] for n in own)) - x_of(0), 0.6 * (xr - xl))
+        b0, b1 = (xl + xr - w) / 2, (xl + xr + w) / 2
+        d += (f" L{xl:.1f},{y:.1f} C{(xl + b0) / 2:.1f},{y:.1f} {(xl + b0) / 2:.1f},{y + depth:.1f} {b0:.1f},{y + depth:.1f}"
+              f" L{b1:.1f},{y + depth:.1f} C{(b1 + xr) / 2:.1f},{y + depth:.1f} {(b1 + xr) / 2:.1f},{y:.1f} {xr:.1f},{y:.1f}")
+        boxes.append((b0, b1, " ".join(own)))
+    c.path(f"{d} L{x_of(parts['length']):.1f},{y:.1f}", stroke)
+    for b0, b1, label in boxes:
+        node_box(c, b0, b1, y + depth - 9, 18, label, fill, stroke)
+
+
+HAPLOTYPE_COLOURS = [BLUE, ORANGE]
+
+
+def schematic_svg(parts):
+    """Each W line beside its line along the reference and, under it, the
+    rows of the window's tile it became, with the window and the rows a
+    read of it fetches shaded alike."""
+    c, shade = Canvas(), Canvas()
+    width, left, x0 = 900, 24, 352
+    x_of = lambda bp: x0 + (width - 24 - x0) * bp / parts["length"]
+    w_lines = {f"{f[1]}#{f[2]}": "  ".join(f) for f in parts["w_lines"]}
+    spans, (tile, tile_rows), (block, block_rows) = parts["spans"], parts["tile_unit"], parts["departures_unit"]
+    routes = decoded_routes(tile, tile_rows)
+    c.say(left, 26, " ".join(["gfa-to-tabix", f"{SCHEMATIC}.gfa", *SCHEMATIC_OPTIONS, "-o", PREFIX]), 13, weight="bold")
+    c.say(left, 84, f"{SCHEMATIC}.gfa", 12, weight="bold")
+    ruler(c, x_of, 92, parts)
+    y = 122
+    window_shade(shade, x_of, 40, y + 30, window_label(parts))
+    reference_boxes(c, x_of, y, parts)
+    c.say(left, y + 15, w_lines[f"{REF}#0"], 11.5, REF_STROKE, "bold")
+
+    def rows(y, drawn, label=None):
+        """The rows the window reads, tagged with their unit, on a block of
+        the window's shade; returns the y below them."""
+        top = y - 12
+        if label:
+            c.say(left + 8, y, label, 10, MUTED, font=SANS)
+            y += 18
+        right, bottom = y, y
+        for r in drawn:
+            edge, bottom = mono_row(c, left + 8, y, r, **glossed(r, routes, spans))
+            right, y = max(right, edge), bottom + 20
+        shade.rect(left, top, right - left + 10, bottom - top + 6, HIGHLIGHT, 3)
+        return bottom + 34
+
+    def unit_tag(unit, entry):
+        name = f"{unit[4]} {unit[5]}" if unit[4] == "tile" else f"{unit[4]} {unit[2]}-{unit[3]}"
+        return f"{name} · {byte_range(int(entry[6]), int(entry[7]))}"
+
+    entry = {e[4]: e for e in parts["entries"]}
+    y = rows(y + 50, [r for r in tile_rows if r[3] == "ref"], unit_tag(tile, entry["tile"]))
+    for i, (name, dips) in enumerate(parts["haplotypes"]):
+        window_shade(shade, x_of, y - 20, y + 44)
+        colours = HAPLOTYPE_COLOURS[i]
+        hug(c, x_of, y, colours, dips, 22, parts)
+        c.say(left, y + 4, w_lines[name], 11.5, colours[2], "bold")
+        y += 68
+        walks = [r for r in tile_rows if r[3] == "walk" and r[4].startswith(name)]
+        taken = {route for w in walks for route, _ in deltas(w[10])[0]}
+        own = [r for i, r in enumerate(r for r in tile_rows if r[3] == "route") if i in taken] + walks
+        if own:
+            y = rows(y, own)
+        departures = [r for r in block_rows if r[4].startswith(name)]
+        if departures:
+            y = rows(y, departures, unit_tag(block, entry["departures"]))
+    c.out.insert(1, "\n".join(shade.out))
+    c.say(left, y - 6, f"{window_label(parts)}  →  one request, {byte_range(*parts['request'])}", 11.5, INK, "bold", SANS)
+    return c.svg(width, y + 10)
+
+
+def bytes_svg(parts):
+    """The reader's path: the window on the graph, the .idx, the data file
+    as a bar of its units with offsets, the window's units shaded as the
+    one request, then the rows it gets."""
+    c, shade = Canvas(), Canvas()
+    width, left, x0 = 900, 24, 160
+    x_of = lambda bp: x0 + (width - 24 - x0) * bp / parts["length"]
+    c.say(left, 26, " ".join(["gfa-to-tabix", f"{SCHEMATIC}.gfa", *SCHEMATIC_OPTIONS, "-o", PREFIX]), 13, weight="bold")
+    ruler(c, x_of, 92, parts)
+    y_ref = 122
+    reference_boxes(c, x_of, y_ref, parts)
+    c.say(left, y_ref + 15, f"{REF}#0", 11.5, REF_STROKE, "bold")
+    for i, (name, dips) in enumerate(parts["haplotypes"]):
+        y = y_ref + 34 + 14 * i
+        hug(c, x_of, y, HAPLOTYPE_COLOURS[i], dips, 36 + 24 * i, parts)
+        c.say(left, y + 4, name, 11.5, HAPLOTYPE_COLOURS[i][2], "bold")
+    bottom = y_ref + 34 + 14 * len(parts["haplotypes"]) + 58
+    window_shade(shade, x_of, 40, bottom, window_label(parts))
+    c.out.insert(1, "\n".join(shade.out))
+    data = f"{PREFIX}.{REF}.walks.gz"
+    y = bottom + 24
+    c.say(left, y, f"{data}.idx", 12, weight="bold")
+    header, sequence = parts["directory"][1:]
+    mono_row(c, left + 8, y + 18, header, 10.5)
+    mono_row(c, left + 8, y + 34, sequence, 10.5, bold=(1, 2))
+    total = next(int(f.split(":")[-1]) for f in parts["directory"][0] if f.startswith("bytes:"))
+    bar_y = y + 86
+    bx0, bx1 = left, width - 24
+    b_of = lambda b: bx0 + (bx1 - bx0) * b / total
+    c.say(left, bar_y - 10, data, 12, weight="bold")
+    c.say(left + 0.602 * 12 * (len(data) + 2), bar_y - 10, f"{total} bytes", 10.5, MUTED)
+    segments = [(("header", ""), 0, int(header[2]))]
+    for e in parts["table"]:
+        label = (f"tile {e[5]}", "") if e[4] == "tile" else (e[4], f"{e[2]}-{e[3]}")
+        segments.append((label, int(e[6]), int(e[6]) + int(e[7])))
+    t0, t1 = int(sequence[1]), int(sequence[1]) + int(sequence[2])
+    segments.append((("table", ""), t0, t1))
+    offset, length = parts["request"]
+    c.rect(b_of(offset), bar_y - 2, b_of(offset + length) - b_of(offset), 60, HIGHLIGHT)
+    for (kind, name), lo, hi in segments:
+        c.rect(b_of(lo) + 1, bar_y, b_of(hi) - b_of(lo) - 2, 34, "none", 3, LINE)
+        weight = "bold" if offset <= lo < offset + length else "normal"
+        c.say((b_of(lo) + b_of(hi)) / 2, bar_y + (15 if name else 21), kind, 10, INK, weight, anchor="middle")
+        c.say((b_of(lo) + b_of(hi)) / 2, bar_y + 27, name, 10, INK, weight, anchor="middle")
+        c.say(b_of(lo), bar_y + 46, str(lo), 9, MUTED, anchor="middle")
+    c.say(b_of(total), bar_y + 46, str(total), 9, MUTED, anchor="middle")
+    ex = left + 8 + 0.602 * 10.5 * (len(sequence[0]) + 3.5)
+    c.path(f"M{ex:.1f},{y + 40:.1f} V{bar_y - 22:.1f} H{(b_of(t0) + b_of(t1)) / 2:.1f} V{bar_y - 4:.1f}", MUTED, 1)
+    c.say((b_of(offset) + b_of(offset + length)) / 2, bar_y + 76,
+          f"{window_label(parts)}: one request, {byte_range(offset, length)}", 11.5, INK, "bold", SANS, "middle")
+    y = unit_rows(c, left + 8, bar_y + 108, *parts["tile_unit"], parts["spans"], kinds=("ref", "route", "walk"))
+    y = unit_rows(c, left + 8, y, *parts["departures_unit"], parts["spans"])
+    return c.svg(width, y - 10)
+
+
 def generate(binary):
     with tempfile.TemporaryDirectory() as tmp:
         out = f"{tmp}/{PREFIX}"
@@ -645,12 +953,17 @@ def generate(binary):
             with gzip.open(walk_file, "rt") as f:
                 built[name] = [line.rstrip("\n").split("\t") for line in f]
             directories[name] = [line.split("\t") for line in Path(f"{walk_file}.idx").read_text().splitlines()]
+        subprocess.run([binary, FIGURES / f"{SCHEMATIC}.gfa", *SCHEMATIC_OPTIONS, "-o", out], **quiet)
+        with gzip.open(walk_file, "rt") as f:
+            schematic = [line.rstrip("\n").split("\t") for line in f]
+        schematic_directory = [line.split("\t") for line in Path(f"{walk_file}.idx").read_text().splitlines()]
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
+    parts = schematic_parts(schematic, schematic_directory, FIGURES / f"{SCHEMATIC}.gfa")
     return {
-        "walks-simple-figure": bandage_figure("walks-simple", built["walks-simple"], directories["walks-simple"],
-                                              lambda f: None),
+        "walks-schematic": schematic_svg(parts),
+        "walks-bytes": bytes_svg(parts),
         "walks-leave-figure": bandage_figure("walks-leave", built["walks-leave"], directories["walks-leave"],
                                              lambda f: HIGHLIGHT if f[3] == "departure" else None),
         "outputs": {},

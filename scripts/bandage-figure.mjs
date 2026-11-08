@@ -24,11 +24,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const FIGURES = [
   {
-    name: 'walks-simple',
-    args: ['--walks', '--refs', 'GRCh38'],
-    region: { refName: 'chr1', start: 0, end: 60 },
-  },
-  {
     name: 'walks-leave',
     args: ['--walks', '--refs', 'GRCh38', '--tile', '30'],
     region: { refName: 'chr1', start: 0, end: 60 },
