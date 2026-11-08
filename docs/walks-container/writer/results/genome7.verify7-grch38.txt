@@ -1,0 +1,2 @@
+{"file": "hprc-v2.1-mc-grch38.GRCh38.walks.gz", "ok": true, "units": 159038, "tables": 195, "lines": 97164719, "departure_lines": 3813809}
+verify7 GRCh38: 83.84 s, 106268 KB peak

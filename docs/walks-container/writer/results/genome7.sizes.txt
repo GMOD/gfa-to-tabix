@@ -1,0 +1,4 @@
+-rw-rw-r-- 1 cdiesh cdiesh 1760248336 Nov  7 21:30 hprc-v2.1-mc-chm13.CHM13.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh        886 Nov  7 21:30 hprc-v2.1-mc-chm13.CHM13.walks.gz.idx
+-rw-rw-r-- 1 cdiesh cdiesh 1562313167 Nov  7 20:39 hprc-v2.1-mc-grch38.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       8109 Nov  7 20:39 hprc-v2.1-mc-grch38.GRCh38.walks.gz.idx

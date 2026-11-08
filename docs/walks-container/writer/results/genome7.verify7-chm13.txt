@@ -1,0 +1,2 @@
+{"file": "hprc-v2.1-mc-chm13.CHM13.walks.gz", "ok": true, "units": 154936, "tables": 25, "lines": 111337174, "departure_lines": 3743089}
+verify7 CHM13: 75.48 s, 104800 KB peak

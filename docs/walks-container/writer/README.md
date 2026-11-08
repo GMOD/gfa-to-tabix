@@ -129,3 +129,23 @@ the step-for-step rebuild added on 11-07 (`results/release.*`,
   shard of MC chr22 finished in an hour; the script runs it only with
   `CLAIMS7=1` ([issues log](../../issues-log.md))
 
+## The genome-wide builds of 2026-11-07, for hosting
+
+`ada:~/work/genome7/genome7.sh` (`results/genome7.*`) built the two
+Minigraph-Cactus graphs genome-wide with the same writer, from the GFAs
+the 11-05 format 6 run had converted from HPRC v2.1's GBZ files,
+`genome7.done` PASSED:
+
+- **GRCh38:** `hprc-v2.1-mc-grch38.GRCh38.walks.gz`, 1.56 GB with an 8 KB
+  `.idx`; 5,404 s on a loaded host, 7.3 GiB peak; 195 reference
+  sequences, 83,303,684 reference nodes, none revisited; 97,164,719 lines
+  in 159,038 units, 3,813,809 of them departure lines; verify7 passes in
+  84 s
+- **CHM13:** `hprc-v2.1-mc-chm13.CHM13.walks.gz`, 1.76 GB with a 0.9 KB
+  `.idx`; 3,010 s, 8.6 GiB peak; 25 sequences, 90,761,410 reference
+  nodes, the header says none revisited; 111,337,174 lines in 154,936
+  units, 3,743,089 departure lines; verify7 passes in 75 s
+- Next on them: graph-walks' `release-check` on each (running on ada at
+  the time of writing), the upload with `deploy-demo.sh`, and the same
+  release check against the hosted URL
+
