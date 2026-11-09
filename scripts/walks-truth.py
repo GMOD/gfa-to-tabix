@@ -28,7 +28,7 @@ to its reference, and measure what a window costs to read.
                    haplotype enters each tile once
       R.tsv (name, sequence, start, end) repeats the figures per region.
 
-  walks-truth.py rebuild WALKS GFA
+  walks-truth.py rebuild WALKS GFA [--shard I/N]
       Rebuilds every W or P line from the file and compares it with the GFA,
       step for step: the file holds exactly the lines with a step on a node
       of the reference's own lines (0 bp segments dropped), each line's
@@ -40,7 +40,9 @@ to its reference, and measure what a window costs to read.
       its start and end are the piece's first and last steps on R, at their
       positions, its hapOffset and bp the piece's stretch from one to the
       other, its nsteps all the piece's steps. Prints each line or abridged
-      row that differs and exits 1 if any does.
+      row that differs and exits 1 if any does. The GFA can be gzip, and
+      --shard checks the lines whose names hash to I of N, parsing no other
+      line, so a genome's file is checked a shard of its paths at a time.
 
   walks-truth.py cost WALKS
       Per window of one tile at each tile's start: the walk rows and steps of
@@ -59,6 +61,8 @@ import gzip
 import hashlib
 import itertools
 import re
+import shutil
+import subprocess
 import sys
 import zlib
 from array import array
@@ -523,38 +527,91 @@ def cost(args):
         print(f"    {w[3]}:{w[4]}  {w[0]:,} gz bytes  {w[1]:,} steps  {w[2]:,} walk rows")
 
 
-def gfa_lines(path, reference):
-    """The reference sample's lines, then a generator over every other W or P
-    line, each as (name, start, handles, lengths), 0 bp segments dropped."""
-    lengths, named = {}, {}
-    with open(path) as f:
-        for line in f:
-            if line.startswith("S\t"):
-                c = line.rstrip("\n").split("\t")
-                lengths[int(c[1])] = len(c[2]) if c[2] != "*" else int(next(t[5:] for t in c[3:] if t.startswith("LN:i:")))
+class ByNode:
+    """A number per node id, 0 until set, held in pages: a genome's 140 M ids
+    cost their bytes, and one id near 2^31 costs one page."""
 
-    def parse(line):
-        c = line.rstrip("\n").split("\t")
-        if c[0] == "W":
-            key = (f"{c[1]}#{c[2]}#{c[3]}", int(c[4]))
-            hs = [2 * int(x) + (s == "<") for s, x in re.findall(r"([<>])([^<>]+)", c[6])]
+    def __init__(self, code):
+        self.code, self.pages = code, {}
+        self.blank = bytes(array(code).itemsize << 16)
+
+    def __setitem__(self, node, value):
+        page = self.pages.get(node >> 16)
+        if page is None:
+            page = self.pages[node >> 16] = array(self.code, self.blank)
+        page[node & 65535] = value
+
+    def __getitem__(self, node):
+        page = self.pages.get(node >> 16)
+        return page[node & 65535] if page is not None else 0
+
+
+def gfa_bytes(path):
+    """The GFA's lines as bytes, gunzipped when it is gzip, by pigz where
+    there is one."""
+    with open(path, "rb") as f:
+        gz = f.read(2) == b"\x1f\x8b"
+    if gz and shutil.which("pigz"):
+        with subprocess.Popen(["pigz", "-dc", path], stdout=subprocess.PIPE, bufsize=1 << 24) as proc:
+            yield from proc.stdout
+        if proc.returncode:
+            sys.exit(f"pigz -dc {path} exited {proc.returncode}")
+    else:
+        with (gzip.open if gz else open)(path, "rb") as f:
+            yield from f
+
+
+def gfa_lines(path, reference, keep):
+    """The reference sample's lines that `keep` takes, a generator over every
+    other W or P line it takes, each as (name, start), handles, lengths with
+    0 bp segments dropped, and which nodes the reference's lines step on.
+    Reads the GFA twice, its S lines and then its path lines, and parses a
+    path line only when it is the reference's or `keep` takes it, so one
+    shard of a genome's paths costs that shard's steps."""
+    lengths, on_reference = ByNode("Q"), ByNode("B")
+    for line in gfa_bytes(path):
+        if line.startswith(b"S\t"):
+            c = line.rstrip(b"\r\n").split(b"\t")
+            lengths[int(c[1])] = 1 + (len(c[2]) if c[2] != b"*" else int(next(t[5:] for t in c[3:] if t.startswith(b"LN:i:"))))
+
+    def name_of(line):
+        if line[:1] == b"W":
+            c = line.split(b"\t", 5)
+            return b"#".join(c[1:4]).decode(), int(c[4])
+        text = line.split(b"\t", 2)[1].decode()
+        named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", text) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", text)
+                 or re.fullmatch(r"(.*):(\d+)-\d+", text))
+        return (named.group(1), int(named.group(2))) if named else (text, 0)
+
+    def handles_of(line):
+        c = line.rstrip(b"\r\n").split(b"\t")
+        if c[0] == b"W":
+            ids = c[6].replace(b"<", b">").split(b">")[1:]
+            strands = c[6].translate(None, b"0123456789")
+            if len(ids) != len(strands):
+                raise ValueError(f"{name_of(line)[0]}: a walk that is not >id or <id steps")
+            hs = [2 * int(x) + (s == 60) for x, s in zip(ids, strands)]
         else:
-            named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", c[1]) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", c[1])
-                     or re.fullmatch(r"(.*):(\d+)-\d+", c[1]))
-            key = (named.group(1), int(named.group(2))) if named else (c[1], 0)
-            hs = [2 * int(x[:-1]) + (x[-1] == "-") for x in c[2].split(",")] if c[2] != "*" else []
-        hs = [h for h in hs if lengths[h >> 1]]
-        return key, hs, [lengths[h >> 1] for h in hs]
+            hs = [2 * int(x[:-1]) + (x[-1:] == b"-") for x in c[2].split(b",")] if c[2] not in (b"*", b"") else []
+        stored = [lengths[h >> 1] for h in hs]
+        if 0 in stored:
+            raise KeyError(f"{name_of(line)[0]} steps on segment {hs[stored.index(0)] >> 1}, which has no S line")
+        return array("I", (h for h, n in zip(hs, stored) if n > 1))
 
-    def lines(sample):
-        with open(path) as f:
-            for line in f:
-                if line[0] in "WP" and line[1] == "\t":
-                    key, hs, ls = parse(line)
-                    if (key[0].split("#")[0] == reference) == sample:
-                        yield key, hs, ls
-
-    return list(lines(True)), lines(False)
+    full = lambda key, hs: (key, list(hs), [lengths[h >> 1] - 1 for h in hs])
+    reference_lines, others = [], []
+    for line in gfa_bytes(path):
+        if line[:1] in (b"W", b"P") and line[1:2] == b"\t":
+            key = name_of(line)
+            of_reference = key[0].split("#")[0] == reference
+            if of_reference or keep(key[0]):
+                hs = handles_of(line)
+                if of_reference:
+                    for h in hs:
+                        on_reference[h >> 1] = 1
+                if keep(key[0]):
+                    (reference_lines if of_reference else others).append((key, hs))
+    return [full(*item) for item in reference_lines], (full(*item) for item in others), on_reference
 
 
 def handle_text(h):
@@ -575,11 +632,10 @@ def rebuild(args):
     for ps in list(rows.values()) + list(refs.values()):
         for p in ps:
             held[p.line].append(p)
-    reference_lines, other_lines = gfa_lines(args.gfa, reference)
-    on_reference = {h >> 1 for _, hs, _ in reference_lines for h in hs}
+    reference_lines, other_lines, on_reference = gfa_lines(args.gfa, reference, keep)
     wrong, expected, seen = [], 0, set()
     for (name, start), want, lengths in itertools.chain(reference_lines, other_lines):
-        if not keep(name) or not any(h >> 1 in on_reference for h in want):
+        if not any(on_reference[h >> 1] for h in want):
             continue
         expected += 1
         seen.add((name, start))
