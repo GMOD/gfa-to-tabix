@@ -3,10 +3,11 @@
 Two routes put a pangenome graph on a static web host for a browser to read by
 region, and the JBrowse graph genome viewer plugin reads both:
 
-- **gfa-to-tabix:** bgzipped, Tabix-indexed BED files from any GFA. The
-  [node and link index](index-format.md) serves every graph, and the
-  [walk files](walks-format.md) add every haplotype's path for a base-level
-  graph
+- **gfa-to-tabix:** static files from any GFA. The
+  [node and link index](index-format.md), a bgzipped, Tabix-indexed BED
+  file, serves every graph, and the [walk files](walks-format.md), gzip
+  units with a table of their byte ranges, add every haplotype's path for a
+  base-level graph
 - **[gbz-base](https://github.com/jltsiren/gbz-base):** a SQLite database,
   `graph.gbz.db`, that `gbz-base construct` builds from a GBZ.
   [@gmod/gbz-base](https://github.com/GMOD/gbz-base-js) reads it by range
@@ -31,16 +32,16 @@ region, and the JBrowse graph genome viewer plugin reads both:
 |                 | gfa-to-tabix | gbz-base, with gbz-haplotype-index |
 | --------------- | ------------ | ---------------------------------- |
 | Input           | rGFA, or a plain GFA with P or W lines; walks need a base-level graph | a GBZ |
-| Files           | BGZF text and TBI, which htslib, `tabix` and any static web host handle | SQLite |
-| Nodes and links | `segs` and `links` rows filed by reference coordinate | a row per node orientation, with its edges |
+| Files           | BGZF text any static web host serves: the index with a TBI, which htslib and `tabix` read, and walk files with a unit table, which `zcat` reads whole | SQLite |
+| Nodes and links | `N` and `L` rows filed by reference coordinate | a row per node orientation, with its edges |
 | Bases           | in walk files with `--sequences` | always |
-| Haplotype paths | per 64 kb chunk: the reference's path, distinct routes off it, each piece's choices of route | the GBWT, in the node rows |
+| Haplotype paths | per 64 kb tile: the reference's path, distinct routes off it, each piece's choices of route | the GBWT, in the node rows |
 | Walk names      | `sample#haplotype#contig` in every row; the header lists them all | `unknown#N` for every walk but the query path without the index; with it, sample, haplotype, contig and coordinate |
 | References      | one walk file per `--refs` sample | one database for GRCh38, CHM13 and any generic path |
 | Zoomed out      | `build` writes a coarse tier, alleles and bubbles; walk files have none | the index draws every haplotype over a whole chromosome in about a dozen requests, at several zoom levels |
 | N haplotypes    | routes grow as N^0.36 and choices as N^0.86, about 20 GB genome-wide at 10,000 | the GBWT grows sublinearly, because haplotypes share runs |
-| Paralog jumps   | the steps after a jump take the paralog's chunk ([details](walks-format.md#paralogs-and-collapsed-repeats)); on chr22, fewer than 0.1% of steps, in at most 74 of the 1,130 paths besides GRCh38's, nearly all in 22q11 | reaches those nodes by graph distance |
-| Misses          | a haplotype that leaves the reference before a window and rejoins it after has only a `skip` row in the window's chunks, which graph-walks doesn't draw yet ([ADR 0006](adr/0006-walks-skip-rows.md)) | the snarl extension once turned a 100 kbp query into 10 Mbp, 75 s and 9 GiB |
+| Paralog jumps   | the steps after a jump take the paralog's tile ([details](walks-format.md#paralogs-and-collapsed-repeats)); on chr22, fewer than 0.1% of steps, in at most 74 of the 1,130 paths besides GRCh38's, nearly all in 22q11 | reaches those nodes by graph distance |
+| Misses          | a path that crosses onto another sequence of the reference reads as ending there ([open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence)); where the reference passes a node more than once, a step's position is the writer's choice ([Exact and chosen](walks-format.md#exact-and-chosen)) | the snarl extension once turned a 100 kbp query into 10 Mbp, 75 s and 9 GiB |
 
 The index's keep route, which names a few chosen haplotypes, has a
 [proof](https://github.com/GMOD/gbz-haplotype-index/blob/main/docs/proof.md)
@@ -52,11 +53,16 @@ The Minigraph-Cactus GRCh38 graph: 139.5 M nodes, 464 haplotypes.
 
 | measure                 | gfa-to-tabix walk files                 | gbz-base             | gbz-haplotype-index |
 | ----------------------- | --------------------------------------- | -------------------- | ------------------- |
-| size                    | 1.22 GB GRCh38, 1.63 GB CHM13, no bases | 10.05 GB with bases  | 5.1 GB              |
-| build                   | 28.6 min, 12.9 GB peak, 24 cores        | HPRC hosts the file  | 35 min, 22 threads  |
-| reads per window        | one index, one range of two chunks      | 18 to 43 round trips |                     |
-| bytes per window, chr22 | 0.05 MB median, 0.5 MB p99              |                      |                     |
+| size                    | 1.56 GB GRCh38, 1.76 GB CHM13, no bases | 10.05 GB with bases  | 5.1 GB              |
+| build                   | 90 min on a loaded host, 7.3 GiB peak, 24 cores | HPRC hosts the file  | 35 min, 22 threads  |
+| reads per window        | one range, a tile and its departure blocks, after three reads at open | 18 to 43 round trips |                     |
+| bytes per 64 kb window  | 0.05 MB median, 0.14 MB p99, 0.36 MB at most, genome-wide |                      |                     |
 
+- The walk files' sizes, build and bytes are the hosted format 7 files':
+  [sizes](walks-container/writer/results/genome7.sizes.txt),
+  [build](walks-container/writer/results/genome7.build-grch38.log) and
+  `walks-truth.py cost` on the [GRCh38](walks-container/writer/results/hosted.cost-grch38.txt)
+  and [CHM13](walks-container/writer/results/hosted.cost-chm13.txt) files
 - The GBZ-base paper (Sirén and Paten, bioRxiv 2026.07.10.737775 v2) gives
   10.7 GiB for gbz-base, 5.7 GiB for the GBZ and 3.35 GiB for an experimental
   GBZ v3 on the CHM13 graph, with bases

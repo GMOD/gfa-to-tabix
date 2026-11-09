@@ -401,15 +401,17 @@ and `piece`, so the first walk to take a route is the same for any reader
 <!-- C125 -->
 
 A handle is `2 × id + r`, with `r` 1 for the reverse strand, and every id is
-below 2^31, so it fits a signed 32-bit integer; the tool refuses a GFA
-with a larger one. <!-- C126 --> A list of handles is written as delta
+below 2^31, so an id fits a signed 32-bit integer and a handle an unsigned
+one; the tool refuses a GFA with a larger id. <!-- C126 --> A list of handles is written as delta
 tokens: each token is `2 × (id − previous id) + r`, and the first token's
 previous id is 0 unless a row says otherwise. <!-- C60 --> An empty list is `.`.
 <!-- C60 -->
 
 A difference can be negative, so a reader splits a token `t` by rounding down,
-taking the difference as `t >> 1` and `r` as `t & 1`. The token `-5` is a difference
-of −3 on the reverse strand; dividing toward zero would read −2.
+taking the difference as `floor(t / 2)` and `r` as `t − 2 × floor(t / 2)`. The
+token `-5` is a difference of −3 on the reverse strand; dividing toward zero
+would read −2. A token can reach 2^32 either side of 0, so a 32-bit shift
+is not enough to split one.
 
 ### ref
 
@@ -879,8 +881,11 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
   the tube map read through @jbrowse/graph-walks
-- jbrowse.org hosts HPRC v2.1's files in format 5, as
-  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f5s.{GRCh38,CHM13}.walks.bed.gz`
+- jbrowse.org hosts HPRC v2.1's files in format 7:
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38.GRCh38.walks.gz` from
+  the GRCh38-referenced graph and
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-chm13.CHM13.walks.gz` from
+  the CHM13-referenced one, each with its `.idx` beside it
 
 In a JBrowse graph track, `walksUri` takes the prefix up to the reference
 sample, so a track on hg38 reads the GRCh38 file of the GRCh38-referenced

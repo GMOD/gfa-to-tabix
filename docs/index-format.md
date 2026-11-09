@@ -224,8 +224,15 @@ and each costs a reader a compressed block.
 - **Cause:** `widen` in `src/anchor.rs` keeps one minimum and maximum per
   reference sequence, so a component attached at 1 Mb and 40 Mb files as 1-40 Mb.
   A reference node's links share the interval of its deletion link
-- **Minigraph-Cactus and rGFA graphs:** the reference passes each node once, and
-  wide intervals are few
+- **Minigraph-Cactus and rGFA graphs:** the reference passes each node once, so
+  no interval spans megabases for a repeat's sake. An interval still runs from
+  the start of the first reference node its component links to to the end of
+  the last, so a small bubble between two long reference nodes is filed under
+  both of them whole, and every window on either returns it. On HPRC's SV
+  rGFA most off-reference node rows are filed under more than a kilobase
+  and a tenth under more than 100 kb
+  ([widths](placement/hprc-sv-interval-widths.txt), from
+  `scripts/interval-widths.sh`)
 - **Giant components:** on HPRC's pggb chrY, one component of 3.5 M nodes
   fills GRCh38's 30 Mb Yq12 gap, and with `--max-component none` a 10 kb
   window there overlaps 3.7 M node rows and 7.1 M link rows. With the default

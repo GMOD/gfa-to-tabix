@@ -94,6 +94,13 @@ Departure records gained `ownTiles` after the results above, which are at
 - `scripts/levels-setup.sh`, `levels.sh`, `levels-mc.sh`: 76ff987 with the
   level read from `$LEVEL`, built at levels 7 to 9 on pggb and 6, 7 and 9
   on MC; `results/levels.txt`
+- `scripts/genome-check.sh`: `walks-truth.py rebuild` over every shard of
+  a genome-wide file's paths against its GFA, a few shards at once under a
+  memory cap; a stopped run resumes
+- `scripts/cross-sequence.py`: the W lines of a walk file whose pieces lie
+  on more than one reference sequence, and how often they cross
+- `scripts/left-out.sh`: the W lines a walk file leaves out of its GFA's,
+  and their bp
 - `scripts/compare7.py`: two format 7 files unit by unit
 - `scripts/detailnames.py`: whether two files hold the same detail units up
   to their names
@@ -149,3 +156,32 @@ the 11-05 format 6 run had converted from HPRC v2.1's GBZ files,
   the time of writing), the upload with `deploy-demo.sh`, and the same
   release check against the hosted URL
 
+## The hosted files against their GFAs, 2026-11-09
+
+Until this day the step-for-step rebuild had run on the chr22 and chrY
+builds of the release check, and the two genome-wide files jbrowse.org
+hosts had verify7 and graph-walks' chr22 windows alone
+([issues log](../../issues-log.md)). On ada, with the hosted files'
+copies under `~/work/genome7`:
+
+- **A sample of paths, 3 of 48 shards of each file:** GRCh38's 3,157
+  lines against HPRC's published `hprc-v2.1-mc-grch38.gfa.gz`, a source
+  the writer never read, and CHM13's 3,650 against `vg convert -f` of
+  HPRC's GBZ, each with its abridged rows, 0 wrong
+  (`results/hosted.rebuild-sample-*.txt`). It ran with a streaming copy of
+  `rebuild`, which became `walks-truth.py`'s `gfa_lines` the same day
+- **What a window reads:** `walks-truth.py cost` on both files; no window
+  of one tile passes the readers' budgets (`results/hosted.cost-*.txt`)
+- **Cuts by graph-walks 6.2 from the hosted URLs:** 40 random 10 kb
+  windows and the windows of the largest tiles of each file, with eight
+  haplotypes and with all of them, under the reader's default budgets;
+  none stops on a budget (`../reader/results-hosted/`, from
+  `../reader/scripts/hosted-cuts.mjs`; the times are a laptop's over the
+  network)
+- **Paths on more than one reference sequence:** 49 lines of the GRCh38
+  file, all between unplaced or unlocalized scaffolds
+  (`results/hosted.cross-sequence-grch38.txt`;
+  [open problems](../../open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
+- **Paths left out:** the 1,698 W lines with no step on a GRCh38 node hold
+  0.0044% of the published GFA's path bp
+  (`results/hosted.left-out-grch38.txt`)

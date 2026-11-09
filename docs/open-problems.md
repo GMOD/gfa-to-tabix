@@ -352,6 +352,46 @@ than replace it. Take one up only when someone asks for pggb walk tracks:
   their detail records, so a reader expands a stub by querying the same
   window there
 
+## A path that crosses onto another reference sequence
+
+```
+W  R  0  chrA  0  30  >1>2>3
+W  R  0  chrB  0  22  >5>6>7
+W  T  1  c     0  30  >1>2>6>7
+W  B  1  c     0  32  >1>2>6>3
+```
+
+- T steps from chrA's node 2 onto chrB's node 6 and stays there. It has a
+  piece in each sequence's tiles and no departure record, since a record
+  lies between two steps on one sequence
+  ([departure](walks-format.md#departure)), and neither piece's row says
+  that another follows on a different sequence
+- A reader of chrA therefore sees T end at node 2, as a contig that ends
+  there does. graph-walks 6.2 returns T's fragment with no departure, no
+  gap and nothing trimmed, and the link from node 2 to node 6 comes back
+  from a cut of neither sequence
+- B crosses and comes back, so it has a record on chrA: 2 bp of its own
+  between adjacent steps, with `ownTiles` `.`. The 2 bp are chrB's node 6,
+  which the record can't say, and an attach fetch reads no tile for them
+- In the hosted GRCh38 file, 49 of the 51,257 lines with walk rows have
+  pieces on more than one sequence, crossing 1,454 times, every time
+  between unplaced or unlocalized scaffolds and never onto a chromosome
+  ([count](walks-container/writer/results/hosted.cross-sequence-grch38.txt),
+  from `walks-container/writer/scripts/cross-sequence.py`).
+  Minigraph-Cactus assigns each contig to one reference chromosome before
+  it builds that chromosome's graph, so its graphs hold no path between
+  chromosomes. A pggb community of several chromosomes, or any graph with
+  a translocation, would
+- No hosted file shows this on a chromosome, so by
+  [ADR 0011](adr/0011-format-7-is-frozen.md) nothing changes now
+- Suggested next step, once a graph with such paths is to be hosted: a tag
+  on a piece's walk row giving the sequence, position and strand of the
+  step before it or after it in its W line, where that step is on another
+  sequence of the reference. Format 7 lets a reader ignore a tag it
+  doesn't know ([Header](walks-format.md#header)), so the format number
+  would stay; it is still an addition to the format, to be measured and
+  decided under ADR 0011's rules
+
 ## Format 2's carrier tags
 
 - The tool writes a link row's two carrier tags under one name, `SB:H:`, with

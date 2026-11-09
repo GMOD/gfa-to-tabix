@@ -1,0 +1,9 @@
+hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 0/48: 1084 lines with rows, 1084 on the reference in the GFA, 1559 abridged rows, 0 wrong
+hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 1/48: 1021 lines with rows, 1021 on the reference in the GFA, 1515 abridged rows, 0 wrong
+hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 2/48: 1052 lines with rows, 1052 on the reference in the GFA, 1474 abridged rows, 0 wrong
+GFA: 139520381 segments, 53150 path lines, 1307 parsed with 901203610 steps; 195 of the reference, 83303684 reference nodes
+shard 0: 2080.09 s, 7884372 KB peak
+GFA: 139520381 segments, 53150 path lines, 1279 parsed with 828184900 steps; 195 of the reference, 83303684 reference nodes
+shard 2: 2050.46 s, 7845276 KB peak
+GFA: 139520381 segments, 53150 path lines, 1258 parsed with 872339560 steps; 195 of the reference, 83303684 reference nodes
+shard 1: 2077.23 s, 7867728 KB peak

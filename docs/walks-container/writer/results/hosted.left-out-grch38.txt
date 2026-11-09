@@ -1,0 +1,1 @@
+W lines 53150 holding 1305008376391 bp; P lines 0; left out of the GRCh38 file: 1698 lines, 57230367 bp (0.0044%), 71 over 100 kb, the longest 439305 bp (HG00232#1#CM089995.1	85900550)

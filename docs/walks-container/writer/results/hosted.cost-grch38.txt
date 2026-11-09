@@ -1,0 +1,13 @@
+hprc-v2.1-mc-grch38.GRCh38.walks.gz: tile 65536; 47440 windows of one tile
+  walk rows  median          926  p90          928  p99          931  max          1,747
+  gz bytes   median       47,407  p90       62,024  p99      137,974  max        361,678
+  steps      median    1,618,698  p90    2,117,226  p99    3,484,722  max      7,938,225
+  windows over 8 MB: 0; over 32 M steps: 0
+    GRCh38#0#chr20:31129600  361,678 gz bytes  2,449,606 steps  399 walk rows
+    GRCh38#0#chr7:1245184  357,770 gz bytes  3,367,044 steps  697 walk rows
+    GRCh38#0#chr22:11993088  348,345 gz bytes  5,462,586 steps  240 walk rows
+    GRCh38#0#chr22:12058624  340,964 gz bytes  1,602,622 steps  128 walk rows
+    GRCh38#0#chr21:8323072  335,016 gz bytes  1,113,050 steps  247 walk rows
+    GRCh38#0#chr1:2686976  334,259 gz bytes  1,752,504 steps  338 walk rows
+    GRCh38#0#chr1:16711680  317,699 gz bytes  1,961,934 steps  161 walk rows
+    GRCh38#0#chr10:41877504  305,220 gz bytes  2,644,194 steps  293 walk rows

@@ -1,0 +1,13 @@
+hprc-v2.1-mc-chm13.CHM13.walks.gz: tile 65536; 47579 windows of one tile
+  walk rows  median          926  p90          928  p99          931  max          1,959
+  gz bytes   median       47,246  p90       62,594  p99      167,805  max        587,014
+  steps      median    1,629,949  p90    2,165,222  p99    4,105,005  max      7,836,367
+  windows over 8 MB: 0; over 32 M steps: 0
+    CHM13#0#chr15:1245184  587,014 gz bytes  1,910,414 steps  214 walk rows
+    CHM13#0#chr20:32505856  527,746 gz bytes  2,065,439 steps  311 walk rows
+    CHM13#0#chr3:91029504  513,688 gz bytes  1,597,857 steps  341 walk rows
+    CHM13#0#chr3:91357184  501,482 gz bytes  1,739,022 steps  357 walk rows
+    CHM13#0#chr3:91291648  498,600 gz bytes  2,455,826 steps  345 walk rows
+    CHM13#0#chr14:786432  488,366 gz bytes  2,062,248 steps  170 walk rows
+    CHM13#0#chr3:90963968  484,622 gz bytes  1,579,190 steps  385 walk rows
+    CHM13#0#chr21:589824  479,854 gz bytes  1,890,240 steps  261 walk rows

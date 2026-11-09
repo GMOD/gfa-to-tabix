@@ -1,0 +1,9 @@
+hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 0/48: 1203 lines with rows, 1203 on the reference in the GFA, 1296 abridged rows, 0 wrong
+hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 1/48: 1183 lines with rows, 1183 on the reference in the GFA, 1413 abridged rows, 0 wrong
+hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 2/48: 1264 lines with rows, 1264 on the reference in the GFA, 1509 abridged rows, 0 wrong
+GFA: 165835204 segments, 60807 path lines, 1380 parsed with 879340200 steps; 25 of the reference, 90761410 reference nodes
+shard 2: 1954.83 s, 9844800 KB peak
+GFA: 165835204 segments, 60807 path lines, 1266 parsed with 917974673 steps; 25 of the reference, 90761410 reference nodes
+shard 1: 1975.08 s, 9870884 KB peak
+GFA: 165835204 segments, 60807 path lines, 1299 parsed with 937866497 steps; 25 of the reference, 90761410 reference nodes
+shard 0: 1974.78 s, 9883044 KB peak

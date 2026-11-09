@@ -2007,3 +2007,86 @@ Where the findings have come from so far, and the rule each gives:
   forms-menu e2e, which named the format 5 hosted file themselves; both
   now read `hprc-v2.1-mc-grch38.GRCh38`, and `grep f5s` over a consumer
   is part of the swap
+- **2026-11-09, the analysis of the hosted files (no hosted file had been
+  rebuilt against a GFA).** The step-for-step rebuild, the check the
+  11-07 handoff names first, had run on the release check's MC chr22 and
+  pggb chrY builds. The genome-wide GRCh38 and CHM13 files, the ones
+  jbrowse.org serves, had verify7, which reads the file alone, and
+  graph-walks' release check on 28 chr22 windows; no chromosome of either
+  had been compared with a GFA step for step, since `rebuild` held every segment's
+  length in a dict and every reference node in a set, read a plain GFA
+  only, and parsed every path line in every shard. Source: the user's
+  request to analyse the format, 2026-11-09. Fix: `walks-truth.py`'s
+  `gfa_lines` reads the GFA as bytes, gzip or plain, holds lengths and
+  reference nodes in pages by node id, and parses only the reference's
+  lines and its shard's; `docs/walks-container/writer/scripts/genome-check.sh`
+  runs every shard, resumably. A sample of 3 of 48 shards of each file,
+  GRCh38's against HPRC's published GFA and CHM13's against `vg convert`
+  of its GBZ, rebuilt 3,157 and 3,650 lines with 0 wrong
+  (`results/hosted.rebuild-sample-*.txt`). Guard: check-walks.sh and
+  fuzz7.sh run the new reader on every fixture and seed, and the 13 broken
+  files `cases.tsv` gives to `rebuild` fail it; a genome-wide build is
+  checked with `genome-check.sh` before it is hosted
+- **2026-11-09, the review of the checker's new GFA reader.** An
+  independent reviewer ran the old and new `rebuild` on the same walk
+  file, GFA and shard 6,799 times: the fixtures under every option set,
+  all 42 broken files, fuzz graphs and their mutants, and 104 hand-made
+  GFAs. Wherever both parse a GFA they give the same verdict. One
+  regression: a segment of 2^32 − 1 bp overflowed the new reader, which
+  held length + 1 in 32 bits. One gap both versions had: a P line with an
+  empty steps field, which the writer accepts, crashed on `int('')`. The
+  new reader also refuses what the writer refuses and the old one read as
+  an empty walk (`*` for a walk, `>+1`, `>>1`), and a line that can't be
+  parsed now stops only the shards that hold it, so a single shard says
+  less than a full sweep. A first draft had read `>0` as `<0`; a hand-made
+  graph with a segment 0 caught it before the review. Source: a review
+  briefed to break the change, 2026-11-09. Fix: lengths in 64 bits, and
+  an empty steps field is no steps. Guard: none in CI for either; no
+  fixture has a segment 0, an empty P line or a segment that long. With
+  pigz on PATH a gzip GFA with bytes after its last member reads as
+  whole, and without pigz it is refused; the reviewer found no walk file
+  this lets pass
+- **2026-11-09, the analysis (a handle does not fit a signed 32-bit
+  integer).** walks-format.md said every id is below 2^31, "so it fits a
+  signed 32-bit integer", of a handle, `2 × id + r`. An id does; a handle
+  reaches 2^32 and a delta token 2^32 either side of 0, and the spec split
+  a token with `t >> 1`, which a 32-bit shift gets wrong from 2^31: a
+  graph with segment 2147483646 writes the token 4294967292. graph-walks
+  splits by arithmetic and passes that graph; a reader written from the
+  sentence in a language with 32-bit integers would not. No hosted graph
+  has an id over 2^28. Source: a hand-made graph with ids 0, 007 and
+  2147483646. Fix: the sentence says an id fits a signed 32-bit integer and
+  a handle an unsigned one, and the split is by floor division; the rows
+  are unchanged. Guard: none beyond `test:a_node_id_of_2_to_the_31_is_refused`;
+  no fixture holds an id above 2^30
+- **2026-11-09, the analysis (this repo's docs still named format 5 as
+  hosted). Re-found:** the 11-08 swap grepped the consumers for `f5s` and
+  not this repo. walks-format.md's Readers section gave the format 5
+  URLs as what jbrowse.org hosts; gbz-comparison.md still described `skip`
+  rows, two-chunk reads and the format 5 sizes; Cargo.toml's description
+  called the walk files Tabix-indexed BED. Source: reading the docs
+  against the hosted files. Fix: each now states format 7's files, with
+  the comparison's figures from the hosted files' own logs and
+  `walks-truth.py cost`. Guard: none; `grep -rn 'f5s\|format 5' docs
+  README.md` belongs in the swap pass
+- **2026-11-09, the analysis ("wide intervals are few", prose ahead of
+  data).** index-format.md said of Minigraph-Cactus and rGFA graphs that
+  wide intervals are few. On the hosted HPRC SV index, 74% of
+  off-reference node rows are filed under more than 1 kb and 9% under
+  more than 100 kb, because an interval runs to the far ends of the
+  reference nodes its component links to; the sentence had no measurement
+  behind it. Through @gmod/tabix 3.13.1 a 10 kb window still read at most
+  about half a megabyte, under the largest components, in a session
+  measurement that is not committed. Source: a scan of the hosted index.
+  Fix: the sentence states the rule and its effect, with
+  `docs/placement/hprc-sv-interval-widths.txt` from
+  `scripts/interval-widths.sh`. Guard: the committed table
+- **2026-11-09, the analysis (a path onto another reference sequence
+  reads as a contig's end).** A W line that steps from one sequence of
+  the reference onto another has no departure record and no row saying
+  so; graph-walks returns it ending, and the link between the sequences
+  comes back from neither side. 49 lines of the hosted GRCh38 file, all
+  between unplaced or unlocalized scaffolds. Source: a hand-made graph
+  with two reference sequences, then a count on the hosted file. Fix:
+  none; [open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence),
+  by ADR 0011. Guard: `cross-sequence.py` counts them in any file

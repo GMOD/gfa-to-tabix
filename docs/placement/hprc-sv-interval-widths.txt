@@ -1,0 +1,7 @@
+off-reference node rows on GRCh38: 431264
+under 1 kb	39931 intervals	112694 rows	26.1% of rows
+1 to 10 kb	22768 intervals	106768 rows	24.8% of rows
+10 to 100 kb	54119 intervals	171526 rows	39.8% of rows
+100 kb to 1 Mb	9518 intervals	40201 rows	9.3% of rows
+over 1 Mb	41 intervals	75 rows	0.0% of rows
+rows filed under another sample: 22501 nodes, 52480 links
