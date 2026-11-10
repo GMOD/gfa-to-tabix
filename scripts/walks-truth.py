@@ -28,7 +28,7 @@ to its reference, and measure what a window costs to read.
                    haplotype enters each tile once
       R.tsv (name, sequence, start, end) repeats the figures per region.
 
-  walks-truth.py rebuild WALKS GFA [--shard I/N]
+  walks-truth.py rebuild WALKS GFA [--shards N] [--jobs K]
       Rebuilds every W or P line from the file and compares it with the GFA,
       step for step: the file holds exactly the lines with a step on a node
       of the reference's own lines (0 bp segments dropped), each line's
@@ -40,9 +40,12 @@ to its reference, and measure what a window costs to read.
       its start and end are the piece's first and last steps on R, at their
       positions, its hapOffset and bp the piece's stretch from one to the
       other, its nsteps all the piece's steps. Prints each line or abridged
-      row that differs and exits 1 if any does. The GFA can be gzip, and
-      --shard checks the lines whose names hash to I of N, parsing no other
-      line, so a genome's file is checked a shard of its paths at a time.
+      row that differs and exits 1 if any does. The GFA can be gzip. One read
+      of it takes each segment's length and the reference's nodes; --shards
+      splits the paths by their names' hash, and each further read feeds
+      the lines of --jobs shards to a process per shard, which holds only
+      its shard's pieces, so a genome's file is checked in 1 + N/K reads,
+      rounded up.
 
   walks-truth.py cost WALKS
       Per window of one tile at each tile's start: the walk rows and steps of
@@ -59,11 +62,12 @@ import argparse
 import bisect
 import gzip
 import hashlib
-import itertools
+import os
 import re
 import shutil
 import subprocess
 import sys
+import traceback
 import zlib
 from array import array
 from collections import defaultdict
@@ -322,7 +326,9 @@ def walk_rows(path, keep):
     rows decoded, abridged pieces from their detail records; the reference's
     own pieces by path, from the ref rows; the abridged rows by path; the
     reference sample; each tile's extent by (seq, tile start); and the tile
-    size. Holds a tile's R past the tile only where it has abridged rows."""
+    size. Holds a tile's R past the tile only where it has abridged rows,
+    and only until its sequence's units end, as its detail units come after
+    the sequence's tiles and before its table."""
     rows, refs, abridged = defaultdict(list), defaultdict(list), defaultdict(list)
     extents, size, tiles, reference = {}, None, {}, None
     unit = filed = detail = None
@@ -336,6 +342,8 @@ def walk_rows(path, keep):
                 c = line.rstrip("\n").split("\t")
                 if filed in tiles and not tiles[filed].abridged:
                     del tiles[filed]
+                if c[4] == "table":
+                    tiles = {}
                 unit = filed = detail = None
                 if c[4] == "tile":
                     filed = (c[1], int(c[5]))
@@ -561,57 +569,63 @@ def gfa_bytes(path):
             yield from f
 
 
-def gfa_lines(path, reference, keep):
-    """The reference sample's lines that `keep` takes, a generator over every
-    other W or P line it takes, each as (name, start), handles, lengths with
-    0 bp segments dropped, and which nodes the reference's lines step on.
-    Reads the GFA twice, its S lines and then its path lines, and parses a
-    path line only when it is the reference's or `keep` takes it, so one
-    shard of a genome's paths costs that shard's steps."""
+def name_of(line):
+    if line[:1] == b"W":
+        c = line.split(b"\t", 5)
+        return b"#".join(c[1:4]).decode(), int(c[4])
+    text = line.split(b"\t", 2)[1].decode()
+    named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", text) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", text)
+             or re.fullmatch(r"(.*):(\d+)-\d+", text))
+    return (named.group(1), int(named.group(2))) if named else (text, 0)
+
+
+def steps_of(line):
+    c = line.rstrip(b"\r\n").split(b"\t")
+    if c[0] == b"W":
+        ids = c[6].replace(b"<", b">").split(b">")[1:]
+        strands = c[6].translate(None, b"0123456789")
+        if len(ids) != len(strands):
+            raise ValueError(f"{name_of(line)[0]}: a walk that is not >id or <id steps")
+        return [2 * int(x) + (s == 60) for x, s in zip(ids, strands)]
+    return [2 * int(x[:-1]) + (x[-1:] == b"-") for x in c[2].split(b",")] if c[2] not in (b"*", b"") else []
+
+
+def handles_of(line, lengths):
+    """A W or P line's handles with 0 bp segments dropped."""
+    hs = steps_of(line)
+    stored = [lengths[h >> 1] for h in hs]
+    if 0 in stored:
+        raise KeyError(f"{name_of(line)[0]} steps on segment {hs[stored.index(0)] >> 1}, which has no S line")
+    return array("I", (h for h, n in zip(hs, stored) if n > 1))
+
+
+def is_path(line):
+    return line[:1] in (b"W", b"P") and line[1:2] == b"\t"
+
+
+def gfa_nodes(path, reference):
+    """Each segment's length plus 1, and which nodes the reference sample's
+    lines step on, from one read of the GFA: S lines and path lines may
+    interleave, so these are complete only at its end."""
     lengths, on_reference = ByNode("Q"), ByNode("B")
     for line in gfa_bytes(path):
         if line.startswith(b"S\t"):
             c = line.rstrip(b"\r\n").split(b"\t")
             lengths[int(c[1])] = 1 + (len(c[2]) if c[2] != b"*" else int(next(t[5:] for t in c[3:] if t.startswith(b"LN:i:"))))
+        elif is_path(line) and name_of(line)[0].split("#")[0] == reference:
+            for h in steps_of(line):
+                on_reference[h >> 1] = 1
+    return lengths, on_reference
 
-    def name_of(line):
-        if line[:1] == b"W":
-            c = line.split(b"\t", 5)
-            return b"#".join(c[1:4]).decode(), int(c[4])
-        text = line.split(b"\t", 2)[1].decode()
-        named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", text) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", text)
-                 or re.fullmatch(r"(.*):(\d+)-\d+", text))
-        return (named.group(1), int(named.group(2))) if named else (text, 0)
 
-    def handles_of(line):
-        c = line.rstrip(b"\r\n").split(b"\t")
-        if c[0] == b"W":
-            ids = c[6].replace(b"<", b">").split(b">")[1:]
-            strands = c[6].translate(None, b"0123456789")
-            if len(ids) != len(strands):
-                raise ValueError(f"{name_of(line)[0]}: a walk that is not >id or <id steps")
-            hs = [2 * int(x) + (s == 60) for x, s in zip(ids, strands)]
-        else:
-            hs = [2 * int(x[:-1]) + (x[-1:] == b"-") for x in c[2].split(b",")] if c[2] not in (b"*", b"") else []
-        stored = [lengths[h >> 1] for h in hs]
-        if 0 in stored:
-            raise KeyError(f"{name_of(line)[0]} steps on segment {hs[stored.index(0)] >> 1}, which has no S line")
-        return array("I", (h for h, n in zip(hs, stored) if n > 1))
-
-    full = lambda key, hs: (key, list(hs), [lengths[h >> 1] - 1 for h in hs])
-    reference_lines, others = [], []
-    for line in gfa_bytes(path):
-        if line[:1] in (b"W", b"P") and line[1:2] == b"\t":
-            key = name_of(line)
-            of_reference = key[0].split("#")[0] == reference
-            if of_reference or keep(key[0]):
-                hs = handles_of(line)
-                if of_reference:
-                    for h in hs:
-                        on_reference[h >> 1] = 1
-                if keep(key[0]):
-                    (reference_lines if of_reference else others).append((key, hs))
-    return [full(*item) for item in reference_lines], (full(*item) for item in others), on_reference
+def walk_reference(path):
+    with gzip.open(path, "rt") as f:
+        for line in f:
+            if not line.startswith("#") or line.startswith("#unit\t"):
+                return None
+            if line.startswith("#reference\t"):
+                return line.rstrip("\n").split("\t")[1]
+    return None
 
 
 def handle_text(h):
@@ -622,47 +636,52 @@ def place(step):
     return f"{handle_text(step[0])} at {step[1]}"
 
 
-def rebuild(args):
-    shard, shards = map(int, args.shard.split("/"))
+def check_shard(walks, shard, shards, lines, lengths, on_reference):
+    """Compares the W or P lines of one shard, as they arrive, with the walk
+    file's pieces of their paths; prints what differs and whether any does."""
     keep = lambda name: zlib.crc32(name.encode()) % shards == shard
-    rows, refs, abridged, reference, _, _ = walk_rows(args.walks, keep)
+    rows, refs, abridged, reference, _, _ = walk_rows(walks, keep)
     for name in abridged:
         rows.setdefault(name, [])
     held = defaultdict(list)
     for ps in list(rows.values()) + list(refs.values()):
         for p in ps:
             held[p.line].append(p)
-    reference_lines, other_lines, on_reference = gfa_lines(args.gfa, reference, keep)
-    wrong, expected, seen = [], 0, set()
-    for (name, start), want, lengths in itertools.chain(reference_lines, other_lines):
+    wrong_of_reference, wrong, expected, seen = [], [], 0, set()
+    for line in lines:
+        name, start = name_of(line)
+        want = list(handles_of(line, lengths))
         if not any(on_reference[h >> 1] for h in want):
             continue
+        faults = []
         expected += 1
         seen.add((name, start))
         ps = sorted(held.get((name, start), []), key=lambda p: p.piece)
         if not ps:
-            wrong.append(f"{name} line at {start}: on the reference, with no rows")
-            continue
-        at, n, faults = start, 0, []
-        if [p.piece for p in ps] != list(range(len(ps))):
-            faults.append(f"pieces numbered {[p.piece for p in ps]}")
-        for p in ps:
-            where = f"piece {p.piece} in tile {p.seq}:{p.tile}"
-            if p.error:
-                faults.append(f"{where} doesn't decode: {p.error}")
-            elif p.nsteps != p.decoded:
-                faults.append(f"{where} says {p.nsteps} steps and decodes to {p.decoded}")
-            if p.offset != at:
-                faults.append(f"{where} starts at {p.offset}, the piece before ends at {at}")
-            if not p.error and p.digest != digest(want[n:n + p.decoded], lengths[n:n + p.decoded] if p.ref else None):
-                gfa = f"the GFA's steps {n} to {n + p.decoded} run {handle_text(want[n])} to {handle_text(want[min(n + p.decoded, len(want)) - 1])}" if n < len(want) else "the GFA's line has ended"
-                faults.append(f"{where} runs {handle_text(p.ends[0])} to {handle_text(p.ends[1])}, {gfa}")
-            n += p.decoded
-            at = p.offset + p.bp
-        if n != len(want) and not faults:
-            faults.append(f"{n} steps rebuilt, the GFA's line has {len(want)}")
+            faults.append("on the reference, with no rows")
+        else:
+            lens = [lengths[h >> 1] - 1 for h in want] if any(p.ref for p in ps) else None
+            at, n = start, 0
+            if [p.piece for p in ps] != list(range(len(ps))):
+                faults.append(f"pieces numbered {[p.piece for p in ps]}")
+            for p in ps:
+                where = f"piece {p.piece} in tile {p.seq}:{p.tile}"
+                if p.error:
+                    faults.append(f"{where} doesn't decode: {p.error}")
+                elif p.nsteps != p.decoded:
+                    faults.append(f"{where} says {p.nsteps} steps and decodes to {p.decoded}")
+                if p.offset != at:
+                    faults.append(f"{where} starts at {p.offset}, the piece before ends at {at}")
+                if not p.error and p.digest != digest(want[n:n + p.decoded], lens[n:n + p.decoded] if p.ref else None):
+                    gfa = f"the GFA's steps {n} to {n + p.decoded} run {handle_text(want[n])} to {handle_text(want[min(n + p.decoded, len(want)) - 1])}" if n < len(want) else "the GFA's line has ended"
+                    faults.append(f"{where} runs {handle_text(p.ends[0])} to {handle_text(p.ends[1])}, {gfa}")
+                n += p.decoded
+                at = p.offset + p.bp
+            if n != len(want) and not faults:
+                faults.append(f"{n} steps rebuilt, the GFA's line has {len(want)}")
         if faults:
-            wrong.append(f"{name} line at {start}: " + "; ".join(faults[:3]))
+            (wrong_of_reference if name.split("#")[0] == reference else wrong).append(f"{name} line at {start}: " + "; ".join(faults[:3]))
+    wrong = wrong_of_reference + wrong
     for name, start in sorted(set(held) - seen):
         wrong.append(f"{name} line at {start}: rows for a line not on the reference, or not in the GFA")
     detailed = {(p.line, p.piece): p for ps in rows.values() for p in ps if p.detail is not None}
@@ -687,9 +706,72 @@ def rebuild(args):
                              f"its piece in detail unit {p.detail} has {', '.join(f'{w} {b}' for w, _, b in differs)}")
     for w in wrong:
         print("  " + w)
-    print(f"{args.walks}: shard {args.shard}: {len(held)} lines with rows, {expected} on the reference in the GFA, "
+    print(f"{walks}: shard {shard}/{shards}: {len(held)} lines with rows, {expected} on the reference in the GFA, "
           f"{len(summaries)} abridged rows, {len(wrong)} wrong")
-    sys.exit(1 if wrong else 0)
+    return bool(wrong)
+
+
+def fork_shard(args, shard, lengths, on_reference, parent_ends):
+    """A child process checking one shard, fed its lines through a pipe;
+    returns its pid, the pipe's end to write lines to and its report's end
+    to read."""
+    lines_r, lines_w = os.pipe()
+    report_r, report_w = os.pipe()
+    sys.stdout.flush()
+    sys.stderr.flush()
+    pid = os.fork()
+    if pid == 0:
+        for fd in parent_ends + [lines_w, report_r]:
+            os.close(fd)
+        os.dup2(report_w, 1)
+        os.dup2(report_w, 2)
+        code = 1
+        try:
+            with os.fdopen(lines_r, "rb", buffering=1 << 24) as lines:
+                code = int(check_shard(args.walks, shard, args.shards, lines, lengths, on_reference))
+        except BaseException:
+            traceback.print_exc()
+        finally:
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os._exit(code)
+    os.close(lines_r)
+    os.close(report_w)
+    return pid, lines_w, report_r
+
+
+def rebuild(args):
+    lengths, on_reference = gfa_nodes(args.gfa, walk_reference(args.walks))
+    failed = 0
+    for first in range(0, args.shards, args.jobs):
+        group = range(first, min(first + args.jobs, args.shards))
+        ends = {}
+        for shard in group:
+            ends[shard] = fork_shard(args, shard, lengths, on_reference, [fd for _, *fds in ends.values() for fd in fds])
+        feeds = {shard: os.fdopen(w, "wb", buffering=1 << 24) for shard, (_, w, _) in ends.items()}
+        closed = set()
+        for line in gfa_bytes(args.gfa):
+            if is_path(line):
+                shard = zlib.crc32(name_of(line)[0].encode()) % args.shards
+                if shard in feeds and shard not in closed:
+                    try:
+                        feeds[shard].write(line)
+                    except BrokenPipeError:
+                        closed.add(shard)
+        for feed in feeds.values():
+            try:
+                feed.close()
+            except BrokenPipeError:
+                pass
+        for shard, (pid, _, report) in ends.items():
+            with os.fdopen(report, "rb") as f:
+                sys.stdout.buffer.write(f.read())
+            code = os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1])
+            if code < 0:
+                print(f"{args.walks}: shard {shard}/{args.shards}: killed by signal {-code}")
+            sys.stdout.flush()
+            failed += code != 0
+    sys.exit(1 if failed else 0)
 
 
 def main():
@@ -708,7 +790,8 @@ def main():
     d = sub.add_parser("rebuild")
     d.add_argument("walks")
     d.add_argument("gfa")
-    d.add_argument("--shard", default="0/1", help="I/N: check the lines whose path name hashes to I of N")
+    d.add_argument("--shards", type=int, default=1, help="N: split the lines by their path name's hash into N shards")
+    d.add_argument("--jobs", type=int, default=1, help="K: check K shards at once, each GFA read feeding K")
     c = sub.add_parser("cost")
     c.add_argument("walks")
     c.add_argument("--top", type=int, default=5)

@@ -95,8 +95,8 @@ Departure records gained `ownTiles` after the results above, which are at
   level read from `$LEVEL`, built at levels 7 to 9 on pggb and 6, 7 and 9
   on MC; `results/levels.txt`
 - `scripts/genome-check.sh`: `walks-truth.py rebuild` over every shard of
-  a genome-wide file's paths against its GFA, a few shards at once under a
-  memory cap; a stopped run resumes
+  a genome-wide file's paths against its GFA, each read of the GFA feeding
+  several shards, under one memory cap
 - `scripts/cross-sequence.py`: the W lines of a walk file whose pieces lie
   on more than one reference sequence, and how often they cross
 - `scripts/left-out.sh`: the W lines a walk file leaves out of its GFA's,

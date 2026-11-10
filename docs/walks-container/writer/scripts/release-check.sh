@@ -3,8 +3,8 @@
 # MC chr22 and pggb chrY on GRCh38 from a bundle of the commit to check,
 # reports whether each data file is byte-identical to the previous build
 # where one is given (a difference is a signal, not a failure), and runs every file check on it: verify7.py; claims7.py --own,
-# audit7.py and walks-truth.py rebuild, each over $SHARDS shards of the
-# paths in parallel, the audit with the GFA. Each check's exit status is
+# audit7.py, and walks-truth.py rebuild over $SHARDS shards of the paths,
+# 8 fed by each read of the GFA, the audit with the GFA. Each check's exit status is
 # recorded, and `release.done` says PASSED or FAILED last.
 # Usage, on ada:
 #   git bundle create writer.bundle main   # locally, then scp it to ~/work/release/
@@ -36,7 +36,7 @@ for d in mc22 pggbY; do
   for check in rebuild audit7 ${CLAIMS7:+claims7}; do
     [ -f release.$d.$check.txt ] && grep -q ", 0 failed;" release.$d.$check.txt && continue
     case $check in
-      rebuild) n=$SHARDS; at_once=8; limit=20G ;;
+      rebuild) n=1; at_once=1; limit=60G ;;
       audit7) n=1; at_once=1; limit=60G ;;
       claims7) n=$SHARDS; at_once=4; limit=28G ;;
     esac
@@ -45,7 +45,7 @@ for d in mc22 pggbY; do
       case $check in
         claims7) (cap $limit python3 -I "$S/claims7.py" "$F" --own --shard $i/$n > $out 2>&1; echo $? > $out.rc) & ;;
         audit7) (cap $limit python3 -I "$S/audit7.py" "$F" --gfa "$G" > $out 2>&1; echo $? > $out.rc) & ;;
-        rebuild) (cap $limit python3 -I "$T" rebuild "$F" "$G" --shard $i/$n > $out 2>&1; echo $? > $out.rc) & ;;
+        rebuild) (cap $limit python3 -I "$T" rebuild "$F" "$G" --shards $SHARDS --jobs 8 > $out 2>&1; echo $? > $out.rc) & ;;
       esac
       [ $(( (i + 1) % at_once )) = 0 ] && wait
     done
