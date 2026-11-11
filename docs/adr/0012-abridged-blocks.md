@@ -1,13 +1,14 @@
-# ADR 0012: Abridged pieces carry their blocks on the reference (walk format 8)
+# ADR 0012: Abridged pieces carry their blocks on the reference
 
-- **Status:** accepted, 2026-11-11. Not yet built: walk format 7 stays
-  what gfa-to-tabix writes and the hosts serve until the build below
-  passes its acceptance test
-- **Decides:** walk format 8, which adds one unit kind, `blocks`, holding
-  each abridged piece's exact stretches on the reference, and what a
-  reader and a viewer may say about a piece whose steps aren't loaded
-- **Keeps:** format 7's tiles, `abridged` rows, detail units, departure
-  blocks and tables, byte for byte
+- **Status:** accepted, 2026-11-11, and amended the same day: the
+  `blocks` unit is a later addition to walk format 7, not a format 8
+  ([How a file declares it](#how-a-file-declares-it)). The hosted files
+  don't carry it until the build below passes its acceptance test
+- **Decides:** one new unit kind, `blocks`, holding each abridged
+  piece's exact stretches on the reference, and what a reader and a
+  viewer may say about a piece whose steps aren't loaded
+- **Keeps:** walk format 7 whole: its number, and its tiles, `abridged`
+  rows, detail units, departure blocks and tables, byte for byte
 - **Trigger, under [ADR 0011](0011-format-7-is-frozen.md):** a consumer
   on a hosted file. graph-walks 6.2 and bandage-core, cutting the hosted
   GRCh38 and CHM13 files, state false things about abridged pieces, and
@@ -19,7 +20,11 @@
   which split ([P](../walks-container/abridged/ruling-P.md),
   [Q](../walks-container/abridged/ruling-Q.md)); a third that
   re-measured both and ruled ([cross-examination](../walks-container/abridged/ruling-cross.md));
-  and the gate below, run over every abridged tile of both hosted files
+  the gate below, run over every abridged tile of both hosted files; and
+  two more blinded deciders on the declaration alone, against
+  [criteria written first](../walks-container/abridged/declaration-criteria.md),
+  which agreed ([1](../walks-container/abridged/ruling-declaration-1.md),
+  [2](../walks-container/abridged/ruling-declaration-2.md))
 
 ## Context
 
@@ -43,11 +48,11 @@
 
 ## Decision
 
-### Format 8
+### The `blocks` unit
 
-- **The new unit:** `#walks format:i:8`. Each tile with `abridged` rows
-  has one `blocks` unit, named by the tile's start, after the tile's
-  detail units in file order, its `start end` the hull of its rows
+- **The new unit:** each tile with `abridged` rows has one `blocks`
+  unit, named by the tile's start, after the tile's detail units in file
+  order, its `start end` the hull of its rows
 - **Its rows:** `seq start end blocks path fragStart piece list`, one per
   `abridged` row of the tile, keyed by `path`, `fragStart` and `piece` as
   the `abridged` row is, `start end` the hull of its blocks
@@ -72,6 +77,27 @@
   units by extent as it does tiles; it reads them only when it keeps
   unloaded pieces
 
+### How a file declares it
+
+- **The header stays `#walks format:i:7`,** with no new tag. The spec
+  already says a unit kind it doesn't give is a later addition, which a
+  reader skips, and that later additions are tags, unit kinds or files.
+  A file's tables list its `blocks` units, and that is the declaration
+- **A reader released before the unit** reads a file that carries it as
+  it reads one that doesn't: graph-walks 6.2 selects units by kind and
+  never reads a kind it doesn't know. So the hosted files can be swapped
+  before any reader is released, and no released reader ever refuses
+  the file the paper cites
+- **A reader that draws from blocks** refuses a sequence whose table
+  lists a detail unit `cs:d` and no `blocks` unit `cs`, naming the
+  gfa-to-tabix version to rebuild with. It has no second drawing path
+  for such a file
+- **A file with no abridged tile** is the same bytes from either writer
+- **The spec's wording:** "a file with a row kind this page doesn't give
+  is another format" gains "in a unit this page gives", which is what
+  graph-walks 6.2 checks; and a table that leaves out an abridged tile's
+  `blocks` entry is one a reader can tell
+
 ### Readers and viewers
 
 - **graph-walks:**
@@ -82,6 +108,8 @@
   - computes departures, gaps, forms and contained cuts from those
   - `expand` reads only detail units whose extent overlaps the window
     and its context
+  - refuses a sequence with a detail unit and no `blocks` unit for its
+    tile
 - **bandage-core:**
   - draws an unloaded piece's runs in the geometry a loaded one gets
   - styles own runs "not loaded" and states exact sizes
@@ -125,6 +153,14 @@ results in `blocks-gate.grch38.jsonl` and `blocks-gate.chm13.jsonl`):
     and 16-24% at 100 kb
 - **`blocks` as a column on `abridged` rows** (ruling Q): adds 1.58 MB
   to one 40 KB CHM13 tile, so every window there reads it
+- **`format:i:8`,** as this ADR first said: every released reader would
+  refuse the file at the hosted URL after the swap, and the next reader
+  would refuse a 4.0.0 file with no abridged tile, for a change the spec
+  calls a later addition. The number came from ruling Q's column on
+  `abridged` rows, which was another format; the cross-examination moved
+  the data to a unit and kept the number
+- **A `blocks:i:1` header tag:** says nothing the tables don't, since
+  every abridged tile has a detail unit
 - **Per-kb presence tags, tolerant blocks, or the true span alone:**
   approximate where exact blocks cost a little more, and the true span
   says no more than the detail extent already does
@@ -133,16 +169,22 @@ results in `blocks-gate.grch38.jsonl` and `blocks-gate.chm13.jsonl`):
 
 ## Consequences
 
-- **gfa-to-tabix:** writes format 8 with the guarantees above checked
-  at build, and a checker claim with its recorded failure on a broken
-  writer. Both hosted files are rebuilt on ada
-- **graph-walks:** a major release reading format 8 only
+- **gfa-to-tabix:** a minor release that writes `blocks` units with
+  the guarantees above checked at build, and a checker claim with its
+  recorded failure on a broken writer. Both hosted files are rebuilt on
+  ada
+- **Swap:** the rebuilt hosted files go up first, once graph-walks 6.2
+  returns the same cuts from them as from today's, which their unchanged
+  units make checkable
+- **graph-walks:** a major release, since it refuses abridged files
+  without `blocks` units
 - **bandage-core and the plugin:** follow it, with before/after renders
   shown first
 - **Other consumers:** BandageJS, ggbandage, the tube map and jb2hubs go
   green on the exact versions
-- **Swap:** the hosted pair changes with the plugin release, never a
-  mismatched pair
+- **After the paper:** the format is still 7, and what it allows later
+  is what it allows now: tags, unit kinds and files that a released
+  reader skips
 - **Reversal:** if the build fails the acceptance test, or the real
-  `blocks` units exceed the gate's limits, format 7 stays and readers
-  take ruling P
+  `blocks` units exceed the gate's limits, no file carries the unit and
+  readers take ruling P

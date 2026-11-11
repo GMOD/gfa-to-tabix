@@ -2155,3 +2155,17 @@ Where the findings have come from so far, and the rule each gives:
   repeated links: none but `ecoli_pggb`'s self-link, which the contig
   layout files twice as the JBrowse scripts do
   ([counts](placement/hosted-duplicate-links.txt))
+- **2026-11-11, a later session's review of ADR 0012 (a later addition
+  called a new format).** ADR 0012 marked files with `blocks` units
+  `format:i:8` and had graph-walks read format 8 only, so the hosted
+  swap would have made every released reader refuse the file the paper
+  cites. The spec says a unit kind it doesn't give is a later addition a
+  reader skips, and graph-walks 6.2 tests that it does. The number came
+  from ruling Q's column on `abridged` rows; the cross-examination moved
+  the data to a unit and kept the number, and none of the three rulings
+  weighed the declaration. Source: reading the spec's Header section and
+  graph-walks' reader against the ADR. Fix: two blinded deciders ruled
+  for `format:i:7` with the unit as the declaration
+  ([1](walks-container/abridged/ruling-declaration-1.md),
+  [2](walks-container/abridged/ruling-declaration-2.md)); ADR 0012 and
+  the handoff amended. Guard: the handoff's "old reader, new file" test
