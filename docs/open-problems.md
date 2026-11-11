@@ -498,6 +498,19 @@ W  B  1  c     0  32  >1>2>6>3
   rebuilt; "What a cut returns" would name the detail extent. Both
   rejected recording alone (it fails the misses criterion) and a writer
   change (no ADR 0011 trigger)
+- **What a user sees,** checked by cutting the hosted GRCh38 file with
+  graph-walks 6.2 at chr2:91,409,000-91,410,000, every haplotype kept:
+  336 of 463 haplotypes come back with no fragment, only departure records
+  spanning the window, such as NA18565#2's from 90.40 to 91.41 Mb, and
+  expanding its abridged piece puts 98 of its steps in the window.
+  bandage-core draws such a haplotype as a row of departures alone,
+  "no step on GRCh38 across …" (`departureText`), which is false, and the
+  plugin offers no expand on it. The plugin expands abridged walks itself
+  when 64 or fewer haplotypes are named (`EXPAND_NAMED_MAX`), so the
+  default view of four is not hit; the view of every haplotype is. The
+  missed stretches total 297 kb of GRCh38 and 395 kb of CHM13, mostly by
+  centromeres (chr2:91.41 Mb holds 843 of GRCh38's 1,279 pieces). A third
+  blinded reviewer ruled to fix it now
 - Not yet taken up: the session that found it can't accept its own
   change, and it needs graph-walks, bandage-core and plugin releases
   under the release gate. Next step: a fixture that doubles back past an
