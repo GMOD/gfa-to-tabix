@@ -214,7 +214,8 @@ def span(t, positions):
 
 
 claim('U1', 'units in file order: header; sequences in byte order; per sequence its tile and departures '
-      'units by start, a tile before the blocks starting there, smaller blocks first; then detail units; then its table')
+      'units by start, a tile before the blocks starting there, smaller blocks first; then detail units, a tile\'s '
+      'blocks unit directly after its last detail unit; then its table')
 claim('U2', 'a tile\'s name is its start, a multiple of tile written in decimal with no leading zero, and every ref '
       'step\'s offset lies in [name, name + tile)')
 claim('U3', 'a tile\'s extent runs from the first base its ref rows\' stretches cover to the last')
@@ -225,7 +226,8 @@ claim('U5', 'a tile lists ref rows, then at most one nodes row, then route rows,
 claim('U6', 'within a departure block lines are in order of start, end, then text')
 claim('U7', 'every departure line overlaps each block it is in, or, a point, lies at the block\'s start')
 claim('U8', 'a table\'s #unit line runs from 0 to |S|, where its sequence\'s last ref row ends, and is named .')
-claim('U9', 'a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks departure')
+claim('U9', 'a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks '
+      'departure, detail units nodes/route/walk, blocks units blocks')
 claim('U10', 'every sequence in the file has at least one tile, so no table is empty')
 claim('H1', '#haplotype lists each haplotype with walk or abridged rows, sample#haplotype, once each in byte order, '
       'and no other')
@@ -269,6 +271,16 @@ claim('A4', 'a detail unit holds the moved pieces of one W line')
 claim('A5', 'a tile\'s detail numbers run from 0 with none missing')
 claim('A6', 'a tile or detail unit holds a nodes row exactly when its routes have an interior step, and at most one')
 claim('A7', 'a tile\'s detail records are numbered from 0 in order of cost, the costliest W line first')
+claim('K1', 'every tile with abridged rows has exactly one blocks unit, named by its start, and no other tile has one')
+claim('K2', 'a blocks unit\'s rows are its tile\'s abridged rows one for one, in their order, by path, fragStart and '
+      'piece')
+claim('K3', 'a blocks row\'s blocks\' bp plus their own bp is its abridged row\'s bp')
+claim('K4', 'a blocks row\'s start end is the hull of its blocks, and a blocks unit\'s the hull of its rows')
+claim('K5', 'a blocks row\'s first block begins at its abridged row\'s start step, running its way, and its last '
+      'ends at the end step, running its way')
+claim('K6', 'a block is maximal: none begins where the one before ended, running the same way, with no own bp between')
+claim('K7', 'a blocks row\'s list writes each block as <d><+|-><len>[:<own>] in decimal with no leading zero, len at '
+      'least 1 and own left out when 0')
 claim('D1', 'a departure record\'s ownTiles are tile names of its sequence that exist, in no repeat')
 claim('D2', 'a record has at most two ownTiles')
 claim('D3', 'a departure record\'s extent holds both breakpoints and is at least the breakpoint stretch')
@@ -303,6 +315,8 @@ interior_nodes = set()
 haplotypes_with_rows = set()
 pieces = collections.defaultdict(set)   # (path, frag) -> piece numbers
 abridged = []           # (seq, tile, path, frag, piece, d, (a, b))
+abridged_of = collections.defaultdict(list)  # (seq, tile) -> [(path, frag, piece, bp, (begin, along), (end, along))]
+blocks_units = collections.Counter()    # (seq, name) of the blocks units
 detail_pieces = {}      # (seq, tile, d) -> {(path, frag, piece): span of all placed steps}
 detail_paths = collections.defaultdict(set)
 records = []
@@ -326,11 +340,63 @@ reference = None
 detail_cost = {}  # (seq, cs, d) -> the cost of the record's pieces
 
 
+BLOCK = re.compile(r'(0|-?[1-9][0-9]*)([+-])([1-9][0-9]*)(?::([1-9][0-9]*))?')
+
+
+def listed_blocks(field):
+    # A blocks row's list as (begin, end, own) per block, begin and end where
+    # it begins and ends on R in path order, and the tokens no block reads from
+    out, at, unread = [], 0, []
+    for token in field.split(','):
+        m = BLOCK.fullmatch(token)
+        if m is None:
+            unread.append(token)
+        else:
+            begin = at + int(m.group(1))
+            at = begin + int(m.group(3)) * (1 if m.group(2) == '+' else -1)
+            out.append((begin, at, int(m.group(4) or 0)))
+    return out, unread
+
+
+def check_blocks(u):
+    key = (u['seq'], u['name'])
+    blocks_units[key] += 1
+    rows = u.get('blocks', [])
+    stand = abridged_of.get(key, [])
+    if [r[2:5] for r in rows] != [s[:3] for s in stand]:
+        bad('K2', (key, 'blocks rows', [r[2:5] for r in rows][:4], 'abridged rows', [s[:3] for s in stand][:4]))
+    if rows and (min(r[0] for r in rows), max(r[1] for r in rows)) != (u['lo'], u['hi']):
+        bad('K4', (key, 'unit', (u['lo'], u['hi']), 'its rows span',
+                   (min(r[0] for r in rows), max(r[1] for r in rows))))
+    by_key = {s[:3]: s for s in stand}
+    for a, b, path, frag, piece, field in rows:
+        blocks, unread = listed_blocks(field)
+        where = (key, path, frag, piece, field[:60])
+        if unread:
+            bad('K7', where + ('token', unread[0][:20]))
+        else:
+            hull = (min(min(x[:2]) for x in blocks), max(max(x[:2]) for x in blocks))
+            if hull != (a, b):
+                bad('K4', where + ('row', (a, b), 'its blocks span', hull))
+            if any(p[1] == q[0] and (p[0] < p[1]) == (q[0] < q[1]) and not q[2] for p, q in zip(blocks, blocks[1:])):
+                bad('K6', where)
+            s = by_key.get((path, frag, piece))
+            if s is not None:
+                held = sum(abs(x[1] - x[0]) + x[2] for x in blocks)
+                if held != s[3]:
+                    bad('K3', where + ('blocks and own bp', held, 'abridged bp', s[3]))
+                first, last = (blocks[0][0], blocks[0][0] < blocks[0][1]), (blocks[-1][1], blocks[-1][0] < blocks[-1][1])
+                if (first, last) != s[4:6]:
+                    bad('K5', where + ('begins, along R', first, 'ends, along R', last, 'start and end steps', s[4:6]))
+
+
 def finish_unit(u):
     if u is None:
         return
     kind = u['kind']
     t = u['tile']
+    if kind == 'blocks':
+        check_blocks(u)
     if kind in ('tile', 'detail') and t is not None:
         interior = any(r[1] for r in t.routes)
         if t.kinds.count('nodes') != (1 if interior else 0):
@@ -443,10 +509,14 @@ with gzip.open(args.file, 'rt') as f:
         u = unit
         a, b = int(c[1]), int(c[2])
         allowed = dict(tile={'ref', 'nodes', 'route', 'walk', 'abridged'}, departures={'departure'},
-                       detail={'nodes', 'route', 'walk'})
+                       detail={'nodes', 'route', 'walk'}, blocks={'blocks'})
         if kind not in allowed.get(u['kind'], set()):
             bad('U9', (u['kind'], u['name'], line[:80]))
         seen('U9')
+        if u['kind'] == 'blocks':
+            if kind == 'blocks':
+                u.setdefault('blocks', []).append((a, b, c[4], int(c[5]), int(c[6]), c[7]))
+            continue
         if u['kind'] == 'departures':
             key = (a, b, '\t'.join(c[3:]))
             if dep_prev is not None and key < dep_prev:
@@ -644,6 +714,11 @@ with gzip.open(args.file, 'rt') as f:
                 bad('A1', (t.seq, t.name, line[:100]))
             seen('A1')
             abridged.append((t.seq, t.name, path, frag, piece, d, (a, b)))
+            along_start, along_end = t.h[si] == s, t.h[ei] == e
+            abridged_of[(t.seq, t.name)].append((
+                path, frag, piece, int(c[9]),
+                (t.off[si] if along_start else t.off[si] + t.len[si], along_start),
+                (t.off[ei] + t.len[ei] if along_end else t.off[ei], along_end)))
             held_tiles[(t.seq, t.name)] = t
             continue
     finish_unit(unit)
@@ -656,9 +731,14 @@ for seq, us in units_of.items():
     if 'tile' not in kinds:
         bad('U10', (seq, 'no tile'))
     body = us[:-1]
-    first_detail = next((k for k, u in enumerate(body) if u[0] == 'detail'), len(body))
-    if any(u[0] != 'detail' for u in body[first_detail:]):
-        bad('U1', (seq, 'a tile or block after a detail unit'))
+    first_detail = next((k for k, u in enumerate(body) if u[0] in ('detail', 'blocks')), len(body))
+    moved = body[first_detail:]
+    if any(u[0] not in ('detail', 'blocks') for u in moved):
+        bad('U1', (seq, 'a tile or block after a detail or blocks unit'))
+    last_detail = {u[1].split(':')[0]: k for k, u in enumerate(moved) if u[0] == 'detail'}
+    for k, u in enumerate(moved):
+        if u[0] == 'blocks' and last_detail.get(u[1]) != k - 1:
+            bad('U1', (seq, 'blocks unit', u[1], 'not directly after its tile\'s last detail unit'))
     tb = body[:first_detail]
 
     def order_key(u):
@@ -756,6 +836,13 @@ for key, ds in named.items():
     if any(a < b for a, b in zip(costs, costs[1:])):
         bad('A7', (key, 'costs by record number', costs[:8]))
 for k in ('A2', 'A3', 'A4', 'A5', 'A7'):
+    seen(k)
+
+# K1: one blocks unit per tile with abridged rows
+for key in sorted(set(abridged_of) | set(blocks_units)):
+    if blocks_units[key] != (key in abridged_of):
+        bad('K1', (key, 'abridged rows', len(abridged_of.get(key, [])), 'blocks units', blocks_units[key]))
+for k in ('K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7'):
     seen(k)
 
 

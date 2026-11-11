@@ -15,12 +15,13 @@
 #   above 0 bytes, and its `#unit` line runs from 0 to `|S|`, where the
 #   sequence's last `ref` row ends
 # - no two units of a kind and sequence share a name other than `.`
-# - every line starts with its unit's sequence; a tile's or detail unit's
-#   lines lie in its extent, which runs, for a tile, from the first base its
-#   ref rows' stretches cover to the last, and for a detail unit from the
-#   first base its pieces' spans cover to the last, or where they cover no
-#   base is the base after their point `p`, the base before it where `p` is
-#   `|S|`, or `[0, 0)` where `|S|` is 0; its other rows state the extent
+# - every line starts with its unit's sequence; a tile's, detail unit's or
+#   blocks unit's lines lie in its extent, which runs, for a tile, from the
+#   first base its ref rows' stretches cover to the last, for a detail unit
+#   from the first base its pieces' spans cover to the last, and for a blocks
+#   unit from the first base its rows' spans cover to the last, or where they
+#   cover no base is the base after their point `p`, the base before it where
+#   `p` is `|S|`, or `[0, 0)` where `|S|` is 0; its other rows state the extent
 # - a departure block is named `.` and aligned, each of its lines overlaps
 #   it, or lies at its start where the line is a point, and each record is
 #   in every block of its cover and no other: blocks of `tile × 8^L` bp,
@@ -86,6 +87,7 @@ def members(f):
 
 
 stats = dict(units=0, tables=0, lines=0, departure_lines=0)
+COVERED_BY = dict(tile='ref rows', blocks='blocks rows')
 state = dict(units=[], names=set(), records={}, table=0, ref_end=0, points=[])
 
 
@@ -128,7 +130,7 @@ def check_unit(at, length, text):
             start = int(c[6])
             stretch = (start, start + sum(int(x) for x in c[10].split(',')))
             state['ref_end'] = max(state['ref_end'], stretch[1])
-        elif c[3] in ('walk', 'abridged') and kind == 'detail':
+        elif (c[3] in ('walk', 'abridged') and kind == 'detail') or (c[3] == 'blocks' and kind == 'blocks'):
             stretch = (a, b)
         if c[3] in ('ref', 'nodes', 'route') and (a, b) != (lo, hi):
             fail(f'a {c[3]} row not stating its unit\'s extent: {line[:80]}')
@@ -136,11 +138,11 @@ def check_unit(at, length, text):
             union = stretch if union is None else (min(union[0], stretch[0]), max(union[1], stretch[1]))
     if kind != 'departures':
         if union is None:
-            fail(f'the {kind} unit at {at} has no ref row and no piece')
+            fail(f'the {kind} unit at {at} has no ref row, piece or blocks row')
         if union[0] < union[1]:
             if union != (lo, hi):
                 fail(f'the {kind} unit at {at} has extent {lo} {hi}, where its '
-                     f'{"ref rows" if kind == "tile" else "pieces"} cover {union}')
+                     f'{COVERED_BY.get(kind, "pieces")} cover {union}')
         else:
             state['points'].append((at, kind, union[0], lo, hi))
 

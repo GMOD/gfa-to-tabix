@@ -10,7 +10,12 @@
 # header's `revisited` how many nodes they hold more than once; and that
 # each `abridged` row states its own piece of its detail unit: its steps,
 # its stretch from its first step on R to its last as hapOffset and bp, and
-# those steps' handles and positions in R as start and end; and that every
+# those steps' handles and positions in R as start and end; that each
+# `abridged` row has one `blocks` row, in its tile's `blocks` unit, stating
+# the blocks its piece of the detail unit decodes to, from its first step on
+# R to its last: each a maximal run of consecutive steps on R, each beginning
+# where the last ended on R, one way, with no step off R between, written in
+# path order as `<d><+|-><len>[:<own>]`; and that every
 # base of a path from its first step on a sequence to its last lies in one
 # piece's stretch on R or one record's own bp. Then checks the reader
 # promise (every base of a record's stretch where its path has no piece lies
@@ -153,11 +158,18 @@ class R:
         self.cum = [0]
         for n in self.len:
             self.cum.append(self.cum[-1] + n)
+        self.breaks = [k for k in range(len(self.h) - 1) if self.off[k] + self.len[k] != self.off[k + 1]]
         self.at = collections.defaultdict(list)
         self.copies = collections.defaultdict(list)
         for i, h in enumerate(self.h):
             self.at[h].append(i)
             self.copies[h >> 1].append(i)
+
+    def unbroken(self, lo, hi):
+        # positions lo to hi of R as (first, last) runs, each step of a run
+        # beginning where the one before ends
+        cuts = self.breaks[bisect.bisect_left(self.breaks, lo):bisect.bisect_left(self.breaks, hi)]
+        return list(zip([lo] + [k + 1 for k in cuts], cuts + [hi]))
 
     def copy(self, h, k):
         c = self.copies.get(h >> 1)
@@ -279,6 +291,8 @@ ref_nodes = set()
 pieces = collections.defaultdict(list)   # path -> [(frag, offset, piece, steps)]
 detail_of = {}   # (path, frag, piece) -> (seq, cs, detail) for a piece in a detail record
 detail_ends = {}   # (path, frag, piece) -> its first and last steps on R, (position in R, handle)
+detail_blocks = {}   # (path, frag, piece) -> its blocks on R as a blocks row states them, (start, end, list)
+blocks_rows = collections.defaultdict(list)   # (path, frag, piece) -> [((seq, unit name), start, end, list)]
 records = []
 dep_rows = []   # (seq, block start, block end, record index, line bytes)
 rec_extent = {}   # record index -> its line's start and end
@@ -322,6 +336,36 @@ def steps_of(r, segs, nodes):
     return out
 
 
+def blocks_of(r, segs, nodes):
+    # A piece's blocks from its first step on R to its last, in path order:
+    # a block is a maximal run of consecutive steps on R, each beginning where
+    # the last ended on R, one way, with no step off R between. Returns their
+    # hull and their list, each block as `<d><+|-><len>[:<own>]`: d where it
+    # begins on R less where the one before ended, or less 0; + along R, -
+    # against; len its bp; own the piece's bp off R since the block before
+    on = [k for k, s in enumerate(segs) if s[0] == 'R']
+    out, own, touching = [], 0, False
+    for s in segs[on[0]:on[-1] + 1]:
+        if s[0] == 'I':
+            own += sum(nodes[h >> 1] for h in s[1])
+            touching = touching and not s[1]
+        else:
+            _, i0, i1, against = s
+            for lo, hi in r.unbroken(min(i0, i1), max(i0, i1))[::-1 if against else 1]:
+                a, b = r.off[lo], r.off[hi] + r.len[hi]
+                begin, end = (b, a) if against else (a, b)
+                if touching and out[-1][1] == begin and (out[-1][0] > out[-1][1]) == against:
+                    out[-1][1] = end
+                else:
+                    out.append([begin, end, own])
+                own, touching = 0, True
+    tokens, at = [], 0
+    for begin, end, own in out:
+        tokens.append(f'{begin - at}{"+" if begin < end else "-"}{abs(end - begin)}' + (f':{own}' if own else ''))
+        at = end
+    return min(min(b[:2]) for b in out), max(max(b[:2]) for b in out), ','.join(tokens)
+
+
 def take_walk(r, routes, nodes, cols, origin=None):
     if not in_shard(cols[4]):
         return
@@ -347,6 +391,7 @@ def take_walk(r, routes, nodes, cols, origin=None):
         detail_of[key] = origin
         runs = [x for x in segs if x[0] == 'R']
         detail_ends[key] = ((runs[0][1], r.h[runs[0][1]] ^ runs[0][3]), (runs[-1][2], r.h[runs[-1][2]] ^ runs[-1][3]))
+        detail_blocks[key] = blocks_of(r, segs, nodes)
 
 
 def abridged_ends(r, start, end):
@@ -381,7 +426,7 @@ with gzip.open(args.file, 'rt') as f:
                 unit = None if args.seq is not None and c[1] != args.seq else (c[1], c[4], c[5], int(c[2]), int(c[3]))
                 if unit is not None and unit[1] in ('tile', 'detail'):
                     unit_names[unit[:3]] += 1
-                if unit is None or unit[1] in ('departures', 'table'):
+                if unit is None or unit[1] not in ('tile', 'detail'):
                     continue
                 routes, route_prev, nodes = [], 0, {}
                 if unit[1] == 'tile':
@@ -395,7 +440,7 @@ with gzip.open(args.file, 'rt') as f:
                     if r is None:
                         bad['detail unit of a tile with no abridged row'] += 1
             continue
-        if unit is None or unit[1] == 'table':
+        if unit is None or unit[1] not in ('tile', 'detail', 'departures', 'blocks'):
             continue
         c = line.rstrip('\n').split('\t')
         seq, a, b = c[0], int(c[1]), int(c[2])
@@ -414,6 +459,11 @@ with gzip.open(args.file, 'rt') as f:
             elif rec_extent[k] != (a, b):
                 bad['one record with two extents'] += 1
             dep_rows.append((seq, unit[3], unit[4], k, len(line)))
+            continue
+        if unit[1] == 'blocks':
+            kinds[f'{kind} rows'] += 1
+            if kind == 'blocks' and in_shard(c[4]):
+                blocks_rows[(c[4], int(c[5]), int(c[6]))].append(((seq, unit[2]), a, b, c[7]))
             continue
         if unit[1] == 'detail':
             kinds[f'detail {kind} rows'] += 1
@@ -754,7 +804,18 @@ must_be_0(len(wrong_ends), 'abridged rows whose start or end is not their piece\
           'by position in R and strand')
 for row in wrong_ends[:args.examples]:
     print('   ends', row, detail_ends[row[:2] + row[3:4]])
+unblocked = [row for row in abridged_rows if row[:2] + row[3:4] in detail_blocks
+             and blocks_rows.get(row[:2] + row[3:4]) != [((row[7][0], str(row[7][1])),) + detail_blocks[row[:2] + row[3:4]]]]
+must_be_0(len(unblocked), 'abridged rows without one blocks row, in their tile\'s blocks unit, stating the blocks '
+          'their piece\'s detail record decodes to')
+for row in unblocked[:args.examples]:
+    print('   blocks', row[:4], row[7], [(u, a, b, text[:80]) for u, a, b, text in blocks_rows.get(row[:2] + row[3:4], [])],
+          'decoded', detail_blocks[row[:2] + row[3:4]][:2], detail_blocks[row[:2] + row[3:4]][2][:80])
 rowed = {row[:2] + row[3:4] for row in abridged_rows}
+unabridged = [k for k in blocks_rows if k not in rowed]
+must_be_0(len(unabridged), 'blocks rows of a piece with no abridged row')
+for k in unabridged[:args.examples]:
+    print('   unabridged', k)
 unrowed = [k for k in detail_of if k not in rowed]
 must_be_0(len(unrowed), 'detail pieces with no abridged row')
 for k in unrowed[:args.examples]:
