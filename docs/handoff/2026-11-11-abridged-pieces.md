@@ -4,49 +4,34 @@ The format review of 2026-11-11 found that graph-walks drops some abridged
 pieces from windows they step in. Two blinded Fable reviews then traced
 abridged pieces from file to screen and found the drop is one of several
 ways the walk view states something false about a haplotype whose piece is
-unloaded. This page is the brief for the session that fixes them. The
-session that found the problem doesn't accept its own change, so none is
-made here, and the fix needs graph-walks, bandage-core and plugin releases,
-which wait for the user.
+unloaded. Two blinded deciders split on the fix, a third cross-examined
+them, and a gate over every abridged tile of the hosted files passed:
+[ADR 0012](../adr/0012-abridged-blocks.md) decides walk format 8, a
+`blocks` unit per abridged tile holding each piece's exact stretches on
+the reference. This page is the brief for the session that builds it;
+the releases and the hosted swap wait for the user.
 
 ## Decision
 
 - **Cause:** an `abridged` row summarises a moved piece by its first and
-  last steps on R, its `bp` and its `nsteps`. Readers and viewers treat
-  that summary as the piece's geometry: where it is (the stretch between
-  its end steps), how long it is there (`bp`), which way it runs (its end
-  steps' strands). A piece that doubles back, jumps or runs against R has
-  none of those, so the view drops it where it steps, draws it where it
-  doesn't, and misstates its size
-- **Fix, reader and viewer, no format change:** an unloaded piece states
-  only that this haplotype has `nsteps` steps not loaded within its detail
-  unit's extent.
-  - graph-walks keeps an abridged piece wherever that extent, which the
-    table it already holds lists, overlaps the drawn stretch, and hands
-    the extent to the consumer
-  - bandage-core draws it as a "not loaded" block over the extent's part
-    of the bar, with no size, strand or departure claims, and never
-    labels a row "no step on the reference" while it holds an unloaded
-    piece reaching the bar
-  - every such row offers the load action
-  - walks-format.md's "What a cut returns" names the detail extent
-- **Not a format change:** an exact unloaded drawing would need each
-  piece's covered stretches in its row, a format 8. ADR 0011 has no
-  trigger for it, and the "not loaded" meaning removes every false
-  statement below without it. Revisit only if users ask to see unloaded
-  pieces' shape without loading them
-- **Why the extent is sound:** every detail unit's `start end` equals the
-  span of its one piece (61,056 of 61,056 on GRCh38, 56,801 of 56,801 on
-  CHM13) or the hull of its several (5,925 and 3,981), by
-  `detail-extent.py` on both hosted files. A multi-piece unit's extent is
-  per line, not per piece; the stretch of it no piece of the line covers
-  is 137 kb of GRCh38 and 271 kb of CHM13, which "not loaded" claims
-  nothing about
-- **The reader change can't ship alone:** with it, today's bandage-core
-  draws 342 of 369 abridged rows longer than the 1,019 bp reference bar
-  at chr2:91,409,000-91,410,000 (median 22 kb, max 1.87 Mb), because it
-  places the block from the end steps. Release graph-walks as a major
-  version so no `^6` consumer picks it up before bandage-core follows
+  last steps on R, its `bp` and its `nsteps`, and readers and viewers
+  treat that summary as where the piece lies, how long it is there and
+  which way it runs
+- **Fix:** [ADR 0012](../adr/0012-abridged-blocks.md). Format 8 adds a
+  `blocks` unit per abridged tile; graph-walks keeps an unloaded piece
+  where a block overlaps the drawn stretch and builds its reference steps
+  from the blocks, each own run one step of known bp and unknown
+  identity; bandage-core draws it in loaded geometry with own runs styled
+  "not loaded"; the plugin offers the load action on every row with
+  unloaded runs. Format 7's units stay byte for byte
+- **Superseded:** this page's first version decided a reader and viewer
+  fix with no format change. It showed nothing about an unloaded piece
+  without loading, and its auto-loading costs +300 KB and 2-7 s a window
+  ([ruling P](../walks-container/abridged/ruling-P.md) and the
+  [cross-examination](../walks-container/abridged/ruling-cross.md))
+- **Not to say:** two unloaded rows with equal blocks may carry different
+  own nodes (0.3% of piece-windows), so a view never calls them the same
+  sequence
 
 ## What the view gets wrong today
 
@@ -121,20 +106,23 @@ the expanded cut over the same window unless a line says otherwise.
 - **Same strand, first step not lowest,** CHM13 chr2 HG02886#1 at
   91,423,100-91,424,500: present
 - **Jumped-over stretch,** chr4 HG00140#1 at 49,290,000-49,295,000 and
-  CHM13 chr22 NA19443#2 at 9,480,000-9,482,000: no size claim; the block
-  says not loaded, and expanding shows the departure
-- **Partial overlap,** CHM13 chr22 NA19443#2 at 9,450,000-9,451,000: no
-  number above the piece's true 2.0 kb, or none
-- **Contained,** chr16:14,942,147-14,942,211: two 64 bp fragments, or a
-  marked unloaded piece
+  CHM13 chr22 NA19443#2 at 9,480,000-9,482,000: unloaded, the row draws
+  the departure the loaded cut shows, with no block over the jump
+- **Partial overlap,** CHM13 chr22 NA19443#2 at 9,450,000-9,451,000:
+  unloaded, the row states the loaded cut's 2.0 kb
+- **Contained,** chr16:14,942,147-14,942,211: two 64 bp fragments,
+  unloaded as loaded
 - **Forms,** chr16:14,932,000-14,933,000: no haplotype with empty cover
   that covers the window expanded
-- **Multi-piece unit,** CHM13 chr7 HG02698#1, three pieces: no window
-  outside the unit's extent shows them
+- **Multi-piece unit,** CHM13 chr7 HG02698#1, three pieces: each drawn
+  from its own blocks
 - **Menu:** every row holding an unloaded piece offers the load action
 - **Renders:** before and after at chr2:91,409,000-91,410,000 with every
   haplotype, and the four-haplotype default as a control that must not
   change, shown to the user before bandage-core is committed
+- **Every row equal:** blocks-built rows equal loaded rows, in bp, gaps,
+  readout and runs, on all the windows above plus 1,000 random
+  abridged-tile windows per file, ADR 0012's acceptance test
 - **Each test fails on graph-walks 6.2 and today's bandage-core**
 
 ## Running the evidence
@@ -150,13 +138,15 @@ the expanded cut over the same window unless a line says otherwise.
 
 ## Order
 
-- graph-walks on a branch: extent on the fragment, `abridgedSpan` by
-  extent, `formsCut` and contained cuts by extent, tests above that fail
-  on 6.2
-- bandage-core on a branch, linked to it: the "not loaded" block, no
-  stepless readout beside an unloaded piece, no size or strand from the
-  ends; renders to the user
-- the plugin's load action on any row with an unloaded piece
-- every consumer green on the exact versions, then release graph-walks
-  7, bandage-core, the consumers, and the walks-format.md sentence with
-  the reader
+- gfa-to-tabix on a branch: format 8's `blocks` unit, its build checks,
+  walks-format.md, a checker claim with its failure on a broken writer;
+  build MC chr22 and check the units against `blocks-gate.ts`'s figures
+- graph-walks on a branch reading format 8: blocks to steps, keep by
+  block, `expand` by overlapping detail units only; the tests above
+- bandage-core on a branch, linked: loaded geometry for unloaded runs,
+  "not loaded" own runs, exact sizes; renders to the user
+- the plugin's load action on every row with unloaded runs
+- rebuild both hosted files on ada and rerun the gate on the real units;
+  every consumer green on the exact versions; then, with the user's
+  go-ahead, release gfa-to-tabix, graph-walks, bandage-core and the
+  consumers, and swap the hosted pair with the plugin release

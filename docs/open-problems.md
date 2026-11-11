@@ -514,11 +514,11 @@ W  B  1  c     0  32  >1>2>6>3
 - Two more blinded reviews traced abridged pieces from file to screen:
   the drop is one of several false statements the view makes about an
   unloaded piece, from a block where it has no step to sizes off by
-  orders of magnitude. The decided fix, reader and viewer with no format
-  change, its failure cases, tests and order are in the
-  [handoff](handoff/2026-11-11-abridged-pieces.md). It waits for a
-  session other than the one that found it, and for the user's go-ahead
-  on the releases
+  orders of magnitude. [ADR 0012](adr/0012-abridged-blocks.md) decides
+  the fix, walk format 8 with a `blocks` unit per abridged tile, after two
+  deciders split and a third cross-examined them; the failure cases,
+  tests and order are in the [handoff](handoff/2026-11-11-abridged-pieces.md).
+  The build, the hosted rebuild and the releases are still to come
 
 ## Walk files name no graph
 
