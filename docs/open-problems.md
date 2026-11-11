@@ -480,13 +480,30 @@ W  B  1  c     0  32  >1>2>6>3
   that doubles back past either end is missed by a window over that part:
   over ref `>1>2>3`, 6 bp nodes, the piece `>9>8>2<1>3>7>8` has a walk row
   at 0-18 and, abridged, a row at 6-18, so a window over node 1 drops it
-- The local copy of the MC chr22 GRCh38 build has 2,572 abridged rows and
-  none narrower than its piece's span in its detail unit, so no hosted
-  file is known to show this, and by ADR 0011 nothing changes now
-- Suggested next step: run the same comparison on both hosted genome-wide
-  files on ada. A fix would write the piece's full span, which its detail
-  unit's `start end` already states, and is a format change under ADR
-  0011's rules
+- The hosted files show it: 1,279 of 74,053 abridged rows on GRCh38 and
+  469 of 65,396 on CHM13 miss part of their piece, a median of about
+  13 kb, at most 63 kb. Each detail unit's `start end`, which the table
+  lists, covers its pieces in every row, and is wider than the piece in
+  the 3,312 and 3,194 rows whose unit holds several pieces of one line,
+  by up to a tile. MC chr22 alone has none
+  ([counts](walks-container/writer/results/hosted.abridged-span.txt),
+  from `abridged-span.py`)
+- Two blinded deciders, given these counts and
+  [criteria written first](walks-container/writer/results/abridged-span-criteria.md),
+  both ruled for a reader change alone: graph-walks keeps an abridged
+  piece where its detail unit's extent overlaps the drawn stretch, and
+  hands that extent to the consumer, since bandage-core places the block
+  from its two end steps (`walkRowRuns.ts`), which lie off the window in
+  exactly these cases. No row's meaning changes and no hosted file is
+  rebuilt; "What a cut returns" would name the detail extent. Both
+  rejected recording alone (it fails the misses criterion) and a writer
+  change (no ADR 0011 trigger)
+- Not yet taken up: the session that found it can't accept its own
+  change, and it needs graph-walks, bandage-core and plugin releases
+  under the release gate. Next step: a fixture that doubles back past an
+  abridged piece's ends, failing on graph-walks 6.2, then the reader
+  change and a check of how bandage-core draws a block whose ends are
+  both off the window
 
 ## Walk files name no graph
 
@@ -509,3 +526,18 @@ W  B  1  c     0  32  >1>2>6>3
 - Suggested next step, before any reader draws walks over index nodes:
   either mark a turned node on its row, or have the reader orient by the
   walk file's `ref` rows
+
+## The release binary is slower than a cargo build
+
+- The Linux binary the README's quick start downloads is built for
+  `x86_64-unknown-linux-musl`, static, with musl's allocator. On pggb
+  chrY it indexes in 99-105 s, where the same code built with cargo
+  against glibc takes 65-68 s on the same machine, and peaks 70 MB lower
+  ([measured](placement/pggb-chrY-build.txt)). The paper's 1.7 minutes
+  is the release binary's
+- `--walks` sorts and encodes on every core, where musl's allocator
+  contends more; it hasn't been timed on the release binary
+- Suggested next step: time the release binary against a cargo build on
+  `--walks` for MC chr22, then build the musl target with another
+  allocator, such as mimalloc, and keep it only if it closes most of the
+  gap on both

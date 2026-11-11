@@ -2132,3 +2132,26 @@ Where the findings have come from so far, and the rule each gives:
   blinded reviews, the second writing its own reader. Fix: wording
   matching the writer and graph-walks 6, with no row's meaning changed,
   as ADR 0011 allows. Guard: none
+- **2026-11-11, the review's loose ends (abridged rows narrower than
+  their pieces, on the hosted files).** The open problem recorded the
+  same day as having no hosted case does have one: 1,279 of 74,053
+  abridged rows on GRCh38 and 469 of 65,396 on CHM13 miss a median of
+  about 13 kb of their piece, so graph-walks drops those pieces from
+  windows over that part. The count on MC chr22 alone, 0 of 2,572, was
+  taken as the hosted answer: the rule "evidence on one graph" again,
+  **re-found**. Source: `abridged-span.py` on both hosted files on ada.
+  Fix: none in this session; two blinded deciders ruled for a
+  graph-walks change alone ([open problems](open-problems.md#an-abridged-row-narrower-than-its-piece)).
+  Guard: `abridged-span.py`
+- **2026-11-11, the review's loose ends (stale scale figures).**
+  index-format.md gave pggb chrY's index as a minute and 5.2 GB, from
+  2026-10-28; the paper's 102.8 s and 6.9 GB came from 4.0.0's release
+  binary on ada. Built with cargo, v4.0.0 and main both take 65-68 s and
+  7.34 GB there, with byte-identical output, so the link dedup costs
+  nothing measurable; the release binary, built for musl, takes 99-105 s
+  ([open problems](open-problems.md#the-release-binary-is-slower-than-a-cargo-build)). Source: the paper's figure against the doc's. Fix: the doc
+  cites [the run](placement/pggb-chrY-build.txt) and dates chr22's
+  figure. Guard: none. Every hosted node and link index was checked for
+  repeated links: none but `ecoli_pggb`'s self-link, which the contig
+  layout files twice as the JBrowse scripts do
+  ([counts](placement/hosted-duplicate-links.txt))

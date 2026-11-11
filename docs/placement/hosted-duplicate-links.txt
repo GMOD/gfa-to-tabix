@@ -1,0 +1,14 @@
+# docs/placement/scripts/duplicate-links.py on each hosted format 2 index, streamed from jbrowse.org/demos on ada, 2026-11-11
+# ecoli_pggb's one repeat is a self-link, 413157- to 413157-, which the contig layout files under both of its ends, the same node
+hprc/hprc-v2.1-mc-grch38.anchored	link rows 1126671	duplicate rows 0	samples 0	highest bit -1	comma-free True
+hprc/hprc-v2.1-mc-grch38.fold10000	link rows 34769	duplicate rows 0	samples 0	highest bit -1	comma-free True
+arabidopsis_pangenome/arabidopsis-tair10-minigraph	link rows 540416	duplicate rows 0	samples 0	highest bit -1	comma-free True
+arabidopsis_pangenome/arabidopsis-tair10-minigraph.fold10000	link rows 20752	duplicate rows 0	samples 0	highest bit -1	comma-free True
+bovine_pangenome/bovine-arsucd12-minigraph	link rows 1209086	duplicate rows 0	samples 0	highest bit -1	comma-free True
+bovine_pangenome/bovine-arsucd12-minigraph.fold10000	link rows 13300	duplicate rows 0	samples 0	highest bit -1	comma-free True
+mouse_pangenome/mouse-mm39-minigraph	link rows 3734244	duplicate rows 0	samples 0	highest bit -1	comma-free True
+mouse_pangenome/mouse-mm39-minigraph.fold10000	link rows 44506	duplicate rows 0	samples 0	highest bit -1	comma-free True
+ecoli_pangenome/ecoli_minigraph	link rows 7290	duplicate rows 0	samples 0	highest bit -1	comma-free True
+ecoli_pangenome/ecoli_pggb	link rows 1628482	duplicate rows 1	samples 5	highest bit 4	comma-free True
+ecoli_pangenome/ecoli_pggb.fold50	link rows 11084	duplicate rows 1	samples 0	highest bit -1	comma-free True
+ecoli_pangenome/ecoli_cactus	link rows 1684388	duplicate rows 0	samples 5	highest bit 4	comma-free True

@@ -1,0 +1,9 @@
+# docs/walks-container/writer/scripts/abridged-span.py on the hosted genome-wide walk files
+# (~/work/genome7 on ada, the same lengths as jbrowse.org/demos/hprc), 2026-11-11.
+# "narrower": rows whose span, from the piece's first step on R to its last, misses part of
+# the span the piece's walk row in its detail unit states; "bp outside" is that part.
+hprc-v2.1-mc-grch38.GRCh38.walks.gz: abridged 74053; narrower 1279, bp outside median 12852 p90 17532 max 63440; over 10 kb 644, over 64 kb 0
+  detail extent covers the true span: 74053 of 74053; extent minus true span, bp: median 0 p90 0 max 65529; rows where they differ 3312
+hprc-v2.1-mc-chm13.CHM13.walks.gz: abridged 65396; narrower 469, bp outside median 13627 p90 53951 max 56610; over 10 kb 275, over 64 kb 0
+  detail extent covers the true span: 65396 of 65396; extent minus true span, bp: median 0 p90 0 max 65436; rows where they differ 3194
+# The MC chr22 GRCh38 build in ~/work/scratch/walks7 on the laptop (58,494,956 bytes): abridged 2572; narrower 0

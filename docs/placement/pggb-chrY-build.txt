@@ -1,0 +1,24 @@
+# pggb chrY (HPRC release 2, 7.7 GB GFA) indexed on GRCh38 on ada (i9-12900K,
+# shared), 2026-11-11, alternating builds, each pair's index compared byte for byte.
+# docs/placement/scripts/loose-ends-2026-11-11.sh, then loose-ends-2026-11-11-iso.sh in the same
+# directory (the same loop over two cargo builds).
+#
+# 4.0.0's release binary (static, x86_64-unknown-linux-musl) against main at 96da551
+# built with cargo (glibc); load about 10
+old round 1: 105.41 s, 7274752 KB peak
+new round 1: 68.15 s, 7341444 KB peak
+old round 2: 98.90 s, 7274140 KB peak
+new round 2: 69.75 s, 7344296 KB peak
+chrY index byte-identical
+link rows in each: 14252949
+#
+# f001614 (src identical to v4.0.0) against main at 96da551, both built with cargo
+# (glibc) on ada; load 10 rising to 26
+v4 (glibc) round 1: 68.17 s, 7342600 KB peak
+main (glibc) round 1: 65.28 s, 7335820 KB peak
+v4 (glibc) round 2: 65.77 s, 7336920 KB peak
+main (glibc) round 2: 65.73 s, 7344764 KB peak
+byte-identical
+#
+# So main's link dedup costs nothing measurable here, and the gap in the first pair
+# is the build: the musl release binary takes about half as long again

@@ -199,7 +199,8 @@ seq start end  L  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtSta
 ```
 
 - Anchored, a link has one row per reference sequence. By contig, it has two
-  rows, one under each node's coordinate
+  rows, one under each node's coordinate, so a link from a node to itself
+  has two identical rows, as the JBrowse scripts wrote it
 - A link stated by more than one L line, either way round, as
   `L 1 + 2 +` and `L 2 - 1 -` are, gets the rows of one, as the first
   L line wrote it
@@ -226,8 +227,10 @@ assemblies in `SM:Z:assembly,...` in place of `SB:H:`, and there is no header.
 - The `contig` indexes are much larger than the `anchored` ones, because a
   Tabix index spends 8 bytes per 16 kb of every contig
 - Memory grows with total path length. HPRC's pggb chrY, 7.7 GB of GFA,
-  indexes in a minute and 5.2 GB, and pggb chr22, 27 GB, in 6.5 minutes and
-  18.7 GB. For a larger graph use [`--walks`](walks-format.md)
+  indexes in 7.3 GB, in about 65 s built with cargo and 100 s with the
+  release binary ([measured](placement/pggb-chrY-build.txt)),
+  and pggb chr22, 27 GB, took 6.5 minutes and 18.7 GB with the version of
+  2026-10-28. For a larger graph use [`--walks`](walks-format.md)
 - A Tabix index holds coordinates up to 512 Mb. A file with a row past that
   gets a `.csi` index instead, which holds up to 34 Gb, and every other file
   keeps its `.tbi`
