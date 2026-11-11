@@ -2,8 +2,10 @@
 
 - **Status:** accepted, 2026-11-11, and amended the same day: the
   `blocks` unit is a later addition to walk format 7, not a format 8
-  ([How a file declares it](#how-a-file-declares-it)). The hosted files
-  don't carry it until the build below passes its acceptance test
+  ([How a file declares it](#how-a-file-declares-it)). gfa-to-tabix
+  writes it and both hosted files are rebuilt with it on ada
+  ([The rebuilt files](#the-rebuilt-files-2026-11-11)); they aren't
+  hosted until the acceptance test below passes
 - **Decides:** one new unit kind, `blocks`, holding each abridged
   piece's exact stretches on the reference, and what a reader and a
   viewer may say about a piece whose steps aren't loaded
@@ -139,6 +141,31 @@ results in `blocks-gate.grch38.jsonl` and `blocks-gate.chm13.jsonl`):
   loaded rows on the failure windows of the handoff plus 1,000 random
   abridged-tile windows per file. The cross-examination's prototype
   matched 2,344 of 2,344 rows over five windows
+
+## The rebuilt files, 2026-11-11
+
+Both hosted graphs rebuilt on ada with the writer of the `blocks-unit`
+branch ([script](../walks-container/abridged/genome-blocks.sh), results in
+[genome/](../walks-container/abridged/genome/)):
+
+| | GRCh38 | CHM13 | Limit |
+|---|---|---|---|
+| Units other than `blocks` and tables | the hosted file's bytes | the hosted file's bytes | the same bytes |
+| `blocks` units | 461, one per abridged tile | 563, one per abridged tile | |
+| `blocks` rows equal to graph-walks' decode of the detail row | 74,053 of 74,053 | 65,396 of 65,396 | all |
+| `blocks` units, total | 19.2 MB, 1.21% of the file | 25.4 MB, 1.42% | 2% |
+| Largest `blocks` unit | 1.71 MB, chr2:91,422,720 | 1.62 MB, chr2:92,078,080 | 2 MB |
+| Largest two adjacent `blocks` units with their tiles | 2.14 MB | 3.31 MB | a 1 kb window ≤ 4 MB |
+
+- **The units are larger than the gate's estimate,** which gzipped each
+  unit as one stream: 45% and 31% in total, and GRCh38's largest 3.5
+  times its 484 KB. The file's BGZF members deflate 64 KB at a time, so
+  a row can't borrow from one in the member before. Every limit still
+  holds
+- **The check is independent of the writer:**
+  [blocks-check.ts](../walks-container/abridged/blocks-check.ts) decodes
+  each piece's detail row with graph-walks 6.2 and derives its blocks. A
+  file without `blocks` units fails it, every row missing
 
 ## Alternatives rejected
 

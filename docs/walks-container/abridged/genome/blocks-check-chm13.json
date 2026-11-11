@@ -1,0 +1,19 @@
+{
+ "file": "/home/cdiesh/work/blocks/genome/hprc-v2.1-mc-chm13.CHM13.walks.gz",
+ "format": 7,
+ "sequences": 25,
+ "abridgedTiles": 563,
+ "blocksUnits": 563,
+ "blocksBytes": 25379051,
+ "largestBlocksUnit": 1618396,
+ "pieces": 65396,
+ "rowsEqual": 65396,
+ "rowsDiffer": 0,
+ "rowsMissing": 0,
+ "rowsExtra": 0,
+ "orderDiffers": 0,
+ "hullDiffers": 0,
+ "unitHullDiffers": 0,
+ "blocksUnitWithoutAbridgedTile": 0,
+ "examples": []
+}

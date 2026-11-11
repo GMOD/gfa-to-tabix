@@ -1,0 +1,19 @@
+{
+ "file": "/home/cdiesh/work/blocks/genome/hprc-v2.1-mc-grch38.GRCh38.walks.gz",
+ "format": 7,
+ "sequences": 195,
+ "abridgedTiles": 461,
+ "blocksUnits": 461,
+ "blocksBytes": 19200026,
+ "largestBlocksUnit": 1712175,
+ "pieces": 74053,
+ "rowsEqual": 74053,
+ "rowsDiffer": 0,
+ "rowsMissing": 0,
+ "rowsExtra": 0,
+ "orderDiffers": 0,
+ "hullDiffers": 0,
+ "unitHullDiffers": 0,
+ "blocksUnitWithoutAbridgedTile": 0,
+ "examples": []
+}

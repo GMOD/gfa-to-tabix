@@ -1,0 +1,12 @@
+-rw-rw-r-- 1 cdiesh cdiesh 392125814762 Nov 11 13:35 chm13.gfa
+-rw-rw-r-- 1 cdiesh cdiesh 1785637086 Nov 11 14:27 hprc-v2.1-mc-chm13.CHM13.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh        886 Nov 11 14:27 hprc-v2.1-mc-chm13.CHM13.walks.gz.idx
+chm13 units but blocks and tables: new f20ba03a7f8504b319ace74396152114 hosted f20ba03a7f8504b319ace74396152114
+chm13 blocks-check exit 0
+chm13 done
+-rw-rw-r-- 1 cdiesh cdiesh 375365804047 Nov 11 14:45 grch38.gfa
+-rw-rw-r-- 1 cdiesh cdiesh 1581521229 Nov 11 15:34 hprc-v2.1-mc-grch38.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       8109 Nov 11 15:34 hprc-v2.1-mc-grch38.GRCh38.walks.gz.idx
+grch38 units but blocks and tables: new 51d571272d36c5fcd0ae48c6034b784a hosted 51d571272d36c5fcd0ae48c6034b784a
+grch38 blocks-check exit 0
+grch38 done

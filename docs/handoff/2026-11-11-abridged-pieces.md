@@ -151,27 +151,18 @@ the expanded cut over the same window unless a line says otherwise.
 
 ## Order
 
-- gfa-to-tabix on the `blocks-unit` branch, not merged:
-  - written: the `blocks` unit, its build checks, and tests that read
-    each abridged piece's detail row back and compare its runs with the
-    `blocks` row. Four broken writers fail them: own bp dropped, steps
-    never joined, a block joined across a turn, and each block measured
-    from the last one's start
-  - checked on four fixtures: every unit but `blocks` and tables is the
-    same bytes as main writes, and graph-walks 6.2 returns the same cuts
-    from both, expanded and not
-  - still to do: walks-format.md and its claims; `verify7.py`,
-    `claims7.py` and `audit7.py`, which refuse a `blocks` unit today, so
-    `scripts/check-walks.sh` fails on the branch; a `broken.sh` case; a
-    build of MC chr22 with its units checked against `blocks-gate.ts`'s
-    figures
+- gfa-to-tabix, done on main and not released: the writer, the spec,
+  the file checkers with a broken file for each check, and both hosted
+  graphs rebuilt on ada as `~/work/blocks/genome/*.walks.gz`
+  ([ADR 0012](../adr/0012-abridged-blocks.md#the-rebuilt-files-2026-11-11)).
+  The version is still 4.0.0: a push to main with a new version in
+  Cargo.toml publishes it
 - graph-walks on a branch: blocks to steps, keep by block, `expand` by
   overlapping detail units only, the refusal of a sequence without
   `blocks` units; the tests above
 - bandage-core on a branch, linked: loaded geometry for unloaded runs,
   "not loaded" own runs, exact sizes; renders to the user
 - the plugin's load action on every row with unloaded runs
-- rebuild both hosted files on ada and rerun the gate on the real units
 - with the user's go-ahead, release gfa-to-tabix as a minor version and
   swap the hosted files, once graph-walks 6.2 reads the rebuilt ones as
   it reads today's. Nothing else has to move with that swap
