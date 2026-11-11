@@ -2092,3 +2092,13 @@ Where the findings have come from so far, and the rule each gives:
   with two reference sequences, then a count on the hosted file. Fix:
   none; [open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence),
   by ADR 0011. Guard: `cross-sequence.py` counts them in any file
+- **2026-11-11, a blinded review (a comma in an assembly name misnumbers
+  the carriers).** The node and link index lists a plain GFA's assemblies
+  in `#samples`, comma-separated, and nothing refused a comma in one: a
+  path `a,b#1#ctg` gave `#samples GCF_1.2.1,a,b.1`, three names for two
+  assemblies, so every `SB:H:` bit after it named the wrong one, and
+  format 1's `SM:Z:` list split the same way. SAM's reference names
+  forbid commas (SAMv1 §1.2.1), so no graph built for htslib tools has
+  one. Source: a hand-made graph. Fix: `place::from_paths` refuses such a
+  path with an error naming it; no real graph's bytes change. Guard:
+  `an_assembly_name_with_a_comma_is_refused`

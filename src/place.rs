@@ -161,7 +161,23 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
                     nothing gives this graph coordinates"
             .into());
     }
-    let assemblies: Vec<Vec<u8>> = paths.iter().map(|p| assembly(&p.name)).collect();
+    let assemblies = paths
+        .iter()
+        .map(|p| {
+            let name = assembly(&p.name);
+            if name.contains(&b',') {
+                Err(format!(
+                    "path {} names the assembly {}, which holds a comma: the \
+                     index lists assemblies comma-separated, and SAM forbids \
+                     commas in reference names. Rename the path",
+                    text(&p.name),
+                    text(&name)
+                ))
+            } else {
+                Ok(name)
+            }
+        })
+        .collect::<Result<Vec<_>, _>>()?;
     let mut references: Vec<&[u8]> = Vec::new();
     let mut notes = Vec::new();
     match reference {
@@ -393,6 +409,14 @@ mod tests {
         let graph = Graph::read(GFA.as_bytes()).unwrap();
         let placed = from_paths(&graph, Some("ref")).unwrap();
         assert_eq!(placed.flipped, [false, true, true]);
+    }
+
+    #[test]
+    fn an_assembly_name_with_a_comma_is_refused() {
+        let gfa = "S\ta\t*\tLN:i:4\nP\tref#1#chr\ta+\t*\nP\ta,b#1#ctg\ta+\t*\n";
+        let graph = Graph::read(gfa.as_bytes()).unwrap();
+        let error = from_paths(&graph, Some("ref")).err().unwrap();
+        assert!(error.contains("a,b.1, which holds a comma"), "{error}");
     }
 
     #[test]

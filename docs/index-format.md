@@ -103,6 +103,9 @@ The tool stops before writing anything on these:
   message says to blunt the graph first, or use an rGFA
 - `no P or W lines, and the S lines carry no rGFA tags`: the file has neither
   coordinate source
+- `path a,b#1#ctg names the assembly a,b.1, which holds a comma`: `#samples`
+  lists assemblies comma-separated, so a comma in one would misnumber every
+  `SB:H:` bit after it. SAM's reference names forbid commas too
 
 ## Layouts
 
