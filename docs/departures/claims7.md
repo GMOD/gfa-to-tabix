@@ -183,6 +183,7 @@ in, and the root cause.
 | C155 | A reader refuses a row of another sequence, or of a kind its unit doesn't hold: tile ref, nodes, route, walk, abridged; departure block departure; detail nodes, route, walk | `graph-walks:walkReader.test.ts: a tile with %s is refused` `graph-walks:walkReader.test.ts: a %s unit holding a row of a kind it does not hold is refused` | the reader | holds |
 | C156 | A reader refuses a table that doesn't start with its own table `#unit` line, from 0 to the sequence's length, or holds a line that isn't an `#entry`; a table missing a unit's entry can't be told | `graph-walks:walkReader.test.ts: a table with %s is refused` | the reader | holds |
 | C157 | `#reference` names the reference sample | `claims7:H3` `test:a_walk_file_names_its_format_reference_and_each_haplotype_with_rows` | the reader | holds |
+| C158 | A P line's `fragStart` is the start its name gives, `[start]`, `[start-end]`, `#start` with exactly three `#`, or `:start-end`; `path` drops that suffix, and a name with none starts at 0 | `unit:a_path_piece_name_gives_its_start` | `split_path_name` | holds |
 
 ## The audit
 

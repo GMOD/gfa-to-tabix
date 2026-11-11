@@ -100,9 +100,10 @@ taken flipped, and its departure records.
   `ownTiles` names, for a record whose leave piece or rejoin piece the
   window's read lacks. It takes the record's own steps from them and
   nothing else ([departure](#departure)) <!-- C117 -->
-- **Drawn stretch:** the reference's nodes over `D`, whole, widened by
-  every pass of a walk's step over them ([Reading a window](#reading-a-window))
-  <!-- C144 -->
+- **Drawn stretch:** one stretch of S, from the lowest start to the highest
+  end over the reference nodes overlapping `D`, whole, and every step of
+  a piece read whose position overlaps `D`
+  ([Reading a window](#reading-a-window)) <!-- C144 -->
 
 ## Tiles and pieces
 
@@ -124,6 +125,11 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus, and
 - On the reference's own lines, a step takes the tile that holds its
   offset, so where the reference passes a node twice each pass lies where
   it is <!-- C15 -->
+- A reference sample with several haplotypes, such as `--refs HG002` names,
+  makes its haplotypes' lines reference sequences of one file, and a
+  node two of them pass counts as passed twice. Another path's step there
+  can take a pass on either, so a path can lie wholly under one of them
+  and show in no window of the other, with no departure record
 - A piece is a run of a W line's steps in one tile. `piece` numbers the
   pieces along one W line from 0 <!-- C16 -->, so a reader keys a piece by
   `path`, `fragStart` and `piece`, and joins consecutive pieces back into
@@ -142,7 +148,8 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus, and
   units and no directory line. Neither HPRC's Minigraph-Cactus chr22 nor pggb's chrY
   has a segment of 0 bp ([counts](walks-container/writer/results/zero-bp.txt)),
   so no rule below speaks of one <!-- C152 -->
-- A W or P line with no steps is skipped once its end column is checked:
+- A W or P line with an empty steps field is skipped once its end
+  column is checked; `*` there is refused as a step:
   it has no rows, no departure record and no `#hole`, it names no
   reference sequence, it is not counted on stderr, and the overlap refusal
   doesn't apply to it. <!-- C118 --> It covers no base, so a contig's
@@ -245,8 +252,9 @@ it alone, and `zcat` reads the whole file as text.
 - **The header unit,** first, from byte 0: the [header](#header) lines,
   with no `#unit` line <!-- C30 -->
 - **Per reference sequence,** in byte order of the names <!-- C31 -->: its
-  `tile` and `departures` units, in order of a tile's `name`, its start, and a block's `start`; then its `detail` units; then
-  its `table` unit, which lists them. <!-- C32 --> At one start a tile comes
+  `tile` and `departures` units in order of position, a tile at its
+  `name` and a block at its `start`; then its `detail` units; then its
+  `table` unit, which lists them. <!-- C32 --> At one start a tile comes
   before the departure blocks that start there, and smaller blocks before
   larger <!-- C33 -->
 - **Every unit but the header** starts with a line
@@ -306,8 +314,9 @@ GRCh38#0#chr22	<offset>	<length>
 ```
 
 - line 1: the data file's `#walks` line, plus `bytes:i:` with the data
-  file's length <!-- C47 -->. A reader refuses a directory whose line 1
-  differs from the header unit's `#walks` line, or whose `bytes` differs
+  file's length <!-- C47 -->. A reader refuses a directory whose line 1,
+  its tab-separated fields without the `bytes:i:` one, differs from the
+  header unit's `#walks` line, or whose `bytes` differs
   from the data file's length, as a server's Content-Range gives it; a
   reader that can't learn the length, where a server hides Content-Range
   from cross-origin readers, skips the length check, so a server must
@@ -367,7 +376,8 @@ The header unit's lines start with `#`:
   unit kinds or files <!-- C124 -->
 - `#reference` names the reference sample <!-- C157 -->
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
-  `sample#haplotype`, once each in byte order <!-- C51 -->
+  `sample#haplotype`, a path name up to its second `#` or whole where it
+  has fewer, once each in byte order <!-- C51 -->
 - `#hole` gives each stretch of a reference sequence that no line of the
   reference covers, between its lines and before its first: sequence,
   start, end, `start` below `end`, in order of sequence name in bytes and
@@ -382,6 +392,9 @@ The header unit's lines start with `#`:
 
 Every line not starting with `#` begins `seq start end kind`: the reference
 sequence, the stretch of it the line is about, and its kind. <!-- C54 -->
+Columns are separated by one tab, a list within a column by commas, and
+a line ends in a newline; the examples here align columns with spaces
+for reading. `start end` are 0-based and half-open, as in BED.
 The columns from `kind` on are format 6's, unchanged. `start end` are data,
 not an index key, so `zcat | grep` places any line.
 
@@ -424,8 +437,11 @@ seq start end ref path fragStart hapOffset piece nsteps steps lengths passes [SQ
   rows in `hapOffset` order, and each piece's steps start in `[name, name
   + tile)` <!-- C127 -->
 - `path` is `sample#haplotype#contig`. `fragStart` is where the W line starts on
-  that contig, or the start in a P line's name (`[start]`, `#start` or
-  `:start-end`). `hapOffset` is where the piece starts
+  that contig, or the start in a P line's name, as written: `[start]` or
+  `[start-end]`, `#start` where the name has exactly three `#`, or
+  `:start-end`. <!-- C158 --> `path` is the name without that suffix,
+  and a P line with none starts at 0 <!-- C158 -->. `hapOffset` is where
+  the piece starts
 - `steps` is the piece's handles as delta tokens, the first from 0
 - `lengths` lists each step's node length in bp <!-- C146 -->
 - `passes` lists for each step how many times the reference's paths pass
@@ -495,10 +511,12 @@ seq start end walk path fragStart hapOffset piece nsteps start[@k] choices
   token is `2 × (route id − previous route id) + flip`, the first from 0,
   where flip 1 means the piece takes the route the other way round.
   <!-- C148 --> A token may end
-  `:k`, then `@k`. See [Decoding a walk row](#decoding-a-walk-row)
+  `:k`, then `@k`, both optional: a signed decimal integer, then `:` and a
+  decimal, then `@` and a decimal, as `-10:1@2`. See
+  [Decoding a walk row](#decoding-a-walk-row)
 - Where R holds a node more than once, `k` names an occurrence, counting R's
-  positions holding the node from 0. `start@k` is the occurrence the piece
-  starts on, where it is not R's first. On a choice, `:k` is the occurrence
+  positions holding the node, in either orientation, from 0. `start@k` is
+  the occurrence the piece starts on, where it is not R's first. On a choice, `:k` is the occurrence
   of the entry's node the walk leaves R from, where stepping along R from
   where it last landed until it reads the entry would stop at an earlier
   one, and `@k` the occurrence the route's exit lands on, where it is not
@@ -523,6 +541,7 @@ seq start end abridged path fragStart hapOffset piece nsteps bp start[@k] end[@k
   has one row in its tile, walk or abridged <!-- C72 -->. A piece left
   abridged stands alone: a reader doesn't join it to the pieces beside it,
   whose steps it lacks <!-- C130 -->
+- A tile's `abridged` rows are in order of `detail`, then `hapOffset`
 - `start` and `end` (the columns after `bp`) are the piece's first and last
   handles on R, both absolute. `start@k` names its occurrence as on a walk
   row; `end@k` names its occurrence where it is not the one nearest
@@ -657,7 +676,9 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
   by every pass of a walk's step over them <!-- C144 -->: a reader draws whole nodes,
   so the stretch a cut describes runs to the edges of the nodes at `D`'s
   ends
-- **What a cut returns:** every piece over `D`, and every departure record
+- **What a cut returns:** every piece with a step whose position
+  overlaps the drawn stretch, every abridged piece whose span overlaps
+  it, and every departure record
   whose line overlaps `D`, unfiltered, one in a `#hole` included, each
   once; and every departure it computes between consecutive steps of one
   piece whose leave → rejoin stretch overlaps the drawn stretch.
@@ -771,7 +792,8 @@ demands every path, placement and departure back as the GFA states them.
   an interior step, then `route` rows and `walk` rows. <!-- C102 --> The
   tool numbers its routes from 0 and chains their tokens from 0, as for a
   tile of its own, and its walk rows decode against the R of tile `cs` of
-  `seq` <!-- C103 -->
+  `seq` <!-- C103 -->. Its `nodes` and `route` rows' `start end` are the
+  detail unit's extent, as a tile's are the tile's
 
 ## Decoding a walk row
 

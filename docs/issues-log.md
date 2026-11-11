@@ -2102,3 +2102,33 @@ Where the findings have come from so far, and the rule each gives:
   one. Source: a hand-made graph. Fix: `place::from_paths` refuses such a
   path with an error naming it; no real graph's bytes change. Guard:
   `an_assembly_name_with_a_comma_is_refused`
+- **2026-11-11, a second blinded review (a link stated twice gets two
+  rows).** `L 1 + 2 + 0M`, `L 2 - 1 - 0M` and `L 1 + 2 + *` are one link,
+  and the node and link index wrote three rows for it; a reader had to
+  deduplicate, by reverse complement too, which no doc said. The
+  fixture `walks-two-refs.gfa` states one link both ways. Source: a
+  hand-made graph; the 11-09 hand cases had repeated L lines but checked
+  only that every link came back. Fix: `Graph::read` keeps the first L
+  line of each link, either way round; only graphs that repeat a link
+  change. Guard:
+  `a_link_stated_twice_either_way_round_is_kept_once_as_first_written`
+- **2026-11-11, the two blinded reviews (spec wording a reader had to
+  guess).** An implementer working from the specs alone had to guess:
+  - the drawn stretch and which pieces a cut returns
+  - the column and list separators and a choice token's grammar
+  - that `k` counts occurrences in either orientation
+  - the order of a tile's `abridged` rows
+  - the extent a detail unit's `nodes` and `route` rows carry
+  - how the directory's line 1 compares with a `bytes:i:` field it has
+    and the header lacks
+  - the P line name forms a start comes from, and how non-PanSN names
+    list
+  - that `*` steps are refused
+  - that a reference sample with several haplotypes can file a path
+    wholly under one of them
+  - in the index: where a path starts, that segments no path visits have
+    no row, the sort's tiebreak, and how `#samples` names split
+  The garbled sentence on unit order was also rewritten. Source: two
+  blinded reviews, the second writing its own reader. Fix: wording
+  matching the writer and graph-walks 6, with no row's meaning changed,
+  as ADR 0011 allows. Guard: none

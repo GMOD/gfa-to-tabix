@@ -66,6 +66,13 @@ the file has; see
   it, at rank 0 on the reference and rank 1 elsewhere. The rows are the same
   for any order of the P and W lines, which `vg convert` changes from run to
   run
+- **Where a path starts:** a W line at its start column. A P line at the
+  start its name's suffix gives, read as [walk files](walks-format.md#ref)
+  read it, and the suffix leaves the sequence name; a P line without one
+  starts at 0. So `P REF#0#chr:100-109` puts its first node at
+  `REF#0#chr` 100
+- **Segments no path visits** have no row, nor do their links; the tool
+  counts them on stderr
 - **Blunt graphs only:** summing node lengths gives the path coordinate only
   when nodes abut, so a plain GFA needs overlaps `*` or `0M`
 - **Orientation:** when the first path to reach a node reads it reversed, the
@@ -150,7 +157,7 @@ a window that starts at the node misses it.
 
 ## What the file holds
 
-`<prefix>.graph.bed.gz`, here for `tests/data/paths.gfa`:
+The first rows of `<prefix>.graph.bed.gz` for `tests/data/paths.gfa`:
 
 ```
 #gfa-to-tabix  format:i:2  layout:Z:anchored  graph:Z:6f8a0816aa66e2d6
@@ -165,7 +172,10 @@ ref#1#chr  0  9  N  3  1  alt#1#ctg  4  5  SB:H:1
   segment set only: two graphs with the same segments and different links,
   paths or reference share it
 - A plain GFA adds a `#samples` line listing its assemblies, written
-  `sample.haplotype`, in byte order
+  `sample.haplotype`, comma-separated, in byte order. PanSN haplotypes
+  are integers, so a reader splits a name at its last dot, whatever dots
+  the sample holds, as in `GCF_000005845.2.1`. A path without a PanSN
+  name is listed whole. The tool refuses a name with a comma
 - Each row's fourth column says whether it is a node (`N`) or a link (`L`)
 - `SB:H:` lists the assemblies whose paths visit a node: hex digit i / 4,
   counted from the left, holds the assembly numbered i in `#samples` as bit
@@ -190,12 +200,16 @@ seq start end  L  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtSta
 
 - Anchored, a link has one row per reference sequence. By contig, it has two
   rows, one under each node's coordinate
+- A link stated by more than one L line, either way round, as
+  `L 1 + 2 +` and `L 2 - 1 -` are, gets the rows of one, as the first
+  L line wrote it
 - The tool writes both nodes' bits on a link row, because a link can reach a
   node no node row of the query returns, such as a repeat copy megabases away
   on a pggb graph
 - Both are named `SB:H:`, so a reader takes them by position, the source's
   then the target's, never by name
-- The tool sorts rows by sequence name in byte order, then by start
+- The tool sorts rows by sequence name in byte order, then by start, then
+  by the whole line in byte order
 
 ### Format 1
 

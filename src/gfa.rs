@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::io::BufRead;
 
 use crate::intern::Interner;
@@ -13,6 +14,25 @@ pub struct Link {
     pub source_reversed: bool,
     pub target: u32,
     pub target_reversed: bool,
+}
+
+impl Link {
+    // The same for an L line and its reverse, `L 1 + 2 +` and `L 2 - 1 -`
+    fn key(&self) -> (u32, bool, u32, bool) {
+        let forward = (
+            self.source,
+            self.source_reversed,
+            self.target,
+            self.target_reversed,
+        );
+        let backward = (
+            self.target,
+            !self.target_reversed,
+            self.source,
+            !self.source_reversed,
+        );
+        forward.min(backward)
+    }
 }
 
 pub fn strand(reversed: bool) -> u8 {
@@ -133,6 +153,8 @@ impl Graph {
             }
             .map_err(|e| format!("line {}: {e}", number + 1))?;
         }
+        let mut seen = HashSet::with_capacity(graph.links.len());
+        graph.links.retain(|link| seen.insert(link.key()));
         Ok(graph)
     }
 
@@ -333,6 +355,26 @@ mod tests {
     }
 
     #[test]
+    fn a_link_stated_twice_either_way_round_is_kept_once_as_first_written() {
+        let gfa = "L\t1\t+\t2\t+\t0M\nL\t2\t-\t1\t-\t0M\nL\t1\t+\t2\t+\t*\n\
+                   L\t2\t+\t1\t+\t0M\nL\t3\t+\t3\t-\t0M\nL\t3\t+\t3\t-\t0M\n";
+        let graph = Graph::read(gfa.as_bytes()).unwrap();
+        let links: Vec<(u32, bool, u32, bool)> = graph
+            .links
+            .iter()
+            .map(|l| (l.source, l.source_reversed, l.target, l.target_reversed))
+            .collect();
+        assert_eq!(
+            links,
+            [
+                (0, false, 1, false),
+                (1, false, 0, false),
+                (2, false, 2, true)
+            ]
+        );
+    }
+
+    #[test]
     fn path_and_walk_steps_keep_their_orientation() {
         let graph =
             Graph::read("P\tp\ta+,bb-,c+\t*\nW\ts\t1\tchr\t0\t9\t>c<bb<a\n".as_bytes()).unwrap();
@@ -366,6 +408,7 @@ mod tests {
             "G#0#chr1[100]",
             "G#1#chr1#100",
             "G#0#chr1:100-106",
+            "M#1#c#d#7",
         ];
         let text: String = names.iter().map(|n| format!("P\t{n}\ta+\t*\n")).collect();
         let graph = Graph::read(text.as_bytes()).unwrap();
@@ -381,6 +424,7 @@ mod tests {
                 (b"G#0#chr1", 100),
                 (b"G#1#chr1", 100),
                 (b"G#0#chr1", 100),
+                (b"M#1#c#d#7", 0),
             ]
         );
     }
