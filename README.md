@@ -9,9 +9,7 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 - The [JBrowse 2](https://jbrowse.org) graph track reads the file
 - The tool is one static binary and needs no bgzip or tabix; `build` runs gfatools, when installed, for an rGFA's bubbles
 
-![A pangenome GFA goes through gfa-to-tabix build to hprc.graph.bed.gz, which a JBrowse graph track queries by region, and through gfa-to-tabix --walks to hprc.GRCh38.walks.gz, which @jbrowse/graph-walks reads by region to rebuild each haplotype's path](docs/figures/outputs.svg)
-
-![The Tabix query a browser runs to view chr1:13-18, the node and link lines it returns, and the graph it draws from them, with each node and edge coloured by the kind of line it came from](docs/figures/overview.svg)
+![A graph of nodes s1 to s4 along chr1 with HG002's node s5 between s2 and s4, and under it every line of hprc.graph.bed.gz as a bar at the chr1 interval it is indexed under; the window chr1:13-18 crosses the bars of the lines tabix returns for it, s5's among them](docs/figures/overview.svg)
 
 ## Quick start
 
@@ -39,9 +37,9 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 - `chr22.gfa` is a base-level GFA with integer node ids and W or P lines, as `vg convert -f chr22.gbz > chr22.gfa` writes
 - The command writes one file per `--refs` sample, here `chr22.GRCh38.walks.gz` and `chr22.CHM13.walks.gz`, each with a `.walks.gz.idx` directory
 - Each file is a series of gzip units: a header, one per tile the reference covers, 64 kb unless `--tile` says otherwise, one per block of departure records, one per detail record of a path moved out of a tile, and one table per reference sequence listing their byte ranges. <!-- C114 --> A reader fetches the tiles and departure blocks over a region, which hold the rows it needs to rebuild every haplotype's path through that region. [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) rebuilds them, and BandageJS and the JBrowse graph plugin draw through it
-- The figure follows one such read on a 90 bp chr1 built with `--tile 30`: what each W line of the GFA became in the file, and what a window fetches
+- The figure follows one such read on a 90 bp chr1 built with `--tile 30`: two haplotypes along GRCh38, and what the tile at 30-60 holds. [Walk files](docs/walks-format.md) has every row and column
 
-![The three W lines of walks-schematic.gfa, GRCh38 along nodes 1 to 9 on chr1, CHM13#0 dipping to its node 10 in place of node 5 and HG002#1 to its node 11 between nodes 3 and 7, and under each the rows of hprc.GRCh38.walks.gz it became for tile 30: GRCh38's ref row, CHM13's route and walk rows, and HG002's departure line in departures 30-60, which chr1:31-60 reads with tile 30 as one request, bytes 380-606](docs/figures/walks-schematic.svg)
+![GRCh38 along nodes 1 to 9 of a 90 bp chr1 cut into three tiles, HG002#1 passing through the same nodes and CHM13#0 through its node 10 in place of node 5; tile 30 of hprc.GRCh38.walks.gz holds GRCh38's nodes 4 5 6, route 0 through nodes 4 10 6, a walk for CHM13#0 that takes route 0 and a walk for HG002#1 that takes no route](docs/figures/walks-tile.svg)
 
 ## FAQ
 

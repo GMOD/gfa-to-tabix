@@ -4,9 +4,9 @@
 Runs the tool on docs/figures/*.gfa and redraws docs/figures/*.svg from the
 lines it writes. The script draws the overview figure itself, the walks
 detail figure by filling the marked regions of its .dot file for Graphviz,
-the outputs figure from its .dot file as written, the walks leave figure
+the walks leave figure
 from the tool's lines and the drawing scripts/bandage-figure.mjs left beside
-them, and the walks schematic and bytes figures from the tool's lines alone.
+them, and the walks tile and bytes figures from the tool's lines alone.
 With --check, exits 1 if a figure differs from what the tool writes now.
 """
 
@@ -119,140 +119,75 @@ def listing(names):
 
 
 def overview_svg(node_lines, link_lines):
-    """The Tabix query a browser runs for a window, the node and link lines
-    it returns, and the graph it draws from them, coloured by the kind of
-    line each part came from."""
-    # the lines without their kind column, N or L
-    segs = [r[:3] + r[4:] for r in node_lines]
-    links = [r[:3] + r[4:] for r in link_lines]
+    """The graph on the reference's coordinates and, under it, each line of
+    the file as a bar at the interval it is indexed under beside its text;
+    the window crosses the bars of the lines its query returns."""
     seq, qstart, qend = QUERY
-    ink, muted, line, grey = "#1f2328", "#57606a", "#8c959f", "#9aa3ad"
+    q = run_query([r[:3] + r[4:] for r in node_lines], [r[:3] + r[4:] for r in link_lines])
+    kept = [q["hits"][i] for i in sorted(q["kept"])]
+    nodes = {r[4]: r for r in node_lines}
+    ref = sorted((n for n in nodes if nodes[n][5] == "0"), key=lambda n: int(nodes[n][1]))
+    alt = next(n for n in nodes if nodes[n][5] != "0")
+    edges = [(r[4][:-1], r[5][:-1]) for r in link_lines]
+    lo, hi = int(nodes[ref[0]][1]), int(nodes[ref[-1]][2])
     node_pale, node_ink = "#dafbe1", "#1a7f37"
     link_pale, link_ink = "#f3e8ff", "#8250df"
-    mono = "Menlo, Consolas, DejaVu Sans Mono, monospace"
-    q = run_query(segs, links)
-    kept = [q["hits"][i] for i in sorted(q["kept"])]
-    nodes = {r[3]: {"seq": r[5], "start": r[6], "end": r[7], "alt": r[4] != "0"} for r in segs}
-    ref = sorted((n for n in nodes if not nodes[n]["alt"]), key=lambda n: int(nodes[n]["start"]))
-    edges = [(r[3][:-1], r[4][:-1]) for r in kept]
-    alt = next(n for n in nodes if nodes[n]["alt"])
-    into = next(a for a, b in edges if b == alt)
-    out_ = next(b for a, b in edges if a == alt)
-    lo, hi = int(nodes[ref[0]]["start"]), int(nodes[ref[-1]]["end"])
     region = f"{seq}:{qstart + 1}-{qend}"
-    out = []
+    c, shade = Canvas(), Canvas()
+    width, left, ax0, ax1, text_x, size = 800, 24, 64, 304, 336, 13
+    x_of = lambda bp: ax0 + (ax1 - ax0) * (bp - lo) / (hi - lo)
+    box_h, alt_y, ref_y, axis = 30, 40, 92, 136
 
-    def say(x, y, s, size=13, fill=ink, anchor="start", weight="normal", font=None):
-        family = f' font-family="{font}"' if font else ""
-        out.append(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}" text-anchor="{anchor}" '
-                   f'font-weight="{weight}"{family}>{s}</text>')
+    c.out.append(f'<defs><marker id="head" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">'
+                 f'<path d="M0,0 L7,3.5 L0,7 z" fill="{link_ink}"/></marker></defs>')
+    c.say(text_x, ref_y + box_h / 2 + 5, f"tabix {PREFIX}.graph.bed.gz {region}", 13, weight="bold")
 
-    def rect(x, y, w, h, fill, stroke="none", rx=0):
-        out.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="{rx}" fill="{fill}" '
-                   f'stroke="{stroke}"/>')
+    box = {n: (x_of(int(nodes[n][1])) + 8, x_of(int(nodes[n][2])) - 8, ref_y) for n in ref}
+    into, out_ = next(a for a, b in edges if b == alt), next(b for a, b in edges if a == alt)
+    middle = (box[into][1] + box[out_][0]) / 2
+    box[alt] = (middle - 24, middle + 24, alt_y)
+    for a, b in edges:
+        (a0, a1, ay), (b0, b1, by) = box[a], box[b]
+        start, end = ((a1, ay + box_h / 2), (b0, by + box_h / 2)) if ay == by else (
+            ((a0 + a1) / 2, ay), (b0, by + box_h / 2)) if ay > by else ((a1, ay + box_h / 2), ((b0 + b1) / 2, by))
+        c.out.append(f'<line x1="{start[0]:.1f}" y1="{start[1]:.1f}" x2="{end[0]:.1f}" y2="{end[1]:.1f}" '
+                     f'stroke="{link_ink}" stroke-width="2" marker-end="url(#head)"/>')
+    for n, (x0, x1, y) in box.items():
+        c.rect(x0, y, x1 - x0, box_h, node_pale, 6, node_ink, 1.2)
+        c.say((x0 + x1) / 2, y + box_h / 2 + 5, n, 13, INK, "bold", SANS, "middle")
+    c.say(middle, alt_y - 7, nodes[alt][6], 11, MUTED, font=SANS, anchor="middle")
+    c.line(x_of(lo), axis, x_of(hi), axis, width=1.2)
+    c.say(x_of(lo) - 10, axis + 18, seq, 11, MUTED, "bold", SANS, "end")
+    for bp in range(lo, hi + 1, 10):
+        c.line(x_of(bp), axis, x_of(bp), axis + 5)
+        c.say(x_of(bp), axis + 18, str(bp), 11, MUTED, anchor="middle")
 
-    track, track_w, x0 = 48, 120, 196
-
-    def t_of(bp):
-        return track + track_w * (bp - lo) / (hi - lo)
-
-    def table(top, command, about, rows, shown, labels, returned, pale, dark):
-        """Each line with a bar at the interval Tabix searches; the window
-        crosses the bars of the lines the query returns."""
-        say(track, top, command, 13, font=mono, weight="bold")
-        say(track, top + 19, about, 12, muted)
-        top += 50
-        char = 7.2
-        widths = [max(len(r[i]) for r in shown) for i in range(len(shown[0]))]
-        xs = [x0]
-        for i, w in enumerate(widths[:-1], 1):
-            start = max(k for k in labels if k < i)
-            xs.append(max(xs[-1] + (w + 1.5) * char, xs[start] + 5.6 * len(labels[start]) + 14 if i in labels else 0))
-        end = xs[-1] + widths[-1] * char
-        for i in labels:
-            say(xs[i], top, labels[i], 11, muted)
-        first, last = top + 24, top + 24 + (len(rows) - 1) * 20
-        for i, r in enumerate(rows):
-            if returned(r):
-                rect(x0 - 6, first + i * 20 - 14, end - x0 + 12, 19, pale)
-        rect(t_of(qstart), top - 10, t_of(qend) - t_of(qstart), last - top + 16, HIGHLIGHT)
-        for bp in range(lo, hi + 1, 10):
-            out.append(f'<line x1="{t_of(bp):.1f}" y1="{top - 3}" x2="{t_of(bp):.1f}" y2="{top + 1}" stroke="{muted}"/>')
-            say(t_of(bp), top - 6, bp, 9, muted, "middle")
-        for i, r in enumerate(rows):
-            y = first + i * 20
+    def table(y, rows, returned, labels, greyed, pale, dark):
+        """Each line's bar and text under the labels of its columns; returns
+        the y of the last line."""
+        cw = 0.602 * size
+        widths = [max(len(r[i]) for r in rows) for i in range(len(rows[0]))]
+        xs = [text_x + (sum(widths[:i]) + 1.6 * i) * cw for i in range(len(widths))]
+        for i, label in labels.items():
+            c.say(xs[i], y, label, 11, MUTED, font=SANS)
+        for k, r in enumerate(rows):
+            y += 22
             hit = returned(r)
-            a, b = t_of(int(r[1])), t_of(int(r[2]))
-            rect(a + 1, y - 10, b - a - 2, 10, pale if hit else "white", dark if hit else grey, 2)
-            for x, cell in zip(xs, shown[i]):
-                say(x, y, cell, 12, ink if hit else grey, font=mono, weight="bold" if hit else "normal")
-        return last
+            a, b = x_of(int(r[1])), x_of(int(r[2]))
+            c.rect(a + 1, y - 10, b - a - 2, 10, pale if hit else "white", 2, dark if hit else GREY)
+            if hit:
+                c.rect(text_x - 6, y - 15, xs[-1] + widths[-1] * cw - text_x + 12, 21, pale, 3)
+            for i, (x, cell) in enumerate(zip(xs, r)):
+                c.say(x, y, cell, size, GREY if not hit or i in greyed else INK, "bold" if hit and i not in greyed else "normal")
+        return y
 
-    def graph(top):
-        left, step, box_w, box_h = 96, 150, 120, 38
-        at = {n: (left + (i + 0.5) * step, top + 70) for i, n in enumerate(ref)}
-        at[alt] = ((at[into][0] + at[out_][0]) / 2, top)
-
-        def x_of(bp):
-            return left + step * (bp - lo) / 10
-
-        axis = top + 70 + box_h / 2 + 22
-        rect(x_of(qstart), top + 70 - box_h / 2 - 8, x_of(qend) - x_of(qstart), axis - top - 70 + box_h / 2 + 8, HIGHLIGHT)
-        for a, b in edges:
-            (ax, ay), (bx, by) = at[a], at[b]
-            if ay == by:
-                ax, bx = ax + box_w / 2, bx - box_w / 2
-            elif ay > by:
-                ax, ay, bx = ax + box_w / 4, ay - box_h / 2, bx - box_w / 2
-            else:
-                ax, bx, by = ax + box_w / 2, bx - box_w / 4, by - box_h / 2
-            out.append(f'<line x1="{ax:.1f}" y1="{ay:.1f}" x2="{bx:.1f}" y2="{by:.1f}" stroke="{link_ink}" '
-                       f'stroke-width="2" marker-end="url(#head)"/>')
-        for n in sorted(q["returned"] | q["far"]):
-            x, y = at[n]
-            fill, stroke = (node_pale, node_ink) if n in q["returned"] else (link_pale, link_ink)
-            rect(x - box_w / 2, y - box_h / 2, box_w, box_h, fill, stroke, 8)
-            v = nodes[n]
-            say(x, y - 3, n, 13, ink, "middle", "bold")
-            say(x, y + 11, coordinate(v["seq"], v["start"], v["end"]), 10, ink, "middle")
-        out.append(f'<line x1="{x_of(lo):.1f}" y1="{axis}" x2="{x_of(hi) + 10:.1f}" y2="{axis}" stroke="{muted}" '
-                   f'stroke-width="1.5" marker-end="url(#axis)"/>')
-        say(x_of(lo) - 8, axis + 4, f"{seq} path", 12, muted, "end", "bold")
-        for bp in range(lo, hi + 1, 10):
-            out.append(f'<line x1="{x_of(bp):.1f}" y1="{axis - 4}" x2="{x_of(bp):.1f}" y2="{axis + 4}" stroke="{muted}"/>')
-            say(x_of(bp), axis + 16, bp, 10, muted, "middle")
-        say((x_of(qstart) + x_of(qend)) / 2, axis + 30, f"window {region}", 11, ink, "middle", "bold")
-        return axis + 30
-
-    out.append(f'<defs><marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
-               f'<path d="M0,0 L8,4 L0,8 z" fill="{link_ink}"/></marker>'
-               f'<marker id="axis" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
-               f'<path d="M0,0 L8,4 L0,8 z" fill="{muted}"/></marker></defs>')
-
-    say(24, 28, f"1. To show {region}, a browser queries the file gfa-to-tabix writes", 14, weight="bold")
-    labels = {0: "interval Tabix searches", 3: "kind", 4: "node", 5: "rank (0 = reference)", 6: "the node's own position"}
-    alt_row = next(r for r in segs if r[3] == alt)
-    bottom = table(62, f"tabix {PREFIX}.graph.bed.gz {region}",
-                   f"N lines, one per node. {alt} is an {nodes[alt]['seq']} allele, so its line spans "
-                   f"{coordinate(*alt_row[0:3])}, from {into} to {out_}.",
-                   segs, [r[:9] for r in node_lines], labels, lambda r: r[3] in q["returned"], node_pale, node_ink)
-    labels = {0: "interval Tabix searches", 3: "kind", 4: "link", 6: "source: position, rank", 10: "target: position, rank"}
-    bottom = table(bottom + 24, "",
-                   "L lines from the same query, one per link, with the positions of both its nodes.",
-                   links, link_lines, labels, lambda r: r in kept, link_pale, link_ink)
-
-    top = bottom + 54
-    say(24, top, "2. It draws the graph from the returned lines", 14, weight="bold")
-    rect(24, top + 12, 22, 14, node_pale, node_ink, 3)
-    say(54, top + 23, f"from N lines: {listing(q['returned'])}", 12, muted)
-    rect(330, top + 12, 22, 14, link_pale, link_ink, 3)
-    say(360, top + 23, f"from L lines: every edge, and {listing(q['far'])}", 12, muted)
-    end = graph(top + 80)
-
-    width, height = 820, int(end + 20)
-    head = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
-            f'font-family="Helvetica, Arial, sans-serif"><rect width="{width}" height="{height}" fill="white"/>')
-    return head + "\n" + "\n".join(out) + "\n</svg>\n"
+    y = table(180, node_lines, lambda r: r[4] in q["returned"],
+              {0: "indexed under", 4: "node", 6: "its own position"}, {5}, node_pale, node_ink)
+    y = table(y + 38, link_lines, lambda r: r[:3] + r[4:] in kept,
+              {4: "link", 6: "from", 10: "to"}, {9, 13}, link_pale, link_ink)
+    shade.rect(x_of(qstart), 10, x_of(qend) - x_of(qstart), y - 4, HIGHLIGHT)
+    c.out.insert(0, "\n".join(shade.out))
+    return c.svg(width, y + 22)
 
 
 def tokens(column):
@@ -688,7 +623,6 @@ def schematic_parts(lines, directory, gfa):
     if sum(int(e[7]) for e in entries) != last - first:
         sys.exit("figures.py: the schematic expects the window's tile and departure block adjacent in the file")
     return {
-        "w_lines": [f for f in (line.split("\t") for line in gfa.read_text().splitlines()) if f[0] == "W"],
         "contig": contigs[ref][0],
         "tile": next(int(f.split(":")[-1]) for f in lines[0] if f.startswith("tile:")),
         "length": sum(lengths[n] for n in reference),
@@ -704,7 +638,7 @@ def schematic_parts(lines, directory, gfa):
     }
 
 
-def mono_row(c, x, y, fields, size=11.5, bold=(), grey=(), glosses=()):
+def mono_row(c, x, y, fields, size=11.5, bold=(), grey=(), glosses=(), gloss_size=10):
     """Draws a row's fields two spaces apart, each at its own x, and the
     glosses (field, text, line) in small sans under their fields; returns
     the row's right edge and the y below its lowest gloss."""
@@ -714,8 +648,8 @@ def mono_row(c, x, y, fields, size=11.5, bold=(), grey=(), glosses=()):
         c.say(fx, y, html.escape(f), size, GREY if i in grey else INK, "bold" if i in bold else "normal")
     bottom = y
     for i, text, line in glosses:
-        c.say(xs[i], y + 13 + 11 * line, html.escape(text), 10, MUTED, font=SANS)
-        bottom = max(bottom, y + 13 + 11 * line)
+        c.say(xs[i], y + 13 + (gloss_size + 1) * line, html.escape(text), gloss_size, MUTED, font=SANS)
+        bottom = max(bottom, y + 13 + (gloss_size + 1) * line)
     return xs[-1] + len(fields[-1]) * cw, bottom
 
 
@@ -812,10 +746,11 @@ def hug(c, x_of, y, colours, dips, depth, parts):
     d, boxes = f"M{x_of(0):.1f},{y:.1f}", []
     for leave, rejoin, own in dips:
         xl, xr = x_of(leave), x_of(rejoin)
-        w = min(x_of(sum(parts["lengths"][n] for n in own)) - x_of(0), 0.6 * (xr - xl))
+        ramp = min(18, (xr - xl) / 4)
+        w = min(x_of(sum(parts["lengths"][n] for n in own)) - x_of(0), xr - xl - 2 * ramp - 8)
         b0, b1 = (xl + xr - w) / 2, (xl + xr + w) / 2
-        d += (f" L{xl:.1f},{y:.1f} C{(xl + b0) / 2:.1f},{y:.1f} {(xl + b0) / 2:.1f},{y + depth:.1f} {b0:.1f},{y + depth:.1f}"
-              f" L{b1:.1f},{y + depth:.1f} C{(b1 + xr) / 2:.1f},{y + depth:.1f} {(b1 + xr) / 2:.1f},{y:.1f} {xr:.1f},{y:.1f}")
+        d += (f" L{xl:.1f},{y:.1f} C{xl + ramp / 2:.1f},{y:.1f} {xl + ramp / 2:.1f},{y + depth:.1f} {xl + ramp:.1f},{y + depth:.1f}"
+              f" L{xr - ramp:.1f},{y + depth:.1f} C{xr - ramp / 2:.1f},{y + depth:.1f} {xr - ramp / 2:.1f},{y:.1f} {xr:.1f},{y:.1f}")
         boxes.append((b0, b1, " ".join(own)))
     c.path(f"{d} L{x_of(parts['length']):.1f},{y:.1f}", stroke)
     for b0, b1, label in boxes:
@@ -825,61 +760,102 @@ def hug(c, x_of, y, colours, dips, depth, parts):
 HAPLOTYPE_COLOURS = [BLUE, ORANGE]
 
 
-def schematic_svg(parts):
-    """Each W line beside its line along the reference and, under it, the
-    rows of the window's tile it became, with the window and the rows a
-    read of it fetches shaded alike."""
+TILE = "walks-tile"
+
+
+def tile_parts(lines, gfa):
+    """What the tile figure draws: the reference's nodes, each haplotype's
+    detours, and the rows of the window's tile."""
+    lengths, _, paths, contigs = read_gfa(gfa)
+    ref = next(name for name in paths if name.startswith(f"{REF}#"))
+    reference = [str(n) for n in paths[ref]]
+    spans = node_spans(reference, lengths)
+    units = units_of(lines)
+    unit, rows = next((u, rs) for u, rs in units if u[4] == "tile" and int(u[2]) == WINDOW[0])
+    return {
+        "contig": contigs[ref][0],
+        "tile": next(int(f.split(":")[-1]) for f in lines[0] if f.startswith("tile:")),
+        "length": sum(lengths[n] for n in reference),
+        "spans": spans,
+        "lengths": lengths,
+        "haplotypes": [(name, detours(spans, [str(n) for n in paths[name]])) for name in paths if name != ref],
+        "rows": rows,
+    }
+
+
+def tile_svg(parts):
+    """The tiles, the reference's nodes with each haplotype as a lane
+    through the nodes it visits, and what the window's tile holds: the
+    reference's nodes, each route's, and the routes each haplotype takes."""
     c, shade = Canvas(), Canvas()
-    width, left, x0 = 900, 24, 352
+    width, left, x0 = 800, 24, 120
     x_of = lambda bp: x0 + (width - 24 - x0) * bp / parts["length"]
-    w_lines = {f"{f[1]}#{f[2]}": "  ".join(f) for f in parts["w_lines"]}
-    spans, (tile, tile_rows), (block, block_rows) = parts["spans"], parts["tile_unit"], parts["departures_unit"]
-    routes = decoded_routes(tile, tile_rows)
-    c.say(left, 26, " ".join(["gfa-to-tabix", f"{SCHEMATIC}.gfa", *SCHEMATIC_OPTIONS, "-o", PREFIX]), 13, weight="bold")
-    c.say(left, 84, f"{SCHEMATIC}.gfa", 12, weight="bold")
-    ruler(c, x_of, 92, parts)
-    y = 122
-    window_shade(shade, x_of, 40, y + 30, window_label(parts))
-    reference_boxes(c, x_of, y, parts)
-    c.say(left, y + 15, w_lines[f"{REF}#0"], 11.5, REF_STROKE, "bold")
+    spans, rows, tile = parts["spans"], parts["rows"], parts["tile"]
+    c.say(left, 26, " ".join(["gfa-to-tabix", "chr1.gfa", *SCHEMATIC_OPTIONS, "-o", PREFIX]), 13, weight="bold")
+    c.say(left, 62, parts["contig"], 12, MUTED, "bold")
+    for start in range(0, parts["length"], tile):
+        a, b = x_of(start), x_of(start + tile)
+        inside = start == WINDOW[0]
+        c.rect(a + 1, 48, b - a - 2, 20, "#ffe98a" if inside else "white", 3, "#d4b106" if inside else LINE)
+        c.say((a + b) / 2, 62, f"tile {start}-{start + tile}", 11.5, INK if inside else MUTED, "bold", anchor="middle")
+    y, box_h, own_h = 86, 68, 36
+    for n, (start, end) in spans.items():
+        c.rect(x_of(start) + 1.5, y, x_of(end) - x_of(start) - 3, box_h, REF_FILL, 4, REF_STROKE, 1.2)
+        c.say((x_of(start) + x_of(end)) / 2, y + 16, n, 11.5, INK, "bold", SANS, "middle")
+    c.path(f"M{x_of(0) + 9:.1f},{y + 30} L{x_of(parts['length']) - 9:.1f},{y + 30}", REF_STROKE)
+    c.say(left, y + 34, f"{REF}#0", 12, REF_STROKE, "bold")
+    colours, own = {}, {}
+    lanes = sorted(enumerate(parts["haplotypes"]), key=lambda h: bool(h[1][1]))
+    own_y = y + box_h + 10
+    for lane, (i, (name, dips)) in enumerate(lanes):
+        fill, _, stroke = HAPLOTYPE_COLOURS[i]
+        ly = y + 44 + 14 * lane
+        d = f"M{x_of(0) + 9:.1f},{ly}"
+        for leave, rejoin, nodes in dips:
+            xl, xr, low = x_of(leave), x_of(rejoin), own_y + own_h / 2
+            w = min(x_of(sum(parts["lengths"][n] for n in nodes)) - x_of(0), xr - xl - 22)
+            c.rect((xl + xr - w) / 2, own_y, w, own_h, fill, 4, stroke, 1.2)
+            c.say((xl + xr) / 2, own_y + 13, " ".join(nodes), 11.5, INK, "bold", SANS, "middle")
+            d += (f" L{xl - 8:.1f},{ly} C{xl:.1f},{ly} {xl:.1f},{low + 6:.1f} {xl + 8:.1f},{low + 6:.1f}"
+                  f" L{xr - 8:.1f},{low + 6:.1f} C{xr:.1f},{low + 6:.1f} {xr:.1f},{ly} {xr + 8:.1f},{ly}")
+            own |= {int(n): HAPLOTYPE_COLOURS[i] for n in nodes if int(n) not in own}
+        c.path(f"{d} L{x_of(parts['length']) - 9:.1f},{ly}", stroke)
+        c.say(left, ly + 4, name, 12, stroke, "bold")
+        colours[name] = stroke
+    band = own_y + own_h + 14
+    shade.rect(x_of(WINDOW[0]), 40, x_of(WINDOW[1]) - x_of(WINDOW[0]), band - 40, HIGHLIGHT)
 
-    def rows(y, drawn, label=None):
-        """The rows the window reads, tagged with their unit, on a block of
-        the window's shade; returns the y below them."""
-        top = y - 12
-        if label:
-            c.say(left + 8, y, label, 10, MUTED, font=SANS)
-            y += 18
-        right, bottom = y, y
-        for r in drawn:
-            edge, bottom = mono_row(c, left + 8, y, r, **glossed(r, routes, spans))
-            right, y = max(right, edge), bottom + 20
-        shade.rect(left, top, right - left + 10, bottom - top + 6, HIGHLIGHT, 3)
-        return bottom + 34
+    routes = decode_walks(rows)[1]
+    held = [("ref", f"{REF}#0", REF_STROKE, [h[0] for r in rows if r[3] == "ref" for h in deltas(r[9])[0]], None)]
+    held += [("route", str(i), INK, [h[0] for h in (entry, *interior, exit_)], None)
+             for i, (entry, interior, exit_) in enumerate(routes)]
+    held += [("walk", r[4].rsplit("#", 1)[0], colours[r[4].rsplit("#", 1)[0]], [], [i for i, _ in deltas(r[10])[0]])
+             for r in rows if r[3] == "walk"]
 
-    def unit_tag(unit, entry):
-        name = f"{unit[4]} {unit[5]}" if unit[4] == "tile" else f"{unit[4]} {unit[2]}-{unit[3]}"
-        return f"{name} · {byte_range(int(entry[6]), int(entry[7]))}"
-
-    entry = {e[4]: e for e in parts["entries"]}
-    y = rows(y + 50, [r for r in tile_rows if r[3] == "ref"], unit_tag(tile, entry["tile"]))
-    for i, (name, dips) in enumerate(parts["haplotypes"]):
-        window_shade(shade, x_of, y - 20, y + 44)
-        colours = HAPLOTYPE_COLOURS[i]
-        hug(c, x_of, y, colours, dips, 22, parts)
-        c.say(left, y + 4, w_lines[name], 11.5, colours[2], "bold")
-        y += 68
-        walks = [r for r in tile_rows if r[3] == "walk" and r[4].startswith(name)]
-        taken = {route for w in walks for route, _ in deltas(w[10])[0]}
-        own = [r for i, r in enumerate(r for r in tile_rows if r[3] == "route") if i in taken] + walks
-        if own:
-            y = rows(y, own)
-        departures = [r for r in block_rows if r[4].startswith(name)]
-        if departures:
-            y = rows(y, departures, unit_tag(block, entry["departures"]))
-    c.out.insert(1, "\n".join(shade.out))
-    c.say(left, y - 6, f"{window_label(parts)}  →  one request, {byte_range(*parts['request'])}", 11.5, INK, "bold", SANS)
-    return c.svg(width, y + 10)
+    top, chip, block_w = band + 26, 34, 330
+    block_x = (x_of(WINDOW[0]) + x_of(WINDOW[1]) - block_w) / 2
+    name = f"{PREFIX}.{REF}.walks.gz"
+    c.say(block_x + 16, top + 26, f"{name}  tile {WINDOW[0]}-{WINDOW[1]}", 12, weight="bold")
+    y = top + 30
+    for kind, who, ink, ids, taken in held:
+        y += 30
+        c.say(block_x + 16, y, kind, 13, INK, "bold")
+        c.say(block_x + 76, y, who, 13, ink, "bold")
+        x = block_x + 176
+        for k, n in enumerate(ids):
+            fill, _, stroke = own.get(n, (REF_FILL, None, REF_STROKE))
+            node_box(c, x + k * (chip + 4) - 1.5, x + k * (chip + 4) + chip + 1.5, y - 15, 22, str(n), fill, stroke)
+        for k, i in enumerate(taken or []):
+            c.rect(x + k * 76, y - 15, 68, 22, "white", 11, INK, 1.2)
+            c.say(x + k * 76 + 34, y, f"route {i}", 12, INK, "bold", SANS, "middle")
+        if taken == []:
+            c.say(x, y, f"follows {REF}", 12, MUTED, font=SANS)
+    bottom = y + 20
+    shade.rect(block_x, top, block_w, bottom - top, HIGHLIGHT, 4)
+    shade.out.append(f'<path d="M{x_of(WINDOW[0]):.1f},{band} L{x_of(WINDOW[1]):.1f},{band} L{block_x + block_w:.1f},{top} '
+                     f'L{block_x:.1f},{top} z" fill="{HIGHLIGHT}" opacity="0.5"/>')
+    c.out.insert(0, "\n".join(shade.out))
+    return c.svg(width, bottom + 14)
 
 
 def bytes_svg(parts):
@@ -957,16 +933,18 @@ def generate(binary):
         with gzip.open(walk_file, "rt") as f:
             schematic = [line.rstrip("\n").split("\t") for line in f]
         schematic_directory = [line.split("\t") for line in Path(f"{walk_file}.idx").read_text().splitlines()]
+        subprocess.run([binary, FIGURES / f"{TILE}.gfa", *SCHEMATIC_OPTIONS, "-o", out], **quiet)
+        with gzip.open(walk_file, "rt") as f:
+            tile = [line.rstrip("\n").split("\t") for line in f]
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
     parts = schematic_parts(schematic, schematic_directory, FIGURES / f"{SCHEMATIC}.gfa")
     return {
-        "walks-schematic": schematic_svg(parts),
+        TILE: tile_svg(tile_parts(tile, FIGURES / f"{TILE}.gfa")),
         "walks-bytes": bytes_svg(parts),
         "walks-leave-figure": bandage_figure("walks-leave", built["walks-leave"], directories["walks-leave"],
                                              lambda f: HIGHLIGHT if f[3] == "departure" else None),
-        "outputs": {},
         "overview": overview_svg(segs, links),
         "walks-detail": {
             "graph": walks_nodes,

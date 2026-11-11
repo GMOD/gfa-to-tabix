@@ -43,11 +43,11 @@
 <rect x="797.9" y="122.0" width="76.6" height="22.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
 <text x="836.2" y="137.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">9</text>
 <text x="24.0" y="137.0" font-size="11.5" fill="#575757" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">GRCh38#0</text>
-<path d="M160.0,156.0 L478.2,156.0 C486.2,156.0 486.2,192.0 494.1,192.0 L541.9,192.0 C549.8,192.0 549.8,156.0 557.8,156.0 L876.0,156.0" fill="none" stroke="#4a6fa5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="495.6" y="183.0" width="44.7" height="18.0" rx="4" fill="#e8eef7" stroke="#4a6fa5" stroke-width="1.2"/>
+<path d="M160.0,156.0 L478.2,156.0 C487.2,156.0 487.2,192.0 496.2,192.0 L539.8,192.0 C548.8,192.0 548.8,156.0 557.8,156.0 L876.0,156.0" fill="none" stroke="#4a6fa5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="501.7" y="183.0" width="32.6" height="18.0" rx="4" fill="#e8eef7" stroke="#4a6fa5" stroke-width="1.2"/>
 <text x="518.0" y="196.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">10</text>
 <text x="24.0" y="160.0" font-size="11.5" fill="#4a6fa5" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">CHM13#0</text>
-<path d="M160.0,170.0 L398.7,170.0 C448.4,170.0 448.4,230.0 498.1,230.0 L537.9,230.0 C587.6,230.0 587.6,170.0 637.3,170.0 L876.0,170.0" fill="none" stroke="#c77a2b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M160.0,170.0 L398.7,170.0 C407.7,170.0 407.7,230.0 416.7,230.0 L619.3,230.0 C628.3,230.0 628.3,170.0 637.3,170.0 L876.0,170.0" fill="none" stroke="#c77a2b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="499.6" y="221.0" width="36.8" height="18.0" rx="4" fill="#fde6cf" stroke="#c77a2b" stroke-width="1.2"/>
 <text x="518.0" y="234.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">11</text>
 <text x="24.0" y="174.0" font-size="11.5" fill="#c77a2b" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">HG002#1</text>

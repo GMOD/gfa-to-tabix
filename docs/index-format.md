@@ -146,7 +146,7 @@ so that they come back, and `--layout` sets how it chooses.
   skips a row with an empty interval when the window starts at it; its
   coordinate in the later columns stays exact
 
-![The Tabix query a browser runs to view chr1:13-18, the node and link lines it returns, and the graph it draws from them, with each node and edge coloured by the kind of line it came from](figures/overview.svg)
+![A graph of nodes s1 to s4 along chr1 with HG002's node s5 between s2 and s4, and under it every line of hprc.graph.bed.gz as a bar at the chr1 interval it is indexed under; the window chr1:13-18 crosses the bars of the lines tabix returns for it, s5's among them](figures/overview.svg)
 
 **`contig`**: the tool files every node under its own coordinate, as version
 0.1.0 did. A reader has to follow links from the reference onto other contigs,
