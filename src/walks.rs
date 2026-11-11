@@ -1567,13 +1567,15 @@ fn unit_of(seq: &[u8], rows: &[(Stretch, &[u8])]) -> Result<Unit, String> {
     }
 }
 
-// The detail records of the sequence being written, held on disk until its
-// tiles and departure blocks are written: each as its tile's start, its
-// number there, its extent and its lines
+// The detail records and blocks units of the sequence being written, held on
+// disk until its tiles and departure blocks are written: each as its tile's
+// start, its number there or `BLOCKS`, its extent and its lines
 struct Details {
     file: BufWriter<File>,
     path: PathBuf,
 }
+
+const BLOCKS: u64 = u64::MAX;
 
 impl Details {
     fn create(dir: &std::path::Path, n: usize) -> Result<Details, String> {
@@ -1585,19 +1587,19 @@ impl Details {
         })
     }
 
-    fn add(&mut self, start: u64, k: usize, unit: &Unit) -> Result<(), String> {
+    fn add(&mut self, start: u64, k: u64, unit: &Unit) -> Result<(), String> {
         let path = &self.path;
         let io = |e: std::io::Error| format!("{}: {e}", path.display());
         let (lo, hi) = unit.extent;
-        for n in [start, k as u64, lo, hi, unit.lines, unit.text.len() as u64] {
+        for n in [start, k, lo, hi, unit.lines, unit.text.len() as u64] {
             self.file.write_all(&n.to_le_bytes()).map_err(io)?;
         }
         self.file.write_all(&unit.text).map_err(io)
     }
 
     // Writes the held records as `detail` units of `seq`, each named by its
-    // tile's start and its number there, and empties the file. Returns how
-    // many lines they hold.
+    // tile's start and its number there, and as `blocks` units named by their
+    // tile's start, and empties the file. Returns how many lines they hold.
     fn flush(&mut self, seq: &[u8], out: &mut UnitFile) -> Result<u64, String> {
         let path = &self.path;
         let io = |e: std::io::Error| format!("{}: {e}", path.display());
@@ -1619,7 +1621,11 @@ impl Details {
             let (k, lo, hi, count, len) = (next()?, next()?, next()?, next()?, next()?);
             text.resize(len as usize, 0);
             reader.read_exact(&mut text).map_err(io)?;
-            out.begin(seq, (lo, hi), "detail", &format!("{start}:{k}"))?;
+            if k == BLOCKS {
+                out.begin(seq, (lo, hi), "blocks", &start.to_string())?;
+            } else {
+                out.begin(seq, (lo, hi), "detail", &format!("{start}:{k}"))?;
+            }
             out.write(&text)?;
             out.end()?;
             lines += count;
@@ -1640,7 +1646,8 @@ struct Output {
 
 // The walk files, written in file order: each reference sequence's tiles
 // with its departure blocks between them by start, a tile before the blocks
-// that start with it, then its detail records, then its table. Each
+// that start with it, then its detail records, each tile's followed by its
+// blocks unit, then its table. Each
 // departure line written must overlap its block, which must be one of its
 // cover's, and must not repeat there, and a sequence must get as many as
 // its records' covers hold, so every record is in every block of its cover.
@@ -1734,7 +1741,13 @@ impl Outputs<'_> {
         Ok(())
     }
 
-    fn tile(&mut self, chunk: u32, tile: &Unit, details: &[Unit]) -> Result<(), String> {
+    fn tile(
+        &mut self,
+        chunk: u32,
+        tile: &Unit,
+        details: &[Unit],
+        blocks: Option<&Unit>,
+    ) -> Result<(), String> {
         let (name, start) = self.chunks.starts[chunk as usize];
         self.close_before(Some(name))?;
         self.departures(name, start)?;
@@ -1746,9 +1759,9 @@ impl Outputs<'_> {
         out.file.end()?;
         out.lines += tile.lines;
         for (k, record) in details.iter().enumerate() {
-            out.details.add(start, k, record)?;
+            out.details.add(start, k as u64, record)?;
         }
-        Ok(())
+        blocks.map_or(Ok(()), |unit| out.details.add(start, BLOCKS, unit))
     }
 
     // Returns each file's path, lines, counts and units
@@ -1937,14 +1950,14 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     let sequence_of = |id: usize| graph.sequence(id);
     let sequence = options.sequences.then_some(&sequence_of);
     // Tiles encode in parallel, a batch at a time, and are written in order.
-    type Encoded = Result<(Unit, Vec<Unit>, routes::Counts), String>;
+    type Encoded = Result<(Unit, Vec<Unit>, Option<Unit>, routes::Counts), String>;
     let encode = |chunk: u32, raw: &[Vec<u8>]| -> Encoded {
         let (name, _) = chunks.starts[chunk as usize];
         let reference = &references[chunks.owner[name as usize] as usize];
         let seq = &names[name as usize];
         let (mut lines, mut ends) = (Vec::new(), Vec::new());
         let mut counts = routes::Counts::default();
-        let mut details = routes::Details::new();
+        let mut moved = routes::Moved::default();
         routes::write_chunk(
             raw,
             routes::Nodes {
@@ -1960,7 +1973,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
                 ends.push((stretch, lines.len()));
                 Ok(())
             },
-            &mut details,
+            &mut moved,
         )?;
         let mut from = 0;
         let rows: Vec<(Stretch, &[u8])> = ends
@@ -1972,17 +1985,18 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
             })
             .collect();
         let tile = unit_of(seq, &rows)?;
-        let details = details
-            .iter()
-            .map(|record| {
-                let rows: Vec<(Stretch, &[u8])> = record
-                    .iter()
-                    .map(|(span, row)| (*span, row.as_slice()))
-                    .collect();
-                unit_of(seq, &rows)
-            })
-            .collect::<Result<_, _>>()?;
-        Ok((tile, details, counts))
+        let unit = |record: &Vec<routes::Row>| {
+            let rows: Vec<(Stretch, &[u8])> = record
+                .iter()
+                .map(|(span, row)| (*span, row.as_slice()))
+                .collect();
+            unit_of(seq, &rows)
+        };
+        let details = moved.details.iter().map(unit).collect::<Result<_, _>>()?;
+        let blocks = (!moved.blocks.is_empty())
+            .then(|| unit(&moved.blocks))
+            .transpose()?;
+        Ok((tile, details, blocks, counts))
     };
     let mut write_batch = |batch: &mut Vec<(u32, Vec<Vec<u8>>)>| -> Result<(), String> {
         let next = AtomicUsize::new(0);
@@ -2002,13 +2016,13 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         });
         for ((chunk, _), slot) in batch.iter().zip(encoded) {
             let (name, start) = chunks.starts[*chunk as usize];
-            let (tile, details, counts) = slot
+            let (tile, details, blocks, counts) = slot
                 .into_inner()
                 .unwrap()
                 .expect("every tile of the batch is encoded")
                 .map_err(|e| format!("{}:{start}: {e}", text(&names[name as usize])))?;
             outputs.outputs[chunks.owner[name as usize] as usize].counts += counts;
-            outputs.tile(*chunk, &tile, &details)?;
+            outputs.tile(*chunk, &tile, &details, blocks.as_ref())?;
         }
         batch.clear();
         Ok(())

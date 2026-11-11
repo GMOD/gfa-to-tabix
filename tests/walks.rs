@@ -253,7 +253,7 @@ fn verify(data: &[u8], directory: &str, tile: u64) {
                     *end = (*end).max(start + bp);
                     Some((start, start + bp))
                 }
-                "walk" | "abridged" => Some((a, b)),
+                "walk" | "abridged" | "blocks" => Some((a, b)),
                 _ => {
                     assert_eq!((a, b), (lo, hi), "{row}");
                     None
@@ -514,6 +514,29 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<(u32, Opt
     steps
 }
 
+// The blocks a `blocks` row lists, in path order: where each begins and ends
+// on R, and its own bp
+fn listed_blocks(list: &str) -> Vec<(u64, u64, u64)> {
+    let mut at = 0i64;
+    list.split(',')
+        .map(|token| {
+            let sign = 1 + token[1..].find(['+', '-']).unwrap();
+            let (length, own) = match token[sign + 1..].split_once(':') {
+                Some((length, own)) => (length, own.parse().unwrap()),
+                None => (&token[sign + 1..], 0),
+            };
+            let length: i64 = length.parse().unwrap();
+            let begin = at + token[..sign].parse::<i64>().unwrap();
+            at = if &token[sign..=sign] == "-" {
+                begin - length
+            } else {
+                begin + length
+            };
+            (begin as u64, at as u64, own)
+        })
+        .collect()
+}
+
 // A walk file read back: every path's steps, joining its pieces in order, by
 // `path@fragStart`; and by sequence and path, the stretches of its contig each
 // piece spans from its first step on R to its last, abridged ones as their
@@ -530,6 +553,8 @@ fn decode_file(text: &str) -> Decoded {
     // by sequence, tile and record
     let mut details: BTreeMap<(String, u64, u64), Vec<Vec<&str>>> = BTreeMap::new();
     let mut records: BTreeSet<(String, Vec<&str>)> = BTreeSet::new();
+    // by sequence and tile, the rows of its blocks unit
+    let mut blocks: BTreeMap<(String, u64), Vec<Vec<&str>>> = BTreeMap::new();
     for (head, lines) in units(text) {
         let seq = head[0].to_string();
         let mut rows = lines.into_iter().map(|l| l.split('\t').collect::<Vec<_>>());
@@ -548,6 +573,10 @@ fn decode_file(text: &str) -> Decoded {
             "departures" => {
                 records.extend(rows.by_ref().map(|c| (seq.clone(), c[3..].to_vec())));
             }
+            "blocks" => blocks
+                .entry((seq, head[4].parse().unwrap()))
+                .or_default()
+                .extend(rows),
             _ => {}
         }
     }
@@ -685,6 +714,18 @@ fn decode_file(text: &str) -> Decoded {
         let abridged: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "abridged").collect();
         let mut held: Vec<u64> = abridged.iter().map(|c| c[12].parse().unwrap()).collect();
         held.dedup();
+        let listed = blocks.remove(&(seq.clone(), *cs)).unwrap_or_default();
+        assert_eq!(
+            listed
+                .iter()
+                .map(|c| (c[3], c[4], c[5], c[6]))
+                .collect::<Vec<_>>(),
+            abridged
+                .iter()
+                .map(|c| ("blocks", c[4], c[5], c[7]))
+                .collect::<Vec<_>>(),
+            "a tile's blocks unit has a row per abridged row, keyed and ordered as they are"
+        );
         for k in held {
             let record = &details[&(seq.clone(), *cs, k)];
             assert!(record.iter().all(|c| c[3] != "ref" && c[3] != "abridged"));
@@ -735,10 +776,66 @@ fn decode_file(text: &str) -> Decoded {
                     ),
                     "{cols:?}"
                 );
+                let row = listed
+                    .iter()
+                    .find(|c| (c[4], c[5], c[6]) == (cols[4], cols[5], cols[7]))
+                    .unwrap();
+                let mut walked: Vec<(u64, u64, u64)> = Vec::new();
+                let (mut own, mut adjacent) = (0, false);
+                for &(h, i) in &steps[first..=last] {
+                    match i {
+                        None => {
+                            own += lengths[&(h >> 1)];
+                            adjacent = false;
+                        }
+                        Some(i) => {
+                            let (a, b) = path.stretches[i];
+                            let (begin, to) = if path.handles[i] == h { (a, b) } else { (b, a) };
+                            match walked.last_mut() {
+                                Some(run)
+                                    if adjacent
+                                        && run.1 == begin
+                                        && (run.0 < run.1) == (begin < to) =>
+                                {
+                                    run.1 = to
+                                }
+                                _ => walked.push((begin, to, own)),
+                            }
+                            own = 0;
+                            adjacent = true;
+                        }
+                    }
+                }
+                assert_eq!(
+                    listed_blocks(row[7]),
+                    walked,
+                    "a blocks row lists the runs its piece's detail row decodes to: {row:?}"
+                );
+                assert_eq!(
+                    walked.iter().map(|b| b.0.abs_diff(b.1) + b.2).sum::<u64>(),
+                    cols[9].parse::<u64>().unwrap(),
+                    "a blocks row's bp and own bp add up to its abridged row's bp: {row:?}"
+                );
+                assert_eq!(
+                    (
+                        row[1].parse::<u64>().unwrap(),
+                        row[2].parse::<u64>().unwrap()
+                    ),
+                    walked
+                        .iter()
+                        .map(|b| (b.0.min(b.1), b.0.max(b.1)))
+                        .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)))
+                        .unwrap(),
+                    "a blocks row spans its blocks: {row:?}"
+                );
                 abridged_stretches.push(((seq.clone(), cols[4].to_string()), (start, end)));
             }
         }
     }
+    assert!(
+        blocks.is_empty(),
+        "a blocks unit is named by a tile with abridged rows"
+    );
     for (key, stretch) in abridged_stretches {
         stretches.entry(key).or_default().push(stretch);
     }
@@ -1187,8 +1284,83 @@ fn a_departure_block_is_named_dot_and_every_other_name_is_unique() {
         .map(|h| (h[0], h[3], h[4]))
         .collect();
     let kinds: BTreeSet<&str> = named.iter().map(|n| n.1).collect();
-    assert_eq!(kinds, BTreeSet::from(["detail", "tile"]));
+    assert_eq!(kinds, BTreeSet::from(["blocks", "detail", "tile"]));
     assert_eq!(named.iter().collect::<BTreeSet<_>>().len(), named.len());
+}
+
+// R is 1-6, 6 bp each, in one tile. H walks 1 2, back over 2 1 against R,
+// 10 bp of its own, 5 6, then 3: four blocks. The second runs against R from where the
+// first ended, the third begins 24 bp on with the 10 bp before it, and the
+// last 24 bp back. Their 42 bp and the 10 are the abridged row's 52. The
+// blocks row spans 0 to 36, where the abridged row spans its end steps, 1
+// and 3, 0 to 18
+#[test]
+fn a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order() {
+    let built = build_text(
+        "blocks",
+        &[
+            "S 1 AAAAAA",
+            "S 2 CCCCCC",
+            "S 3 GGGGGG",
+            "S 4 TTTTTT",
+            "S 5 AAAAAA",
+            "S 6 CCCCCC",
+            "S 11 GGGGGGGGGG",
+            "W R 0 c 0 36 >1>2>3>4>5>6",
+            "W H 1 c 0 52 >1>2<2<1>11>5>6>3",
+        ],
+        &["--refs", "R", "--tile", "36", "--abridge-bytes", "1"],
+    );
+    let r = built.file("R");
+    assert_eq!(
+        rows_of(r, "R#0#c", "abridged", "H#1#c"),
+        tsv(&["R#0#c 0 18 abridged H#1#c 0 0 0 8 52 2 6 0"])
+    );
+    assert_eq!(
+        unit(r, "blocks", "0"),
+        tsv(&[
+            "#unit R#0#c 0 36 blocks 0",
+            "R#0#c 0 36 blocks H#1#c 0 0 0+12,0-12,24+12:10,-24+6",
+        ])
+    );
+}
+
+// A tile's blocks unit comes after its detail units, and a tile with no
+// abridged row has none
+#[test]
+fn a_blocks_unit_follows_its_tiles_detail_units() {
+    let built = build("walks-two-refs.gfa", &["--abridge-bytes", "1"]);
+    let after_tiles: Vec<String> = units(built.file("GRCh38"))
+        .into_iter()
+        .filter(|(head, _)| head[3] == "detail" || head[3] == "blocks")
+        .map(|(head, _)| format!("{} {}", head[3], head[4]))
+        .collect();
+    assert_eq!(
+        after_tiles,
+        [
+            "detail 0:0",
+            "detail 0:1",
+            "detail 0:2",
+            "detail 0:3",
+            "blocks 0",
+            "detail 10:0",
+            "detail 10:1",
+            "detail 10:2",
+            "detail 10:3",
+            "blocks 10",
+            "detail 20:0",
+            "detail 20:1",
+            "detail 20:2",
+            "detail 20:3",
+            "blocks 20",
+        ]
+    );
+    let whole = build("walks-two-refs.gfa", &[]);
+    assert!(
+        units(whole.file("GRCh38"))
+            .iter()
+            .all(|(head, _)| head[3] != "blocks")
+    );
 }
 
 // R has chr1 (1 2) and chr2 (3 4); H walks 1 2 3 4, then 5 of its own. On

@@ -633,8 +633,13 @@ pub type Row = (Stretch, Vec<u8>);
 // Takes each row as `Row` holds it, borrowed
 pub type Emit<'a> = dyn FnMut(Stretch, &[u8]) -> Result<(), String> + 'a;
 
-// A chunk's detail records, one per abridged path
-pub type Details = Vec<Vec<Row>>;
+// What a chunk over its budget moves out of its tile: a detail record per
+// abridged path, and a `blocks` row per abridged piece
+#[derive(Default)]
+pub struct Moved {
+    pub details: Vec<Vec<Row>>,
+    pub blocks: Vec<Row>,
+}
 
 // Each walk piece with its row and the span its row decodes to
 struct Encoded<'p> {
@@ -761,8 +766,8 @@ fn abridged_groups(enc: &Encoded, budget: Budget, raw: u64) -> (Vec<Group>, usiz
 // `emit`, each from its kind on with its newline, and what it says of R's
 // sequence. `sequence`
 // gives a node's bases with --sequences. A chunk over `budget` moves its
-// costliest paths' rows to `details`, and leaves an `abridged` row for each
-// of their pieces.
+// costliest paths' rows to `moved_out`, and leaves an `abridged` row for each
+// of their pieces, with its stretches on R as a row of blocks there.
 pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     raw: &[Vec<u8>],
     nodes: Nodes,
@@ -770,7 +775,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     budget: Budget,
     counts: &mut Counts,
     emit: &mut Emit,
-    details: &mut Details,
+    moved_out: &mut Moved,
 ) -> Result<(), String> {
     let lengths = nodes.lengths;
     let mut references: Vec<Piece> = raw
@@ -891,6 +896,8 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         for (piece, walk, _) in &alone.walks {
             let (span, row) = summary_row(&path, piece, walk, nodes, k)?;
             emit(Stretch::Piece(span), &row)?;
+            let (hull, row) = blocks_row(&path, piece, walk, lengths)?;
+            moved_out.blocks.push((Stretch::Piece(hull), row));
         }
         let mut record = Vec::new();
         emit_rows(
@@ -905,7 +912,7 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
                 Ok(())
             },
         )?;
-        details.push(record);
+        moved_out.details.push(record);
         counts.abridged += 1;
     }
     counts.detail_walks += detail_counts.walks;
@@ -972,6 +979,173 @@ fn summary_row(
             "{}: the abridged row does not decode to its piece's first and last steps on R",
             String::from_utf8_lossy(piece.name)
         ))
+    }
+}
+
+// A stretch of R that consecutive steps of a piece cover one after another in
+// one direction, and the piece's bp off R since the stretch before it
+#[derive(Clone, Copy, PartialEq, Debug)]
+struct Block {
+    span: Span,
+    against: bool,
+    own: u64,
+}
+
+impl Block {
+    fn begin(&self) -> u64 {
+        if self.against {
+            self.span.1
+        } else {
+            self.span.0
+        }
+    }
+
+    fn end(&self) -> u64 {
+        if self.against {
+            self.span.0
+        } else {
+            self.span.1
+        }
+    }
+}
+
+// The blocks of a piece from its first step on R to its last, in path order
+fn blocks_of(path: &Path, piece: &Piece, lengths: &[u32]) -> Vec<Block> {
+    let on_r = |t: &u32| *t != NONE;
+    let first = piece.targets.iter().position(on_r).expect("a step on R");
+    let last = piece.targets.iter().rposition(on_r).expect("a step on R");
+    let mut blocks: Vec<Block> = Vec::new();
+    let (mut own, mut adjacent) = (0, false);
+    for (&h, &t) in piece.handles[first..=last]
+        .iter()
+        .zip(&piece.targets[first..=last])
+    {
+        if t == NONE {
+            own += u64::from(lengths[(h >> 1) as usize]);
+            adjacent = false;
+        } else {
+            let j = t as usize;
+            let span = (path.offsets[j], path.ends[j]);
+            let against = (h ^ path.handles[j]) & 1 == 1;
+            let step = Block { span, against, own };
+            match blocks.last_mut() {
+                Some(b) if adjacent && b.against == against && b.end() == step.begin() => {
+                    b.span = (b.span.0.min(span.0), b.span.1.max(span.1));
+                }
+                _ => blocks.push(step),
+            }
+            own = 0;
+            adjacent = true;
+        }
+    }
+    blocks
+}
+
+// `blocks` as a `blocks` row lists them: each as where it begins on R less
+// where the one before ended, or less 0 for the first, then + along R or -
+// against it, its bp, and after a colon its own bp where it has any
+fn push_blocks(out: &mut Vec<u8>, blocks: &[Block]) {
+    let mut at = 0i64;
+    for (k, b) in blocks.iter().enumerate() {
+        if k > 0 {
+            out.push(b',');
+        }
+        push_i64(out, b.begin() as i64 - at);
+        out.push(if b.against { b'-' } else { b'+' });
+        out.extend_from_slice((b.span.1 - b.span.0).to_string().as_bytes());
+        if b.own > 0 {
+            out.push(b':');
+            out.extend_from_slice(b.own.to_string().as_bytes());
+        }
+        at = b.end() as i64;
+    }
+}
+
+// The blocks a `blocks` row's list states
+fn read_blocks(list: &[u8]) -> Option<Vec<Block>> {
+    let number = |bytes: &[u8]| std::str::from_utf8(bytes).ok()?.parse::<i64>().ok();
+    let mut at = 0i64;
+    list.split(|&b| b == b',')
+        .map(|token| {
+            let sign = 1 + token
+                .get(1..)?
+                .iter()
+                .position(|b| matches!(b, b'+' | b'-'))?;
+            let against = token[sign] == b'-';
+            let mut sizes = token[sign + 1..].split(|&b| b == b':');
+            let length = number(sizes.next()?)?;
+            let own = sizes.next().map_or(Some(0), number)?;
+            let begin = at + number(&token[..sign])?;
+            at = if against {
+                begin - length
+            } else {
+                begin + length
+            };
+            let span = (begin.min(at), begin.max(at));
+            (sizes.next().is_none() && length >= 0 && own >= 0 && span.0 >= 0).then_some(Block {
+                span: (span.0 as u64, span.1 as u64),
+                against,
+                own: own as u64,
+            })
+        })
+        .collect()
+}
+
+// The `blocks` row of an abridged piece, keyed as its `abridged` row is, and
+// the span of R its blocks cover. Its list must read back as the blocks, which
+// must begin at the piece's first step on R, end at its last, and with their
+// own bp hold every bp between
+fn blocks_row(
+    path: &Path,
+    piece: &Piece,
+    walk: &Walk,
+    lengths: &[u32],
+) -> Result<(Span, Vec<u8>), String> {
+    let blocks = blocks_of(path, piece, lengths);
+    let mut line = b"blocks\t".to_vec();
+    line.extend_from_slice(piece.name);
+    for n in [piece.frag, u64::from(piece.piece)] {
+        line.push(b'\t');
+        line.extend_from_slice(n.to_string().as_bytes());
+    }
+    line.push(b'\t');
+    let listed = line.len();
+    push_blocks(&mut line, &blocks);
+    let on_r = |t: &u32| *t != NONE;
+    let first = piece.targets.iter().position(on_r).expect("a step on R");
+    let last = piece.targets.iter().rposition(on_r).expect("a step on R");
+    let bp: u64 = piece.handles[first..=last]
+        .iter()
+        .map(|&h| u64::from(lengths[(h >> 1) as usize]))
+        .sum();
+    let held: u64 = blocks.iter().map(|b| b.span.1 - b.span.0 + b.own).sum();
+    let step = |at: usize| (path.offsets[at], path.ends[at]);
+    let within = |b: &Block, (lo, hi): Span| b.span.0 <= lo && hi <= b.span.1;
+    let ends = match (blocks.first(), blocks.last()) {
+        (Some(a), Some(b)) => {
+            let (start, end) = (step(walk.start_at), step(walk.end_at));
+            within(a, start)
+                && within(b, end)
+                && a.begin() == if a.against { start.1 } else { start.0 }
+                && b.end() == if b.against { end.0 } else { end.1 }
+        }
+        _ => false,
+    };
+    let hull = blocks
+        .iter()
+        .map(|b| b.span)
+        .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)));
+    match hull {
+        Some(hull)
+            if read_blocks(&line[listed..]).as_ref() == Some(&blocks) && held == bp && ends =>
+        {
+            line.push(b'\n');
+            Ok((hull, line))
+        }
+        _ => Err(format!(
+            "{}: the blocks row does not read back as its piece's stretches on R, from its first step there to its last, holding its {bp} bp",
+            String::from_utf8_lossy(piece.name)
+        )),
     }
 }
 
