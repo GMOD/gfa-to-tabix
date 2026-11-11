@@ -471,3 +471,41 @@ W  B  1  c     0  32  >1>2>6>3
   random rGFAs, so `build` writes no bubble file for them and says so
 - Suggested next step: find whether a newer gfatools fixes it, and report it
   upstream if not
+
+## An abridged row narrower than its piece
+
+- An `abridged` row's `start end` is the span of the piece's first and
+  last steps on R, and graph-walks keeps an abridged piece where that
+  span overlaps the drawn stretch (`walkRows.ts` `abridgedSpan`). A piece
+  that doubles back past either end is missed by a window over that part:
+  over ref `>1>2>3`, 6 bp nodes, the piece `>9>8>2<1>3>7>8` has a walk row
+  at 0-18 and, abridged, a row at 6-18, so a window over node 1 drops it
+- The local copy of the MC chr22 GRCh38 build has 2,572 abridged rows and
+  none narrower than its piece's span in its detail unit, so no hosted
+  file is known to show this, and by ADR 0011 nothing changes now
+- Suggested next step: run the same comparison on both hosted genome-wide
+  files on ada. A fix would write the piece's full span, which its detail
+  unit's `start end` already states, and is a format change under ADR
+  0011's rules
+
+## Walk files name no graph
+
+- The node and link index names its graph in `graph:Z:`, a hash of the
+  segments; a walk file's header names none. So nothing can tell that a
+  walk file came from a given GFA, or pair it with an index. A directory
+  from another build still fails a reader's `#unit` check on the first
+  unit it reads
+- Suggested next step, once a consumer reads a walk file beside an index
+  of the same graph: a `graph:Z:` tag on the `#walks` line, which a reader
+  that doesn't know it ignores. It is still an addition to the format,
+  under ADR 0011's rules
+
+## The index and walk files disagree on a node's strand
+
+- On a plain GFA the index turns a node to read forward along the first
+  path that places it (`place::flip`), and its rows don't say which nodes
+  it turned; walk files keep the GFA's strands. The plugin draws the fine
+  tier from one or the other, never both, so nothing shows it yet
+- Suggested next step, before any reader draws walks over index nodes:
+  either mark a turned node on its row, or have the reader orient by the
+  walk file's `ref` rows
