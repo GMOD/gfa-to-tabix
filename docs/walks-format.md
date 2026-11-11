@@ -253,8 +253,9 @@ it alone, and `zcat` reads the whole file as text.
   with no `#unit` line <!-- C30 -->
 - **Per reference sequence,** in byte order of the names <!-- C31 -->: its
   `tile` and `departures` units in order of position, a tile at its
-  `name` and a block at its `start`; then its `detail` units; then its
-  `table` unit, which lists them. <!-- C32 --> At one start a tile comes
+  `name` and a block at its `start`; then its `detail` units, a tile's
+  followed by its `blocks` unit; then its `table` unit, which lists them.
+  <!-- C32 --> At one start a tile comes
   before the departure blocks that start there, and smaller blocks before
   larger <!-- C33 -->
 - **Every unit but the header** starts with a line
@@ -274,13 +275,15 @@ it alone, and `zcat` reads the whole file as text.
 | `tile` | the tile's extent | the tile's start, a multiple of `tile` in decimal with no leading zero | its `ref`, `nodes`, `route`, `walk` and `abridged` rows |
 | `departures` | the block | `.` | the departure records of one block of the pyramid |
 | `detail` | from the first base its walk rows' spans cover to the last | `cs:d`, the tile's start and the `abridged` rows' `detail` | one W line's moved pieces in tile `cs` |
+| `blocks` | from the first base its rows' blocks cover to the last | `cs`, the tile's start | a `blocks` row per `abridged` row of tile `cs` |
 | `table` | 0 to `\|S\|` | `.` | one `#entry` line per unit of the sequence |
 
-<!-- C35 C36 C37 C38 -->
+<!-- C35 C36 C37 C38 C159 -->
 
 - **A unit's `name`** is the key other lines use to point at it: a tile's
-  start, which a departure record's `ownTiles` lists, and a detail unit's
-  `cs:d`, which an `abridged` row's `detail` and its tile's start give. It
+  start, which a departure record's `ownTiles` lists and its `blocks`
+  unit takes, and a detail unit's `cs:d`, which an `abridged` row's
+  `detail` and its tile's start give. It
   is `.` where nothing points at the unit, a departure block or a table.
   Every other name is unique within its kind and sequence <!-- C39 -->
 - **A tile's extent** runs from the first base of its `ref` rows' steps
@@ -348,8 +351,8 @@ The header unit's lines start with `#`:
 
 - `format:i:7` marks this format: these units, these row kinds, their
   columns and the placement rule above. A reader refuses any other format,
-  and a file with a row kind or a placement rule this page doesn't give is
-  another format. <!-- C49 --> A unit kind this page doesn't give is a
+  and a file with a placement rule this page doesn't give, or a row kind
+  it doesn't give in a unit it does, is another format. <!-- C49 --> A unit kind this page doesn't give is a
   later addition, which a reader skips <!-- C123 -->
 - A reader refuses a unit whose `#unit` line doesn't state its table
   entry's `seq start end kind name`, or whose text doesn't end in a
@@ -402,10 +405,11 @@ not an index key, so `zcat | grep` places any line.
 |---|---|
 | `walk` | the piece's span: the first base its steps placed on R cover to the last, over all of them. Route interiors that hold another tile's reference nodes lie outside it |
 | `abridged` | the span of the piece's first and last steps on R, as its `start` and `end` decode |
+| `blocks` | from the first base the piece's blocks cover to the last, which can be wider than its `abridged` row's two steps |
 | `ref`, `nodes`, `route` | the unit's extent: these rows describe the tile, not a piece, and have no span of their own |
 | `departure` | from the first base of its leave or rejoin node, whichever is first, to the last base of the other |
 
-<!-- C55 C56 C57 C58 -->
+<!-- C55 C56 C57 C58 C160 -->
 
 A tile lists its `ref` rows, then at most one `nodes` row, then its `route`
 rows, then its `walk` rows, then its `abridged` rows. <!-- C59 --> Its
@@ -568,6 +572,59 @@ seq start end abridged path fragStart hapOffset piece nsteps bp start[@k] end[@k
   with two W lines there has two <!-- C76 -->. A tile's records are
   numbered from 0, the costliest line first <!-- C131 -->
 
+### blocks
+
+```
+seq start end blocks path fragStart piece list
+```
+
+- One row per `abridged` row of a tile, in the `blocks` unit named by the
+  tile's start: keyed by `path`, `fragStart` and `piece` as the
+  `abridged` row is, and in the order the tile lists them. A tile with no
+  `abridged` row has no `blocks` unit <!-- C161 -->
+- A block is a run of consecutive steps of the piece on R, between its
+  `start` step and its `end` step: a step begins where the one before
+  ended on R, they all run one way, and no step off R lies between.
+  <!-- C162 --> A block is as long as that allows, so no two blocks in a
+  row join <!-- C162 -->
+- `list` gives the piece's blocks in path order, comma-separated, as
+  `<d><+|-><len>[:<own>]`:
+  - `d`: where the block begins on R, less where the block before ended,
+    or less 0 for the first. A block begins at its first base in path
+    order, its high end where it runs against R, and `d` is negative
+    where the piece jumps back
+  - `+` along R, `-` against it
+  - `len`: its bp
+  - `own`: the piece's bp off R between the block before and this one,
+    left out when 0
+- The blocks' `len` and `own` add up to the `abridged` row's `bp`. The
+  first block begins where the `start` step does and the last ends where
+  the `end` step does <!-- C163 -->
+- The blocks are the ones the piece's walk row in its detail record
+  decodes to. So a reader that leaves the piece unexpanded places it on R
+  where its steps are, with its own bp between them, and expands it to
+  learn which nodes those are <!-- C164 -->
+- Two rows with the same list can differ in the nodes of their own bp,
+  so the same blocks don't make two pieces the same sequence
+- A file written before gfa-to-tabix 4.1 has no `blocks` units; its other
+  units are the same
+
+R is `>1>2>3>4>5>6`, six nodes of 6 bp in one tile, and a piece walks
+`>1>2<2<1>11>5>6>3` with 10 bp of its own in node 11:
+
+```
+#unit  R#0#c  0  36  blocks  0
+R#0#c  0  36  blocks  H#1#c  0  0  0+12,0-12,24+12:10,-24+6
+```
+
+- `0+12`: nodes 1 and 2 along R, from 0
+- `0-12`: back over 2 and 1 against R, from 12, where the block before
+  ended
+- `24+12:10`: 10 bp off R, then nodes 5 and 6 from 24, 24 bp on from 0
+- `-24+6`: node 3 from 12, 24 bp back from 36
+- The four `len` and the one `own` are the `abridged` row's 52 bp. That
+  row spans its end steps, nodes 1 and 3, 0-18; this one spans 0-36
+
 ### departure
 
 ```
@@ -719,7 +776,7 @@ demands every path, placement and departure back as the GFA states them.
 - No two units of a kind and sequence share a name other than `.` (build,
   tests, files) <!-- C136 -->
 - A tile's extent runs from the first base of its `ref` rows' steps to
-  the last (tests, files); every tile and detail line lies within
+  the last (tests, files); every tile, detail and blocks line lies within
   its unit's `start end` (build, tests, files) <!-- C137 -->
 - Every departure line overlaps each block it is in; every departure
   record is in every block of its cover and no other (build, tests,
@@ -732,6 +789,11 @@ demands every path, placement and departure back as the GFA states them.
   checked at build: a `ref`, `nodes` or `route` row states its unit's
   extent, and a departure line's extent comes from its ends (tests, files)
   <!-- C112 -->
+- Each `blocks` row's list reads back as its piece's blocks, which begin
+  at its first step on R, end at its last and with their own bp hold its
+  `bp`: the tool reads back every list it writes and fails the build on a
+  difference (build, tests, files). <!-- C165 --> The blocks are those its detail
+  record's walk row decodes to (tests; files with the GFA) <!-- C165 -->
 - Each record's `ownTiles` are the tiles of S holding its own steps, in
   the path's order (tests; files on the paths of a shard) <!-- C97 -->
 - A record's leave step is the last step on R of its piece and its rejoin
@@ -788,6 +850,9 @@ demands every path, placement and departure back as the GFA states them.
   sequence, `d` the record's number. A window read names only `tile` and
   `departures` units and an attach fetch only tiles; a viewer reads a
   detail record when it expands that path <!-- C150 -->
+- The tile's `blocks` unit, after its detail units, gives where on R
+  the steps of the moved pieces lie ([blocks](#blocks)), at a small part
+  of the detail records' bytes
 - A record holds at most one `nodes` row, one exactly when its routes have
   an interior step, then `route` rows and `walk` rows. <!-- C102 --> The
   tool numbers its routes from 0 and chains their tokens from 0, as for a
