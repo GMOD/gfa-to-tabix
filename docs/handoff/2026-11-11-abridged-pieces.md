@@ -151,10 +151,20 @@ the expanded cut over the same window unless a line says otherwise.
 
 ## Order
 
-- gfa-to-tabix on the `blocks-unit` branch: the `blocks` unit and its
-  build checks are written; still to do are walks-format.md, a checker
-  claim with its failure on a broken writer, and a build of MC chr22
-  with its units checked against `blocks-gate.ts`'s figures
+- gfa-to-tabix on the `blocks-unit` branch, not merged:
+  - written: the `blocks` unit, its build checks, and tests that read
+    each abridged piece's detail row back and compare its runs with the
+    `blocks` row. Four broken writers fail them: own bp dropped, steps
+    never joined, a block joined across a turn, and each block measured
+    from the last one's start
+  - checked on four fixtures: every unit but `blocks` and tables is the
+    same bytes as main writes, and graph-walks 6.2 returns the same cuts
+    from both, expanded and not
+  - still to do: walks-format.md and its claims; `verify7.py`,
+    `claims7.py` and `audit7.py`, which refuse a `blocks` unit today, so
+    `scripts/check-walks.sh` fails on the branch; a `broken.sh` case; a
+    build of MC chr22 with its units checked against `blocks-gate.ts`'s
+    figures
 - graph-walks on a branch: blocks to steps, keep by block, `expand` by
   overlapping detail units only, the refusal of a sequence without
   `blocks` units; the tests above
