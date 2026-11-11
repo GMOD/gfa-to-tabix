@@ -1,0 +1,117 @@
+#### chr16 NA20827#1
+## 14932000-14933000 plain: fragments 0 departures 1
+  REF GRCh38#0#chr16 bp 1036
+  ROW NA20827#1#CM102553.1 bp 0 onRefBp 0 gapBp 1036 complete true stepless true estimated false abridgedSteps 0
+      text: "rejoins GRCh38 on the other strand, 500 kb away · 421 bp of its own"
+      runs: [gap 1036 departure]
+## 14932000-14933000 expand: fragments 1 departures 3
+  REF GRCh38#0#chr16 bp 1036
+  ROW NA20827#1#CM102553.1 bp 1036 onRefBp 1036 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "1.0 kb"
+      runs: R1036
+## 14941000-14942211 plain: fragments 3 departures 1
+  REF GRCh38#0#chr16 bp 1238
+  ROW NA20827#1#CM102553.1 bp 165235 onRefBp 1182 gapBp 164053 complete false stepless false estimated false abridgedSteps 9703
+      text: "≥ 165 kb · does not rejoin the reference within the extracted subgraph · 10 k steps, 164 kb not loaded"
+      runs: R<1118 [gap 164053 abridged] R64
+## 14941000-14942211 expand: fragments 1 departures 5
+  REF GRCh38#0#chr16 bp 1238
+  ROW NA20827#1#CM102553.1 bp 1238 onRefBp 1237 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "1.2 kb"
+      runs: R66 o1 R1171
+#### chr4 HG00140#1 phantom / HG01252 missed
+## 49290000-49295000 plain: fragments 1 departures 2
+  REF GRCh38#0#chr4 bp 5003
+  ROW HG00140#1#CM087110.1 bp 44536 onRefBp 0 gapBp 44536 complete true stepless false estimated true abridgedSteps 11650
+      text: "≈ 45 kb (+40 kb) · 12 k steps, 45 kb not loaded"
+      runs: [gap 44536 abridged]
+## 49290000-49295000 expand: fragments 0 departures 3
+  REF GRCh38#0#chr4 bp 5003
+  ROW HG00140#1#CM087110.1 bp 0 onRefBp 0 gapBp 5003 complete true stepless true estimated false abridgedSteps 0
+      text: "rejoins GRCh38 on the other strand, 2.6 Mb away · 3.8 Mb of its own · 3.8 Mb not in the graph · 2 more departures"
+      runs: [gap 5003 departure]
+## 49300000-49301000 plain: fragments 0 departures 1
+  REF GRCh38#0#chr4 bp 1040
+  ROW HG01252#1#JBHIHY010000011.1 bp 0 onRefBp 0 gapBp 1040 complete true stepless true estimated false abridgedSteps 0
+      text: "rejoins GRCh38 on the other strand, 2.5 Mb away · 3.8 Mb of its own · 3.8 Mb not in the graph"
+      runs: [gap 1040 departure]
+## 49300000-49301000 expand: fragments 1 departures 75
+  REF GRCh38#0#chr4 bp 1040
+  ROW HG01252#1#JBHIHY010000011.1 bp 1068 onRefBp 1023 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "1.1 kb (+28 bp)"
+      runs: o1 R77 o28 R74 o1 R6 …21 runs… o1 R241 o1 R4 o1 R276
+#### chr9 NA18959#1
+## 39800000-39801000 plain: fragments 2 departures 32
+  REF GRCh38#0#chr9 bp 1040
+  ROW NA18959#1#CM101548.1 bp 1012 onRefBp 1002 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "1.0 kb (−28 bp)"
+      runs: R64 o1 R45 o1 R10 R16 …8 runs… o1 R9 o1 R254 o1 R29
+## 39800000-39801000 expand: fragments 3 departures 241
+  REF GRCh38#0#chr9 bp 1040
+  ROW NA18959#1#CM101548.1 bp 18461948 onRefBp 1926 gapBp 18459961 complete true stepless false estimated false abridgedSteps 0
+      text: "18462 kb (+18461 kb) · 18396 kb on nodes filed near chr9:39.7 Mb · 64 kb outside the extracted subgraph"
+      runs: R5 o1 R<53 o1 R4 o1 …89 runs… o1 R9 o1 R<333 o1 R<187
+#### chm13 chr16 HG04228#2
+## 15031100-15031400 plain: fragments 1 departures 2
+  REF CHM13#0#chr16 bp 347
+  ROW HG04228#2#CM088516.1 bp 316125 onRefBp 1 gapBp 316094 complete false stepless false estimated false abridgedSteps 12153
+      text: "≥ 316 kb · partial walk · 12 k steps, 316 kb not loaded"
+      runs: o30 [gap 316094 abridged] R1
+## 15031100-15031400 expand: fragments 1 departures 12
+  REF CHM13#0#chr16 bp 347
+  ROW HG04228#2#CM088516.1 bp 347 onRefBp 347 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "0.3 kb"
+      runs: R347
+## 15040000-15041000 plain: fragments 1 departures 2
+  REF CHM13#0#chr16 bp 1037
+  ROW HG04228#2#CM088516.1 bp 275331 onRefBp 0 gapBp 275331 complete true stepless false estimated true abridgedSteps 12153
+      text: "≈ 275 kb (+274 kb) · 12 k steps, 275 kb not loaded"
+      runs: [gap 275331 abridged]
+## 15040000-15041000 expand: fragments 1 departures 10
+  REF CHM13#0#chr16 bp 1037
+  ROW HG04228#2#CM088516.1 bp 1038 onRefBp 1035 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "1.0 kb (+1 bp)"
+      runs: R65 o1 R67 o1 R875 o1 R28
+#### chm13 chr7 NA18940#1
+## 145510000-145511000 plain: fragments 2 departures 3
+  REF CHM13#0#chr7 bp 1232
+  ROW NA18940#1#CM101705.1 bp 198321 onRefBp 0 gapBp 198321 complete true stepless false estimated true abridgedSteps 9842
+      text: "≈ 198 kb (+197 kb) · 10 k steps, 198 kb not loaded"
+      runs: [gap 198321 abridged]
+## 145510000-145511000 expand: fragments 3 departures 22
+  REF CHM13#0#chr7 bp 1232
+  ROW NA18940#1#CM101705.1 bp 1232 onRefBp 1231 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "1.2 kb"
+      runs: R334 o1 R897
+#### chm13 chr7 NA19776#2
+## 145500000-145505000 plain: fragments 2 departures 1
+  REF CHM13#0#chr7 bp 5135
+  ROW NA19776#2#CM094050.1 bp 185571 onRefBp 0 gapBp 185571 complete true stepless false estimated true abridgedSteps 8842
+      text: "≈ 186 kb (+180 kb) · 9 k steps, 186 kb not loaded"
+      runs: [gap 185571 abridged]
+## 145500000-145505000 expand: fragments 1 departures 20
+  REF CHM13#0#chr7 bp 5135
+  ROW NA19776#2#CM094050.1 bp 5139 onRefBp 5117 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "5.1 kb (+4 bp)"
+      runs: R595 o1 R28 o1 R153 o1 …15 runs… R28 o1 R96 o4 R25 R273
+#### chm13 chr22 NA19443#2 ordinary+phantom
+## 9450000-9451000 plain: fragments 1 departures 0
+  REF CHM13#0#chr22 bp 1001
+  ROW NA19443#2#JBHIIR010000014.1 bp 27287 onRefBp 0 gapBp 27287 complete true stepless false estimated true abridgedSteps 16816
+      text: "≈ 27 kb (+26 kb) · 17 k steps, 27 kb not loaded"
+      runs: [gap 27287 abridged]
+## 9450000-9451000 expand: fragments 1 departures 205
+  REF CHM13#0#chr22 bp 1001
+  ROW NA19443#2#JBHIIR010000014.1 bp 2037 onRefBp 632 gapBp 0 complete true stepless false estimated false abridgedSteps 0
+      text: "2.0 kb (+1.0 kb)"
+      runs: o1330 R2 o1 R4 o1 R15 …122 runs… R17 o2 R4 o1 R17 o1
+## 9480000-9482000 plain: fragments 1 departures 0
+  REF CHM13#0#chr22 bp 2133
+  ROW NA19443#2#JBHIIR010000014.1 bp 28419 onRefBp 0 gapBp 28419 complete true stepless false estimated true abridgedSteps 16816
+      text: "≈ 28 kb (+26 kb) · 17 k steps, 28 kb not loaded"
+      runs: [gap 28419 abridged]
+## 9480000-9482000 expand: fragments 0 departures 1
+  REF CHM13#0#chr22 bp 2133
+  ROW NA19443#2#JBHIIR010000014.1 bp 0 onRefBp 0 gapBp 2133 complete true stepless true estimated false abridgedSteps 0
+      text: "no step on CHM13 across 6.7 kb · 0 bp of its own"
+      runs: [gap 2133 departure]

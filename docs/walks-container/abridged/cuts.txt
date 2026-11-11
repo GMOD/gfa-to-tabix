@@ -1,0 +1,148 @@
+#### chr16 NA20827#1
+## 14932000-14933000 plain: fragments 0 departures 1 kept 29
+  Dsummary computed 0 record 1
+## 14932000-14933000 expand: fragments 1 departures 1 kept 4401
+  F NA20827#1#CM102553.1 hap 15210483-15356297 (145814bp) steps 8736 onR 598 inWin 34 R 14928651-14933028  trim 9184/9183
+  Dsummary computed 0 record 1
+## 14932000-14933000 contained: fragments 0 departures 1 kept 29
+  Dsummary computed 0 record 1
+## 14932000-14933000 contained+expand: fragments 2 departures 1 kept 29
+  F NA20827#1#CM102553.1 hap 15210483-15211519 (1036bp) steps 17 onR 17 inWin 17 R 14931992-14933028  trim 9184/153961
+  F NA20827#1#CM102553.1 hap 15355261-15356297 (1036bp) steps 17 onR 17 inWin 17 R 14931992-14933028  trim 153962/9183
+  Dsummary computed 0 record 1
+## 14928400-14928900 plain: fragments 0 departures 1 kept 78
+  Dsummary computed 0 record 1
+## 14928400-14928900 expand: fragments 1 departures 8 kept 4163
+  F NA20827#1#CM102553.1 hap 15214608-15352172 (137564bp) steps 8244 onR 116 inWin 116 R 14928651-14928903  trim 13309/13308
+  Dsummary computed 7 record 1
+## 14928400-14928900 contained: fragments 0 departures 1 kept 78
+  Dsummary computed 0 record 1
+## 14928400-14928900 contained+expand: fragments 1 departures 8 kept 4163
+  F NA20827#1#CM102553.1 hap 15214608-15352172 (137564bp) steps 8244 onR 116 inWin 116 R 14928651-14928903  trim 13309/13308
+  Dsummary computed 7 record 1
+## 14942147-14942211 plain: fragments 1 departures 1 kept 13
+  F NA20827#1#CM102553.1 hap 15201299-15365480 (164181bp) steps 2 onR 2 inWin 2 R 14942147-14942211 ABRIDGED steps=9703 bp=164181 against=1,0 trim 0/0
+  Dsummary computed 0 record 1
+## 14942147-14942211 expand: fragments 1 departures 1 kept 4885
+  F NA20827#1#CM102553.1 hap 15201299-15365480 (164181bp) steps 9703 onR 1555 inWin 2 R 14928651-14942211  trim 0/0
+  Dsummary computed 0 record 1
+## 14942147-14942211 contained: fragments 1 departures 1 kept 13
+  F NA20827#1#CM102553.1 hap 15201299-15365480 (164181bp) steps 2 onR 2 inWin 2 R 14942147-14942211 ABRIDGED steps=9703 bp=164181 against=1,0 trim 0/0
+  Dsummary computed 0 record 1
+## 14942147-14942211 contained+expand: fragments 2 departures 1 kept 13
+  F NA20827#1#CM102553.1 hap 15201299-15201363 (64bp) steps 1 onR 1 inWin 1 R 14942147-14942211  trim 0/164117
+  F NA20827#1#CM102553.1 hap 15365416-15365480 (64bp) steps 1 onR 1 inWin 1 R 14942147-14942211  trim 164117/0
+  Dsummary computed 0 record 1
+#### chr4 HG01252#1
+## 49300000-49301000 plain: fragments 0 departures 1 kept 93
+  Dsummary computed 0 record 1
+## 49300000-49301000 expand: fragments 1 departures 19 kept 1966
+  F HG01252#1#JBHIHY010000011.1 hap 3889534-3890601 (1067bp) steps 94 onR 79 inWin 79 R 49299999-49301039  trim 47025/166982
+  Dsummary computed 18 record 1
+## 49312400-49312900 plain: fragments 0 departures 1 kept 61
+  Dsummary computed 0 record 1
+## 49312400-49312900 expand: fragments 1 departures 15 kept 74
+  F HG01252#1#JBHIHY010000011.1 hap 3982611-3982873 (262bp) steps 59 onR 46 inWin 46 R 49312398-49312660  trim 140102/74710
+  Dsummary computed 14 record 1
+## 49283079-49283080 plain: fragments 1 departures 1 kept 1
+  F HG01252#1#JBHIHY010000011.1 hap 3842509-4057583 (215074bp) steps 2 onR 2 inWin 2 R 49283079-49283080 ABRIDGED steps=20466 bp=215074 against=0,1 trim 0/0
+  Dsummary computed 0 record 1
+## 49283079-49283080 expand: fragments 1 departures 1 kept 19089
+  F HG01252#1#JBHIHY010000011.1 hap 3842509-4057583 (215074bp) steps 20466 onR 5340 inWin 2 R 49283079-49312660  trim 0/0
+  Dsummary computed 0 record 1
+#### chr4 HG00140#1 phantom
+## 49290000-49295000 plain: fragments 1 departures 2 kept 1053
+  F HG00140#1#CM087110.1 hap 49514174-49583288 (69114bp) steps 2 onR 2 inWin 0 R 49283079-49312660 ABRIDGED steps=11650 bp=69114 against=0,0 trim 0/0
+  Dsummary computed 0 record 2
+## 49290000-49295000 expand: fragments 0 departures 3 kept 3443
+  Dsummary computed 1 record 2
+#### chr9 NA18959#1
+## 39800000-39801000 plain: fragments 2 departures 22 kept 200
+  F NA18959#1#CM101548.1 hap 58316593-58317605 (1012bp) steps 167 onR 157 inWin 157 R 39799985-39801025  trim 45964/19637
+  F NA18959#1#CM101548.1 hap 62903166-62904178 (1012bp) steps 167 onR 158 inWin 158 R 39799985-39801025  trim 19636/45965
+  Dsummary computed 19 record 3
+## 39800000-39801000 expand: fragments 3 departures 88 kept 9297
+  F NA18959#1#CM101548.1 hap 58316593-58317605 (1012bp) steps 167 onR 157 inWin 157 R 39799985-39801025  trim 45964/19637
+  F NA18959#1#CM101548.1 hap 62903166-62904178 (1012bp) steps 167 onR 158 inWin 158 R 39799985-39801025  trim 19636/45965
+  F NA18959#1#CM101548.1 hap 39678474-39854643 (176169bp) steps 15072 onR 3580 inWin 326 R 39799985-39813754  trim 19663/19556
+  Dsummary computed 85 record 3
+## 39813500-39814000 plain: fragments 2 departures 7 kept 67
+  F NA18959#1#CM101548.1 hap 58303606-58304122 (516bp) steps 64 onR 62 inWin 62 R 39813494-39814010  trim 32977/33120
+  F NA18959#1#CM101548.1 hap 62916648-62917164 (516bp) steps 64 onR 62 inWin 62 R 39813494-39814010  trim 33118/32979
+  Dsummary computed 4 record 3
+## 39813500-39814000 expand: fragments 3 departures 26 kept 6779
+  F NA18959#1#CM101548.1 hap 58303606-58304122 (516bp) steps 64 onR 62 inWin 62 R 39813494-39814010  trim 32977/33120
+  F NA18959#1#CM101548.1 hap 62916648-62917164 (516bp) steps 64 onR 62 inWin 62 R 39813494-39814010  trim 33118/32979
+  F NA18959#1#CM101548.1 hap 39691943-39840801 (148858bp) steps 10762 onR 73 inWin 73 R 39813494-39813754  trim 33132/33398
+  Dsummary computed 23 record 3
+## 39780357-39780358 plain: fragments 3 departures 3 kept 1
+  F NA18959#1#CM101548.1 hap 39658811-39874199 (215388bp) steps 2 onR 2 inWin 2 R 39780357-39780358 ABRIDGED steps=20896 bp=215388 against=0,1 trim 0/0
+  F NA18959#1#CM101548.1 hap 58337241-58337242 (1bp) steps 1 onR 1 inWin 1 R 39780357-39780358  trim 66612/0
+  F NA18959#1#CM101548.1 hap 62883530-62883531 (1bp) steps 1 onR 1 inWin 1 R 39780357-39780358  trim 0/66612
+  Dsummary computed 0 record 3
+## 39780357-39780358 expand: fragments 3 departures 3 kept 12703
+  F NA18959#1#CM101548.1 hap 58337241-58337242 (1bp) steps 1 onR 1 inWin 1 R 39780357-39780358  trim 66612/0
+  F NA18959#1#CM101548.1 hap 62883530-62883531 (1bp) steps 1 onR 1 inWin 1 R 39780357-39780358  trim 0/66612
+  F NA18959#1#CM101548.1 hap 39658811-39874199 (215388bp) steps 20896 onR 8349 inWin 2 R 39780357-39813754  trim 0/0
+  Dsummary computed 0 record 3
+#### chm13 chr16 HG04228#2
+## 15031100-15031400 plain: fragments 0 departures 1 kept 5
+  Dsummary computed 0 record 1
+## 15031100-15031400 expand: fragments 1 departures 1 kept 9324
+  F HG04228#2#CM088516.1 hap 15119794-15393943 (274149bp) steps 11164 onR 14 inWin 10 R 15031059-15031415  trim 41932/1160
+  Dsummary computed 0 record 1
+## 15040000-15041000 plain: fragments 1 departures 2 kept 16
+  F HG04228#2#CM088516.1 hap 15077862-15393987 (316125bp) steps 2 onR 2 inWin 0 R 15031466-15073297 ABRIDGED steps=12153 bp=316125 against=1,0 trim 0/0
+  Dsummary computed 0 record 2
+## 15040000-15041000 expand: fragments 1 departures 5 kept 54
+  F HG04228#2#CM088516.1 hap 15110171-15111209 (1038bp) steps 15 onR 12 inWin 12 R 15039969-15041006  trim 32309/283894
+  Dsummary computed 3 record 2
+#### chm13 chr7 NA18940#1
+## 145510000-145511000 plain: fragments 2 departures 3 kept 29
+  F NA18940#1#CM101705.1 hap 145642643-145883097 (240454bp) steps 2 onR 2 inWin 0 R 145490210-145533575 ABRIDGED steps=7351 bp=240454 against=0,0 trim 0/0
+  F NA18940#1#CM101705.1 hap 145936652-146001977 (65325bp) steps 2 onR 2 inWin 0 R 145490210-145555516 ABRIDGED steps=2491 bp=65325 against=0,0 trim 0/0
+  Dsummary computed 0 record 3
+## 145510000-145511000 expand: fragments 3 departures 7 kept 1163
+  F NA18940#1#CM101705.1 hap 145457484-145458716 (1232bp) steps 26 onR 25 inWin 25 R 145509783-145511015  trim 24283/171814
+  F NA18940#1#CM101705.1 hap 145662253-145663485 (1232bp) steps 26 onR 25 inWin 25 R 145509783-145511015  trim 19610/261054
+  F NA18940#1#CM101705.1 hap 145956257-145957489 (1232bp) steps 26 onR 26 inWin 26 R 145509783-145511015  trim 19605/44488
+  Dsummary computed 4 record 3
+## 145495800-145496200 plain: fragments 2 departures 3 kept 56
+  F NA18940#1#CM101705.1 hap 145642643-145883097 (240454bp) steps 2 onR 2 inWin 0 R 145490210-145533575 ABRIDGED steps=7351 bp=240454 against=0,0 trim 0/0
+  F NA18940#1#CM101705.1 hap 145936652-146001977 (65325bp) steps 2 onR 2 inWin 0 R 145490210-145555516 ABRIDGED steps=2491 bp=65325 against=0,0 trim 0/0
+  Dsummary computed 0 record 3
+## 145495800-145496200 expand: fragments 3 departures 5 kept 1189
+  F NA18940#1#CM101705.1 hap 145472302-145472524 (222bp) steps 14 onR 13 inWin 13 R 145495982-145496204  trim 39101/158006
+  F NA18940#1#CM101705.1 hap 145648229-145648635 (406bp) steps 53 onR 53 inWin 53 R 145495798-145496204  trim 5586/275904
+  F NA18940#1#CM101705.1 hap 145942239-145942645 (406bp) steps 53 onR 53 inWin 53 R 145495798-145496204  trim 5587/59332
+  Dsummary computed 2 record 3
+## 145533569-145533575 plain: fragments 3 departures 3 kept 3
+  F NA18940#1#CM101705.1 hap 145433201-145589092 (155891bp) steps 2 onR 2 inWin 2 R 145533569-145533575 ABRIDGED steps=6211 bp=155891 against=1,0 trim 0/0
+  F NA18940#1#CM101705.1 hap 145642643-145883097 (240454bp) steps 2 onR 2 inWin 1 R 145490210-145533575 ABRIDGED steps=7351 bp=240454 against=0,0 trim 0/0
+  F NA18940#1#CM101705.1 hap 145936652-146001977 (65325bp) steps 2 onR 2 inWin 0 R 145490210-145555516 ABRIDGED steps=2491 bp=65325 against=0,0 trim 0/0
+  Dsummary computed 0 record 3
+## 145533569-145533575 expand: fragments 3 departures 3 kept 5549
+  F NA18940#1#CM101705.1 hap 145433201-145589092 (155891bp) steps 5086 onR 2144 inWin 2 R 145495982-145533575  trim 0/41438
+  F NA18940#1#CM101705.1 hap 145883091-145883097 (6bp) steps 1 onR 1 inWin 1 R 145533569-145533575  trim 240448/41442
+  F NA18940#1#CM101705.1 hap 145980050-145980056 (6bp) steps 1 onR 1 inWin 1 R 145533569-145533575  trim 43398/21921
+  Dsummary computed 0 record 3
+#### chm13 chr7 NA19776#2 phantom
+## 145500000-145505000 plain: fragments 2 departures 1 kept 225
+  F NA19776#2#CM094050.1 hap 143832982-144051399 (218417bp) steps 2 onR 2 inWin 0 R 145495594-145533575 ABRIDGED steps=6354 bp=218417 against=0,0 trim 0/0
+  F NA19776#2#CM094050.1 hap 144104962-144171978 (67016bp) steps 2 onR 2 inWin 0 R 145490210-145555516 ABRIDGED steps=2488 bp=67016 against=0,0 trim 0/0
+  Dsummary computed 0 record 1
+## 145500000-145505000 expand: fragments 1 departures 16 kept 1371
+  F NA19776#2#CM094050.1 hap 144114638-144119777 (5139bp) steps 222 onR 208 inWin 208 R 145499886-145505021  trim 9676/52201
+  Dsummary computed 15 record 1
+#### chm13 chr22 HG00323#2
+## 9460000-9461000 plain: fragments 0 departures 1 kept 175
+  Dsummary computed 0 record 1
+## 9460000-9461000 expand: fragments 1 departures 51 kept 3048
+  F HG00323#2#CM087341.1 hap 5524948-5535243 (10295bp) steps 3263 onR 2502 inWin 214 R 9459927-9470861  trim 24433/117391
+  Dsummary computed 50 record 1
+## 9440000-9441000 plain: fragments 1 departures 2 kept 57
+  F HG00323#2#CM087341.1 hap 5500515-5596230 (95715bp) steps 2 onR 2 inWin 0 R 9437203-9444165 ABRIDGED steps=21081 bp=95715 against=0,1 trim 0/0
+  Dsummary computed 0 record 2
+## 9440000-9441000 expand: fragments 1 departures 19 kept 4596
+  F HG00323#2#CM087341.1 hap 5503295-5504299 (1004bp) steps 53 onR 38 inWin 38 R 9440001-9441074  trim 2780/148335
+  Dsummary computed 17 record 2

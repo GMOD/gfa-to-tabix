@@ -511,12 +511,14 @@ W  B  1  c     0  32  >1>2>6>3
   missed stretches total 297 kb of GRCh38 and 395 kb of CHM13, mostly by
   centromeres (chr2:91.41 Mb holds 843 of GRCh38's 1,279 pieces). A third
   blinded reviewer ruled to fix it now
-- Not yet taken up: the session that found it can't accept its own
-  change, and it needs graph-walks, bandage-core and plugin releases
-  under the release gate. Next step: a fixture that doubles back past an
-  abridged piece's ends, failing on graph-walks 6.2, then the reader
-  change and a check of how bandage-core draws a block whose ends are
-  both off the window
+- Two more blinded reviews traced abridged pieces from file to screen:
+  the drop is one of several false statements the view makes about an
+  unloaded piece, from a block where it has no step to sizes off by
+  orders of magnitude. The decided fix, reader and viewer with no format
+  change, its failure cases, tests and order are in the
+  [handoff](handoff/2026-11-11-abridged-pieces.md). It waits for a
+  session other than the one that found it, and for the user's go-ahead
+  on the releases
 
 ## Walk files name no graph
 
