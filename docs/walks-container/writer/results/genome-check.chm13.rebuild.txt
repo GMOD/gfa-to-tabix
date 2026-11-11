@@ -1,0 +1,26 @@
+# rebuild of /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz against /home/cdiesh/work/analysis1109/chm13.gfa.gz, 24 shards, 0 failed; a shard's exit status, then its last line
+shard 0: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 0/24: 2363 lines with rows, 2363 on the reference in the GFA, 2557 abridged rows, 0 wrong
+shard 1: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 1/24: 2358 lines with rows, 2358 on the reference in the GFA, 2822 abridged rows, 0 wrong
+shard 2: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 2/24: 2388 lines with rows, 2388 on the reference in the GFA, 2718 abridged rows, 0 wrong
+shard 3: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 3/24: 2471 lines with rows, 2471 on the reference in the GFA, 2878 abridged rows, 0 wrong
+shard 4: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 4/24: 2270 lines with rows, 2270 on the reference in the GFA, 2704 abridged rows, 0 wrong
+shard 5: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 5/24: 2261 lines with rows, 2261 on the reference in the GFA, 2631 abridged rows, 0 wrong
+shard 6: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 6/24: 2558 lines with rows, 2558 on the reference in the GFA, 2918 abridged rows, 0 wrong
+shard 7: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 7/24: 2379 lines with rows, 2379 on the reference in the GFA, 2585 abridged rows, 0 wrong
+shard 8: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 8/24: 2456 lines with rows, 2456 on the reference in the GFA, 2975 abridged rows, 0 wrong
+shard 9: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 9/24: 2432 lines with rows, 2432 on the reference in the GFA, 2826 abridged rows, 0 wrong
+shard 10: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 10/24: 2308 lines with rows, 2308 on the reference in the GFA, 2619 abridged rows, 0 wrong
+shard 11: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 11/24: 2353 lines with rows, 2353 on the reference in the GFA, 2588 abridged rows, 0 wrong
+shard 12: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 12/24: 2366 lines with rows, 2366 on the reference in the GFA, 2591 abridged rows, 0 wrong
+shard 13: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 13/24: 2459 lines with rows, 2459 on the reference in the GFA, 2766 abridged rows, 0 wrong
+shard 14: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 14/24: 2448 lines with rows, 2448 on the reference in the GFA, 2664 abridged rows, 0 wrong
+shard 15: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 15/24: 2441 lines with rows, 2441 on the reference in the GFA, 2756 abridged rows, 0 wrong
+shard 16: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 16/24: 2376 lines with rows, 2376 on the reference in the GFA, 2680 abridged rows, 0 wrong
+shard 17: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 17/24: 2619 lines with rows, 2619 on the reference in the GFA, 2940 abridged rows, 0 wrong
+shard 18: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 18/24: 2365 lines with rows, 2365 on the reference in the GFA, 2685 abridged rows, 0 wrong
+shard 19: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 19/24: 2275 lines with rows, 2275 on the reference in the GFA, 2574 abridged rows, 0 wrong
+shard 20: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 20/24: 2597 lines with rows, 2597 on the reference in the GFA, 2947 abridged rows, 0 wrong
+shard 21: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 21/24: 2311 lines with rows, 2311 on the reference in the GFA, 2646 abridged rows, 0 wrong
+shard 22: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 22/24: 2276 lines with rows, 2276 on the reference in the GFA, 2726 abridged rows, 0 wrong
+shard 23: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-chm13.CHM13.walks.gz: shard 23/24: 2365 lines with rows, 2365 on the reference in the GFA, 2600 abridged rows, 0 wrong
+# lines of any shard that aren't a summary:

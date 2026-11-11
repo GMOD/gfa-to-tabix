@@ -1,0 +1,26 @@
+# rebuild of /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz against /home/cdiesh/hprc_multiway/build/hprc-v2.1-mc-grch38.gfa.gz, 24 shards, 0 failed; a shard's exit status, then its last line
+shard 0: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 0/24: 2163 lines with rows, 2163 on the reference in the GFA, 3051 abridged rows, 0 wrong
+shard 1: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 1/24: 2099 lines with rows, 2099 on the reference in the GFA, 3051 abridged rows, 0 wrong
+shard 2: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 2/24: 2035 lines with rows, 2035 on the reference in the GFA, 2874 abridged rows, 0 wrong
+shard 3: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 3/24: 2256 lines with rows, 2256 on the reference in the GFA, 3158 abridged rows, 0 wrong
+shard 4: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 4/24: 2055 lines with rows, 2055 on the reference in the GFA, 2932 abridged rows, 0 wrong
+shard 5: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 5/24: 2091 lines with rows, 2091 on the reference in the GFA, 3332 abridged rows, 0 wrong
+shard 6: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 6/24: 2276 lines with rows, 2276 on the reference in the GFA, 3186 abridged rows, 0 wrong
+shard 7: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 7/24: 2094 lines with rows, 2094 on the reference in the GFA, 2936 abridged rows, 0 wrong
+shard 8: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 8/24: 2178 lines with rows, 2178 on the reference in the GFA, 3040 abridged rows, 0 wrong
+shard 9: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 9/24: 2201 lines with rows, 2201 on the reference in the GFA, 3209 abridged rows, 0 wrong
+shard 10: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 10/24: 2155 lines with rows, 2155 on the reference in the GFA, 3101 abridged rows, 0 wrong
+shard 11: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 11/24: 1974 lines with rows, 1974 on the reference in the GFA, 2802 abridged rows, 0 wrong
+shard 12: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 12/24: 2122 lines with rows, 2122 on the reference in the GFA, 3006 abridged rows, 0 wrong
+shard 13: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 13/24: 2158 lines with rows, 2158 on the reference in the GFA, 3198 abridged rows, 0 wrong
+shard 14: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 14/24: 2194 lines with rows, 2194 on the reference in the GFA, 3207 abridged rows, 0 wrong
+shard 15: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 15/24: 2180 lines with rows, 2180 on the reference in the GFA, 2987 abridged rows, 0 wrong
+shard 16: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 16/24: 2114 lines with rows, 2114 on the reference in the GFA, 3098 abridged rows, 0 wrong
+shard 17: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 17/24: 2235 lines with rows, 2235 on the reference in the GFA, 3355 abridged rows, 0 wrong
+shard 18: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 18/24: 2125 lines with rows, 2125 on the reference in the GFA, 3283 abridged rows, 0 wrong
+shard 19: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 19/24: 2125 lines with rows, 2125 on the reference in the GFA, 3195 abridged rows, 0 wrong
+shard 20: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 20/24: 2295 lines with rows, 2295 on the reference in the GFA, 3334 abridged rows, 0 wrong
+shard 21: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 21/24: 2153 lines with rows, 2153 on the reference in the GFA, 2955 abridged rows, 0 wrong
+shard 22: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 22/24: 2043 lines with rows, 2043 on the reference in the GFA, 2806 abridged rows, 0 wrong
+shard 23: exit 0: /home/cdiesh/work/genome7/hprc-v2.1-mc-grch38.GRCh38.walks.gz: shard 23/24: 2131 lines with rows, 2131 on the reference in the GFA, 2957 abridged rows, 0 wrong
+# lines of any shard that aren't a summary:

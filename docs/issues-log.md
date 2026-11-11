@@ -2023,7 +2023,9 @@ Where the findings have come from so far, and the rule each gives:
   runs every shard, resumably. A sample of 3 of 48 shards of each file,
   GRCh38's against HPRC's published GFA and CHM13's against `vg convert`
   of its GBZ, rebuilt 3,157 and 3,650 lines with 0 wrong
-  (`results/hosted.rebuild-sample-*.txt`). Guard: check-walks.sh and
+  (`results/hosted.rebuild-sample-*.txt`), and by 2026-11-10 every shard
+  of both had, 51,452 and 57,495 lines with 0 wrong
+  (`results/genome-check.*.rebuild.txt`). Guard: check-walks.sh and
   fuzz7.sh run the new reader on every fixture and seed, and the 13 broken
   files `cases.tsv` gives to `rebuild` fail it; a genome-wide build is
   checked with `genome-check.sh` before it is hosted

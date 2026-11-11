@@ -164,6 +164,14 @@ hosts had verify7 and graph-walks' chr22 windows alone
 ([issues log](../../issues-log.md)). On ada, with the hosted files'
 copies under `~/work/genome7`:
 
+- **Every path of both files, 24 shards each:** GRCh38's 51,452 lines
+  with rows against HPRC's published `hprc-v2.1-mc-grch38.gfa.gz`, and
+  CHM13's 57,495 against `vg convert -f` of HPRC's GBZ, each with its
+  abridged rows, every shard exit 0 and 0 wrong
+  (`results/genome-check.{grch38,chm13}.rebuild.txt`). It ran with the
+  shard-at-a-time `genome-check.sh` of this day, before 1fa622c made it
+  read the GFA once per group of shards, from 2026-11-09 14:10 to
+  2026-11-10 07:50, 3 shards at once and up to 12 GiB each
 - **A sample of paths, 3 of 48 shards of each file:** GRCh38's 3,157
   lines against HPRC's published `hprc-v2.1-mc-grch38.gfa.gz`, a source
   the writer never read, and CHM13's 3,650 against `vg convert -f` of
