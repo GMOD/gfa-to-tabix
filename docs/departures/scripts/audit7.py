@@ -12,11 +12,10 @@
 # its stretch from its first step on R to its last as hapOffset and bp, and
 # those steps' handles and positions in R as start and end; that each
 # `abridged` row has one `blocks` row, in its tile's `blocks` unit, stating
-# the blocks its piece of the detail unit decodes to, from its first step on
-# R to its last: each a maximal run of consecutive steps on R, each beginning
-# where the last ended on R, one way, with no step off R between, written in
-# path order as `<d><+|-><len>[:<own>]`, with the bp of the piece's steps
-# before the first and after the last as `ownBefore` and `ownAfter`; and that every
+# what its piece of the detail unit decodes to, in path order: each run of
+# steps off R as its bp, and each block, a maximal run of consecutive steps
+# on R, each beginning where the last ended on R, one way, with no step off
+# R between, as `<d><+|-><len>`; and that every
 # base of a path from its first step on a sequence to its last lies in one
 # piece's stretch on R or one record's own bp. Then checks the reader
 # promise (every base of a record's stretch where its path has no piece lies
@@ -292,8 +291,8 @@ ref_nodes = set()
 pieces = collections.defaultdict(list)   # path -> [(frag, offset, piece, steps)]
 detail_of = {}   # (path, frag, piece) -> (seq, cs, detail) for a piece in a detail record
 detail_ends = {}   # (path, frag, piece) -> its first and last steps on R, (position in R, handle)
-detail_blocks = {}   # (path, frag, piece) -> its blocks row's (start, end, ownBefore, ownAfter, list)
-blocks_rows = collections.defaultdict(list)   # (path, frag, piece) -> [((seq, unit name), start, end, ownBefore, ownAfter, list)]
+detail_blocks = {}   # (path, frag, piece) -> its blocks row's (start, end, list)
+blocks_rows = collections.defaultdict(list)   # (path, frag, piece) -> [((seq, unit name), start, end, list)]
 records = []
 dep_rows = []   # (seq, block start, block end, record index, line bytes)
 rec_extent = {}   # record index -> its line's start and end
@@ -338,35 +337,39 @@ def steps_of(r, segs, nodes):
 
 
 def blocks_of(r, segs, nodes):
-    # A piece's blocks from its first step on R to its last, in path order:
-    # a block is a maximal run of consecutive steps on R, each beginning where
-    # the last ended on R, one way, with no step off R between. Returns their
-    # hull, the piece's bp before the first and after the last, and their
-    # list, each block as `<d><+|-><len>[:<own>]`: d where it begins on R less
-    # where the one before ended, or less 0; + along R, - against; len its
-    # bp; own the piece's bp off R since the block before
-    on = [k for k, s in enumerate(segs) if s[0] == 'R']
-    before, after = (str(sum(nodes[h >> 1] for s in part for h in s[1])) for part in (segs[:on[0]], segs[on[-1] + 1:]))
-    out, own, touching = [], 0, False
-    for s in segs[on[0]:on[-1] + 1]:
+    # A piece as its blocks row states it, the hull of its blocks and its
+    # list in path order: a run of steps off R as its bp, and a block, a
+    # maximal run of consecutive steps on R, each beginning where the last
+    # ended on R, one way, with no step off R between, as `<d><+|-><len>`: d
+    # where it begins on R less where the block before ended, or less 0; +
+    # along R, - against; len its bp
+    parts = []
+    for s in segs:
         if s[0] == 'I':
-            own += sum(nodes[h >> 1] for h in s[1])
-            touching = touching and not s[1]
+            bp = sum(nodes[h >> 1] for h in s[1])
+            if bp and parts and isinstance(parts[-1], int):
+                parts[-1] += bp
+            elif bp:
+                parts.append(bp)
         else:
             _, i0, i1, against = s
             for lo, hi in r.unbroken(min(i0, i1), max(i0, i1))[::-1 if against else 1]:
                 a, b = r.off[lo], r.off[hi] + r.len[hi]
                 begin, end = (b, a) if against else (a, b)
-                if touching and out[-1][1] == begin and (out[-1][0] > out[-1][1]) == against:
-                    out[-1][1] = end
+                last = parts[-1] if parts else None
+                if isinstance(last, list) and last[1] == begin and (last[0] > last[1]) == against:
+                    last[1] = end
                 else:
-                    out.append([begin, end, own])
-                own, touching = 0, True
+                    parts.append([begin, end])
     tokens, at = [], 0
-    for begin, end, own in out:
-        tokens.append(f'{begin - at}{"+" if begin < end else "-"}{abs(end - begin)}' + (f':{own}' if own else ''))
-        at = end
-    return min(min(b[:2]) for b in out), max(max(b[:2]) for b in out), before, after, ','.join(tokens)
+    for part in parts:
+        if isinstance(part, int):
+            tokens.append(str(part))
+        else:
+            tokens.append(f'{part[0] - at}{"+" if part[0] < part[1] else "-"}{abs(part[1] - part[0])}')
+            at = part[1]
+    on = [part for part in parts if isinstance(part, list)]
+    return min(min(part) for part in on), max(max(part) for part in on), ','.join(tokens)
 
 
 def take_walk(r, routes, nodes, cols, origin=None):
@@ -809,8 +812,8 @@ for row in wrong_ends[:args.examples]:
     print('   ends', row, detail_ends[row[:2] + row[3:4]])
 unblocked = [row for row in abridged_rows if row[:2] + row[3:4] in detail_blocks
              and blocks_rows.get(row[:2] + row[3:4]) != [((row[7][0], str(row[7][1])),) + detail_blocks[row[:2] + row[3:4]]]]
-must_be_0(len(unblocked), 'abridged rows without one blocks row, in their tile\'s blocks unit, stating the blocks, '
-          'ownBefore and ownAfter their piece\'s detail record decodes to')
+must_be_0(len(unblocked), 'abridged rows without one blocks row, in their tile\'s blocks unit, stating the blocks '
+          'and runs off R their piece\'s detail record decodes to')
 for row in unblocked[:args.examples]:
     print('   blocks', row[:4], row[7], [(u, a, b, ' '.join(text)[:80]) for u, a, b, *text in blocks_rows.get(row[:2] + row[3:4], [])],
           'decoded', detail_blocks[row[:2] + row[3:4]][:2], ' '.join(detail_blocks[row[:2] + row[3:4]][2:])[:80])

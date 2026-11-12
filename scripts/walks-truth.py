@@ -41,11 +41,10 @@ to its reference, and measure what a window costs to read.
       positions, its hapOffset and bp the piece's stretch from one to the
       other, its nsteps all the piece's steps. Each abridged row has one
       blocks row, in its tile's blocks unit, whose list and start end state
-      exactly the blocks the piece's decoded steps make: each a maximal run of
-      consecutive steps on R, each beginning where the last ended on R, one
-      way, with no step off R between, from the piece's first step on R to
-      its last; and whose ownBefore and ownAfter are the bp of the piece's
-      steps before its first step on R and after its last. Prints each line, abridged row or blocks row that differs
+      exactly what the piece's decoded steps make: each run of steps off R as
+      its bp, leading and trailing ones included, and each block, a maximal
+      run of consecutive steps on R, each beginning where the last ended on
+      R, one way, with no step off R between. Prints each line, abridged row or blocks row that differs
       and exits 1 if any does. The GFA can be gzip. One read
       of it takes each segment's length and the reference's nodes; --shards
       splits the paths by their names' hash, and each further read feeds
@@ -317,34 +316,35 @@ def stretch(steps, lens, offset):
 
 
 def blocks(steps, lens, tile):
-    """A detail piece's blocks as its blocks row states them, start, end,
-    ownBefore, ownAfter and list, or None with no step on R. A block is a
-    maximal run of consecutive steps on R, from the piece's first there to its
-    last, each beginning where the last ended on R, one way, with no step off
-    R between. The list gives each in path order as <d><+|-><len>[:<own>]: d
-    where it begins on R less where the block before ended, or less 0; +
-    along R, - against; len its bp; own the piece's bp off R since the block
-    before, left out when 0. ownBefore and ownAfter are the piece's bp before
-    its first step on R and after its last."""
-    on = [k for k, (_, i) in enumerate(steps) if i is not None]
-    counted = slice(on[0], on[-1] + 1) if on else slice(0)
-    runs, own, touching = [], 0, False
-    for (h, i), n in zip(steps[counted], lens[counted]):
+    """A detail piece as its blocks row states it, start, end and list, or
+    None with no step on R. The list gives the piece in path order: a run of
+    steps off R as its bp, and a block, a maximal run of consecutive steps on
+    R, each beginning where the last ended on R, one way, with no step off R
+    between, as <d><+|-><len>: d where it begins on R less where the block
+    before ended, or less 0; + along R, - against; len its bp."""
+    parts = []
+    for (h, i), n in zip(steps, lens):
+        last = parts[-1] if parts else None
         if i is None:
-            own, touching = own + n, False
+            if isinstance(last, int):
+                parts[-1] += n
+            else:
+                parts.append(n)
         else:
             begin, end = (tile.off[i], tile.off[i] + n) if tile.h[i] == h else (tile.off[i] + n, tile.off[i])
-            if touching and runs[-1][1] == begin and (runs[-1][0] < runs[-1][1]) == (begin < end):
-                runs[-1][1] = end
+            if isinstance(last, list) and last[1] == begin and (last[0] < last[1]) == (begin < end):
+                last[1] = end
             else:
-                runs.append([begin, end, own])
-            own, touching = 0, True
+                parts.append([begin, end])
     tokens, at = [], 0
-    for begin, end, own in runs:
-        tokens.append(f"{begin - at}{'+' if begin < end else '-'}{abs(end - begin)}" + (f":{own}" if own else ""))
-        at = end
-    return (min(min(r[:2]) for r in runs), max(max(r[:2]) for r in runs), str(sum(lens[:counted.start])),
-            str(sum(lens[counted.stop:])), ",".join(tokens)) if runs else None
+    for part in parts:
+        if isinstance(part, int):
+            tokens.append(str(part))
+        else:
+            tokens.append(f"{part[0] - at}{'+' if part[0] < part[1] else '-'}{abs(part[1] - part[0])}")
+            at = part[1]
+    on = [part for part in parts if isinstance(part, list)]
+    return (min(min(part) for part in on), max(max(part) for part in on), ",".join(tokens)) if on else None
 
 
 class Summary:

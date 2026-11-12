@@ -275,21 +275,24 @@ claim('A7', 'a tile\'s detail records are numbered from 0 in order of cost, the 
 claim('K1', 'every tile with abridged rows has exactly one blocks unit, named by its start, and no other tile has one')
 claim('K2', 'a blocks unit\'s rows are its tile\'s abridged rows one for one, in their order, by path, fragStart and '
       'piece')
-claim('K3', 'a blocks row\'s blocks\' bp plus their own bp is its abridged row\'s bp')
+claim('K3', 'a blocks row\'s items from its first block to its last, blocks\' bp and runs off R, add up to its '
+      'abridged row\'s bp')
 claim('K4', 'a blocks row\'s start end is the hull of its blocks, and a blocks unit\'s the hull of its rows')
 claim('K5', 'a blocks row\'s first block begins at its abridged row\'s start step, running its way, and its last '
       'ends at the end step, running its way')
-claim('K6', 'a block is maximal: none begins where the one before ended, running the same way, with no own bp between')
-claim('K7', 'a blocks row\'s list writes each block as <d><+|-><len>[:<own>] in decimal with no leading zero, len at '
-      'least 1 and own left out when 0')
-claim('K8', 'a blocks row has ownBefore, ownAfter and list, the first two decimal integers of 0 or more with no '
-      'leading zero')
+claim('K6', 'a block is maximal: none begins where the block right before it ended, running the same way')
+claim('K7', 'a block item is <d><+|-><len>: d a decimal that may be 0 or negative, with no leading zero and no -0, '
+      'len a decimal of at least 1 with no leading zero')
+claim('K8', 'a blocks row has eight columns, and its list\'s items are each a block or, all digits, a run off R of at '
+      'least 1 bp with no leading zero; no two runs stand side by side, and there is at least one block')
 claim('K9', 'a W line\'s pieces tile its contig: a piece ends where the line\'s next piece starts, a walk row\'s piece '
-      'running from hapOffset over its steps\' bp and an abridged one from hapOffset - ownBefore to hapOffset + bp + '
-      'ownAfter')
-claim('K10', 'a W line\'s piece 0 starts at fragStart: a walk row\'s hapOffset, an abridged row\'s hapOffset - ownBefore')
+      'running from hapOffset over its steps\' bp and an abridged one from hapOffset less its blocks row\'s leading '
+      'run to hapOffset + bp plus its trailing run')
+claim('K10', 'a W line\'s piece 0 starts at fragStart: a walk row\'s hapOffset, an abridged row\'s hapOffset less its '
+      'blocks row\'s leading run')
 claim('K11', 'a departure record of an abridged piece\'s sequence and path whose hapStart is the piece\'s hapOffset + bp '
-      'has an ownBp of at least the piece\'s ownAfter')
+      'has an ownBp of at least the trailing run of the piece\'s blocks row')
+claim('K12', 'a blocks row\'s list starts with a run off R only on a W line\'s piece 0')
 claim('D1', 'a departure record\'s ownTiles are tile names of its sequence that exist, in no repeat')
 claim('D2', 'a record has at most two ownTiles')
 claim('D3', 'a departure record\'s extent holds both breakpoints and is at least the breakpoint stretch')
@@ -326,7 +329,7 @@ pieces = collections.defaultdict(set)   # (path, frag) -> piece numbers
 abridged = []           # (seq, tile, path, frag, piece, d, (a, b))
 abridged_of = collections.defaultdict(list)  # (seq, tile) -> [(path, frag, piece, bp, (begin, along), (end, along), hapOffset)]
 stretches = collections.defaultdict(lambda: array.array('q'))  # (path, frag) -> piece, start, end on the contig, per piece
-left_after = []         # (seq, path, hapOffset + bp, ownAfter) of the abridged pieces
+left_after = []         # (seq, path, hapOffset + bp, trailing run) of the abridged pieces
 blocks_units = collections.Counter()    # (seq, name) of the blocks units
 detail_pieces = {}      # (seq, tile, d) -> {(path, frag, piece): span of all placed steps}
 detail_paths = collections.defaultdict(set)
@@ -351,23 +354,31 @@ reference = None
 detail_cost = {}  # (seq, cs, d) -> the cost of the record's pieces
 
 
-OWN = re.compile(r'0|[1-9][0-9]*')
-BLOCK = re.compile(r'(0|-?[1-9][0-9]*)([+-])([1-9][0-9]*)(?::([1-9][0-9]*))?')
+DIGITS = re.compile(r'[0-9]+')
+RUN = re.compile(r'[1-9][0-9]*')
+BLOCK = re.compile(r'(0|-?[1-9][0-9]*)([+-])([1-9][0-9]*)')
 
 
-def listed_blocks(field):
-    # A blocks row's list as (begin, end, own) per block, begin and end where
-    # it begins and ends on R in path order, and the tokens no block reads from
-    out, at, unread = [], 0, []
+def listed_items(field):
+    # A blocks row's list in path order, a run off R as its bp and a block as
+    # (begin, end), where it begins and ends on R; and the items that read
+    # as neither, those of all digits apart from the rest
+    out, at, unread_runs, unread_blocks = [], 0, [], []
     for token in field.split(','):
-        m = BLOCK.fullmatch(token)
-        if m is None:
-            unread.append(token)
+        if DIGITS.fullmatch(token):
+            if RUN.fullmatch(token):
+                out.append(int(token))
+            else:
+                unread_runs.append(token)
         else:
-            begin = at + int(m.group(1))
-            at = begin + int(m.group(3)) * (1 if m.group(2) == '+' else -1)
-            out.append((begin, at, int(m.group(4) or 0)))
-    return out, unread
+            m = BLOCK.fullmatch(token)
+            if m is None:
+                unread_blocks.append(token)
+            else:
+                begin = at + int(m.group(1))
+                at = begin + int(m.group(3)) * (1 if m.group(2) == '+' else -1)
+                out.append((begin, at))
+    return out, unread_runs, unread_blocks
 
 
 def check_blocks(u):
@@ -383,29 +394,37 @@ def check_blocks(u):
     by_key = {s[:3]: s for s in stand}
     for a, b, path, frag, piece, stated in rows:
         where = (key, path, frag, piece, ' '.join(stated)[:60])
-        s = by_key.get((path, frag, piece))
-        owns = [int(x) for x in stated[:2] if OWN.fullmatch(x)]
-        if len(stated) != 3 or len(owns) != 2:
-            bad('K8', where)
-        elif s is not None:
-            stretches[(path, frag)].extend((piece, s[6] - owns[0], s[6] + s[3] + owns[1]))
-            left_after.append((u['seq'], path, s[6] + s[3], owns[1]))
-        blocks, unread = listed_blocks(stated[2]) if len(stated) == 3 else ([], [])
-        if unread:
-            bad('K7', where + ('token', unread[0][:20]))
-        elif blocks:
-            hull = (min(min(x[:2]) for x in blocks), max(max(x[:2]) for x in blocks))
+        items, unread_runs, unread_blocks = listed_items(stated[0]) if len(stated) == 1 else ([], [], [])
+        on = [k for k, item in enumerate(items) if isinstance(item, tuple)]
+        if unread_blocks:
+            bad('K7', where + ('item', unread_blocks[0][:20]))
+        if len(stated) != 1:
+            bad('K8', where + ('columns', 7 + len(stated)))
+        elif unread_runs:
+            bad('K8', where + ('item', unread_runs[0][:20]))
+        elif not unread_blocks and (not on or any(isinstance(p, int) and isinstance(q, int) for p, q in zip(items, items[1:]))):
+            bad('K8', where + ('no block' if not on else 'two runs side by side',))
+        elif not unread_blocks:
+            blocks = [items[k] for k in on]
+            leading, trailing = sum(items[:on[0]]), sum(items[on[-1] + 1:])
+            hull = (min(min(x) for x in blocks), max(max(x) for x in blocks))
             if hull != (a, b):
                 bad('K4', where + ('row', (a, b), 'its blocks span', hull))
-            if any(p[1] == q[0] and (p[0] < p[1]) == (q[0] < q[1]) and not q[2] for p, q in zip(blocks, blocks[1:])):
+            if any(isinstance(p, tuple) and isinstance(q, tuple) and p[1] == q[0] and (p[0] < p[1]) == (q[0] < q[1])
+                   for p, q in zip(items, items[1:])):
                 bad('K6', where)
+            if leading and piece:
+                bad('K12', where)
+            s = by_key.get((path, frag, piece))
             if s is not None:
-                held = sum(abs(x[1] - x[0]) + x[2] for x in blocks)
+                held = sum(abs(x[1] - x[0]) if isinstance(x, tuple) else x for x in items[on[0]:on[-1] + 1])
                 if held != s[3]:
-                    bad('K3', where + ('blocks and own bp', held, 'abridged bp', s[3]))
+                    bad('K3', where + ('first block to last', held, 'abridged bp', s[3]))
                 first, last = (blocks[0][0], blocks[0][0] < blocks[0][1]), (blocks[-1][1], blocks[-1][0] < blocks[-1][1])
                 if (first, last) != s[4:6]:
                     bad('K5', where + ('begins, along R', first, 'ends, along R', last, 'start and end steps', s[4:6]))
+                stretches[(path, frag)].extend((piece, s[6] - leading, s[6] + s[3] + trailing))
+                left_after.append((u['seq'], path, s[6] + s[3], trailing))
 
 
 def finish_unit(u):
@@ -870,7 +889,7 @@ for (path, frag), flat in stretches.items():
     for (piece, _, end), (after, start, _) in zip(line, line[1:]):
         if after == piece + 1 and end != start:
             bad('K9', (path, frag, 'piece', piece, 'ends at', end, 'piece', after, 'starts at', start))
-for k in ('K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10'):
+for k in ('K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10', 'K12'):
     seen(k)
 
 
@@ -980,7 +999,7 @@ for (seq, _), c in recs.items():
 for seq, path, at, after in left_after:
     for own in own_from.get((seq, path, at), []):
         if own < after:
-            bad('K11', (seq, path, 'hapStart', at, 'ownBp', own, 'ownAfter', after))
+            bad('K11', (seq, path, 'hapStart', at, 'ownBp', own, 'trailing run', after))
 seen('K11')
 
 # O1, O2, O4, L1: own steps from the decoded rows of the shard's paths
