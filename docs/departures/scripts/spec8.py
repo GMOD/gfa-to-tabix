@@ -5,8 +5,11 @@
 # page disagree: the directory and tables, file order, each tile's rows,
 # routes and walk rows decoded, detail units, each blocks row against its
 # detail walk row collapsed and against the tile's ref rows, each W line's
-# pieces tiling its contig, and the departure records against the piece
-# boundaries computed from the rows. It shares no code with verify7.py,
+# pieces tiling its contig, each abridged row's hapBp against its detail
+# walk row, its blocks row and the next piece's hapOffset, the departure
+# records against the piece boundaries computed from the rows, and each
+# record's stretch against the abridged pieces of its path by the attach
+# rule. It shares no code with verify7.py,
 # claims7.py, audit7.py, expand7.py or walks-truth.py, which is its value;
 # keep it so. GUESS-n marks each place the page left the reader a choice.
 # A column after a row's fixed ones must be a tag, NAME:T:value, and is not
@@ -66,7 +69,7 @@ class Entry:
 
 
 TAG = re.compile(r"[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*")
-COLUMNS = {"ref": 12, "nodes": 6, "route": 7, "walk": 11, "abridged": 10, "blocks": 8, "departure": 15}
+COLUMNS = {"ref": 12, "nodes": 6, "route": 7, "walk": 11, "abridged": 11, "blocks": 8, "departure": 15}
 ROWS_OF = {
     "tile": ("ref", "nodes", "route", "walk", "abridged"),
     "departures": ("departure",),
@@ -790,7 +793,7 @@ def main():
                 pieces.setdefault(key, {})
                 if r["piece"] in pieces[key]:
                     rep.bad("piece key twice", f"{where} {key} {r['piece']}")
-                pieces[key][r["piece"]] = (r["hap"], sum(r["lens"]), seq, cs, "ref", None, None, 0, 0)
+                pieces[key][r["piece"]] = (r["hap"], sum(r["lens"]), seq, cs, "ref", None, None, 0, 0, None, None, None, None)
             if any(not cs <= o < cs + tile_bp for o in t.off):
                 rep.bad("ref step starting outside [name, name+tile)", where)
             if any(a >= b for a, b in zip(t.off, t.off[1:])) or any(t.end[i] > t.off[i + 1] for i in range(len(t.off) - 1)):
@@ -830,7 +833,7 @@ def main():
                 if pc in pieces[key]:
                     rep.bad("piece key twice", wh)
                 f, l, lead, trail = ends_of(t, t.rs, segs)
-                pieces[key][pc] = (hap, t.bp(t.rs, segs), seq, cs, "walk", f, l, lead, trail)
+                pieces[key][pc] = (hap, t.bp(t.rs, segs), seq, cs, "walk", f, l, lead, trail, None, None, None, None)
                 stats["walk rows"] += 1
                 if gfa:
                     truth_steps[(pth, frag, pc)] = [(h, None if p is None else (seq, t.off[p])) for h, p in t.steps(t.rs, segs)]
@@ -851,7 +854,7 @@ def main():
                     rep.bad("unabridged tile costs more than abridge", f"{where} {cost}")
                 continue
             stats["abridged tiles"] += 1
-            akeys = [(int(c[9]), int(c[6])) for c in t.abridged]
+            akeys = [(int(c[10]), int(c[6])) for c in t.abridged]
             if akeys != sorted(akeys):
                 rep.bad("abridged rows out of order (detail, hapOffset)", where)
             if abridge and cost > abridge and t.walks:
@@ -867,7 +870,7 @@ def main():
                 continue
             if len(brow) != len(t.abridged):
                 rep.bad("blocks rows and abridged rows differ in count", where)
-            dnums = sorted(set(int(c[9]) for c in t.abridged))
+            dnums = sorted(set(int(c[10]) for c in t.abridged))
             if dnums != list(range(len(dnums))):
                 rep.bad("detail records not numbered from 0 without a gap", where)
             dunits = [x for x in w.entries(seq, "detail") if x.name.startswith(e.name + ":")]
@@ -933,7 +936,7 @@ def main():
             blo = bhi = None
             keys_seen = set()
             for idx, c in enumerate(t.abridged):
-                pth, frag, hap, pc, ns, d = c[4], c[5], int(c[6]), int(c[7]), int(c[8]), int(c[9])
+                pth, frag, hap, pc, ns, hbp, d = c[4], c[5], int(c[6]), int(c[7]), int(c[8]), int(c[9]), int(c[10])
                 wh = f"{where} abridged {pth} {frag} {pc}"
                 stats["abridged rows"] += 1
                 key = (pth, frag)
@@ -959,7 +962,13 @@ def main():
                 fl_hi = max(t.end[f[0]], t.end[l[0]])
                 if (fl_lo, fl_hi) != dsp:
                     stats["abridged pieces whose span is wider than their first and last steps on R"] += 1
-                pieces[key][pc] = (hap, t.bp(rs, segs), seq, cs, "abridged", f, l, lead, trail)
+                if hbp != t.bp(rs, segs):
+                    rep.bad("abridged hapBp is not the bp of all its detail walk row's steps", f"{wh} {hbp} vs {t.bp(rs, segs)}")
+                else:
+                    rep.good("abridged hapBp equal to the bp of all its detail walk row's steps")
+                if hbp < 1:
+                    rep.bad("abridged hapBp below 1", wh)
+                pieces[key][pc] = (hap, t.bp(rs, segs), seq, cs, "abridged", f, l, lead, trail, hbp, None, None, None)
                 rep.good("abridged rows equal to their detail walk row (key, hapOffset, nsteps, span, record)")
                 if idx >= len(brow):
                     continue
@@ -1010,6 +1019,12 @@ def main():
                 total = sum(x[1] if x[0] == "U" else abs(x[5] - x[4]) for x in ex)
                 if total != t.bp(rs, segs):
                     rep.bad("blocks items don't add up to the piece's bp", wh)
+                if total != hbp:
+                    rep.bad("blocks items don't add up to the abridged row's hapBp", f"{wh} {total} vs {hbp}")
+                else:
+                    rep.good("blocks lists whose items add up to their abridged row's hapBp")
+                pieces[key][pc] = pieces[key][pc][:10] + (
+                    ex[0][1] if ex[0][0] == "U" else 0, ex[-1][1] if ex[-1][0] == "U" else 0, total)
                 lo2 = min(min(x[4], x[5]) for x in ex if x[0] == "B")
                 hi2 = max(max(x[4], x[5]) for x in ex if x[0] == "B")
                 if (lo2, hi2) != (int(b[1]), int(b[2])):
@@ -1103,6 +1118,12 @@ def main():
                     rep.bad("a piece doesn't end where the line's next piece begins", f"{wh} piece {k - 1}: {ps[k - 1][0]}+{ps[k - 1][1]} != {ps[k][0]}")
                 if ps[k][7] and ps[k][4] != "ref":
                     rep.bad("a piece that is not its line's first begins off R", f"{wh} piece {k}")
+                if ps[k - 1][9] is not None:
+                    if ps[k - 1][0] + ps[k - 1][9] != ps[k][0]:
+                        rep.bad("an abridged piece's hapOffset plus hapBp is not the next piece's hapOffset",
+                                f"{wh} piece {k - 1}: {ps[k - 1][0]}+{ps[k - 1][9]} != {ps[k][0]}")
+                    else:
+                        rep.good("abridged pieces whose hapOffset plus hapBp is the next piece's hapOffset")
             if okay:
                 rep.good("W lines whose pieces tile their contig from fragStart")
             by_path[pth].append((int(frag), frag, ps))
@@ -1223,6 +1244,31 @@ def check_departures(rep, w, by_path, departures, tile_bp, stats):
     for k in got:
         if k not in want:
             rep.bad("departure record matching no piece boundary", str(k))
+    # the attach rule: a record's stretch of its contig against each abridged piece of its
+    # path on its sequence, from the abridged row and the record, checked against the list
+    held = collections.defaultdict(list)
+    for pth, flat in order:
+        for p in flat:
+            if p[7] == "abridged" and p[13] is not None:
+                held[(p[5], pth)].append((p[3], p[12], p[13], p[14], p[15], p[1], p[2], p[6]))
+    for ps in held.values():
+        ps.sort()
+    for c in departures:
+        h0, h1 = int(c[5]), int(c[5]) + int(c[6])
+        ps = held.get((c[0], c[4]), [])
+        for hap, hbp, blead, btrail, total, frag, pc, cs in ps[max(0, bisect.bisect_left(ps, (h0,)) - 1):bisect.bisect_left(ps, (h1,))]:
+            over = max(0, min(h1, hap + hbp) - max(h0, hap))
+            own = btrail if h0 == hap + total - btrail else blead if h1 == hap + blead else 0
+            wh = f"{c[0]} {c[4]} hapStart {c[5]} ownBp {c[6]}; piece {frag} {pc} hapOffset {hap} hapBp {hbp}"
+            if over >= hbp:
+                rep.bad("a record's stretch holds a whole abridged piece of its sequence", wh)
+            elif over != own:
+                rep.bad("a record's stretch cut to an abridged piece's is not its list's leading or trailing run there",
+                        f"{wh}: {over} vs {own} of runs {blead}, {btrail}")
+            elif over:
+                rep.good("record stretches that cut to an abridged piece's are its list's whole leading or trailing run")
+            if over and str(cs) not in c[14].split(","):
+                rep.bad("a record's stretch meets an abridged piece in a tile its ownTiles doesn't name", f"{wh} tile {cs}")
     # cover
     L = [tile_bp * 8 ** k for k in range(4)]
     blocks = collections.defaultdict(set)

@@ -3,7 +3,10 @@ abridged-hapoffset	walks-contig-ends.gfa	claims7 audit7 spec8 rebuild	the hapOff
 abridged-hapoffset-later	walks-contig-ends.gfa	claims7 audit7 spec8 rebuild	the hapOffset 12 of M's abridged piece 1 made 13
 abridged-nsteps	walks-contig-ends.gfa	claims7 audit7 spec8 rebuild	the nsteps 5 of L's abridged row made 7
 abridged-span	walks-contig-ends.gfa	claims7 audit7 spec8 rebuild	L's abridged row stating 12 18 where its blocks span 12 24
+abridged-ten-columns	walks-contig-ends.gfa	claims7 audit7 expand7 spec8 rebuild	L's abridged row in ten columns, with no hapBp, as format 8 first had it
 abridged-thirteen-columns	walks-contig-ends.gfa	claims7 audit7 spec8 rebuild	L's abridged row in thirteen columns, with bp, start and end, as in format 7
+attach-overlap-mid-run	walks-two-refs.gfa	claims7 audit7 spec8	a record for H's departure inside its one abridged piece: its stretch, 118 over 3, is the piece's run of 3 bp between two blocks, not a run at either end of its list
+attach-overlap-short	../../docs/walks-container/hapbp/two-pieces.gfa	claims7 audit7 spec8	H's record's hapStart 6 made 7 and its ownBp 31 made 30, so its stretch holds 9 of the 10 bp of piece 0's trailing run
 block-misaligned	walks-two-refs.gfa	verify7 spec8	the departure block 10 20 stated as 10 19
 blocks-ends-swapped	broken/blocks.gfa	audit7 expand7 spec8 rebuild	H's leading run 7 and trailing run 50 swapped
 blocks-first	broken/blocks.gfa	audit7 expand7 spec8 rebuild	H's first block 0+12 made 12-12, a + made - over the same bases, the second's d with it, at the same span and bp
@@ -46,6 +49,12 @@ g1-walk-order	walks-two-refs.gfa	claims7 spec8	H's and D's walk rows swapped in 
 gzip-not-bgzf	walks-two-refs.gfa	verify7	each unit one plain gzip member, not BGZF members
 hap-dup	walks-two-refs.gfa	claims7 spec8	#haplotype D#1 listed twice
 hap-missing	walks-two-refs.gfa	claims7 spec8	#haplotype D#1 left out
+hapbp-format7	broken/blocks.gfa	claims7 audit7 expand7 spec8 rebuild	H's hapBp 109 made 52, the bp from its first step on R to its last, as format 7's bp was
+hapbp-next-piece	walks-contig-ends.gfa	claims7 audit7 expand7 spec8 rebuild	the hapBp 42 of L's piece 0 made 6, the next piece's
+hapbp-off-by-one	broken/blocks.gfa	claims7 audit7 expand7 spec8 rebuild	H's hapBp 109 made 110
+hapbp-span	broken/blocks.gfa	claims7 audit7 expand7 spec8 rebuild	H's hapBp 109 made 36, its span's end less its start
+hapbp-to-last-on-r	../../docs/walks-container/hapbp/two-pieces.gfa	claims7 audit7 expand7 spec8 rebuild	the hapBp 16 of H's piece 0 made 6, so the piece ends at its last step on R and its record's stretch holds none of its trailing run of 10
+hapbp-zero	broken/blocks.gfa	claims7 audit7 expand7 spec8 rebuild	H's hapBp 109 made 0
 hapstart-wrong-G	walks-records.gfa	claims7 audit7 spec8	G's record with hapStart 12 made 13
 hdr-len-idx-only	walks-two-refs.gfa	verify7 spec8	the directory's #header 0 139 stated as 0 100
 header-len-100	walks-two-refs.gfa	verify7 spec8	a header line without # and #header 0 100

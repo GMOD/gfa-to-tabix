@@ -1,4 +1,4 @@
-#walks	format:i:8	tile:i:10	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:1	bytes:i:2888
+#walks	format:i:8	tile:i:10	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:1	bytes:i:2903
 #header	0	139
-GRCh38#0#chr	2495	301
-#meta	2796	64
+GRCh38#0#chr	2508	303
+#meta	2811	64

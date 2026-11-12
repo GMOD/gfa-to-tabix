@@ -35,7 +35,7 @@ CLAIMS = {}
 
 
 TAG = re.compile(r'[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*')
-COLUMNS = dict(ref=12, nodes=6, route=7, walk=11, abridged=10, blocks=8, departure=15)
+COLUMNS = dict(ref=12, nodes=6, route=7, walk=11, abridged=11, blocks=8, departure=15)
 ROWS = dict(tile={'ref', 'nodes', 'route', 'walk', 'abridged'}, departures={'departure'},
             detail={'nodes', 'route', 'walk'}, blocks={'blocks'})
 
@@ -288,7 +288,16 @@ claim('A6', 'a tile or detail unit holds a nodes row exactly when its routes hav
 claim('A7', 'a tile\'s detail records are numbered from 0 in order of cost, the costliest W line first')
 claim('A8', 'an abridged row states its piece\'s walk row in its detail unit: the same start end, path, fragStart, '
       'hapOffset, piece and nsteps')
-claim('A9', 'an abridged row has ten columns: seq start end abridged path fragStart hapOffset piece nsteps detail')
+claim('A9', 'an abridged row has eleven columns: seq start end abridged path fragStart hapOffset piece nsteps hapBp '
+      'detail')
+claim('A10', 'an abridged row\'s hapBp is at least 1 and is what its blocks row\'s items add up to')
+claim('A11', 'an abridged row\'s hapBp is the bp of the steps its piece\'s walk row in its detail unit decodes to')
+claim('A12', 'an abridged piece 0 starts at fragStart, and an abridged piece\'s hapOffset plus hapBp is the hapOffset '
+      'of its W line\'s next piece, in that piece\'s walk or abridged row')
+claim('A13', 'the bp of an abridged piece\'s stretch of its contig, hapOffset over hapBp, within a record\'s of its '
+      'sequence and path, hapStart over ownBp, is its blocks list\'s trailing run where hapStart is where its last '
+      'block ends on the contig, its leading run where hapStart plus ownBp is where its first block begins there, '
+      'and 0 otherwise; it is never the whole piece')
 claim('K1', 'every tile with abridged rows has exactly one blocks unit, named by its start, and no other tile has one')
 claim('K2', 'a blocks unit\'s rows are its tile\'s abridged rows one for one, in their order, by path, fragStart and '
       'piece')
@@ -323,6 +332,8 @@ claim('O4', 'the own steps in the file lie in the tiles ownTiles names or in ano
       'plus missingBp is at most ownBp')
 claim('L1', 'a record\'s leave step is the last step on R of its piece, and its rejoin step the first on R of its '
       'piece')
+claim('O5', 'a record\'s own steps in an abridged piece of its sequence are the piece\'s steps within hapStart over '
+      'ownBp cut to hapOffset over hapBp, and no other')
 claim('D6', 'a departure line\'s start end runs from the first base of its end nodes to the last, widened to the '
       'breakpoint stretch where that is wider')
 
@@ -342,8 +353,9 @@ ref_any = set()
 interior_nodes = set()
 haplotypes_with_rows = set()
 pieces = collections.defaultdict(set)   # (path, frag) -> piece numbers
-abridged = []           # (seq, tile, path, frag, piece, d, (a, b), hapOffset, nsteps)
-abridged_of = collections.defaultdict(list)  # (seq, tile) -> [(path, frag, piece, (a, b), hapOffset, d)]
+abridged = []           # (seq, tile, path, frag, piece, d, (a, b), hapOffset, nsteps, hapBp)
+abridged_of = collections.defaultdict(list)  # (seq, tile) -> [(path, frag, piece, (a, b), hapOffset, d, hapBp)]
+end_runs = {}           # (seq, path, frag, piece) -> an abridged piece's blocks list's leading and trailing runs and its sum
 stretches = collections.defaultdict(lambda: array.array('q'))  # (path, frag) -> piece, start, end on the contig, per piece
 left_after = []         # (seq, path, where the last block ends on the contig, trailing run) of the abridged pieces
 blocks_units = collections.Counter()    # (seq, name) of the blocks units
@@ -436,6 +448,9 @@ def check_blocks(u):
                 bad('K12', where)
             if s is not None:
                 total = sum(abs(x[1] - x[0]) if isinstance(x, tuple) else x for x in items)
+                if total != s[6]:
+                    bad('A10', where + ('items add up to', total, 'abridged row\'s hapBp', s[6]))
+                end_runs[(u['seq'], path, frag, piece)] = (leading, trailing, total)
                 detail = detail_pieces.get(key + (s[5],), {}).get((path, frag, piece))
                 if detail is not None and total != detail[4]:
                     bad('K3', where + ('items add up to', total, 'detail walk row decodes to', detail[4]))
@@ -788,11 +803,13 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             if piece in pieces[(path, frag)]:
                 bad('W5', ('two rows', path, frag, piece))
             pieces[(path, frag)].add(piece)
-            if len(c) < 10 or any(not TAG.fullmatch(x) for x in c[10:]):
+            if len(c) < 11 or any(not TAG.fullmatch(x) for x in c[11:]) or not DIGITS.fullmatch(c[9]):
                 bad('A9', (t.seq, t.name, len(c), 'columns', line[:100]))
             else:
-                abridged.append((t.seq, t.name, path, frag, piece, int(c[9]), (a, b), int(c[6]), int(c[8])))
-                abridged_of[(t.seq, t.name)].append((path, frag, piece, (a, b), int(c[6]), int(c[9])))
+                if not RUN.fullmatch(c[9]):
+                    bad('A10', (t.seq, t.name, 'hapBp', c[9], line[:100]))
+                abridged.append((t.seq, t.name, path, frag, piece, int(c[10]), (a, b), int(c[6]), int(c[8]), int(c[9])))
+                abridged_of[(t.seq, t.name)].append((path, frag, piece, (a, b), int(c[6]), int(c[10]), int(c[9])))
             seen('A9')
             held_tiles[(t.seq, t.name)] = t
             continue
@@ -890,14 +907,18 @@ seen('W5')
 
 # A2-A8
 named = collections.defaultdict(set)
-for seq, cs, path, frag, piece, d, (a, b), offset, nsteps in abridged:
+for seq, cs, path, frag, piece, d, (a, b), offset, nsteps, hap_bp in abridged:
     named[(seq, cs)].add(d)
     held = detail_pieces.get((seq, cs, d))
     if held is None or (path, frag, piece) not in held:
         bad('A2', (seq, cs, d, path, piece))
-    elif held[(path, frag, piece)][:4] != (a, b, offset, nsteps):
-        bad('A8', (seq, cs, d, path, frag, piece, 'abridged row', (a, b, offset, nsteps), 'detail walk row',
-                   held[(path, frag, piece)][:4]))
+    else:
+        if held[(path, frag, piece)][:4] != (a, b, offset, nsteps):
+            bad('A8', (seq, cs, d, path, frag, piece, 'abridged row', (a, b, offset, nsteps), 'detail walk row',
+                       held[(path, frag, piece)][:4]))
+        if held[(path, frag, piece)][4] != hap_bp:
+            bad('A11', (seq, cs, d, path, frag, piece, 'hapBp', hap_bp, 'detail walk row decodes to',
+                        held[(path, frag, piece)][4]))
 for key in detail_pieces:
     if key[2] not in named.get(key[:2], ()):
         bad('A2', ('detail unit no abridged row names', key))
@@ -916,7 +937,7 @@ for key, ds in named.items():
     costs = [detail_cost.get(key + (d,), 0) for d in sorted(ds)]
     if any(a < b for a, b in zip(costs, costs[1:])):
         bad('A7', (key, 'costs by record number', costs[:8]))
-for k in ('A1', 'A2', 'A3', 'A4', 'A5', 'A7', 'A8'):
+for k in ('A1', 'A2', 'A3', 'A4', 'A5', 'A7', 'A8', 'A10', 'A11'):
     seen(k)
 
 # K1: one blocks unit per tile with abridged rows
@@ -933,6 +954,21 @@ for (path, frag), flat in stretches.items():
             bad('K9', (path, frag, 'piece', piece, 'ends at', end, 'piece', after, 'starts at', start))
 for k in ('K1', 'K2', 'K3', 'K4', 'K6', 'K7', 'K8', 'K9', 'K10', 'K12'):
     seen(k)
+# A12: each abridged piece's end, from its row alone, against the next piece's row
+abridged_lines = collections.defaultdict(dict)   # (path, frag) -> piece -> (hapOffset, hapBp)
+for _, _, path, frag, piece, _, _, offset, _, hap_bp in abridged:
+    abridged_lines[(path, frag)][piece] = (offset, hap_bp)
+for (path, frag), rows in abridged_lines.items():
+    flat = stretches.get((path, frag), ())
+    starts = dict(zip(flat[0::3], flat[1::3]))
+    starts.update((piece, offset) for piece, (offset, _) in rows.items())
+    for piece, (offset, hap_bp) in rows.items():
+        if piece == 0 and offset != frag:
+            bad('A12', (path, frag, 'piece 0 starts at', offset))
+        if starts.get(piece + 1, offset + hap_bp) != offset + hap_bp:
+            bad('A12', (path, frag, 'piece', piece, 'hapOffset', offset, 'hapBp', hap_bp, 'piece', piece + 1,
+                        'starts at', starts[piece + 1]))
+seen('A12')
 
 
 # B3: the tile's rows with its last-numbered detail record put back, encoded
@@ -1044,6 +1080,34 @@ for seq, path, at, after in left_after:
             bad('K11', (seq, path, 'hapStart', at, 'ownBp', own, 'trailing run', after))
 seen('K11')
 
+# A13: each record's stretch against the abridged pieces of its sequence and path, from their rows
+abridged_on = collections.defaultdict(list)   # (seq, path) -> [(hapOffset, hapBp, frag, piece)]
+for seq, _, path, frag, piece, _, _, offset, _, hap_bp in abridged:
+    abridged_on[(seq, path)].append((offset, hap_bp, frag, piece))
+for held in abridged_on.values():
+    held.sort()
+abridged_at = {(seq, path, frag, piece) for (seq, path), held in abridged_on.items() for _, _, frag, piece in held}
+
+
+def met(seq, path, lo, hi):
+    # the abridged pieces of a sequence and path that start below hi, from the last that starts below lo, each
+    # with the bp of its stretch within [lo, hi)
+    held = abridged_on.get((seq, path), [])
+    for offset, hap_bp, frag, piece in held[max(0, bisect.bisect_left(held, (lo,)) - 1):bisect.bisect_left(held, (hi,))]:
+        yield offset, hap_bp, frag, piece, max(0, min(hi, offset + hap_bp) - max(lo, offset))
+
+
+for (seq, _), c in recs.items():
+    lo, hi = int(c[5]), int(c[5]) + int(c[6])
+    for offset, hap_bp, frag, piece, over in met(seq, c[4], lo, hi):
+        leading, trailing, total = end_runs.get((seq, c[4], frag, piece), (None, None, None))
+        if total is not None:
+            own = trailing if lo == offset + total - trailing else leading if hi == offset + leading else 0
+            if over != own or over >= hap_bp:
+                bad('A13', (seq, c[4:8], 'piece', frag, piece, 'hapOffset', offset, 'hapBp', hap_bp, 'overlap', over,
+                            'its list\'s run there', own))
+seen('A13')
+
 # O1, O2, O4, L1: own steps from the decoded rows of the shard's paths
 if args.own:
     index = {}
@@ -1109,6 +1173,14 @@ if args.own:
             piece = [j for j in range(len(steps)) if steps[j][:2] == steps[k][:2] and steps[j][8] is not None]
             if k != (piece[-1] if last else piece[0]):
                 bad('L1', (seq, c[4:15], 'leave' if last else 'rejoin', steps[k][:3]))
+        own_in = collections.Counter()
+        for st in between:
+            if st[5] == seq:
+                own_in[st[:2]] += st[4] - st[3]
+        cut = {(frag, piece): over for _, _, frag, piece, over in met(seq, path, hs, hs + own) if over}
+        for key in {k for k in own_in if (seq, path) + k in abridged_at} | set(cut):
+            if own_in[key] != cut.get(key, 0):
+                bad('O5', (seq, c[4:8], 'piece', key, 'own steps', own_in[key], 'bp', 'overlap', cut.get(key, 0)))
         S = seq_end[seq]
 
         def stretch(bp, at_end):
@@ -1123,7 +1195,7 @@ if args.own:
         extent = (min(a for a, _ in ends), max(b for _, b in ends))
         if extent != (int(c[1]), int(c[2])):
             bad('D6', (seq, c[1:3], 'from its ends', extent, c[4:15]))
-    for k in ('O1', 'O2', 'O4', 'L1', 'D6'):
+    for k in ('O1', 'O2', 'O4', 'O5', 'L1', 'D6'):
         seen(k)
 
 print(f'# {args.file}: {sum(len(v) for v in units_of.values())} units, {len(recs)} departure records, '

@@ -9,8 +9,11 @@
 # pass counts are how often the file's `ref` rows hold the node, and the
 # header's `revisited` how many nodes they hold more than once; and that
 # each `abridged` row states its own piece of its detail unit: where it
-# starts on its contig as hapOffset, its steps as nsteps, and the span of
-# its steps on R as start and end; that each
+# starts on its contig as hapOffset, its steps as nsteps, the bp of all of
+# them as hapBp, which ends it where its line's next piece starts, and the
+# span of its steps on R as start and end; that a record's stretch of its
+# contig meets an abridged piece's in its whole leading or trailing run off
+# R or not at all; that each
 # `abridged` row has one `blocks` row, in its tile's `blocks` unit, stating
 # what its piece of the detail unit decodes to, in path order: each run of
 # steps off R as its bp, and each block, a maximal run of consecutive steps
@@ -318,7 +321,7 @@ text_bytes = collections.Counter()
 seq_len = collections.Counter()
 bad = collections.Counter()
 bad_examples = []
-abridged_rows = []   # (path, frag, offset, piece, steps, (start, end), (seq, cs, detail))
+abridged_rows = []   # (path, frag, offset, piece, steps, (start, end), (seq, cs, detail), hapBp)
 stated_passes = {}   # node -> the count its first ref row states
 stated_counts = collections.defaultdict(set)   # node -> every count its ref rows state
 held_passes = collections.Counter()   # node -> positions of the file's ref rows holding it
@@ -539,12 +542,13 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
         elif kind == 'walk':
             take_walk(r, routes, nodes, c)
         elif kind == 'abridged':
-            # abridged path frag offset piece steps detail
+            # abridged path frag offset piece steps hapBp detail
             keep_r[(seq, cs)] = r
-            if len(untagged(c, 10)) != 10:
-                bad['abridged row: not ten columns'] += 1
+            if len(untagged(c, 11)) != 11:
+                bad['abridged row: not eleven columns'] += 1
             elif in_shard(c[4]):
-                abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), (a, b), (seq, cs, int(c[9]))))
+                abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), (a, b), (seq, cs, int(c[10])),
+                                      int(c[9])))
 print('# header')
 print('\t'.join(f'{k}:{v}' for k, v in header.items()))
 print('# rows by kind')
@@ -780,6 +784,7 @@ if args.seq is None and str(revisited) != header.get('revisited'):
 # sequence and path each piece's stretch from its first step on R to its
 # last, and the records' own bp
 held_pieces = {}
+held_bp = {}   # (path, frag, piece) -> its steps' bp, and the bp of those before its first on R and after its last
 stretches = collections.defaultdict(list)
 for path, ps in pieces.items():
     for frag, offset, piece, steps in ps:
@@ -789,6 +794,7 @@ for path, ps in pieces.items():
         lead = sum(x[2] for x in steps[:on[0]])
         tail = sum(x[2] for x in steps[on[-1] + 1:])
         held_pieces[(path, frag, piece)] = (offset, n, (min(steps[k][8] for k in on), max(steps[k][9] for k in on)))
+        held_bp[(path, frag, piece)] = (bp, lead, tail)
         stretches[(steps[on[0]][1], path)].append((offset + lead, offset + bp - tail))
 record_seq = {row[3]: row[0] for row in dep_rows}
 for k, rec in enumerate(records):
@@ -799,6 +805,38 @@ for key, spans in stretches.items():
     spans.sort()
     if any(a[1] != b[0] for a, b in zip(spans, spans[1:])):
         untiled.append((key, spans))
+unlike_bp = [row for row in abridged_rows if row[:2] + row[3:4] in held_bp and held_bp[row[:2] + row[3:4]][0] != row[7]]
+must_be_0(len(unlike_bp), 'abridged rows whose hapBp is not the bp of the steps their piece decodes to in its detail '
+          'record')
+for row in unlike_bp[:args.examples]:
+    print('   hapBp', row, held_bp[row[:2] + row[3:4]][0])
+unchained = [row for row in abridged_rows
+             if (row[3] == 0 and row[2] != row[1])
+             or held_pieces.get((row[0], row[1], row[3] + 1), (row[2] + row[7],))[0] != row[2] + row[7]]
+must_be_0(len(unchained), 'abridged rows that are piece 0 and start off fragStart, or whose hapOffset plus hapBp is '
+          'not where their line\'s next piece starts')
+for row in unchained[:args.examples]:
+    print('   unchained', row, held_pieces.get((row[0], row[1], row[3] + 1)))
+abridged_on = collections.defaultdict(list)   # (seq, path) -> [(hapOffset, hapBp, frag, piece)]
+for row in abridged_rows:
+    abridged_on[(row[6][0], row[0])].append((row[2], row[7], row[1], row[3]))
+for held in abridged_on.values():
+    held.sort()
+unrun = []
+for k, rec in enumerate(records):
+    held = abridged_on.get((record_seq[k], rec[1]), [])
+    lo, hi = int(rec[2]), int(rec[2]) + int(rec[3])
+    for offset, hap_bp, frag, piece in held[max(0, bisect.bisect_left(held, (lo,)) - 1):bisect.bisect_left(held, (hi,))]:
+        over = max(0, min(hi, offset + hap_bp) - max(lo, offset))
+        bp, lead, tail = held_bp.get((rec[1], frag, piece), (None, None, None))
+        own = None if bp is None else tail if lo == offset + bp - tail else lead if hi == offset + lead else 0
+        if own is not None and (over != own or over >= hap_bp):
+            unrun.append((record_seq[k], rec[:4], (frag, piece, offset, hap_bp), over, own))
+must_be_0(len(unrun), 'records whose stretch from hapStart over ownBp holds other bp of an abridged piece\'s, from '
+          'hapOffset over hapBp, than its steps after its last on R where it leaves there, or before its first where '
+          'it rejoins there')
+for row in unrun[:args.examples]:
+    print('   unrun', row)
 stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4]) != (row[2], row[4], row[5])]
 must_be_0(len(stray), 'abridged rows unlike the hapOffset, the steps and the span on R of the piece their detail '
           'record holds')

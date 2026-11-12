@@ -342,14 +342,15 @@ def blocks(steps, lens, tile):
 
 
 class Summary:
-    """An abridged row: its span on R, its hapOffset, nsteps and the detail
-    record it names, or how many columns it has where they aren't ten."""
+    """An abridged row: its span on R, its hapOffset, nsteps, hapBp and the
+    detail record it names, or how many columns it has where they aren't
+    eleven."""
 
     def __init__(self, c, cs):
-        c = untagged(c, 10)
+        c = untagged(c, 11)
         self.line, self.piece, self.tile = (c[4], int(c[5])), int(c[7]), (c[0], cs)
         self.span, self.offset, self.nsteps = (int(c[1]), int(c[2])), int(c[6]), int(c[8])
-        self.detail, self.error = (int(c[9]), None) if len(c) == 10 else (None, f"{len(c)} columns, not ten")
+        self.bp, self.detail, self.error = (int(c[9]), int(c[10]), None) if len(c) == 11 else (None, None, f"{len(c)} columns, not eleven")
 
 
 def row_kind(line):
@@ -777,7 +778,7 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
                 wrong.append(f"{where}: its walk row in detail unit {p.detail} has no step on R")
         else:
             differs = [(what, a, b) for what, a, b in (("start end", "%d %d" % s.span, "%d %d" % p.blocks[:2]), ("hapOffset", s.offset, p.offset),
-                                                       ("nsteps", s.nsteps, p.decoded), ("detail", s.detail, p.detail)) if a != b]
+                                                       ("nsteps", s.nsteps, p.decoded), ("hapBp", s.bp, p.bp), ("detail", s.detail, p.detail)) if a != b]
             if differs:
                 wrong.append(f"{where} says {', '.join(f'{w} {a}' for w, a, _ in differs)}; "
                              f"its piece in detail unit {p.detail} has {', '.join(f'{w} {b}' for w, _, b in differs)}")

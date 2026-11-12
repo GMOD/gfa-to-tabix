@@ -9,6 +9,7 @@ W=$2
 BIN=$REPO/target/debug/gfa-to-tabix
 BROKEN=$REPO/docs/departures/scripts/broken
 DATA=$REPO/tests/data
+HAPBP=$REPO/docs/walks-container/hapbp
 mkdir -p "$W"
 build() {
   local out=$1 gfa=$2 ref=$3
@@ -25,6 +26,7 @@ build t10 "$DATA/walks-two-refs.gfa" GRCh38 --tile 10 --abridge-bytes 1
 build ce "$DATA/walks-contig-ends.gfa" R --tile 10 --abridge-bytes 1
 build cs "$DATA/walks-contig-ends.gfa" R --tile 10 --abridge-steps 1
 build rc "$DATA/walks-records.gfa" R --tile 1000 --abridge-steps 1
+build tp "$HAPBP/two-pieces.gfa" R --tile 12 --stay 0 --abridge-bytes 1
 T0=$W/t0.GRCh38.walks.gz
 T311=$W/t311.GRCh38.walks.gz
 RR=$W/rr.R.walks.gz
@@ -36,6 +38,7 @@ T10=$W/t10.GRCh38.walks.gz
 CE=$W/ce.R.walks.gz
 CS=$W/cs.R.walks.gz
 RC=$W/rc.R.walks.gz
+TP=$W/tp.R.walks.gz
 corrupt() {
   local name=$1 base=$2
   python3 -I "$BROKEN/corrupt.py" "$base" "$BROKEN/$name.walks.gz" "${@:3}"
@@ -153,14 +156,27 @@ R#0#chr 20 20 walk H#1#h 0 10 1 1 4 .
 EOF
 
 # abridged rows and detail units
-AL=$'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t0\n'
-AM=$'R#0#c\t12\t18\tabridged\tM#1#c\t0\t12\t1\t4\t1\n'
-corrupt abridged-detail "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t1\n'
-corrupt abridged-hapoffset "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t1\t0\t5\t0\n'
-corrupt abridged-hapoffset-later "$CS" "$AM" $'R#0#c\t12\t18\tabridged\tM#1#c\t0\t13\t1\t4\t1\n'
-corrupt abridged-nsteps "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t7\t0\n'
-corrupt abridged-span "$CS" "$AL" $'R#0#c\t12\t18\tabridged\tL#1#c\t0\t0\t0\t5\t0\n'
+AL=$'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t42\t0\n'
+AM=$'R#0#c\t12\t18\tabridged\tM#1#c\t0\t12\t1\t4\t36\t1\n'
+corrupt abridged-detail "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t42\t1\n'
+corrupt abridged-hapoffset "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t1\t0\t5\t42\t0\n'
+corrupt abridged-hapoffset-later "$CS" "$AM" $'R#0#c\t12\t18\tabridged\tM#1#c\t0\t13\t1\t4\t36\t1\n'
+corrupt abridged-nsteps "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t7\t42\t0\n'
+corrupt abridged-span "$CS" "$AL" $'R#0#c\t12\t18\tabridged\tL#1#c\t0\t0\t0\t5\t42\t0\n'
 corrupt abridged-thirteen-columns "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t30\t0\t5\t12\t6\t8\t0\n'
+corrupt abridged-ten-columns "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t0\n'
+
+# hapBp, and the attach rule it serves
+AH=$'R#0#c\t0\t36\tabridged\tH#1#c\t0\t0\t0\t11\t'
+corrupt hapbp-format7 "$B" "${AH}109" "${AH}52"
+corrupt hapbp-span "$B" "${AH}109" "${AH}36"
+corrupt hapbp-off-by-one "$B" "${AH}109" "${AH}110"
+corrupt hapbp-zero "$B" "${AH}109" "${AH}0"
+corrupt hapbp-next-piece "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t6\t0\n'
+corrupt hapbp-to-last-on-r "$TP" $'abridged\tH#1#c\t0\t0\t0\t2\t16\t0' $'abridged\tH#1#c\t0\t0\t0\t2\t6\t0'
+corrupt attach-overlap-mid-run "$T2" $'#unit\t'$G$'\t0\t30\tdetail\t0:0\n' \
+  $'#unit\t'$G$'\t0\t1000\tdepartures\t.\n'$G$'\t12\t24\tdeparture\tH#1#h\t118\t3\t0\t18\t+\t1\t18\t+\t1\t0\n#unit\t'$G$'\t0\t30\tdetail\t0:0\n'
+corrupt attach-overlap-short "$TP" --all $'departure\tH#1#c\t6\t31\t14\t' $'departure\tH#1#c\t7\t30\t14\t'
 corrupt detail-interior-flipped "$CE" $'route\t.\t22,2,2\t-20' $'route\t.\t22,3,2\t-20'
 
 # blocks rows and units
@@ -239,9 +255,9 @@ corrupt revisited-zero "$TIE100" $'revisited:i:1' $'revisited:i:0'
 corrupt record-passes "$TIE10" --all $'R#0#c\t12\t30\tdeparture\tA#1#c\t6\t0\t0\t18\t+\t1\t24\t+\t2\t.' $'R#0#c\t12\t30\tdeparture\tA#1#c\t6\t0\t0\t18\t+\t2\t24\t+\t2\t.'
 corrupt record-stretch-short "$TIE10" --all $'R#0#c\t0\t18\tdeparture\tB#1#c\t6\t0\t0\t12\t-\t1\t6\t-\t2\t.' $'R#0#c\t6\t18\tdeparture\tB#1#c\t6\t0\t0\t12\t-\t1\t6\t-\t2\t.'
 corrupt ref-rows-swapped "$REFGAP100" --all $'R#0#c\t0\t48\tref\tR#0#c\t0\t0\t0\t3\t2,2,2\t6,6,6\t.\nR#0#c\t0\t48\tref\tR#0#c\t30\t30\t0\t3\t8,2,2\t6,6,6\t.' $'R#0#c\t0\t48\tref\tR#0#c\t30\t30\t0\t3\t8,2,2\t6,6,6\t.\nR#0#c\t0\t48\tref\tR#0#c\t0\t0\t0\t3\t2,2,2\t6,6,6\t.'
-corrupt piece-walk-and-abridged "$FOLLOW100A" --all $'R#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t0' $'R#0#c\t0\t36\twalk\tA#1#c\t0\t0\t0\t6\t2\t.\nR#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t0'
+corrupt piece-walk-and-abridged "$FOLLOW100A" --all $'R#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t84\t0' $'R#0#c\t0\t36\twalk\tA#1#c\t0\t0\t0\t6\t2\t.\nR#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t84\t0'
 corrupt default-copy-named "$TIE100" --all $'R#0#c\t12\t30\twalk\tA#1#c\t0\t0\t0\t2\t2\t0' $'R#0#c\t12\t30\twalk\tA#1#c\t0\t0\t0\t2\t2\t0@1'
-corrupt costliest-not-first "$FOLLOW100A" --all $'R#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t0\nR#0#c\t0\t36\tabridged\tA#1#c\t0\t0\t0\t6\t1' $'R#0#c\t0\t36\tabridged\tA#1#c\t0\t0\t0\t6\t0\nR#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t1' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:0' $'#unit\tR#0#c\t0\t36\tdetail\t0:9' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:1' $'#unit\tR#0#c\t0\t36\tdetail\t0:0' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:9' $'#unit\tR#0#c\t0\t36\tdetail\t0:1' --all $'R#0#c\t0\t36\tblocks\tB#1#c\t0\t0\t0+12,50,12+12,10\nR#0#c\t0\t36\tblocks\tA#1#c\t0\t0\t0+36' $'R#0#c\t0\t36\tblocks\tA#1#c\t0\t0\t0+36\nR#0#c\t0\t36\tblocks\tB#1#c\t0\t0\t0+12,50,12+12,10'
+corrupt costliest-not-first "$FOLLOW100A" --all $'R#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t84\t0\nR#0#c\t0\t36\tabridged\tA#1#c\t0\t0\t0\t6\t36\t1' $'R#0#c\t0\t36\tabridged\tA#1#c\t0\t0\t0\t6\t36\t0\nR#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t84\t1' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:0' $'#unit\tR#0#c\t0\t36\tdetail\t0:9' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:1' $'#unit\tR#0#c\t0\t36\tdetail\t0:0' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:9' $'#unit\tR#0#c\t0\t36\tdetail\t0:1' --all $'R#0#c\t0\t36\tblocks\tB#1#c\t0\t0\t0+12,50,12+12,10\nR#0#c\t0\t36\tblocks\tA#1#c\t0\t0\t0+36' $'R#0#c\t0\t36\tblocks\tA#1#c\t0\t0\t0+36\nR#0#c\t0\t36\tblocks\tB#1#c\t0\t0\t0+12,50,12+12,10'
 corrupt revisited-as-interior "$TIE100" --all $'R#0#c\t0\t30\troute\t2\t.\t2' $'R#0#c\t0\t30\tnodes\t2\t6\nR#0#c\t0\t30\troute\t2\t.\t2' --all $'R#0#c\t0\t30\troute\t1\t.\t3' $'R#0#c\t0\t30\troute\t1\t.\t3\nR#0#c\t0\t30\troute\t.\t-1\t-1' --all $'R#0#c\t12\t30\twalk\tA#1#c\t0\t0\t0\t2\t2\t0' $'R#0#c\t12\t18\twalk\tA#1#c\t0\t0\t0\t2\t2\t11'
 corrupt node-two-lengths "$ENDSOFF10" --all $'R#0#c\t0\t12\tnodes\t11,1,1,1,1,1\t10,7,20,30,3,1' $'R#0#c\t0\t12\tnodes\t11,1,1,1,1,1\t10,9,20,30,3,1'
 corrupt piece-split-at-jump "$JUMPS100" --all $'R#0#c\t0\t36\twalk\tC#1#c\t0\t0\t0\t4\t2\t4,5,-4' $'R#0#c\t0\t6\twalk\tC#1#c\t0\t0\t0\t1\t2\t.\nR#0#c\t0\t36\twalk\tC#1#c\t0\t6\t1\t3\t12\t9,-4'

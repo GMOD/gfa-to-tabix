@@ -14,6 +14,8 @@
 #   `start end` and its list, byte for byte, in eight columns
 # - every piece of a detail unit has one blocks row in its tile's blocks
 #   unit, and every blocks row is such a piece's
+# - the steps and runs a row expands to add up to its `abridged` row's
+#   hapBp, so the piece ends at hapOffset plus hapBp as its tile says
 # A column after a row's fixed ones is a tag, `NAME:T:value`, and is not
 # read; a unit of another kind than tile, detail and blocks is skipped. It
 # refuses a file of another format, a `#unit` or `#entry` line with a tag,
@@ -67,7 +69,7 @@ def handles(field, prev):
 
 class Tile:
     def __init__(self):
-        self.refs, self.abridged, self.h = [], False, None
+        self.refs, self.abridged, self.h, self.hap_bp = [], False, None, {}
 
     def index(self):
         if self.h is None:
@@ -233,6 +235,10 @@ def compare(tile, key, row, walk):
                  f'row collapses to {len(walk)}, and they first differ at {differs}: '
                  f'{described(got[differs]) if differs < len(got) else "nothing"} for '
                  f'{described(walk[differs]) if differs < len(walk) else "nothing"}')
+        bp = sum(-v if v < 0 else tile.len[v >> 1] for v in got)
+        if unread is None and bp != tile.hap_bp.get(key[2:]):
+            fail(f'{where}: its blocks row {clipped(rest[0])} expands to {bp} bp, and its abridged row\'s hapBp is '
+                 f'{tile.hap_bp.get(key[2:], "not stated")}')
         again = encode(tile, walk)
         if again != stated:
             fail(f'{where}: its blocks row says {lo} {hi} {clipped(rest[0])}, its detail row collapsed encodes to '
@@ -281,6 +287,8 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
                 tile.refs.append((int(c[6]), handles(c[9], 0)[0], [int(x) for x in c[10].split(',')]))
             elif kind == 'tile' and c[3] == 'abridged':
                 tile.abridged = True
+                if len(c) > 10 and DIGITS.fullmatch(c[9]) and not TAG.fullmatch(c[10]):
+                    tile.hap_bp[(c[4], c[5], c[7])] = int(c[9])
             elif kind == 'detail' and c[3] == 'nodes':
                 at = 0
                 for d, n in zip(c[4].split(','), c[5].split(',')):
