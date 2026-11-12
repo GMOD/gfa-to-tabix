@@ -1,0 +1,5 @@
+H	VN:Z:1.1
+S	01	AAAAAA
+S	002	CCCCCC
+W	R	0	chr1	0	12	>01>002
+W	H	1	c	0	12	>1>2

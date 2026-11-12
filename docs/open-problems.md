@@ -527,10 +527,17 @@ W  B  1  c     0  32  >1>2>6>3
   walk file came from a given GFA, or pair it with an index. A directory
   from another build still fails a reader's `#unit` check on the first
   unit it reads
+- Nor does it name its writer: no tool or version is in the file, and the
+  count of lines left out because they step on no reference node goes to
+  stderr alone, as `N paths visit no R node and are left out`
 - Suggested next step, once a consumer reads a walk file beside an index
-  of the same graph: a `graph:Z:` tag on the `#walks` line, which a reader
-  that doesn't know it ignores. It is still an addition to the format,
-  under ADR 0011's rules
+  of the same graph: give the tool, its version, a hash of the segments as
+  the index's `graph:Z:` is, and that count, in a header line or in tags
+  after the `#walks` line's others. A reader already ignores a header line
+  whose first word it doesn't know. Not a `#` line of the directory, nor
+  a tag before `format:i:`: those were the two places readers and
+  checkers handled worst when a review repacked files with each kind of
+  addition. It is still an addition to the format, under ADR 0011's rules
 
 ## The index and walk files disagree on a node's strand
 
@@ -568,8 +575,14 @@ W  B  1  c     0  32  >1>2>6>3
 - Found by the proof of what a `blocks` row determines
   ([blocks-proof.md](walks-container/abridged/blocks-proof.md)); it is
   not particular to `blocks` rows
+- The writer's memory also grows with where the reference starts: it
+  allocates an entry per tile of each reference sequence from 0
+  (`Chunks` in `src/walks.rs`), whether a line covers it or not, so a
+  reference line starting near 2^46 aborts under a 4 GB memory cap at the
+  default tile ([big-refstart-2e46.gfa](walks-container/dialect/big-refstart-2e46.gfa))
 - Suggested next step: refuse a line whose end passes 2^53 at build,
-  with a test, as node ids of 2^31 are refused
+  with a test, as node ids of 2^31 are refused, and hold entries only for
+  tiles a reference line reaches
 
 ## No check recomputes placement where the reference passes a node twice
 
@@ -586,4 +599,91 @@ W  B  1  c     0  32  >1>2>6>3
   file, and no hosted walk file has a revisited node
 - Suggested next step, when someone hosts a pggb walk file: state those
   two rules exactly, then recompute each such step's pass from the GFA
-  in `walks-truth.py rebuild`
+  in `walks-truth.py rebuild`. [The next section](#format-8-names-the-writers-placement-policy)
+  gives another way out: the rule as this writer's policy, and what
+  readers rely on as the format
+
+## Format 8 names the writer's placement policy
+
+- walks-format.md makes the placement rule part of format 8: a file with
+  a placement rule the page doesn't give is another format. But a reader
+  takes every position from the rows, and of the `#walks` line reads
+  `format`, `tile` and `revisited` alone (graph-walks' `parseDirectory`
+  in `src/walkFile.ts`, and `src/walkRows.ts`)
+- What a reader relies on are properties the placement bullets
+  guarantee, such as a record's leave step being the last step on R of
+  its piece and its rejoin the first (C74): graph-walks indexes own steps
+  by them (the comment above the own-steps index in `src/walkRows.ts`,
+  `pieceEnds` in `src/walkChunk.ts`)
+- So a pggb placement that kept those properties would be another format
+  by the page's words though no reader would read it differently, and
+  claims7.md mixes the format's invariants with this writer's choices
+- Suggested next step, when pggb placement work starts: state those
+  properties as format 8's invariants; call pass choice, `stay`, the
+  abridge budgets and the pyramid's bin sizes what this writer does;
+  name the policy in a `#walks` tag; and split the checkers' claims the
+  same way. It changes no byte and breaks no reader, so it can follow the
+  paper's freeze. It also answers the section before, which finds the
+  rule not pinned tightly enough to recompute
+
+## P line names
+
+- Minigraph-Cactus writes W lines, so none of this reaches its graphs. A
+  P line's name is read by walks-format.md's rules (C51, C158), which
+  differ from what other tools mean by the same names:
+  - `sample#hap#contig#N` is read as starting at offset N
+    ([p-arity4-phase.gfa](walks-container/dialect/p-arity4-phase.gfa) gives `H#1#c` from 1),
+    where vg's path metadata calls the fourth field a phase block, which
+    its graphs built from a phased VCF use
+  - `sample#contig` is listed whole as a `#haplotype`, one line per
+    contig ([p-arity2.gfa](walks-container/dialect/p-arity2.gfa) lists `H#c` and `H#d`)
+  - `name:start-end` is read as 0-based and half-open
+    ([p-colon-range.gfa](walks-container/dialect/p-colon-range.gfa))
+  - the name as written isn't kept: the rows give `path` and `fragStart`
+- The first two are rules of the spec, so changing them changes `path`,
+  `fragStart` or `#haplotype` for such inputs, under ADR 0011's rules
+- Suggested next step, before the paper freezes the format: list the
+  P line names pggb, odgi and vg write, and rule on the fourth field and
+  on two-field names with a measured ADR, or record why they stay
+
+## Inputs the writer accepts and shouldn't
+
+- A P line named `[5]` or `:5-21` alone gives an empty path name and an
+  empty `#haplotype` line
+  ([p-name-only-bracket.gfa](walks-container/dialect/p-name-only-bracket.gfa),
+  [p-name-only-colon.gfa](walks-container/dialect/p-name-only-colon.gfa))
+- A P line's stated end, `[100-105]`, is ignored where its steps
+  disagree ([p-bracket-end-wrong.gfa](walks-container/dialect/p-bracket-end-wrong.gfa)), where
+  a W line's end column is refused (C18,
+  [w-end-wrong.gfa](walks-container/dialect/w-end-wrong.gfa))
+- Segment names `01` and `002` are read as nodes 1 and 2, so a line
+  stepping on `1` steps on `01`
+  ([s-leading-zero.gfa](walks-container/dialect/s-leading-zero.gfa))
+- A carriage return inside a name, or a byte that isn't UTF-8, is written
+  raw ([cr-only-in-name.gfa](walks-container/dialect/cr-only-in-name.gfa),
+  [nonascii-name.gfa](walks-container/dialect/nonascii-name.gfa)). The file checkers read
+  such names; graph-walks reads them through a UTF-8 decoder, so two
+  names that differ only in such a byte read as one, and its header
+  lists that haplotype twice
+  ([names-not-utf8.gfa](walks-container/dialect/names-not-utf8.gfa))
+- A P line with GFA 1.2's `;` jumps is refused as a step that isn't an
+  integer node id ([p-jump-semicolon.gfa](walks-container/dialect/p-jump-semicolon.gfa))
+- A GFA with no paths is refused as `--refs R matches no path's sample;
+  have: ` with nothing after it ([no-paths.gfa](walks-container/dialect/no-paths.gfa))
+- Suggested next step: refuse an empty path name, a stated end its steps
+  don't reach, segment names with a leading zero, and names with a
+  carriage return or bytes that aren't UTF-8, naming the line; say what
+  a `;` jump is when refusing it, and that the GFA has no paths. Each
+  refuses a GFA accepted today and changes no file it still accepts
+
+## One table per sequence
+
+- A sequence's detail and blocks units are found only through its one
+  table, so a reader opening a sequence reads every unit's entry, and
+  splitting the table later is a new format
+- [ADR 0011](adr/0011-format-7-is-frozen.md) measured a split of the
+  detail units' entries into a table of their own, which would have cut
+  the open of GRCh38's chr9 from 192 to 69 KiB
+  ([measured](walks-container/reshape/report.md)), and declined it
+- Known and accepted: nothing to do unless a consumer's open time on a
+  genome file says otherwise
