@@ -446,6 +446,48 @@ W  B  1  c     0  32  >1>2>6>3
 - Suggested next step: measure inline own steps under a size cap on pggb
   chrY against the attach fetches they replace
 
+## pggb chrY in walk format 8
+
+- HPRC release 2's pggb chrY was built in format 8 on 2026-11-12 for
+  GRCh38 and CHM13 at the default options
+  ([notes](walks-container/pggbY/notes.md), counts for
+  [GRCh38](walks-container/pggbY/stats.GRCh38.json) and
+  [CHM13](walks-container/pggbY/stats.CHM13.json)). All six file checkers
+  and `walks-truth.py rebuild` pass on both files, and `spec8.py`, the
+  reader written from the spec alone, disagrees nowhere
+- The rules no hosted file exercises fire throughout: 81% and 95% of the
+  reference's steps lie on nodes it passes more than once, and a walk
+  row's `k` reaches 3,346 and 3,756 where the fixtures reach 7. No row
+  needed a change
+- **What a reader gets,** graph-walks 676a0dd over 1 kb windows
+  ([four haplotypes on GRCh38](walks-container/pggbY/four.GRCh38.log),
+  [on CHM13](walks-container/pggbY/four.CHM13.log), every haplotype on
+  [GRCh38](walks-container/pggbY/win1.GRCh38.cuts.txt) and
+  [CHM13](walks-container/pggbY/win.CHM13.cuts.txt)): off the satellites
+  a cut of four haplotypes is a few range requests. GRCh38's densest
+  tile is refused at the default budgets with every haplotype, and
+  CHM13's Yq12 windows are refused even for four: the attach fetches or
+  the departure read pass the reader's budgets
+- **`blocks` units outgrow [ADR 0012](adr/0012-abridged-blocks.md)'s
+  limits here,** which were set for the hosted graphs: 3.5% and 5.7% of
+  the file, the largest 2.58 MB, and a unit can be several times its
+  tile
+- **An unloaded cut differs from the loaded one where a run off R holds
+  a node the reference passes elsewhere.** At GRCh38 20.15 Mb a
+  haplotype's 1 bp step inside a run is on a node passed 17 times; the
+  loaded cut keeps that node and its links 95 kb away, the unloaded cut
+  shows a 1 bp run. The page says a run can hold another tile's
+  reference node ([blocks](walks-format.md#blocks)); it can't happen
+  where `revisited` is 0
+- graph-walks' equality harness, not its reader, read a `+` leave as the
+  node's right end, which is wrong where the reference passes the node
+  reversed ([revref.gfa](walks-container/pggbY/revref.gfa))
+- Suggested next step, when someone asks for pggb walk tracks: measure
+  inline own steps under a size cap on the Yq12 windows, as
+  [the section above](#departure-records-and-attach-fetches-on-pggb)
+  proposes. A unit kind holding them is a later addition a format 8
+  reader skips
+
 ## Alleles on two reference samples
 
 - `alleles` drops the sample from a sequence's name, so GRCh38's and CHM13's

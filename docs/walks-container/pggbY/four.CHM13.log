@@ -1,0 +1,40 @@
+== ord-3M CHM13#0#chrY:3000000-3001000 21:49:26 avail 81
+CUTS {"label":"ord-3M","at":"CHM13#0#chrY:3000000-3001000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"fragments":5,"departures":3,"kept":43,"placeholders":2,"requests":4,"bytes":628864,"ms":104,"rssMB":178},"fourExpandedDefault":{"fragments":5,"departures":3,"kept":41,"placeholders":0,"requests":5,"bytes":1066387,"ms":395,"rssMB":293}}
+TIME 0.69 s, 286020 KB peak, exit 0
+== ord-8M CHM13#0#chrY:8000000-8001000 21:49:27 avail 81
+CUTS {"label":"ord-8M","at":"CHM13#0#chrY:8000000-8001000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"fragments":5,"departures":279,"kept":94,"placeholders":2,"requests":6,"bytes":717329,"ms":168,"rssMB":182},"fourExpandedDefault":{"fragments":5,"departures":279,"kept":92,"placeholders":0,"requests":7,"bytes":1154852,"ms":539,"rssMB":346}}
+TIME 0.91 s, 343368 KB peak, exit 0
+== ord-12M CHM13#0#chrY:12000000-12001000 21:49:28 avail 81
+CUTS {"label":"ord-12M","at":"CHM13#0#chrY:12000000-12001000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"fragments":5,"departures":563,"kept":597,"placeholders":12,"requests":15,"bytes":3858872,"ms":742,"rssMB":451},"fourExpandedDefault":{"fragments":5,"departures":563,"kept":614,"placeholders":0,"requests":16,"bytes":3921753,"ms":1072,"rssMB":669}}
+TIME 1.98 s, 718240 KB peak, exit 0
+== ord-15M CHM13#0#chrY:15000000-15001000 21:49:30 avail 81
+CUTS {"label":"ord-15M","at":"CHM13#0#chrY:15000000-15001000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"fragments":5,"departures":76,"kept":51,"placeholders":0,"requests":4,"bytes":50035,"ms":54,"rssMB":119},"fourExpandedDefault":{"fragments":5,"departures":76,"kept":51,"placeholders":0,"requests":4,"bytes":50035,"ms":25,"rssMB":124}}
+TIME 0.26 s, 124284 KB peak, exit 0
+== ord-19M CHM13#0#chrY:19000000-19001000 21:49:30 avail 81
+CUTS {"label":"ord-19M","at":"CHM13#0#chrY:19000000-19001000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"fragments":12,"departures":312,"kept":301,"placeholders":0,"requests":5,"bytes":198102,"ms":83,"rssMB":127},"fourExpandedDefault":{"fragments":12,"departures":312,"kept":301,"placeholders":0,"requests":5,"bytes":198102,"ms":64,"rssMB":152}}
+TIME 0.31 s, 149268 KB peak, exit 0
+== ord-25M CHM13#0#chrY:25000000-25001000 21:49:30 avail 81
+CUTS {"label":"ord-25M","at":"CHM13#0#chrY:25000000-25001000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"fragments":6,"departures":775,"kept":32,"placeholders":0,"requests":13,"bytes":596005,"ms":177,"rssMB":177},"fourExpandedDefault":{"fragments":6,"departures":775,"kept":32,"placeholders":0,"requests":13,"bytes":596005,"ms":178,"rssMB":239}}
+TIME 0.54 s, 233464 KB peak, exit 0
+== ord-45M CHM13#0#chrY:45000000-45001000 21:49:31 avail 81
+CUTS {"label":"ord-45M","at":"CHM13#0#chrY:45000000-45001000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"error":"NodeLimitError: Too many departures here whose own steps the cut must fetch, even zoomed in (22.8 MB against a byte budget of 8.0 MB); choose fewer haplotypes or a smaller attachBp","requests":4,"bytes":816073,"ms":268,"rssMB":142},"fourExpandedDefault":{"error":"NodeLimitError: Too many departures here whose own steps the cut must fetch, even zoomed in (22.8 MB against a byte budget of 8.0 MB); choose fewer haplotypes or a smaller attachBp","requests":4,"bytes":816073,"ms":249,"rssMB":210}}
+TIME 0.78 s, 205664 KB peak, exit 0
+== ord-55M CHM13#0#chrY:55000000-55001000 21:49:32 avail 81
+CUTS {"label":"ord-55M","at":"CHM13#0#chrY:55000000-55001000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"error":"NodeLimitError: Too many departures here whose own steps the cut must fetch, even zoomed in (22.4 MB against a byte budget of 8.0 MB); choose fewer haplotypes or a smaller attachBp","requests":3,"bytes":661481,"ms":349,"rssMB":145},"fourExpandedDefault":{"error":"NodeLimitError: Too many departures here whose own steps the cut must fetch, even zoomed in (22.4 MB against a byte budget of 8.0 MB); choose fewer haplotypes or a smaller attachBp","requests":3,"bytes":661481,"ms":178,"rssMB":175}}
+TIME 0.67 s, 170588 KB peak, exit 0
+== worst-abridged+blocks-35.68M CHM13#0#chrY:35680000-35681000 21:49:32 avail 81
+CUTS {"label":"worst-abridged+blocks-35.68M","at":"CHM13#0#chrY:35680000-35681000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"error":"NodeLimitError: Too many departures here whose own steps the cut must fetch, even zoomed in (24.3 MB against a byte budget of 8.0 MB); choose fewer haplotypes or a smaller attachBp","requests":3,"bytes":5349393,"ms":1016,"rssMB":397},"fourExpandedDefault":{"error":"NodeLimitError: Too many departures here whose own steps the cut must fetch, even zoomed in (22.4 MB against a byte budget of 8.0 MB); choose fewer haplotypes or a smaller attachBp","requests":5,"bytes":3754758,"ms":960,"rssMB":541}}
+TIME 2.18 s, 566140 KB peak, exit 0
+== worst-two-bins-35.717M CHM13#0#chrY:35716620-35717620 21:49:35 avail 81
+CUTS {"label":"worst-two-bins-35.717M","at":"CHM13#0#chrY:35716620-35717620","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"error":"DepartureReadError: Too many departures from the reference over this window to read (3.1 MB against a budget of 2.0 MB). A collapsed repeat usually causes this: haplotypes hop between its copies, and each hop is a departure","requests":0,"bytes":0,"ms":2,"rssMB":107},"fourExpandedDefault":{"error":"DepartureReadError: Too many departures from the reference over this window to read (3.1 MB against a budget of 2.0 MB). A collapsed repeat usually causes this: haplotypes hop between its copies, and each hop is a departure","requests":0,"bytes":0,"ms":1,"rssMB":107}}
+TIME 0.25 s, 104504 KB peak, exit 0
+== worst-tile-bytes-35.75M CHM13#0#chrY:35750000-35751000 21:49:35 avail 81
+CUTS {"label":"worst-tile-bytes-35.75M","at":"CHM13#0#chrY:35750000-35751000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"error":"NodeLimitError: Too many departures here whose own steps the cut must fetch, even zoomed in (23.1 MB against a byte budget of 8.0 MB); choose fewer haplotypes or a smaller attachBp","requests":3,"bytes":4690102,"ms":945,"rssMB":388},"fourExpandedDefault":{"error":"NodeLimitError: Too many departures here whose own steps the cut must fetch, even zoomed in (23.1 MB against a byte budget of 8.0 MB); choose fewer haplotypes or a smaller attachBp","requests":5,"bytes":4907160,"ms":1043,"rssMB":535}}
+TIME 2.16 s, 556632 KB peak, exit 0
+== dense-bin-23.1M CHM13#0#chrY:23100000-23101000 21:49:37 avail 81
+CUTS {"label":"dense-bin-23.1M","at":"CHM13#0#chrY:23100000-23101000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"fragments":8,"departures":2749,"kept":717,"placeholders":0,"requests":13,"bytes":2587891,"ms":759,"rssMB":414},"fourExpandedDefault":{"fragments":8,"departures":2749,"kept":717,"placeholders":0,"requests":13,"bytes":2587891,"ms":692,"rssMB":469}}
+TIME 1.66 s, 474980 KB peak, exit 0
+== dense-bin-7.3M CHM13#0#chrY:7300000-7301000 21:49:39 avail 81
+CUTS {"label":"dense-bin-7.3M","at":"CHM13#0#chrY:7300000-7301000","open":{"requests":2,"bytes":54822},"haplotypes":139,"fourDefault":{"fragments":5,"departures":3367,"kept":1265,"placeholders":37,"requests":9,"bytes":2858664,"ms":769,"rssMB":403},"fourExpandedDefault":{"fragments":5,"departures":3367,"kept":1228,"placeholders":0,"requests":10,"bytes":3104839,"ms":747,"rssMB":467}}
+TIME 1.69 s, 475460 KB peak, exit 0
+DONE

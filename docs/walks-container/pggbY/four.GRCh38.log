@@ -1,0 +1,58 @@
+== ord-2.9M GRCh38#0#chrY:2900000-2901000 21:49:00 avail 82
+CUTS {"label":"ord-2.9M","at":"GRCh38#0#chrY:2900000-2901000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":4,"kept":41,"placeholders":2,"requests":3,"bytes":630775,"ms":194,"rssMB":166},"fourExpandedDefault":{"fragments":5,"departures":4,"kept":39,"placeholders":0,"requests":4,"bytes":1068832,"ms":294,"rssMB":308}}
+TIME 0.70 s, 300532 KB peak, exit 0
+== ord-4.5M GRCh38#0#chrY:4500000-4501000 21:49:00 avail 82
+CUTS {"label":"ord-4.5M","at":"GRCh38#0#chrY:4500000-4501000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":6,"kept":48,"placeholders":2,"requests":4,"bytes":629780,"ms":198,"rssMB":156},"fourExpandedDefault":{"fragments":5,"departures":6,"kept":46,"placeholders":0,"requests":5,"bytes":1067837,"ms":325,"rssMB":334}}
+TIME 0.69 s, 337488 KB peak, exit 0
+== ord-6.8M GRCh38#0#chrY:6800000-6801000 21:49:01 avail 82
+CUTS {"label":"ord-6.8M","at":"GRCh38#0#chrY:6800000-6801000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":372,"kept":259,"placeholders":2,"requests":8,"bytes":870595,"ms":539,"rssMB":185},"fourExpandedDefault":{"fragments":5,"departures":372,"kept":257,"placeholders":0,"requests":9,"bytes":1308652,"ms":535,"rssMB":386}}
+TIME 1.39 s, 379932 KB peak, exit 0
+== ord-8.0M GRCh38#0#chrY:8000000-8001000 21:49:03 avail 82
+CUTS {"label":"ord-8.0M","at":"GRCh38#0#chrY:8000000-8001000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":513,"kept":300,"placeholders":2,"requests":10,"bytes":968593,"ms":237,"rssMB":218},"fourExpandedDefault":{"fragments":5,"departures":513,"kept":298,"placeholders":0,"requests":11,"bytes":1406650,"ms":363,"rssMB":425}}
+TIME 0.77 s, 427536 KB peak, exit 0
+== ord-13.5M GRCh38#0#chrY:13500000-13501000 21:49:03 avail 82
+CUTS {"label":"ord-13.5M","at":"GRCh38#0#chrY:13500000-13501000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":142,"kept":19,"placeholders":0,"requests":4,"bytes":106647,"ms":78,"rssMB":125},"fourExpandedDefault":{"fragments":5,"departures":142,"kept":19,"placeholders":0,"requests":4,"bytes":106647,"ms":46,"rssMB":142}}
+TIME 0.34 s, 139072 KB peak, exit 0
+== ord-15.0M GRCh38#0#chrY:15000000-15001000 21:49:04 avail 82
+CUTS {"label":"ord-15.0M","at":"GRCh38#0#chrY:15000000-15001000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":142,"kept":10,"placeholders":0,"requests":4,"bytes":102858,"ms":93,"rssMB":123},"fourExpandedDefault":{"fragments":5,"departures":142,"kept":10,"placeholders":0,"requests":4,"bytes":102858,"ms":25,"rssMB":138}}
+TIME 0.25 s, 135340 KB peak, exit 0
+== ord-19.0M GRCh38#0#chrY:19000000-19001000 21:49:04 avail 82
+CUTS {"label":"ord-19.0M","at":"GRCh38#0#chrY:19000000-19001000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":147,"kept":21,"placeholders":0,"requests":4,"bytes":120120,"ms":81,"rssMB":120},"fourExpandedDefault":{"fragments":5,"departures":147,"kept":21,"placeholders":0,"requests":4,"bytes":120120,"ms":43,"rssMB":138}}
+TIME 0.34 s, 137436 KB peak, exit 0
+== ord-22.5M GRCh38#0#chrY:22500000-22501000 21:49:04 avail 82
+CUTS {"label":"ord-22.5M","at":"GRCh38#0#chrY:22500000-22501000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":9,"departures":608,"kept":71,"placeholders":0,"requests":10,"bytes":565762,"ms":356,"rssMB":220},"fourExpandedDefault":{"fragments":9,"departures":608,"kept":71,"placeholders":0,"requests":10,"bytes":565762,"ms":179,"rssMB":316}}
+TIME 0.78 s, 316076 KB peak, exit 0
+== ord-24.5M GRCh38#0#chrY:24500000-24501000 21:49:05 avail 82
+CUTS {"label":"ord-24.5M","at":"GRCh38#0#chrY:24500000-24501000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":7,"departures":860,"kept":65,"placeholders":0,"requests":12,"bytes":574194,"ms":201,"rssMB":162},"fourExpandedDefault":{"fragments":7,"departures":860,"kept":65,"placeholders":0,"requests":12,"bytes":574194,"ms":155,"rssMB":218}}
+TIME 0.58 s, 212840 KB peak, exit 0
+== ord-10k-15.0M GRCh38#0#chrY:15000000-15010000 21:49:06 avail 82
+CUTS {"label":"ord-10k-15.0M","at":"GRCh38#0#chrY:15000000-15010000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":143,"kept":70,"placeholders":0,"requests":4,"bytes":107964,"ms":71,"rssMB":127},"fourExpandedDefault":{"fragments":5,"departures":143,"kept":70,"placeholders":0,"requests":4,"bytes":107964,"ms":46,"rssMB":150}}
+TIME 0.26 s, 146156 KB peak, exit 0
+== worst-tile+bin-11.53M GRCh38#0#chrY:11560000-11561000 21:49:06 avail 81
+CUTS {"label":"worst-tile+bin-11.53M","at":"GRCh38#0#chrY:11560000-11561000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":357,"departures":6254,"kept":10519,"placeholders":6271,"requests":9,"bytes":6018431,"ms":1388,"rssMB":478},"fourExpandedDefault":{"fragments":357,"departures":6254,"kept":9136,"placeholders":0,"requests":14,"bytes":3833757,"ms":1605,"rssMB":734}}
+TIME 3.30 s, 716324 KB peak, exit 0
+== worst-bin-lines-11.47M GRCh38#0#chrY:11500000-11501000 21:49:09 avail 82
+CUTS {"label":"worst-bin-lines-11.47M","at":"GRCh38#0#chrY:11500000-11501000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":5,"departures":149,"kept":82,"placeholders":4,"requests":8,"bytes":2542483,"ms":625,"rssMB":375},"fourExpandedDefault":{"fragments":5,"departures":149,"kept":79,"placeholders":0,"requests":10,"bytes":2706429,"ms":578,"rssMB":549}}
+TIME 1.42 s, 547920 KB peak, exit 0
+== worst-bin-bytes-20.12M GRCh38#0#chrY:20150000-20151000 21:49:11 avail 82
+CUTS {"label":"worst-bin-bytes-20.12M","at":"GRCh38#0#chrY:20150000-20151000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":113,"departures":2550,"kept":1102,"placeholders":69,"requests":12,"bytes":5132958,"ms":902,"rssMB":486},"fourExpandedDefault":{"fragments":113,"departures":2550,"kept":1034,"placeholders":0,"requests":12,"bytes":3968192,"ms":975,"rssMB":595}}
+TIME 2.19 s, 593456 KB peak, exit 0
+== dense-20.05M GRCh38#0#chrY:20080000-20081000 21:49:13 avail 82
+CUTS {"label":"dense-20.05M","at":"GRCh38#0#chrY:20080000-20081000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":111,"departures":1524,"kept":778,"placeholders":58,"requests":12,"bytes":4875912,"ms":1157,"rssMB":479},"fourExpandedDefault":{"fragments":111,"departures":1524,"kept":721,"placeholders":0,"requests":12,"bytes":3711146,"ms":829,"rssMB":589}}
+TIME 2.27 s, 579944 KB peak, exit 0
+== dense-20.25M GRCh38#0#chrY:20280000-20281000 21:49:15 avail 82
+CUTS {"label":"dense-20.25M","at":"GRCh38#0#chrY:20280000-20281000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":95,"departures":2771,"kept":682,"placeholders":45,"requests":12,"bytes":4867224,"ms":1288,"rssMB":498},"fourExpandedDefault":{"fragments":95,"departures":2771,"kept":637,"placeholders":0,"requests":12,"bytes":3702458,"ms":1180,"rssMB":595}}
+TIME 2.76 s, 583508 KB peak, exit 0
+== dense-9.44M GRCh38#0#chrY:9480000-9481000 21:49:18 avail 82
+CUTS {"label":"dense-9.44M","at":"GRCh38#0#chrY:9480000-9481000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":70,"departures":1841,"kept":1458,"placeholders":36,"requests":13,"bytes":2180329,"ms":784,"rssMB":332},"fourExpandedDefault":{"fragments":70,"departures":1841,"kept":1447,"placeholders":0,"requests":15,"bytes":2524099,"ms":1168,"rssMB":575}}
+TIME 2.25 s, 597396 KB peak, exit 0
+== steps27M-12.45M GRCh38#0#chrY:12480000-12481000 21:49:21 avail 82
+CUTS {"label":"steps27M-12.45M","at":"GRCh38#0#chrY:12480000-12481000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":8,"departures":562,"kept":735,"placeholders":266,"requests":5,"bytes":720850,"ms":327,"rssMB":201},"fourExpandedDefault":{"fragments":8,"departures":562,"kept":472,"placeholders":0,"requests":6,"bytes":1158907,"ms":455,"rssMB":388}}
+TIME 1.12 s, 382164 KB peak, exit 0
+== end-56.9M GRCh38#0#chrY:57000000-57001000 21:49:22 avail 82
+CUTS {"label":"end-56.9M","at":"GRCh38#0#chrY:57000000-57001000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":1,"departures":0,"kept":1,"placeholders":0,"requests":2,"bytes":493827,"ms":132,"rssMB":137},"fourExpandedDefault":{"fragments":1,"departures":0,"kept":1,"placeholders":0,"requests":2,"bytes":493827,"ms":58,"rssMB":166}}
+TIME 0.36 s, 164192 KB peak, exit 0
+== blocks3M-26.61M GRCh38#0#chrY:26640000-26641000 21:49:22 avail 81
+CUTS {"label":"blocks3M-26.61M","at":"GRCh38#0#chrY:26640000-26641000","open":{"requests":2,"bytes":21632},"haplotypes":136,"fourDefault":{"fragments":28,"departures":737,"kept":21917,"placeholders":19707,"requests":2,"bytes":2772352,"ms":752,"rssMB":288},"fourExpandedDefault":{"error":"NodeLimitError: Zoom in to about 387bp to see the graph","requests":5,"bytes":5878817,"ms":2993,"rssMB":1153}}
+TIME 3.92 s, 1131692 KB peak, exit 0
+DONE

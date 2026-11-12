@@ -1,0 +1,746 @@
+{
+ "file": "pggbY.GRCh38.walks.gz",
+ "units": {
+  "tile": 399,
+  "departures": 424,
+  "detail": 684,
+  "blocks": 11
+ },
+ "unitBytes": {
+  "tile": 11847848,
+  "departures": 14618280,
+  "detail": 160200867,
+  "blocks": 6825806
+ },
+ "unitRawBytes": {
+  "tile": 76468907,
+  "departures": 171547514,
+  "detail": 1362435490,
+  "blocks": 45972189
+ },
+ "walkRows": {
+  "tile": 358298,
+  "detail": 112800
+ },
+ "walkRowsStartAt": {
+  "tile": 33363,
+  "detail": 13654
+ },
+ "walkRowsWithChoiceK": {
+  "tile": 77922,
+  "detail": 57295
+ },
+ "choiceTokens": {
+  "tile": 2660101,
+  "detail": 5518459
+ },
+ "choiceColonK": {
+  "tile": 165495,
+  "detail": 604857
+ },
+ "choiceAtK": {
+  "tile": 96232,
+  "detail": 366143
+ },
+ "maxK": 3346,
+ "refSteps": 827826,
+ "refStepsRevisited": 671879,
+ "refRowsWithPasses": 175,
+ "maxPasses": 14656,
+ "departureRecords": 425040,
+ "recordsLeavePassedTwice": 395773,
+ "recordsRejoinPassedTwice": 219764,
+ "recordsEitherEndPassedTwice": 405985,
+ "piecesPerLine": {
+  "p50": 200,
+  "p90": 3202,
+  "p99": 4384,
+  "p100": 5169,
+  "n": 524,
+  "sum": 471098
+ },
+ "tilesPerLine": {
+  "p50": 34,
+  "p90": 254,
+  "p99": 363,
+  "p100": 364,
+  "n": 524,
+  "sum": 45900
+ },
+ "abridgedPerTile": {
+  "p50": 6727,
+  "p90": 24449,
+  "p99": 47103,
+  "p100": 47103,
+  "n": 11,
+  "sum": 112800
+ },
+ "blockItems": {
+  "blocks": 5612332,
+  "runs": 1626738,
+  "negative d": 2424083,
+  "against R": 321329
+ },
+ "blocksUnitBytes": {
+  "p50": 222713,
+  "p90": 2546012,
+  "p99": 2584384,
+  "p100": 2584384,
+  "n": 11,
+  "sum": 6825806
+ },
+ "blocksOverTile": {
+  "p50": 0.323,
+  "p90": 2.904,
+  "p99": 11.754,
+  "p100": 11.754,
+  "n": 11,
+  "sum": 17.256999999999998
+ },
+ "blocksOverDetail": {
+  "p50": 0.405,
+  "p90": 0.6262,
+  "p99": 0.6476,
+  "p100": 0.6476,
+  "n": 11,
+  "sum": 3.7095000000000002
+ },
+ "detailUnitBytes": {
+  "p50": 59157,
+  "p90": 741324,
+  "p99": 1587367,
+  "p100": 3225812,
+  "n": 684,
+  "sum": 160200867
+ },
+ "detailOverTile": {
+  "p50": 0.067,
+  "p90": 3.422,
+  "p99": 7.328,
+  "p100": 14.892,
+  "n": 684,
+  "sum": 628.0069999999998
+ },
+ "tileBytes": {
+  "p50": 6052,
+  "p90": 39183,
+  "p99": 766634,
+  "p100": 889992,
+  "n": 399,
+  "sum": 11847848
+ },
+ "tileRawBytes": {
+  "p50": 32581,
+  "p90": 261061,
+  "p99": 4278247,
+  "p100": 6094868,
+  "n": 399,
+  "sum": 76468907
+ },
+ "binLines": {
+  "p50": 114,
+  "p90": 10123,
+  "p99": 52252,
+  "p100": 99378,
+  "n": 424,
+  "sum": 1558946
+ },
+ "binBytes": {
+  "p50": 1874,
+  "p90": 92423,
+  "p99": 513633,
+  "p100": 770679,
+  "n": 424,
+  "sum": 14618280
+ },
+ "topTilesByBytes": [
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "11534336",
+   "start": 11534336,
+   "end": 11642902,
+   "bytes": 889992,
+   "raw": 6094868,
+   "walk": 4144,
+   "abridged": 47103,
+   "steps": 35757856
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20054016",
+   "start": 20054065,
+   "end": 20119552,
+   "bytes": 811849,
+   "raw": 4278247,
+   "walk": 20376,
+   "abridged": 6727,
+   "steps": 4886752
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20119552",
+   "start": 20119552,
+   "end": 20185089,
+   "bytes": 811084,
+   "raw": 4365849,
+   "walk": 18117,
+   "abridged": 10550,
+   "steps": 8156388
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "11468800",
+   "start": 11468811,
+   "end": 11534336,
+   "bytes": 766634,
+   "raw": 5728022,
+   "walk": 26898,
+   "abridged": 24449,
+   "steps": 4574195
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20250624",
+   "start": 20257801,
+   "end": 20316160,
+   "bytes": 646758,
+   "raw": 3647172,
+   "walk": 8966,
+   "abridged": 12958,
+   "steps": 10451649
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "12451840",
+   "start": 12452097,
+   "end": 12517886,
+   "bytes": 572484,
+   "raw": 2737144,
+   "walk": 76,
+   "abridged": 157,
+   "steps": 27140359
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "56885248",
+   "start": 56885355,
+   "end": 57227415,
+   "bytes": 492690,
+   "raw": 3002380,
+   "walk": 59,
+   "abridged": 55,
+   "steps": 1672752
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20185088",
+   "start": 20185089,
+   "end": 20257801,
+   "bytes": 415884,
+   "raw": 2845866,
+   "walk": 18448,
+   "abridged": 0,
+   "steps": 3207519
+  }
+ ],
+ "topTilesByAbridged": [
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "11534336",
+   "start": 11534336,
+   "end": 11642902,
+   "bytes": 889992,
+   "raw": 6094868,
+   "walk": 4144,
+   "abridged": 47103,
+   "steps": 35757856
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "11468800",
+   "start": 11468811,
+   "end": 11534336,
+   "bytes": 766634,
+   "raw": 5728022,
+   "walk": 26898,
+   "abridged": 24449,
+   "steps": 4574195
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20250624",
+   "start": 20257801,
+   "end": 20316160,
+   "bytes": 646758,
+   "raw": 3647172,
+   "walk": 8966,
+   "abridged": 12958,
+   "steps": 10451649
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20119552",
+   "start": 20119552,
+   "end": 20185089,
+   "bytes": 811084,
+   "raw": 4365849,
+   "walk": 18117,
+   "abridged": 10550,
+   "steps": 8156388
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "9437184",
+   "start": 9453713,
+   "end": 9502721,
+   "bytes": 291719,
+   "raw": 2083162,
+   "walk": 11611,
+   "abridged": 7537,
+   "steps": 5880152
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20054016",
+   "start": 20054065,
+   "end": 20119552,
+   "bytes": 811849,
+   "raw": 4278247,
+   "walk": 20376,
+   "abridged": 6727,
+   "steps": 4886752
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "9502720",
+   "start": 9502721,
+   "end": 9568256,
+   "bytes": 287325,
+   "raw": 1970910,
+   "walk": 17129,
+   "abridged": 2047,
+   "steps": 4774670
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616",
+   "start": 26607915,
+   "end": 26673152,
+   "bytes": 216607,
+   "raw": 2049431,
+   "walk": 18,
+   "abridged": 1078,
+   "steps": 317802522
+  }
+ ],
+ "topBlocks": [
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "11534336",
+   "start": 11534336,
+   "end": 11592895,
+   "bytes": 2584384,
+   "raw": 15023874,
+   "rows": 47103,
+   "blocks": 1576531,
+   "runs": 583916,
+   "tileBytes": 889992,
+   "detailBytes": 6381209,
+   "ratioTile": 2.904,
+   "ratioDetail": 0.405
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616",
+   "start": 26607915,
+   "end": 26673152,
+   "bytes": 2546012,
+   "raw": 20244456,
+   "rows": 1078,
+   "blocks": 3184740,
+   "runs": 807197,
+   "tileBytes": 216607,
+   "detailBytes": 122753085,
+   "ratioTile": 11.754,
+   "ratioDetail": 0.0207
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20250624",
+   "start": 20257852,
+   "end": 20316160,
+   "bytes": 625661,
+   "raw": 2864954,
+   "rows": 12958,
+   "blocks": 291004,
+   "runs": 7389,
+   "tileBytes": 646758,
+   "detailBytes": 966129,
+   "ratioTile": 0.967,
+   "ratioDetail": 0.6476
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20119552",
+   "start": 20119552,
+   "end": 20185089,
+   "bytes": 358071,
+   "raw": 1793586,
+   "rows": 10550,
+   "blocks": 151906,
+   "runs": 5666,
+   "tileBytes": 811084,
+   "detailBytes": 611562,
+   "ratioTile": 0.441,
+   "ratioDetail": 0.5855
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "11468800",
+   "start": 11468811,
+   "end": 11534336,
+   "bytes": 315214,
+   "raw": 2885392,
+   "rows": 24449,
+   "blocks": 145417,
+   "runs": 86408,
+   "tileBytes": 766634,
+   "detailBytes": 1076915,
+   "ratioTile": 0.411,
+   "ratioDetail": 0.2927
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "20054016",
+   "start": 20054065,
+   "end": 20119552,
+   "bytes": 222713,
+   "raw": 1087786,
+   "rows": 6727,
+   "blocks": 88003,
+   "runs": 3777,
+   "tileBytes": 811849,
+   "detailBytes": 381816,
+   "ratioTile": 0.274,
+   "ratioDetail": 0.5833
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "9437184",
+   "start": 9455809,
+   "end": 9502721,
+   "bytes": 94200,
+   "raw": 854729,
+   "rows": 7537,
+   "blocks": 38479,
+   "runs": 7503,
+   "tileBytes": 291719,
+   "detailBytes": 213144,
+   "ratioTile": 0.323,
+   "ratioDetail": 0.442
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "12451840",
+   "start": 12452097,
+   "end": 12517886,
+   "bytes": 50686,
+   "raw": 872424,
+   "rows": 157,
+   "blocks": 115035,
+   "runs": 112374,
+   "tileBytes": 572484,
+   "detailBytes": 26512221,
+   "ratioTile": 0.089,
+   "ratioDetail": 0.0019
+  }
+ ],
+ "topDetails": [
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616:0",
+   "tile": "26607616",
+   "bytes": 3225812,
+   "raw": 27971377,
+   "start": 26607915,
+   "end": 26673152,
+   "walk": 8,
+   "steps": 6301022,
+   "tileBytes": 216607,
+   "ratio": 14.892
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616:1",
+   "tile": "26607616",
+   "bytes": 2116346,
+   "raw": 18848732,
+   "start": 26607915,
+   "end": 26673152,
+   "walk": 6,
+   "steps": 4577523,
+   "tileBytes": 216607,
+   "ratio": 9.77
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616:2",
+   "tile": "26607616",
+   "bytes": 2093049,
+   "raw": 18798286,
+   "start": 26607915,
+   "end": 26673152,
+   "walk": 8,
+   "steps": 4519108,
+   "tileBytes": 216607,
+   "ratio": 9.663
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616:3",
+   "tile": "26607616",
+   "bytes": 1623772,
+   "raw": 14792579,
+   "start": 26607915,
+   "end": 26673152,
+   "walk": 10,
+   "steps": 3789922,
+   "tileBytes": 216607,
+   "ratio": 7.496
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616:9",
+   "tile": "26607616",
+   "bytes": 1597661,
+   "raw": 14435428,
+   "start": 26607915,
+   "end": 26673152,
+   "walk": 10,
+   "steps": 3681024,
+   "tileBytes": 216607,
+   "ratio": 7.376
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616:6",
+   "tile": "26607616",
+   "bytes": 1596784,
+   "raw": 14419016,
+   "start": 26607915,
+   "end": 26673152,
+   "walk": 7,
+   "steps": 3771949,
+   "tileBytes": 216607,
+   "ratio": 7.372
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616:8",
+   "tile": "26607616",
+   "bytes": 1587367,
+   "raw": 14494156,
+   "start": 26607915,
+   "end": 26673152,
+   "walk": 10,
+   "steps": 3692349,
+   "tileBytes": 216607,
+   "ratio": 7.328
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "name": "26607616:7",
+   "tile": "26607616",
+   "bytes": 1582760,
+   "raw": 14483630,
+   "start": 26607915,
+   "end": 26673152,
+   "walk": 10,
+   "steps": 3706432,
+   "tileBytes": 216607,
+   "ratio": 7.307
+  }
+ ],
+ "topBinsByLines": [
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 11468800,
+   "end": 11534336,
+   "size": 65536,
+   "bytes": 739902,
+   "raw": 11151459,
+   "lines": 99378
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 11534336,
+   "end": 11599872,
+   "size": 65536,
+   "bytes": 741474,
+   "raw": 11141013,
+   "lines": 99288
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 20119552,
+   "end": 20185088,
+   "size": 65536,
+   "bytes": 770679,
+   "raw": 8869518,
+   "lines": 78317
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 20185088,
+   "end": 20250624,
+   "size": 65536,
+   "bytes": 573549,
+   "raw": 6683868,
+   "lines": 58968
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 20054016,
+   "end": 20119552,
+   "size": 65536,
+   "bytes": 513633,
+   "raw": 5919667,
+   "lines": 52252
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 20250624,
+   "end": 20316160,
+   "size": 65536,
+   "bytes": 504945,
+   "raw": 5851558,
+   "lines": 51692
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 9437184,
+   "end": 9502720,
+   "size": 65536,
+   "bytes": 416724,
+   "raw": 5100185,
+   "lines": 48290
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 9502720,
+   "end": 9568256,
+   "size": 65536,
+   "bytes": 368662,
+   "raw": 4600852,
+   "lines": 43424
+  }
+ ],
+ "topBinsByBytesL0": [
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 20119552,
+   "end": 20185088,
+   "size": 65536,
+   "bytes": 770679,
+   "raw": 8869518,
+   "lines": 78317
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 11534336,
+   "end": 11599872,
+   "size": 65536,
+   "bytes": 741474,
+   "raw": 11141013,
+   "lines": 99288
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 11468800,
+   "end": 11534336,
+   "size": 65536,
+   "bytes": 739902,
+   "raw": 11151459,
+   "lines": 99378
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 20185088,
+   "end": 20250624,
+   "size": 65536,
+   "bytes": 573549,
+   "raw": 6683868,
+   "lines": 58968
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 20054016,
+   "end": 20119552,
+   "size": 65536,
+   "bytes": 513633,
+   "raw": 5919667,
+   "lines": 52252
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 20250624,
+   "end": 20316160,
+   "size": 65536,
+   "bytes": 504945,
+   "raw": 5851558,
+   "lines": 51692
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 9437184,
+   "end": 9502720,
+   "size": 65536,
+   "bytes": 416724,
+   "raw": 5100185,
+   "lines": 48290
+  },
+  {
+   "seq": "GRCh38#0#chrY",
+   "start": 9502720,
+   "end": 9568256,
+   "size": 65536,
+   "bytes": 368662,
+   "raw": 4600852,
+   "lines": 43424
+  }
+ ],
+ "topLinesByPieces": [
+  [
+   5169,
+   "HG02668#1#CM088876.1#0"
+  ],
+  [
+   4601,
+   "HG00609#1#JBHDRX010000001.1#0"
+  ],
+  [
+   4506,
+   "NA18944#1#CM101657.1#0"
+  ],
+  [
+   4438,
+   "NA18948#1#JBKACC010000023.1#0"
+  ],
+  [
+   4413,
+   "NA18982#1#JBKABS010000023.1#0"
+  ],
+  [
+   4384,
+   "HG01258#1#JAGYYV020000047.1#0"
+  ],
+  [
+   4277,
+   "NA18940#1#JBKACK010000023.1#0"
+  ],
+  [
+   4255,
+   "CHM13#0#chrY#0"
+  ]
+ ]
+}
