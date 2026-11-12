@@ -58,10 +58,11 @@ ap.add_argument('--shard', default='0/1', help='I/N: check only the paths whose 
                 'shard 0 also costs the windows')
 args = ap.parse_args()
 SHARD, SHARDS = map(int, args.shard.split('/'))
+sys.stdout.reconfigure(errors='surrogateescape')
 
 
 def in_shard(path):
-    return zlib.crc32(path.encode()) % SHARDS == SHARD
+    return zlib.crc32(path.encode('utf-8', 'surrogateescape')) % SHARDS == SHARD
 
 
 failures = []
@@ -87,7 +88,7 @@ def read_gfa(path):
     lengths, bases, lines = {}, {}, collections.defaultdict(list)
     paths = []
     opener = gzip.open if path.endswith('.gz') else open
-    with opener(path, 'rt') as f:
+    with opener(path, 'rt', encoding='utf-8', errors='surrogateescape') as f:
         for line in f:
             c = line.rstrip('\n').split('\t')
             if c[0] == 'S':
@@ -107,6 +108,8 @@ def read_gfa(path):
 
 gfa_bases, gfa_lines, gfa_lengths = read_gfa(args.gfa) if args.gfa else (None, None, None)
 TAG = re.compile(r'[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*')
+ROWS = dict(tile=('ref', 'nodes', 'route', 'walk', 'abridged'), departures=('departure',),
+            detail=('nodes', 'route', 'walk'), blocks=('blocks',))
 
 
 def untagged(c, fixed):
@@ -413,14 +416,21 @@ r = None
 routes = []
 route_prev = 0
 nodes = {}
-with gzip.open(args.file, 'rt') as f:
+with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f:
     for line in f:
         if line[0] == '#':
             c = line.rstrip('\n').split('\t')
+            if c[0] in ('#unit', '#entry') and len(c) != (6 if c[0] == '#unit' else 8):
+                bad[f'a {c[0]} line with a tag or a column missing'] += 1
+                unit = None if c[0] == '#unit' else unit
+                continue
             if c[0] == '#walks':
                 for t in c[1:]:
-                    k, _, v = t.split(':', 2)
-                    header[k] = v
+                    if TAG.fullmatch(t):
+                        k, _, v = t.split(':', 2)
+                        header[k] = v
+                    else:
+                        bad['a #walks field that is no tag'] += 1
                 if header.get('format') != '8':
                     sys.exit(f'audit7.py: {args.file}: format {header.get("format")}, not walk format 8')
             elif c[0] == '#hole':
@@ -446,8 +456,11 @@ with gzip.open(args.file, 'rt') as f:
         if unit is None or unit[1] not in ('tile', 'detail', 'departures', 'blocks'):
             continue
         c = line.rstrip('\n').split('\t')
+        kind = c[3] if len(c) > 3 else None
+        if kind not in ROWS[unit[1]]:
+            bad[f'a row of a kind a {unit[1]} unit doesn\'t hold'] += 1
+            continue
         seq, a, b = c[0], int(c[1]), int(c[2])
-        kind = c[3]
         if seq != unit[0]:
             bad['a line of another sequence than its unit'] += 1
         text_bytes[kind] += len(line)
@@ -923,15 +936,18 @@ must_be_0(outside_extent, 'records whose breakpoints lie outside their line\'s e
 def load_units(path):
     out = collections.defaultdict(list)
     with open(path, 'rb') as f:
-        for line in open(path + '.idx').read().splitlines()[1:]:
+        for line in open(path + '.idx', encoding='utf-8', errors='surrogateescape').read().splitlines()[1:]:
             c = line.split('\t')
-            if c[0] == '#header' or (args.seq is not None and c[0] != args.seq):
+            if c[0].startswith('#') or (args.seq is not None and c[0] != args.seq):
+                continue
+            if len(c) != 3:
+                must_be_0(1, f'directory line of {c[0]} not its name, offset and length alone')
                 continue
             f.seek(int(c[1]))
-            for e in gzip.decompress(f.read(int(c[2]))).decode().splitlines()[1:]:
-                _, seq, lo, hi, kind, _, at, n = e.split('\t')
-                if kind in ('tile', 'departures') and int(n) > 0:
-                    out[seq].append((int(lo), int(hi), int(at), int(n), kind))
+            for e in gzip.decompress(f.read(int(c[2]))).decode('utf-8', 'surrogateescape').splitlines()[1:]:
+                e = e.split('\t')
+                if len(e) == 8 and e[4] in ('tile', 'departures') and int(e[7]) > 0:
+                    out[e[1]].append((int(e[2]), int(e[3]), int(e[6]), int(e[7]), e[4]))
     return out
 
 

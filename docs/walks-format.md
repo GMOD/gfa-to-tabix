@@ -359,6 +359,10 @@ The header unit's lines start with `#`:
   and a file with a placement rule this page doesn't give, or a row kind
   it doesn't give in a unit it does, is another format. <!-- C49 --> A unit kind this page doesn't give is a
   later addition, which a reader skips <!-- C123 -->
+- The `#walks` line is `#walks` and then tags alone, in any order, as
+  the tags after a row's fixed columns are: a reader finds `format`,
+  `tile` and the rest by name, not by place. The writer writes them in
+  the order above, and the directory's line 1 adds `bytes:i:` after them
 - A reader refuses a unit whose `#unit` line doesn't state its table
   entry's `seq start end kind name`, or whose text doesn't end in a
   newline, as a unit cut short does <!-- C154 -->

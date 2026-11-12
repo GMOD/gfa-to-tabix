@@ -26,6 +26,7 @@ ap.add_argument('--own', action='store_true',
 ap.add_argument('--shard', default='0/1', help='I/N: the paths --own checks, by a hash of their name')
 ap.add_argument('--examples', type=int, default=3)
 args = ap.parse_args()
+sys.stdout.reconfigure(errors='surrogateescape')
 SHARD, SHARDS = map(int, args.shard.split('/'))
 
 counts = collections.Counter()
@@ -247,7 +248,8 @@ claim('R2', 'a tile\'s ref rows are written in hapOffset order')
 claim('G1', 'a tile\'s walk rows are in order of path name in bytes, then fragStart, hapOffset and piece')
 claim('G4', 'every node id is below 2^31')
 claim('G6', 'a row has its kind\'s fixed columns, and any column after them is a tag NAME:T:value, its name letters '
-      'and digits from a letter, its type one letter')
+      'and digits from a letter, its type one letter; the #walks line holds tags alone; a #unit line has its six '
+      'columns and an #entry line its eight, with no tag')
 claim('G5', '#hole lines are the stretches of each sequence before |S| that no ref row\'s stretch covers, in order '
       'of sequence name in bytes, then start')
 claim('N1', 'a nodes row lists the nodes the tile\'s route interiors visit, ids strictly ascending, and no other')
@@ -353,7 +355,7 @@ own_steps = collections.defaultdict(list)  # path -> [(frag, hapOffset of step, 
 
 
 def in_shard(path):
-    return zlib.crc32(path.encode()) % SHARDS == SHARD
+    return zlib.crc32(path.encode('utf-8', 'surrogateescape')) % SHARDS == SHARD
 
 
 tile_size = None
@@ -478,7 +480,7 @@ def finish_unit(u):
     if kind == 'tile' and 'walk' in t.kinds:
         budget = int(header.get('abridgebytes', 0))
         if budget:
-            size = len(''.join(u['rows']).encode())
+            size = len(''.join(u['rows']).encode('utf-8', 'surrogateescape'))
             if size > budget:
                 bad('B1', (u['seq'], u['name'], size, budget))
         cost = int(header.get('abridge', 0))
@@ -510,15 +512,24 @@ def kinds_in_order(kinds, order):
 
 unit = None
 dep_prev = None
-with gzip.open(args.file, 'rt') as f:
+with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f:
     for line in f:
         line = line.rstrip('\n')
         if line.startswith('#'):
             c = line.split('\t')
+            fixed = dict(zip(('#unit', '#entry'), (6, 8))).get(c[0])
+            if fixed is not None and len(c) != fixed:
+                bad('G6', line[:100])
+                if len(c) < fixed:
+                    sys.exit(f'claims7.py: {args.file}: a {c[0]} line without its {fixed} columns: {line[:100]!r}')
+            seen('G6')
             if c[0] == '#walks':
                 for tag in c[1:]:
-                    k, _, v = tag.split(':', 2)
-                    header[k] = v
+                    if TAG.fullmatch(tag):
+                        k, _, v = tag.split(':', 2)
+                        header[k] = v
+                    else:
+                        bad('G6', ('#walks', tag))
                 if header.get('format') != '8':
                     sys.exit(f'claims7.py: {args.file}: format {header.get("format")}, not walk format 8')
                 tile_size = int(header['tile'])
@@ -562,11 +573,12 @@ with gzip.open(args.file, 'rt') as f:
         if u['kind'] not in ROWS:
             continue
         c = line.split('\t')
-        kind = c[3]
-        a, b = int(c[1]), int(c[2])
+        kind = c[3] if len(c) > 3 else None
         if kind not in ROWS[u['kind']]:
             bad('U9', (u['kind'], u['name'], line[:80]))
+            continue
         seen('U9')
+        a, b = int(c[1]), int(c[2])
         fixed = COLUMNS.get(kind, len(c))
         if len(c) < fixed or any(not TAG.fullmatch(x) for x in c[fixed:]):
             bad('G6', (u['kind'], u['name'], line[:100]))
@@ -740,7 +752,7 @@ with gzip.open(args.file, 'rt') as f:
             seen('G4')
             u.setdefault('spans', []).append((a, b))
             if u['kind'] == 'tile':
-                u.setdefault('walk_keys', []).append((path.encode(), frag, int(c[6]), piece))
+                u.setdefault('walk_keys', []).append((path.encode('utf-8', 'surrogateescape'), frag, int(c[6]), piece))
             piece_cost = len(steps) + 4 * sum(len(t.routes[r][1]) for r, *_ in choices)
             u['cost'] = u.get('cost', 0) + piece_cost
             u.setdefault('line_cost', collections.Counter())[(path, frag)] += piece_cost
@@ -811,7 +823,7 @@ for seq, us in units_of.items():
     if keys != sorted(keys):
         k = next(k for k in range(len(keys) - 1) if keys[k] > keys[k + 1])
         bad('U1', (seq, 'tiles and blocks out of order', tb[k], tb[k + 1]))
-    if sequences.index(seq) and sequences[sequences.index(seq) - 1].encode() >= seq.encode():
+    if sequences.index(seq) and sequences[sequences.index(seq) - 1].encode('utf-8', 'surrogateescape') >= seq.encode('utf-8', 'surrogateescape'):
         bad('U1', (seq, 'sequences not in byte order'))
     t_kind, t_name, t_lo, t_hi = us[-1]
     if (t_lo, t_hi, t_name) != (0, seq_end[seq], '.'):
@@ -841,7 +853,7 @@ def uncovered(stretches, end):
 
 
 for (s1, a1, b1), (s2, a2, b2) in zip(holes, holes[1:]):
-    if (s1.encode(), a1) >= (s2.encode(), a2):
+    if (s1.encode('utf-8', 'surrogateescape'), a1) >= (s2.encode('utf-8', 'surrogateescape'), a2):
         bad('G5', ('out of order', (s1, a1, b1), (s2, a2, b2)))
 stated_holes = collections.defaultdict(list)
 for s_, a_, b_ in holes:
@@ -853,7 +865,7 @@ for seq in sorted(set(units_of) | set(stated_holes)):
 seen('G5')
 
 # H1
-if haplotypes_listed != sorted(set(haplotypes_listed), key=lambda s: s.encode()):
+if haplotypes_listed != sorted(set(haplotypes_listed), key=lambda s: s.encode('utf-8', 'surrogateescape')):
     bad('H1', ('not unique or not in byte order', haplotypes_listed[:5]))
 if set(haplotypes_listed) != haplotypes_with_rows:
     bad('H1', ('listed without rows', sorted(set(haplotypes_listed) - haplotypes_with_rows)[:5],
@@ -970,9 +982,9 @@ def rows_put_back(held, record):
             tokens.append(str(2 * (new - prev) + flip) + (f':{ek}' if ek is not None else '')
                           + (f'@{xk}' if xk is not None else ''))
             prev = new
-        walks.append(((c[4].encode(), int(c[5]), int(c[6]), int(c[7])), c[3:10] + [','.join(tokens) or '.'] + c[11:]))
+        walks.append(((c[4].encode('utf-8', 'surrogateescape'), int(c[5]), int(c[6]), int(c[7])), c[3:10] + [','.join(tokens) or '.'] + c[11:]))
     out += ['\t'.join(cols) + '\n' for _, cols in sorted(walks)]
-    return ''.join(out).encode()
+    return ''.join(out).encode('utf-8', 'surrogateescape')
 
 
 cost_budget, bytes_budget = int(header.get('abridge', 0)), int(header.get('abridgebytes', 0))

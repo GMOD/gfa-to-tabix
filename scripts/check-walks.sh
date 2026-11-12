@@ -7,10 +7,12 @@
 # reader written from the spec alone (spec8.py) and walks-truth.py's rebuild
 # of every line against the GFA; runs them too on files that use the
 # format's room for additions, a tag on every row and on the #walks line, a
-# unit of an unknown kind and an unknown header line, and on a file where a
-# gzip member cut inside a row begins `#unit<TAB>`, all of which must pass;
-# then fuzz7.sh's batch of seeds 1 to $SEEDS (6 by default). Each check
-# fails by its exit status. Exits 1 on any failure, naming it.
+# unit of an unknown kind, an unknown header line and each legal variant of
+# repack.py, on a file whose path names hold bytes that are not UTF-8, and
+# on a file where a gzip member cut inside a row begins `#unit<TAB>`, all
+# of which must pass; then fuzz7.sh's batch of seeds 1 to $SEEDS (6 by
+# default). Each check fails by its exit status. Exits 1 on any failure,
+# naming it.
 # Usage: scripts/check-walks.sh target/release/gfa-to-tabix
 set -u
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -67,6 +69,14 @@ if "$B" "$S/broken/follow.gfa" --walks --refs R --tile 100 --sequences --abridge
   addition tags --tag zz:i:1
   addition unit-kind $'#unit\tR#0#c\t0\t36\ttable\t.\n' $'#unit\tR#0#c\t0\t36\tfuture\tx\nR#0#c\t0\t36\tfuture\tanything\n#unit\tR#0#c\t0\t36\ttable\t.\n'
   addition header-line $'#reference\tR\n' $'#reference\tR\n#future\tx\n'
+  mapfile -t legal < <(python3 -I "$S/repack.py" --legal)
+  if python3 -I "$S/repack.py" "$dir/follow.R.walks.gz" "$dir/repack" "${legal[@]}" > "$dir/log" 2>&1; then
+    for v in "${legal[@]}"; do
+      [ -e "$dir/repack/$v/f.walks.gz" ] && checks "addition $v" "$dir/repack/$v/f.walks.gz" "$S/broken/follow.gfa"
+    done
+  else
+    echo "repack.py: $(tail -1 "$dir/log")"; failed=1
+  fi
 else
   echo "broken/follow.gfa: BUILD $(tail -1 "$dir/log")"; failed=1
 fi
@@ -83,5 +93,20 @@ if "$B" "$dir/unitname.gfa" --walks --refs R --tile 100000 -o "$dir/unitname" > 
 else
   echo "a contig named unit: BUILD $(tail -1 "$dir/log")"; failed=1
 fi
+# path names whose bytes are not UTF-8, beside one that is, all in byte order
+{
+  printf 'H\tVN:Z:1.1\nS\t1\tAAAAAA\nS\t2\tCCCCCC\nS\t3\tGGGGGG\nS\t4\tTTTT\n'
+  printf 'L\t1\t+\t2\t+\t0M\nL\t2\t+\t3\t+\t0M\nL\t1\t+\t4\t+\t0M\nL\t4\t+\t3\t+\t0M\n'
+  printf 'W\tR\t0\tchr\376\t0\t18\t>1>2>3\nW\tH\351\t1\tc\377\t0\t16\t>1>4>3\n'
+  printf 'W\tH\303\251\t1\tc\t0\t16\t>1>4>3\nW\tHz\t1\tc\t0\t18\t>1>2>3\n'
+} > "$dir/bytes.gfa"
+for opts in "--tile 10" "--tile 10 --abridge-bytes 1"; do
+  read -r -a args <<< "$opts"
+  if "$B" "$dir/bytes.gfa" --walks --refs R "${args[@]}" -o "$dir/bytes" > "$dir/log" 2>&1; then
+    checks "path names not UTF-8 $opts" "$dir/bytes.R.walks.gz" "$dir/bytes.gfa"
+  else
+    echo "path names not UTF-8 $opts: BUILD $(tail -1 "$dir/log")"; failed=1
+  fi
+done
 FUZZ_DIR=$dir/fuzz GFA_TO_TABIX=$B bash "$S/fuzz7.sh" 1 "${SEEDS:-6}" || failed=1
 exit $failed

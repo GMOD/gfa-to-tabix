@@ -15,7 +15,10 @@
 # - every piece of a detail unit has one blocks row in its tile's blocks
 #   unit, and every blocks row is such a piece's
 # A column after a row's fixed ones is a tag, `NAME:T:value`, and is not
-# read; a unit of another kind than tile, detail and blocks is skipped.
+# read; a unit of another kind than tile, detail and blocks is skipped. It
+# refuses a file of another format, a `#unit` or `#entry` line with a tag,
+# and a row of a kind its tile, departure block, detail or blocks unit
+# doesn't hold.
 # Reads the file as a stream, holding the R of a sequence's tiles with
 # abridged rows until its table, and a tile's collapsed pieces, 8 bytes a
 # step, until its blocks unit. Prints each failure, then a count line, and
@@ -34,10 +37,13 @@ ap.add_argument('file')
 ap.add_argument('--shard', default='0/1', help='I/N: the paths checked, by a hash of their name')
 ap.add_argument('--examples', type=int, default=20)
 args = ap.parse_args()
+sys.stdout.reconfigure(errors='surrogateescape')
 SHARD, SHARDS = map(int, args.shard.split('/'))
 CHOICE = re.compile(r'(-?[0-9]+)(?::([0-9]+))?(?:@([0-9]+))?')
 DIGITS = re.compile(r'[0-9]+')
 TAG = re.compile(r'[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*')
+ROWS = dict(tile=('ref', 'nodes', 'route', 'walk', 'abridged'), departures=('departure',),
+            detail=('nodes', 'route', 'walk'), blocks=('blocks',))
 failures = []
 
 
@@ -48,7 +54,7 @@ def fail(message):
 
 
 def in_shard(path):
-    return zlib.crc32(path.encode()) % SHARDS == SHARD
+    return zlib.crc32(path.encode('utf-8', 'surrogateescape')) % SHARDS == SHARD
 
 
 def handles(field, prev):
@@ -239,11 +245,14 @@ early = {}    # the same -> (start, end, columns after piece) of a blocks row re
 stats = dict(pieces=0, rows=0)
 unit = tile = None
 routes, route_prev, nodes = [], 0, {}
-with gzip.open(args.file, 'rt') as f:
+with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f:
     for line in f:
         c = line.rstrip('\n').split('\t')
-        if c[0] == '#walks' and c[1:2] != ['format:i:8']:
-            sys.exit(f'expand7.py: {args.file}: {" ".join(c[1:2])}, not walk format 8')
+        formats = [t for t in c[1:] if t.startswith('format:i:')]
+        if c[0] == '#walks' and formats != ['format:i:8']:
+            sys.exit(f'expand7.py: {args.file}: {" ".join(formats) or "no format:i:"}, not walk format 8')
+        if c[0] in ('#unit', '#entry') and len(c) != (6 if c[0] == '#unit' else 8):
+            sys.exit(f'expand7.py: {args.file}: a {c[0]} line with a tag or a column missing: {line[:80]!r}')
         if c[0] == '#unit':
             if unit is not None and unit[1] == 'tile' and not tiles[(unit[0], unit[2])].abridged:
                 del tiles[(unit[0], unit[2])]
@@ -266,6 +275,8 @@ with gzip.open(args.file, 'rt') as f:
                 tiles, walks, early = {}, {}, {}
         elif line[0] != '#' and unit is not None:
             seq, kind, name = unit
+            if kind in ROWS and (len(c) < 4 or c[3] not in ROWS[kind]):
+                sys.exit(f'expand7.py: {args.file}: a row of a kind a {kind} unit doesn\'t hold: {line[:80]!r}')
             if kind == 'tile' and c[3] == 'ref':
                 tile.refs.append((int(c[6]), handles(c[9], 0)[0], [int(x) for x in c[10].split(',')]))
             elif kind == 'tile' and c[3] == 'abridged':

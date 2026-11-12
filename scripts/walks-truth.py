@@ -80,6 +80,8 @@ from collections import defaultdict
 
 CIGAR = re.compile(rb"(\d+)([=XIDM])")
 TAG = re.compile(r"[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*")
+ROWS = {"tile": ("ref", "nodes", "route", "walk", "abridged"), "departures": ("departure",),
+        "detail": ("nodes", "route", "walk"), "blocks": ("blocks",)}
 BYTE_BUDGET = 8 << 20
 STEP_BUDGET = 32_000_000
 
@@ -350,6 +352,11 @@ class Summary:
         self.detail, self.error = (int(c[9]), None) if len(c) == 10 else (None, f"{len(c)} columns, not ten")
 
 
+def row_kind(line):
+    c = line.split("\t", 4)
+    return c[3] if len(c) > 3 else None
+
+
 def walk_rows(path, keep, segments=None):
     """Pieces by path, for the paths `keep` takes, sorted by hapOffset: walk
     rows decoded, abridged pieces from their detail records; the reference's
@@ -357,20 +364,26 @@ def walk_rows(path, keep, segments=None):
     blocks rows by line and piece, each with its unit's sequence and name;
     the reference sample; each tile's extent by (seq, tile start); the tile
     size; and, given the GFA's segments' lengths, each node a nodes row gives another
-    length than its segment's. Holds a tile's R past the tile only where it has abridged rows,
+    length than its segment's; and each `#unit` or `#entry` line with a
+    column more or fewer than its fixed ones, and each row of a kind its
+    unit doesn't hold. Holds a tile's R past the tile only where it has abridged rows,
     and only until its sequence's units end, as its detail units come after
     the sequence's tiles and before its table."""
     rows, refs, abridged, listed = defaultdict(list), defaultdict(list), defaultdict(list), defaultdict(list)
-    extents, size, tiles, reference, unlike = {}, None, {}, None, []
-    unit = filed = detail = listing = None
-    with gzip.open(path, "rt") as f:
+    extents, size, tiles, reference, unlike, malformed = {}, None, {}, None, [], []
+    unit = filed = detail = listing = kind = None
+    with gzip.open(path, "rt", encoding="utf-8", errors="surrogateescape") as f:
         for line in f:
             if line.startswith("#walks"):
                 size = tile_of(line)
             if line.startswith("#reference\t"):
                 reference = line.rstrip("\n").split("\t")[1]
+            fixed = {"#unit": 6, "#entry": 8}.get(line.split("\t", 1)[0])
+            if fixed and line.count("\t") + 1 != fixed:
+                malformed.append(f"a line with a tag or a column missing: {clipped(line.rstrip())}")
             if line.startswith("#unit\t"):
                 c = line.rstrip("\n").split("\t")
+                kind = c[4]
                 if filed in tiles and not tiles[filed].abridged:
                     del tiles[filed]
                 if c[4] == "table":
@@ -385,7 +398,13 @@ def walk_rows(path, keep, segments=None):
                 elif c[4] == "detail":
                     cs, d = c[5].split(":")
                     filed, detail = (c[1], int(cs)), int(d)
-                    unit = tiles[filed].detail()
+                    if filed in tiles:
+                        unit = tiles[filed].detail()
+                    else:
+                        malformed.append(f"{c[1]}: detail unit {c[5]} before its tile, or of no tile with abridged rows")
+                continue
+            if line[0] != "#" and kind in ROWS and row_kind(line) not in ROWS[kind]:
+                malformed.append(f"a row of a kind a {kind} unit doesn't hold: {clipped(line.rstrip())}")
                 continue
             if line[0] != "#" and listing is not None:
                 c = line.rstrip("\n").split("\t")
@@ -423,7 +442,7 @@ def walk_rows(path, keep, segments=None):
                     rows[c[4]].append(piece)
     by_key = lambda ps: sorted(ps, key=Piece.key)
     return ({n: by_key(ps) for n, ps in rows.items()}, {n: by_key(ps) for n, ps in refs.items()},
-            dict(abridged), dict(listed), reference, extents, size, unlike)
+            dict(abridged), dict(listed), reference, extents, size, unlike, malformed)
 
 
 def union(intervals):
@@ -442,7 +461,7 @@ def pct(a, b):
 def score(args):
     reference_of(args.walks)
     haps = set(args.haps.split(","))
-    pieces, _, _, _, _, extents, size, _ = walk_rows(args.walks, lambda name: name.rsplit("#", 1)[0] in haps)
+    pieces, _, _, _, _, extents, size, _, _ = walk_rows(args.walks, lambda name: name.rsplit("#", 1)[0] in haps)
     broken = [p for ps in pieces.values() for p in ps if p.error]
     if broken:
         sys.exit(f"{len(broken)} walk rows don't decode, the first {broken[0].line} piece {broken[0].piece}: {broken[0].error}")
@@ -617,8 +636,8 @@ def gfa_bytes(path):
 def name_of(line):
     if line[:1] == b"W":
         c = line.split(b"\t", 5)
-        return b"#".join(c[1:4]).decode(), int(c[4])
-    text = line.split(b"\t", 2)[1].decode()
+        return b"#".join(c[1:4]).decode("utf-8", "surrogateescape"), int(c[4])
+    text = line.split(b"\t", 2)[1].decode("utf-8", "surrogateescape")
     named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", text) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", text)
              or re.fullmatch(r"(.*):(\d+)-\d+", text))
     return (named.group(1), int(named.group(2))) if named else (text, 0)
@@ -664,22 +683,23 @@ def gfa_nodes(path, reference):
 
 
 def walk_header(path):
-    """A walk file's format tag and reference sample, from its header lines."""
+    """A walk file's format tags, of its #walks line in any order, and its
+    reference sample, from its header lines."""
     found = {}
-    with gzip.open(path, "rt") as f:
+    with gzip.open(path, "rt", encoding="utf-8", errors="surrogateescape") as f:
         for line in f:
             c = line.rstrip("\n").split("\t")
             if c[0] == "#unit" or not line.startswith("#"):
                 break
-            found.setdefault(c[0], c[1] if len(c) > 1 else None)
-    return found.get("#walks"), found.get("#reference")
+            found.setdefault(c[0], c[1:])
+    return [t for t in found.get("#walks", []) if t.startswith("format:i:")], found.get("#reference", [None])[0]
 
 
 def reference_of(path):
     """The reference sample of a walk format 8 file; exits on any other format."""
-    tag, reference = walk_header(path)
-    if tag != "format:i:8":
-        sys.exit(f"walks-truth.py: {path}: {tag}, not walk format 8")
+    tags, reference = walk_header(path)
+    if tags != ["format:i:8"]:
+        sys.exit(f"walks-truth.py: {path}: {' '.join(tags) or 'no format:i:'}, not walk format 8")
     return reference
 
 
@@ -694,8 +714,8 @@ def clipped(text):
 def check_shard(walks, shard, shards, lines, lengths, on_reference):
     """Compares the W or P lines of one shard, as they arrive, with the walk
     file's pieces of their paths; prints what differs and whether any does."""
-    keep = lambda name: zlib.crc32(name.encode()) % shards == shard
-    rows, refs, abridged, listed, reference, _, _, unlike = walk_rows(walks, keep, lengths if shard == 0 else None)
+    keep = lambda name: zlib.crc32(name.encode("utf-8", "surrogateescape")) % shards == shard
+    rows, refs, abridged, listed, reference, _, _, unlike, malformed = walk_rows(walks, keep, lengths if shard == 0 else None)
     blocks_rows = sum(len(stated) for stated in listed.values())
     for name in abridged:
         rows.setdefault(name, [])
@@ -703,7 +723,7 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
     for ps in list(rows.values()) + list(refs.values()):
         for p in ps:
             held[p.line].append(p)
-    wrong_of_reference, wrong, expected, seen = [], [], 0, set()
+    wrong_of_reference, wrong, expected, seen = [], malformed if shard == 0 else [], 0, set()
     for seq, tile, detail, node, stated, length in unlike:
         wrong.append(f"{seq} tile {tile}{'' if detail is None else f' detail {detail}'}: its nodes row gives node {node} "
                      f"{stated} bp, the GFA {length if length >= 0 else 'no segment'}")
@@ -821,7 +841,7 @@ def rebuild(args):
         closed = set()
         for line in gfa_bytes(args.gfa):
             if is_path(line):
-                shard = zlib.crc32(name_of(line)[0].encode()) % args.shards
+                shard = zlib.crc32(name_of(line)[0].encode("utf-8", "surrogateescape")) % args.shards
                 if shard in feeds and shard not in closed:
                     try:
                         feeds[shard].write(line)
@@ -865,6 +885,7 @@ def main():
     c.add_argument("walks")
     c.add_argument("--top", type=int, default=5)
     args = p.parse_args()
+    sys.stdout.reconfigure(errors="surrogateescape")
     {"lift": lift, "score": score, "rebuild": rebuild, "cost": cost}[args.cmd](args)
 
 

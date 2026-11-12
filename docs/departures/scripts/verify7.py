@@ -5,9 +5,14 @@
 # checks what arbiter A's verify7.mjs does, which reads files whole and so
 # none past 2 GiB, and more:
 # - the directory's line 1 is the header's `#walks` line with the data
-#   file's length; `#header 0 <length>` is the header unit, which ends where
-#   a gzip member starts; then one line per sequence naming its table, in
-#   file order
+#   file's length as a `bytes:i:` tag, its tags in any order;
+#   `#header 0 <length>` is the header unit, which ends where a gzip member
+#   starts; then one line per sequence naming its table, in file order. A
+#   line that starts with `#` past line 2 is a later addition, skipped; the
+#   `#header` and sequence lines, `#unit` lines and `#entry` lines hold no
+#   tag
+# - every unit is BGZF members, and every row of a tile, departure block,
+#   detail unit or blocks unit is of a kind that unit holds
 # - the header, the units, the tables and the EOF block partition the file;
 #   every unit starts on a gzip member with its `#unit` line: a member that
 #   begins `#unit<TAB>` after one whose text ended in a newline, as a member
@@ -49,16 +54,25 @@ def fail(msg):
     sys.exit(f'verify7.py: {path}: {msg}')
 
 
-directory = [l.split('\t') for l in open(path + '.idx').read().rstrip('\n').split('\n')]
-walks = directory[0]
-if walks[:2] != ['#walks', 'format:i:8'] or not walks[-1].startswith('bytes:i:'):
-    fail('directory line 1 is not a format 8 #walks line ending in bytes:i:')
-if int(walks[-1][8:]) != size:
-    fail(f'bytes:i: is {walks[-1][8:]}, the file {size}')
-if directory[1][:2] != ['#header', '0']:
-    fail('directory line 2 is not #header 0')
+def decoded(raw):
+    return raw.decode('utf-8', 'surrogateescape')
+
+
+directory = [l.split('\t') for l in decoded(open(path + '.idx', 'rb').read()).rstrip('\n').split('\n')]
+first = directory[0]
+stated = [t for t in first if t.startswith('bytes:i:')]
+walks = [t for t in first if not t.startswith('bytes:i:')]
+if walks[0] != '#walks' or [t for t in walks if t.startswith('format:i:')] != ['format:i:8'] or len(stated) != 1:
+    fail('directory line 1 is not a format 8 #walks line with one bytes:i:')
+if int(stated[0][8:]) != size:
+    fail(f'bytes:i: is {stated[0][8:]}, the file {size}')
+if len(directory) < 2 or directory[1][:2] != ['#header', '0'] or len(directory[1]) != 3:
+    fail('directory line 2 is not #header 0 <length>, with no tag')
 header_end = int(directory[1][2])
-tables = [(c[0], int(c[1]), int(c[2])) for c in directory[2:]]
+listed = [c for c in directory[2:] if not c[0].startswith('#')]
+if any(len(c) != 3 for c in listed):
+    fail('a directory line of a sequence is not its name, offset and length alone')
+tables = [(c[0], int(c[1]), int(c[2])) for c in listed]
 tile = int(sys.argv[2]) if len(sys.argv) > 2 else int(next(t for t in walks if t.startswith('tile:i:'))[7:])
 sizes = [tile * n for n in (512, 64, 8, 1)]
 
@@ -82,8 +96,8 @@ def members(f):
     at = 0
     while at < size:
         head = f.read(18)
-        if head[:2] != b'\x1f\x8b':
-            fail(f'no gzip member at {at}')
+        if head[:4] != b'\x1f\x8b\x08\x04' or head[10:16] != b'\x06\x00BC\x02\x00':
+            fail(f'no BGZF member at {at}')
         n = struct.unpack_from('<H', head, 16)[0] + 1
         body = head + f.read(n - 18)
         yield at, n, zlib.decompress(body[18:-8], -15)
@@ -91,16 +105,19 @@ def members(f):
 
 
 stats = dict(units=0, tables=0, lines=0, departure_lines=0, members_cut_before_unit_text=0)
-KINDS = ('tile', 'departures', 'detail', 'blocks')
+ROWS = dict(tile=('ref', 'nodes', 'route', 'walk', 'abridged'), departures=('departure',),
+            detail=('nodes', 'route', 'walk'), blocks=('blocks',))
 COVERED_BY = dict(tile='ref rows', blocks='blocks rows')
 state = dict(units=[], names=set(), records={}, table=0, ref_end=0, points=[])
 
 
 def check_unit(at, length, text):
-    lines = text.decode().split('\n')
+    lines = decoded(text).split('\n')
     if lines[-1] != '':
         fail(f'the unit at {at} does not end in a newline')
     head = lines[0].split('\t')
+    if len(head) != 6:
+        fail(f'the #unit line at {at} is not its sequence, start, end, kind and name alone: {lines[0][:80]}')
     seq, lo, hi, kind, name = head[1], int(head[2]), int(head[3]), head[4], head[5]
     if kind == 'table':
         check_table(at, length, seq, lo, hi, lines[1:-1])
@@ -111,11 +128,13 @@ def check_unit(at, length, text):
         fail(f'two {kind} units of {seq} named {name}')
     state['names'].add((kind, name))
     union = None
-    for line in lines[1:-1] if kind in KINDS else []:
+    for line in lines[1:-1] if kind in ROWS else []:
         c = line.split('\t')
         stats['lines'] += 1
         if c[0] != seq:
             fail(f'a line of another sequence in the unit at {at}: {line[:80]}')
+        if len(c) < 4 or c[3] not in ROWS[kind]:
+            fail(f'a row of a kind a {kind} unit doesn\'t hold, at {at}: {line[:80]}')
         a, b = int(c[1]), int(c[2])
         if kind == 'departures':
             stats['departure_lines'] += 1
@@ -125,7 +144,7 @@ def check_unit(at, length, text):
                 fail(f'departure block {lo} {hi} is not aligned')
             if not (lo < b and a < hi if a < b else a == lo):
                 fail(f'a departure line not overlapping its block {lo} {hi}: {line[:80]}')
-            key = hashlib.blake2b(line.encode(), digest_size=12).digest()
+            key = hashlib.blake2b(line.encode('utf-8', 'surrogateescape'), digest_size=12).digest()
             state['records'].setdefault(key, [a, b, []])[2].append((lo, hi - lo))
             continue
         if not (lo <= a <= b <= hi):
@@ -141,7 +160,7 @@ def check_unit(at, length, text):
             fail(f'a {c[3]} row not stating its unit\'s extent: {line[:80]}')
         if stretch:
             union = stretch if union is None else (min(union[0], stretch[0]), max(union[1], stretch[1]))
-    if kind in KINDS and kind != 'departures':
+    if kind in ROWS and kind != 'departures':
         if union is None:
             fail(f'the {kind} unit at {at} has no ref row, piece or blocks row')
         if union[0] < union[1]:
@@ -158,7 +177,7 @@ def check_table(at, length, seq, head_lo, head_hi, lines):
     state['table'] += 1
     stats['tables'] += 1
     listed = ['\t'.join(l.split('\t')[1:]) for l in lines]
-    if any(not l.startswith('#entry\t') for l in lines) or listed != state['units']:
+    if any(not l.startswith('#entry\t') or l.count('\t') != 7 for l in lines) or listed != state['units']:
         fail(f'the table of {seq} does not list its units as they are, in file order')
     if any(int(l.split('\t')[7]) <= 0 for l in lines):
         fail(f'the table of {seq} lists a unit of 0 bytes')
@@ -191,8 +210,8 @@ with open(path, 'rb') as f:
             if at != header_end:
                 fail(f'#header 0 {header_end} ends inside the member at {at}')
             header_read = True
-            lines = header.decode().split('\n')
-            if lines[0] != '\t'.join(walks[:-1]):
+            lines = decoded(header).split('\n')
+            if lines[0] != '\t'.join(walks):
                 fail('the directory\'s line 1 differs from the header\'s #walks line')
             if any(l and (not l.startswith('#') or l.startswith('#unit')) for l in lines):
                 fail('a header line that is not a header line')

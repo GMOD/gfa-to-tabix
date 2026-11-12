@@ -248,3 +248,14 @@ corrupt piece-split-at-jump "$JUMPS100" --all $'R#0#c\t0\t36\twalk\tC#1#c\t0\t0\
 corrupt missing-overstated "$ENDSOFF10" --all $'departure\tG#1#c\t31\t72\t39\t24' $'departure\tG#1#c\t31\t72\t60\t24'
 corrupt nodes-bases-missing "$FOLLOW100SA" --all $'10,20,30\tSQ:Z:ACGTACGTACACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC' $'10,20,30'
 corrupt revisited-count "$REPEAT100" $'revisited:i:2' $'revisited:i:7'
+
+# the forbidden variants of repack.py on a file with every kind of unit, as
+# it writes them, tables and directory included
+FORBIDDEN="tag-unit-tile tag-unit-table tag-entry dir-tag-seq-line dir-tag-header-line row-new-kind-in-tile
+  row-new-kind-in-departures row-new-kind-in-detail row-new-kind-in-blocks unit-new-kind-no-seq gzip-not-bgzf
+  tag-row-walk-underscore"
+python3 -I "$BROKEN/../repack.py" "$T10" "$W/repack" $FORBIDDEN > /dev/null
+for v in $FORBIDDEN; do
+  cp "$W/repack/$v/f.walks.gz" "$BROKEN/$v.walks.gz"
+  cp "$W/repack/$v/f.walks.gz.idx" "$BROKEN/$v.walks.gz.idx"
+done

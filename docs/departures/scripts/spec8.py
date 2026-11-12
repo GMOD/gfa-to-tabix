@@ -420,7 +420,7 @@ class Walks:
         self.path = path
         self.f = open(path, "rb")
         self.size = os.path.getsize(path)
-        lines = open(path + ".idx", "rb").read().decode().split("\n")
+        lines = open(path + ".idx", "rb").read().decode("utf-8", "surrogateescape").split("\n")
         if lines and lines[-1] == "":
             lines.pop()
         l1 = lines[0].split("\t")
@@ -428,6 +428,8 @@ class Walks:
             raise Refuse("directory line 1 is not #walks")
         self.tags = {}
         for t in l1[1:]:
+            if not TAG.fullmatch(t):
+                raise Refuse(f"directory line 1 holds {t!r}, which is no tag")
             k, ty, v = t.split(":", 2)
             self.tags[k] = int(v) if ty == "i" else v
         if self.tags.get("format") != 8:
@@ -436,13 +438,18 @@ class Walks:
             raise Refuse("directory bytes differs from the data file's length")
         self.tile = self.tags["tile"]
         h = lines[1].split("\t")
-        if h[0] != "#header" or h[1] != "0":
-            raise Refuse("directory line 2 is not #header 0 <length>")
+        if h[:2] != ["#header", "0"] or len(h) != 3:
+            raise Refuse("directory line 2 is not #header 0 <length>, with no tag")
         self.header_len = int(h[2])
         self.tables = {}
         self.seq_order = []
         for l in lines[2:]:
-            s, o, n = l.split("\t")
+            if l.startswith("#"):
+                continue
+            c = l.split("\t")
+            if len(c) != 3:
+                raise Refuse(f"directory line {l!r} is not a sequence, offset and length alone")
+            s, o, n = c
             self.tables[s] = (int(o), int(n))
             self.seq_order.append(s)
         ht = self.gunzip(0, self.header_len)
@@ -465,7 +472,7 @@ class Walks:
 
     def gunzip(self, off, length):
         self.f.seek(off)
-        return gzip.decompress(self.f.read(length)).decode()
+        return gzip.decompress(self.f.read(length)).decode("utf-8", "surrogateescape")
 
     def table(self, seq):
         if seq not in self._table:
@@ -480,8 +487,8 @@ class Walks:
             entries = []
             for l in lines[1:]:
                 c = l.split("\t")
-                if c[0] != "#entry":
-                    raise Refuse("table holds a line that isn't an #entry")
+                if c[0] != "#entry" or len(c) != 8:
+                    raise Refuse("table holds a line that isn't an #entry of seven columns")
                 entries.append(Entry(c[1:8]))
             self._table[seq] = (int(u[3]), entries)
         return self._table[seq]
@@ -671,6 +678,7 @@ def ends_of(t, rs, segs):
 
 
 def main():
+    sys.stdout.reconfigure(errors="surrogateescape")
     args = sys.argv[1:]
     path = args[0]
     gfa = args[args.index("--gfa") + 1] if "--gfa" in args else None
@@ -697,11 +705,13 @@ def main():
     hl = w.header_lines
     if any(not l.startswith("#") for l in hl):
         rep.bad("header line not starting with #")
-    if w.haplotypes != sorted(set(w.haplotypes), key=lambda s: s.encode()):
+    if len(w.reference) != 1 or any(seq.split("#")[0] != w.reference[0] for seq in w.seq_order):
+        rep.bad("not one #reference line naming the sample of the file's sequences", f"{w.reference}")
+    if w.haplotypes != sorted(set(w.haplotypes), key=lambda s: s.encode("utf-8", "surrogateescape")):
         rep.bad("#haplotype lines not once each in byte order")
-    if w.hole_list != sorted(w.hole_list, key=lambda h: (h[0].encode(), h[1])):
+    if w.hole_list != sorted(w.hole_list, key=lambda h: (h[0].encode("utf-8", "surrogateescape"), h[1])):
         rep.bad("#hole lines out of order")
-    if w.seq_order != sorted(w.seq_order, key=lambda s: s.encode()):
+    if w.seq_order != sorted(w.seq_order, key=lambda s: s.encode("utf-8", "surrogateescape")):
         rep.bad("directory sequences not in byte order")
     seen_hap = set()
     prev_table_end = w.header_len
@@ -801,7 +811,7 @@ def main():
             okeys = []
             for c in t.walks:
                 pth, frag, hap, pc, ns = c[4], c[5], int(c[6]), int(c[7]), int(c[8])
-                okeys.append((pth.encode(), int(frag), hap, pc))
+                okeys.append((pth.encode("utf-8", "surrogateescape"), int(frag), hap, pc))
                 wh = f"{where} walk {pth} {frag} {pc}"
                 notes = []
                 try:
@@ -1081,7 +1091,7 @@ def main():
         for (pth, frag), ps in pieces.items():
             ns = sorted(ps)
             wh = f"{pth} {frag}"
-            if ns != list(range(len(ns))):
+            if not ns or ns != list(range(len(ns))):
                 rep.bad("a line's pieces are not numbered from 0 without a gap", f"{wh} {ns[:8]}")
                 continue
             if ps[0][0] != int(frag):
@@ -1148,16 +1158,25 @@ def check_departures(rep, w, by_path, departures, tile_bp, stats):
             for a, b in zip(idx, idx[1:]):
                 p, q = flat[a], flat[b]
                 between = sum(flat[i + 1][3] - (flat[i][3] + flat[i][4]) for i in range(a, b) if flat[i + 1][1] != flat[i][1])
-                bounds.append((pth, S, p, q, between))
-                need[(S, p[6])].add(p[9][0])
-                need[(S, q[6])].add(q[8][0])
+                if p[9] is None or q[8] is None:
+                    rep.bad("a piece of a line not of the #reference sample with no step on R", f"{pth} {S}")
+                else:
+                    bounds.append((pth, S, p, q, between))
+                    need[(S, p[6])].add(p[9][0])
+                    need[(S, q[6])].add(q[8][0])
     fact = {}
     for (S, cs), poss in need.items():
-        t = w.read_tile(w.find(S, "tile", str(cs))[0])
-        for i in poss:
-            fact[(S, cs, i)] = (t.off[i], t.end[i], t.passes[i])
+        found = w.find(S, "tile", str(cs))
+        if found:
+            t = w.read_tile(found[0])
+            for i in poss:
+                fact[(S, cs, i)] = (t.off[i], t.end[i], t.passes[i])
+        else:
+            rep.bad("a piece's tile has no tile unit named by its start", f"{S} {cs}")
     want = {}
     for pth, S, p, q, between in bounds:
+        if (S, p[6], p[9][0]) not in fact or (S, q[6], q[8][0]) not in fact:
+            continue
         (lp, ld), (rp, rd) = p[9], q[8]
         loff, lend, lpass = fact[(S, p[6], lp)]
         roff, rend, rpass = fact[(S, q[6], rp)]
@@ -1229,7 +1248,7 @@ def check_departures(rep, w, by_path, departures, tile_bp, stats):
 def check_gfa(rep, w, gfa, pieces, truth_steps):
     seglen = {}
     lines = []
-    for l in open(gfa):
+    for l in open(gfa, encoding="utf-8", errors="surrogateescape"):
         c = l.rstrip("\n").split("\t")
         if c[0] == "S":
             seglen[int(c[1])] = len(c[2]) if c[2] != "*" else int([x for x in c[3:] if x.startswith("LN:i:")][0][5:])
