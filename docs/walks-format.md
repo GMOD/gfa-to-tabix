@@ -575,7 +575,7 @@ seq start end abridged path fragStart hapOffset piece nsteps bp start[@k] end[@k
 ### blocks
 
 ```
-seq start end blocks path fragStart piece list
+seq start end blocks path fragStart piece ownBefore ownAfter list
 ```
 
 - One row per `abridged` row of a tile, in the `blocks` unit named by the
@@ -600,30 +600,41 @@ seq start end blocks path fragStart piece list
 - The blocks' `len` and `own` add up to the `abridged` row's `bp`. The
   first block begins where the `start` step does and the last ends where
   the `end` step does <!-- C163 -->
-- The blocks are the ones the piece's walk row in its detail record
-  decodes to. So a reader that leaves the piece unexpanded places it on R
-  where its steps are, with its own bp between them, and expands it to
-  learn which nodes those are <!-- C164 -->
+- `ownBefore` and `ownAfter` are the piece's bp off R before its first
+  block and after its last, 0 where it has none: the steps `nsteps`
+  counts and the `abridged` row's stretch leaves out. So the piece runs
+  on its contig from `hapOffset − ownBefore` to
+  `hapOffset + bp + ownAfter`, and ends where the line's next piece
+  begins <!-- C166 -->
+- The blocks, `ownBefore` and `ownAfter` are what the piece's walk row in
+  its detail record decodes to. So a reader that leaves the piece
+  unexpanded places it on R where its steps are, with its own bp between
+  them and at its ends, and expands it to learn which nodes those are
+  <!-- C164 -->
 - Two rows with the same list can differ in the nodes of their own bp,
   so the same blocks don't make two pieces the same sequence
 - A file written before gfa-to-tabix 4.1 has no `blocks` units; its other
   units are the same
 
 R is `>1>2>3>4>5>6`, six nodes of 6 bp in one tile, and a piece walks
-`>1>2<2<1>11>5>6>3` with 10 bp of its own in node 11:
+`>12>1>2<2<1>11>5>6>3>13>14`, where nodes 11 to 14 are its own, of 10, 7,
+20 and 30 bp:
 
 ```
 #unit  R#0#c  0  36  blocks  0
-R#0#c  0  36  blocks  H#1#c  0  0  0+12,0-12,24+12:10,-24+6
+R#0#c  0  36  blocks  H#1#c  0  0  7  50  0+12,0-12,24+12:10,-24+6
 ```
 
+- `7` and `50`: node 12 before the first block, nodes 13 and 14 after
+  the last
 - `0+12`: nodes 1 and 2 along R, from 0
 - `0-12`: back over 2 and 1 against R, from 12, where the block before
   ended
 - `24+12:10`: 10 bp off R, then nodes 5 and 6 from 24, 24 bp on from 0
 - `-24+6`: node 3 from 12, 24 bp back from 36
-- The four `len` and the one `own` are the `abridged` row's 52 bp. That
-  row spans its end steps, nodes 1 and 3, 0-18; this one spans 0-36
+- The four `len` and the one `own` are the `abridged` row's 52 bp, from
+  its `hapOffset` of 7, so the piece runs from 0 to 109 on its contig.
+  That row spans its end steps, nodes 1 and 3, 0-18; this one spans 0-36
 
 ### departure
 
@@ -792,8 +803,9 @@ demands every path, placement and departure back as the GFA states them.
 - Each `blocks` row's list reads back as its piece's blocks, which begin
   at its first step on R, end at its last and with their own bp hold its
   `bp`: the tool reads back every list it writes and fails the build on a
-  difference (build, tests, files). <!-- C165 --> The blocks are those its detail
-  record's walk row decodes to (tests; files with the GFA) <!-- C165 -->
+  difference (build, tests, files). <!-- C165 --> The blocks, `ownBefore`
+  and `ownAfter` are those its detail record's walk row decodes to
+  (tests; files with the GFA) <!-- C165 -->
 - Each record's `ownTiles` are the tiles of S holding its own steps, in
   the path's order (tests; files on the paths of a shard) <!-- C97 -->
 - A record's leave step is the last step on R of its piece and its rejoin

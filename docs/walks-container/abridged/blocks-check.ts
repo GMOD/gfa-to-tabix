@@ -28,6 +28,7 @@ const total = {
   rowsDiffer: 0,
   rowsMissing: 0,
   rowsExtra: 0,
+  endsDiffer: 0,
   orderDiffers: 0,
   hullDiffers: 0,
   unitHullDiffers: 0,
@@ -65,7 +66,10 @@ for (const seq of sequences) {
       const k = r.abridged.detail.name
       byDetail.set(k, [...(byDetail.get(k) ?? []), r])
     }
-    const expected = new Map<string, { list: string; lo: number; hi: number }>()
+    const expected = new Map<
+      string,
+      { list: string; lo: number; hi: number; before: number; after: number }
+    >()
     for (let i = 0; i < dets.length; i += 16) {
       const batch = dets.slice(i, i + 16)
       const read = await file.read(batch)
@@ -95,6 +99,13 @@ for (const seq of sequences) {
                 first = first < 0 ? j : first
                 last = j
               }
+            }
+            let before = 0
+            let after = 0
+            for (let j = 0; j < walk.n; j++) {
+              const bp = length(walk.steps.ids[j])
+              before += j < first ? bp : 0
+              after += j > last ? bp : 0
             }
             const runs: { begin: number; end: number; own: number }[] = []
             let own = 0
@@ -138,6 +149,8 @@ for (const seq of sequences) {
               list: tokens.join(','),
               lo,
               hi,
+              before,
+              after,
             })
           }
         }
@@ -166,16 +179,24 @@ for (const seq of sequences) {
       hi = Math.max(hi, Number(c[2]))
       if (!want) {
         total.rowsExtra++
-      } else if (want.list === c[7]) {
+      } else if (want.list === c[9]) {
         total.rowsEqual++
         if (want.lo !== Number(c[1]) || want.hi !== Number(c[2])) {
           total.hullDiffers++
+        }
+        if (want.before !== Number(c[7]) || want.after !== Number(c[8])) {
+          total.endsDiffer++
+          if (examples.length < 5) {
+            examples.push(
+              `${seq} ${cs} ${key.replaceAll('\t', ' ')}: written ${c[7]} before and ${c[8]} after, decoded ${want.before} and ${want.after}`,
+            )
+          }
         }
       } else {
         total.rowsDiffer++
         if (examples.length < 5) {
           examples.push(
-            `${seq} ${cs} ${key.replaceAll('\t', ' ')}: written ${c[7]!.slice(0, 120)} decoded ${want.list.slice(0, 120)}`,
+            `${seq} ${cs} ${key.replaceAll('\t', ' ')}: written ${(c[9] ?? c[7] ?? "").slice(0, 120)} decoded ${want.list.slice(0, 120)}`,
           )
         }
       }

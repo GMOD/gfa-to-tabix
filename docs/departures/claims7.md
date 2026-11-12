@@ -189,8 +189,9 @@ in, and the root cause.
 | C161 | One `blocks` row per `abridged` row of a tile, keyed and ordered as the tile's; a tile with no `abridged` row has no `blocks` unit | `test:decode_file` `test:a_blocks_unit_follows_its_tiles_detail_units` `claims7:K1` `claims7:K2` | `write_chunk` | holds |
 | C162 | A block is a run of consecutive steps on R between the `start` and `end` steps, a step beginning where the one before ended, all one way, with no step off R between, and as long as that allows | `test:decode_file` `test:a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order` `claims7:K6` | `blocks_of` | holds |
 | C163 | The blocks' `len` and `own` add up to the `abridged` row's `bp`; the first block begins where the `start` step does and the last ends where the `end` step does | `build:blocks_row` `test:decode_file` `claims7:K3` `claims7:K5` | `blocks_row` | holds |
-| C164 | The blocks are the ones the piece's walk row in its detail record decodes to | `test:decode_file` `script:scripts/walks-truth.py` | `blocks_of`, from the steps `encode_all` checked | holds |
+| C164 | The blocks, `ownBefore` and `ownAfter` are what the piece's walk row in its detail record decodes to | `test:decode_file` `script:scripts/walks-truth.py` | `blocks_of`, from the steps `encode_all` checked | holds |
 | C165 | The tool reads back every `blocks` list it writes and fails the build where it differs from the piece's blocks, they don't begin at its first step on R and end at its last, or they don't hold its `bp` | `build:blocks_row` `test:decode_file` `claims7:K7` | `blocks_row` | holds |
+| C166 | `ownBefore` and `ownAfter` are the piece's bp off R before its first block and after its last; the piece runs on its contig from `hapOffset − ownBefore` to `hapOffset + bp + ownAfter` and ends where the line's next piece begins | `test:decode_file` `test:a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order` | `blocks_row` | holds |
 
 ## The audit
 
