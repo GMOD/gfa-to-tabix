@@ -134,41 +134,5 @@ the expanded cut over the same window unless a line says otherwise.
 
 ## Order
 
-Hosting freezes the format, and the `blocks` row changed twice once a
-first reader was built on it, so nothing is hosted or released until
-every consumer has read it end to end. Experiments and runs go to ada,
-one agent at a time. No more rulings on the row's spelling: a change
-from here needs a consumer failing on a real window.
-
-- gfa-to-tabix, done on main, not pushed and not released: the writer,
-  the spec, the proof, five file checkers with 74 broken files, and the
-  repo's CI steps green on ada but for the job that rebuilds every path
-  with graph-walks, which needs graph-walks 7. The version is still
-  4.0.0: a push to main with a new version in Cargo.toml publishes it,
-  so main isn't pushed before graph-walks 7 is released
-- graph-walks on its `blocks-unit` branch (`~/src/graph-walks-blocks`):
-  an independent review found its first round unsafe to build on, and a
-  second round is fixing that and following format 8. It is done when
-  its equality harness shows no difference from the full loaded cut on
-  chr22, plain and contained, the harness fails on a broken reader, its
-  cost on the worst windows is measured against 6.2, and a second review
-  passes it
-- walks-format.md's "Reading a window" follows the reader once it is
-  settled, and the departure pyramid's blocks become bins in its prose,
-  since "block" now means three things
-- bandage-core on a branch, linked: loaded geometry for unloaded runs,
-  runs off R styled "not loaded", exact sizes; renders to the user
-- the plugin's load action on every row with unloaded runs
-- chr22 end to end, from the writer to rendered rows, through all three
-- then both genome files rebuilt on ada (`genome-blocks.sh`) and ADR
-  0012's acceptance list run on them, the parts that check the writer by
-  someone other than the session that wrote it
-- then, with the user's go-ahead: release gfa-to-tabix 5.0, graph-walks
-  7, bandage-core, the plugin and the other consumers, each green on the
-  exact versions, and swap the hosted files with them
-- the paper names the gfa-to-tabix version that built the hosted walk
-  file and a request count measured on it; both are rechecked after the
-  swap, and [the prior-art review](../walks-container/abridged/reviews.md#prior-art)
-  has three sentences that say what the file is to a reader who knows
-  GFA. If the consumers aren't green in time, the paper cites 4.0.0 and
-  today's hosted files, which none of this touches
+Where the work stands, what is checked and by whom, and what comes next
+are in [the end-of-session handoff](2026-11-11-format-8-status.md).
