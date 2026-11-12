@@ -1,6 +1,6 @@
 [package]
 name = "gfa-to-tabix"
-version = "4.0.0"
+version = "5.0.0"
 edition = "2024"
 rust-version = "1.91"
 description = "Indexes a pangenome graph's GFA by genome coordinate: a Tabix-indexed BED file of its nodes and links, and walk files of its haplotype paths"

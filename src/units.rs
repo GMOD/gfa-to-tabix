@@ -1,4 +1,4 @@
-// A walk file of format 7 (ADR 0010): a header unit, then per reference
+// A walk file of format 8 (ADR 0010): a header unit, then per reference
 // sequence its units and a table listing them, then a BGZF EOF block; and a
 // directory beside it naming the header and each table. A unit is a whole run
 // of BGZF blocks that starts with its `#unit` line. Both files are written
@@ -292,7 +292,7 @@ mod tests {
         let sink =
             parallel_bgzf::Writer::new(File::create(&temp.0).unwrap(), Compression::new(LEVEL), 2)
                 .starting_at(base);
-        let mut out = UnitFile::start(&path, temp, sink, b"#walks\tformat:i:7\n").unwrap();
+        let mut out = UnitFile::start(&path, temp, sink, b"#walks\tformat:i:8\n").unwrap();
         let mut noise = 1u64;
         for k in 0..4u64 {
             out.begin(b"s", (k, k + 1), "tile", &k.to_string()).unwrap();
@@ -343,7 +343,7 @@ mod tests {
                 unit(offset, length).starts_with(&format!("#unit\ts\t{k}\t{}\ttile\t{k}\n", k + 1))
             );
         }
-        assert!(directory.starts_with(&format!("#walks\tformat:i:7\tbytes:i:{}\n", data.len())));
+        assert!(directory.starts_with(&format!("#walks\tformat:i:8\tbytes:i:{}\n", data.len())));
     }
 
     #[test]

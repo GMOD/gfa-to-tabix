@@ -80,7 +80,7 @@ pub struct Cli {
     pub out: Option<String>,
 
     /// Instead write PREFIX.SAMPLE.walks.gz and its directory
-    /// PREFIX.SAMPLE.walks.gz.idx for each SAMPLE in --refs, in walk format 7.
+    /// PREFIX.SAMPLE.walks.gz.idx for each SAMPLE in --refs, in walk format 8.
     /// Each file lists every path line with a node on SAMPLE in SAMPLE's
     /// coordinates. Reads the GFA twice, three times when a path line comes
     /// before an S line it uses
