@@ -170,21 +170,19 @@ impl PathLine<'_> {
 }
 
 // A P line's path and start, which its name gives once its steps' bp are known,
-// refused where it starts past the highest coordinate
-fn settle(path: PathLine, bp: u64) -> Result<PathLine, String> {
+// refused where it starts past the highest coordinate. The path is the name
+// less what was read from its right, so the name is cut short in place.
+fn settle(mut path: PathLine, bp: u64) -> Result<PathLine, String> {
     if path.walk {
         Ok(path)
     } else {
-        let (name, start) =
-            read_path_name(&path.name, bp).map(|(name, start)| (name.to_vec(), start))?;
+        let (kept, start) =
+            read_path_name(&path.name, bp).map(|(name, start)| (name.len(), start))?;
+        path.name.truncate(kept);
         if start > MAX_COORDINATE {
-            Err(past_max(&name, "starts", start))
+            Err(past_max(&path.name, "starts", start))
         } else {
-            Ok(PathLine {
-                name,
-                start,
-                ..path
-            })
+            Ok(PathLine { start, ..path })
         }
     }
 }
