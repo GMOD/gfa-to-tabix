@@ -202,6 +202,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   - [ADR 0011](docs/adr/0011-format-7-is-frozen.md): walk format 7 is frozen, and what a format change must pass
   - [ADR 0012](docs/adr/0012-abridged-blocks.md): walk format 8: an abridged piece's shape in a `blocks` row
   - [ADR 0013](docs/adr/0013-abridged-hapbp.md): the `abridged` row states the piece's bp on its contig, and what a reader relies on is the format
+  - [ADR 0014](docs/adr/0014-p-line-names.md): a P line's name is read from its right end, against the bp of its steps
 - [Open problems](docs/open-problems.md): measured but undecided, such as pggb's collapsed repeats
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when a figure differs from that output

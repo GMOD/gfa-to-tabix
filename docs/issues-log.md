@@ -2211,3 +2211,22 @@ Where the findings have come from so far, and the rule each gives:
   Fix: the page says what a reader can know, no later step on that
   sequence, and that no row tells such a line from one that stops; no
   byte changed. Guard: none
+- **2026-11-12, a proposal and three reviews of how P line names are read
+  (starts no input stated).** `split_path_name` took the first of three
+  suffixes that parsed and never looked at the line's steps. A 1-based
+  region name was placed one base off (odgi's `DRB1-3123.gfa`), a stated
+  end the steps contradict was accepted, vg's `-gfW` P form of a clipped
+  haplotype became two paths, a suffix alone gave a path with no name,
+  and a `sample#contig` path was listed as a haplotype of its own. Three
+  checkers repeated the reading as regexes of their own and `spec8.py`
+  read no suffix, so none could find it, and no test ran the dialect
+  fixtures that showed three of them. Source:
+  [the proposal](walks-container/dialect/evidence/proposal.md)'s runs of
+  vg and odgi, and the reviews' pipelines and prototype. Fix:
+  [ADR 0014](adr/0014-p-line-names.md), one reading from the right of the
+  name against the line's bp, for walk files and the index. Guard:
+  [p-names.tsv](walks-container/dialect/p-names.tsv), which the unit test
+  and five checkers each read; `tests/dialect.rs` and
+  `scripts/check-dialect.sh` on every dialect fixture, W and P twins byte
+  for byte; `mutants.sh`, whose five broken writers each fail them
+  ([run](walks-container/dialect/results/mutants.txt))

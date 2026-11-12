@@ -680,55 +680,66 @@ W  B  1  c     0  32  >1>2>6>3
   into format and policy, and rule on the bin sizes. A tag is an
   addition a reader ignores, so it can follow the paper's freeze
 
-## P line names
+## Starts a name or a column states that are not starts
 
-- Minigraph-Cactus writes W lines, so none of this reaches its graphs. A
-  P line's name is read by walks-format.md's rules (C51, C158), which
-  differ from what other tools mean by the same names:
-  - `sample#hap#contig#N` is read as starting at offset N
-    ([p-arity4-phase.gfa](walks-container/dialect/p-arity4-phase.gfa) gives `H#1#c` from 1),
-    where vg's path metadata calls the fourth field a phase block, which
-    its graphs built from a phased VCF use
-  - `sample#contig` is listed whole as a `#haplotype`, one line per
-    contig ([p-arity2.gfa](walks-container/dialect/p-arity2.gfa) lists `H#c` and `H#d`)
-  - `name:start-end` is read as 0-based and half-open
-    ([p-colon-range.gfa](walks-container/dialect/p-colon-range.gfa))
-  - the name as written isn't kept: the rows give `path` and `fragStart`
-- The first two are rules of the spec, so changing them changes `path`,
-  `fragStart` or `#haplotype` for such inputs, under ADR 0011's rules
-- Suggested next step, before the paper freezes the format: list the
-  P line names pggb, odgi and vg write, and rule on the fourth field and
-  on two-field names with a measured ADR, or record why they stay
+[ADR 0014](adr/0014-p-line-names.md) decided how a P line's name is read
+([Path names](walks-format.md#path-names)). These are what it leaves.
+
+- **vg's phase blocks.** For haplotypes from a VCF-phased GBWT, vg
+  numbers a contig's phase blocks 0, 1, 2 and writes that counter in the
+  fourth field of a P line's name and in a W line's start column, and the
+  tool reads both as starts. Blocks whose stretches then overlap are
+  refused, with a message that names the cause
+  ([vg-vcf-phased-p.gfa](walks-container/dialect/vg-vcf-phased-p.gfa),
+  [vg-vcf-phased-w.gfa](walks-container/dialect/vg-vcf-phased-w.gfa)). A block alone, or
+  blocks that don't collide, are placed at their counter: `S1#0#chr1#2`
+  of 70 bp is written from 2 where it lies at 50. The same field is a
+  start for a haplotype clipped out of a Minigraph-Cactus GBZ, and no
+  line says which it is
+- **A 1-based range.** `name:start-end` is read where `end − start` is
+  the line's bp, as `odgi extract` writes it. A region name cut 1-based
+  and inclusive, as the 12 paths of odgi's test graph `DRB1-3123.gfa`
+  are, stays in the name whole, from 0, so such a graph is drawn in its
+  own coordinates and not its chromosome's
+- **A cut that runs past its piece.** Beneath a `:a-b` a bracket's end
+  is not read, so `X#0[100-114]:6-16` is `X#0` from 106 though the cut
+  ends past the piece it names
+  ([p-colon-past-bracket.gfa](walks-container/dialect/p-colon-past-bracket.gfa)). odgi can't
+  write one; a hand-made name can
+- **A W line's `*` start,** which GFA allows, is refused: it states no
+  offset ([w-star-start.gfa](walks-container/dialect/w-star-start.gfa))
+- **A P line with `;` jumps,** GFA 1.2's, is refused: no step after a
+  jump has an offset
+  ([p-jump-semicolon.gfa](walks-container/dialect/p-jump-semicolon.gfa))
+- Suggested next step, when someone brings a VCF-phased graph: find what,
+  if anything, in vg's graph tells a counted block from a clipped
+  fragment, since its P and W lines don't. After the paper's freeze the
+  reading can accept more, and can't re-mean what it reads today
 
 ## Inputs the writer accepts and shouldn't
 
-- A P line named `[5]` or `:5-21` alone gives an empty path name and an
-  empty `#haplotype` line
-  ([p-name-only-bracket.gfa](walks-container/dialect/p-name-only-bracket.gfa),
-  [p-name-only-colon.gfa](walks-container/dialect/p-name-only-colon.gfa))
-- A P line's stated end, `[100-105]`, is ignored where its steps
-  disagree ([p-bracket-end-wrong.gfa](walks-container/dialect/p-bracket-end-wrong.gfa)), where
-  a W line's end column is refused (C18,
-  [w-end-wrong.gfa](walks-container/dialect/w-end-wrong.gfa))
 - Segment names `01` and `002` are read as nodes 1 and 2, so a line
   stepping on `1` steps on `01`
   ([s-leading-zero.gfa](walks-container/dialect/s-leading-zero.gfa))
 - A carriage return inside a name, or a byte that isn't UTF-8, is written
   raw ([cr-only-in-name.gfa](walks-container/dialect/cr-only-in-name.gfa),
   [nonascii-name.gfa](walks-container/dialect/nonascii-name.gfa)). The file checkers read
-  such names; graph-walks reads them through a UTF-8 decoder, so two
-  names that differ only in such a byte read as one, and its header
-  lists that haplotype twice
+  a name whose bytes aren't UTF-8 and split a line at a carriage return,
+  so [check-dialect.sh](../scripts/check-dialect.sh) builds that fixture
+  and runs none of them on it; graph-walks reads names through a UTF-8
+  decoder, so two names that differ only in such a byte read as one, and
+  its header lists that haplotype twice
   ([names-not-utf8.gfa](walks-container/dialect/names-not-utf8.gfa))
-- A P line with GFA 1.2's `;` jumps is refused as a step that isn't an
-  integer node id ([p-jump-semicolon.gfa](walks-container/dialect/p-jump-semicolon.gfa))
 - A GFA with no paths is refused as `--refs R matches no path's sample;
   have: ` with nothing after it ([no-paths.gfa](walks-container/dialect/no-paths.gfa))
-- Suggested next step: refuse an empty path name, a stated end its steps
-  don't reach, segment names with a leading zero, and names with a
-  carriage return or bytes that aren't UTF-8, naming the line; say what
-  a `;` jump is when refusing it, and that the GFA has no paths. Each
-  refuses a GFA accepted today and changes no file it still accepts
+- The node and link index doesn't read a W line's end column, so it
+  builds a graph `--walks` refuses for one
+  ([w-end-wrong.gfa](walks-container/dialect/w-end-wrong.gfa))
+- Suggested next step: refuse segment names with a leading zero and
+  names with a carriage return or bytes that aren't UTF-8, naming the
+  line; say that the GFA has no paths; check a W line's end in the
+  index. Each refuses a GFA accepted today and changes no file it still
+  accepts
 
 ## One table per sequence
 
