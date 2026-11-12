@@ -1,15 +1,16 @@
-abridged-bp	walks-contig-ends.gfa	claims7 audit7 rebuild	an abridged row's bp 12 made 13
-abridged-end	walks-contig-ends.gfa	claims7 audit7 rebuild	L's abridged row in tile 10 with end >4 made >3, its end and bp with it
-abridged-hapoffset	walks-contig-ends.gfa	claims7 audit7 rebuild	an abridged row's hapOffset 30 made 31
-abridged-nsteps	walks-contig-ends.gfa	audit7 rebuild	an abridged row's nsteps 5 made 7
-abridged-start	walks-contig-ends.gfa	claims7 audit7 rebuild	L's abridged row in tile 10 with start >3 made >4, its start, hapOffset and bp with it
+abridged-detail	walks-contig-ends.gfa	claims7 audit7 rebuild	L's abridged row in tile 10 naming detail record 1 for 0
+abridged-hapoffset	walks-contig-ends.gfa	claims7 audit7 rebuild	the hapOffset 0 of L's abridged piece 0 made 1
+abridged-hapoffset-later	walks-contig-ends.gfa	claims7 audit7 rebuild	the hapOffset 12 of M's abridged piece 1 made 13
+abridged-nsteps	walks-contig-ends.gfa	claims7 audit7 rebuild	the nsteps 5 of L's abridged row made 7
+abridged-span	walks-contig-ends.gfa	claims7 audit7 rebuild	L's abridged row stating 12 18 where its blocks span 12 24
+abridged-thirteen-columns	walks-contig-ends.gfa	claims7 audit7 rebuild	L's abridged row in thirteen columns, with bp, start and end, as in format 7
 block-misaligned	walks-two-refs.gfa	verify7	the departure block 10 20 stated as 10 19
-blocks-ends-swapped	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's leading run 7 and trailing run 50 swapped
-blocks-first	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's first block 0+12 made 12-12, a + made - over the same bases, the second's d with it, at the same span and bp
+blocks-ends-swapped	broken/blocks.gfa	audit7 expand7 rebuild	H's leading run 7 and trailing run 50 swapped
+blocks-first	broken/blocks.gfa	audit7 expand7 rebuild	H's first block 0+12 made 12-12, a + made - over the same bases, the second's d with it, at the same span and bp
 blocks-foreign-row	walks-contig-ends.gfa	claims7	a walk row in the blocks unit 0
-blocks-last	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's last block -24+6 made -18-6, a + made - over the same bases, at the same span and bp
-blocks-leading-later	walks-contig-ends.gfa	claims7 audit7 expand7 rebuild	L's piece 1 given a leading run of 1, so it starts 1 bp before piece 0 ends
-blocks-leading-off	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's leading run 7 made 8 on piece 0, which then starts before fragStart
+blocks-last	broken/blocks.gfa	audit7 expand7 rebuild	H's last block -24+6 made -18-6, a + made - over the same bases, at the same span and bp
+blocks-leading-later	walks-contig-ends.gfa	claims7 audit7 expand7 rebuild	L's piece 1 given a leading run of 1, so it ends 1 bp after piece 2 starts
+blocks-leading-off	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's leading run 7 made 8, 1 bp more than its piece holds
 blocks-merged	walks-two-refs.gfa	audit7 expand7 rebuild	Q's blocks 0+6,6,6+18 and the run between merged into 0+30, at the same span, bp and ends
 blocks-minus-zero	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's second block 0-12 written -0-12
 blocks-moved	broken/blocks.gfa	audit7 expand7 rebuild	H's second block's d 0 made 6 and the third's 24 made 18, so the second lies 6 bp on, at the same span, bp and ends
@@ -24,9 +25,9 @@ blocks-run-zero	broken/blocks.gfa	claims7 audit7 expand7 rebuild	a run of 0 betw
 blocks-runs-adjacent	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's run of 10 written as two, 4,6
 blocks-strand	broken/blocks.gfa	audit7 expand7 rebuild	H's second block 0-12 made -12+12, a - made + over the same bases, the third's d with it, at the same span, bp and ends
 blocks-ten-columns	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's blocks row in ten columns, with ownBefore, ownAfter and :own, as before runs were items
-blocks-trailing-dropped	broken/blocks.gfa	audit7 expand7 rebuild	H's trailing run 50 left out, on its line's last piece
+blocks-trailing-dropped	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's trailing run 50 left out, on its line's last piece
 blocks-trailing-dropped-mid	walks-two-refs.gfa	claims7 audit7 expand7 rebuild	Q's trailing run 6 on piece 0 left out, so the piece ends 6 bp before piece 1 starts
-blocks-trailing-off	broken/blocks.gfa	audit7 expand7 rebuild	H's trailing run 50 made 51, on its line's last piece
+blocks-trailing-off	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's trailing run 50 made 51, on its line's last piece
 blocks-trailing-over-record	walks-records.gfa	claims7 audit7 expand7 rebuild	G's piece 0, its line's last, given a trailing run of 19, past the 18 ownBp of the record leaving it
 blocks-unit-dropped	walks-contig-ends.gfa	claims7 audit7 expand7 rebuild	the blocks unit 10 left out, and its table entry
 blocks-unit-early	walks-contig-ends.gfa	claims7	the blocks unit 10 moved before its tile's detail units 10:0 and 10:1
@@ -36,6 +37,7 @@ blocks-unit-wide	walks-contig-ends.gfa	verify7 claims7	the blocks unit 10 stated
 blocks-unmerged	broken/blocks.gfa	claims7 audit7 expand7 rebuild	H's third block 24+12 split into 24+6,0+6
 detail-interior-flipped	walks-contig-ends.gfa	rebuild	detail 10:0's route interior >12 made <12, so L's abridged piece decodes to >11<12>13 at the same bp
 empty-block	walks-two-refs.gfa	verify7 claims7	an empty departure block after the table
+format-7	walks-two-refs.gfa	verify7 claims7 audit7 expand7 rebuild	the header and directory stating format:i:7
 g1-walk-order	walks-two-refs.gfa	claims7	H's and D's walk rows swapped in tile 0
 hap-dup	walks-two-refs.gfa	claims7	#haplotype D#1 listed twice
 hap-missing	walks-two-refs.gfa	claims7	#haplotype D#1 left out

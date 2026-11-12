@@ -1,22 +1,43 @@
 #!/usr/bin/env python3
 # Writes a broken walk file for broken.sh: the data file read as text, each
-# OLD replaced by NEW (each OLD must occur once), repacked as a format 7 file
-# whose units, tables and directory are right, so only the rows differ. A
-# table unit is rebuilt from the repacked units, and the directory from the
-# tables, so a corruption of a table or the directory is made by hand.
-# Usage: corrupt.py in.walks.gz out.walks.gz OLD NEW [OLD NEW ...]
+# OLD replaced by NEW (each OLD must occur once, or with --all at least
+# once, every one replaced), repacked as a walk file whose units, tables
+# and directory are right, so only the rows differ. A table unit is rebuilt
+# from the repacked units, and the directory from the tables; a corruption
+# of those is asked for by name:
+# - --table OLD NEW: in the one rebuilt table that holds OLD
+# - --idx OLD NEW: in the directory
+# - --header N: the directory states `#header 0 N`
+# - --append UNIT: a unit's text after the last table, in no table
+# With no edit, a text is packed as it is.
+# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT]...
 import gzip
 import struct
 import sys
 import zlib
 
-src, dst, *edits = sys.argv[1:]
-text = gzip.open(src, 'rt').read()
-for old, new in zip(edits[::2], edits[1::2]):
-    if text.count(old) != 1:
-        sys.exit(f'corrupt.py: {old!r} occurs {text.count(old)} times, not once')
-    text = text.replace(old, new)
+src, dst, *args = sys.argv[1:]
+edits = dict(once=[], all=[], table=[], idx=[])
+appended, header_stated = [], None
+while args:
+    kind = args.pop(0)[2:] if args[0] in ('--all', '--table', '--idx', '--header', '--append') else 'once'
+    if kind == 'append':
+        appended.append(args.pop(0))
+    elif kind == 'header':
+        header_stated = int(args.pop(0))
+    else:
+        edits[kind].append((args.pop(0), args.pop(0)))
 
+
+def replaced(text, pairs, every=False):
+    for old, new in pairs:
+        if text.count(old) != 1 and not (every and text.count(old) > 1):
+            sys.exit(f'corrupt.py: {old!r} occurs {text.count(old)} times, not once')
+        text = text.replace(old, new)
+    return text
+
+
+text = replaced(replaced(gzip.open(src, 'rt').read(), edits['once']), edits['all'], True)
 EOF = bytes.fromhex('1f8b08040000000000ff0600424302001b0003000000000000000000')
 
 
@@ -40,6 +61,7 @@ header, units = units[0], [u for u in units[1:] if u.split('\t')[4] != 'table']
 walks = header.split('\n')[0]
 data, tables, entries, at = bgzf(header.encode()), [], [], 0
 header_length = len(data)
+table_edits = {pair: 0 for pair in edits['table']}
 for n, unit in enumerate(units):
     seq, lo, hi, kind, name = unit.split('\n')[0].split('\t')[1:6]
     packed = bgzf(unit.encode())
@@ -49,10 +71,21 @@ for n, unit in enumerate(units):
     if last:
         length = max(int(u.split('\n')[0].split('\t')[3]) for u in units[:n + 1]
                      if u.split('\t')[1] == seq and u.split('\t')[4] == 'tile')
-        table = bgzf((f'#unit\t{seq}\t0\t{length}\ttable\t.\n' + ''.join(entries)).encode())
+        listing = f'#unit\t{seq}\t0\t{length}\ttable\t.\n' + ''.join(entries)
+        for old, new in [pair for pair in table_edits if pair[0] in listing]:
+            table_edits[(old, new)] += listing.count(old)
+            listing = listing.replace(old, new)
+        table = bgzf(listing.encode())
         tables.append(f'{seq}\t{len(data)}\t{len(table)}\n')
         data += table
         entries = []
+for (old, new), n in table_edits.items():
+    if n != 1:
+        sys.exit(f'corrupt.py: {old!r} occurs {n} times in the tables, not once')
+for unit in appended:
+    data += bgzf(unit.encode())
 data += EOF
+stated = header_length if header_stated is None else header_stated
+directory = replaced(f'{walks}\tbytes:i:{len(data)}\n#header\t0\t{stated}\n' + ''.join(tables), edits['idx'])
 open(dst, 'wb').write(data)
-open(dst + '.idx', 'w').write(f'{walks}\tbytes:i:{len(data)}\n#header\t0\t{header_length}\n' + ''.join(tables))
+open(dst + '.idx', 'w').write(directory)

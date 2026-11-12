@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# The release checks of a walk format 7 file and its directory, read as a
+# The release checks of a walk format 8 file and its directory, read as a
 # stream: one gzip member at a time, holding one unit and one sequence's
 # departure records, so a file of any size checks in bounded memory. It
 # checks what arbiter A's verify7.mjs does, which reads files whole and so
@@ -47,8 +47,8 @@ def fail(msg):
 
 directory = [l.split('\t') for l in open(path + '.idx').read().rstrip('\n').split('\n')]
 walks = directory[0]
-if walks[:2] != ['#walks', 'format:i:7'] or not walks[-1].startswith('bytes:i:'):
-    fail('directory line 1 is not a format 7 #walks line ending in bytes:i:')
+if walks[:2] != ['#walks', 'format:i:8'] or not walks[-1].startswith('bytes:i:'):
+    fail('directory line 1 is not a format 8 #walks line ending in bytes:i:')
 if int(walks[-1][8:]) != size:
     fail(f'bytes:i: is {walks[-1][8:]}, the file {size}')
 if directory[1][:2] != ['#header', '0']:

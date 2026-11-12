@@ -1,4 +1,4 @@
-#walks	format:i:7	tile:i:10	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	bytes:i:5810
+#walks	format:i:8	tile:i:10	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	bytes:i:5810
 #header	0	162
 R#0#chr1	593	127
 R#0#chr10	1142	128

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Writes the broken walk files of the blocks unit, and rewrites the six
-# abridged ones from files that hold blocks units, with broken/corrupt.py.
+# Writes every broken walk file of cases.tsv: each a file the writer at
+# target/debug wrote, corrupted by broken/corrupt.py, or, for hole-inside
+# and hole-trailing, the text an earlier writer wrote, packed by it.
 # Usage: make-broken.sh <repo> <scratch dir>
 set -eu
 REPO=$1
@@ -9,12 +10,26 @@ BIN=$REPO/target/debug/gfa-to-tabix
 BROKEN=$REPO/docs/departures/scripts/broken
 DATA=$REPO/tests/data
 mkdir -p "$W"
-"$BIN" "$BROKEN/blocks.gfa" --walks --refs R --tile 36 --abridge-bytes 1 -o "$W/b" > /dev/null 2>&1
-"$BIN" "$DATA/walks-two-refs.gfa" --walks --refs GRCh38 --tile 1000 --abridge-steps 1 -o "$W/t2" > /dev/null 2>&1
-"$BIN" "$DATA/walks-two-refs.gfa" --walks --refs GRCh38 --tile 10 --abridge-bytes 1 -o "$W/t10" > /dev/null 2>&1
-"$BIN" "$DATA/walks-contig-ends.gfa" --walks --refs R --tile 10 --abridge-bytes 1 -o "$W/ce" > /dev/null 2>&1
-"$BIN" "$DATA/walks-contig-ends.gfa" --walks --refs R --tile 10 --abridge-steps 1 -o "$W/cs" > /dev/null 2>&1
-"$BIN" "$DATA/walks-records.gfa" --walks --refs R --tile 1000 --abridge-steps 1 -o "$W/rc" > /dev/null 2>&1
+build() {
+  local out=$1 gfa=$2 ref=$3
+  "$BIN" "$gfa" --walks --refs "$ref" "${@:4}" -o "$W/$out" > /dev/null 2>&1
+}
+build t0 "$DATA/walks-two-refs.gfa" GRCh38 --tile 10 --stay 0
+build t311 "$DATA/walks-two-refs.gfa" GRCh38 --tile 10
+build rr "$DATA/walks-records.gfa" R --tile 10
+build rp "$DATA/walks-repeat.gfa" R --tile 10
+build sq "$DATA/walks-sequences.gfa" R --tile 10 --sequences
+build b "$BROKEN/blocks.gfa" R --tile 36 --abridge-bytes 1
+build t2 "$DATA/walks-two-refs.gfa" GRCh38 --tile 1000 --abridge-steps 1
+build t10 "$DATA/walks-two-refs.gfa" GRCh38 --tile 10 --abridge-bytes 1
+build ce "$DATA/walks-contig-ends.gfa" R --tile 10 --abridge-bytes 1
+build cs "$DATA/walks-contig-ends.gfa" R --tile 10 --abridge-steps 1
+build rc "$DATA/walks-records.gfa" R --tile 1000 --abridge-steps 1
+T0=$W/t0.GRCh38.walks.gz
+T311=$W/t311.GRCh38.walks.gz
+RR=$W/rr.R.walks.gz
+RP=$W/rp.R.walks.gz
+SQ=$W/sq.R.walks.gz
 B=$W/b.R.walks.gz
 T2=$W/t2.GRCh38.walks.gz
 T10=$W/t10.GRCh38.walks.gz
@@ -25,15 +40,129 @@ corrupt() {
   local name=$1 base=$2
   python3 -I "$BROKEN/corrupt.py" "$base" "$BROKEN/$name.walks.gz" "${@:3}"
 }
+# packs a walk file's text, given with a space for each tab and no tables
+pack() {
+  tr ' ' '\t' | gzip > "$W/$1.txt.gz"
+  corrupt "$1" "$W/$1.txt.gz"
+}
 G=GRCh38#0#chr
 
-corrupt abridged-bp "$CS" $'abridged\tL#1#c\t0\t30\t0\t5\t12\t' $'abridged\tL#1#c\t0\t30\t0\t5\t13\t'
-corrupt abridged-end "$CS" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t30\t0\t5\t12\t6\t8\t0' $'R#0#c\t12\t18\tabridged\tL#1#c\t0\t30\t0\t5\t6\t6\t6\t0'
-corrupt abridged-hapoffset "$CS" $'abridged\tL#1#c\t0\t30\t' $'abridged\tL#1#c\t0\t31\t'
-corrupt abridged-nsteps "$CS" $'abridged\tL#1#c\t0\t30\t0\t5\t' $'abridged\tL#1#c\t0\t30\t0\t7\t'
-corrupt abridged-start "$CS" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t30\t0\t5\t12\t6\t8\t0' $'R#0#c\t18\t24\tabridged\tL#1#c\t0\t36\t0\t5\t6\t8\t8\t0'
+# rows, units and header lines of files with no abridged tile
+I6=$G$'\t0\t18\tdeparture\tI#1#i\t6\t0\t0\t6\t+\t1\t18\t-\t1\t.\n'
+Q6=$G$'\t0\t18\tdeparture\tQ#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t0\n'
+D24=$G$'\t0\t24\tdeparture\tD#1#d\t24\t0\t0\t24\t+\t1\t0\t+\t1\t.\n'
+I18=$G$'\t6\t24\tdeparture\tI#1#i\t18\t0\t0\t6\t-\t1\t18\t+\t1\t.\n'
+H118=$G$'\t12\t24\tdeparture\tH#1#h\t118\t3\t0\t18\t+\t1\t18\t+\t1\t10\n'
+WD=$G$'\t0\t12\twalk\tD#1#d\t0\t24\t2\t2\t2\t.\n'
+WH=$G$'\t0\t12\twalk\tH#1#h\t100\t100\t0\t2\t2\t.\n'
+corrupt block-misaligned "$T0" $'#unit\t'$G$'\t10\t20\tdepartures' $'#unit\t'$G$'\t10\t19\tdepartures'
+corrupt empty-block "$T0" --append $'#unit\t'$G$'\t30\t40\tdepartures\t.\n'
+corrupt format-7 "$T0" 'format:i:8' 'format:i:7'
+corrupt g1-walk-order "$T0" "$WD$WH" "$WH$WD"
+corrupt hap-dup "$T0" $'#haplotype\tD#1\n' $'#haplotype\tD#1\n#haplotype\tD#1\n'
+corrupt hap-missing "$T0" $'#haplotype\tD#1\n' ''
+corrupt hapstart-wrong-G "$RR" --all $'G#1#g\t12\t18\t18\t' $'G#1#g\t13\t18\t18\t'
+corrupt hdr-len-idx-only "$T0" --header 100
+corrupt header-len-100 "$T0" $'#reference\tGRCh38' $'reference\tGRCh38' --header 100
+corrupt header-len-right-ctl "$T0" $'#reference\tGRCh38' $'reference\tGRCh38'
+corrupt hole-bogus "$T0" $'#reference\tGRCh38\n' $'#reference\tGRCh38\n#hole\t'$G$'\t3\t5\n'
+corrupt interior-flipped "$T311" $'\t0\t12\troute\t.\t13\t-9' $'\t0\t12\troute\t.\t12\t-9'
+corrupt last-piece-dropped "$T0" $G$'\t12\t24\twalk\tD#1#d\t0\t36\t3\t2\t6\t.\n' ''
+corrupt missing-understated "$RR" --all $'H#1#h\t12\t28\t22\t' $'H#1#h\t12\t28\t0\t'
+corrupt missing-understated-G "$RR" --all $'G#1#g\t12\t18\t18\t' $'G#1#g\t12\t18\t5\t'
+corrupt nodes-extra "$T0" $'\t0\t12\tnodes\t6\t6' $'\t0\t12\tnodes\t5,1\t3,6'
+corrupt ownbp-overstated-G "$RR" --all $'G#1#g\t12\t18\t18\t' $'G#1#g\t12\t30\t18\t'
+corrupt owntiles-wrong "$T0" --all $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t0\n' $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t10\n'
+corrupt passes-second-row "$RP" $'\tref\tR#0#chr\t0\t12\t1\t2\t6,-2\t6,6\t2,2' $'\tref\tR#0#chr\t0\t12\t1\t2\t6,-2\t6,6\t2,3'
+corrupt point "$T0" $'\t0\t10\tdepartures\t.\n'"$I6" $'\t0\t10\tdepartures\t.\n'"$I6"$G$'\t5\t5\tdeparture\tI#1#i\t6\t0\t0\t6\t+\t1\t18\t-\t1\t.\n'
+corrupt record-bogus-path "$T0" --all "$Q6" "$Q6"$G$'\t0\t18\tdeparture\tZ#1#z\t6\t6\t0\t6\t+\t1\t12\t+\t1\t.\n'
+corrupt record-dropped "$T0" --all "$Q6" ''
+corrupt record-leavepasses "$T0" --all $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12' $'Q#0#chr\t6\t6\t0\t6\t+\t2\t12'
+corrupt record-within-piece "$T0" "$I18"$'#unit\t'$G$'\t24\t30\ttile' "$I18$H118"$'#unit\t'$G$'\t24\t30\ttile' \
+  $'\t20\t30\tdepartures\t.\n'"$D24$I18" $'\t20\t30\tdepartures\t.\n'"$D24$I18$H118"
+corrupt ref-lengths "$T0" $'\t12\t24\tref\t'$G$'\t0\t12\t1\t2\t6,2\t6,6' $'\t12\t24\tref\t'$G$'\t0\t12\t1\t2\t6,2\t5,7'
+corrupt ref-strand-flipped "$T311" $'\t0\t24\t2\t1\t10\t6\t.' $'\t0\t24\t2\t1\t11\t6\t.' \
+  $'D#1#d\t0\t48\t4\t1\t10\t.' $'D#1#d\t0\t48\t4\t1\t11\t.' $'H#1#h\t100\t127\t2\t1\t10\t.' $'H#1#h\t100\t127\t2\t1\t11\t.' \
+  $'I#1#i\t0\t24\t4\t1\t10\t.' $'I#1#i\t0\t24\t4\t1\t11\t.' $'Q#0#chr\t0\t24\t2\t1\t10\t.' $'Q#0#chr\t0\t24\t2\t1\t11\t.'
+corrupt reference-wrong "$T0" $'#reference\tGRCh38' $'#reference\tCHM13'
+corrupt sqbad "$SQ" $'R#0#chr1\t0\t8\tref\tR#0#chr1\t0\t0\t0\t2\t18,2\t4,4\t.\tSQ:Z:ACGAAACT' $'R#0#chr1\t0\t8\tref\tR#0#chr1\t0\t0\t0\t2\t18,2\t4,4\t.\tSQ:Z:CCGAAACT'
+corrupt table-S-wrong "$T0" --table $'\t0\t30\ttable\t.\n' $'\t0\t40\ttable\t.\n'
+corrupt table-named "$T0" --table $'\ttable\t.\n' $'\ttable\tx\n'
+corrupt u2-leading-zero "$T0" $'\t12\t24\ttile\t10\n' $'\t12\t24\ttile\t010\n'
+corrupt walk-span-wrong "$T0" $'\t12\t24\twalk\tD#1#d\t0\t12\t' $'\t12\t18\twalk\tD#1#d\t0\t12\t'
+corrupt walks-differ-ctl "$T0" 'stay:i:0' 'stay:i:5' --idx 'stay:i:5' 'stay:i:0'
+corrupt walks-differ-len100 "$T0" 'stay:i:0' 'stay:i:5' --idx 'stay:i:5' 'stay:i:0' --header 100
+corrupt wide "$T0" $'\t0\t12\ttile\t0\n' $'\t0\t15\ttile\t0\n' $'\t0\t12\tref\t' $'\t0\t15\tref\t' $'\t0\t12\tnodes\t' $'\t0\t15\tnodes\t' \
+  $'\t0\t12\troute\t' $'\t0\t15\troute\t' $'\t0\t12\twalk\tD#1#d\t0\t0\t' $'\t0\t15\twalk\tD#1#d\t0\t0\t' \
+  $'\t0\t12\twalk\tD#1#d\t0\t24\t' $'\t0\t15\twalk\tD#1#d\t0\t24\t' $'\t0\t12\twalk\tH#1#h\t' $'\t0\t15\twalk\tH#1#h\t' \
+  $'\t6\t12\twalk\tI#1#i\t' $'\t6\t15\twalk\tI#1#i\t'
+
+# what a writer since repaired wrote for broken/hole-inside.gfa and
+# broken/hole-trailing.gfa at --tile 4, in format 8's header
+pack hole-inside << 'EOF'
+#walks format:i:8 tile:i:4 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000
+#reference R
+#haplotype H#1
+#hole R#0#chr 10 20
+#unit R#0#chr 0 10 tile 0
+R#0#chr 0 10 ref R#0#chr 0 0 0 1 2 10 .
+R#0#chr 0 10 walk H#1#h 0 0 0 1 2 .
+#unit R#0#chr 0 4 departures .
+R#0#chr 0 16 departure H#1#h 10 0 0 10 + 1 15 + 1 .
+#unit R#0#chr 4 8 departures .
+R#0#chr 0 16 departure H#1#h 10 0 0 10 + 1 15 + 1 .
+#unit R#0#chr 8 12 departures .
+R#0#chr 0 16 departure H#1#h 10 0 0 10 + 1 15 + 1 .
+#unit R#0#chr 15 16 tile 12
+R#0#chr 15 16 ref R#0#chr 15 15 0 1 4 0 .
+R#0#chr 15 15 walk H#1#h 0 10 1 1 4 .
+#unit R#0#chr 12 16 departures .
+R#0#chr 0 16 departure H#1#h 10 0 0 10 + 1 15 + 1 .
+R#0#chr 15 25 departure H#1#h 10 0 0 15 + 1 20 + 1 .
+#unit R#0#chr 16 20 departures .
+R#0#chr 15 25 departure H#1#h 10 0 0 15 + 1 20 + 1 .
+#unit R#0#chr 20 25 tile 20
+R#0#chr 20 25 ref R#0#chr 20 20 0 1 6 5 .
+R#0#chr 20 25 walk H#1#h 0 10 2 1 6 .
+#unit R#0#chr 20 24 departures .
+R#0#chr 15 25 departure H#1#h 10 0 0 15 + 1 20 + 1 .
+#unit R#0#chr 24 28 departures .
+R#0#chr 15 25 departure H#1#h 10 0 0 15 + 1 20 + 1 .
+EOF
+pack hole-trailing << 'EOF'
+#walks format:i:8 tile:i:4 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000
+#reference R
+#haplotype H#1
+#unit R#0#chr 0 10 tile 0
+R#0#chr 0 10 ref R#0#chr 0 0 0 1 2 10 .
+R#0#chr 0 10 walk H#1#h 0 0 0 1 2 .
+#unit R#0#chr 0 4 departures .
+R#0#chr 0 20 departure H#1#h 10 0 0 10 + 1 20 + 1 .
+#unit R#0#chr 4 8 departures .
+R#0#chr 0 20 departure H#1#h 10 0 0 10 + 1 20 + 1 .
+#unit R#0#chr 8 12 departures .
+R#0#chr 0 20 departure H#1#h 10 0 0 10 + 1 20 + 1 .
+#unit R#0#chr 12 16 departures .
+R#0#chr 0 20 departure H#1#h 10 0 0 10 + 1 20 + 1 .
+#unit R#0#chr 16 20 departures .
+R#0#chr 0 20 departure H#1#h 10 0 0 10 + 1 20 + 1 .
+#unit R#0#chr 19 20 tile 20
+R#0#chr 19 20 ref R#0#chr 20 20 0 1 4 0 .
+R#0#chr 20 20 walk H#1#h 0 10 1 1 4 .
+EOF
+
+# abridged rows and detail units
+AL=$'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t0\n'
+AM=$'R#0#c\t12\t18\tabridged\tM#1#c\t0\t12\t1\t4\t1\n'
+corrupt abridged-detail "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t1\n'
+corrupt abridged-hapoffset "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t1\t0\t5\t0\n'
+corrupt abridged-hapoffset-later "$CS" "$AM" $'R#0#c\t12\t18\tabridged\tM#1#c\t0\t13\t1\t4\t1\n'
+corrupt abridged-nsteps "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t7\t0\n'
+corrupt abridged-span "$CS" "$AL" $'R#0#c\t12\t18\tabridged\tL#1#c\t0\t0\t0\t5\t0\n'
+corrupt abridged-thirteen-columns "$CS" "$AL" $'R#0#c\t12\t24\tabridged\tL#1#c\t0\t30\t0\t5\t12\t6\t8\t0\n'
 corrupt detail-interior-flipped "$CE" $'route\t.\t22,2,2\t-20' $'route\t.\t22,3,2\t-20'
 
+# blocks rows and units
 L=$'\t7,0+12,0-12,10,24+12,-24+6,50\n'
 corrupt blocks-own "$B" ',10,24+12' ',11,24+12'
 corrupt blocks-strand "$B" '0-12,10,24+12' '-12+12,10,12+12'

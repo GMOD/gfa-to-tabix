@@ -10,7 +10,7 @@ to its reference, and measure what a window costs to read.
   walks-truth.py score lift.tsv WALKS [--haps H,H,...] [--regions R.tsv]
       For each haplotype path in both, compares where its pieces are filed
       with where their bases align. A window over tile c, [c, c + tile),
-      reads every tile whose extent overlaps it (walk format 7), so a piece
+      reads every tile whose extent overlaps it (walk format 8), so a piece
       in tile f is visible where its bases align, at c, when f's extent
       overlaps c's stretch. It prints:
         placement  aligned piece bp visible where they align, and the same
@@ -37,9 +37,9 @@ to its reference, and measure what a window costs to read.
       before ends, and joined they give the line's handles exactly; the
       reference's own lines likewise from their ref rows, lengths included.
       Each abridged row agrees with its piece in the detail unit it names:
-      its start and end are the piece's first and last steps on R, at their
-      positions, its hapOffset and bp the piece's stretch from one to the
-      other, its nsteps all the piece's steps. Each abridged row has one
+      its hapOffset is the walk row's, where the piece starts on its contig,
+      its nsteps all the piece's steps, and its start end the span of the
+      piece's steps on R. Each abridged row has one
       blocks row, in its tile's blocks unit, whose list and start end state
       exactly what the piece's decoded steps make: each run of steps off R as
       its bp, leading and trailing ones included, and each block, a maximal
@@ -232,14 +232,6 @@ class Tile:
         """The position of `node` in R nearest position i, the later on a tie."""
         return min(reversed(self.occ[node]), key=lambda j: abs(j - i))
 
-    def ends(self, start, end):
-        """An abridged row's start and end as (handle, position in R): start at
-        occurrence k with @k, else the first; end at k with @k, else nearest start's."""
-        h, _, k = start.partition("@")
-        e, _, ke = end.partition("@")
-        i = self.occ[int(h) >> 1][int(k) if k else 0]
-        return (int(h), i), (int(e), self.occ[int(e) >> 1][int(ke)] if ke else self.nearest(int(e) >> 1, i))
-
     def steps(self, c):
         """A walk row's steps as (handle, position in R or None), by the spec's decoding rules."""
         nsteps = int(c[8])
@@ -302,17 +294,10 @@ class Piece:
         self.bp, self.ref, self.error = bp, lengths is not None, error
         self.decoded, self.ends = len(handles), (handles[0], handles[-1]) if handles else None
         self.digest = digest(handles, lengths)
-        self.detail = self.stretch = self.blocks = None
+        self.detail = self.blocks = None
 
     def key(self):
         return (self.line, self.offset, self.piece)
-
-
-def stretch(steps, lens, offset):
-    """A detail piece's first and last steps on R, its hapOffset at the first
-    and the bp from the first to the last, or None with no step on R."""
-    on = [k for k, (_, i) in enumerate(steps) if i is not None]
-    return (steps[on[0]], steps[on[-1]], offset + sum(lens[:on[0]]), sum(lens[on[0]:on[-1] + 1])) if on else None
 
 
 def blocks(steps, lens, tile):
@@ -348,17 +333,13 @@ def blocks(steps, lens, tile):
 
 
 class Summary:
-    """An abridged row: its start and end on R as (handle, position), its
-    hapOffset, nsteps, bp and the detail record it names, or why its start
-    or end isn't on R."""
+    """An abridged row: its span on R, its hapOffset, nsteps and the detail
+    record it names, or how many columns it has where they aren't ten."""
 
-    def __init__(self, c, tile, cs):
+    def __init__(self, c, cs):
         self.line, self.piece, self.tile = (c[4], int(c[5])), int(c[7]), (c[0], cs)
-        self.offset, self.nsteps, self.bp, self.detail = int(c[6]), int(c[8]), int(c[9]), int(c[12])
-        try:
-            self.ends, self.error = tile.ends(c[10], c[11]), None
-        except (IndexError, ValueError) as e:
-            self.ends, self.error = None, f"{type(e).__name__}: {e}"
+        self.span, self.offset, self.nsteps = (int(c[1]), int(c[2])), int(c[6]), int(c[8])
+        self.detail, self.error = (int(c[9]), None) if len(c) == 10 else (None, f"{len(c)} columns, not ten")
 
 
 def walk_rows(path, keep):
@@ -414,15 +395,14 @@ def walk_rows(path, keep):
                 if not hasattr(unit, "h"):
                     unit.index()
                 if c[3] == "abridged":
-                    abridged[c[4]].append(Summary(c, unit, filed[1]))
+                    abridged[c[4]].append(Summary(c, filed[1]))
                 else:
                     try:
                         steps = unit.steps(c)
                         lens = [unit.len[i] if i is not None else unit.nodes[h >> 1] for h, i in steps]
                         piece = Piece(c, c[0], filed[1], [h for h, _ in steps], sum(lens))
                         if detail is not None:
-                            piece.detail, piece.stretch = detail, stretch(steps, lens, int(c[6]))
-                            piece.blocks = blocks(steps, lens, unit)
+                            piece.detail, piece.blocks = detail, blocks(steps, lens, unit)
                     except (KeyError, IndexError, ValueError) as e:
                         piece = Piece(c, c[0], filed[1], error=f"{type(e).__name__}: {e}")
                     rows[c[4]].append(piece)
@@ -445,6 +425,7 @@ def pct(a, b):
 
 
 def score(args):
+    reference_of(args.walks)
     haps = set(args.haps.split(","))
     pieces, _, _, _, _, extents, size = walk_rows(args.walks, lambda name: name.rsplit("#", 1)[0] in haps)
     broken = [p for ps in pieces.values() for p in ps if p.error]
@@ -537,6 +518,7 @@ def score(args):
 
 
 def cost(args):
+    reference_of(args.walks)
     data = open(args.walks, "rb")
 
     def unit(offset, length):
@@ -666,22 +648,28 @@ def gfa_nodes(path, reference):
     return lengths, on_reference
 
 
-def walk_reference(path):
+def walk_header(path):
+    """A walk file's format tag and reference sample, from its header lines."""
+    found = {}
     with gzip.open(path, "rt") as f:
         for line in f:
-            if not line.startswith("#") or line.startswith("#unit\t"):
-                return None
-            if line.startswith("#reference\t"):
-                return line.rstrip("\n").split("\t")[1]
-    return None
+            c = line.rstrip("\n").split("\t")
+            if c[0] == "#unit" or not line.startswith("#"):
+                break
+            found.setdefault(c[0], c[1] if len(c) > 1 else None)
+    return found.get("#walks"), found.get("#reference")
+
+
+def reference_of(path):
+    """The reference sample of a walk format 8 file; exits on any other format."""
+    tag, reference = walk_header(path)
+    if tag != "format:i:8":
+        sys.exit(f"walks-truth.py: {path}: {tag}, not walk format 8")
+    return reference
 
 
 def handle_text(h):
     return ("<" if h & 1 else ">") + str(h >> 1)
-
-
-def place(step):
-    return f"{handle_text(step[0])} at {step[1]}"
 
 
 def clipped(text):
@@ -743,17 +731,15 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
         where = f"{s.line[0]} line at {s.line[1]}: abridged row of piece {s.piece} in tile {s.tile[0]}:{s.tile[1]}"
         p = detailed.get((s.line, s.piece))
         if s.error:
-            wrong.append(f"{where} has a start or end not on R: {s.error}")
+            wrong.append(f"{where} has {s.error}")
         elif p is None:
             wrong.append(f"{where} has no walk row in a detail unit")
-        elif p.stretch is None:
+        elif p.blocks is None:
             if not p.error:
                 wrong.append(f"{where}: its walk row in detail unit {p.detail} has no step on R")
         else:
-            first, last, offset, bp = p.stretch
-            differs = [(what, a, b) for what, a, b in (("start", place(s.ends[0]), place(first)), ("end", place(s.ends[1]), place(last)),
-                                                       ("hapOffset", s.offset, offset), ("nsteps", s.nsteps, p.decoded),
-                                                       ("bp", s.bp, bp), ("detail", s.detail, p.detail)) if a != b]
+            differs = [(what, a, b) for what, a, b in (("start end", "%d %d" % s.span, "%d %d" % p.blocks[:2]), ("hapOffset", s.offset, p.offset),
+                                                       ("nsteps", s.nsteps, p.decoded), ("detail", s.detail, p.detail)) if a != b]
             if differs:
                 wrong.append(f"{where} says {', '.join(f'{w} {a}' for w, a, _ in differs)}; "
                              f"its piece in detail unit {p.detail} has {', '.join(f'{w} {b}' for w, _, b in differs)}")
@@ -806,7 +792,7 @@ def fork_shard(args, shard, lengths, on_reference, parent_ends):
 
 
 def rebuild(args):
-    lengths, on_reference = gfa_nodes(args.gfa, walk_reference(args.walks))
+    lengths, on_reference = gfa_nodes(args.gfa, reference_of(args.walks))
     failed = 0
     for first in range(0, args.shards, args.jobs):
         group = range(first, min(first + args.jobs, args.shards))

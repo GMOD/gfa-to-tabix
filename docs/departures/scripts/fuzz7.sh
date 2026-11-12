@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Builds fuzz7-gen.py's random graphs under nine option sets, with two
-# references, R and Q, and runs on each file the release checks
+# Builds fuzz7-gen.py's random graphs under thirteen option sets, with two
+# references, R and Q, every third seed with 0 bp nodes, every second with
+# a second haplotype of R and every third with same-node hairpins, and runs on each file the release checks
 # (verify7.py), the claims checks (claims7.py --own), the audit (audit7.py,
 # given the graph), the blocks rows expanded against their tiles' ref rows
 # (expand7.py) and walks-truth.py's rebuild of every line against the
@@ -16,11 +17,16 @@ cd "$FUZZ_DIR"
 from=${1:-1}; to=${2:-200}
 failed=0
 for seed in $(seq "$from" "$to"); do
-  python3 -I "$HERE/fuzz7-gen.py" "$seed" > "g$seed.gfa"
+  shapes=()
+  [ $((seed % 3)) = 0 ] && shapes+=(--zero)
+  [ $((seed % 2)) = 0 ] && shapes+=(--two-haplotypes)
+  [ $((seed % 3)) = 1 ] && shapes+=(--hairpins)
+  python3 -I "$HERE/fuzz7-gen.py" "$seed" "${shapes[@]}" > "g$seed.gfa"
   kept=0
   for v in "a:20:" "b:16:--stay 8" "c:32:--abridge-steps 3" "d:20:--stay 40" "e:64:--abridge-steps 2" \
            "f:8:--stay 40 --abridge-steps 1" "g:64:--abridge-bytes 300" "h:128:--abridge-bytes 600" \
-           "i:24:--sequences --abridge-bytes 400"; do
+           "i:24:--sequences --abridge-bytes 400" "j:3:--stay 0 --abridge-bytes 1" "k:1000:--stay 1000 --abridge-steps 1" \
+           "l:5:--abridge-bytes 1" "m:2:--stay 1000 --abridge-steps 2"; do
     tag=${v%%:*}; rest=${v#*:}; tile=${rest%%:*}; read -r -a opts <<< "${rest#*:}"
     out=o$seed.$tag
     if ! "$B" "g$seed.gfa" --walks --refs R,Q --tile "$tile" "${opts[@]}" -o "$out" > "$out.log" 2>&1; then

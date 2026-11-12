@@ -11,13 +11,18 @@
 # visit no node of R or of either reference, and some graphs put the path
 # lines before the S lines. Every segment has bases, so --sequences runs.
 # With --zero, nodes can have 0 bp, so a sequence can be 0 bp long, and
-# those segments are `*` with LN:i:0.
-# Usage: fuzz7-gen.py seed [--zero] > g.gfa
+# those segments are `*` with LN:i:0. With --two-haplotypes, the reference
+# sample has a second haplotype, R#1, whose contig follows R's first
+# sequence as a haplotype does. With --hairpins, a haplotype steps on a
+# node again right after it, turned round or the same way.
+# Usage: fuzz7-gen.py seed [--zero] [--two-haplotypes] [--hairpins] > g.gfa
 import random
 import sys
 
 seed = int(sys.argv[1])
 zero = '--zero' in sys.argv[2:]
+two_haplotypes = '--two-haplotypes' in sys.argv[2:]
+hairpins = '--hairpins' in sys.argv[2:]
 rng = random.Random(seed)
 lengths = {}
 nid = 1
@@ -101,6 +106,8 @@ def walk(ref):
     while len(steps) < rng.randint(5, 3 * len(ref) + 5) and 0 <= i < len(ref):
         s, r = ref[i]
         steps.append((s, r != rev))
+        if hairpins and rng.random() < 0.08:
+            steps.append((s, rng.choice([r == rev, r == rev, r != rev])))
         x = rng.random()
         if x < 0.06:
             i += rng.randint(2, 30)
@@ -144,6 +151,10 @@ def p_lines(sample, contig, steps):
         start = end + rng.choice([0, 1, 7, 100] if end > start else [1, 7, 100])
 
 
+if two_haplotypes:
+    second = walk(sequences[0])
+    on_reference |= {s for s, _ in second}
+    w('R', 1, 'chr', 0, second)
 q = walk(sequences[0])
 w('Q', 0, 'chr', 0, q + [(node(short()), False) for _ in range(rng.randint(0, 3))])
 for k in range(rng.randint(3, 12)):

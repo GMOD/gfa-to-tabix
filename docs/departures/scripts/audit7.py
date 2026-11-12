@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Audits a walk format 7 file as a reader sees it. Decodes every walk row,
+# Audits a walk format 8 file as a reader sees it. Decodes every walk row,
 # detail ones included, to positions on its sequence by the decoding rules
-# (`@k` and `:k` copies), and checks each walk and abridged row's `start
-# end` against the span its steps decode to. Recomputes every departure from
+# (`@k` and `:k` copies), and checks each walk row's `start end` against the
+# span its steps decode to. Recomputes every departure from
 # those positions, and checks them against the departure records: each
 # departure that needs a record has one with the same fields, and no record
 # lacks a departure, each end's pass count included; that each `ref` row's
 # pass counts are how often the file's `ref` rows hold the node, and the
 # header's `revisited` how many nodes they hold more than once; and that
-# each `abridged` row states its own piece of its detail unit: its steps,
-# its stretch from its first step on R to its last as hapOffset and bp, and
-# those steps' handles and positions in R as start and end; that each
+# each `abridged` row states its own piece of its detail unit: where it
+# starts on its contig as hapOffset, its steps as nsteps, and the span of
+# its steps on R as start and end; that each
 # `abridged` row has one `blocks` row, in its tile's `blocks` unit, stating
 # what its piece of the detail unit decodes to, in path order: each run of
 # steps off R as its bp, and each block, a maximal run of consecutive steps
@@ -21,7 +21,7 @@
 # promise (every base of a record's stretch where its path has no piece lies
 # under a block of the record), that a departure inside a piece lies within
 # its tile's extent, so any window over it reads the tile, and costs each
-# window as format 7 reads it: the tiles and departure blocks whose extents
+# window as format 8 reads it: the tiles and departure blocks whose extents
 # overlap it, from the unit tables, in requests of touching byte ranges.
 # With --gfa, the graph the file was built from: each record's missingBp is
 # the bp between the path's rows that no W or P line of its contig covers,
@@ -290,7 +290,6 @@ def decode(r, routes, cols):
 ref_nodes = set()
 pieces = collections.defaultdict(list)   # path -> [(frag, offset, piece, steps)]
 detail_of = {}   # (path, frag, piece) -> (seq, cs, detail) for a piece in a detail record
-detail_ends = {}   # (path, frag, piece) -> its first and last steps on R, (position in R, handle)
 detail_blocks = {}   # (path, frag, piece) -> its blocks row's (start, end, list)
 blocks_rows = collections.defaultdict(list)   # (path, frag, piece) -> [((seq, unit name), start, end, list)]
 records = []
@@ -305,7 +304,7 @@ text_bytes = collections.Counter()
 seq_len = collections.Counter()
 bad = collections.Counter()
 bad_examples = []
-abridged_rows = []   # (path, frag, offset, piece, steps, bp, (start, end), (seq, cs, detail))
+abridged_rows = []   # (path, frag, offset, piece, steps, (start, end), (seq, cs, detail))
 stated_passes = {}   # node -> the count its first ref row states
 stated_counts = collections.defaultdict(set)   # node -> every count its ref rows state
 held_passes = collections.Counter()   # node -> positions of the file's ref rows holding it
@@ -395,22 +394,7 @@ def take_walk(r, routes, nodes, cols, origin=None):
     if origin is not None:
         key = (cols[4], int(cols[5]), int(cols[7]))
         detail_of[key] = origin
-        runs = [x for x in segs if x[0] == 'R']
-        detail_ends[key] = ((runs[0][1], r.h[runs[0][1]] ^ runs[0][3]), (runs[-1][2], r.h[runs[-1][2]] ^ runs[-1][3]))
         detail_blocks[key] = blocks_of(r, segs, nodes)
-
-
-def abridged_ends(r, start, end):
-    # The positions in R and handles an abridged row's start and end name:
-    # start at occurrence k with `@k`, else the first; end at occurrence k
-    # with `@k`, else the one nearest start's position, the later on a tie
-    h, k = with_k(start)
-    h = int(h)
-    i = r.copy(h, 0 if k is None else k)
-    e, ke = with_k(end)
-    e = int(e)
-    j = None if i is None else r.nearest(e, i) if ke is None else r.copy(e, ke)
-    return (i, h), (j, e)
 
 
 unit = None   # (seq, kind, name, start, end) of the unit being read
@@ -426,6 +410,8 @@ with gzip.open(args.file, 'rt') as f:
                 for t in c[1:]:
                     k, _, v = t.split(':', 2)
                     header[k] = v
+                if header.get('format') != '8':
+                    sys.exit(f'audit7.py: {args.file}: format {header.get("format")}, not walk format 8')
             elif c[0] == '#hole':
                 holes[c[1]].append((int(c[2]), int(c[3])))
             elif c[0] == '#unit':
@@ -529,19 +515,12 @@ with gzip.open(args.file, 'rt') as f:
         elif kind == 'walk':
             take_walk(r, routes, nodes, c)
         elif kind == 'abridged':
-            # abridged path frag offset piece steps bp start end detail
+            # abridged path frag offset piece steps detail
             keep_r[(seq, cs)] = r
-            if in_shard(c[4]):
-                ends = abridged_ends(r, c[10], c[11])
-                if None in (ends[0][0], ends[1][0]):
-                    bad['abridged row: start or end not on R'] += 1
-                else:
-                    i, j = ends[0][0], ends[1][0]
-                    span = (min(r.off[i], r.off[j]), max(r.off[i] + r.len[i], r.off[j] + r.len[j]))
-                    if span != (a, b):
-                        bad['abridged row: start end differ from its start and end steps\' span'] += 1
-                abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), int(c[9]),
-                                      ends, (seq, cs, int(c[12]))))
+            if len(c) != 10:
+                bad['abridged row: not ten columns'] += 1
+            elif in_shard(c[4]):
+                abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), (a, b), (seq, cs, int(c[9]))))
 print('# header')
 print('\t'.join(f'{k}:{v}' for k, v in header.items()))
 print('# rows by kind')
@@ -773,9 +752,9 @@ revisited = sum(1 for n in stated_passes.values() if n > 1)
 print(f'{revisited}\tnodes stated as passed more than once; the header says {header.get("revisited")}')
 if args.seq is None and str(revisited) != header.get('revisited'):
     must_be_0(1, 'header revisited differs from the ref rows')
-# each piece's offset and bp trimmed to its stretch from its first step on R
-# to its last, and its steps; and by sequence and path those stretches and
-# the records' own bp
+# each piece's offset, its steps and the span of its steps on R; and by
+# sequence and path each piece's stretch from its first step on R to its
+# last, and the records' own bp
 held_pieces = {}
 stretches = collections.defaultdict(list)
 for path, ps in pieces.items():
@@ -785,7 +764,7 @@ for path, ps in pieces.items():
         on = [k for k, x in enumerate(steps) if x[0] == 'R']
         lead = sum(x[2] for x in steps[:on[0]])
         tail = sum(x[2] for x in steps[on[-1] + 1:])
-        held_pieces[(path, frag, piece)] = (offset + lead, n, bp - lead - tail)
+        held_pieces[(path, frag, piece)] = (offset, n, (min(steps[k][8] for k in on), max(steps[k][9] for k in on)))
         stretches[(steps[on[0]][1], path)].append((offset + lead, offset + bp - tail))
 record_seq = {row[3]: row[0] for row in dep_rows}
 for k, rec in enumerate(records):
@@ -797,25 +776,20 @@ for key, spans in stretches.items():
     if any(a[1] != b[0] for a, b in zip(spans, spans[1:])):
         untiled.append((key, spans))
 stray = [row for row in abridged_rows if held_pieces.get(row[:2] + row[3:4]) != (row[2], row[4], row[5])]
-must_be_0(len(stray), 'abridged rows unlike the stretch on R and the steps of the piece their detail record holds')
+must_be_0(len(stray), 'abridged rows unlike the hapOffset, the steps and the span on R of the piece their detail '
+          'record holds')
 for row in stray[:args.examples]:
     print('   abridged', row, held_pieces.get(row[:2] + row[3:4]))
-misplaced = [row for row in abridged_rows if detail_of.get(row[:2] + row[3:4]) != row[7]]
+misplaced = [row for row in abridged_rows if detail_of.get(row[:2] + row[3:4]) != row[6]]
 must_be_0(len(misplaced), 'abridged rows whose piece is not in the detail record they name')
 for row in misplaced[:args.examples]:
     print('   misplaced', row, detail_of.get(row[:2] + row[3:4]))
-wrong_ends = [row for row in abridged_rows
-              if row[:2] + row[3:4] in detail_ends and detail_ends[row[:2] + row[3:4]] != row[6]]
-must_be_0(len(wrong_ends), 'abridged rows whose start or end is not their piece\'s first or last step on R, '
-          'by position in R and strand')
-for row in wrong_ends[:args.examples]:
-    print('   ends', row, detail_ends[row[:2] + row[3:4]])
 unblocked = [row for row in abridged_rows if row[:2] + row[3:4] in detail_blocks
-             and blocks_rows.get(row[:2] + row[3:4]) != [((row[7][0], str(row[7][1])),) + detail_blocks[row[:2] + row[3:4]]]]
+             and blocks_rows.get(row[:2] + row[3:4]) != [((row[6][0], str(row[6][1])),) + detail_blocks[row[:2] + row[3:4]]]]
 must_be_0(len(unblocked), 'abridged rows without one blocks row, in their tile\'s blocks unit, stating the blocks '
           'and runs off R their piece\'s detail record decodes to')
 for row in unblocked[:args.examples]:
-    print('   blocks', row[:4], row[7], [(u, a, b, ' '.join(text)[:80]) for u, a, b, *text in blocks_rows.get(row[:2] + row[3:4], [])],
+    print('   blocks', row[:4], row[6], [(u, a, b, ' '.join(text)[:80]) for u, a, b, *text in blocks_rows.get(row[:2] + row[3:4], [])],
           'decoded', detail_blocks[row[:2] + row[3:4]][:2], ' '.join(detail_blocks[row[:2] + row[3:4]][2:])[:80])
 rowed = {row[:2] + row[3:4] for row in abridged_rows}
 unabridged = [k for k in blocks_rows if k not in rowed]
@@ -932,7 +906,7 @@ must_be_0(uncovered_bases, f'bases uncovered, over {uncovered_records} records')
 must_be_0(outside_extent, 'records whose breakpoints lie outside their line\'s extent')
 
 
-# Window costs, as format 7 reads a window: the tile and departure units
+# Window costs, as format 8 reads a window: the tile and departure units
 # whose extents overlap it, fetched in requests of touching byte ranges; the
 # departure lines kept are those whose extent overlaps it
 def load_units(path):

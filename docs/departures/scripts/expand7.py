@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Reads each `blocks` row of a walk format 7 file as a reader that has not
+# Reads each `blocks` row of a walk format 8 file as a reader that has not
 # loaded its piece does, against its tile's `ref` rows alone, and checks it
 # against the piece's walk row in its detail unit, decoded by the spec's
 # rules and collapsed: each step on R kept as its position in R and its
@@ -239,6 +239,8 @@ routes, route_prev, nodes = [], 0, {}
 with gzip.open(args.file, 'rt') as f:
     for line in f:
         c = line.rstrip('\n').split('\t')
+        if c[0] == '#walks' and c[1:2] != ['format:i:8']:
+            sys.exit(f'expand7.py: {args.file}: {" ".join(c[1:2])}, not walk format 8')
         if c[0] == '#unit':
             if unit is not None and unit[1] == 'tile' and not tiles[(unit[0], unit[2])].abridged:
                 del tiles[(unit[0], unit[2])]
