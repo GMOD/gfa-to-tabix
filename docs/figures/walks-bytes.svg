@@ -54,48 +54,48 @@
 <text x="24.0" y="266.0" font-size="12" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">hprc.GRCh38.walks.gz.idx</text>
 <text x="32.0" y="284.0" font-size="10.5" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">#header</text>
 <text x="88.9" y="284.0" font-size="10.5" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">0</text>
-<text x="107.9" y="284.0" font-size="10.5" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">143</text>
+<text x="107.9" y="284.0" font-size="10.5" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">142</text>
 <text x="32.0" y="300.0" font-size="10.5" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">GRCh38#0#chr1</text>
-<text x="126.8" y="300.0" font-size="10.5" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">828</text>
+<text x="126.8" y="300.0" font-size="10.5" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">827</text>
 <text x="158.4" y="300.0" font-size="10.5" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">150</text>
 <text x="24.0" y="342.0" font-size="12" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">hprc.GRCh38.walks.gz</text>
-<text x="182.9" y="342.0" font-size="10.5" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">1006 bytes</text>
-<rect x="345.8" y="350.0" width="192.3" height="60.0" rx="0" fill="#fff3b0"/>
-<rect x="25.0" y="352.0" width="119.1" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
-<text x="84.6" y="373.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">header</text>
-<text x="84.6" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
+<text x="182.9" y="342.0" font-size="10.5" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">1005 bytes</text>
+<rect x="345.3" y="350.0" width="192.4" height="60.0" rx="0" fill="#fff3b0"/>
+<rect x="25.0" y="352.0" width="118.4" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
+<text x="84.2" y="373.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">header</text>
+<text x="84.2" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
 <text x="24.0" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">0</text>
-<rect x="146.1" y="352.0" width="115.7" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
-<text x="204.0" y="373.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 0</text>
-<text x="204.0" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
-<text x="145.1" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">143</text>
-<rect x="263.8" y="352.0" width="81.0" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
-<text x="304.3" y="367.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">departures</text>
-<text x="304.3" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">0-30</text>
-<text x="262.8" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">282</text>
-<rect x="346.8" y="352.0" width="107.3" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
-<text x="400.5" y="373.0" font-size="10" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 30</text>
-<text x="400.5" y="379.0" font-size="10" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
-<text x="345.8" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">380</text>
-<rect x="456.1" y="352.0" width="81.0" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
-<text x="496.6" y="367.0" font-size="10" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">departures</text>
-<text x="496.6" y="379.0" font-size="10" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">30-60</text>
-<text x="455.1" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">509</text>
-<rect x="539.1" y="352.0" width="100.5" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
-<text x="589.3" y="373.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 60</text>
-<text x="589.3" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
-<text x="538.1" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">607</text>
-<rect x="641.6" y="352.0" width="82.7" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
-<text x="682.9" y="367.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">departures</text>
-<text x="682.9" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">60-90</text>
-<text x="640.6" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">728</text>
-<rect x="726.2" y="352.0" width="125.0" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
-<text x="788.8" y="373.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">table</text>
-<text x="788.8" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
-<text x="725.2" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">828</text>
-<text x="876.0" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">1006</text>
-<path d="M136.3,306.0 V330.0 H788.8 V348.0" fill="none" stroke="#57606a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="442.0" y="428.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">chr1:31-60: one request, bytes 380-606</text>
+<rect x="145.4" y="352.0" width="115.8" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
+<text x="203.3" y="373.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 0</text>
+<text x="203.3" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
+<text x="144.4" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">142</text>
+<rect x="263.2" y="352.0" width="81.1" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
+<text x="303.8" y="367.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">departures</text>
+<text x="303.8" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">0-30</text>
+<text x="262.2" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">281</text>
+<rect x="346.3" y="352.0" width="107.4" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
+<text x="400.0" y="373.0" font-size="10" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 30</text>
+<text x="400.0" y="379.0" font-size="10" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
+<text x="345.3" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">379</text>
+<rect x="455.7" y="352.0" width="81.1" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
+<text x="496.2" y="367.0" font-size="10" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">departures</text>
+<text x="496.2" y="379.0" font-size="10" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">30-60</text>
+<text x="454.7" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">508</text>
+<rect x="538.7" y="352.0" width="100.6" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
+<text x="589.0" y="373.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 60</text>
+<text x="589.0" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
+<text x="537.7" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">606</text>
+<rect x="641.3" y="352.0" width="82.8" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
+<text x="682.7" y="367.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">departures</text>
+<text x="682.7" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">60-90</text>
+<text x="640.3" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">727</text>
+<rect x="726.1" y="352.0" width="125.2" height="34.0" rx="3" fill="none" stroke="#d0d7de" stroke-width="1"/>
+<text x="788.7" y="373.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">table</text>
+<text x="788.7" y="379.0" font-size="10" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve"></text>
+<text x="725.1" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">827</text>
+<text x="876.0" y="398.0" font-size="9" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">1005</text>
+<path d="M136.3,306.0 V330.0 H788.7 V348.0" fill="none" stroke="#57606a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="441.5" y="428.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">chr1:31-60: one request, bytes 379-605</text>
 <text x="32.0" y="460.0" font-size="11.5" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">#unit</text>
 <text x="80.5" y="460.0" font-size="11.5" fill="#9aa3ad" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">GRCh38#0#chr1</text>
 <text x="184.3" y="460.0" font-size="11.5" fill="#1f2328" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">30</text>

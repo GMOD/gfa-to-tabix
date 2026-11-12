@@ -2044,7 +2044,6 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
         Ok(())
     })?;
     write_batch(&mut batch)?;
-    drop(write_batch);
     for (path, lines, counts, units) in outputs.finish()? {
         eprintln!(
             "{} {lines} lines in {units} units -> {path} (+ .idx): {} routes, {} walk rows, {} copies named; {} paths abridged to {} detail walk rows",
