@@ -1,0 +1,32 @@
+{
+ "file": "/home/cdiesh/work/blocks/genome/hprc-v2.1-mc-chm13.CHM13.walks.gz",
+ "pieces": 65396,
+ "ownBeforeFirstStepOnR": {
+  "n": 3949,
+  "sum": 234780109,
+  "median": 28818,
+  "p90": 142573,
+  "p99": 357670,
+  "max": 574363,
+  "of1kbOrMore": 3615
+ },
+ "ownAfterLastStepOnR": {
+  "n": 22364,
+  "sum": 1472065076,
+  "median": 37241,
+  "p90": 170607,
+  "p99": 407792,
+  "max": 1066591,
+  "of1kbOrMore": 16691
+ },
+ "largest": [
+  "CHM13#0#chr19 tile 24510464 NA19391#1#CM087798.1 line 14684 piece 374: 1066591 bp after its last step on R",
+  "CHM13#0#chr19 tile 24510464 HG02630#2#JAHAOP020000017.1 line 0 piece 267: 1059445 bp after its last step on R",
+  "CHM13#0#chr19 tile 24510464 HG01891#1#CM088190.1 line 10992 piece 374: 1023673 bp after its last step on R",
+  "CHM13#0#chr19 tile 24510464 HG03369#1#CM094391.1 line 5288 piece 372: 977775 bp after its last step on R",
+  "CHM13#0#chr19 tile 24510464 HG01496#2#CM086399.1 line 22043 piece 376: 934135 bp after its last step on R",
+  "CHM13#0#chr19 tile 24510464 HG02647#1#CM086568.1 line 851530 piece 361: 802210 bp after its last step on R",
+  "CHM13#0#chr19 tile 24510464 HG03270#2#JBHIKD010000006.1 line 6685 piece 374: 759113 bp after its last step on R",
+  "CHM13#0#chr19 tile 24510464 NA18976#2#JBHIJP010000061.1 line 65121 piece 373: 758749 bp after its last step on R"
+ ]
+}

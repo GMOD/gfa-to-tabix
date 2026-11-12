@@ -1,0 +1,32 @@
+{
+ "file": "/home/cdiesh/work/blocks/genome/hprc-v2.1-mc-grch38.GRCh38.walks.gz",
+ "pieces": 74053,
+ "ownBeforeFirstStepOnR": {
+  "n": 1868,
+  "sum": 87582080,
+  "median": 18232,
+  "p90": 113852,
+  "p99": 369670,
+  "max": 566691,
+  "of1kbOrMore": 1682
+ },
+ "ownAfterLastStepOnR": {
+  "n": 17293,
+  "sum": 928222728,
+  "median": 31891,
+  "p90": 143996,
+  "p99": 285245,
+  "max": 914817,
+  "of1kbOrMore": 12079
+ },
+ "largest": [
+  "GRCh38#0#chrY tile 9371648 HG01255#1#JBHDTB010000058.1 line 2446117 piece 101: 914817 bp after its last step on R",
+  "GRCh38#0#chrY tile 9371648 HG01258#1#JAGYYV020000047.1 line 2409564 piece 101: 833636 bp after its last step on R",
+  "GRCh38#0#chrY tile 9371648 HG03209#1#JBHDWG010000018.1 line 0 piece 45: 772826 bp after its last step on R",
+  "GRCh38#0#chrY tile 9371648 HG00609#1#JBHDRX010000001.1 line 2461711 piece 101: 691714 bp after its last step on R",
+  "GRCh38#0#chr15 tile 23265280 HG03453#1#JAGYVW020000013.1 line 17297711 piece 14: 639991 bp after its last step on R",
+  "GRCh38#0#chr15 tile 23265280 HG03130#1#JBHDWI010000014.1 line 12053515 piece 0: 639935 bp after its last step on R",
+  "GRCh38#0#chr15 tile 23265280 HG03521#2#JBIREG010000010.1 line 10544011 piece 0: 639926 bp after its last step on R",
+  "GRCh38#0#chrY tile 9371648 HG02647#1#JBHDSP010000062.1 line 2480706 piece 101: 549898 bp after its last step on R"
+ ]
+}
