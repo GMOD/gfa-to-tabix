@@ -33,6 +33,15 @@ def walk(c, blocks):
     if c[8] != '0':
         items.append(c[8])
     return '\t'.join(c[:7] + [','.join(items)])
+def walk_signed(c, blocks):
+    items = [c[7]] if c[7] != '0' else []
+    for d, begin, sign, length, own in blocks:
+        if own:
+            items.append(str(own))
+        items.append(f"{d}{sign}{length}")
+    if c[8] != '0':
+        items.append(c[8])
+    return '\t'.join(c[:7] + [','.join(items)])
 def absolute(c, blocks):
     return '\t'.join(c[:9] + [','.join(f"{begin}{sign}{length}{':' + str(own) if own else ''}" for d, begin, sign, length, own in blocks)])
 def walk_absolute(c, blocks):
@@ -50,7 +59,7 @@ total = {}
 worst = {}
 for name, lines in units.items():
     parsed = list(rows(lines))
-    for label, f in (('current', current), ('own as items', walk), ('absolute begins', absolute), ('own as items, absolute', walk_absolute)):
+    for label, f in (('current', current), ('own as items', walk), ('own as items, + and -', walk_signed), ('absolute begins', absolute), ('own as items, absolute', walk_absolute)):
         text = lines[0] + ''.join(f(c, b) + '\n' for c, b in parsed)
         raw, z = len(text), bgzf(text)
         t = total.setdefault(label, [0, 0]); t[0] += raw; t[1] += z

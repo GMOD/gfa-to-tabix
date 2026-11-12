@@ -2,5 +2,8 @@ list-grammar.py on MC chr22's 18 blocks units (gfa-to-tabix blocks-unit 3085da9,
 
 current: raw 6312497 bgzf 632569 largest unit 183646
 own as items: raw 6304587 bgzf 610914 largest unit 176110
+own as items, + and -: raw 6304587 bgzf 610624 largest unit 176075
 absolute begins: raw 12168351 bgzf 1539200 largest unit 543190
 own as items, absolute: raw 12160441 bgzf 1535007 largest unit 543938
+
+"own as items" writes > and < for a block's direction; "+ and -" keeps the current signs.
