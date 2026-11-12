@@ -1,0 +1,44 @@
+pggb chrY's GRCh38 walk file on ada, 2026-11-12: seconds and peak memory of main's writer at 17b5bc5 (main)
+and of this change's (new), each build run as
+  systemd-run --user --scope -p MemoryMax=12G -p MemorySwapMax=0 nice -n 10 /usr/bin/time \
+    gfa-to-tabix pggbY.gfa --walks --refs GRCh38
+
+One build at a time:
+main round 1: 92.62 s, 7018480 KB peak, exit 0
+new round 1: 89.64 s, 6985144 KB peak, exit 0
+main round 2: 91.24 s, 7035760 KB peak, exit 0
+new round 2: 91.69 s, 7019404 KB peak, exit 0
+main round 3: 89.01 s, 6996376 KB peak, exit 0
+new round 3: 91.12 s, 6974268 KB peak, exit 0
+
+Two builds of one writer side by side:
+main beside main, round 1: 92.85 s, 6999960 KB peak, exit 0
+main beside main, round 1: 93.05 s, 7029744 KB peak, exit 0
+new beside new, round 1: 98.13 s, 6993268 KB peak, exit 0
+new beside new, round 1: 104.67 s, 7003032 KB peak, exit 0
+main beside main, round 2: 92.02 s, 6986072 KB peak, exit 0
+main beside main, round 2: 92.95 s, 6972464 KB peak, exit 0
+new beside new, round 2: 94.30 s, 7301100 KB peak, exit 0
+new beside new, round 2: 94.54 s, 7013140 KB peak, exit 0
+main beside main, round 3: 93.37 s, 7283680 KB peak, exit 0
+main beside main, round 3: 93.58 s, 6979024 KB peak, exit 0
+new beside new, round 3: 92.28 s, 7066188 KB peak, exit 0
+new beside new, round 3: 92.57 s, 6985636 KB peak, exit 0
+main beside main, round 4: 94.86 s, 7029464 KB peak, exit 0
+main beside main, round 4: 95.37 s, 6993144 KB peak, exit 0
+new beside new, round 4: 94.46 s, 7021632 KB peak, exit 0
+new beside new, round 4: 94.94 s, 7060892 KB peak, exit 0
+main beside main, round 5: 92.27 s, 7034308 KB peak, exit 0
+main beside main, round 5: 92.53 s, 7000624 KB peak, exit 0
+new beside new, round 5: 95.26 s, 6962940 KB peak, exit 0
+new beside new, round 5: 95.53 s, 7047828 KB peak, exit 0
+main beside main, round 6: 92.12 s, 6971860 KB peak, exit 0
+main beside main, round 6: 92.29 s, 7068984 KB peak, exit 0
+new beside new, round 6: 94.05 s, 7046388 KB peak, exit 0
+new beside new, round 6: 94.71 s, 6999716 KB peak, exit 0
+
+The files the two writers write are identical. One at a time they peak within 0.05 GB of each other. Side by
+side a build of either sometimes peaks about 0.3 GB higher: one of 12 here for main's and one of 12 for this
+change's. Main's beside this change's, in the earlier runs of same-bytes-pggbY.sh, gave that higher peak to
+this change's build three times in five and to main's never, which the runs above don't bear out as a
+difference between the writers.

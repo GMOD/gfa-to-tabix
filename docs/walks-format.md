@@ -253,8 +253,8 @@ the vg and odgi runs behind it and the readings turned down.
   as it refuses a W line's start past it. <!-- C186 --> A P line with no
   suffix is its name whole, from 0.
   The tool reads no suffix beneath a fourth field and no second suffix of
-  a kind: a `:a-b` there is part of `path`, as it is in the contig column
-  of the W line vg writes for the same path <!-- C186 -->
+  a kind: a `:a-b` there is part of `path`, as it is of the contig in the
+  W line of the same path <!-- C186 -->
 - The fixtures of [dialect](walks-container/dialect/) hold the same paths
   as vg wrote them in W lines and in P lines, and as odgi cut vg's P
   lines. The forms of one graph give one walk file, byte for byte

@@ -53,8 +53,8 @@
     subrange as `[start]` or `[start-end]`, 0-based, end exclusive
     ([run](../walks-container/dialect/evidence/vg-chunk-subranges.txt),
     [run](../walks-container/dialect/evidence/vg-metadata.txt))
-  - vg calls the fourth field a phase block, and its header says a phase
-    block "may be a number or a start coordinate". One W line,
+  - vg calls the fourth field a phase block, and libhandlegraph's header
+    says a phase block "may be a number or a start coordinate". One W line,
     `W H 1 c 100 106`, leaves vg as `H#1#c#100` through a GBZ and as
     `H#1#c#0[100-106]` through `vg convert -gfW`
     ([run](../walks-container/dialect/evidence/vg-mc-roundtrip.txt)). A
@@ -88,10 +88,12 @@ the spec's text is the rule. By ruling:
   describing the piece it was cut from
 - **R1, a fourth field.** In `sample#hap#contig#N`, exactly three `#`
   and `N` a number, `#N` leaves the name and `N` is added; `#0` adds 0.
-  `H#1#c#100[16-22]` is `H#1#c` from 116, which is where vg's W line of
-  that path starts
+  `H#1#c#100[16-22]` is `H#1#c` from 116, which is where the stretch
+  lies on the contig of the W line it was clipped and cut from
 - **A colon beneath `#0` is not read.** `H#1#c:5-21#0` is the path
-  `H#1#c:5-21` from 0, as vg's W line of it, `W H 1 c:5-21 0 16`, is
+  `H#1#c:5-21` from 0, as the W line of the same path,
+  `W H 1 c:5-21 0 16`, is: vg takes `c:5-21` for the contig
+  ([run](../walks-container/dialect/evidence/vg-metadata.txt))
 - **No empty path.** A name that is only a suffix, or empty, is refused
 - **R2, two fields.** `sample#contig` is listed under its sample in
   `#haplotype`, which is what the node and link index's assemblies,
@@ -107,6 +109,9 @@ the spec's text is the rule. By ruling:
 - **`--refs` and `--reference`** match what a line reads as, and
   `--reference` also the name as its P line writes it; neither reads a
   suffix out of its own text
+- **A start past 2^53 is refused** where a P line's start is settled,
+  once its steps are summed, as a W line's is at its column
+  ([Tiles and pieces](../walks-format.md#tiles-and-pieces))
 - **A number** is one to nineteen decimal digits. Text that is no number
   makes no suffix
 - **A stated limit, phase blocks.** The tool can't tell vg's counter from
@@ -172,8 +177,9 @@ the spec's text is the rule. By ruling:
   - **A stated end the steps contradict was accepted,** `H#1#c[5-900]`
     of 16 bp from 5, where `W H 1 c 5 900` is refused; and `[5]` alone
     gave a path and a `#haplotype` line with no name
-- **Against the checks this ADR adds,** that writer fails 28 of the
-  51 [dialect fixtures](../walks-container/dialect/expected.tsv)
+- **Against the checks this ADR adds,** the writer this change lands on,
+  main at 17b5bc5, fails 28 of the 53
+  [dialect fixtures](../walks-container/dialect/expected.tsv)
   ([run](../walks-container/dialect/results/mutants.txt)). The
   implementer's review counted 14 of the 44 GFAs it ran; its table stayed
   with the review and was not rerun
@@ -199,7 +205,7 @@ the spec's text is the rule. By ruling:
   | a fourth field dropped, not added | 9 | the same, and two graphs refused for lines that now collide |
   | a fourth field not added to a bracket | 3 | the lines its rows name, `walks-truth.py rebuild`, its W twin |
   | two-field paths listed whole | 5 | the `#haplotype` lines, `claims7.py`, `spec8.py` |
-  | the writer at 36a190d | 28 | all of the above |
+  | main's writer at 17b5bc5 | 28 | each of the above |
 
 - **Each reader of P line names is held to one table.** The Rust unit
   test, `audit7.py`, `spec8.py`, `claims7.py`, `walks-truth.py` and
@@ -213,7 +219,8 @@ the spec's text is the rule. By ruling:
   by [same-bytes.sh](../walks-container/dialect/scripts/same-bytes.sh)):
   - every GFA of `tests/data`, the E. coli pggb subgraph and its
     `:start-end` names among them, as walk files and as an index in both
-    formats: the same files from the writer at 36a190d and from this one
+    formats: the same files from main's writer at 17b5bc5 and from this
+    one
   - HPRC release 2's pggb chrY, 1,053 P lines: the walk files for GRCh38
     and for CHM13, their directories, and the node and link index in
     both formats, identical

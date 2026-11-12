@@ -14,7 +14,7 @@ WORK=$(readlink -f "${1:?a directory to build in}")
 OLD=${2:-17b5bc5}
 RUN=${RUN:-}
 escaped=0
-clean() { sed -E "s#/tmp/tmp\.[A-Za-z0-9]+/##g; s#$WORK/[a-z]+/##g" | cut -c1-330; }
+clean() { sed -E "s#/tmp/tmp\.[A-Za-z0-9]+/##g; s#$WORK/(mutant/|old/)?##g; s#$REPO/##g" | grep -v ' KB peak, exit ' | cut -c1-330; }
 dialect() {
   bash "$REPO/scripts/check-dialect.sh" "$1" > "$WORK/dialect.txt" 2>&1
   code=$?
@@ -23,12 +23,13 @@ dialect() {
   echo "exit $code"
 }
 rm -rf "$WORK/mutant" "$WORK/old"
-git clone -q "$REPO" "$WORK/mutant" && git clone -q "$REPO" "$WORK/old" && git -C "$WORK/old" checkout -q "$OLD" || exit 1
+clone() { git -c advice.detachedHead=false clone -q "$REPO" "$1" 2> /dev/null; }
+clone "$WORK/mutant" && clone "$WORK/old" && git -C "$WORK/old" checkout -q "$OLD" || exit 1
 echo "Each broken writer of P line names against the checks. $(git -C "$WORK/mutant" log -1 --format='HEAD %h'), by"
 echo "docs/walks-container/dialect/scripts/mutants.sh."
 echo
 echo "== the writer unbroken: scripts/check-dialect.sh"
-(cd "$WORK/mutant" && $RUN cargo build -q --locked 2>&1 | tail -3)
+(cd "$WORK/mutant" && $RUN cargo build -q --locked 2>&1 | clean | tail -3)
 dialect "$WORK/mutant/target/debug/gfa-to-tabix"
 [ "$code" = 0 ] || escaped=1
 for m in $(python3 -I "$HERE/mutate.py" --list); do
@@ -96,7 +97,7 @@ readers 0 fails
 git checkout -q -- $T
 echo
 echo "== the writer at $OLD, before ADR 0014: scripts/check-dialect.sh"
-(cd "$WORK/old" && $RUN cargo build -q --locked 2>&1 | tail -3)
+(cd "$WORK/old" && $RUN cargo build -q --locked 2>&1 | clean | tail -3)
 dialect "$WORK/old/target/debug/gfa-to-tabix"
 [ "$code" != 0 ] || { echo "ESCAPED: the writer at $OLD"; escaped=1; }
 exit $escaped
