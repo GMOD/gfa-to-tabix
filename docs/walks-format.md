@@ -266,7 +266,11 @@ it alone, and `zcat` reads the whole file as text.
 - **Every unit but the header** starts with a line
   `#unit seq start end kind name` <!-- C34 -->, so the file delimits
   itself: the tables can be rebuilt by walking its gzip members, as a
-  `.fai` can be rebuilt from its FASTA. The header needs no such line: it
+  `.fai` can be rebuilt from its FASTA. A member begins a unit where the
+  member before it ended in a newline and it begins `#unit`: members are
+  cut by size, in the middle of a line, and a path name can hold `#unit`,
+  but no line of a unit after its first starts with `#`. The header needs
+  no such line: it
   is what comes before the first `#unit` line, it is about no sequence and
   no stretch, and any `seq start end` it stated would be made up
   ([ADR 0010](adr/0010-walks-unit-table.md#costs-decided))
