@@ -3,9 +3,9 @@
 - **Status:** accepted, 2026-11-11, and amended the same day: the
   `blocks` unit is a later addition to walk format 7, not a format 8
   ([How a file declares it](#how-a-file-declares-it)). gfa-to-tabix
-  writes it and both hosted files are rebuilt with it on ada
-  ([The rebuilt files](#the-rebuilt-files-2026-11-11)); they aren't
-  hosted until the acceptance test below passes
+  writes it. Nothing with the unit is hosted or released until
+  graph-walks, bandage-core and the plugin read the rebuilt files end to
+  end and the acceptance test below passes
 - **Decides:** one new unit kind, `blocks`, holding each abridged
   piece's exact stretches on the reference, and what a reader and a
   viewer may say about a piece whose steps aren't loaded
@@ -55,36 +55,46 @@
 - **The new unit:** each tile with `abridged` rows has one `blocks`
   unit, named by the tile's start, after the tile's detail units in file
   order, its `start end` the hull of its rows
-- **Its rows:** `seq start end blocks path fragStart piece ownBefore
-  ownAfter list`, one per `abridged` row of the tile, keyed by `path`,
-  `fragStart` and `piece` as the `abridged` row is, `start end` the hull
-  of its blocks
-- **`ownBefore` and `ownAfter`:** the piece's bp off R before its first
-  block and after its last, so the row states the whole piece, from
-  `hapOffset − ownBefore` to `hapOffset + bp + ownAfter` on its contig.
-  The row first stated a piece only between its first and last steps on
-  R; 23% and 34% of the hosted graphs' abridged pieces go on after that,
-  32 and 37 kb at the median, and a reader could learn it only from a
-  neighbouring piece or a departure record where the window held one
-  ([ruling](../walks-container/abridged/ruling-piece-ends.md))
+- **Its rows:** `seq start end blocks path fragStart piece list`, one per
+  `abridged` row of the tile, keyed by `path`, `fragStart` and `piece` as
+  the `abridged` row is, `start end` the hull of its blocks
 - **What a block is:** a maximal run of consecutive steps of the piece on
-  R, each starting where the last ended on R, all in one direction, with
-  no step off R between
-- **How `list` writes them:** the blocks in path order, comma-separated,
-  each as `<d><+|-><len>[:<own>]`:
-  - `d`: where the block begins on R (its first base in path order, the
-    high end for `-`), less where the previous block ended, or less 0 for
-    the first
-  - `+` along R, `-` against it
-  - `len`: its bp
-  - `own`: the haplotype's bp between the previous block and this one,
-    omitted when 0
+  R, each beginning on the base the last ended on, all in one direction,
+  with no step off R between
+- **How `list` writes the piece:** its items in path order,
+  comma-separated, of two kinds:
+  - a block, `<d><+|-><len>`: `d` is where the block begins on R (its
+    first base in path order, the high end for `-`), less where the
+    block before ended, or less 0 for the first; `+` along R, `-`
+    against it; `len` its bp
+  - a run off R, a bare number: the bp of the steps between two blocks,
+    before the first or after the last, that have no place on the
+    tile's R
+- **The list is the whole piece,** so the row states it from
+  `hapOffset` less the leading run to `hapOffset + bp` plus the trailing
+  one. As first built the row stopped at the piece's first and last
+  steps on R; 23% and 34% of the hosted graphs' abridged pieces go on
+  after that, 32 and 37 kb at the median, and a reader could learn it
+  only from a neighbouring piece or a departure record where the window
+  held one ([ruling](../walks-container/abridged/ruling-piece-ends.md)).
+  The two numbers were columns for a few hours, beside a `:own` suffix
+  on each block, which said the same kind of thing two ways; two
+  deciders moved every run into the list
+  ([1](../walks-container/abridged/ruling-final-row-1.md),
+  [2](../walks-container/abridged/ruling-final-row-2.md),
+  [criteria](../walks-container/abridged/final-row-criteria.md),
+  [bytes](../walks-container/abridged/list-grammar.chr22.txt)). They
+  split on `>` and `<` for a block's direction, so the signs stay
+- **What the row determines is proved:** with its tile's `ref` rows and
+  its `abridged` row, the piece with each run off R as its bp, and
+  nothing else ([proof](../walks-container/abridged/blocks-proof.md))
 - **Guarantees, checked at build:**
-  - Σ`len` + Σ`own` equals the `abridged` row's `bp`
+  - the list reads back as the piece, its runs off R included
+  - the items from the first block to the last add up to the `abridged`
+    row's `bp`
   - the first block begins at the `start` step and the last ends at the
     `end` step
-  - the blocks, `ownBefore` and `ownAfter` equal what the detail unit's
-    walk row decodes to
+  - only a line's first piece begins with a run
 - **Everything else is format 7's.** A window read selects `blocks`
   units by extent as it does tiles; it reads them only when it keeps
   unloaded pieces
@@ -154,6 +164,11 @@ results in `blocks-gate.grch38.jsonl` and `blocks-gate.chm13.jsonl`):
 
 ## The rebuilt files, 2026-11-11
 
+These figures are from the row as first built, with `:own` suffixes and
+no end runs; the files were deleted when the row changed, and the table
+is redone from the final row's files before anything is hosted. On
+chr22 the final row's units are 3.5% smaller than the two-column row's.
+
 Both hosted graphs rebuilt on ada with the writer of the `blocks-unit`
 branch ([script](../walks-container/abridged/genome-blocks.sh), results in
 [genome/](../walks-container/abridged/genome/)):
@@ -210,9 +225,11 @@ branch ([script](../walks-container/abridged/genome-blocks.sh), results in
   the guarantees above checked at build, and a checker claim with its
   recorded failure on a broken writer. Both hosted files are rebuilt on
   ada
-- **Swap:** the rebuilt hosted files go up first, once graph-walks 6.2
-  returns the same cuts from them as from today's, which their unchanged
-  units make checkable
+- **Swap:** the rebuilt hosted files can go up before the readers are
+  released, since graph-walks 6.2 reads them as it reads today's. They
+  don't go up before graph-walks, bandage-core and the plugin, linked
+  locally, pass the handoff's tests and renders on them: hosting freezes
+  the row, and the row changed twice once a reader was built on it
 - **graph-walks:** a major release, since it refuses abridged files
   without `blocks` units
 - **bandage-core and the plugin:** follow it, with before/after renders

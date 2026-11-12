@@ -20,7 +20,8 @@ builds it; the releases and the hosted swap wait for the user.
   treat that summary as where the piece lies, how long it is there and
   which way it runs
 - **Fix:** [ADR 0012](../adr/0012-abridged-blocks.md). gfa-to-tabix
-  adds a `blocks` unit per abridged tile, under `format:i:7`;
+  adds a `blocks` unit per abridged tile, under `format:i:7`, each row
+  the whole piece with its runs off R as their bp;
   graph-walks keeps an unloaded piece
   where a block overlaps the drawn stretch and builds its reference steps
   from the blocks, each own run one step of known bp and unknown
@@ -151,24 +152,38 @@ the expanded cut over the same window unless a line says otherwise.
 
 ## Order
 
-- gfa-to-tabix, done on main and not released: the writer, the spec,
-  the file checkers with a broken file for each check, and both hosted
-  graphs rebuilt on ada as `~/work/blocks/genome/*.walks.gz`
-  ([ADR 0012](../adr/0012-abridged-blocks.md#the-rebuilt-files-2026-11-11)).
-  The version is still 4.0.0: a push to main with a new version in
-  Cargo.toml publishes it
-- graph-walks on a branch: blocks to steps, keep by block, `expand` by
-  overlapping detail units only, the refusal of a sequence without
-  `blocks` units; the tests above
+Hosting freezes the `blocks` row, and it changed twice once a reader was
+built on it, so nothing is hosted or released until every consumer has
+read it end to end. Experiments and runs go to ada, one agent at a time.
+
+- gfa-to-tabix, on the `blocks-unit` branch, ahead of main: the writer,
+  the spec and the file checkers follow the row's final shape
+  ([ADR 0012](../adr/0012-abridged-blocks.md)), with its
+  [proof](../walks-container/abridged/blocks-proof.md). Main still holds
+  the row as first built; the branch lands once `scripts/check-walks.sh`
+  passes on ada. The version is still 4.0.0: a push to main with a new
+  version in Cargo.toml publishes it
+- graph-walks on its `blocks-unit` branch (`~/src/graph-walks-blocks`):
+  an independent review found it unsafe to build on, and a second round
+  is fixing that. It is done when its equality harness shows no
+  difference from the full loaded cut on chr22, plain and contained, the
+  harness fails on a broken reader, its cost on the failure windows
+  above is measured against 6.2, and a second review passes it
+- "Reading a window" and the `abridged` section of walks-format.md,
+  which still describe 6.2's reader, follow the reader once it is
+  settled
 - bandage-core on a branch, linked: loaded geometry for unloaded runs,
-  "not loaded" own runs, exact sizes; renders to the user
+  runs off R styled "not loaded", exact sizes; renders to the user
 - the plugin's load action on every row with unloaded runs
-- with the user's go-ahead, release gfa-to-tabix as a minor version and
-  swap the hosted files, once graph-walks 6.2 reads the rebuilt ones as
-  it reads today's. Nothing else has to move with that swap
-- every consumer green on the exact versions; then, with the user's
-  go-ahead, release graph-walks, bandage-core, the plugin and the
+- chr22 end to end, from the writer to rendered rows, through all three
+- then both genome files rebuilt on ada (`genome-blocks.sh`), ADR 0012's
+  table of them redone, graph-walks 6.2.0's release check and the
+  harness run on them, and the tests above on the hosted windows
+- then, with the user's go-ahead, release gfa-to-tabix as a minor
+  version and swap the hosted files; every consumer green on the exact
+  versions; release graph-walks, bandage-core, the plugin and the
   consumers
 - the paper names the gfa-to-tabix version that built the hosted walk
   file and a request count measured on it; both are rechecked after the
-  swap
+  swap. If the paper can't wait, it cites 4.0.0 and today's hosted
+  files, which none of this touches

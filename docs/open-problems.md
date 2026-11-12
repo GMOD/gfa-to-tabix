@@ -556,3 +556,17 @@ W  B  1  c     0  32  >1>2>6>3
   `--walks` for MC chr22, then build the musl target with another
   allocator, such as mimalloc, and keep it only if it closes most of the
   gap on both
+
+## Coordinates past 2^53
+
+- The writer accepts a reference line that starts past 2^53 on its
+  sequence, and writes positions a reader holding numbers as doubles,
+  as graph-walks does, reads wrong: a line at 2^53 + 1 gives a `blocks`
+  list beginning `9007199254740993+6`. A start near 2^63 panics in the
+  writer (`Along::predict`). No real assembly has such a coordinate; a
+  W line's start is whatever its writer put there
+- Found by the proof of what a `blocks` row determines
+  ([blocks-proof.md](walks-container/abridged/blocks-proof.md)); it is
+  not particular to `blocks` rows
+- Suggested next step: refuse a line whose end passes 2^53 at build,
+  with a test, as node ids of 2^31 are refused

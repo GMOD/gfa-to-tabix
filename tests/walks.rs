@@ -1307,13 +1307,13 @@ fn a_departure_block_is_named_dot_and_every_other_name_is_unique() {
     assert_eq!(named.iter().collect::<BTreeSet<_>>().len(), named.len());
 }
 
-// R is 1-6, 6 bp each, in one tile. H starts with 7 bp of its own, walks 1 2,
-// back over 2 1 against R, 10 bp of its own, 5 6, then 3, and ends with 50 bp
-// of its own: four blocks, with 7 bp before them and 50 after. The second runs against R from where the
-// first ended, the third begins 24 bp on with the 10 bp before it, and the
-// last 24 bp back. Their 42 bp and the 10 are the abridged row's 52. The
-// blocks row spans 0 to 36, where the abridged row spans its end steps, 1
-// and 3, 0 to 18
+// R is 1-6, 6 bp each, in one tile. H starts with 7 bp off R, walks 1 2,
+// back over 2 1 against R, 10 bp off R, 5 6, then 3, and ends with 50 bp
+// off R. Its list has the four blocks and the three runs in that order: the
+// second block runs against R from where the first ended, the third begins
+// 24 bp on, and the last 24 bp back. From the first block to the last the
+// items are the abridged row's 52 bp. The blocks row spans 0 to 36, where
+// the abridged row spans its end steps, 1 and 3, 0 to 18
 #[test]
 fn a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order() {
     let built = build_text(
