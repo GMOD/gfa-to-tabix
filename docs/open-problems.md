@@ -570,3 +570,20 @@ W  B  1  c     0  32  >1>2>6>3
   not particular to `blocks` rows
 - Suggested next step: refuse a line whose end passes 2^53 at build,
   with a test, as node ids of 2^31 are refused
+
+## No check recomputes placement where the reference passes a node twice
+
+- A file with a step put on the other copy of a node the reference
+  passes twice, and its detail, `abridged` and `blocks` rows all agreeing
+  with that, passes all six file checkers
+  ([review](walks-container/abridged/reviews.md#format-8-from-the-spec-alone)).
+  The build's own check and the tests catch a writer that does it; a
+  file checker can't without placing the step itself
+- The page doesn't pin the rule tightly enough to place a step from it:
+  what the nearest pass is predicted from for a step against the
+  reference, and the order a stay evaluates its steps in
+- It can't happen where `revisited` is 0, so not on a Minigraph-Cactus
+  file, and no hosted walk file has a revisited node
+- Suggested next step, when someone hosts a pggb walk file: state those
+  two rules exactly, then recompute each such step's pass from the GFA
+  in `walks-truth.py rebuild`

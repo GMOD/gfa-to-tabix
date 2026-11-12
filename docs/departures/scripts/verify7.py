@@ -9,7 +9,11 @@
 #   a gzip member starts; then one line per sequence naming its table, in
 #   file order
 # - the header, the units, the tables and the EOF block partition the file;
-#   every unit starts on a gzip member with its `#unit` line
+#   every unit starts on a gzip member with its `#unit` line: a member that
+#   begins `#unit<TAB>` after one whose text ended in a newline, as a member
+#   cut inside a line of a sequence named `...#unit` begins so too
+# - a unit of a kind this script doesn't know is listed by its table like
+#   any other, and its rows are not read
 # - each table lists exactly the units of its sequence since the last
 #   table, in file order, as they are, at their offsets and lengths, each
 #   above 0 bytes, and its `#unit` line runs from 0 to `|S|`, where the
@@ -86,7 +90,8 @@ def members(f):
         at += n
 
 
-stats = dict(units=0, tables=0, lines=0, departure_lines=0)
+stats = dict(units=0, tables=0, lines=0, departure_lines=0, members_cut_before_unit_text=0)
+KINDS = ('tile', 'departures', 'detail', 'blocks')
 COVERED_BY = dict(tile='ref rows', blocks='blocks rows')
 state = dict(units=[], names=set(), records={}, table=0, ref_end=0, points=[])
 
@@ -106,7 +111,7 @@ def check_unit(at, length, text):
         fail(f'two {kind} units of {seq} named {name}')
     state['names'].add((kind, name))
     union = None
-    for line in lines[1:-1]:
+    for line in lines[1:-1] if kind in KINDS else []:
         c = line.split('\t')
         stats['lines'] += 1
         if c[0] != seq:
@@ -136,7 +141,7 @@ def check_unit(at, length, text):
             fail(f'a {c[3]} row not stating its unit\'s extent: {line[:80]}')
         if stretch:
             union = stretch if union is None else (min(union[0], stretch[0]), max(union[1], stretch[1]))
-    if kind != 'departures':
+    if kind in KINDS and kind != 'departures':
         if union is None:
             fail(f'the {kind} unit at {at} has no ref row, piece or blocks row')
         if union[0] < union[1]:
@@ -196,11 +201,12 @@ with open(path, 'rb') as f:
                 check_unit(*unit)
             unit = None
             eof = at
-        elif text.startswith(b'#unit\t'):
+        elif text.startswith(b'#unit\t') and (unit is None or unit[2].endswith(b'\n')):
             if unit:
                 check_unit(*unit)
             unit = [at, n, text]
         elif unit:
+            stats['members_cut_before_unit_text'] += text.startswith(b'#unit\t')
             unit[1] += n
             unit[2] += text
         else:

@@ -25,7 +25,10 @@
 # overlap it, from the unit tables, in requests of touching byte ranges.
 # With --gfa, the graph the file was built from: each record's missingBp is
 # the bp between the path's rows that no W or P line of its contig covers,
-# and each SQ:Z: tag holds its nodes' bases as the S lines give them.
+# each SQ:Z: tag holds its nodes' bases as the S lines give them, and each
+# length a ref or nodes row states is its segment's. A column after a row's
+# fixed ones is a tag, `NAME:T:value`, and one the audit doesn't know is
+# ignored; a unit of a kind it doesn't know is skipped.
 # Without it, a missingBp below the gap between the rows is unverified, as
 # the gap may hold a W line with no step on the reference, which has no rows.
 # Prints each check that must find nothing as `<count>\t<what> (must be 0)`,
@@ -99,10 +102,16 @@ def read_gfa(path):
                 paths.append((name, start, [int(x.rstrip('+-')) for x in c[2].split(',')]))
     for name, start, steps in paths:
         lines[name].append((start, start + sum(lengths[x] for x in steps)))
-    return bases, lines
+    return bases, lines, lengths
 
 
-gfa_bases, gfa_lines = read_gfa(args.gfa) if args.gfa else (None, None)
+gfa_bases, gfa_lines, gfa_lengths = read_gfa(args.gfa) if args.gfa else (None, None, None)
+TAG = re.compile(r'[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*')
+
+
+def untagged(c, fixed):
+    # a row's columns less the tags after its fixed ones
+    return c[:fixed] + [x for x in c[fixed:] if not TAG.fullmatch(x)]
 
 
 def unlined(path, lo, hi):
@@ -111,10 +120,12 @@ def unlined(path, lo, hi):
     return hi - lo - sum(max(0, min(b, hi) - max(a, lo)) for a, b in gfa_lines.get(path, []))
 
 
-def check_bases(c, ids):
+def check_bases(c, ids, lengths):
     sq = next((t[5:] for t in c[4:] if t.startswith('SQ:Z:')), None)
     if gfa_bases is not None and sq is not None and sq != ''.join(gfa_bases.get(x, '') for x in ids):
         bad[f'{c[3]} row: SQ:Z: differs from its nodes\' bases in the GFA'] += 1
+    if gfa_lengths is not None and lengths != [gfa_lengths.get(x) for x in ids]:
+        bad[f'{c[3]} row: a length differs from its segment\'s in the GFA'] += 1
 
 def handles(field, prev):
     out = []
@@ -455,7 +466,7 @@ with gzip.open(args.file, 'rt') as f:
         if unit[1] == 'blocks':
             kinds[f'{kind} rows'] += 1
             if kind == 'blocks' and in_shard(c[4]):
-                blocks_rows[(c[4], int(c[5]), int(c[6]))].append(((seq, unit[2]), a, b) + tuple(c[7:]))
+                blocks_rows[(c[4], int(c[5]), int(c[6]))].append(((seq, unit[2]), a, b) + tuple(untagged(c, 8)[7:]))
             continue
         if unit[1] == 'detail':
             kinds[f'detail {kind} rows'] += 1
@@ -468,7 +479,7 @@ with gzip.open(args.file, 'rt') as f:
                     prev += d_
                     nodes[prev] = n
                     ids.append(prev)
-                check_bases(c, ids)
+                check_bases(c, ids, ints(c[5]))
             elif kind == 'route':
                 e, route_prev = handles(c[4], route_prev) if c[4] != '.' else ([None], route_prev)
                 inter, route_prev = handles(c[5], route_prev)
@@ -490,7 +501,7 @@ with gzip.open(args.file, 'rt') as f:
                 held_passes[h >> 1] += 1
                 stated_passes.setdefault(h >> 1, n)
                 stated_counts[h >> 1].add(n)
-            check_bases(c, [h >> 1 for h in hs])
+            check_bases(c, [h >> 1 for h in hs], lengths)
             r.add(int(c[6]), hs, lengths)
             seq_len[seq] = max(seq_len[seq], r.off[-1] + r.len[-1])
             for h in hs:
@@ -506,7 +517,7 @@ with gzip.open(args.file, 'rt') as f:
                 prev += d_
                 nodes[prev] = n
                 ids.append(prev)
-            check_bases(c, ids)
+            check_bases(c, ids, ints(c[5]))
         elif kind == 'route':
             e, route_prev = handles(c[4], route_prev) if c[4] != '.' else ([None], route_prev)
             inter, route_prev = handles(c[5], route_prev)
@@ -517,7 +528,7 @@ with gzip.open(args.file, 'rt') as f:
         elif kind == 'abridged':
             # abridged path frag offset piece steps detail
             keep_r[(seq, cs)] = r
-            if len(c) != 10:
+            if len(untagged(c, 10)) != 10:
                 bad['abridged row: not ten columns'] += 1
             elif in_shard(c[4]):
                 abridged_rows.append((c[4], int(c[5]), int(c[6]), int(c[7]), int(c[8]), (a, b), (seq, cs, int(c[9]))))

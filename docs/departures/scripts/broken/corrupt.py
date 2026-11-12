@@ -9,8 +9,9 @@
 # - --idx OLD NEW: in the directory
 # - --header N: the directory states `#header 0 N`
 # - --append UNIT: a unit's text after the last table, in no table
+# - --tag TAG: TAG as a last column on every row and on the #walks line
 # With no edit, a text is packed as it is.
-# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT]...
+# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT | --tag TAG]...
 import gzip
 import struct
 import sys
@@ -18,11 +19,13 @@ import zlib
 
 src, dst, *args = sys.argv[1:]
 edits = dict(once=[], all=[], table=[], idx=[])
-appended, header_stated = [], None
+appended, tags, header_stated = [], [], None
 while args:
-    kind = args.pop(0)[2:] if args[0] in ('--all', '--table', '--idx', '--header', '--append') else 'once'
+    kind = args.pop(0)[2:] if args[0] in ('--all', '--table', '--idx', '--header', '--append', '--tag') else 'once'
     if kind == 'append':
         appended.append(args.pop(0))
+    elif kind == 'tag':
+        tags.append(args.pop(0))
     elif kind == 'header':
         header_stated = int(args.pop(0))
     else:
@@ -38,6 +41,9 @@ def replaced(text, pairs, every=False):
 
 
 text = replaced(replaced(gzip.open(src, 'rt').read(), edits['once']), edits['all'], True)
+for tag in tags:
+    text = ''.join(line + '\t' + tag + '\n' if line[0] != '#' or line.startswith('#walks\t') else line + '\n'
+                   for line in text.splitlines())
 EOF = bytes.fromhex('1f8b08040000000000ff0600424302001b0003000000000000000000')
 
 

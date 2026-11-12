@@ -14,6 +14,8 @@
 #   `start end` and its list, byte for byte, in eight columns
 # - every piece of a detail unit has one blocks row in its tile's blocks
 #   unit, and every blocks row is such a piece's
+# A column after a row's fixed ones is a tag, `NAME:T:value`, and is not
+# read; a unit of another kind than tile, detail and blocks is skipped.
 # Reads the file as a stream, holding the R of a sequence's tiles with
 # abridged rows until its table, and a tile's collapsed pieces, 8 bytes a
 # step, until its blocks unit. Prints each failure, then a count line, and
@@ -35,6 +37,7 @@ args = ap.parse_args()
 SHARD, SHARDS = map(int, args.shard.split('/'))
 CHOICE = re.compile(r'(-?[0-9]+)(?::([0-9]+))?(?:@([0-9]+))?')
 DIGITS = re.compile(r'[0-9]+')
+TAG = re.compile(r'[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*')
 failures = []
 
 
@@ -293,7 +296,7 @@ with gzip.open(args.file, 'rt') as f:
                     walks[key] = walk
             elif kind == 'blocks' and c[3] == 'blocks' and in_shard(c[4]):
                 key = (seq, name, c[4], c[5], c[6])
-                row = (int(c[1]), int(c[2]), c[7:])
+                row = (int(c[1]), int(c[2]), c[7:8] + [x for x in c[8:] if not TAG.fullmatch(x)])
                 stats['rows'] += 1
                 if key in walks:
                     compare(tiles[(seq, name)].index(), key, row, walks.pop(key))

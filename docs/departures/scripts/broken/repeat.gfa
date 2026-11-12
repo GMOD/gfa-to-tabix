@@ -1,0 +1,42 @@
+H	VN:Z:1.1
+S	1	ACGTAC
+S	2	ACGTAC
+S	3	ACGTAC
+S	4	ACGTAC
+S	5	ACGTAC
+S	6	ACGTAC
+S	11	ACGTACGTAC
+S	12	ACGTACG
+S	13	ACGTACGTACGTACGTACGT
+S	14	ACGTACGTACGTACGTACGTACGTACGTAC
+S	15	ACG
+S	16	A
+L	1	+	2	+	0M
+L	11	+	3	+	0M
+L	12	+	2	+	0M
+L	2	+	13	+	0M
+L	2	+	3	+	0M
+L	2	-	1	-	0M
+L	2	-	4	-	0M
+L	2	-	5	-	0M
+L	3	+	12	+	0M
+L	3	+	2	+	0M
+L	3	+	4	+	0M
+L	3	+	5	+	0M
+L	3	+	6	+	0M
+L	3	-	2	-	0M
+L	3	-	5	+	0M
+L	4	+	2	+	0M
+L	4	+	3	-	0M
+L	4	-	3	-	0M
+L	5	+	2	+	0M
+L	5	-	3	-	0M
+L	6	-	3	-	0M
+W	R	0	c	0	60	>1>2>3>4>2>3>5>2>3>6
+W	A	1	c	0	60	>1>2>3>4>2>3>5>2>3>6
+W	B	1	c	0	24	>1>2>3>6
+W	C	1	c	0	60	>1>2>3>5>2>3>4>2>3>6
+W	D	1	c	0	48	>2>3>2>3>2>3>2>3
+W	E	1	c	0	60	<6<3<2<5<3<2<4<3<2<1
+W	F	1	c	0	49	>11>3>12>2>13
+W	G	1	c	0	18	>4<3>5

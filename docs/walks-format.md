@@ -189,8 +189,9 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus, and
 - The walk row states each step's position ([walk](#walk)), so a reader
   never chooses a pass itself, and the tool fails the build if a row
   decodes to another node or position than the one it placed. <!-- C25 -->
-  A step the placement leaves off the reference is route interior, even
-  where the tile's reference path holds its node <!-- C26 -->
+  A step the placement leaves off the reference is route interior, which
+  it does only where the step's tile has no pass of its node: no route
+  interior holds a node of its own tile's reference path <!-- C26 -->
 - A route can hold another tile's reference nodes. A reader places a node
   at a reference position from a `ref` row of a tile it read whenever one
   exists: a pass over `D` before any other, then the row whose path sorts
@@ -390,7 +391,8 @@ The header unit's lines start with `#`:
   - a header line whose first word a reader doesn't know is ignored
   - a unit of a kind it doesn't know is skipped, whatever rows it holds
   - `#unit` lines, `#entry` lines and the directory's lines for the
-    header and the sequences take no tags
+    header and the sequences take no tags; a directory line that starts
+    with `#` and a word a reader doesn't know is ignored
   - an addition doesn't change what a row this page gives means, so a
     reader that ignores it draws nothing false. A change that can't
     keep to that is another format

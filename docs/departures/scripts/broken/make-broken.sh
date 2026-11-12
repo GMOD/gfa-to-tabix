@@ -86,6 +86,7 @@ corrupt ref-strand-flipped "$T311" $'\t0\t24\t2\t1\t10\t6\t.' $'\t0\t24\t2\t1\t1
   $'I#1#i\t0\t24\t4\t1\t10\t.' $'I#1#i\t0\t24\t4\t1\t11\t.' $'Q#0#chr\t0\t24\t2\t1\t10\t.' $'Q#0#chr\t0\t24\t2\t1\t11\t.'
 corrupt reference-wrong "$T0" $'#reference\tGRCh38' $'#reference\tCHM13'
 corrupt sqbad "$SQ" $'R#0#chr1\t0\t8\tref\tR#0#chr1\t0\t0\t0\t2\t18,2\t4,4\t.\tSQ:Z:ACGAAACT' $'R#0#chr1\t0\t8\tref\tR#0#chr1\t0\t0\t0\t2\t18,2\t4,4\t.\tSQ:Z:CCGAAACT'
+corrupt tag-malformed "$T0" $'\t2,2\t6,6\t.\n' $'\t2,2\t6,6\t.\tzz\n'
 corrupt table-S-wrong "$T0" --table $'\t0\t30\ttable\t.\n' $'\t0\t40\ttable\t.\n'
 corrupt table-named "$T0" --table $'\ttable\t.\n' $'\ttable\tx\n'
 corrupt u2-leading-zero "$T0" $'\t12\t24\ttile\t10\n' $'\t12\t24\ttile\t010\n'
@@ -205,3 +206,45 @@ corrupt blocks-row-misfiled "$CE" "$M10" '' "$U20" $'#unit\tR#0#c\t12\t30\tblock
 corrupt blocks-foreign-row "$CE" "$M0" "$M0"$'R#0#c\t0\t12\twalk\tM#1#c\t0\t0\t0\t2\t2\t.\n'
 corrupt blocks-unit-stray "$CS" "$M10" "$M10"$'#unit\tR#0#c\t0\t12\tblocks\t0\n'"$M0"
 corrupt blocks-leading-later "$CE" "$L20" $'R#0#c\t24\t30\tblocks\tL#1#c\t0\t1\t1,24+6\n'
+
+# the files an independent reviewer of format 8 broke by hand, from graphs of
+# its own, each the writer's file with a few rows changed
+build tie100 "$BROKEN/tie.gfa" R --tile 100
+build tie100a "$BROKEN/tie.gfa" R --tile 100 --abridge-bytes 1
+build tie10 "$BROKEN/tie.gfa" R --tile 10
+build follow100 "$BROKEN/follow.gfa" R --tile 100
+build follow100a "$BROKEN/follow.gfa" R --tile 100 --abridge-bytes 1
+build follow100s "$BROKEN/follow.gfa" R --tile 100 --sequences
+build follow100sa "$BROKEN/follow.gfa" R --tile 100 --sequences --abridge-bytes 1
+build repeat100 "$BROKEN/repeat.gfa" R --tile 100
+build refgap100 "$BROKEN/ref-gap.gfa" R --tile 100
+build endsoff10 "$BROKEN/ends-off.gfa" R --tile 10
+build jumps100 "$BROKEN/jumps.gfa" R --tile 100
+for base in tie100 tie100a tie10 follow100 follow100a follow100s follow100sa repeat100 refgap100 endsoff10 jumps100; do
+  declare "${base^^}=$W/$base.R.walks.gz"
+done
+corrupt placement-other-copy "$TIE100" --all $'R#0#c\t0\t18\twalk\tB#1#c\t0\t0\t0\t2\t3\t6@0' $'R#0#c\t12\t30\twalk\tB#1#c\t0\t0\t0\t2\t3\t6'
+corrupt placement-other-copy-abridged "$TIE100A" --all $'R#0#c\t0\t18\twalk\tB#1#c\t0\t0\t0\t2\t3\t0@0' $'R#0#c\t12\t30\twalk\tB#1#c\t0\t0\t0\t2\t3\t0' --all $'R#0#c\t0\t18\troute\t3\t.\t3' $'R#0#c\t12\t30\troute\t3\t.\t3' --all $'#unit\tR#0#c\t0\t18\tdetail\t0:4' $'#unit\tR#0#c\t12\t30\tdetail\t0:4' --all $'R#0#c\t0\t18\tabridged\tB#1#c' $'R#0#c\t12\t30\tabridged\tB#1#c' --all $'R#0#c\t0\t18\tblocks\tB#1#c\t0\t0\t18-6,-6-6' $'R#0#c\t12\t30\tblocks\tB#1#c\t0\t0\t18-6,18-6'
+corrupt on-reference-as-interior "$FOLLOW100" --all $'R#0#c\t0\t36\tnodes\t11,2,1\t10,20,30' $'R#0#c\t0\t36\tnodes\t3,8,2,1\t6,10,20,30' --all $'R#0#c\t0\t36\troute\t4\t22,2\t-18' $'R#0#c\t0\t36\troute\t4\t2\t2\nR#0#c\t0\t36\troute\t-4\t22,2\t-18' --all $'R#0#c\t0\t36\twalk\tA#1#c\t0\t0\t0\t6\t2\t.' $'R#0#c\t0\t36\twalk\tA#1#c\t0\t0\t0\t6\t2\t0' --all $'R#0#c\t0\t36\twalk\tB#1#c\t0\t0\t0\t7\t2\t0,3' $'R#0#c\t0\t36\twalk\tB#1#c\t0\t0\t0\t7\t2\t2,3'
+corrupt on-reference-as-interior-abridged "$FOLLOW100A" --all $'#unit\tR#0#c\t0\t36\tdetail\t0:1\nR#0#c\t0\t36\twalk\tA#1#c\t0\t0\t0\t6\t2\t.' $'#unit\tR#0#c\t0\t36\tdetail\t0:1\nR#0#c\t0\t36\tnodes\t3\t6\nR#0#c\t0\t36\troute\t4\t2\t2\nR#0#c\t0\t36\twalk\tA#1#c\t0\t0\t0\t6\t2\t0' --all $'R#0#c\t0\t36\tblocks\tA#1#c\t0\t0\t0+36' $'R#0#c\t0\t36\tblocks\tA#1#c\t0\t0\t0+12,6,6+18'
+corrupt interior-lengths-traded "$FOLLOW100" --all $'R#0#c\t0\t36\tnodes\t11,2,1\t10,20,30' $'R#0#c\t0\t36\tnodes\t11,2,1\t10,25,25'
+corrupt interior-lengths-traded-abridged "$FOLLOW100A" --all $'R#0#c\t0\t36\tnodes\t11,2,1\t10,20,30' $'R#0#c\t0\t36\tnodes\t11,2,1\t10,25,25'
+corrupt line-end-longer "$FOLLOW100" --all $'R#0#c\t0\t36\tnodes\t11,2,1\t10,20,30' $'R#0#c\t0\t36\tnodes\t11,2,1\t17,20,30'
+corrupt line-end-longer-abridged "$FOLLOW100A" --all $'R#0#c\t0\t36\tnodes\t11,2,1\t10,20,30' $'R#0#c\t0\t36\tnodes\t11,2,1\t17,20,30' --all $'R#0#c\t0\t36\tblocks\tB#1#c\t0\t0\t0+12,50,12+12,10' $'R#0#c\t0\t36\tblocks\tB#1#c\t0\t0\t0+12,50,12+12,17'
+corrupt nodes-bases "$FOLLOW100S" --all $'10,20,30\tSQ:Z:ACGTACGTAC' $'10,20,30\tSQ:Z:TCGTACGTAC'
+corrupt nodes-bases-abridged "$FOLLOW100SA" --all $'10,20,30\tSQ:Z:ACGTACGTAC' $'10,20,30\tSQ:Z:TCGTACGTAC'
+corrupt passes-understated "$REPEAT100" --all $'1,3,3,1,3,3,1,3,3,1' $'1,2,2,1,2,2,1,2,2,1'
+corrupt passes-once-as-twice "$REPEAT100" --all $'1,3,3,1,3,3,1,3,3,1' $'1,3,3,2,3,3,1,3,3,1' $'revisited:i:2' $'revisited:i:3'
+corrupt revisited-zero "$TIE100" $'revisited:i:1' $'revisited:i:0'
+corrupt record-passes "$TIE10" --all $'R#0#c\t12\t30\tdeparture\tA#1#c\t6\t0\t0\t18\t+\t1\t24\t+\t2\t.' $'R#0#c\t12\t30\tdeparture\tA#1#c\t6\t0\t0\t18\t+\t2\t24\t+\t2\t.'
+corrupt record-stretch-short "$TIE10" --all $'R#0#c\t0\t18\tdeparture\tB#1#c\t6\t0\t0\t12\t-\t1\t6\t-\t2\t.' $'R#0#c\t6\t18\tdeparture\tB#1#c\t6\t0\t0\t12\t-\t1\t6\t-\t2\t.'
+corrupt ref-rows-swapped "$REFGAP100" --all $'R#0#c\t0\t48\tref\tR#0#c\t0\t0\t0\t3\t2,2,2\t6,6,6\t.\nR#0#c\t0\t48\tref\tR#0#c\t30\t30\t0\t3\t8,2,2\t6,6,6\t.' $'R#0#c\t0\t48\tref\tR#0#c\t30\t30\t0\t3\t8,2,2\t6,6,6\t.\nR#0#c\t0\t48\tref\tR#0#c\t0\t0\t0\t3\t2,2,2\t6,6,6\t.'
+corrupt piece-walk-and-abridged "$FOLLOW100A" --all $'R#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t0' $'R#0#c\t0\t36\twalk\tA#1#c\t0\t0\t0\t6\t2\t.\nR#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t0'
+corrupt default-copy-named "$TIE100" --all $'R#0#c\t12\t30\twalk\tA#1#c\t0\t0\t0\t2\t2\t0' $'R#0#c\t12\t30\twalk\tA#1#c\t0\t0\t0\t2\t2\t0@1'
+corrupt costliest-not-first "$FOLLOW100A" --all $'R#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t0\nR#0#c\t0\t36\tabridged\tA#1#c\t0\t0\t0\t6\t1' $'R#0#c\t0\t36\tabridged\tA#1#c\t0\t0\t0\t6\t0\nR#0#c\t0\t36\tabridged\tB#1#c\t0\t0\t0\t7\t1' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:0' $'#unit\tR#0#c\t0\t36\tdetail\t0:9' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:1' $'#unit\tR#0#c\t0\t36\tdetail\t0:0' --all $'#unit\tR#0#c\t0\t36\tdetail\t0:9' $'#unit\tR#0#c\t0\t36\tdetail\t0:1' --all $'R#0#c\t0\t36\tblocks\tB#1#c\t0\t0\t0+12,50,12+12,10\nR#0#c\t0\t36\tblocks\tA#1#c\t0\t0\t0+36' $'R#0#c\t0\t36\tblocks\tA#1#c\t0\t0\t0+36\nR#0#c\t0\t36\tblocks\tB#1#c\t0\t0\t0+12,50,12+12,10'
+corrupt revisited-as-interior "$TIE100" --all $'R#0#c\t0\t30\troute\t2\t.\t2' $'R#0#c\t0\t30\tnodes\t2\t6\nR#0#c\t0\t30\troute\t2\t.\t2' --all $'R#0#c\t0\t30\troute\t1\t.\t3' $'R#0#c\t0\t30\troute\t1\t.\t3\nR#0#c\t0\t30\troute\t.\t-1\t-1' --all $'R#0#c\t12\t30\twalk\tA#1#c\t0\t0\t0\t2\t2\t0' $'R#0#c\t12\t18\twalk\tA#1#c\t0\t0\t0\t2\t2\t11'
+corrupt node-two-lengths "$ENDSOFF10" --all $'R#0#c\t0\t12\tnodes\t11,1,1,1,1,1\t10,7,20,30,3,1' $'R#0#c\t0\t12\tnodes\t11,1,1,1,1,1\t10,9,20,30,3,1'
+corrupt piece-split-at-jump "$JUMPS100" --all $'R#0#c\t0\t36\twalk\tC#1#c\t0\t0\t0\t4\t2\t4,5,-4' $'R#0#c\t0\t6\twalk\tC#1#c\t0\t0\t0\t1\t2\t.\nR#0#c\t0\t36\twalk\tC#1#c\t0\t6\t1\t3\t12\t9,-4'
+corrupt missing-overstated "$ENDSOFF10" --all $'departure\tG#1#c\t31\t72\t39\t24' $'departure\tG#1#c\t31\t72\t60\t24'
+corrupt nodes-bases-missing "$FOLLOW100SA" --all $'10,20,30\tSQ:Z:ACGTACGTACACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC' $'10,20,30'
+corrupt revisited-count "$REPEAT100" $'revisited:i:2' $'revisited:i:7'

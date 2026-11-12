@@ -2,7 +2,8 @@
 # Runs the file checks on the broken walk files of broken/, each a file the
 # writer wrote and then corrupted by hand, or a file showing a writer bug,
 # and fails unless every checker cases.tsv names fails it by its exit
-# status, without a traceback; audit7 and walks-truth.py rebuild are given the GFA named there, from
+# status, without a traceback (a case naming `none` is a broken file no
+# checker fails yet, kept for the check that will); audit7 and walks-truth.py rebuild are given the GFA named there, from
 # tests/data or broken/. Exits 1 on any check that passes a broken file.
 # Usage: broken.sh
 set -u
@@ -18,6 +19,8 @@ while IFS=$'\t' read -r name gfa checkers what; do
       claims7) out=$(python3 -I "$HERE/claims7.py" "$f" --own 2>&1) ;;
       audit7) out=$(python3 -I "$HERE/audit7.py" "$f" --gfa "$g" --window 64 --point 16 2>&1) ;;
       expand7) out=$(python3 -I "$HERE/expand7.py" "$f" 2>&1) ;;
+      spec8) out=$(python3 -I "$HERE/spec8.py" "$f" 2>&1) ;;
+      none) continue ;;
       rebuild) out=$(python3 -I "$HERE/../../../scripts/walks-truth.py" rebuild "$f" "$g" 2>&1) ;;
     esac
     if [ $? = 0 ] || grep -q Traceback <<< "$out"; then

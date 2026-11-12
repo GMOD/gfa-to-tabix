@@ -4,7 +4,7 @@
 # a second haplotype of R and every third with same-node hairpins, and runs on each file the release checks
 # (verify7.py), the claims checks (claims7.py --own), the audit (audit7.py,
 # given the graph), the blocks rows expanded against their tiles' ref rows
-# (expand7.py) and walks-truth.py's rebuild of every line against the
+# (expand7.py), the reader written from the spec alone (spec8.py) and walks-truth.py's rebuild of every line against the
 # GFA; prints every seed whose
 # build or checks fail, each by its exit status, and exits 1 if any does.
 # Keeps the failing seeds' graphs and outputs.
@@ -40,6 +40,8 @@ for seed in $(seq "$from" "$to"); do
       audit=$(python3 -I "$HERE/audit7.py" "$f" --gfa "g$seed.gfa" --window 64 --point 16 2>&1) ||
         bad="$bad $r audit7: $(echo "$audit" | sed -n '/^audit7: /,$p' | tr '\n' ' ')$(echo "$audit" | grep -E 'Traceback|Error' | tr '\n' ' ');"
       expanded=$(python3 -I "$HERE/expand7.py" "$f" 2>&1) || bad="$bad $r expand7: $(echo "$expanded" | tr '\n' ' ');"
+      spec=$(python3 -I "$HERE/spec8.py" "$f" 2>&1) ||
+        bad="$bad $r spec8: $(echo "$spec" | sed -n '/^== disagreed ==/,$p' | tr '\n' ' ')$(echo "$spec" | grep -E 'Traceback|Error|^spec8' | tr '\n' ' ');"
       truth=$(python3 -I "$HERE/../../../scripts/walks-truth.py" rebuild "$f" "g$seed.gfa" 2>&1) ||
         bad="$bad $r walks-truth: $(echo "$truth" | tr '\n' ' ');"
     done

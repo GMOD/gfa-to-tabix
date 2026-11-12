@@ -33,6 +33,12 @@ examples = collections.defaultdict(list)
 CLAIMS = {}
 
 
+TAG = re.compile(r'[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*')
+COLUMNS = dict(ref=12, nodes=6, route=7, walk=11, abridged=10, blocks=8, departure=15)
+ROWS = dict(tile={'ref', 'nodes', 'route', 'walk', 'abridged'}, departures={'departure'},
+            detail={'nodes', 'route', 'walk'}, blocks={'blocks'})
+
+
 def claim(key, text):
     CLAIMS[key] = text
 
@@ -228,7 +234,7 @@ claim('U6', 'within a departure block lines are in order of start, end, then tex
 claim('U7', 'every departure line overlaps each block it is in, or, a point, lies at the block\'s start')
 claim('U8', 'a table\'s #unit line runs from 0 to |S|, where its sequence\'s last ref row ends, and is named .')
 claim('U9', 'a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks '
-      'departure, detail units nodes/route/walk, blocks units blocks')
+      'departure, detail units nodes/route/walk, blocks units blocks; a unit of another kind is skipped with its rows')
 claim('U10', 'every sequence in the file has at least one tile, so no table is empty')
 claim('H1', '#haplotype lists each haplotype with walk or abridged rows, sample#haplotype, once each in byte order, '
       'and no other')
@@ -240,10 +246,16 @@ claim('R3', 'a tile of S holds at least one ref row, and ref rows of S only')
 claim('R2', 'a tile\'s ref rows are written in hapOffset order')
 claim('G1', 'a tile\'s walk rows are in order of path name in bytes, then fragStart, hapOffset and piece')
 claim('G4', 'every node id is below 2^31')
+claim('G6', 'a row has its kind\'s fixed columns, and any column after them is a tag NAME:T:value, its name letters '
+      'and digits from a letter, its type one letter')
 claim('G5', '#hole lines are the stretches of each sequence before |S| that no ref row\'s stretch covers, in order '
       'of sequence name in bytes, then start')
 claim('N1', 'a nodes row lists the nodes the tile\'s route interiors visit, ids strictly ascending, and no other')
 claim('N2', 'no route interior holds a node the reference passes once (ADR 0009, nearest-pass placement)')
+claim('N3', 'a node has one length in every ref and nodes row of the file that holds it')
+claim('N5', 'no route interior of a tile or of its detail units holds a node of the tile\'s own R')
+claim('S1', 'SQ:Z: is on every ref and nodes row of a file or on none, and holds as many bases as the row\'s lengths '
+      'add up to')
 claim('T1', 'a route is stored the way round whose handles sort first: entry (none first), interior, exit')
 claim('T2', 'each distinct route is written once per tile or detail unit, a route and its flip counting as one')
 claim('T3', 'a route with no entry or no exit has a non-empty interior')
@@ -322,6 +334,8 @@ units_of = collections.defaultdict(list)  # seq -> [(kind, name, lo, hi)] in fil
 tile_names = collections.defaultdict(set)
 tile_tile = {}          # (seq, name) -> Tile, for --own
 ref_pass_one = set()
+node_length = {}        # node -> the length its first ref or nodes row states
+rows_with_bases = collections.Counter()  # whether a ref or nodes row has SQ:Z: -> rows
 ref_any = set()
 interior_nodes = set()
 haplotypes_with_rows = set()
@@ -526,7 +540,8 @@ with gzip.open(args.file, 'rt') as f:
                 seq, lo, hi, kind, name = c[1], int(c[2]), int(c[3]), c[4], c[5]
                 if not sequences or sequences[-1] != seq:
                     sequences.append(seq)
-                units_of[seq].append((kind, name, lo, hi))
+                if kind in ROWS:
+                    units_of[seq].append((kind, name, lo, hi))
                 t = Tile(seq, name, lo, hi)
                 unit = dict(kind=kind, name=name, seq=seq, lo=lo, hi=hi, tile=t)
                 if kind == 'tile':
@@ -543,18 +558,31 @@ with gzip.open(args.file, 'rt') as f:
                     unit['tile'] = None
                 dep_prev = None
             continue
+        u = unit
+        if u['kind'] not in ROWS:
+            continue
         c = line.split('\t')
         kind = c[3]
-        u = unit
         a, b = int(c[1]), int(c[2])
-        allowed = dict(tile={'ref', 'nodes', 'route', 'walk', 'abridged'}, departures={'departure'},
-                       detail={'nodes', 'route', 'walk'}, blocks={'blocks'})
-        if kind not in allowed.get(u['kind'], set()):
+        if kind not in ROWS[u['kind']]:
             bad('U9', (u['kind'], u['name'], line[:80]))
         seen('U9')
+        fixed = COLUMNS.get(kind, len(c))
+        if len(c) < fixed or any(not TAG.fullmatch(x) for x in c[fixed:]):
+            bad('G6', (u['kind'], u['name'], line[:100]))
+        seen('G6')
+        if len(c) < fixed and kind not in ('abridged', 'blocks'):
+            continue
+        if kind in ('ref', 'nodes'):
+            bases = next((x[5:] for x in c[fixed:] if x.startswith('SQ:Z:')), None)
+            rows_with_bases[bases is not None] += 1
+            if bases is not None and len(bases) != sum(ints(c[10 if kind == 'ref' else 5])):
+                bad('S1', (u['kind'], u['name'], kind, 'row of', sum(ints(c[10 if kind == 'ref' else 5])), 'bp with',
+                           len(bases), 'bases'))
         if u['kind'] == 'blocks':
             if kind == 'blocks':
-                u.setdefault('blocks', []).append((a, b, c[4], int(c[5]), int(c[6]), c[7:]))
+                u.setdefault('blocks', []).append((a, b, c[4], int(c[5]), int(c[6]),
+                                                   [x for k, x in enumerate(c[7:]) if k == 0 or not TAG.fullmatch(x)]))
             continue
         if u['kind'] == 'departures':
             key = (a, b, '\t'.join(c[3:]))
@@ -607,6 +635,8 @@ with gzip.open(args.file, 'rt') as f:
             t.refs.append((int(c[6]), hs, lens, passes))
             at = int(c[6])
             for h, n, p in zip(hs, lens, pc):
+                if node_length.setdefault(h >> 1, n) != n:
+                    bad('N3', (t.seq, t.name, 'ref row', h >> 1, n, 'elsewhere', node_length[h >> 1]))
                 if not (int(t.name) <= at < int(t.name) + tile_size):
                     bad('U2', (t.seq, t.name, 'ref step at', at))
                 ref_any.add(h >> 1)
@@ -631,6 +661,8 @@ with gzip.open(args.file, 'rt') as f:
                 bad('N1', (t.seq, t.name, 'ids not strictly ascending'))
             for x, n in zip(ids, ints(c[5])):
                 t.nodes[x] = n
+                if node_length.setdefault(x, n) != n:
+                    bad('N3', (t.seq, u['kind'], u['name'], 'nodes row', x, n, 'elsewhere', node_length[x]))
             u['nodes_ids'] = ids
             bases = next((x[5:] for x in c[6:] if x.startswith('SQ:Z:')), None)
             if bases is not None:
@@ -665,6 +697,8 @@ with gzip.open(args.file, 'rt') as f:
                         bad('T4', (t.seq, t.name, r))
                 for h in r[1]:
                     interior_nodes.add(h >> 1)
+                    if (h >> 1) in t.occ:
+                        bad('N5', (t.seq, u['kind'], u['name'], 'route', r, 'node', h >> 1))
             used = sorted({h >> 1 for r in t.routes for h in r[1]})
             if used != u.get('nodes_ids', []):
                 bad('N1', (t.seq, t.name, 'nodes row', u.get('nodes_ids', [])[:5], 'interiors', used[:5]))
@@ -676,7 +710,7 @@ with gzip.open(args.file, 'rt') as f:
             if order != sorted(order):
                 k = next(k for k in range(len(order) - 1) if order[k] > order[k + 1])
                 bad('T6', (t.seq, t.name, 'route', k, t.routes[k], 'before', t.routes[k + 1]))
-            for k in ('T1', 'T2', 'T3', 'T4', 'T6', 'N1'):
+            for k in ('T1', 'T2', 'T3', 'T4', 'T6', 'N1', 'N5'):
                 seen(k)
         if kind == 'walk':
             path, frag, piece = c[4], int(c[5]), int(c[7])
@@ -742,7 +776,7 @@ with gzip.open(args.file, 'rt') as f:
             if piece in pieces[(path, frag)]:
                 bad('W5', ('two rows', path, frag, piece))
             pieces[(path, frag)].add(piece)
-            if len(c) != 10:
+            if len(c) < 10 or any(not TAG.fullmatch(x) for x in c[10:]):
                 bad('A9', (t.seq, t.name, len(c), 'columns', line[:100]))
             else:
                 abridged.append((t.seq, t.name, path, frag, piece, int(c[9]), (a, b), int(c[6]), int(c[8])))
@@ -831,6 +865,10 @@ seen('H2')
 for n in interior_nodes & ref_pass_one:
     bad('N2', n)
 seen('N2')
+seen('N3')
+if len(rows_with_bases) > 1:
+    bad('S1', (rows_with_bases[True], 'ref and nodes rows with SQ:Z:', rows_with_bases[False], 'without'))
+seen('S1')
 
 # W5: piece numbering
 for (path, frag), ps in pieces.items():
