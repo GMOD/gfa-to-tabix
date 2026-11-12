@@ -514,27 +514,35 @@ fn decode_walk(path: &RefPath, routes: &[Route], cols: &[&str]) -> Vec<(u32, Opt
     steps
 }
 
-// The blocks a `blocks` row lists, in path order: where each begins and ends
-// on R, and its own bp
-fn listed_blocks(list: &str) -> Vec<(u64, u64, u64)> {
+// What a `blocks` row lists, in path order: its blocks, each as where it
+// begins and ends on R and the bp off R before it, and the bp off R after the
+// last
+fn listed_blocks(list: &str) -> (Vec<(u64, u64, u64)>, u64) {
     let mut at = 0i64;
-    list.split(',')
-        .map(|token| {
-            let sign = 1 + token[1..].find(['+', '-']).unwrap();
-            let (length, own) = match token[sign + 1..].split_once(':') {
-                Some((length, own)) => (length, own.parse().unwrap()),
-                None => (&token[sign + 1..], 0),
-            };
-            let length: i64 = length.parse().unwrap();
-            let begin = at + token[..sign].parse::<i64>().unwrap();
-            at = if &token[sign..=sign] == "-" {
-                begin - length
-            } else {
-                begin + length
-            };
-            (begin as u64, at as u64, own)
-        })
-        .collect()
+    let mut off = 0u64;
+    let mut blocks = Vec::new();
+    for item in list.split(',') {
+        match item[1..].find(['+', '-']) {
+            None => {
+                assert_eq!(off, 0, "two runs off R side by side: {list}");
+                off = item.parse().unwrap();
+                assert!(off > 0, "a run off R of 0 bp: {list}");
+            }
+            Some(sign) => {
+                let sign = sign + 1;
+                let length: i64 = item[sign + 1..].parse().unwrap();
+                let begin = at + item[..sign].parse::<i64>().unwrap();
+                at = if &item[sign..=sign] == "-" {
+                    begin - length
+                } else {
+                    begin + length
+                };
+                blocks.push((begin as u64, at as u64, off));
+                off = 0;
+            }
+        }
+    }
+    (blocks, off)
 }
 
 // A walk file read back: every path's steps, joining its pieces in order, by
@@ -781,11 +789,11 @@ fn decode_file(text: &str) -> Decoded {
                     .find(|c| (c[4], c[5], c[6]) == (cols[4], cols[5], cols[7]))
                     .unwrap();
                 let mut walked: Vec<(u64, u64, u64)> = Vec::new();
-                let (mut own, mut adjacent) = (0, false);
-                for &(h, i) in &steps[first..=last] {
+                let (mut off, mut adjacent) = (0, false);
+                for &(h, i) in steps {
                     match i {
                         None => {
-                            own += lengths[&(h >> 1)];
+                            off += lengths[&(h >> 1)];
                             adjacent = false;
                         }
                         Some(i) => {
@@ -799,30 +807,33 @@ fn decode_file(text: &str) -> Decoded {
                                 {
                                     run.1 = to
                                 }
-                                _ => walked.push((begin, to, own)),
+                                _ => walked.push((begin, to, off)),
                             }
-                            own = 0;
+                            off = 0;
                             adjacent = true;
                         }
                     }
                 }
+                assert_eq!(row.len(), 8, "{row:?}");
                 assert_eq!(
-                    (
-                        row[7].parse::<u64>().unwrap(),
-                        row[8].parse::<u64>().unwrap()
-                    ),
+                    listed_blocks(row[7]),
+                    (walked.clone(), off),
+                    "a blocks row lists its piece as its detail row decodes, each run off R as its bp: {row:?}"
+                );
+                assert_eq!(
+                    (walked[0].2, off),
                     (bp_of(&steps[..first]), bp_of(&steps[last + 1..])),
-                    "a blocks row states its piece's bp off R before its first step on R and after its last: {row:?}"
+                    "{row:?}"
+                );
+                assert!(
+                    walked[0].2 == 0 || *piece == 0,
+                    "only a line's first piece begins off R: {row:?}"
                 );
                 assert_eq!(
-                    listed_blocks(row[9]),
-                    walked,
-                    "a blocks row lists the runs its piece's detail row decodes to: {row:?}"
-                );
-                assert_eq!(
-                    walked.iter().map(|b| b.0.abs_diff(b.1) + b.2).sum::<u64>(),
+                    walked.iter().map(|b| b.0.abs_diff(b.1)).sum::<u64>()
+                        + walked[1..].iter().map(|b| b.2).sum::<u64>(),
                     cols[9].parse::<u64>().unwrap(),
-                    "a blocks row's bp and own bp add up to its abridged row's bp: {row:?}"
+                    "a blocks row's items from its first block to its last add up to its abridged row's bp: {row:?}"
                 );
                 assert_eq!(
                     (
@@ -1332,7 +1343,7 @@ fn a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order() {
         unit(r, "blocks", "0"),
         tsv(&[
             "#unit R#0#c 0 36 blocks 0",
-            "R#0#c 0 36 blocks H#1#c 0 0 7 50 0+12,0-12,24+12:10,-24+6",
+            "R#0#c 0 36 blocks H#1#c 0 0 7,0+12,0-12,10,24+12,-24+6,50",
         ])
     );
 }

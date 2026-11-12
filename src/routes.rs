@@ -983,12 +983,13 @@ fn summary_row(
 }
 
 // A stretch of R that consecutive steps of a piece cover one after another in
-// one direction, and the piece's bp off R since the stretch before it
+// one direction, and the piece's bp off R before it, since the block before
+// or the piece's start
 #[derive(Clone, Copy, PartialEq, Debug)]
 struct Block {
     span: Span,
     against: bool,
-    own: u64,
+    off: u64,
 }
 
 impl Block {
@@ -1009,125 +1010,131 @@ impl Block {
     }
 }
 
-// The blocks of a piece from its first step on R to its last, in path order
-fn blocks_of(path: &Path, piece: &Piece, lengths: &[u32]) -> Vec<Block> {
-    let on_r = |t: &u32| *t != NONE;
-    let first = piece.targets.iter().position(on_r).expect("a step on R");
-    let last = piece.targets.iter().rposition(on_r).expect("a step on R");
+// A piece with each run of steps off R as its bp: its blocks in path order,
+// and its bp off R after the last
+#[derive(PartialEq, Debug)]
+struct Collapsed {
+    blocks: Vec<Block>,
+    after: u64,
+}
+
+fn collapsed(path: &Path, piece: &Piece, lengths: &[u32]) -> Collapsed {
     let mut blocks: Vec<Block> = Vec::new();
-    let (mut own, mut adjacent) = (0, false);
-    for (&h, &t) in piece.handles[first..=last]
-        .iter()
-        .zip(&piece.targets[first..=last])
-    {
+    let (mut off, mut adjacent) = (0, false);
+    for (&h, &t) in piece.handles.iter().zip(&piece.targets) {
         if t == NONE {
-            own += u64::from(lengths[(h >> 1) as usize]);
+            off += u64::from(lengths[(h >> 1) as usize]);
             adjacent = false;
         } else {
             let j = t as usize;
             let span = (path.offsets[j], path.ends[j]);
             let against = (h ^ path.handles[j]) & 1 == 1;
-            let step = Block { span, against, own };
+            let step = Block { span, against, off };
             match blocks.last_mut() {
                 Some(b) if adjacent && b.against == against && b.end() == step.begin() => {
                     b.span = (b.span.0.min(span.0), b.span.1.max(span.1));
                 }
                 _ => blocks.push(step),
             }
-            own = 0;
+            off = 0;
             adjacent = true;
         }
     }
-    blocks
+    Collapsed { blocks, after: off }
 }
 
-// `blocks` as a `blocks` row lists them: each as where it begins on R less
-// where the one before ended, or less 0 for the first, then + along R or -
-// against it, its bp, and after a colon its own bp where it has any
-fn push_blocks(out: &mut Vec<u8>, blocks: &[Block]) {
+// A collapsed piece as a `blocks` row lists it, in path order: a run off R as
+// its bp, and a block as where it begins on R less where the block before
+// ended, or less 0 for the first, then + along R or - against it, then its bp
+fn push_collapsed(out: &mut Vec<u8>, piece: &Collapsed) {
     let mut at = 0i64;
-    for (k, b) in blocks.iter().enumerate() {
-        if k > 0 {
-            out.push(b',');
+    let mut items: Vec<Vec<u8>> = Vec::new();
+    for b in &piece.blocks {
+        if b.off > 0 {
+            items.push(b.off.to_string().into_bytes());
         }
-        push_i64(out, b.begin() as i64 - at);
-        out.push(if b.against { b'-' } else { b'+' });
-        out.extend_from_slice((b.span.1 - b.span.0).to_string().as_bytes());
-        if b.own > 0 {
-            out.push(b':');
-            out.extend_from_slice(b.own.to_string().as_bytes());
-        }
+        let mut block = Vec::new();
+        push_i64(&mut block, b.begin() as i64 - at);
+        block.push(if b.against { b'-' } else { b'+' });
+        block.extend_from_slice((b.span.1 - b.span.0).to_string().as_bytes());
+        items.push(block);
         at = b.end() as i64;
     }
+    if piece.after > 0 {
+        items.push(piece.after.to_string().into_bytes());
+    }
+    out.extend_from_slice(&items.join(&b','));
 }
 
-// The blocks a `blocks` row's list states
-fn read_blocks(list: &[u8]) -> Option<Vec<Block>> {
+// The collapsed piece a `blocks` row's list states
+fn read_collapsed(list: &[u8]) -> Option<Collapsed> {
     let number = |bytes: &[u8]| std::str::from_utf8(bytes).ok()?.parse::<i64>().ok();
     let mut at = 0i64;
-    list.split(|&b| b == b',')
-        .map(|token| {
-            let sign = 1 + token
+    let mut off = 0u64;
+    let mut blocks = Vec::new();
+    for item in list.split(|&b| b == b',') {
+        if item.iter().all(u8::is_ascii_digit) {
+            let run = number(item).filter(|&n| n > 0 && off == 0)?;
+            off = run as u64;
+        } else {
+            let sign = 1 + item
                 .get(1..)?
                 .iter()
                 .position(|b| matches!(b, b'+' | b'-'))?;
-            let against = token[sign] == b'-';
-            let mut sizes = token[sign + 1..].split(|&b| b == b':');
-            let length = number(sizes.next()?)?;
-            let own = sizes.next().map_or(Some(0), number)?;
-            let begin = at + number(&token[..sign])?;
+            let against = item[sign] == b'-';
+            let length = number(&item[sign + 1..]).filter(|&n| n >= 0)?;
+            let begin = at + number(&item[..sign])?;
             at = if against {
                 begin - length
             } else {
                 begin + length
             };
             let span = (begin.min(at), begin.max(at));
-            (sizes.next().is_none() && length >= 0 && own >= 0 && span.0 >= 0).then_some(Block {
+            blocks.push((span.0 >= 0).then_some(Block {
                 span: (span.0 as u64, span.1 as u64),
                 against,
-                own: own as u64,
-            })
-        })
-        .collect()
+                off,
+            })?);
+            off = 0;
+        }
+    }
+    (!blocks.is_empty()).then_some(Collapsed { blocks, after: off })
 }
 
-// The `blocks` row of an abridged piece, keyed as its `abridged` row is, with
-// its bp off R before its first step on R and after its last, and the span of
-// R its blocks cover. Its list must read back as the blocks, which
-// must begin at the piece's first step on R, end at its last, and with their
-// own bp hold every bp between
+// The `blocks` row of an abridged piece, keyed as its `abridged` row is, and
+// the span of R its blocks cover. Its list must read back as the collapsed
+// piece, whose blocks must begin at the piece's first step on R and end at its
+// last and, with the runs off R between them, hold the `abridged` row's bp;
+// and only a line's first piece may begin off R
 fn blocks_row(
     path: &Path,
     piece: &Piece,
     walk: &Walk,
     lengths: &[u32],
 ) -> Result<(Span, Vec<u8>), String> {
-    let blocks = blocks_of(path, piece, lengths);
+    let whole = collapsed(path, piece, lengths);
+    let blocks = &whole.blocks;
     let on_r = |t: &u32| *t != NONE;
     let first = piece.targets.iter().position(on_r).expect("a step on R");
     let last = piece.targets.iter().rposition(on_r).expect("a step on R");
-    let bp_of = |steps: &[u32]| -> u64 {
-        steps
-            .iter()
-            .map(|&h| u64::from(lengths[(h >> 1) as usize]))
-            .sum()
-    };
-    let bp = bp_of(&piece.handles[first..=last]);
+    let bp: u64 = piece.handles[first..=last]
+        .iter()
+        .map(|&h| u64::from(lengths[(h >> 1) as usize]))
+        .sum();
     let mut line = b"blocks\t".to_vec();
     line.extend_from_slice(piece.name);
-    for n in [
-        piece.frag,
-        u64::from(piece.piece),
-        bp_of(&piece.handles[..first]),
-        bp_of(&piece.handles[last + 1..]),
-    ] {
+    for n in [piece.frag, u64::from(piece.piece)] {
         line.push(b'\t');
         line.extend_from_slice(n.to_string().as_bytes());
     }
     line.push(b'\t');
     let listed = line.len();
-    push_blocks(&mut line, &blocks);
-    let held: u64 = blocks.iter().map(|b| b.span.1 - b.span.0 + b.own).sum();
+    push_collapsed(&mut line, &whole);
+    let held: u64 = blocks
+        .iter()
+        .enumerate()
+        .map(|(k, b)| b.span.1 - b.span.0 + if k > 0 { b.off } else { 0 })
+        .sum();
     let step = |at: usize| (path.offsets[at], path.ends[at]);
     let within = |b: &Block, (lo, hi): Span| b.span.0 <= lo && hi <= b.span.1;
     let ends = match (blocks.first(), blocks.last()) {
@@ -1137,6 +1144,7 @@ fn blocks_row(
                 && within(b, end)
                 && a.begin() == if a.against { start.1 } else { start.0 }
                 && b.end() == if b.against { end.0 } else { end.1 }
+                && (a.off == 0 || piece.piece == 0)
         }
         _ => false,
     };
@@ -1146,13 +1154,13 @@ fn blocks_row(
         .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)));
     match hull {
         Some(hull)
-            if read_blocks(&line[listed..]).as_ref() == Some(&blocks) && held == bp && ends =>
+            if read_collapsed(&line[listed..]).as_ref() == Some(&whole) && held == bp && ends =>
         {
             line.push(b'\n');
             Ok((hull, line))
         }
         _ => Err(format!(
-            "{}: the blocks row does not read back as its piece's stretches on R, from its first step there to its last, holding its {bp} bp",
+            "{}: the blocks row does not read back as its piece, with blocks from its first step on R to its last holding its {bp} bp",
             String::from_utf8_lossy(piece.name)
         )),
     }
