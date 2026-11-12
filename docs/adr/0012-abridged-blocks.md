@@ -3,6 +3,9 @@
 - **Status:** accepted, 2026-11-11. gfa-to-tabix writes it; no file in
   format 8 is hosted or released until graph-walks, bandage-core and the
   plugin read one end to end and the acceptance test below passes
+- **Amended by:** [ADR 0013](0013-abridged-hapbp.md), 2026-11-12, which
+  adds `hapBp`, the piece's bp on its contig, to the `abridged` row.
+  The amended lines are marked below
 - **Decides:** walk format 8. Each tile with `abridged` rows has a
   `blocks` unit whose rows give each moved piece as a chain on the
   reference; the `abridged` row keeps only what a reader needs to find
@@ -76,7 +79,9 @@ changed and why.
 
 - `seq start end abridged path fragStart hapOffset piece nsteps detail`:
   the leading columns of the piece's walk row in its detail record, and
-  the record's number
+  the record's number. ADR 0013 adds `hapBp` between `nsteps` and
+  `detail`: the bp of all the piece's steps, which is not the `bp`
+  dropped here
 - **Gone from format 7's row:** `bp` and the two end steps, which the
   list and the `ref` rows give
 - **Changed in meaning:** `start end` is the span of all the piece's
@@ -86,8 +91,14 @@ changed and why.
   piece's start in 113 pieces, and `hapOffset` to `hapOffset + bp` was
   not the whole piece in 1,089 of 2,572
 - **Why it stays in the tile:** a cut of a few named haplotypes reads
-  the tile and loads their detail records, and never reads the `blocks`
-  unit. It needs the key, the cost and the record's number
+  the tile and loads their detail records. It needs the key, the cost
+  and the record's number. This said such a cut never reads the `blocks`
+  unit, which the genome files showed false: 12 and 11 of 60 cuts of
+  four named haplotypes on the worst tiles read one. graph-walks sent
+  every moved piece it met and didn't load through the unit, which a
+  reader rule over the `abridged` rows spares; and a cut that trims a
+  line at a piece it doesn't load needs that piece's end, which
+  [ADR 0013](0013-abridged-hapbp.md) puts on the row as `hapBp`
 
 ### Readers and viewers
 
@@ -209,7 +220,13 @@ in [walks-container/abridged/](../walks-container/abridged/).
   the drawn stretch: 45 KB on one chr22 window, and up to 1.7 MB on a
   genome file's worst tile. The `abridged` row could spare it that with
   the piece's bp and end steps back, which format 8 dropped; they stay
-  dropped unless this number says otherwise
+  dropped unless this number says otherwise. Measured, 60 cuts a
+  genome: 17.8 MB against format 7's 12.0 on CHM13 and 17.7 against
+  13.7 on GRCh38, the worst cut 1.45 MB against 0.61 and 0.95 against
+  0.39. Most of that is graph-walks loading by rule, not the format.
+  What no reader rule removes is a piece's end, which
+  [ADR 0013](0013-abridged-hapbp.md) puts on the row as `hapBp`; the
+  end steps and format 7's `bp` stay dropped
 - The file checkers and graph-walks 7 read a file with an unknown tag
   on every row, an unknown header line and an unknown unit kind as they
   read the same file without them

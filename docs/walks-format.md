@@ -17,7 +17,8 @@
   so is any departure with an end there ([Exact and chosen](#exact-and-chosen))
 - gfa-to-tabix 5.0 and later write walk format 8, which this page
   describes ([ADR 0010](adr/0010-walks-unit-table.md),
-  [ADR 0012](adr/0012-abridged-blocks.md)). It is a series of
+  [ADR 0012](adr/0012-abridged-blocks.md),
+  [ADR 0013](adr/0013-abridged-hapbp.md)). It is a series of
   gzip units with a table of their byte ranges, not a Tabix file. 4.x
   wrote format 7, the same but for a moved piece: its `abridged` row gave
   the piece's two end steps and the bp between, and there were no
@@ -114,6 +115,10 @@ taken flipped, and its departure records.
 [ADR 0001](adr/0001-step-placement.md) gives the reasons for these rules, the
 alternatives tried and their measurements on pggb and Minigraph-Cactus, and
 [ADR 0009](adr/0009-departure-records.md) the changes format 6 made.
+Which pass a step takes, where a piece is cut and what `stay` keeps
+together are gfa-to-tabix's policy: a reader takes positions and pieces
+from the rows, and relies on the invariants of
+[What a reader relies on](#what-a-reader-relies-on), not on these rules.
 
 - The tool cuts each reference sequence into tiles of `tile` bp, at
   multiples of `tile`. <!-- C12 --> A tile's rows are one unit of the
@@ -145,6 +150,11 @@ alternatives tried and their measurements on pggb and Minigraph-Cactus, and
   overlap or start at the same base. <!-- C17 --> The lines are the same
   for any order of the W lines, which `vg convert` changes from run to run
   <!-- C19 -->
+- The tool refuses a W or P line that starts or ends past 2^53 on its
+  contig, and a reference sequence whose last tile ends past it, so no
+  coordinate a file states is above 2^53, a line's end, a unit's `end`,
+  `hapOffset + hapBp` and `hapStart + ownBp` among them, and a reader
+  holding numbers as doubles reads each one exactly <!-- C172 -->
 - The tool drops every segment of 0 bp as it reads the GFA: its steps
   leave every W and P line, so the steps either side of one become
   consecutive, and a line left with no steps is skipped as the next rule
@@ -359,10 +369,14 @@ The header unit's lines start with `#`:
 ```
 
 - `format:i:8` marks this format: these units, these row kinds, their
-  columns and the placement rule above. A reader refuses any other format,
-  and a file with a placement rule this page doesn't give, or a row kind
-  it doesn't give in a unit it does, is another format. <!-- C49 --> A unit kind this page doesn't give is a
-  later addition, which a reader skips <!-- C123 -->
+  columns and the invariants of
+  [What a reader relies on](#what-a-reader-relies-on). A reader refuses
+  any other format, and a file that breaks one of those invariants, or
+  holds a row kind this page doesn't give in a unit it does, is not
+  format 8. <!-- C49 --> The placement rule, `stay` and the abridge
+  budgets are this writer's policy, which the format doesn't fix. A unit
+  kind this page doesn't give is a later addition, which a reader skips
+  <!-- C123 -->
 - The `#walks` line is `#walks` and then tags alone, in any order, as
   the tags after a row's fixed columns are: a reader finds `format`,
   `tile` and the rest by name, not by place. The writer writes them in
@@ -564,12 +578,13 @@ seq start end walk path fragStart hapOffset piece nsteps startHandle[@k] choices
 ### abridged
 
 ```
-seq start end abridged path fragStart hapOffset piece nsteps detail
+seq start end abridged path fragStart hapOffset piece nsteps hapBp detail
 ```
 
 - One row per piece the tool moved to a detail record, in place of its walk
   row: the leading columns of the piece's walk row in that record, then
-  the record's number. See [Abridged tiles](#abridged-tiles). A reader
+  the piece's bp on its contig and the record's number. See
+  [Abridged tiles](#abridged-tiles). A reader
   keys it by `path`, `fragStart` and `piece` as it does a walk row, so
   every piece of a line has one row in its tile, walk or abridged
   <!-- C72 -->
@@ -579,17 +594,43 @@ seq start end abridged path fragStart hapOffset piece nsteps detail
   and how many steps it has. <!-- C73 --> From `nsteps` a reader learns
   the cost of expanding the piece before it reads the detail unit
   <!-- C75 -->
+- `hapBp` is the sum of the lengths of all the piece's steps, on R or off
+  it, and at least 1: the bp of the detail walk row's steps and the sum
+  of the [blocks](#blocks) row's items. <!-- C167 --> The piece covers
+  the half-open stretch `[hapOffset, hapOffset + hapBp)` of its contig,
+  forward along the contig whichever way its steps run on S
+  <!-- C167 -->
+- `hapBp` is not a length on S and has nothing to do with `end − start`:
+  a piece that walks four 10 bp nodes of R, 7 bp of its own and the four
+  nodes back has a span of 40 bp and a `hapBp` of 87. Nor is it format
+  7's `bp`, which ran from the piece's first step on R to its last and
+  left out the steps off R at its ends
+- A line's piece 0 starts at `fragStart`, and `hapOffset + hapBp` is the
+  `hapOffset` of the line's next piece, on whichever sequence that piece
+  is filed; the line's last piece ends where the line does
+  <!-- C168 -->
 - `detail` numbers the tile's record that holds the piece's walk row: the
   unit `detail` named `cs:detail`, `cs` the tile's start. A W line's moved
   pieces in one tile share one record, one record per W line: a contig
   with two W lines there has two <!-- C76 -->. A tile's records are
   numbered from 0, the costliest line first <!-- C131 -->
-- Where on R the piece's steps lie, and its bp off R, are in its
-  [blocks](#blocks) row, which a reader that leaves the piece unexpanded
-  draws it from. A reader that expands it needs this row alone: the key,
-  the cost and the record to read
+- Where on R the piece's steps lie, and where its bp off R lie among
+  them, are in its [blocks](#blocks) row, which a reader that leaves the
+  piece unexpanded draws it from. A reader that expands it needs this
+  row alone: the key, the cost and the record to read
 - A departure record's leave step is the last step on R of its piece and
   its rejoin step the first on R of its piece <!-- C74 -->
+- **The attach rule.** A record's own steps in a piece of its path filed
+  on its sequence are the piece's steps within `[hapStart, hapStart +
+  ownBp) ∩ [hapOffset, hapOffset + hapBp)`, both stretches of the path's
+  contig. <!-- C169 --> Where that is not empty it is one run of steps
+  off R at one end of the piece, and never the whole piece: the steps
+  after the piece's last step on R, where that step is the record's
+  leave, or the steps before its first, where that step is the record's
+  rejoin. <!-- C169 --> So it is the whole trailing run of the piece's `blocks` list or
+  its whole leading run, and a reader has its place and its bp from the
+  `abridged` row and the record without reading the list
+  <!-- C169 -->
 
 ### blocks
 
@@ -615,6 +656,23 @@ seq start end blocks path fragStart piece list
   off R between two blocks, so no two blocks in a row join and no two
   runs stand side by side. A list has a block, and no run of 0 bp
   <!-- C162 -->
+- The list's grammar, in ABNF, with a reader splitting a block at its
+  first `+` or `-` after its first character:
+
+  ```
+  list   = item *( "," item )
+  item   = block / run
+  block  = d sign len
+  d      = "0" / [ "-" ] number
+  sign   = "+" / "-"
+  len    = number
+  run    = number
+  number = %x31-39 *DIGIT
+  ```
+
+  So `d` has no leading zero and is never `-0`, a `len` or a run is at
+  least 1 with no leading zero, and an item of digits alone is a run
+  <!-- C170 -->
 - A block begins at its first base in path order, its high end where it
   runs against R. `d` is counted along S whichever way the blocks run:
   a piece walking steadily along R has `d` of 0 or more, the reference
@@ -628,9 +686,9 @@ seq start end blocks path fragStart piece list
 - Two lines of the reference that abut are one stretch to a block. Two
   with a gap between them end it: the next block begins past the gap,
   and a reader takes the `#hole` out before it calls that a departure
-- The items add up to the piece's bp: it runs on its contig from its
-  `abridged` row's `hapOffset` for their sum, and ends where the line's
-  next piece begins <!-- C163 -->
+- The items add up to the piece's bp, its `abridged` row's `hapBp`: it
+  runs on its contig from that row's `hapOffset` for their sum, and ends
+  where the line's next piece begins <!-- C163 -->
 - A run before the first block or after the last is the piece's steps
   off R at its ends. Only a line's first piece has a leading run
   <!-- C166 -->
@@ -668,10 +726,11 @@ R#0#c  0  36  blocks  H#1#c  0  0  7,0+12,0-12,10,24+12,-24+6,50
 - `24+12`: nodes 5 and 6 from 24, 24 bp on from 0
 - `-24+6`: node 3 from 12, 24 bp back from 36
 - `50`: nodes 13 and 14, after its last step on R
-- The items add up to 109 bp, so the piece runs from 0, its `abridged`
-  row's `hapOffset`, to 109 on its contig. Both rows span 0-36, and the
-  `abridged` row is `R#0#c 0 36 abridged H#1#c 0 0 0 11 0`: 11 steps, in
-  detail record 0
+- The items add up to 109 bp, the `abridged` row's `hapBp`, so the piece
+  runs from 0, that row's `hapOffset`, to 109 on its contig. Both rows
+  span 0-36, and the `abridged` row is
+  `R#0#c 0 36 abridged H#1#c 0 0 0 11 109 0`: 11 steps and 109 bp, in
+  detail record 0. Format 7's `bp` here was 52, from node 1 to node 3
 
 ### departure
 
@@ -711,7 +770,8 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
 - A contig's sequence before its first step on S or after its last is no
   departure and has no record <!-- C82 -->: the piece holding that step
   shows where the path comes from or goes on, as a route with no entry or
-  no exit, and a piece on another sequence holds its steps there
+  no exit, and a piece on another sequence holds its steps there, which
+  no row of S points to ([Reading a window](#reading-a-window))
 - No column says what kind of departure it is. `leaveStrand ≠ rejoinStrand`
   is a strand switch; otherwise, for a `+` leave the path jumps back when
   `rejoinPos < leavePos`, and for a `-` leave when `rejoinPos > leavePos`,
@@ -749,10 +809,12 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
   record's own steps from them: the path's steps after its leave step and
   before its rejoin step, which start at `hapStart` on its contig and span
   `ownBp`. Nothing else it reads joins a fragment or yields a computed
-  departure <!-- C132 -->. A piece there that
-  the tile abridged is read as in the window's read: from its `blocks`
-  row, or from its `detail` unit where the cut was asked to expand that
-  path <!-- C133 -->
+  departure <!-- C132 -->. For a piece there that the tile abridged, it
+  builds the record's own run from the `abridged` row and the record by
+  [the attach rule](#abridged), as one step of that many bp whose nodes
+  it doesn't know, and reads no `blocks` unit for it; where the cut was
+  asked to expand that path it reads the piece's `detail` unit, and
+  takes the own steps from the walk row there <!-- C133 -->
 
 ## Reading a window
 
@@ -772,11 +834,14 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
   Keep the departure lines overlapping `D` and drop exact duplicates
   <!-- C149 -->
 - An attach fetch reads the tiles a record's `ownTiles` names and takes
-  the record's own steps from them alone ([departure](#departure))
-- A cut that leaves an abridged piece unexpanded reads its tile's
-  `blocks` unit and builds the piece from its row there: a block as
-  the steps of R in its stretch ([blocks](#blocks)), and a run off R as
-  one step of that many bp whose nodes it doesn't know
+  the record's own steps from them alone ([departure](#departure)). It
+  reads no `blocks` unit: an abridged piece's own run comes from its
+  `abridged` row and the record
+- A cut that leaves an abridged piece of a window's tile unexpanded
+  reads that tile's `blocks` unit and builds the piece from its row
+  there: a block as the steps of R in its stretch ([blocks](#blocks)),
+  and a run off R as one step of that many bp whose nodes it doesn't
+  know
 - Expanding an abridged piece, which a viewer does on request, reads the
   `detail` unit `cs:d`
 - There is no chunk-before rule, no `maxnode`, no `#long` widening and no
@@ -798,18 +863,87 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
   the bp of it the read holds past either end stated, not as the whole
   piece: a record for where the line goes after a step outside the
   drawn stretch need not overlap `D`, so a whole piece could show its
-  line ending where it goes on
+  line ending where it goes on. An abridged piece's bp past an end come
+  from its `abridged` row, which gives where it starts and ends on its
+  contig
 - **An end at the drawn stretch's edge is not the line's end.** Inside
   the drawn stretch a reader holds either the line's next step on the
-  sequence or the record that gives it, so a line with neither ends
-  there. At the edge it holds neither for a line that ends there and for
-  one that goes on in a tile it didn't read, and it says nothing of
-  which
+  sequence or the record that gives it, so a line with neither has no
+  later step on that sequence. At the edge it holds neither for a line
+  with no later step there and for one that goes on in a tile it didn't
+  read, and it says nothing of which
+- **No later step on the sequence is not the line's end either.** No row
+  states where a W or P line ends or how many pieces it has. After its
+  last step on S a line can go on over nodes off the reference, which
+  its piece holds as the steps after its last on R; in a piece filed on
+  another sequence of the reference, which S's units don't point to;
+  or, for a contig, in a later W line. A record lies between two steps
+  on one sequence, so a line that steps from S onto another sequence and
+  stays there has none on S, and reads on S as a line that stops does.
+  A reader can say a line has no later step on S, and how many bp its
+  last piece there holds after that step. It cannot say the line ends
+  there, nor where on the reference it goes
+  ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
 - Under the overlap rule, a reader can see two fragments of a path where
   format 6's lookback joined them through steps 80–92 kb outside the
   window, with nothing in the window missing; an attach fetch, which takes
   own steps alone, joins none
   ([ADR 0010](adr/0010-walks-unit-table.md#genome-wide))
+
+## What a reader relies on
+
+The format is what holds of any file that says `format:i:8`, whoever
+wrote it: the units, rows and columns above, and the invariants below,
+which the file checks read off a file
+([claims7.md](departures/claims7.md)). A reader may build on them, and
+on nothing else about how a file was made.
+
+- **Positions are stated.** A walk row decodes by
+  [Decoding a walk row](#decoding-a-walk-row) to its piece's steps, each
+  on R at a stated position or off R, so a reader never chooses a pass
+  <!-- C25 -->
+- **A piece has a step on R,** so every piece has a span, which lies
+  inside its tile's extent <!-- C69 C41 -->
+- **A line's pieces tile it.** They are numbered from 0, piece 0 starts
+  at `fragStart`, and each piece ends on its contig where the next
+  begins: a walk row's after its steps' bp, an abridged row's at
+  `hapOffset + hapBp` <!-- C16 C163 C168 -->
+- **An abridged piece's three rows agree.** `hapBp` is the bp of its
+  detail walk row's steps and the sum of its `blocks` list, the list is
+  what that walk row decodes to, and only a line's first piece has a
+  leading run <!-- C167 C164 C166 -->
+- **A record lies between two pieces.** Its leave step is the last step
+  on R of its piece and its rejoin step the first on R of its piece, and
+  a departure inside one piece has no record <!-- C74 C138 C77 -->
+- **A record's own steps in a piece** of its path on its sequence are
+  the piece's steps within `[hapStart, hapStart + ownBp) ∩ [hapOffset,
+  hapOffset + hapBp)`: nothing, or the piece's whole run off R at one
+  end, never the whole piece <!-- C169 -->
+- **`ownTiles` names the tiles of S that hold a record's own steps,** in
+  the path's order, so an attach fetch reads those tiles and no other
+  <!-- C84 C97 -->
+- **A record is in every bin of its cover,** which tiles its line's
+  stretch, so the departures units over `D` hold every record whose
+  line overlaps `D` <!-- C88 -->
+- **No coordinate is above 2^53** <!-- C172 -->
+
+What this writer chooses, and another writer of format 8 could choose
+otherwise with no reader the wiser:
+
+- **Placement:** which pass a step takes where the reference passes its
+  node more than once, the nearest to where the path's last placed step
+  predicts, and so where a line is cut into pieces
+  ([Tiles and pieces](#tiles-and-pieces)). The `passes` columns say
+  where a position is such a choice
+- **`stay`:** which short stretches over revisited nodes stay in their
+  home piece
+- **The abridge budgets:** which tiles move lines to detail records, and
+  how many
+- **Costliest first:** the order a tile numbers its detail records in. A
+  reader finds a record by the `detail` its `abridged` row names
+
+The header's `stay`, `abridge` and `abridgebytes` tags record those
+choices for a person reading the file; a reader ignores them.
 
 ## What the writer guarantees
 
@@ -859,6 +993,16 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   fails the build on a difference (build, tests, files). <!-- C165 -->
   The list is what its detail record's walk row decodes to (tests; files
   with the GFA) <!-- C165 -->
+- Each `abridged` row's `hapBp` is the bp of all its piece's steps: the
+  tool fails the build where its `blocks` list's items don't add up to
+  it, and the checks hold it to the detail walk row's steps, the list
+  and the next piece's `hapOffset` (build, tests, files) <!-- C171 -->
+- A record's stretch of its contig cut to an abridged piece's is the
+  piece's own steps for that record, and the whole leading or trailing
+  run of its list (tests; files, against the list on any file and
+  against the decoded steps on the paths of a shard) <!-- C169 -->
+- No line starts or ends past 2^53, and no reference sequence's last
+  tile does (build, tests) <!-- C172 -->
 - Each record's `ownTiles` are the tiles of S holding its own steps, in
   the path's order (tests; files on the paths of a shard) <!-- C97 -->
 - A record's leave step is the last step on R of its piece and its rejoin
@@ -895,6 +1039,9 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
 ## Abridged tiles
 
 [ADR 0004](adr/0004-abridged-detours.md) gives the reasons and measurements.
+The budgets, which lines a tile moves and the order it numbers their
+records in are this writer's policy
+([What a reader relies on](#what-a-reader-relies-on)).
 
 - A piece costs a reader its routes' interior steps, each counted once per
   use, plus a quarter of all its steps, interior ones included. <!-- C99 -->
@@ -909,19 +1056,21 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   same <!-- C100 -->
 - The tile keeps its `ref` rows, its other pieces' `nodes`, `route` and
   `walk` rows, encoded without the moved pieces, and an `abridged` row per
-  moved piece with where it starts on its contig, its steps and its
-  detail record <!-- C101 -->
+  moved piece with where it starts on its contig, its steps, its bp and
+  its detail record <!-- C101 -->
 - The moved pieces' rows go to the `detail` unit `cs:d` of the tile's
   sequence, `d` the record's number. A reader reads a detail record
   only when it expands that path <!-- C150 -->
 - The tile's `blocks` unit, after its detail units, gives where on R
   the steps of the moved pieces lie ([blocks](#blocks)), at a small part
-  of the detail records' bytes. A reader reads it where it keeps a moved
-  piece it doesn't expand, in a window's tile or an attach fetch's: a
-  cut of all the haplotypes does, and so does a cut that expands a few
-  where one of them has a moved piece in the tile off the drawn stretch.
-  The unit counts toward neither `abridge` budget and can be larger
-  than its tile
+  of the detail records' bytes. A reader reads it to draw a moved piece
+  of a window's tile that it doesn't expand, as a cut of all the
+  haplotypes does. It reads none to choose the detail records a cut
+  expands or to attach a record: a moved piece's span, where it ends on
+  its contig, which piece of its line comes next and a record's own run
+  in it are in the `abridged` rows and the records
+  ([abridged](#abridged)). The unit counts toward neither `abridge`
+  budget and can be larger than its tile
 - A record holds at most one `nodes` row, one exactly when its routes have
   an interior step, then `route` rows and `walk` rows. <!-- C102 --> The
   tool numbers its routes from 0 and chains their tokens from 0, as for a

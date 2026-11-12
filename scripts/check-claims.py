@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keeps walk format 7's claims and their checks together.
+"""Keeps walk format 8's claims and their checks together.
 
 Fails when:
 - a claim ID in the docs (`<!-- C76 -->`) has no row in
@@ -22,7 +22,7 @@ A check is `kind:what`, in backticks in the row's Check column:
 - `claims7:ID`, a claim of docs/departures/scripts/claims7.py
 - `verify7:text` and `audit7:text`, text in verify7.py or audit7.py
 - `script:path`, a file of the repository that runs the check
-- `graph-walks:title`, a test of graph-walks' format 7 reader, as
+- `graph-walks:title`, a test of graph-walks' format 8 reader, as
   docs/walks-container/reader/graph-walks-tests.txt lists them. With
   GRAPH_WALKS=<checkout>, the list must also match that checkout's tests
 

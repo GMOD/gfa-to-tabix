@@ -1,0 +1,54 @@
+=== build
+GRCh38: 253629 pieces, 24648 departure records in 54050 rows, 36 paths visit no GRCh38 node and are left out
+[  50.7 s, 1.0 GiB peak] 1961126 lines in 3855 units -> /home/cdiesh/work/blocks/hapbp-0013/chr22/hapbp.GRCh38.walks.gz (+ .idx): 786690 routes, 250281 walk rows, 0 copies named; 2468 paths abridged to 2572 detail walk rows
+50.69 s, 1099780 KB peak, exit 0
+-rw-rw-r-- 1 cdiesh cdiesh 59120818 Nov 12 09:55 hapbp.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh 59115081 Nov 11 17:29 /home/cdiesh/work/blocks/chr22/f8.GRCh38.walks.gz
+=== bytes
+/home/cdiesh/work/blocks/chr22/f8.GRCh38.walks.gz: 59115081 bytes; hapbp.GRCh38.walks.gz: 59120818 bytes, +5737, +0.0097%
+blocks units: 628486 -> 628486 bytes, +0
+departures units: 891207 -> 891207 bytes, +0
+detail units: 39340605 -> 39340605 bytes, +0
+table units: 46399 -> 46373 bytes, -26
+tile units: 18207021 -> 18212784 bytes, +5763
+tiles with abridged rows: 18, holding 2572 abridged rows: 2102254 -> 2108017 bytes, +5763, +0.274%, 2.24 bytes a row
+the tile that grows most: GRCh38#0#chr22:16252928, 368 abridged rows, 87413 -> 88179 bytes, +766
+units whose lines differ beyond the column: 0
+2.45 s, 28784 KB peak, exit 0
+=== exit 0 : column-bytes
+=== verify7
+1.82 s, 36624 KB peak, exit 0
+{"file": "hapbp.GRCh38.walks.gz", "ok": true, "units": 3855, "tables": 1, "lines": 1961126, "departure_lines": 54050, "members_cut_before_unit_text": 0}
+=== exit 0 : verify7
+=== expand7
+41.46 s, 127704 KB peak, exit 0
+expand7: hapbp.GRCh38.walks.gz: 2572 blocks rows, 2572 pieces in detail units, 0 failures
+=== exit 0 : expand7
+=== against-format7
+4.58 s, 147532 KB peak, exit 0
+1962856 lines; 2572 abridged rows in 18 tiles, 0 with no blocks row; lines that differ: header 0, abridged rows 0, other 0, past the end of one file 0
+=== exit 0 : against-format7
+=== spec8
+=== exit 0 : spec8
+3:          2572  abridged rows
+4:            18  abridged tiles
+18:== agreed ==
+21:        2572  abridged hapBp equal to the bp of all its detail walk row's steps
+22:        2509  abridged pieces whose hapOffset plus hapBp is the next piece's hapOffset
+23:        2572  abridged rows equal to their detail walk row (key, hapOffset, nsteps, span, record)
+26:        2572  blocks lists whose items add up to their abridged row's hapBp
+29:        1102  record stretches that cut to an abridged piece's are its list's whole leading or trailing run
+33:== disagreed ==
+== disagreed ==
+  none
+(112.6 s)
+112.71 s, 1219044 KB peak, exit 0
+=== claims7
+=== exit 0 : claims7
+# hapbp.GRCh38.walks.gz: 3856 units, 24648 departure records, 2572 abridged rows, 0 walk rows with copies
+0	A9 an abridged row has eleven columns: seq start end abridged path fragStart hapOffset piece nsteps hapBp detail
+0	A10 an abridged row's hapBp is at least 1 and is what its blocks row's items add up to
+0	A11 an abridged row's hapBp is the bp of the steps its piece's walk row in its detail unit decodes to
+0	A12 an abridged piece 0 starts at fragStart, and an abridged piece's hapOffset plus hapBp is the hapOffset of its W line's next piece, in that piece's walk or abridged row
+0	A13 the bp of an abridged piece's stretch of its contig, hapOffset over hapBp, within a record's of its sequence and path, hapStart over ownBp, is its blocks list's trailing run where hapStart is wh
+=== chr22 done
