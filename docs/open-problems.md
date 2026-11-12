@@ -481,7 +481,14 @@ W  B  1  c     0  32  >1>2>6>3
   where `revisited` is 0
 - graph-walks' equality harness, not its reader, read a `+` leave as the
   node's right end, which is wrong where the reference passes the node
-  reversed ([revref.gfa](walks-container/pggbY/revref.gfa))
+  reversed ([revref.gfa](walks-container/pggbY/revref.gfa)). graph-walks
+  cbca728 reads the strand from the tile's `ref` rows, and sets the
+  difference above aside by name where `revisited` is above 0
+- With both mended, ten links still differ over seven GRCh38 windows,
+  at 11.56 and 20.08 Mb: each joins two reference nodes, only the loaded
+  cut holds it, and no fragment or departure of either cut walks it. One
+  was traced to steps the loaded cut decodes and doesn't return; the
+  other nine are untraced, and the harness still fails on them
 - Suggested next step, when someone asks for pggb walk tracks: measure
   inline own steps under a size cap on the Yq12 windows, as
   [the section above](#departure-records-and-attach-fetches-on-pggb)
