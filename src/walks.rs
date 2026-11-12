@@ -1,8 +1,8 @@
 // The --walks mode: every path of a base-level GFA cut into pieces filed under
 // fixed tiles of each reference's coordinate, written as one walk file per
-// reference in walk format 7 (ADR 0010): `routes.rs` writes a tile's rows,
-// `departures.rs` the departure records, and `units.rs` the units, tables and
-// directory. Every line starts with its sequence and the stretch of it the
+// reference in walk format 8 (ADR 0010, ADR 0012, ADR 0013): `routes.rs`
+// writes a tile's rows, `departures.rs` the departure records, and `units.rs`
+// the units, tables and directory. Every line starts with its sequence and the stretch of it the
 // line is about. The header unit gives the format, the tile size and the
 // options, then the reference, the haplotypes and the holes.
 
@@ -72,10 +72,24 @@ struct PathLine<'a> {
     walk: bool,
 }
 
+// The highest coordinate a walk file states: a reader holding numbers as
+// doubles reads every integer up to it exactly
+const MAX_COORDINATE: u64 = 1 << 53;
+
+fn past_max(path: &[u8], what: &str, at: u64) -> String {
+    format!(
+        "path {} {what} at {at}, past 2^53, the highest coordinate a walk file states",
+        text(path)
+    )
+}
+
 // Refuses a name a walk file's line would read as a header or `#unit` line,
-// and one holding a NUL byte, which ends a name in the writer's sort
+// one holding a NUL byte, which ends a name in the writer's sort, and a line
+// that starts past the highest coordinate
 fn named(path: PathLine) -> Result<Option<PathLine>, String> {
-    if path.name.first() == Some(&b'#') {
+    if path.start > MAX_COORDINATE {
+        Err(past_max(&path.name, "starts", path.start))
+    } else if path.name.first() == Some(&b'#') {
         Err(format!(
             "path {} starts with #, which marks a walk file's header and unit lines",
             text(&path.name)
@@ -477,7 +491,7 @@ impl Stable {
         for &id in ids {
             let id = id as usize;
             self.offer(names, id, name, offset);
-            offset += u64::from(lengths[id]);
+            offset = offset.saturating_add(u64::from(lengths[id]));
         }
         offset
     }
@@ -491,22 +505,22 @@ struct Record {
     end: u64,
 }
 
-// Refuses a W line whose end column disagrees with its steps.
+// Refuses a W line whose end column disagrees with its steps, and a line
+// that ends past the highest coordinate.
 fn record(path: &PathLine, name: u32, end: u64) -> Result<Record, String> {
-    if let Some(stated) = path.end
-        && stated != end
-    {
-        return Err(format!(
+    match path.end {
+        Some(stated) if stated != end => Err(format!(
             "path {} ends at {stated}, but its steps from {} end at {end}",
             text(&path.name),
             path.start
-        ));
+        )),
+        _ if end > MAX_COORDINATE => Err(past_max(&path.name, "ends", end)),
+        _ => Ok(Record {
+            name,
+            start: path.start,
+            end,
+        }),
     }
-    Ok(Record {
-        name,
-        start: path.start,
-        end,
-    })
 }
 
 // Pass 1: node lengths (and sequences), every reference sample's paths,
@@ -858,24 +872,33 @@ impl Chunks {
             .iter()
             .map(|&(_, _, _, end)| end.div_ceil(size))
             .sum();
-        if count >= u64::from(NONE) {
-            return Err("more than 2^32 tiles; use a larger --tile".into());
-        }
-        for (_, name, reference, end) in sequences {
-            first[name as usize] = starts.len() as u32;
-            owner[name as usize] = reference;
-            ends[name as usize] = end;
-            for c in 0..end.div_ceil(size) {
-                starts.push((name, c * size));
+        let past = sequences
+            .iter()
+            .find(|&&(_, _, _, end)| end.div_ceil(size) * size > MAX_COORDINATE);
+        if let Some(&(name, _, _, end)) = past {
+            Err(format!(
+                "reference sequence {} ends at {end}, and its last tile of {size} bp ends past 2^53, the highest coordinate a walk file states",
+                text(name)
+            ))
+        } else if count >= u64::from(NONE) {
+            Err("more than 2^32 tiles; use a larger --tile".into())
+        } else {
+            for (_, name, reference, end) in sequences {
+                first[name as usize] = starts.len() as u32;
+                owner[name as usize] = reference;
+                ends[name as usize] = end;
+                for c in 0..end.div_ceil(size) {
+                    starts.push((name, c * size));
+                }
             }
+            Ok(Chunks {
+                size,
+                first,
+                owner,
+                end: ends,
+                starts,
+            })
         }
-        Ok(Chunks {
-            size,
-            first,
-            owner,
-            end: ends,
-            starts,
-        })
     }
 
     fn of(&self, name: u32, offset: u64) -> u32 {

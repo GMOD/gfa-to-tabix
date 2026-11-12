@@ -2532,6 +2532,106 @@ fn a_node_id_of_2_to_the_31_is_refused() {
     assert!(built.walks.is_empty());
 }
 
+fn dialect_fixture(name: &str) -> String {
+    format!(
+        "{}/docs/walks-container/dialect/{name}",
+        env!("CARGO_MANIFEST_DIR")
+    )
+}
+
+// No coordinate in a walk file is past 2^53, which a reader holding numbers
+// as doubles reads exactly: lines of the reference and of a haplotype that
+// end there build, and the tile, the piece and the blocks row end there too.
+// One that ends 1 bp on is refused, and so is one that starts past it, a
+// start near 2^63 included, which used to panic
+#[test]
+fn a_line_past_2_to_the_53_is_refused_and_one_ending_there_builds() {
+    let tile = ["--refs", "R", "--tile", "1099511627776"];
+    let built = build(
+        &dialect_fixture("line-end-2e53.gfa"),
+        &[&tile[..], &["--abridge-bytes", "1"]].concat(),
+    );
+    let stderr = String::from_utf8_lossy(&built.output.stderr);
+    assert!(built.output.status.success(), "{stderr}");
+    let r = built.file("R");
+    assert_eq!(
+        unit(r, "tile", "9006099743113216"),
+        tsv(&[
+            "#unit R#0#chr 9007199254740980 9007199254740992 tile 9006099743113216",
+            "R#0#chr 9007199254740980 9007199254740992 ref R#0#chr 9007199254740980 9007199254740980 0 2 2,2 6,6 .",
+            "R#0#chr 9007199254740980 9007199254740992 abridged H#1#c 9007199254740976 9007199254740976 0 3 16 0",
+        ])
+    );
+    assert_eq!(
+        unit(r, "blocks", "9006099743113216"),
+        tsv(&[
+            "#unit R#0#chr 9007199254740980 9007199254740992 blocks 9006099743113216",
+            "R#0#chr 9007199254740980 9007199254740992 blocks H#1#c 9007199254740976 0 9007199254740980+6,4,0+6",
+        ])
+    );
+    let refused = build(&dialect_fixture("line-end-past-2e53.gfa"), &tile);
+    let stderr = refused_in_first_pass(&refused);
+    assert!(
+        stderr.ends_with(
+            "line 9: path H#1#c ends at 9007199254740993, past 2^53, the highest coordinate a walk file states\n"
+        ),
+        "{stderr}"
+    );
+    for (line, error) in [
+        (
+            "W R 0 chr 9007199254740987 9007199254740993 >1",
+            "path R#0#chr ends at 9007199254740993, past 2^53",
+        ),
+        (
+            "W H 1 c 9007199254740993 9007199254740999 >1",
+            "path H#1#c starts at 9007199254740993, past 2^53",
+        ),
+        (
+            "W H 1 c 9223372036854775807 9223372036854775813 >1",
+            "path H#1#c starts at 9223372036854775807, past 2^53",
+        ),
+        (
+            "W H 1 c 9999999999999999999 5 >1",
+            "path H#1#c starts at 9999999999999999999, past 2^53",
+        ),
+        (
+            "P H#1#c#9007199254740993 1+ *",
+            "path H#1#c starts at 9007199254740993, past 2^53",
+        ),
+        (
+            "P H#1#c#9007199254740987 1+,1+ *",
+            "path H#1#c ends at 9007199254740999, past 2^53",
+        ),
+    ] {
+        let built = build_text(
+            "past-2-53",
+            &["S 1 AAAAAA", "W R 0 chr 0 6 >1", line],
+            &tile,
+        );
+        let stderr = refused_in_first_pass(&built);
+        assert!(stderr.contains(error), "{line}: {stderr}");
+    }
+}
+
+// A reference line that ends at 2^53 is refused where its last tile would
+// end past it: a departure bin there would state an end past 2^53
+#[test]
+fn a_reference_whose_last_tile_ends_past_2_to_the_53_is_refused() {
+    let built = build(
+        &dialect_fixture("line-end-2e53.gfa"),
+        &["--refs", "R", "--tile", "1000000000000"],
+    );
+    assert_eq!(built.output.status.code(), Some(1));
+    assert!(built.walks.is_empty());
+    let stderr = String::from_utf8_lossy(&built.output.stderr);
+    assert!(
+        stderr.contains(
+            "reference sequence R#0#chr ends at 9007199254740992, and its last tile of 1000000000000 bp ends past 2^53"
+        ),
+        "{stderr}"
+    );
+}
+
 // Memory follows the number of segments, not the largest id: a graph of
 // three segments, one of them 2147483647, builds in a 512 MB address space,
 // where arrays by id would need 66 GB. The ids come out as the GFA gives
