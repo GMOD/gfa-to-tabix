@@ -1,0 +1,52 @@
+fixture	refs	walks	rows	haplotypes	index	twin
+big-refstart-2e46.gfa	R	skip	its tiles from 0 take more memory than a test may	.	.	.
+cr-only-in-name.gfa	R	built	the file checkers split a line at its carriage return	.	ok	.
+names-not-utf8.gfa	R	ok	.	.	ok	.
+no-paths.gfa	R	refused	--refs R matches no path's sample	.	no P or W lines	.
+nonascii-name.gfa	R	ok	.	.	ok	.
+odgi-of-vg-gbz-p.gfa	R	ok	H#1#c@106 K#2#d@23 R#0#chr1@18	H#1,K#2	ok	odgi-of-vg-w.gfa
+odgi-of-vg-gfw-p.gfa	R	ok	H#1#c@106 K#2#d@23 R#0#chr1@18	H#1,K#2	ok	odgi-of-vg-w.gfa
+odgi-of-vg-w.gfa	R	ok	H#1#c@106 K#2#d@23 R#0#chr1@18	H#1,K#2	ok	.
+p-arity2.gfa	R	ok	H#c@0 H#d@0 R#chr1@0 R#chr2@0	H	ok	.
+p-arity4-phase.gfa	R	ok	H#1#c@1 R#0#chr1@0	H#1	ok	.
+p-before-s.gfa	R	ok	H#1#c@0 H#1#c@100 K#2#d@7 R#0#chr1@0	H#1,K#2	ok	vg-clipped-w.gfa
+p-bracket-end-inverted.gfa	R	refused	line 11: path H#1#c[21-5]: the [start-end] in its name ends at 5, but its steps from 21 end at 37	.	line 11: path H#1#c[21-5]: the [start-end] in its name ends at 5	.
+p-bracket-end-wrong.gfa	R	refused	line 10: path R#0#chr1[100-105]: the [start-end] in its name ends at 105, but its steps from 100 end at 118	.	line 10: path R#0#chr1[100-105]: the [start-end] in its name ends at 105	.
+p-bracket-no-end.gfa	R	ok	H#1#c@100 R#0#chr1@0	H#1	ok	.
+p-colon-1-based.gfa	R	ok	H#1#c:6-21@0 R#0#chr1@0	H#1	ok	.
+p-colon-beneath-hash0.gfa	R	ok	H#1#c:5-21@0 J#1#c:5-17@0 R#0#chr1@0	H#1,J#1	ok	w-colon-in-contig.gfa
+p-colon-over-bracket.gfa	R	ok	R#0#chr1@0 X#0@106	X	ok	.
+p-colon-over-fourth.gfa	R	ok	H#1#c@106 R#0#chr1@0	H#1	ok	w-colon-over-fourth.gfa
+p-colon-over-two-fields.gfa	R	ok	R#0#chr1@0 X#100@6	X	ok	.
+p-colon-past-bracket.gfa	R	ok	R#0#chr1@0 X#0@106	X	ok	.
+p-colon-range.gfa	R	ok	H#1#c@5 R#0#chr1@0	H#1	ok	.
+p-colon-twice.gfa	R	ok	H#1#c:5-21@3 R#0#chr1@0	H#1	ok	.
+p-fourth-and-bracket.gfa	R	ok	H#1#c@116 R#0#chr1@0	H#1	ok	w-fourth-and-bracket.gfa
+p-hash0.gfa	R	ok	H#1#c@0 R#0#chr1@0	H#1	ok	.
+p-jump-semicolon.gfa	R	refused	line 12: path H#1#c has a `;` between steps, a GFA 1.2 jump	.	path H#1#c visits segment 1+;3, which has no S line	.
+p-name-empty.gfa	R	refused	line 11: a P line has an empty name	.	line 11: a P line has an empty name	.
+p-name-only-bracket.gfa	R	refused	line 11: path [5]: its name is only a start, with no name before it	.	line 11: path [5]: its name is only a start, with no name before it	.
+p-name-only-colon.gfa	R	refused	line 11: path :5-21: its name is only a start, with no name before it	.	line 11: path :5-21: its name is only a start, with no name before it	.
+p-no-steps-bracket-end-wrong.gfa	R	refused	line 11: path H#1#c[5-9]: the [start-end] in its name ends at 9, but its steps from 5 end at 5	.	line 11: path H#1#c[5-9]: the [start-end] in its name ends at 9	.
+p-one-field.gfa	R	ok	R#0#chr1@0 plain@0 sam@7	plain,sam	ok	.
+p-overlap.gfa	R	refused	path H#1#c: the line covering 0-16 overlaps the one covering 5-21. Where vg wrote the lines from a VCF-phased GBWT	.	path H#1#c: the line covering 0-16 overlaps the one covering 5-21	.
+p-ref-bracket-and-fourth.gfa	R	ok	H#1#c@0 R#0#chr1@100	H#1	ok	.
+p-same-name-twice.gfa	R	refused	path H#1#c has two lines starting at 0	.	path H#1#c has two lines starting at 0	.
+p-two-and-three-fields.gfa	R	ok	H#1@0 H#1#c@0 R#0#chr1@0	H,H#1	ok	.
+s-leading-zero.gfa	R	ok	H#1#c@0 R#0#chr1@0	H#1	path H#1#c visits segment 1, which has no S line	.
+vg-chunk-mixed.gfa	R	ok	H#1#c@116 R#0#chr1@18	H#1	ok	vg-chunk-w.gfa
+vg-chunk-p.gfa	R	ok	H#1#c@116 R#0#chr1@18	H#1	ok	vg-chunk-w.gfa
+vg-chunk-w.gfa	R	ok	H#1#c@116 R#0#chr1@18	H#1	ok	.
+vg-clipped-gbz-p.gfa	R	ok	H#1#c@0 H#1#c@100 K#2#d@7 R#0#chr1@0	H#1,K#2	ok	vg-clipped-w.gfa
+vg-clipped-gfw-p.gfa	R	ok	H#1#c@0 H#1#c@100 K#2#d@7 R#0#chr1@0	H#1,K#2	ok	vg-clipped-w.gfa
+vg-clipped-mixed.gfa	R	ok	H#1#c@0 H#1#c@100 K#2#d@7 R#0#chr1@0	H#1,K#2	ok	vg-clipped-w.gfa
+vg-clipped-w.gfa	R	ok	H#1#c@0 H#1#c@100 K#2#d@7 R#0#chr1@0	H#1,K#2	ok	.
+vg-pggb-chunk-p.gfa	R	ok	H#1#c@10 R#0#chr1@12	H#1	ok	vg-pggb-chunk-w.gfa
+vg-pggb-chunk-w.gfa	R	ok	H#1#c@10 R#0#chr1@12	H#1	ok	.
+vg-vcf-phased-p.gfa	S1	refused	path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60. Where vg wrote the lines from a VCF-phased GBWT	.	path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60	.
+vg-vcf-phased-w.gfa	S1	refused	path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60. Where vg wrote the lines from a VCF-phased GBWT	.	path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60	.
+w-colon-in-contig.gfa	R	ok	H#1#c:5-21@0 J#1#c:5-17@0 R#0#chr1@0	H#1,J#1	ok	.
+w-colon-over-fourth.gfa	R	ok	H#1#c@106 R#0#chr1@0	H#1	ok	.
+w-end-wrong.gfa	R	refused	line 11: path H#1#c ends at 99, but its steps from 0 end at 16	.	ok	.
+w-fourth-and-bracket.gfa	R	ok	H#1#c@116 R#0#chr1@0	H#1	ok	.
+w-star-start.gfa	R	refused	line 6: W line start is *, which GFA allows but which states no offset	.	line 6: W line start is *, which GFA allows but which states no offset	.

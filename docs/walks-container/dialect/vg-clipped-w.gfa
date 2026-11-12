@@ -1,0 +1,15 @@
+H	VN:Z:1.1	RS:Z:R
+S	1	AAAAAA
+S	2	CCCCCC
+S	3	GGGGGG
+S	4	TTTT
+S	5	ACGTACGT
+L	1	+	4	+	0M
+L	1	+	2	+	0M
+L	2	+	3	+	0M
+L	3	+	5	+	0M
+L	4	+	3	+	0M
+W	H	1	c	100	114	>3>5
+W	H	1	c	0	6	>1
+W	K	2	d	7	31	>1>4>3>5
+W	R	0	chr1	0	26	>1>2>3>5

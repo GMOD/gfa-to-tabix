@@ -1,0 +1,6 @@
+H	VN:Z:1.1
+S	1	AAAAAA
+S	2	CCCCCC
+L	1	+	2	+	0M
+W	R	0	chr1	0	12	>1>2
+W	H	1	c	*	*	>1>2

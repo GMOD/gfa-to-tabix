@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Shows the file checks fail on the broken files of broken.sh; builds every
+# Shows the file checks fail on the broken files of broken.sh; runs
+# check-dialect.sh on the GFAs of docs/walks-container/dialect; builds every
 # walk fixture under four option sets, and some under options of their
 # own, and runs on each file the release checks (verify7.py), the claims
 # checks (claims7.py --own), the audit (audit7.py, given the fixture), the
@@ -22,6 +23,7 @@ dir=$(mktemp -d)
 trap 'rm -rf "$dir"' EXIT
 failed=0
 bash "$S/broken.sh" || failed=1
+bash "$REPO/scripts/check-dialect.sh" "$B" || failed=1
 # runs the six checks on walk file $2, built from the GFA $3
 checks() {
   local label=$1 f=$2 gfa=$3 out
