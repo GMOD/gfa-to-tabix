@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// The consumer-side check of claim C1: @jbrowse/graph-walks 6, the real
-// reader, rebuilds from the walk files the tool writes every path exactly
+// The consumer-side check of claim C1: @jbrowse/graph-walks 7, the real
+// reader of walk format 8, rebuilds from the walk files the tool writes every path exactly
 // as the GFA states it. Each fixture is built under the option sets of
 // check-walks.sh; each reference sample's file is opened with WalkReader,
 // and every reference sequence S is cut whole, [0, |S|), with context 0,
@@ -43,8 +43,13 @@
 //   lies at a pass of S, its earliest, with its length and pass count, and
 //   in a revisited:i:0 file every reference node of S is placed; the bases
 //   the cut holds for a node are its S line's.
-// - The unexpanded cut's abridged fragments run from a step on S to a step
-//   on S of their line, which their two handles name (C73).
+// - The unexpanded cut, which builds each abridged piece from its blocks
+//   row with each run off R one placeholder step of known bp, equals the
+//   expanded one: each fragment as its name, offsets and trims, each step
+//   on the reference as its place, strand and node and each run of steps
+//   off it as its bp, counted as often as it comes; its departures as the
+//   expanded cut's; and no placeholder on the reference or beside another
+//   step off it (C164).
 //
 // Before the builds, the broken files BROKEN names in
 // docs/departures/scripts/broken/ must each fail the check, by a mismatch
@@ -87,8 +92,32 @@ const EXTRA_BUILDS = [
   'walks-sequences.gfa R --tile 10 --sequences',
 ]
 const BROKEN = [
-  'abridged-bp',
+  'abridged-detail',
   'abridged-hapoffset',
+  'abridged-span',
+  'abridged-thirteen-columns',
+  'blocks-ends-swapped',
+  'blocks-first',
+  'blocks-foreign-row',
+  'blocks-last',
+  'blocks-leading-later',
+  'blocks-leading-off',
+  'blocks-merged',
+  'blocks-moved',
+  'blocks-own',
+  'blocks-row-dropped',
+  'blocks-row-misfiled',
+  'blocks-run-zero',
+  'blocks-runs-adjacent',
+  'blocks-strand',
+  'blocks-ten-columns',
+  'blocks-trailing-dropped',
+  'blocks-trailing-dropped-mid',
+  'blocks-trailing-off',
+  'blocks-trailing-over-record',
+  'blocks-unit-dropped',
+  'blocks-unit-empty',
+  'format-7',
   'hap-dup',
   'hap-missing',
   'hapstart-wrong-G',
@@ -100,9 +129,19 @@ const BROKEN = [
   'hole-trailing',
   'interior-flipped',
   'last-piece-dropped',
+  'missing-overstated',
   'missing-understated',
   'missing-understated-G',
+  'node-two-lengths',
+  'nodes-bases',
+  'nodes-bases-abridged',
+  'on-reference-as-interior',
+  'on-reference-as-interior-abridged',
   'ownbp-overstated-G',
+  'passes-once-as-twice',
+  'passes-understated',
+  'piece-split-at-jump',
+  'piece-walk-and-abridged',
   'point',
   'record-bogus-path',
   'record-dropped',
@@ -111,8 +150,11 @@ const BROKEN = [
   'ref-lengths',
   'ref-strand-flipped',
   'reference-wrong',
+  'revisited-as-interior',
+  'revisited-zero',
   'sqbad',
   'table-named',
+  'tag-malformed',
   'walks-differ-ctl',
   'walks-differ-len100',
 ]
@@ -365,7 +407,40 @@ const counted = keys => {
   return counts
 }
 
+// A fragment with each run of steps off the reference as its bp, every step
+// on it as its place, strand and node
+function collapsed(graph, f) {
+  const items = []
+  let off = -1
+  for (let i = 0; i <= f.ids.length; i++) {
+    if (i < f.ids.length && Number.isNaN(f.refStarts[i])) {
+      const node = graph.nodes.get(f.ids[i])
+      off = Math.max(off, 0) + (node ? node.end - node.start : 0)
+    } else {
+      if (off >= 0) {
+        items.push(`off ${off}`)
+      }
+      off = -1
+      if (i < f.ids.length) {
+        items.push(
+          `${f.refStarts[i]}${f.against[i] === 1 ? '-' : '+'}${f.rev[i] === 1 ? '<' : '>'}${f.ids[i]}`,
+        )
+      }
+    }
+  }
+  return `fragment ${f.name} at ${f.fragStart}, ${f.hapStart}-${f.hapEnd}, trimmed ${f.trimmedBefore} and ${f.trimmedAfter}: ${items.join(' ')}`
+}
+
+// A placeholder on the reference, or beside another step off it
+function misplaced(f, isPlaceholder) {
+  const offR = k => k >= 0 && k < f.ids.length && Number.isNaN(f.refStarts[k])
+  return f.ids.some(
+    (id, i) => isPlaceholder(id) && (offR(i - 1) || offR(i + 1) || !offR(i)),
+  )
+}
+
 const handle = step => `${step.rev ? '<' : '>'}${step.id}`
+const earliest = offsets => offsets.reduce((a, b) => Math.min(a, b))
 const holeText = h => `${h.start}-${h.end}`
 
 const CUT_OPTIONS = {
@@ -380,7 +455,7 @@ const CUT_OPTIONS = {
   sequences: true,
 }
 
-async function checkFile(WalkReader, walksPath, gfaPath) {
+async function checkFile({ WalkReader, isPlaceholder }, walksPath, gfaPath) {
   const failures = []
   const fail = text => {
     failures.push(text)
@@ -391,7 +466,23 @@ async function checkFile(WalkReader, walksPath, gfaPath) {
     directory: new LocalFile(`${walksPath}.idx`),
   }
   const reader = WalkReader.fromFilehandles(files)
-  const counts = { sequences: 0, fragments: 0, steps: 0, departures: 0 }
+  const counts = {
+    sequences: 0,
+    fragments: 0,
+    steps: 0,
+    departures: 0,
+    placeholders: 0,
+  }
+  const differ = (what, unexpanded, expanded) => {
+    for (const key of new Set([...unexpanded.keys(), ...expanded.keys()])) {
+      const [m, n] = [unexpanded.get(key) ?? 0, expanded.get(key) ?? 0]
+      if (m !== n) {
+        fail(
+          `${what} ${key} came back ${m} times, the expanded cut's ${n} times`,
+        )
+      }
+    }
+  }
   try {
     const header = await reader.header()
     const sample = header.references[0]
@@ -506,8 +597,8 @@ async function checkFile(WalkReader, walksPath, gfaPath) {
           const where = `${seq}: node ${id} placed at ${node.start}-${node.end} with ${node.passes} passes`
           if (offsets.length === 0) {
             fail(`${where}, which the reference's lines never pass`)
-          } else if (node.start !== Math.min(...offsets)) {
-            fail(`${where}, its earliest pass at ${Math.min(...offsets)}`)
+          } else if (node.start !== earliest(offsets)) {
+            fail(`${where}, its earliest pass at ${earliest(offsets)}`)
           } else if (node.end - node.start !== gfa.lengths.get(id)) {
             fail(`${where}, its length ${gfa.lengths.get(id)}`)
           } else if (node.passes !== ref.passesOf(id).length) {
@@ -553,19 +644,25 @@ async function checkFile(WalkReader, walksPath, gfaPath) {
         }
       }
       const plain = await reader.cut(seq, region, CUT_OPTIONS)
-      for (const f of plain.fragments.filter(f => f.abridged)) {
-        const where = `${seq}: ${f.name} at ${f.fragStart}, abridged ${f.hapStart}-${f.hapEnd}`
-        const { line, first, last, problem } = locate(f)
-        if (problem) {
-          fail(`${where}: ${problem}`)
-        } else {
-          checkStep(seq, where, f, 0, line, first)
-          checkStep(seq, where, f, 1, line, last)
-          if (Number.isNaN(f.refStarts[0]) || Number.isNaN(f.refStarts[1])) {
-            fail(`${where}: an end is off the reference`)
-          }
+      for (const f of plain.fragments) {
+        const placeholders = f.ids.filter(isPlaceholder).length
+        counts.placeholders += placeholders
+        if (placeholders > 0 && misplaced(f, isPlaceholder)) {
+          fail(
+            `${seq}: ${f.name} at ${f.fragStart}, unexpanded ${f.hapStart}-${f.hapEnd}: a placeholder on the reference or beside another step off it`,
+          )
         }
       }
+      differ(
+        `${seq}: unexpanded`,
+        counted(plain.fragments.map(f => collapsed(plain.graph, f))),
+        counted(fragments.map(f => collapsed(graph, f))),
+      )
+      differ(
+        `${seq}: unexpanded departure`,
+        counted(plain.departures.map(departureKey)),
+        got,
+      )
     }
     for (const line of gfa.lines) {
       line.steps.forEach((step, k) => {
@@ -586,7 +683,7 @@ async function checkFile(WalkReader, walksPath, gfaPath) {
   }
   return {
     failures,
-    summary: `${counts.sequences} sequences, ${counts.fragments} fragments, ${counts.steps} steps, ${counts.departures} departures rebuilt`,
+    summary: `${counts.sequences} sequences, ${counts.fragments} fragments, ${counts.steps} steps, ${counts.departures} departures rebuilt; unexpanded, ${counts.placeholders} placeholders`,
   }
 }
 
@@ -604,7 +701,7 @@ function report(label, { failures, summary }) {
   return failures.length === 0
 }
 
-async function checkBroken(WalkReader) {
+async function checkBroken(graphWalks) {
   const cases = new Map(
     (await readFile(join(BROKEN_DIR, 'cases.tsv'), 'utf8'))
       .split('\n')
@@ -619,7 +716,7 @@ async function checkBroken(WalkReader) {
       ? join(BROKEN_DIR, '..', gfa)
       : join(DATA, gfa)
     const result = await checkFile(
-      WalkReader,
+      graphWalks,
       join(BROKEN_DIR, `${name}.walks.gz`),
       gfaPath,
     )
@@ -633,7 +730,7 @@ async function checkBroken(WalkReader) {
   return ok
 }
 
-async function checkBuilds(WalkReader, binary, builds) {
+async function checkBuilds(graphWalks, binary, builds) {
   const dir = mkdtempSync(join(tmpdir(), 'graph-walks-rebuild-'))
   let ok = true
   try {
@@ -652,7 +749,7 @@ async function checkBuilds(WalkReader, binary, builds) {
       } else {
         for (const ref of refs.split(',')) {
           const result = await checkFile(
-            WalkReader,
+            graphWalks,
             join(dir, `o.${ref}.walks.gz`),
             gfaPath,
           )
@@ -673,16 +770,16 @@ if (checkout === undefined || binary === undefined) {
   )
   process.exit(2)
 }
-const { WalkReader } = await import(
+const graphWalks = await import(
   pathToFileURL(join(resolve(checkout), 'src/index.ts')).href
 )
 const results =
   binary === '--file'
-    ? [report(rest[0], await checkFile(WalkReader, rest[0], rest[1]))]
+    ? [report(rest[0], await checkFile(graphWalks, rest[0], rest[1]))]
     : [
-        await checkBroken(WalkReader),
+        await checkBroken(graphWalks),
         await checkBuilds(
-          WalkReader,
+          graphWalks,
           resolve(binary),
           rest.length > 0 ? rest : [...FIXTURES, ...EXTRA_BUILDS],
         ),
