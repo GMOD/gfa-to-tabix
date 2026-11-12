@@ -1,0 +1,36 @@
+### input mc.gfa path lines
+H	VN:Z:1.1	RS:Z:R
+W	R	0	chr1	0	18	>1>2>3
+W	H	1	c	0	6	>1
+W	H	1	c	100	106	>3
+W	R2	0	chrZ	50	62	>1>2
+### vg gbwt -G mc.gfa --gbz-format -g mc.gbz ; vg paths -M -x mc.gbz
+#NAME	SENSE	SAMPLE	HAPLOTYPE	LOCUS	PHASE_BLOCK	SUBRANGE
+R#0#chr1	REFERENCE	R	0	chr1	NO_PHASE_BLOCK	NO_SUBRANGE
+H#1#c#0	HAPLOTYPE	H	1	c	0	NO_SUBRANGE
+H#1#c#100	HAPLOTYPE	H	1	c	100	NO_SUBRANGE
+R2#0#chrZ#50	HAPLOTYPE	R2	0	chrZ	50	NO_SUBRANGE
+### vg convert -f mc.gbz (W lines)
+H	VN:Z:1.1	RS:Z:R
+W	H	1	c	0	6	>1
+W	H	1	c	100	106	>3
+W	R2	0	chrZ	50	62	>1>2
+W	R	0	chr1	0	18	>1>2>3
+### vg convert -f -W mc.gbz (P lines)
+H	VN:Z:1.1	RS:Z:R
+P	H#1#c#0	1+	*
+P	H#1#c#100	3+	*
+P	R#0#chr1	1+,2+,3+	*
+P	R2#0#chrZ#50	1+,2+	*
+### vg gbwt -Z mc.gbz --gfa... : vg convert -g mc.gfa -f -W (via HashGraph)
+H	VN:Z:1.1	RS:Z:R
+P	H#1#c#0[100-106]	3+	*
+P	H#1#c#0	1+	*
+P	R#0#chr1	1+,2+,3+	*
+P	R2#0#chrZ#0[50-62]	1+,2+	*
+### vg paths -M -x mc.gfa (via HashGraph)
+#NAME	SENSE	SAMPLE	HAPLOTYPE	LOCUS	PHASE_BLOCK	SUBRANGE
+H#1#c#0	HAPLOTYPE	H	1	c	0	NO_SUBRANGE
+R2#0#chrZ#0[50-62]	HAPLOTYPE	R2	0	chrZ	0	50-62
+H#1#c#0[100-106]	HAPLOTYPE	H	1	c	0	100-106
+R#0#chr1	REFERENCE	R	0	chr1	NO_PHASE_BLOCK	NO_SUBRANGE

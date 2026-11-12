@@ -1,0 +1,44 @@
+The path lines of each source GFA found on ada, 2026-11-12, by docs/walks-container/dialect/scripts/census.py.
+
+Looked for the sources of the hosted node and link indexes by name, under the home directory to depth 8:
+  236383029	~/1001g/graph/arabidopsis-tair10-minigraph.rgfa
+  65317227	~/1001g/graph/arabidopsis-tair10-minigraph.rgfa.gz
+  235163732	~/1001g/graph/order_v1/arabidopsis-tair10-minigraph.rgfa
+  65010075	~/1001g/graph/order_v1/arabidopsis-tair10-minigraph.rgfa.gz
+  236383029	~/1001g/host/arabidopsis-tair10-minigraph.rgfa
+  65317227	~/1001g/host/arabidopsis-tair10-minigraph.rgfa.gz
+  38440680	~/data/celegans-pg/celegans-pg.sv.gfa.gz
+  8168411	~/data/ecoli-pggb-rebuild-2026-10-11/full/ecoli_minigraph.rgfa
+  8933416	~/ecoli-gbz-oracle/ecoli.gfa.gz
+  63643485602	~/hprc_multiway/build/hprc-v2.1-mc-grch38.gfa.gz
+  189562421	~/maize_nam/chr5/out/maize_nam_chr5.sv.gfa.gz
+  159065071	~/maize_nam/chr8/out/maize_nam_chr8.sv.gfa.gz
+
+== E. coli pggb, the rebuild of 2026-10-11 (hosted as ecoli_pggb)
+606130 S, 0 S with SN, 5 P
+  5	P sample#hap#contig	e.g. K12#1#chr
+  0 P names written more than once
+== E. coli minigraph rGFA (hosted as ecoli_minigraph)
+2656 S, 2656 S with SN
+  0 P names written more than once
+== C. elegans Minigraph-Cactus sv rGFA
+130466 S, 130466 S with SN
+  0 P names written more than once
+== pggb chrY, HPRC release 2
+4122486 S, 0 S with SN, 1053 P
+  1053	P sample#hap#contig	e.g. CHM13#0#chrY
+  0 P names written more than once
+== HPRC v2.1 Minigraph-Cactus GRCh38, base level (source of the hosted GRCh38 walk file)
+139520381 S, 83303684 S with SN, 53150 W, 47559 W starting above 0
+  0 P names written more than once
+  18159 W paths; 0 pairs of one path's lines overlap or share a start
+== Arabidopsis minigraph rGFA (hosted as arabidopsis-tair10-minigraph)
+192327 S, 192327 S with SN
+  0 P names written more than once
+== E. coli, ~/ecoli-gbz-oracle/ecoli.gfa.gz
+525146 S, 318884 S with SN, 14 W, 10 W starting above 0
+  0 P names written more than once
+  4 W paths; 0 pairs of one path's lines overlap or share a start
+== maize NAM chr8 Minigraph-Cactus sv rGFA
+208780 S, 208780 S with SN
+  0 P names written more than once

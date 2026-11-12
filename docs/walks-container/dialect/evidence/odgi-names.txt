@@ -1,0 +1,64 @@
+### odgi v0.9.4-2-g405be8f6
+### odgi build -g mc.gfa (W lines, one contig in two pieces at 0 and 100; R2 chrZ from 50) ; odgi paths -L
+### odgi view -g mc.og | path lines
+### pggb-like graph: P lines R#0#chr1 (18 bp), H#1#c (16 bp); odgi extract -r 'H#1#c:6-10' -c 0, then path lines
+S	4	TTTT
+P	H#1#c:6-10	4+	*
+### same, with -E (full range): odgi extract -r 'H#1#c:6-10' -c 0 -E
+S	4	TTTT
+P	H#1#c:6-10	4+	*
+### nested: extract 'H#1#c:6-10' again from the extracted graph, range 'H#1#c:6-10:0-4'
+S	4	TTTT
+P	H#1#c:6-10:0-4	4+	*
+### odgi extract by node: -n 1 and -n 3 with -c 0 (a path leaving and re-entering the subgraph)
+S	1	AAAAAA
+P	R#0#chr1:0-6	1+	*
+P	H#1#c:0-6	1+	*
+S	1	AAAAAA
+S	2	CCCCCC
+S	3	GGGGGG
+S	4	TTTT
+P	R#0#chr1:0-18	1+,2+,3+	*
+P	H#1#c:0-16	1+,4+,3+	*
+### odgi extract --help, naming lines
+        -d[N],
+        --max-distance-subpaths=[N]       Maximum distance between subpaths
+                                          allowed for merging them. It reduces
+                                          the fragmentation of unspecified paths
+                                          in the input path ranges. Set 0 to
+--
+        --max-merging-iterations=[N]      Maximum number of iterations in
+                                          attempting to merge close subpaths. It
+                                          stops early if during an iteration no
+                                          subpaths were merged [default: 6].
+        -s, --split-subgraphs             Instead of writing the target
+                                          subgraphs into a single graph, write
+                                          one subgraph per given target to a
+                                          separate file named path:start-end.og
+                                          (0-based coordinates).
+        -I, --inverse                     Extract the parts of the graph that do
+                                          not meet the query criteria.
+        -n[ID], --node=[ID]               A single node ID from which to begin
+--
+                                          range TARGET=path[:pos1[-pos2]]
+                                          (0-based coordinates).
+        -b[FILE], --bed-file=[FILE]       Find the node(s) in the path range(s)
+                                          specified in the given BED FILE.
+        -q[STRING],
+        --pangenomic-range=[STRING]       Find the node(s) in the specified
+                                          pangenomic range pos1-pos2 (0-based
+                                          coordinates). The nucleotide positions
+                                          refer to the pangenome’s sequence
+                                          (i.e., the sequence obtained arranging
+--
+                                          right).
+        -E, --full-range                  Collects all nodes in the sorted order
+                                          of the graph in the min and max
+                                          positions touched by the given path
+                                          ranges. This ensures that all the
+### odgi stats -S -i mc.og (built from mc.gfa, whose 4 path lines are all W lines)
+#length	nodes	edges	paths	steps
+22	4	4	0	0
+### odgi stats -S -i pg.og (built from pg.gfa, 2 P lines)
+#length	nodes	edges	paths	steps
+22	4	4	2	6

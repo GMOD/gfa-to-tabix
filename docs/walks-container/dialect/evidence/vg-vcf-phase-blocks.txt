@@ -1,0 +1,42 @@
+### VCF genotypes (S1): pos20 0|1, pos50 0/1 (unphased), pos80 1|0, pos100 1|1
+### vg paths -M -x x.gbz
+#NAME	SENSE	SAMPLE	HAPLOTYPE	LOCUS	PHASE_BLOCK	SUBRANGE
+S1#0#chr1#0	HAPLOTYPE	S1	0	chr1	0	NO_SUBRANGE
+S1#0#chr1#1	HAPLOTYPE	S1	0	chr1	1	NO_SUBRANGE
+S1#1#chr1#0	HAPLOTYPE	S1	1	chr1	0	NO_SUBRANGE
+S1#1#chr1#1	HAPLOTYPE	S1	1	chr1	1	NO_SUBRANGE
+S1#0#chr1#2	HAPLOTYPE	S1	0	chr1	2	NO_SUBRANGE
+S1#1#chr1#2	HAPLOTYPE	S1	1	chr1	2	NO_SUBRANGE
+### vg convert -f x.gbz
+H	VN:Z:1.1
+W	S1	0	chr1	2	72	>7>8>10>11>13
+W	S1	1	chr1	0	49	>1>2>4
+W	S1	0	chr1	1	60	>4>6>7
+W	S1	0	chr1	0	49	>1>3>4
+W	S1	1	chr1	1	60	>4>5>7
+W	S1	1	chr1	2	72	>7>9>10>11>13
+### vg convert -f -W x.gbz
+H	VN:Z:1.1
+P	S1#0#chr1#0	1+,3+,4+	*
+P	S1#0#chr1#1	4+,6+,7+	*
+P	S1#0#chr1#2	7+,8+,10+,11+,13+	*
+P	S1#1#chr1#0	1+,2+,4+	*
+P	S1#1#chr1#1	4+,5+,7+	*
+P	S1#1#chr1#2	7+,9+,10+,11+,13+	*
+### segment lengths (id:bp)
+1:19 2:1 3:1 4:29 5:1 6:1 7:29 8:1 9:1 10:19 11:1 13:20 
+### via PackedGraph: vg convert x.gbz -p > x.pg; vg paths -M -x x.pg; vg convert -f x.pg
+#NAME	SENSE	SAMPLE	HAPLOTYPE	LOCUS	PHASE_BLOCK	SUBRANGE
+S1#0#chr1#2	HAPLOTYPE	S1	0	chr1	2	NO_SUBRANGE
+S1#1#chr1#1	HAPLOTYPE	S1	1	chr1	1	NO_SUBRANGE
+S1#0#chr1#1	HAPLOTYPE	S1	0	chr1	1	NO_SUBRANGE
+S1#1#chr1#0	HAPLOTYPE	S1	1	chr1	0	NO_SUBRANGE
+S1#0#chr1#0	HAPLOTYPE	S1	0	chr1	0	NO_SUBRANGE
+S1#1#chr1#2	HAPLOTYPE	S1	1	chr1	2	NO_SUBRANGE
+H	VN:Z:1.1
+P	S1#0#chr1#1	4+,6+,7+	*
+P	S1#0#chr1#2	7+,8+,10+,11+,13+	*
+P	S1#1#chr1#1	4+,5+,7+	*
+P	S1#1#chr1#2	7+,9+,10+,11+,13+	*
+W	S1	0	chr1	0	49	>1>3>4
+W	S1	1	chr1	0	49	>1>2>4

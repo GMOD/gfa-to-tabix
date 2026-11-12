@@ -1,0 +1,59 @@
+#### chr6.C4.gfa (odgi test data) --refs grch38
+grch38: 296 pieces, 54 departure records in 108 rows, 0 paths visit no grch38 node and are left out
+[   0.0 s, 0.0 GiB peak] 1095 lines in 6 units -> c4.grch38.walks.gz (+ .idx): 688 routes, 293 walk rows, 0 copies named; 0 paths abridged to 0 detail walk rows
+#reference	grch38
+#hole	grch38#chr6	0	31972046
+ref path=grch38#chr6 fragStart=31972046
+walk path=HG00438#1#JAHBCB010000040.1 fragStart=24269348
+walk path=HG00438#2#JAHBCA010000042.1 fragStart=24398231
+walk path=HG00621#1#JAHBCD010000020.1 fragStart=24374257
+walk path=HG00621#2#JAHBCC010000005.1 fragStart=31922874
+89 #haplotype lines; 89 distinct (path,fragStart) among walk rows
+#haplotype	HG00438#1
+#haplotype	HG00438#2
+#haplotype	HG00621#1
+#haplotype	HG00621#2
+#### chr6.C4.gfa (odgi test data) --refs chm13
+chm13: 980 pieces, 786 departure records in 1572 rows, 0 paths visit no chm13 node and are left out
+[   0.1 s, 0.0 GiB peak] 3276 lines in 4 units -> c4.chm13.walks.gz (+ .idx): 722 routes, 978 walk rows, 0 copies named; 0 paths abridged to 0 detail walk rows
+#reference	chm13
+#hole	chm13#chr6	0	31825251
+ref path=chm13#chr6 fragStart=31825251
+walk path=HG00438#1#JAHBCB010000040.1 fragStart=24269348
+walk path=HG00438#2#JAHBCA010000042.1 fragStart=24398231
+walk path=HG00621#1#JAHBCD010000020.1 fragStart=24374257
+walk path=HG00621#2#JAHBCC010000005.1 fragStart=31922874
+89 #haplotype lines; 89 distinct (path,fragStart) among walk rows
+#haplotype	HG00438#1
+#haplotype	HG00438#2
+#haplotype	HG00621#1
+#haplotype	HG00621#2
+#### DRB1-3123.gfa --refs 'gi|568815592'
+gi|568815592: 12 pieces, 0 departure records in 0 rows, 0 paths visit no gi|568815592 node and are left out
+[   0.0 s, 0.0 GiB peak] 1496 lines in 1 units -> drb.gi|568815592.walks.gz (+ .idx): 1483 routes, 11 walk rows, 0 copies named; 0 paths abridged to 0 detail walk rows
+#reference	gi|568815592
+#haplotype	gi|157702218
+#haplotype	gi|28212469
+#haplotype	gi|28212470
+#haplotype	gi|29124352
+#haplotype	gi|345525392
+#haplotype	gi|528476637
+#haplotype	gi|568815529
+#haplotype	gi|568815551
+#haplotype	gi|568815561
+#haplotype	gi|568815567
+#haplotype	gi|568815569
+#hole	gi|568815592	0	32578768
+ref path=gi|568815592 fragStart=32578768
+walk path=gi|157702218 fragStart=147985
+walk path=gi|28212469 fragStart=126036
+walk path=gi|28212470 fragStart=131613
+walk path=gi|29124352 fragStart=124254
+walk path=gi|345525392 fragStart=5000
+walk path=gi|528476637 fragStart=32549024
+walk path=gi|568815529 fragStart=3998044
+walk path=gi|568815551 fragStart=3814534
+walk path=gi|568815561 fragStart=3988942
+walk path=gi|568815567 fragStart=3779003
+walk path=gi|568815569 fragStart=3979127
+#haplotype	chm13#chr6

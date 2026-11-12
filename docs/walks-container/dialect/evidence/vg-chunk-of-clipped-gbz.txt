@@ -1,0 +1,69 @@
+##### OLD
+== chunk2-vg-default
+  in:    P H#1#c#100[16-22]  4+
+  in:    W R 0 chr1 18 24
+  index: #samples H.1,R.0
+  walks: #haplotype H#1
+  walks: #hole R#0#chr1 0 18
+  walks: ref path=R#0#chr1 fragStart=18 hapOffset=18
+  walks: walk path=H#1#c#100 fragStart=16 hapOffset=16
+== chunk2-vg-P
+  in:    P H#1#c#100[16-22]  4+
+  in:    P R#0#chr1[18-24]  4+
+  index: #samples H.1,R.0
+  walks: #haplotype H#1
+  walks: #hole R#0#chr1 0 18
+  walks: ref path=R#0#chr1 fragStart=18 hapOffset=18
+  walks: walk path=H#1#c#100 fragStart=16 hapOffset=16
+== chunk2-truth-W
+  in:    W R 0 chr1 18 24
+  in:    W H 1 c 116 122
+  index: #samples H.1,R.0
+  walks: #haplotype H#1
+  walks: #hole R#0#chr1 0 18
+  walks: ref path=R#0#chr1 fragStart=18 hapOffset=18
+  walks: walk path=H#1#c fragStart=116 hapOffset=116
+##### M
+== chunk2-vg-default
+  in:    P H#1#c#100[16-22]  4+
+  in:    W R 0 chr1 18 24
+  index REFUSED: gfa-to-tabix: error: path H#1#c#100[16-22]: a fourth field of 100 beside a [start] gives two starts
+  walks REFUSED: gfa-to-tabix: error: plines-impl/vgsum/chunk2-vg-default.gfa: line 3: path H#1#c#100[16-22]: a fourth fie
+== chunk2-vg-P
+  in:    P H#1#c#100[16-22]  4+
+  in:    P R#0#chr1[18-24]  4+
+  index REFUSED: gfa-to-tabix: error: path H#1#c#100[16-22]: a fourth field of 100 beside a [start] gives two starts
+  walks REFUSED: gfa-to-tabix: error: plines-impl/vgsum/chunk2-vg-P.gfa: line 3: path H#1#c#100[16-22]: a fourth field of 
+== chunk2-truth-W
+  in:    W R 0 chr1 18 24
+  in:    W H 1 c 116 122
+  index: #samples H.1,R.0
+  walks: #haplotype H#1
+  walks: #hole R#0#chr1 0 18
+  walks: ref path=R#0#chr1 fragStart=18 hapOffset=18
+  walks: walk path=H#1#c fragStart=116 hapOffset=116
+##### M+sum
+== chunk2-vg-default
+  in:    P H#1#c#100[16-22]  4+
+  in:    W R 0 chr1 18 24
+  index: #samples H.1,R.0
+  walks: #haplotype H#1
+  walks: #hole R#0#chr1 0 18
+  walks: ref path=R#0#chr1 fragStart=18 hapOffset=18
+  walks: walk path=H#1#c fragStart=116 hapOffset=116
+== chunk2-vg-P
+  in:    P H#1#c#100[16-22]  4+
+  in:    P R#0#chr1[18-24]  4+
+  index: #samples H.1,R.0
+  walks: #haplotype H#1
+  walks: #hole R#0#chr1 0 18
+  walks: ref path=R#0#chr1 fragStart=18 hapOffset=18
+  walks: walk path=H#1#c fragStart=116 hapOffset=116
+== chunk2-truth-W
+  in:    W R 0 chr1 18 24
+  in:    W H 1 c 116 122
+  index: #samples H.1,R.0
+  walks: #haplotype H#1
+  walks: #hole R#0#chr1 0 18
+  walks: ref path=R#0#chr1 fragStart=18 hapOffset=18
+  walks: walk path=H#1#c fragStart=116 hapOffset=116

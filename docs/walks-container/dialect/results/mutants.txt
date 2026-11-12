@@ -1,0 +1,372 @@
+Each broken writer of P line names against the checks, on ada. Regenerate with
+the scripts beside ADR 0014's results: one mutant of src/gfa.rs at a time, then
+cargo test --no-fail-fast and scripts/check-dialect.sh on its binary.
+
+== the branch's writer: scripts/check-dialect.sh
+0 failures, by fixture:
+
+exit 0
+
+== mutant no-end-check
+-        .filter(|piece| colon.is_none() && !spans(piece))
++        .filter(|piece| piece.at > usize::MAX - 1 && colon.is_none() && !spans(piece))
+-- cargo test --no-fail-fast
+test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
+test gfa::tests::the_first_misnamed_p_line_is_kept_for_the_placement_to_refuse ... FAILED
+test gfa::tests::the_specs_table_of_p_line_names_reads_as_it_says ... FAILED
+test place::tests::a_misnamed_p_line_is_refused ... FAILED
+assertion `left == right` failed: H#1#c[100-900] of 16 bp
+assertion `left == right` failed: H#1#c[100-900]
+test result: FAILED. 27 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
+assertion `left == right` failed: p-bracket-end-inverted.gfa
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+test a_p_line_whose_bracket_end_disagrees_with_its_steps_is_refused ... FAILED
+test result: FAILED. 69 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+-- scripts/check-dialect.sh on its binary
+6 failures, by fixture:
+2 p-bracket-end-inverted.gfa, 2 p-bracket-end-wrong.gfa, 2 p-no-steps-bracket-end-wrong.gfa
+dialect p-bracket-end-inverted.gfa: built, where it should be refused: line 11: path H#1#c[21-5]: the [start-end] in its name ends at 5, but its steps from 21 end at 37
+dialect p-bracket-end-inverted.gfa: its index built, where it should be refused: line 11: path H#1#c[21-5]: the [start-end] in its name ends at 5
+dialect p-bracket-end-wrong.gfa: built, where it should be refused: line 10: path R#0#chr1[100-105]: the [start-end] in its name ends at 105, but its steps from 100 end at 118
+dialect p-bracket-end-wrong.gfa: its index built, where it should be refused: line 10: path R#0#chr1[100-105]: the [start-end] in its name ends at 105
+dialect p-no-steps-bracket-end-wrong.gfa: built, where it should be refused: line 11: path H#1#c[5-9]: the [start-end] in its name ends at 9, but its steps from 5 end at 5
+dialect p-no-steps-bracket-end-wrong.gfa: its index built, where it should be refused: line 11: path H#1#c[5-9]: the [start-end] in its name ends at 9
+exit 1
+
+== mutant colon-beneath-fourth
+-        (_, Some(start)) => Ok((path, start)),
++        (_, Some(start)) => match suffix(path, b':')
++            .filter(|cut| colon.is_none() && fourth.is_some() && bp > 0 && spans(cut))
++        {
++            Some(cut) => Ok((&path[..cut.at], start + cut.start)),
++            None => Ok((path, start)),
++        },
+-- cargo test --no-fail-fast
+test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
+test gfa::tests::the_specs_table_of_p_line_names_reads_as_it_says ... FAILED
+assertion `left == right` failed: H#1#c:5-21#0 of 16 bp
+assertion `left == right` failed: H#1#c:5-21#0
+test result: FAILED. 29 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
+assertion `left == right` failed: p-colon-beneath-hash0.gfa
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
+test result: FAILED. 69 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+-- scripts/check-dialect.sh on its binary
+4 failures, by fixture:
+4 p-colon-beneath-hash0.gfa
+dialect p-colon-beneath-hash0.gfa: rows name the lines H#1#c@5 J#1#c@5 R#0#chr1@0, not H#1#c:5-21@0 J#1#c:5-17@0 R#0#chr1@0
+dialect p-colon-beneath-hash0.gfa: walks-truth:   H#1#c:5-21 line at 0: on the reference, with no rows
+  J#1#c:5-17 line at 0: on the reference, with no rows
+  H#1#c line at 5: rows for a line not on the reference, or not in the GFA
+  J#1#c line at 5: rows for a line not on the reference, or not in the GFA
+p-colon-beneath-hash0.gfa.R.walks.gz: shard 0/1: 3 lines with rows, 3 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 4 wrong
+dialect p-colon-beneath-hash0.gfa: its walk file differs from w-colon-in-contig.gfa's
+dialect p-colon-beneath-hash0.gfa: its directory differs from w-colon-in-contig.gfa's
+exit 1
+
+== mutant fourth-dropped
+-    let start = [&colon, &bracket, &fourth]
++    let start = [&colon, &bracket, &None]
+-- cargo test --no-fail-fast
+test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
+test gfa::tests::a_p_line_is_named_whether_its_segments_come_before_or_after_it ... FAILED
+test gfa::tests::starts_that_add_up_past_2_to_the_64_are_refused ... FAILED
+test gfa::tests::the_specs_table_of_p_line_names_reads_as_it_says ... FAILED
+assertion `left == right` failed: H#1#c#100 of 14 bp
+assertion `left == right` failed: H#1#c#100
+test result: FAILED. 27 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
+assertion `left == right` failed: odgi-of-vg-gbz-p.gfa
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
+test an_overlap_refusal_says_vg_numbers_phase_blocks_where_this_tool_reads_starts ... FAILED
+test result: FAILED. 68 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+-- scripts/check-dialect.sh on its binary
+28 failures, by fixture:
+4 odgi-of-vg-gbz-p.gfa, 2 p-arity4-phase.gfa, 4 p-colon-over-fourth.gfa, 4 p-fourth-and-bracket.gfa, 4 vg-chunk-mixed.gfa, 4 vg-chunk-p.gfa, 2 vg-clipped-gbz-p.gfa, 2 vg-clipped-mixed.gfa, 2 vg-vcf-phased-p.gfa
+dialect odgi-of-vg-gbz-p.gfa: rows name the lines H#1#c@6 K#2#d@16 R#0#chr1@18, not H#1#c@106 K#2#d@23 R#0#chr1@18
+dialect odgi-of-vg-gbz-p.gfa: walks-truth:   H#1#c line at 106: on the reference, with no rows
+  K#2#d line at 23: on the reference, with no rows
+  H#1#c line at 6: rows for a line not on the reference, or not in the GFA
+  K#2#d line at 16: rows for a line not on the reference, or not in the GFA
+odgi-of-vg-gbz-p.gfa.R.walks.gz: shard 0/1: 3 lines with rows, 3 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 4 wrong
+dialect odgi-of-vg-gbz-p.gfa: its walk file differs from odgi-of-vg-w.gfa's
+dialect odgi-of-vg-gbz-p.gfa: its directory differs from odgi-of-vg-w.gfa's
+dialect p-arity4-phase.gfa: rows name the lines H#1#c@0 R#0#chr1@0, not H#1#c@1 R#0#chr1@0
+dialect p-arity4-phase.gfa: walks-truth:   H#1#c line at 1: on the reference, with no rows
+  H#1#c line at 0: rows for a line not on the reference, or not in the GFA
+p-arity4-phase.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-colon-over-fourth.gfa: rows name the lines H#1#c@6 R#0#chr1@0, not H#1#c@106 R#0#chr1@0
+dialect p-colon-over-fourth.gfa: walks-truth:   H#1#c line at 106: on the reference, with no rows
+  H#1#c line at 6: rows for a line not on the reference, or not in the GFA
+p-colon-over-fourth.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-colon-over-fourth.gfa: its walk file differs from w-colon-over-fourth.gfa's
+dialect p-colon-over-fourth.gfa: its directory differs from w-colon-over-fourth.gfa's
+dialect p-fourth-and-bracket.gfa: rows name the lines H#1#c@16 R#0#chr1@0, not H#1#c@116 R#0#chr1@0
+dialect p-fourth-and-bracket.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c line at 16: rows for a line not on the reference, or not in the GFA
+p-fourth-and-bracket.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-fourth-and-bracket.gfa: its walk file differs from w-fourth-and-bracket.gfa's
+dialect p-fourth-and-bracket.gfa: its directory differs from w-fourth-and-bracket.gfa's
+dialect vg-chunk-mixed.gfa: rows name the lines H#1#c@16 R#0#chr1@18, not H#1#c@116 R#0#chr1@18
+dialect vg-chunk-mixed.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c line at 16: rows for a line not on the reference, or not in the GFA
+vg-chunk-mixed.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect vg-chunk-mixed.gfa: its walk file differs from vg-chunk-w.gfa's
+dialect vg-chunk-mixed.gfa: its directory differs from vg-chunk-w.gfa's
+dialect vg-chunk-p.gfa: rows name the lines H#1#c@16 R#0#chr1@18, not H#1#c@116 R#0#chr1@18
+dialect vg-chunk-p.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c line at 16: rows for a line not on the reference, or not in the GFA
+vg-chunk-p.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect vg-chunk-p.gfa: its walk file differs from vg-chunk-w.gfa's
+dialect vg-chunk-p.gfa: its directory differs from vg-chunk-w.gfa's
+dialect vg-clipped-gbz-p.gfa: BUILD gfa-to-tabix: error: path H#1#c has two lines starting at 0
+dialect vg-clipped-gbz-p.gfa: index BUILD gfa-to-tabix: error: path H#1#c has two lines starting at 0
+dialect vg-clipped-mixed.gfa: BUILD gfa-to-tabix: error: path H#1#c has two lines starting at 0
+dialect vg-clipped-mixed.gfa: index BUILD gfa-to-tabix: error: path H#1#c has two lines starting at 0
+dialect vg-vcf-phased-p.gfa: refused as gfa-to-tabix: error: path S1#0#chr1 has two lines starting at 0, not as: path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60. Where vg wrote the lines from a VCF-phased GBWT
+dialect vg-vcf-phased-p.gfa: its index is refused as gfa-to-tabix: error: path S1#0#chr1 has two lines starting at 0, not as: path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60
+exit 1
+
+== mutant fourth-not-summed
+-    let start = [&colon, &bracket, &fourth]
++    let start = [&colon, &bracket, if bracket.is_some() { &None } else { &fourth }]
+-- cargo test --no-fail-fast
+test gfa::tests::starts_that_add_up_past_2_to_the_64_are_refused ... FAILED
+test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
+test gfa::tests::the_specs_table_of_p_line_names_reads_as_it_says ... FAILED
+assertion `left == right` failed: H#1#c#100[16-22] of 6 bp
+assertion `left == right` failed: H#1#c#100[16-22]
+test result: FAILED. 28 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
+assertion `left == right` failed: p-fourth-and-bracket.gfa
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
+test result: FAILED. 69 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+-- scripts/check-dialect.sh on its binary
+12 failures, by fixture:
+4 p-fourth-and-bracket.gfa, 4 vg-chunk-mixed.gfa, 4 vg-chunk-p.gfa
+dialect p-fourth-and-bracket.gfa: rows name the lines H#1#c@16 R#0#chr1@0, not H#1#c@116 R#0#chr1@0
+dialect p-fourth-and-bracket.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c line at 16: rows for a line not on the reference, or not in the GFA
+p-fourth-and-bracket.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-fourth-and-bracket.gfa: its walk file differs from w-fourth-and-bracket.gfa's
+dialect p-fourth-and-bracket.gfa: its directory differs from w-fourth-and-bracket.gfa's
+dialect vg-chunk-mixed.gfa: rows name the lines H#1#c@16 R#0#chr1@18, not H#1#c@116 R#0#chr1@18
+dialect vg-chunk-mixed.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c line at 16: rows for a line not on the reference, or not in the GFA
+vg-chunk-mixed.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect vg-chunk-mixed.gfa: its walk file differs from vg-chunk-w.gfa's
+dialect vg-chunk-mixed.gfa: its directory differs from vg-chunk-w.gfa's
+dialect vg-chunk-p.gfa: rows name the lines H#1#c@16 R#0#chr1@18, not H#1#c@116 R#0#chr1@18
+dialect vg-chunk-p.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c line at 16: rows for a line not on the reference, or not in the GFA
+vg-chunk-p.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect vg-chunk-p.gfa: its walk file differs from vg-chunk-w.gfa's
+dialect vg-chunk-p.gfa: its directory differs from vg-chunk-w.gfa's
+exit 1
+
+== mutant haplotype-2a
+-        _ => sample(path),
++        _ => path,
+-- cargo test --no-fail-fast
+test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
+assertion `left == right` failed: H#c of 16 bp
+test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
+assertion `left == right` failed: p-arity2.gfa
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
+test result: FAILED. 69 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+-- scripts/check-dialect.sh on its binary
+15 failures, by fixture:
+3 p-arity2.gfa, 3 p-colon-over-bracket.gfa, 3 p-colon-over-two-fields.gfa, 3 p-colon-past-bracket.gfa, 3 p-two-and-three-fields.gfa
+dialect p-arity2.gfa: #haplotype lists H#c,H#d, not H
+dialect p-arity2.gfa: claims7: # p-arity2.gfa.R.walks.gz: 7 units, 1 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', ['H#c', 'H#d'], 'rows not listed', ['H'])
+dialect p-arity2.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['H', 'H#c', 'H#d']
+(0.0 s) 
+dialect p-colon-over-bracket.gfa: #haplotype lists X#0, not X
+dialect p-colon-over-bracket.gfa: claims7: # p-colon-over-bracket.gfa.R.walks.gz: 3 units, 0 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', ['X#0'], 'rows not listed', ['X'])
+dialect p-colon-over-bracket.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['X', 'X#0']
+(0.0 s) 
+dialect p-colon-over-two-fields.gfa: #haplotype lists X#100, not X
+dialect p-colon-over-two-fields.gfa: claims7: # p-colon-over-two-fields.gfa.R.walks.gz: 3 units, 0 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', ['X#100'], 'rows not listed', ['X'])
+dialect p-colon-over-two-fields.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['X', 'X#100']
+(0.0 s) 
+dialect p-colon-past-bracket.gfa: #haplotype lists X#0, not X
+dialect p-colon-past-bracket.gfa: claims7: # p-colon-past-bracket.gfa.R.walks.gz: 3 units, 0 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', ['X#0'], 'rows not listed', ['X'])
+dialect p-colon-past-bracket.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['X', 'X#0']
+(0.0 s) 
+dialect p-two-and-three-fields.gfa: #haplotype lists H#1, not H,H#1
+dialect p-two-and-three-fields.gfa: claims7: # p-two-and-three-fields.gfa.R.walks.gz: 5 units, 1 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', [], 'rows not listed', ['H'])
+dialect p-two-and-three-fields.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['H']
+(0.0 s) 
+exit 1
+
+== today's writer, main at 36a190d: scripts/check-dialect.sh
+80 failures, by fixture:
+4 odgi-of-vg-gbz-p.gfa, 4 odgi-of-vg-gfw-p.gfa, 3 p-arity2.gfa, 4 p-before-s.gfa, 2 p-bracket-end-inverted.gfa, 2 p-bracket-end-wrong.gfa, 2 p-colon-1-based.gfa, 5 p-colon-over-bracket.gfa, 3 p-colon-over-fourth.gfa, 3 p-colon-over-two-fields.gfa, 5 p-colon-past-bracket.gfa, 4 p-fourth-and-bracket.gfa, 1 p-jump-semicolon.gfa, 2 p-name-empty.gfa, 2 p-name-only-bracket.gfa, 2 p-name-only-colon.gfa, 2 p-no-steps-bracket-end-wrong.gfa, 2 p-overlap.gfa, 2 p-ref-bracket-and-fourth.gfa, 1 p-same-name-twice.gfa, 3 p-two-and-three-fields.gfa, 4 vg-chunk-mixed.gfa, 4 vg-chunk-p.gfa, 4 vg-clipped-gfw-p.gfa, 4 vg-pggb-chunk-p.gfa, 2 vg-vcf-phased-p.gfa, 2 vg-vcf-phased-w.gfa, 2 w-star-start.gfa
+dialect odgi-of-vg-gbz-p.gfa: rows name the lines H#1#c#100@6 K#2#d#7@16 R#0#chr1@18, not H#1#c@106 K#2#d@23 R#0#chr1@18
+dialect odgi-of-vg-gbz-p.gfa: walks-truth:   H#1#c line at 106: on the reference, with no rows
+  K#2#d line at 23: on the reference, with no rows
+  H#1#c#100 line at 6: rows for a line not on the reference, or not in the GFA
+  K#2#d#7 line at 16: rows for a line not on the reference, or not in the GFA
+odgi-of-vg-gbz-p.gfa.R.walks.gz: shard 0/1: 3 lines with rows, 3 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 4 wrong
+dialect odgi-of-vg-gbz-p.gfa: its walk file differs from odgi-of-vg-w.gfa's
+dialect odgi-of-vg-gbz-p.gfa: its directory differs from odgi-of-vg-w.gfa's
+dialect odgi-of-vg-gfw-p.gfa: rows name the lines H#1#c#0[100-114]@6 K#2#d#0[7-31]@16 R#0#chr1@18, not H#1#c@106 K#2#d@23 R#0#chr1@18
+dialect odgi-of-vg-gfw-p.gfa: walks-truth:   H#1#c line at 106: on the reference, with no rows
+  K#2#d line at 23: on the reference, with no rows
+  H#1#c#0[100-114] line at 6: rows for a line not on the reference, or not in the GFA
+  K#2#d#0[7-31] line at 16: rows for a line not on the reference, or not in the GFA
+odgi-of-vg-gfw-p.gfa.R.walks.gz: shard 0/1: 3 lines with rows, 3 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 4 wrong
+dialect odgi-of-vg-gfw-p.gfa: its walk file differs from odgi-of-vg-w.gfa's
+dialect odgi-of-vg-gfw-p.gfa: its directory differs from odgi-of-vg-w.gfa's
+dialect p-arity2.gfa: #haplotype lists H#c,H#d, not H
+dialect p-arity2.gfa: claims7: # p-arity2.gfa.R.walks.gz: 7 units, 1 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', ['H#c', 'H#d'], 'rows not listed', ['H'])
+dialect p-arity2.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['H', 'H#c', 'H#d']
+(0.0 s) 
+dialect p-before-s.gfa: rows name the lines H#1#c@0 H#1#c#0@100 K#2#d#0@7 R#0#chr1@0, not H#1#c@0 H#1#c@100 K#2#d@7 R#0#chr1@0
+dialect p-before-s.gfa: walks-truth:   H#1#c line at 100: on the reference, with no rows
+  K#2#d line at 7: on the reference, with no rows
+  H#1#c#0 line at 100: rows for a line not on the reference, or not in the GFA
+  K#2#d#0 line at 7: rows for a line not on the reference, or not in the GFA
+p-before-s.gfa.R.walks.gz: shard 0/1: 4 lines with rows, 4 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 4 wrong
+dialect p-before-s.gfa: its walk file differs from vg-clipped-w.gfa's
+dialect p-before-s.gfa: its directory differs from vg-clipped-w.gfa's
+dialect p-bracket-end-inverted.gfa: built, where it should be refused: line 11: path H#1#c[21-5]: the [start-end] in its name ends at 5, but its steps from 21 end at 37
+dialect p-bracket-end-inverted.gfa: its index built, where it should be refused: line 11: path H#1#c[21-5]: the [start-end] in its name ends at 5
+dialect p-bracket-end-wrong.gfa: built, where it should be refused: line 10: path R#0#chr1[100-105]: the [start-end] in its name ends at 105, but its steps from 100 end at 118
+dialect p-bracket-end-wrong.gfa: its index built, where it should be refused: line 10: path R#0#chr1[100-105]: the [start-end] in its name ends at 105
+dialect p-colon-1-based.gfa: rows name the lines H#1#c@6 R#0#chr1@0, not H#1#c:6-21@0 R#0#chr1@0
+dialect p-colon-1-based.gfa: walks-truth:   H#1#c:6-21 line at 0: on the reference, with no rows
+  H#1#c line at 6: rows for a line not on the reference, or not in the GFA
+p-colon-1-based.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-colon-over-bracket.gfa: rows name the lines R#0#chr1@0 X#0[100-114]@6, not R#0#chr1@0 X#0@106
+dialect p-colon-over-bracket.gfa: #haplotype lists X#0[100-114], not X
+dialect p-colon-over-bracket.gfa: claims7: # p-colon-over-bracket.gfa.R.walks.gz: 3 units, 0 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', ['X#0[100-114]'], 'rows not listed', ['X'])
+dialect p-colon-over-bracket.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['X', 'X#0[100-114]']
+(0.0 s) 
+dialect p-colon-over-bracket.gfa: walks-truth:   X#0 line at 106: on the reference, with no rows
+  X#0[100-114] line at 6: rows for a line not on the reference, or not in the GFA
+p-colon-over-bracket.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-colon-over-fourth.gfa: rows name the lines H#1#c#100@6 R#0#chr1@0, not H#1#c@106 R#0#chr1@0
+dialect p-colon-over-fourth.gfa: walks-truth:   H#1#c line at 106: on the reference, with no rows
+  H#1#c#100 line at 6: rows for a line not on the reference, or not in the GFA
+p-colon-over-fourth.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-colon-over-fourth.gfa: its walk file differs from w-colon-over-fourth.gfa's
+dialect p-colon-over-two-fields.gfa: #haplotype lists X#100, not X
+dialect p-colon-over-two-fields.gfa: claims7: # p-colon-over-two-fields.gfa.R.walks.gz: 3 units, 0 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', ['X#100'], 'rows not listed', ['X'])
+dialect p-colon-over-two-fields.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['X', 'X#100']
+(0.0 s) 
+dialect p-colon-past-bracket.gfa: rows name the lines R#0#chr1@0 X#0[100-114]@6, not R#0#chr1@0 X#0@106
+dialect p-colon-past-bracket.gfa: #haplotype lists X#0[100-114], not X
+dialect p-colon-past-bracket.gfa: claims7: # p-colon-past-bracket.gfa.R.walks.gz: 3 units, 0 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', ['X#0[100-114]'], 'rows not listed', ['X'])
+dialect p-colon-past-bracket.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['X', 'X#0[100-114]']
+(0.0 s) 
+dialect p-colon-past-bracket.gfa: walks-truth:   X#0 line at 106: on the reference, with no rows
+  X#0[100-114] line at 6: rows for a line not on the reference, or not in the GFA
+p-colon-past-bracket.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-fourth-and-bracket.gfa: rows name the lines H#1#c#100@16 R#0#chr1@0, not H#1#c@116 R#0#chr1@0
+dialect p-fourth-and-bracket.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c#100 line at 16: rows for a line not on the reference, or not in the GFA
+p-fourth-and-bracket.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-fourth-and-bracket.gfa: its walk file differs from w-fourth-and-bracket.gfa's
+dialect p-fourth-and-bracket.gfa: its directory differs from w-fourth-and-bracket.gfa's
+dialect p-jump-semicolon.gfa: refused as gfa-to-tabix: error: docs/walks-container/dialect/p-jump-semicolon.gfa: line 12: --walks needs integer node ids below 2^31, as vg and Minigraph-Cactus write; 1+;3 is not one, not as: line 12: path H#1#c has a `;` between steps, a GFA 1.2 jump
+dialect p-name-empty.gfa: built, where it should be refused: line 11: a P line has an empty name
+dialect p-name-empty.gfa: its index built, where it should be refused: line 11: a P line has an empty name
+dialect p-name-only-bracket.gfa: built, where it should be refused: line 11: path [5]: its name is only a start, with no name before it
+dialect p-name-only-bracket.gfa: its index built, where it should be refused: line 11: path [5]: its name is only a start, with no name before it
+dialect p-name-only-colon.gfa: built, where it should be refused: line 11: path :5-21: its name is only a start, with no name before it
+dialect p-name-only-colon.gfa: its index built, where it should be refused: line 11: path :5-21: its name is only a start, with no name before it
+dialect p-no-steps-bracket-end-wrong.gfa: built, where it should be refused: line 11: path H#1#c[5-9]: the [start-end] in its name ends at 9, but its steps from 5 end at 5
+dialect p-no-steps-bracket-end-wrong.gfa: its index built, where it should be refused: line 11: path H#1#c[5-9]: the [start-end] in its name ends at 9
+dialect p-overlap.gfa: refused as gfa-to-tabix: error: path H#1#c: the line covering 0-16 overlaps the one covering 5-21, not as: path H#1#c: the line covering 0-16 overlaps the one covering 5-21. Where vg wrote the lines from a VCF-phased GBWT
+dialect p-overlap.gfa: its index built, where it should be refused: path H#1#c: the line covering 0-16 overlaps the one covering 5-21
+dialect p-ref-bracket-and-fourth.gfa: rows name the lines H#1#c@0 R#0#chr1#0@100, not H#1#c@0 R#0#chr1@100
+dialect p-ref-bracket-and-fourth.gfa: walks-truth:   R#0#chr1 line at 100: on the reference, with no rows
+  R#0#chr1#0 line at 100: rows for a line not on the reference, or not in the GFA
+p-ref-bracket-and-fourth.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect p-same-name-twice.gfa: its index built, where it should be refused: path H#1#c has two lines starting at 0
+dialect p-two-and-three-fields.gfa: #haplotype lists H#1, not H,H#1
+dialect p-two-and-three-fields.gfa: claims7: # p-two-and-three-fields.gfa.R.walks.gz: 5 units, 1 departure records, 0 abridged rows, 0 walk rows with copies
+1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+    ('listed without rows', [], 'rows not listed', ['H'])
+dialect p-two-and-three-fields.gfa: spec8: == disagreed ==
+           1  #haplotype lines are not the other haplotypes with rows
+              ['H']
+(0.0 s) 
+dialect vg-chunk-mixed.gfa: rows name the lines H#1#c#100@16 R#0#chr1@18, not H#1#c@116 R#0#chr1@18
+dialect vg-chunk-mixed.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c#100 line at 16: rows for a line not on the reference, or not in the GFA
+vg-chunk-mixed.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect vg-chunk-mixed.gfa: its walk file differs from vg-chunk-w.gfa's
+dialect vg-chunk-mixed.gfa: its directory differs from vg-chunk-w.gfa's
+dialect vg-chunk-p.gfa: rows name the lines H#1#c#100@16 R#0#chr1@18, not H#1#c@116 R#0#chr1@18
+dialect vg-chunk-p.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
+  H#1#c#100 line at 16: rows for a line not on the reference, or not in the GFA
+vg-chunk-p.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong
+dialect vg-chunk-p.gfa: its walk file differs from vg-chunk-w.gfa's
+dialect vg-chunk-p.gfa: its directory differs from vg-chunk-w.gfa's
+dialect vg-clipped-gfw-p.gfa: rows name the lines H#1#c@0 H#1#c#0@100 K#2#d#0@7 R#0#chr1@0, not H#1#c@0 H#1#c@100 K#2#d@7 R#0#chr1@0
+dialect vg-clipped-gfw-p.gfa: walks-truth:   H#1#c line at 100: on the reference, with no rows
+  K#2#d line at 7: on the reference, with no rows
+  H#1#c#0 line at 100: rows for a line not on the reference, or not in the GFA
+  K#2#d#0 line at 7: rows for a line not on the reference, or not in the GFA
+vg-clipped-gfw-p.gfa.R.walks.gz: shard 0/1: 4 lines with rows, 4 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 4 wrong
+dialect vg-clipped-gfw-p.gfa: its walk file differs from vg-clipped-w.gfa's
+dialect vg-clipped-gfw-p.gfa: its directory differs from vg-clipped-w.gfa's
+dialect vg-pggb-chunk-p.gfa: rows name the lines H#1#c#0@10 R#0#chr1#0@12, not H#1#c@10 R#0#chr1@12
+dialect vg-pggb-chunk-p.gfa: walks-truth:   R#0#chr1 line at 12: on the reference, with no rows
+  H#1#c line at 10: on the reference, with no rows
+  H#1#c#0 line at 10: rows for a line not on the reference, or not in the GFA
+  R#0#chr1#0 line at 12: rows for a line not on the reference, or not in the GFA
+vg-pggb-chunk-p.gfa.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 4 wrong
+dialect vg-pggb-chunk-p.gfa: its walk file differs from vg-pggb-chunk-w.gfa's
+dialect vg-pggb-chunk-p.gfa: its directory differs from vg-pggb-chunk-w.gfa's
+dialect vg-vcf-phased-p.gfa: refused as gfa-to-tabix: error: path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60, not as: path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60. Where vg wrote the lines from a VCF-phased GBWT
+dialect vg-vcf-phased-p.gfa: its index built, where it should be refused: path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60
+dialect vg-vcf-phased-w.gfa: refused as gfa-to-tabix: error: path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60, not as: path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60. Where vg wrote the lines from a VCF-phased GBWT
+dialect vg-vcf-phased-w.gfa: its index built, where it should be refused: path S1#0#chr1: the line covering 0-49 overlaps the one covering 1-60
+dialect w-star-start.gfa: refused as gfa-to-tabix: error: docs/walks-container/dialect/w-star-start.gfa: line 6: W line start: * is not a non-negative integer, not as: line 6: W line start is *, which GFA allows but which states no offset
+dialect w-star-start.gfa: its index is refused as gfa-to-tabix: error: line 6: W line start: * is not a non-negative integer, not as: line 6: W line start is *, which GFA allows but which states no offset
+exit 1

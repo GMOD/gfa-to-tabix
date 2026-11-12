@@ -1,0 +1,15 @@
+### vg v1.69.0: pggb-like P-line graph pg.gfa (P R#0#chr1 = 1+,2+,3+, 18 bp; P H#1#c = 1+,4+,3+, 16 bp); vg convert -g pg.gfa -p > pg.pg; vg paths -L -x pg.pg
+R#0#chr1#0
+H#1#c#0
+### vg chunk -x pg.pg -p 'R#0#chr1#0:12-17' -c 0 > chunk3.vg ; vg paths -M -x chunk3.vg   (node 3: R at 12-18, H#1#c at 10-16)
+#NAME	SENSE	SAMPLE	HAPLOTYPE	LOCUS	PHASE_BLOCK	SUBRANGE
+R#0#chr1#0[12-18]	HAPLOTYPE	R	0	chr1	0	12-18
+H#1#c#0[10-16]	HAPLOTYPE	H	1	c	0	10-16
+### vg convert -f -W chunk3.vg
+H	VN:Z:1.1
+P	H#1#c#0[10-16]	3+	*
+P	R#0#chr1#0[12-18]	3+	*
+### vg convert -f chunk3.vg
+H	VN:Z:1.1
+W	H	1	c	10	16	>3
+W	R	0	chr1	12	18	>3

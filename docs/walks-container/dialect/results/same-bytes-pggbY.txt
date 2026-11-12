@@ -1,0 +1,21 @@
+pggb chrY, HPRC release 2 (7695644148 bytes), main at 36a190d against the branch
+Mem:             125           7           2           0         115         116
+old --walks --refs GRCh38: 90.88 s, 7139232 KB peak, exit 0
+new --walks --refs GRCh38: 93.00 s, 7331836 KB peak, exit 0
+old --walks --refs CHM13: 137.51 s, 3918484 KB peak, exit 0
+new --walks --refs CHM13: 141.04 s, 3940688 KB peak, exit 0
+old --reference GRCh38: 85.02 s, 7348036 KB peak, exit 0
+new --reference GRCh38: 87.60 s, 7339572 KB peak, exit 0
+old --reference GRCh38 --format 1: 84.49 s, 6224992 KB peak, exit 0
+new --reference GRCh38 --format 1: 85.52 s, 6228596 KB peak, exit 0
+identical	referenceGRCh38format1.links.bed.gz	681918965 bytes	b9c0f30b03408ac5
+identical	referenceGRCh38format1.links.bed.gz.tbi	563737 bytes	e26360a6efe2e705
+identical	referenceGRCh38format1.segs.bed.gz	72911535 bytes	1d2da6966e983d9f
+identical	referenceGRCh38format1.segs.bed.gz.tbi	402060 bytes	69d5e91cee5f2c9c
+identical	referenceGRCh38.graph.bed.gz	349382071 bytes	ad75f61e70e3e98f
+identical	referenceGRCh38.graph.bed.gz.tbi	464970 bytes	960d7b745f1778a8
+identical	walksrefsCHM13.CHM13.walks.gz	188280064 bytes	c60063b98c1344fa
+identical	walksrefsCHM13.CHM13.walks.gz.idx	163 bytes	892ed733d39b2547
+identical	walksrefsGRCh38.GRCh38.walks.gz	193514603 bytes	31720984d67380ec
+identical	walksrefsGRCh38.GRCh38.walks.gz.idx	210 bytes	d9b2a4db28c073f3
+files: 10 old, 10 new
