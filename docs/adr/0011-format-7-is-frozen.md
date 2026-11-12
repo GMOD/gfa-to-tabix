@@ -1,6 +1,8 @@
 # ADR 0011: Walk format 7 is frozen, and collapsed repeats stay an open problem
 
-- **Status:** accepted, 2026-11-06
+- **Status:** accepted, 2026-11-06. Its rules stand; its freeze of format 7
+  ended with [ADR 0012](0012-abridged-blocks.md), walk format 8, which
+  changes the abridged tier alone
 - **Decides:**
   - that walk format 7 ([ADR 0010](0010-walks-unit-table.md),
     [walks-format.md](../walks-format.md)) ships unchanged

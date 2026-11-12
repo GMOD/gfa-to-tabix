@@ -4,7 +4,7 @@ gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can fe
 
 - **In:** a GFA file (`.gfa` or `.gfa.gz`): an rGFA from minigraph or Minigraph-Cactus (`*.sv.gfa.gz`), or a plain GFA with P or W lines from pggb, odgi or `vg convert -f`
 - **Out:** `<prefix>.graph.bed.gz` and its `.tbi`, one line per node and per link ([format](docs/index-format.md#what-the-file-holds)); `--format 1` writes the `.segs.bed.gz` and `.links.bed.gz` pair that readers before graph-walks 4.4 and the JBrowse plugin 8.2 need
-- **Out, with `--walks --refs GRCh38`:** `<prefix>.GRCh38.walks.gz` and its directory `.walks.gz.idx`, every haplotype's path through a base-level graph in [walk format 7](docs/walks-format.md), which [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 6 reads; 3.x wrote format 6, which graph-walks 5 reads, and 2.x format 5, which graph-walks 4 reads
+- **Out, with `--walks --refs GRCh38`:** `<prefix>.GRCh38.walks.gz` and its directory `.walks.gz.idx`, every haplotype's path through a base-level graph in [walk format 8](docs/walks-format.md), which [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 7 reads; 4.x wrote format 7, which graph-walks 6 reads, 3.x format 6, which graph-walks 5 reads, and 2.x format 5, which graph-walks 4 reads
 - A browser fetches the rows for a region with HTTP range requests and never downloads the whole graph
 - The [JBrowse 2](https://jbrowse.org) graph track reads the file
 - The tool is one static binary and needs no bgzip or tabix; `build` runs gfatools, when installed, for an rGFA's bubbles
@@ -187,7 +187,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 
 - [The node and link index](docs/index-format.md): inputs (rGFA, plain GFA, choosing a reference), options, coordinates, layouts, columns, scale
 - [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `bubbles`, `fold`, `paths`, and the deprecated `alleles`
-- [Walk files](docs/walks-format.md): options, placement rules, walk format 7's units and rows, and its readers
+- [Walk files](docs/walks-format.md): options, placement rules, walk format 8's units and rows, and its readers
 - Decisions:
   - [ADR 0001](docs/adr/0001-step-placement.md): which chunk a walk file files each step under
   - [ADR 0002](docs/adr/0002-two-index-files.md): why format 1 keeps nodes and links in two files
@@ -200,7 +200,7 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
   - [ADR 0009](docs/adr/0009-departure-records.md): one record per departure from the reference, and walk rows that name the copy (walk format 6)
   - [ADR 0010](docs/adr/0010-walks-unit-table.md): the walk file is gzip units with a unit table, not a Tabix file (walk format 7)
   - [ADR 0011](docs/adr/0011-format-7-is-frozen.md): walk format 7 is frozen, and what a format change must pass
-  - [ADR 0012](docs/adr/0012-abridged-blocks.md): abridged pieces carry their blocks on the reference (a `blocks` unit added to walk format 7)
+  - [ADR 0012](docs/adr/0012-abridged-blocks.md): walk format 8: an abridged piece's shape in a `blocks` row
 - [Open problems](docs/open-problems.md): measured but undecided, such as pggb's collapsed repeats
 - [Comparison with gbz-base and gbz-haplotype-index](docs/gbz-comparison.md)
 - `scripts/figures.py target/release/gfa-to-tabix` redraws the figures from the tool's output, and CI fails when a figure differs from that output

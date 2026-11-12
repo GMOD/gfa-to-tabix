@@ -4,42 +4,28 @@ The format review of 2026-11-11 found that graph-walks drops some abridged
 pieces from windows they step in. Two blinded Fable reviews then traced
 abridged pieces from file to screen and found the drop is one of several
 ways the walk view states something false about a haplotype whose piece is
-unloaded. Two blinded deciders split on the fix, a third cross-examined
-them, and a gate over every abridged tile of the hosted files passed:
-[ADR 0012](../adr/0012-abridged-blocks.md) decides a `blocks` unit per
-abridged tile holding each piece's exact stretches on the reference. A
-later session found the ADR's "format 8" was not needed, and two more
-blinded deciders agreed: the unit is a later addition to walk format 7,
-which released readers skip. This page is the brief for the session that
-builds it; the releases and the hosted swap wait for the user.
+unloaded. [ADR 0012](../adr/0012-abridged-blocks.md) decides walk format
+8: a `blocks` row gives each abridged piece's shape on the reference, and
+the `abridged` row keeps only what finds and costs its detail record.
+This page lists what is wrong today, the tests a fix must pass, and where
+the work stands; the releases and the hosted swap wait for the user.
 
 ## Decision
 
-- **Cause:** an `abridged` row summarises a moved piece by its first and
-  last steps on R, its `bp` and its `nsteps`, and readers and viewers
-  treat that summary as where the piece lies, how long it is there and
-  which way it runs
-- **Fix:** [ADR 0012](../adr/0012-abridged-blocks.md). gfa-to-tabix
-  adds a `blocks` unit per abridged tile, under `format:i:7`, each row
-  the whole piece with its runs off R as their bp;
-  graph-walks keeps an unloaded piece
-  where a block overlaps the drawn stretch and builds its reference steps
-  from the blocks, each own run one step of known bp and unknown
-  identity; bandage-core draws it in loaded geometry with own runs styled
-  "not loaded"; the plugin offers the load action on every row with
-  unloaded runs. Format 7's units stay byte for byte
-- **No format 8:** graph-walks 6.2 skips unit kinds it doesn't know, as
-  the spec says a reader does, so it reads a file with `blocks` units as
-  it reads today's. The next graph-walks refuses a sequence with a
-  detail unit and no `blocks` unit for its tile
-- **Superseded:** this page's first version decided a reader and viewer
-  fix with no format change. It showed nothing about an unloaded piece
-  without loading, and its auto-loading costs +300 KB and 2-7 s a window
-  ([ruling P](../walks-container/abridged/ruling-P.md) and the
-  [cross-examination](../walks-container/abridged/ruling-cross.md))
-- **Not to say:** two unloaded rows with equal blocks may carry different
-  own nodes (0.3% of piece-windows), so a view never calls them the same
-  sequence
+- **Cause:** format 7's `abridged` row summarises a moved piece by its
+  first and last steps on R, its `bp` and its `nsteps`, and readers and
+  viewers treat that summary as where the piece lies, how long it is
+  there and which way it runs
+- **Fix:** [ADR 0012](../adr/0012-abridged-blocks.md), walk format 8.
+  graph-walks builds an unloaded piece from its `blocks` row as an
+  ordinary fragment, each run off R one placeholder step of known bp and
+  unknown identity; bandage-core draws it in loaded geometry with those
+  runs styled "not loaded"; the plugin offers the load action on every
+  row with unloaded runs
+- **Not to say:** two unloaded rows with equal lists may differ in the
+  nodes of their runs (0.3% of piece-windows), so a view never calls
+  them the same sequence; and a run off R is off the tile's reference,
+  not proof of sequence the reference lacks
 
 ## What the view gets wrong today
 
@@ -132,12 +118,8 @@ the expanded cut over the same window unless a line says otherwise.
   readout and runs, on all the windows above plus 1,000 random
   abridged-tile windows per file, ADR 0012's acceptance test
 - **Each test fails on graph-walks 6.2 and today's bandage-core**
-- **Old reader, new file:** graph-walks 6.2 returns the same cuts from a
-  rebuilt file as from today's hosted one, on the windows above, before
-  a rebuilt file is hosted
-- **New reader, old file:** the next graph-walks refuses today's hosted
-  file at a sequence with abridged tiles, naming the version to rebuild
-  with, and reads its sequences that have none
+- **A file in another format:** graph-walks 7 refuses a format 7 file at
+  open, naming the gfa-to-tabix version to rebuild with
 
 ## Running the evidence
 
@@ -152,38 +134,41 @@ the expanded cut over the same window unless a line says otherwise.
 
 ## Order
 
-Hosting freezes the `blocks` row, and it changed twice once a reader was
-built on it, so nothing is hosted or released until every consumer has
-read it end to end. Experiments and runs go to ada, one agent at a time.
+Hosting freezes the format, and the `blocks` row changed twice once a
+first reader was built on it, so nothing is hosted or released until
+every consumer has read it end to end. Experiments and runs go to ada,
+one agent at a time. No more rulings on the row's spelling: a change
+from here needs a consumer failing on a real window.
 
-- gfa-to-tabix, on the `blocks-unit` branch, ahead of main: the writer,
-  the spec and the file checkers follow the row's final shape
-  ([ADR 0012](../adr/0012-abridged-blocks.md)), with its
-  [proof](../walks-container/abridged/blocks-proof.md). Main still holds
-  the row as first built; the branch lands once `scripts/check-walks.sh`
-  passes on ada. The version is still 4.0.0: a push to main with a new
-  version in Cargo.toml publishes it
+- gfa-to-tabix, done on main, not pushed and not released: the writer,
+  the spec, the proof, five file checkers with 74 broken files, and the
+  repo's CI steps green on ada but for the job that rebuilds every path
+  with graph-walks, which needs graph-walks 7. The version is still
+  4.0.0: a push to main with a new version in Cargo.toml publishes it,
+  so main isn't pushed before graph-walks 7 is released
 - graph-walks on its `blocks-unit` branch (`~/src/graph-walks-blocks`):
-  an independent review found it unsafe to build on, and a second round
-  is fixing that. It is done when its equality harness shows no
-  difference from the full loaded cut on chr22, plain and contained, the
-  harness fails on a broken reader, its cost on the failure windows
-  above is measured against 6.2, and a second review passes it
-- "Reading a window" and the `abridged` section of walks-format.md,
-  which still describe 6.2's reader, follow the reader once it is
-  settled
+  an independent review found its first round unsafe to build on, and a
+  second round is fixing that and following format 8. It is done when
+  its equality harness shows no difference from the full loaded cut on
+  chr22, plain and contained, the harness fails on a broken reader, its
+  cost on the worst windows is measured against 6.2, and a second review
+  passes it
+- walks-format.md's "Reading a window" follows the reader once it is
+  settled, and the departure pyramid's blocks become bins in its prose,
+  since "block" now means three things
 - bandage-core on a branch, linked: loaded geometry for unloaded runs,
   runs off R styled "not loaded", exact sizes; renders to the user
 - the plugin's load action on every row with unloaded runs
 - chr22 end to end, from the writer to rendered rows, through all three
-- then both genome files rebuilt on ada (`genome-blocks.sh`), ADR 0012's
-  table of them redone, graph-walks 6.2.0's release check and the
-  harness run on them, and the tests above on the hosted windows
-- then, with the user's go-ahead, release gfa-to-tabix as a minor
-  version and swap the hosted files; every consumer green on the exact
-  versions; release graph-walks, bandage-core, the plugin and the
-  consumers
+- then both genome files rebuilt on ada (`genome-blocks.sh`) and ADR
+  0012's acceptance list run on them, the parts that check the writer by
+  someone other than the session that wrote it
+- then, with the user's go-ahead: release gfa-to-tabix 5.0, graph-walks
+  7, bandage-core, the plugin and the other consumers, each green on the
+  exact versions, and swap the hosted files with them
 - the paper names the gfa-to-tabix version that built the hosted walk
   file and a request count measured on it; both are rechecked after the
-  swap. If the paper can't wait, it cites 4.0.0 and today's hosted
-  files, which none of this touches
+  swap, and [the prior-art review](../walks-container/abridged/reviews.md#prior-art)
+  has three sentences that say what the file is to a reader who knows
+  GFA. If the consumers aren't green in time, the paper cites 4.0.0 and
+  today's hosted files, which none of this touches
