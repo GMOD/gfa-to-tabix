@@ -55,9 +55,18 @@
 - **The new unit:** each tile with `abridged` rows has one `blocks`
   unit, named by the tile's start, after the tile's detail units in file
   order, its `start end` the hull of its rows
-- **Its rows:** `seq start end blocks path fragStart piece list`, one per
-  `abridged` row of the tile, keyed by `path`, `fragStart` and `piece` as
-  the `abridged` row is, `start end` the hull of its blocks
+- **Its rows:** `seq start end blocks path fragStart piece ownBefore
+  ownAfter list`, one per `abridged` row of the tile, keyed by `path`,
+  `fragStart` and `piece` as the `abridged` row is, `start end` the hull
+  of its blocks
+- **`ownBefore` and `ownAfter`:** the piece's bp off R before its first
+  block and after its last, so the row states the whole piece, from
+  `hapOffset − ownBefore` to `hapOffset + bp + ownAfter` on its contig.
+  The row first stated a piece only between its first and last steps on
+  R; 23% and 34% of the hosted graphs' abridged pieces go on after that,
+  32 and 37 kb at the median, and a reader could learn it only from a
+  neighbouring piece or a departure record where the window held one
+  ([ruling](../walks-container/abridged/ruling-piece-ends.md))
 - **What a block is:** a maximal run of consecutive steps of the piece on
   R, each starting where the last ended on R, all in one direction, with
   no step off R between
@@ -74,7 +83,8 @@
   - Σ`len` + Σ`own` equals the `abridged` row's `bp`
   - the first block begins at the `start` step and the last ends at the
     `end` step
-  - the blocks equal those the detail unit's walk row decodes to
+  - the blocks, `ownBefore` and `ownAfter` equal what the detail unit's
+    walk row decodes to
 - **Everything else is format 7's.** A window read selects `blocks`
   units by extent as it does tiles; it reads them only when it keeps
   unloaded pieces
