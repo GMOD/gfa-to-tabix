@@ -370,6 +370,12 @@ W  B  1  c     0  32  >1>2>6>3
   there does. graph-walks 6.2 returns T's fragment with no departure, no
   gap and nothing trimmed, and the link from node 2 to node 6 comes back
   from a cut of neither sequence
+- walks-format.md used to say a line with no later step and no record
+  inside the drawn stretch ends there. It now says what a reader can
+  know, that the line has no later step on that sequence, and that
+  nothing in the sequence's units tells a line that ends from one that
+  goes on elsewhere ([Reading a window](walks-format.md#reading-a-window)).
+  The file is unchanged
 - B crosses and comes back, so it has a record on chrA: 2 bp of its own
   between adjacent steps, with `ownTiles` `.`. The 2 bp are chrB's node 6,
   which the record can't say, and an attach fetch reads no tile for them
@@ -613,25 +619,24 @@ W  B  1  c     0  32  >1>2>6>3
   allocator, such as mimalloc, and keep it only if it closes most of the
   gap on both
 
-## Coordinates past 2^53
+## Memory grows with where a reference line starts
 
-- The writer accepts a reference line that starts past 2^53 on its
-  sequence, and writes positions a reader holding numbers as doubles,
-  as graph-walks does, reads wrong: a line at 2^53 + 1 gives a `blocks`
-  list beginning `9007199254740993+6`. A start near 2^63 panics in the
-  writer (`Along::predict`). No real assembly has such a coordinate; a
-  W line's start is whatever its writer put there
-- Found by the proof of what a `blocks` row determines
-  ([blocks-proof.md](walks-container/abridged/blocks-proof.md)); it is
-  not particular to `blocks` rows
-- The writer's memory also grows with where the reference starts: it
-  allocates an entry per tile of each reference sequence from 0
-  (`Chunks` in `src/walks.rs`), whether a line covers it or not, so a
+- The writer allocates an entry per tile of each reference sequence from
+  0 (`Chunks` in `src/walks.rs`), whether a line covers it or not, so a
   reference line starting near 2^46 aborts under a 4 GB memory cap at the
-  default tile ([big-refstart-2e46.gfa](walks-container/dialect/big-refstart-2e46.gfa))
-- Suggested next step: refuse a line whose end passes 2^53 at build,
-  with a test, as node ids of 2^31 are refused, and hold entries only for
-  tiles a reference line reaches
+  default tile ([big-refstart-2e46.gfa](walks-container/dialect/big-refstart-2e46.gfa)),
+  and one ending at 2^53 builds only with a tile large enough to keep
+  the count below 2^32
+  ([line-end-2e53.gfa](walks-container/dialect/line-end-2e53.gfa))
+- No real assembly has such a coordinate; a W line's start is whatever
+  its writer put there. The coordinates themselves are settled: 5.0.0
+  refuses a line that starts or ends past 2^53, and a reference whose
+  last tile does ([walks-format.md](walks-format.md#tiles-and-pieces),
+  [line-end-past-2e53.gfa](walks-container/dialect/line-end-past-2e53.gfa)),
+  where it used to write positions a reader holding numbers as doubles
+  read wrong and panicked on a start near 2^63
+- Suggested next step, if a graph with such a line turns up: hold entries
+  only for tiles a reference line reaches
 
 ## No check recomputes placement where the reference passes a node twice
 
@@ -648,32 +653,32 @@ W  B  1  c     0  32  >1>2>6>3
   file, and no hosted walk file has a revisited node
 - Suggested next step, when someone hosts a pggb walk file: state those
   two rules exactly, then recompute each such step's pass from the GFA
-  in `walks-truth.py rebuild`. [The next section](#format-8-names-the-writers-placement-policy)
-  gives another way out: the rule as this writer's policy, and what
-  readers rely on as the format
+  in `walks-truth.py rebuild`. The page now calls the rule this writer's
+  policy and what readers rely on the format
+  ([the next section](#the-writers-policy-has-no-name-in-the-file)), so
+  such a file is a format 8 file with another placement, not a broken
+  one; the check would then be of gfa-to-tabix, not of the format
 
-## Format 8 names the writer's placement policy
+## The writer's policy has no name in the file
 
-- walks-format.md makes the placement rule part of format 8: a file with
-  a placement rule the page doesn't give is another format. But a reader
-  takes every position from the rows, and of the `#walks` line reads
-  `format`, `tile` and `revisited` alone (graph-walks' `parseDirectory`
-  in `src/walkFile.ts`, and `src/walkRows.ts`)
-- What a reader relies on are properties the placement bullets
-  guarantee, such as a record's leave step being the last step on R of
-  its piece and its rejoin the first (C74): graph-walks indexes own steps
-  by them (the comment above the own-steps index in `src/walkRows.ts`,
-  `pieceEnds` in `src/walkChunk.ts`)
-- So a pggb placement that kept those properties would be another format
-  by the page's words though no reader would read it differently, and
-  claims7.md mixes the format's invariants with this writer's choices
-- Suggested next step, when pggb placement work starts: state those
-  properties as format 8's invariants; call pass choice, `stay`, the
-  abridge budgets and the pyramid's bin sizes what this writer does;
-  name the policy in a `#walks` tag; and split the checkers' claims the
-  same way. It changes no byte and breaks no reader, so it can follow the
-  paper's freeze. It also answers the section before, which finds the
-  rule not pinned tightly enough to recompute
+- walks-format.md made the placement rule part of format 8, though a
+  reader takes every position from the rows and of the `#walks` line
+  reads `format`, `tile` and `revisited` alone. It now lists what a
+  reader relies on as the format, and calls pass choice, `stay`, the
+  abridge budgets and the order of a tile's detail records this writer's
+  policy ([What a reader relies on](walks-format.md#what-a-reader-relies-on),
+  [ADR 0013](adr/0013-abridged-hapbp.md)). No byte changed
+- Still mixed: claims7.md lists the format's invariants and this
+  writer's choices in one table, and the file checkers fail a file for
+  either, so a file from another placement would fail checks of the
+  policy. The pyramid's bin sizes are stated as the format, though a
+  reader selects departure units by extent
+- A file doesn't say which policy wrote it: `stay`, `abridge` and
+  `abridgebytes` are there, the placement rule's name isn't
+- Suggested next step, when pggb placement work starts: name the policy
+  in a `#walks` tag, split the claims table and the checkers' claims
+  into format and policy, and rule on the bin sizes. A tag is an
+  addition a reader ignores, so it can follow the paper's freeze
 
 ## P line names
 

@@ -2169,3 +2169,45 @@ Where the findings have come from so far, and the rule each gives:
   ([1](walks-container/abridged/ruling-declaration-1.md),
   [2](walks-container/abridged/ruling-declaration-2.md)); ADR 0012 and
   the handoff amended. Guard: the handoff's "old reader, new file" test
+- **2026-11-12, graph-walks' format 8 branch on the genome files (an
+  attached record needs a piece's end the tile doesn't state).** An
+  `abridged` row gave where a moved piece starts on its contig and not
+  where it ends, so a reader attaching a record to an abridged tile read
+  the tile's `blocks` unit to learn which piece holds the record's own
+  steps and how many bp they are: 4.54 MB for a 1 kb window on 5 of
+  1,689 scanned CHM13 windows, past ADR 0012's 4 MB and its own
+  `bytesFor`. ADR 0012 said a cut of named haplotypes never reads the
+  unit; 12 and 11 of 60 such cuts did. Source: the reader's read scan on
+  ada, then three independent reviews
+  ([ADR 0013](adr/0013-abridged-hapbp.md)). Fix: `hapBp` on the
+  `abridged` row, and the attach rule as a statement of the format.
+  Guard: the build's check of `hapBp` against the `blocks` list;
+  `decode_file`; claims7 A10 to A13 and O5, audit7, expand7, spec8 and
+  the rebuild; nine broken files and five broken writers
+- **2026-11-12, the broken writers of ADR 0013 (the tests passed a
+  writer stating another piece's bp).** A writer that gave an `abridged`
+  row the bp of its line's next piece in the tile passed every test:
+  each fixture the tests abridged had one piece of a line in a tile, or
+  two of the same bp. The file checkers failed it. Source:
+  `broken-writers.py`'s first run. Fix: a test that abridges the
+  reviews' graphs, one with a line's pieces of 38 and 18 bp in one tile.
+  Guard: `the_hap_bp_graphs_rebuild_with_every_abridged_row_and_record_checked`,
+  and `broken-writers.py`, which exits 1 where a wrong value gets through
+- **2026-11-12, the blocks-row proof's finding, taken up (coordinates
+  past 2^53).** **re-found**. A line at 2^53 + 1 built, with positions a
+  reader holding doubles reads wrong, and a start near 2^63 panicked.
+  Source: [blocks-proof.md](walks-container/abridged/blocks-proof.md),
+  logged in open problems on 2026-11-11. Fix: the first read refuses a
+  line that starts or ends past 2^53, and a reference whose last tile
+  ends past it. Guard:
+  `a_line_past_2_to_the_53_is_refused_and_one_ending_there_builds`,
+  `a_reference_whose_last_tile_ends_past_2_to_the_53_is_refused`
+- **2026-11-12, the freeze review's finding, taken up (a line that
+  crosses onto another sequence read as ending).** walks-format.md said
+  a line with no later step and no record inside the drawn stretch ends
+  there, which is false of a line that goes on on another sequence of
+  the reference. Source:
+  [open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence).
+  Fix: the page says what a reader can know, no later step on that
+  sequence, and that no row tells such a line from one that stops; no
+  byte changed. Guard: none
