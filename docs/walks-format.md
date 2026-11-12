@@ -88,8 +88,8 @@ taken flipped, and its departure records.
 - **Stretch:** a run of bases, on S unless a contig is named: a `ref`
   row's runs from its `hapOffset` over its steps' lengths
 - **Span:** a walk row's stretch of S, from the first base its steps placed
-  on R cover to the last, over all of them; an abridged row's, from the
-  first base its first and last steps on R cover to the last
+  on R cover to the last, over all of them; an abridged row's and a
+  blocks row's are their piece's, the same
   ([Rows](#rows)) <!-- C10 -->
 - **Extent:** a unit's `start end` ([Units](#units)) or a departure line's
   ([departure](#departure))
@@ -364,7 +364,8 @@ The header unit's lines start with `#`:
 - A reader refuses a row of a unit that belongs to another sequence, or
   is of a kind its unit doesn't hold: a tile holds `ref`, `nodes`,
   `route`, `walk` and `abridged` rows, a departure block `departure`
-  rows, a detail unit `nodes`, `route` and `walk` rows <!-- C155 -->
+  rows, a detail unit `nodes`, `route` and `walk` rows, a blocks unit
+  `blocks` rows <!-- C155 -->
 - A reader refuses a table that doesn't start with its own
   `#unit seq 0 |S| table .` line, or holds a line that isn't an `#entry`.
   A table that leaves out a unit's entry altogether reads as a sequence
@@ -378,9 +379,21 @@ The header unit's lines start with `#`:
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
   `--abridge-bytes` budgets the file was written with; 0 means none. A reader
   ignores them
-- Tags a reader doesn't know it ignores, on any row, in any order after
-  the fixed columns, and on header lines too. Later additions are tags,
-  unit kinds or files <!-- C124 -->
+- Later additions are tags, header lines, unit kinds or files, and a
+  reader of format 8 reads a file that has them as it reads one that
+  doesn't <!-- C124 -->:
+  - a tag is `NAME:T:value`, as SAM writes one: a name of letters and
+    digits that starts with a letter, one letter for its type, and a
+    value with no tab. Tags follow a row's fixed columns, in any order.
+    A reader ignores the ones it doesn't know, on a row of any kind and
+    on the `#walks` line. `SQ:Z:` on a `ref` or `nodes` row is one
+  - a header line whose first word a reader doesn't know is ignored
+  - a unit of a kind it doesn't know is skipped, whatever rows it holds
+  - `#unit` lines, `#entry` lines and the directory's lines for the
+    header and the sequences take no tags
+  - an addition doesn't change what a row this page gives means, so a
+    reader that ignores it draws nothing false. A change that can't
+    keep to that is another format
 - `#reference` names the reference sample <!-- C157 -->
 - `#haplotype` lists each other haplotype with rows in the file, as its PanSN
   `sample#haplotype`, a path name up to its second `#` or whole where it
@@ -496,7 +509,7 @@ seq start end route entry interior exit
   The tile's first route row starts from 0 <!-- C67 -->
 - A route's id is its row's index among the tile's route rows, from 0. The
   rows are in order of the first position in R of their entry's or exit's
-  node, whichever is first, a route with neither last, then by `entry`
+  node, whichever is first, then by `entry`
   (none first), `interior` and `exit` <!-- C129 -->
 - A route is stored the way round whose handles sort first: by `entry` (none
   first), then `interior`, then `exit`. <!-- C68 --> Its flip is the
@@ -575,17 +588,17 @@ seq start end blocks path fragStart piece list
 ```
 
 - One row per `abridged` row of a tile, in the `blocks` unit named by the
-  tile's start: keyed by `path`, `fragStart` and `piece` as the
-  `abridged` row is, and in the order the tile lists them. A tile with no
+  tile's start. A reader matches the two by `path`, `fragStart` and
+  `piece`; the unit lists its rows in the tile's order of them. A tile with no
   `abridged` row has no `blocks` unit <!-- C161 -->
 - `list` is the piece in path order, comma-separated, with its steps
   gathered into two kinds of item:
   - **a block,** `<d><+|-><len>`: a run of consecutive steps on R, where
     a step begins on the base the one before ended on and they all run
-    one way. `d` is where the block begins on R, less where the block
-    before ended, or less 0 for the first; `+` is along R and `-` against
-    it; `len` is its bp. So `-24+6` is a jump 24 bp back and then 6 bp
-    along R, not a sum
+    one way. `d` is the base of S the block begins on, less the base the
+    block before ended on, or less 0 for the first; `+` is along R and
+    `-` against it; `len` is its bp. So `-24+6` begins 24 bp below where
+    the block before ended and runs 6 bp along R; it is not a sum
   - **a run off R,** a bare number: the bp of consecutive steps with no
     place on the tile's R. It doesn't move where the next `d` counts from
 - A block is as long as its steps allow and a run holds all the steps
@@ -593,10 +606,18 @@ seq start end blocks path fragStart piece list
   runs stand side by side. A list has a block, and no run of 0 bp
   <!-- C162 -->
 - A block begins at its first base in path order, its high end where it
-  runs against R, and `d` is negative where the piece jumps back. Two
-  lines of the reference with a gap between them end a block: the next
-  begins past the gap, and a reader takes the `#hole` out before it
-  calls that a departure
+  runs against R. `d` is counted along S whichever way the blocks run:
+  a piece walking steadily along R has `d` of 0 or more, the reference
+  it skips, and one walking steadily against R has `d` of 0 or less. So
+  a negative `d` before a `+` block, or a positive one before a `-`
+  block, is a jump back
+- A block's stretch of S is whole steps of R: the positions of R whose
+  stretches lie in it, in ascending order for `+` and descending for
+  `-`, are the piece's steps there, which also says which pass a step
+  is on where R passes a node more than once
+- Two lines of the reference that abut are one stretch to a block. Two
+  with a gap between them end it: the next block begins past the gap,
+  and a reader takes the `#hole` out before it calls that a departure
 - The items add up to the piece's bp: it runs on its contig from its
   `abridged` row's `hapOffset` for their sum, and ends where the line's
   next piece begins <!-- C163 -->
@@ -604,8 +625,9 @@ seq start end blocks path fragStart piece list
   off R at its ends. Only a line's first piece has a leading run
   <!-- C166 -->
 - A list is a chain, as UCSC's chain format and a PAF `cg` tag give one:
-  a block is an ungapped match, a positive `d` is reference the piece
-  skips, and a run is sequence the piece has between. Unlike theirs, a
+  a block is an ungapped match, a `d` the way the blocks run is
+  reference the piece skips, and a run is sequence the piece has
+  between. Unlike theirs, a
   block has its own direction and `d` can be negative, so a piece that
   turns or jumps back stays one row
 - The list is what the piece's walk row in its detail record decodes to,
@@ -718,9 +740,9 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
   before its rejoin step, which start at `hapStart` on its contig and span
   `ownBp`. Nothing else it reads joins a fragment or yields a computed
   departure <!-- C132 -->. A piece there that
-  the tile abridged stays abridged, its `abridged` row standing for it,
-  unless the cut was asked to expand that path, when the reader reads its
-  `detail` unit as it does in the window's read <!-- C133 -->
+  the tile abridged is read as in the window's read: from its `blocks`
+  row, or from its `detail` unit where the cut was asked to expand that
+  path <!-- C133 -->
 
 ## Reading a window
 
@@ -742,7 +764,8 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
 - An attach fetch reads the tiles a record's `ownTiles` names and takes
   the record's own steps from them alone ([departure](#departure))
 - A cut that leaves an abridged piece unexpanded reads its tile's
-  `blocks` unit and builds the piece from its row there, a run off R as
+  `blocks` unit and builds the piece from its row there: a block as
+  the steps of R in its stretch ([blocks](#blocks)), and a run off R as
   one step of that many bp whose nodes it doesn't know
 - Expanding an abridged piece, which a viewer does on request, reads the
   `detail` unit `cs:d`
@@ -810,7 +833,7 @@ demands every path, placement and departure back as the GFA states them.
   <!-- C112 -->
 - Each `blocks` row's list reads back as its piece, runs off R and all,
   with blocks that begin at its first step on R, end at its last and
-  hold its `bp` between: the tool reads back every list it writes and
+  hold every bp between: the tool reads back every list it writes and
   fails the build on a difference (build, tests, files). <!-- C165 -->
   The list is what its detail record's walk row decodes to (tests; files
   with the GFA) <!-- C165 -->
@@ -867,12 +890,16 @@ demands every path, placement and departure back as the GFA states them.
   moved piece with where it starts on its contig, its steps and its
   detail record <!-- C101 -->
 - The moved pieces' rows go to the `detail` unit `cs:d` of the tile's
-  sequence, `d` the record's number. A window read names only `tile` and
-  `departures` units and an attach fetch only tiles; a viewer reads a
-  detail record when it expands that path <!-- C150 -->
+  sequence, `d` the record's number. A reader reads a detail record
+  only when it expands that path <!-- C150 -->
 - The tile's `blocks` unit, after its detail units, gives where on R
   the steps of the moved pieces lie ([blocks](#blocks)), at a small part
-  of the detail records' bytes
+  of the detail records' bytes. A reader reads it where it keeps a moved
+  piece it doesn't expand, in a window's tile or an attach fetch's: a
+  cut of all the haplotypes does, and so does a cut that expands a few
+  where one of them has a moved piece in the tile off the drawn stretch.
+  The unit counts toward neither `abridge` budget and can be larger
+  than its tile
 - A record holds at most one `nodes` row, one exactly when its routes have
   an interior step, then `route` rows and `walk` rows. <!-- C102 --> The
   tool numbers its routes from 0 and chains their tokens from 0, as for a
@@ -899,7 +926,7 @@ emitted with its position in R, and so with its offset and pass.
    - with no exit, stop: the piece ends off R
    - emit the exit, at occurrence `k` of its node in R with `@k`, else at the
      occurrence nearest the current position in R, counted in positions,
-     the later one on a tie
+     the one at the higher position on a tie
 4. Step along R until the piece has `nsteps` steps
 
 <!-- C141 -->

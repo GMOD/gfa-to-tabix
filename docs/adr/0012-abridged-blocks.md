@@ -173,8 +173,16 @@ in [walks-container/abridged/](../walks-container/abridged/).
   list; the tests decode each piece's detail row and compare; five file
   checkers, one of which expands a row as an unloaded reader does, fail
   the 74 broken files named for them; ten broken writers fail the tests
-- **Not yet shown:** the acceptance test, and the cost of an
-  every-haplotype cut from blocks on the worst windows
+- **A reader from the spec alone** reproduced every piece of chr22 and
+  of 85 small files, and found the document's faults, since fixed
+  ([review](../walks-container/abridged/reviews.md#format-8-from-the-spec-alone))
+- **graph-walks' branch on chr22:** its harness shows no difference
+  between unloaded and fully loaded cuts in 900 pairs with every
+  haplotype together, fails on a broken reader, and has passed a second
+  review. Links into a run off R, which the proof says a list doesn't
+  determine, are counted apart
+- **Not yet shown:** any of it on the genome files, the cost of cuts on
+  the worst windows, and two of the three consumers
 
 ## Acceptance, before anything is hosted
 
@@ -192,8 +200,19 @@ in [walks-container/abridged/](../walks-container/abridged/).
   `abridged` row is recomputed from the format 8 rows
 - The `blocks` units are within 2% of each file, the largest within
   2 MB, and a 1 kb window's read within 4 MB
-- A decoder written from walks-format.md alone reproduces chr22's
-  pieces
+- A decoder written from walks-format.md alone reproduces a genome
+  file's pieces, its 936 hairpins among them; chr22 has no piece that
+  turns
+- What a cut of four named haplotypes reads on the ten tiles with the
+  largest `blocks` units, against format 7 today. Such a cut reads the
+  unit where one of its haplotypes has a moved piece in the tile off
+  the drawn stretch: 45 KB on one chr22 window, and up to 1.7 MB on a
+  genome file's worst tile. The `abridged` row could spare it that with
+  the piece's bp and end steps back, which format 8 dropped; they stay
+  dropped unless this number says otherwise
+- The file checkers and graph-walks 7 read a file with an unknown tag
+  on every row, an unknown header line and an unknown unit kind as they
+  read the same file without them
 - bandage-core and the plugin read chr22 end to end, with before and
   after renders at chr2:91,409,000 and the four-haplotype default as a
   control shown to the user

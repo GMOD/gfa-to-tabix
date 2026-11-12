@@ -1,6 +1,6 @@
-# Three reviews of the day's work, 2026-11-11
+# Four reviews of the day's work, 2026-11-11
 
-Three Fable reviewers, none briefed with the session's conclusions, were
+Four Fable reviewers, none briefed with the session's conclusions, were
 asked about the work as a whole rather than one decision. Each is given
 here in substance.
 
@@ -114,3 +114,46 @@ define, and the spec never said so.
   Positions are rGFA stable coordinates on the reference; where the
   reference passes a node more than once, which rGFA excludes, the file
   states the writer's choice and marks it
+
+## Format 8 from the spec alone
+
+Asked, at high effort, to review format 8 before it is frozen, starting
+by writing a reader from walks-format.md without reading the writer, the
+tests, the checkers or graph-walks. Its verdict: the bytes are fit to
+freeze and the document was not; four faults of wording had to be fixed
+first, none changing a byte.
+
+- **The from-spec reader on chr22:** 2,572 of 2,572 `blocks` rows equal
+  the detail walk row decoded and collapsed; 2,572 `abridged` rows equal
+  their detail row in key, `hapOffset`, `nsteps`, span and record;
+  250,281 walk rows in 776 tiles decode to their `nsteps` and span;
+  1,095 W lines, 253,629 pieces, tile their contigs; 24,648 departure
+  records equal the piece boundaries it computed. No disagreement
+- **On 17 awkward graphs under 5 option sets:** a reference passing a
+  node twice, a hairpin on one node, pieces against the reference
+  throughout, pieces beginning or ending off it, a gap between two
+  reference lines, a walk crossing two sequences, a 0 bp node: 658
+  abridged pieces, 416 walk rows and 430 GFA lines back step for step,
+  no disagreement
+- **What chr22 doesn't exercise:** all 2,572 lists run one way and never
+  jump back, so turns were tested on small graphs alone. A from-spec
+  decode of a genome file, with its 936 hairpins, comes before freezing
+- **The writer:** no defect found in the new code
+- **Wording that had to change,** and has: "Span" still gave format 7's
+  two-end-step span; `d` was never said to be a base of the sequence,
+  and "negative where the piece jumps back" was false of every one of
+  chr22's 190,840 negative `d`, each on a block walking steadily against
+  the reference; two sections disagreed on what a reader fetches for an
+  unloaded piece, and the rule that turns a block into the reference's
+  steps was only in the proof; and the extension rule had no tag grammar
+  and nothing exercised it, so that a file with an unknown tag on each
+  row failed 4 of the 5 file checkers
+- **Checkers beaten:** 9 of 25 hand-broken files passed all five, from
+  four causes: a step on the other copy of a node the reference passes
+  twice, such a step written off the reference, node lengths wrong in
+  ways that cancel, and bases dropped from one row. The first two can't
+  arise on the hosted graphs; the lengths can on any file
+- **On freezing:** nothing a reader needs is missing, nothing should be
+  removed, and anything it would add can come later as an addition,
+  provided graph-walks 7 and the checkers pass an extension fixture
+  before release

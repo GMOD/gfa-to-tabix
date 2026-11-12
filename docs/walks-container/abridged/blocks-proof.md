@@ -3,8 +3,13 @@
 A Fable agent was asked to prove three claims about a `blocks` row from
 the spec and the writer's code, or break them with a graph. It proved
 all three and found no counterexample, on the row with `ownBefore` and
-`ownAfter` columns; the row has since moved those two numbers into the
-list as its first and last runs, which changes no step of the proof.
+`ownAfter` columns under format 7; the row has since moved those two
+numbers into the list as its first and last runs, and format 8's
+`abridged` row gives the piece's start where format 7's gave its first
+step on R, which changes no step of the proof. A later review wrote a
+reader from walks-format.md alone and reproduced every piece of chr22
+and of 85 small files with it
+([reviews](reviews.md#format-8-from-the-spec-alone)).
 The statements and proofs below are worded for the row as
 [walks-format.md](../../walks-format.md#blocks) gives it. Code is named
 by function, in `src/walks.rs` and `src/routes.rs`.
@@ -20,8 +25,8 @@ replaced by the run's bp.
   expanded against T's `ref` rows: a block's stretch `[lo, hi)` of S
   reads as the positions of R lying in it, ascending for `+` and
   descending for `-`, and a bare item is one run off R. p covers its
-  contig from `hapOffset` less the leading run to `hapOffset + bp` plus
-  the trailing run, with `hapOffset` and `bp` from the `abridged` row
+  contig from its `abridged` row's `hapOffset` for the sum of the list's
+  items
 - **(B) The row holds nothing else.** `seq start end` and `list` are a
   function of cw(p); only `path fragStart piece` is not
 - **(C) A W line's pieces tile it.** Over every sequence of the file,
@@ -58,8 +63,9 @@ of the blocks. Maximal runs of a chain are unique.
 
 **(C)** `cut_pieces` partitions the line's steps, and a piece's offset
 is the line's start plus the bp before its first step (`write_pieces`).
-The `abridged` row adds the bp off R before the piece's first step on R
-to it, and the `blocks` row's leading run is that same sum. Steps off R
+The `abridged` row states that offset, and the list holds every step's
+bp, the runs off R before the piece's first step on R and after its last
+among them. Steps off R
 take the tile of the step on R before them, and only those before a
 line's first placed step take the tile of the one after
 (`assign_chunks`; `stay_home` fills inner runs only), so only piece 0
