@@ -1,10 +1,8 @@
-Each broken writer of P line names against the checks, on ada. Regenerate with
-the scripts beside ADR 0014's results: one mutant of src/gfa.rs at a time, then
-cargo test --no-fail-fast and scripts/check-dialect.sh on its binary.
+Each broken writer of P line names against the checks. HEAD 889d26e, by
+docs/walks-container/dialect/scripts/mutants.sh.
 
-== the branch's writer: scripts/check-dialect.sh
-0 failures, by fixture:
-
+== the writer unbroken: scripts/check-dialect.sh
+0 failures, on 0 fixtures
 exit 0
 
 == mutant no-end-check
@@ -17,15 +15,15 @@ test gfa::tests::the_specs_table_of_p_line_names_reads_as_it_says ... FAILED
 test place::tests::a_misnamed_p_line_is_refused ... FAILED
 assertion `left == right` failed: H#1#c[100-900] of 16 bp
 assertion `left == right` failed: H#1#c[100-900]
-test result: FAILED. 27 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+test result: FAILED. 27 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
 test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
 assertion `left == right` failed: p-bracket-end-inverted.gfa
-test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
 test a_p_line_whose_bracket_end_disagrees_with_its_steps_is_refused ... FAILED
-test result: FAILED. 69 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+test result: FAILED. 75 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+exit 101
 -- scripts/check-dialect.sh on its binary
-6 failures, by fixture:
-2 p-bracket-end-inverted.gfa, 2 p-bracket-end-wrong.gfa, 2 p-no-steps-bracket-end-wrong.gfa
+6 failures, on 3 fixtures
 dialect p-bracket-end-inverted.gfa: built, where it should be refused: line 11: path H#1#c[21-5]: the [start-end] in its name ends at 5, but its steps from 21 end at 37
 dialect p-bracket-end-inverted.gfa: its index built, where it should be refused: line 11: path H#1#c[21-5]: the [start-end] in its name ends at 5
 dialect p-bracket-end-wrong.gfa: built, where it should be refused: line 10: path R#0#chr1[100-105]: the [start-end] in its name ends at 105, but its steps from 100 end at 118
@@ -47,15 +45,15 @@ test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
 test gfa::tests::the_specs_table_of_p_line_names_reads_as_it_says ... FAILED
 assertion `left == right` failed: H#1#c:5-21#0 of 16 bp
 assertion `left == right` failed: H#1#c:5-21#0
-test result: FAILED. 29 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+test result: FAILED. 29 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
 test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
 assertion `left == right` failed: p-colon-beneath-hash0.gfa
-test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
 test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
-test result: FAILED. 69 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+test result: FAILED. 75 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+exit 101
 -- scripts/check-dialect.sh on its binary
-4 failures, by fixture:
-4 p-colon-beneath-hash0.gfa
+4 failures, on 1 fixtures
 dialect p-colon-beneath-hash0.gfa: rows name the lines H#1#c@5 J#1#c@5 R#0#chr1@0, not H#1#c:5-21@0 J#1#c:5-17@0 R#0#chr1@0
 dialect p-colon-beneath-hash0.gfa: walks-truth:   H#1#c:5-21 line at 0: on the reference, with no rows
   J#1#c:5-17 line at 0: on the reference, with no rows
@@ -70,22 +68,23 @@ exit 1
 -    let start = [&colon, &bracket, &fourth]
 +    let start = [&colon, &bracket, &None]
 -- cargo test --no-fail-fast
-test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
 test gfa::tests::a_p_line_is_named_whether_its_segments_come_before_or_after_it ... FAILED
 test gfa::tests::starts_that_add_up_past_2_to_the_64_are_refused ... FAILED
+test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
 test gfa::tests::the_specs_table_of_p_line_names_reads_as_it_says ... FAILED
 assertion `left == right` failed: H#1#c#100 of 14 bp
 assertion `left == right` failed: H#1#c#100
-test result: FAILED. 27 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+test result: FAILED. 27 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
 test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
 assertion `left == right` failed: odgi-of-vg-gbz-p.gfa
-test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
-test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test a_line_past_2_to_the_53_is_refused_and_one_ending_there_builds ... FAILED
 test an_overlap_refusal_says_vg_numbers_phase_blocks_where_this_tool_reads_starts ... FAILED
-test result: FAILED. 68 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
+test result: FAILED. 73 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+exit 101
 -- scripts/check-dialect.sh on its binary
-28 failures, by fixture:
-4 odgi-of-vg-gbz-p.gfa, 2 p-arity4-phase.gfa, 4 p-colon-over-fourth.gfa, 4 p-fourth-and-bracket.gfa, 4 vg-chunk-mixed.gfa, 4 vg-chunk-p.gfa, 2 vg-clipped-gbz-p.gfa, 2 vg-clipped-mixed.gfa, 2 vg-vcf-phased-p.gfa
+28 failures, on 9 fixtures
 dialect odgi-of-vg-gbz-p.gfa: rows name the lines H#1#c@6 K#2#d@16 R#0#chr1@18, not H#1#c@106 K#2#d@23 R#0#chr1@18
 dialect odgi-of-vg-gbz-p.gfa: walks-truth:   H#1#c line at 106: on the reference, with no rows
   K#2#d line at 23: on the reference, with no rows
@@ -134,20 +133,20 @@ exit 1
 -    let start = [&colon, &bracket, &fourth]
 +    let start = [&colon, &bracket, if bracket.is_some() { &None } else { &fourth }]
 -- cargo test --no-fail-fast
-test gfa::tests::starts_that_add_up_past_2_to_the_64_are_refused ... FAILED
 test gfa::tests::a_p_line_name_reads_as_the_shared_table_says ... FAILED
+test gfa::tests::starts_that_add_up_past_2_to_the_64_are_refused ... FAILED
 test gfa::tests::the_specs_table_of_p_line_names_reads_as_it_says ... FAILED
 assertion `left == right` failed: H#1#c#100[16-22] of 6 bp
 assertion `left == right` failed: H#1#c#100[16-22]
-test result: FAILED. 28 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+test result: FAILED. 28 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
 test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
 assertion `left == right` failed: p-fourth-and-bracket.gfa
-test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
 test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
-test result: FAILED. 69 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+test result: FAILED. 75 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+exit 101
 -- scripts/check-dialect.sh on its binary
-12 failures, by fixture:
-4 p-fourth-and-bracket.gfa, 4 vg-chunk-mixed.gfa, 4 vg-chunk-p.gfa
+12 failures, on 3 fixtures
 dialect p-fourth-and-bracket.gfa: rows name the lines H#1#c@16 R#0#chr1@0, not H#1#c@116 R#0#chr1@0
 dialect p-fourth-and-bracket.gfa: walks-truth:   H#1#c line at 116: on the reference, with no rows
   H#1#c line at 16: rows for a line not on the reference, or not in the GFA
@@ -177,12 +176,12 @@ assertion `left == right` failed: H#c of 16 bp
 test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
 test every_dialect_fixture_builds_or_is_refused_as_its_table_says ... FAILED
 assertion `left == right` failed: p-arity2.gfa
-test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
 test a_p_line_reads_the_same_before_its_segments_as_after_them ... FAILED
-test result: FAILED. 69 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+test result: FAILED. 75 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+exit 101
 -- scripts/check-dialect.sh on its binary
-15 failures, by fixture:
-3 p-arity2.gfa, 3 p-colon-over-bracket.gfa, 3 p-colon-over-two-fields.gfa, 3 p-colon-past-bracket.gfa, 3 p-two-and-three-fields.gfa
+15 failures, on 5 fixtures
 dialect p-arity2.gfa: #haplotype lists H#c,H#d, not H
 dialect p-arity2.gfa: claims7: # p-arity2.gfa.R.walks.gz: 7 units, 1 departure records, 0 abridged rows, 0 walk rows with copies
 1	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
@@ -225,9 +224,32 @@ dialect p-two-and-three-fields.gfa: spec8: == disagreed ==
 (0.0 s) 
 exit 1
 
-== today's writer, main at 36a190d: scripts/check-dialect.sh
-80 failures, by fixture:
-4 odgi-of-vg-gbz-p.gfa, 4 odgi-of-vg-gfw-p.gfa, 3 p-arity2.gfa, 4 p-before-s.gfa, 2 p-bracket-end-inverted.gfa, 2 p-bracket-end-wrong.gfa, 2 p-colon-1-based.gfa, 5 p-colon-over-bracket.gfa, 3 p-colon-over-fourth.gfa, 3 p-colon-over-two-fields.gfa, 5 p-colon-past-bracket.gfa, 4 p-fourth-and-bracket.gfa, 1 p-jump-semicolon.gfa, 2 p-name-empty.gfa, 2 p-name-only-bracket.gfa, 2 p-name-only-colon.gfa, 2 p-no-steps-bracket-end-wrong.gfa, 2 p-overlap.gfa, 2 p-ref-bracket-and-fourth.gfa, 1 p-same-name-twice.gfa, 3 p-two-and-three-fields.gfa, 4 vg-chunk-mixed.gfa, 4 vg-chunk-p.gfa, 4 vg-clipped-gfw-p.gfa, 4 vg-pggb-chunk-p.gfa, 2 vg-vcf-phased-p.gfa, 2 vg-vcf-phased-w.gfa, 2 w-star-start.gfa
+== p-names.tsv as committed
+audit7.py: exit 0: audit7: 0 failed checks
+claims7.py: exit 0: 
+spec8.py: exit 0: (0.0 s)
+walks-truth.py: exit 0: chunk.R.walks.gz: shard 0/1: 2 lines with rows, 2 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 0 wrong
+cargo test, the table: exit 0: 
+graph-walks-rebuild.mjs: exit 2: 
+
+== p-names.tsv with the start of H#1#c#100[16-22] changed from 116 to 16
+audit7.py: exit 1: audit7: path_start reads 'H#1#c#100[16-22]' of 6 bp as ('H#1#c', 116), p-names.tsv says ('H#1#c', 16)
+claims7.py: exit 0: 
+spec8.py: exit 1: spec8.py: reads P line name 'H#1#c#100[16-22]' of 6 bp as ('H#1#c', '116', 'H#1'), p-names.tsv says ('H#1#c', '16', 'H#1')
+walks-truth.py: exit 1: walks-truth.py: reads P line name 'H#1#c#100[16-22]' of 6 bp as ('H#1#c', '116', 'H#1'), p-names.tsv says ('H#1#c', '16', 'H#1')
+cargo test, the table: exit 101: assertion `left == right` failed: H#1#c#100[16-22] of 6 bp
+graph-walks-rebuild.mjs: exit 1: reads P line name H#1#c#100[16-22] of 6 bp as H#1#c 116 H#1, p-names.tsv says H#1#c 16 H#1
+
+== p-names.tsv with H#c listed under H#c, not H
+audit7.py: exit 0: audit7: 0 failed checks
+claims7.py: exit 1: claims7: lists 'H#c' under 'H', p-names.tsv says 'H#c'
+spec8.py: exit 1: spec8.py: reads P line name 'H#c' of 16 bp as ('H#c', '0', 'H'), p-names.tsv says ('H#c', '0', 'H#c')
+walks-truth.py: exit 1: walks-truth.py: reads P line name 'H#c' of 16 bp as ('H#c', '0', 'H'), p-names.tsv says ('H#c', '0', 'H#c')
+cargo test, the table: exit 101: assertion `left == right` failed: H#c of 16 bp
+graph-walks-rebuild.mjs: exit 1: reads P line name H#c of 16 bp as H#c 0 H, p-names.tsv says H#c 0 H#c
+
+== the writer at 17b5bc5, before ADR 0014: scripts/check-dialect.sh
+80 failures, on 28 fixtures
 dialect odgi-of-vg-gbz-p.gfa: rows name the lines H#1#c#100@6 K#2#d#7@16 R#0#chr1@18, not H#1#c@106 K#2#d@23 R#0#chr1@18
 dialect odgi-of-vg-gbz-p.gfa: walks-truth:   H#1#c line at 106: on the reference, with no rows
   K#2#d line at 23: on the reference, with no rows

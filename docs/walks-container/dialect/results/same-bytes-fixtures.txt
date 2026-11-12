@@ -1,130 +1,130 @@
-main at 36a190d against the branch, each GFA of tests/data: scripts/same-bytes.sh
-same	alleles.gfa index	exit 0, 2 files
-same	alleles.gfa index --format 1	exit 0, 4 files
+main at 17b5bc5 against 889d26e, each GFA of tests/data: docs/walks-container/dialect/scripts/same-bytes.sh
+same	alleles.gfa index	exit 1, 0 files
+same	alleles.gfa index --format 1	exit 1, 0 files
 same	cactus.gfa index	exit 1, 0 files
 same	cactus.gfa index --format 1	exit 1, 0 files
-same	cactus.gfa index --reference GI262359905	exit 0, 2 files
-same	cactus.gfa index --reference GI262359905 --format 1	exit 0, 4 files
-same	cactus.gfa walks --refs GI262359905	exit 0, 2 files
-same	cactus.gfa walks --refs GI262359905 --tile 10	exit 0, 2 files
+same	cactus.gfa index --reference GI262359905	exit 1, 0 files
+same	cactus.gfa index --reference GI262359905 --format 1	exit 1, 0 files
+same	cactus.gfa walks --refs GI262359905	exit 1, 0 files
+same	cactus.gfa walks --refs GI262359905 --tile 10	exit 1, 0 files
 same	diploid.gfa index	exit 1, 0 files
 same	diploid.gfa index --format 1	exit 1, 0 files
-same	diploid.gfa index --reference ref	exit 0, 2 files
-same	diploid.gfa index --reference ref --format 1	exit 0, 4 files
-same	diploid.gfa walks --refs ref	exit 0, 2 files
-same	diploid.gfa walks --refs ref --tile 10	exit 0, 2 files
+same	diploid.gfa index --reference ref	exit 1, 0 files
+same	diploid.gfa index --reference ref --format 1	exit 1, 0 files
+same	diploid.gfa walks --refs ref	exit 1, 0 files
+same	diploid.gfa walks --refs ref --tile 10	exit 1, 0 files
 same	ecoli_pggb_subgraph.gfa index	exit 1, 0 files
 same	ecoli_pggb_subgraph.gfa index --format 1	exit 1, 0 files
-same	ecoli_pggb_subgraph.gfa index --reference K12	exit 0, 2 files
-same	ecoli_pggb_subgraph.gfa index --reference K12 --format 1	exit 0, 4 files
-same	ecoli_pggb_subgraph.gfa walks --refs K12	exit 0, 2 files
-same	ecoli_pggb_subgraph.gfa walks --refs K12 --tile 10	exit 0, 2 files
-same	ecoli_rgfa_slice.gfa index	exit 0, 2 files
-same	ecoli_rgfa_slice.gfa index --format 1	exit 0, 4 files
-same	fold.gfa index	exit 0, 2 files
-same	fold.gfa index --format 1	exit 0, 4 files
+same	ecoli_pggb_subgraph.gfa index --reference K12	exit 1, 0 files
+same	ecoli_pggb_subgraph.gfa index --reference K12 --format 1	exit 1, 0 files
+same	ecoli_pggb_subgraph.gfa walks --refs K12	exit 1, 0 files
+same	ecoli_pggb_subgraph.gfa walks --refs K12 --tile 10	exit 1, 0 files
+same	ecoli_rgfa_slice.gfa index	exit 1, 0 files
+same	ecoli_rgfa_slice.gfa index --format 1	exit 1, 0 files
+same	fold.gfa index	exit 1, 0 files
+same	fold.gfa index --format 1	exit 1, 0 files
 same	genome.gfa index	exit 1, 0 files
 same	genome.gfa index --format 1	exit 1, 0 files
-same	genome.gfa index --reference chr1	exit 0, 2 files
-same	genome.gfa index --reference chr1 --format 1	exit 0, 4 files
-same	genome.gfa walks --refs chr1	exit 0, 2 files
-same	genome.gfa walks --refs chr1 --tile 10	exit 0, 2 files
-same	haplotype.gfa index	exit 0, 2 files
-same	haplotype.gfa index --format 1	exit 0, 4 files
-same	haplotype.gfa index --reference HG002	exit 0, 2 files
-same	haplotype.gfa index --reference HG002 --format 1	exit 0, 4 files
-same	haplotype.gfa walks --refs HG002	exit 0, 2 files
-same	haplotype.gfa walks --refs HG002 --tile 10	exit 0, 2 files
-same	island.gfa index	exit 0, 2 files
-same	island.gfa index --format 1	exit 0, 4 files
+same	genome.gfa index --reference chr1	exit 1, 0 files
+same	genome.gfa index --reference chr1 --format 1	exit 1, 0 files
+same	genome.gfa walks --refs chr1	exit 1, 0 files
+same	genome.gfa walks --refs chr1 --tile 10	exit 1, 0 files
+same	haplotype.gfa index	exit 1, 0 files
+same	haplotype.gfa index --format 1	exit 1, 0 files
+same	haplotype.gfa index --reference HG002	exit 1, 0 files
+same	haplotype.gfa index --reference HG002 --format 1	exit 1, 0 files
+same	haplotype.gfa walks --refs HG002	exit 1, 0 files
+same	haplotype.gfa walks --refs HG002 --tile 10	exit 1, 0 files
+same	island.gfa index	exit 1, 0 files
+same	island.gfa index --format 1	exit 1, 0 files
 same	order.gfa index	exit 1, 0 files
 same	order.gfa index --format 1	exit 1, 0 files
-same	order.gfa index --reference ref	exit 0, 2 files
-same	order.gfa index --reference ref --format 1	exit 0, 4 files
-same	order.gfa walks --refs ref	exit 0, 2 files
-same	order.gfa walks --refs ref --tile 10	exit 0, 2 files
+same	order.gfa index --reference ref	exit 1, 0 files
+same	order.gfa index --reference ref --format 1	exit 1, 0 files
+same	order.gfa walks --refs ref	exit 1, 0 files
+same	order.gfa walks --refs ref --tile 10	exit 1, 0 files
 same	paths.gfa index	exit 1, 0 files
 same	paths.gfa index --format 1	exit 1, 0 files
-same	paths.gfa index --reference ref	exit 0, 2 files
-same	paths.gfa index --reference ref --format 1	exit 0, 4 files
-same	paths.gfa walks --refs ref	exit 0, 2 files
-same	paths.gfa walks --refs ref --tile 10	exit 0, 2 files
+same	paths.gfa index --reference ref	exit 1, 0 files
+same	paths.gfa index --reference ref --format 1	exit 1, 0 files
+same	paths.gfa walks --refs ref	exit 1, 0 files
+same	paths.gfa walks --refs ref --tile 10	exit 1, 0 files
 same	reversed.gfa index	exit 1, 0 files
 same	reversed.gfa index --format 1	exit 1, 0 files
-same	reversed.gfa index --reference ref	exit 0, 2 files
-same	reversed.gfa index --reference ref --format 1	exit 0, 4 files
-same	reversed.gfa walks --refs ref	exit 0, 2 files
-same	reversed.gfa walks --refs ref --tile 10	exit 0, 2 files
-same	rgfa.gfa index	exit 0, 2 files
-same	rgfa.gfa index --format 1	exit 0, 4 files
-same	rgfa_reordered.gfa index	exit 0, 2 files
-same	rgfa_reordered.gfa index --format 1	exit 0, 4 files
+same	reversed.gfa index --reference ref	exit 1, 0 files
+same	reversed.gfa index --reference ref --format 1	exit 1, 0 files
+same	reversed.gfa walks --refs ref	exit 1, 0 files
+same	reversed.gfa walks --refs ref --tile 10	exit 1, 0 files
+same	rgfa.gfa index	exit 1, 0 files
+same	rgfa.gfa index --format 1	exit 1, 0 files
+same	rgfa_reordered.gfa index	exit 1, 0 files
+same	rgfa_reordered.gfa index --format 1	exit 1, 0 files
 same	walks-abridge-bytes.gfa index	exit 1, 0 files
 same	walks-abridge-bytes.gfa index --format 1	exit 1, 0 files
-same	walks-abridge-bytes.gfa index --reference R	exit 0, 2 files
-same	walks-abridge-bytes.gfa index --reference R --format 1	exit 0, 4 files
-same	walks-abridge-bytes.gfa walks --refs R	exit 0, 2 files
-same	walks-abridge-bytes.gfa walks --refs R --tile 10	exit 0, 2 files
+same	walks-abridge-bytes.gfa index --reference R	exit 1, 0 files
+same	walks-abridge-bytes.gfa index --reference R --format 1	exit 1, 0 files
+same	walks-abridge-bytes.gfa walks --refs R	exit 1, 0 files
+same	walks-abridge-bytes.gfa walks --refs R --tile 10	exit 1, 0 files
 same	walks-contig-ends.gfa index	exit 1, 0 files
 same	walks-contig-ends.gfa index --format 1	exit 1, 0 files
-same	walks-contig-ends.gfa index --reference R	exit 0, 2 files
-same	walks-contig-ends.gfa index --reference R --format 1	exit 0, 4 files
-same	walks-contig-ends.gfa walks --refs R	exit 0, 2 files
-same	walks-contig-ends.gfa walks --refs R --tile 10	exit 0, 2 files
+same	walks-contig-ends.gfa index --reference R	exit 1, 0 files
+same	walks-contig-ends.gfa index --reference R --format 1	exit 1, 0 files
+same	walks-contig-ends.gfa walks --refs R	exit 1, 0 files
+same	walks-contig-ends.gfa walks --refs R --tile 10	exit 1, 0 files
 same	walks.gfa index	exit 1, 0 files
 same	walks.gfa index --format 1	exit 1, 0 files
-same	walks.gfa index --reference alt	exit 0, 2 files
-same	walks.gfa index --reference alt --format 1	exit 0, 4 files
-same	walks.gfa walks --refs alt	exit 0, 2 files
-same	walks.gfa walks --refs alt --tile 10	exit 0, 2 files
+same	walks.gfa index --reference alt	exit 1, 0 files
+same	walks.gfa index --reference alt --format 1	exit 1, 0 files
+same	walks.gfa walks --refs alt	exit 1, 0 files
+same	walks.gfa walks --refs alt --tile 10	exit 1, 0 files
 same	walks-long-jump.gfa index	exit 1, 0 files
 same	walks-long-jump.gfa index --format 1	exit 1, 0 files
-same	walks-long-jump.gfa index --reference R	exit 0, 2 files
-same	walks-long-jump.gfa index --reference R --format 1	exit 0, 4 files
-same	walks-long-jump.gfa walks --refs R	exit 0, 2 files
-same	walks-long-jump.gfa walks --refs R --tile 10	exit 0, 2 files
+same	walks-long-jump.gfa index --reference R	exit 1, 0 files
+same	walks-long-jump.gfa index --reference R --format 1	exit 1, 0 files
+same	walks-long-jump.gfa walks --refs R	exit 1, 0 files
+same	walks-long-jump.gfa walks --refs R --tile 10	exit 1, 0 files
 same	walks-loop.gfa index	exit 1, 0 files
 same	walks-loop.gfa index --format 1	exit 1, 0 files
-same	walks-loop.gfa index --reference R	exit 0, 2 files
-same	walks-loop.gfa index --reference R --format 1	exit 0, 4 files
-same	walks-loop.gfa walks --refs R	exit 0, 2 files
-same	walks-loop.gfa walks --refs R --tile 10	exit 0, 2 files
+same	walks-loop.gfa index --reference R	exit 1, 0 files
+same	walks-loop.gfa index --reference R --format 1	exit 1, 0 files
+same	walks-loop.gfa walks --refs R	exit 1, 0 files
+same	walks-loop.gfa walks --refs R --tile 10	exit 1, 0 files
 same	walks-records.gfa index	exit 1, 0 files
 same	walks-records.gfa index --format 1	exit 1, 0 files
-same	walks-records.gfa index --reference R	exit 0, 2 files
-same	walks-records.gfa index --reference R --format 1	exit 0, 4 files
-same	walks-records.gfa walks --refs R	exit 0, 2 files
-same	walks-records.gfa walks --refs R --tile 10	exit 0, 2 files
+same	walks-records.gfa index --reference R	exit 1, 0 files
+same	walks-records.gfa index --reference R --format 1	exit 1, 0 files
+same	walks-records.gfa walks --refs R	exit 1, 0 files
+same	walks-records.gfa walks --refs R --tile 10	exit 1, 0 files
 same	walks-repeat.gfa index	exit 1, 0 files
 same	walks-repeat.gfa index --format 1	exit 1, 0 files
-same	walks-repeat.gfa index --reference R	exit 0, 2 files
-same	walks-repeat.gfa index --reference R --format 1	exit 0, 4 files
-same	walks-repeat.gfa walks --refs R	exit 0, 2 files
-same	walks-repeat.gfa walks --refs R --tile 10	exit 0, 2 files
+same	walks-repeat.gfa index --reference R	exit 1, 0 files
+same	walks-repeat.gfa index --reference R --format 1	exit 1, 0 files
+same	walks-repeat.gfa walks --refs R	exit 1, 0 files
+same	walks-repeat.gfa walks --refs R --tile 10	exit 1, 0 files
 same	walks-sequences.gfa index	exit 1, 0 files
 same	walks-sequences.gfa index --format 1	exit 1, 0 files
-same	walks-sequences.gfa index --reference R	exit 0, 2 files
-same	walks-sequences.gfa index --reference R --format 1	exit 0, 4 files
-same	walks-sequences.gfa walks --refs R	exit 0, 2 files
-same	walks-sequences.gfa walks --refs R --tile 10	exit 0, 2 files
+same	walks-sequences.gfa index --reference R	exit 1, 0 files
+same	walks-sequences.gfa index --reference R --format 1	exit 1, 0 files
+same	walks-sequences.gfa walks --refs R	exit 1, 0 files
+same	walks-sequences.gfa walks --refs R --tile 10	exit 1, 0 files
 same	walks-skip.gfa index	exit 1, 0 files
 same	walks-skip.gfa index --format 1	exit 1, 0 files
-same	walks-skip.gfa index --reference R	exit 0, 2 files
-same	walks-skip.gfa index --reference R --format 1	exit 0, 4 files
-same	walks-skip.gfa walks --refs R	exit 0, 2 files
-same	walks-skip.gfa walks --refs R --tile 10	exit 0, 2 files
+same	walks-skip.gfa index --reference R	exit 1, 0 files
+same	walks-skip.gfa index --reference R --format 1	exit 1, 0 files
+same	walks-skip.gfa walks --refs R	exit 1, 0 files
+same	walks-skip.gfa walks --refs R --tile 10	exit 1, 0 files
 same	walks-two-refs.gfa index	exit 1, 0 files
 same	walks-two-refs.gfa index --format 1	exit 1, 0 files
-same	walks-two-refs.gfa index --reference GRCh38	exit 0, 2 files
-same	walks-two-refs.gfa index --reference GRCh38 --format 1	exit 0, 4 files
-same	walks-two-refs.gfa walks --refs GRCh38	exit 0, 2 files
-same	walks-two-refs.gfa walks --refs GRCh38 --tile 10	exit 0, 2 files
+same	walks-two-refs.gfa index --reference GRCh38	exit 1, 0 files
+same	walks-two-refs.gfa index --reference GRCh38 --format 1	exit 1, 0 files
+same	walks-two-refs.gfa walks --refs GRCh38	exit 1, 0 files
+same	walks-two-refs.gfa walks --refs GRCh38 --tile 10	exit 1, 0 files
 same	walks-two-refs-p.gfa index	exit 1, 0 files
 same	walks-two-refs-p.gfa index --format 1	exit 1, 0 files
-same	walks-two-refs-p.gfa index --reference GRCh38	exit 0, 2 files
-same	walks-two-refs-p.gfa index --reference GRCh38 --format 1	exit 0, 4 files
-same	walks-two-refs-p.gfa walks --refs GRCh38	exit 0, 2 files
-same	walks-two-refs-p.gfa walks --refs GRCh38 --tile 10	exit 0, 2 files
-same	zero.gfa index	exit 0, 2 files
-same	zero.gfa index --format 1	exit 0, 4 files
+same	walks-two-refs-p.gfa index --reference GRCh38	exit 1, 0 files
+same	walks-two-refs-p.gfa index --reference GRCh38 --format 1	exit 1, 0 files
+same	walks-two-refs-p.gfa walks --refs GRCh38	exit 1, 0 files
+same	walks-two-refs-p.gfa walks --refs GRCh38 --tile 10	exit 1, 0 files
+same	zero.gfa index	exit 1, 0 files
+same	zero.gfa index --format 1	exit 1, 0 files
 exit 0
