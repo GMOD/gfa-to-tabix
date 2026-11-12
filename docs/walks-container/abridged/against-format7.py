@@ -96,7 +96,7 @@ def format7(r, c, items):
     end = b'%d' % (r.h[last] ^ flip1) + (b'@%d' % occ_last.index(last) if nearest != last else b'')
     bp = sum(runs) + sum(s[3] for s in spans) - lead - trail
     return b'\t'.join([c[0], b'%d' % lo, b'%d' % hi, b'abridged', c[4], c[5], b'%d' % (int(c[6]) + lead), c[7], c[8],
-                       b'%d' % bp, start, end, c[9]]) + b'\n'
+                       b'%d' % bp, start, end, c[10]]) + b'\n'
 
 
 refs, tile, unit = [], None, None
@@ -111,7 +111,7 @@ for line in lines(args.new):
     elif line[:1] != b'#' and unit == b'tile' and c[3] == b'abridged':
         if tile not in rs:
             rs[tile] = R(refs)
-        abridged[tile].append(c[:10])
+        abridged[tile].append(c[:11])
     elif line[:1] != b'#' and unit == b'blocks':
         listed[(tile, c[4], c[5], c[6])] = c[7].split(b',')
 recomputed = {}

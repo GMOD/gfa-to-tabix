@@ -1,0 +1,445 @@
+ 09:06:07 up 118 days, 16:29, 20 users,  load average: 1.12, 1.27, 1.50
+## scan chm13
+CHM13#0#chr2:92077080-92078080: window tiles 2 71139; departure bins 3 26295; bytesFor today 3125787
+  [every] records over D 697, within ATTACH_BP with ownTiles 240; attach tiles 2 48534
+    unloaded: today 4539070 (2+2+2+1 ranges; attach blocks units 1 1364749) | rule 3174321 (0 of 239 pieces need a blocks unit for their end, 0 more units) | bp 3174321
+    expanded: today 21549838 (drawn detail 784 21307146; blocks units 0 0; attach detail 2) | rule 21549838 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 21549838 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 9, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 3125787 (2+2+0+0 ranges; attach blocks units 0 0) | rule 3125787 (0 of 3 pieces need a blocks unit for their end, 0 more units) | bp 3125787
+    expanded: today 606002 (drawn detail 6 508568; blocks units 0 0; attach detail 0) | rule 606002 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 606002 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 0 0
+    unloaded: today 3125787 (2+2+0+0 ranges; attach blocks units 0 0) | rule 3125787 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 3125787
+    expanded: today 100869 (drawn detail 6 3435; blocks units 0 0; attach detail 0) | rule 100869 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 100869 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92078080-92079080: window tiles 2 71139; departure bins 3 26295; bytesFor today 3125787
+  [every] records over D 697, within ATTACH_BP with ownTiles 240; attach tiles 2 48534
+    unloaded: today 4539070 (2+2+2+1 ranges; attach blocks units 1 1364749) | rule 3174321 (0 of 239 pieces need a blocks unit for their end, 0 more units) | bp 3174321
+    expanded: today 21549838 (drawn detail 784 21307146; blocks units 0 0; attach detail 2) | rule 21549838 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 21549838 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 9, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 3125787 (2+2+0+0 ranges; attach blocks units 0 0) | rule 3125787 (0 of 3 pieces need a blocks unit for their end, 0 more units) | bp 3125787
+    expanded: today 606002 (drawn detail 6 508568; blocks units 0 0; attach detail 0) | rule 606002 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 606002 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 0 0
+    unloaded: today 3125787 (2+2+0+0 ranges; attach blocks units 0 0) | rule 3125787 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 3125787
+    expanded: today 100869 (drawn detail 6 3435; blocks units 0 0; attach detail 0) | rule 100869 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 100869 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92142616-92143616: window tiles 2 64651; departure bins 3 25015; bytesFor today 2968116
+  [every] records over D 700, within ATTACH_BP with ownTiles 243; attach tiles 2 55022
+    unloaded: today 4537790 (2+2+2+1 ranges; attach blocks units 1 1514652) | rule 3023138 (0 of 242 pieces need a blocks unit for their end, 0 more units) | bp 3023138
+    expanded: today 26439646 (drawn detail 778 21871416; blocks units 0 0; attach detail 132) | rule 26439646 (attach detail 132; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 26439646 (attach detail 132) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 9, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 2968116 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2968116 (0 of 3 pieces need a blocks unit for their end, 0 more units) | bp 2968116
+    expanded: today 611898 (drawn detail 7 522232; blocks units 0 0; attach detail 0) | rule 611898 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 611898 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 1 37565
+    unloaded: today 4520333 (2+2+1+1 ranges; attach blocks units 1 1514652) | rule 3005681 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 3005681
+    expanded: today 131485 (drawn detail 7 3528; blocks units 0 0; attach detail 1) | rule 131485 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 131485 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92143616-92144616: window tiles 2 64651; departure bins 3 25015; bytesFor today 2968116
+  [every] records over D 700, within ATTACH_BP with ownTiles 243; attach tiles 2 55022
+    unloaded: today 4537790 (2+2+2+1 ranges; attach blocks units 1 1514652) | rule 3023138 (0 of 242 pieces need a blocks unit for their end, 0 more units) | bp 3023138
+    expanded: today 26439646 (drawn detail 778 21871416; blocks units 0 0; attach detail 132) | rule 26439646 (attach detail 132; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 26439646 (attach detail 132) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 9, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 2968116 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2968116 (0 of 3 pieces need a blocks unit for their end, 0 more units) | bp 2968116
+    expanded: today 611898 (drawn detail 7 522232; blocks units 0 0; attach detail 0) | rule 611898 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 611898 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 1 37565
+    unloaded: today 4520333 (2+2+1+1 ranges; attach blocks units 1 1514652) | rule 3005681 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 3005681
+    expanded: today 131485 (drawn detail 7 3528; blocks units 0 0; attach detail 1) | rule 131485 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 131485 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92110348-92111348: window tiles 1 33574; departure bins 2 13344; bytesFor today 1560619
+  [every] records over D 592, within ATTACH_BP with ownTiles 135; attach tiles 3 86099
+    unloaded: today 4526119 (2+1+3+2 ranges; attach blocks units 2 2879401) | rule 1646718 (0 of 134 pieces need a blocks unit for their end, 0 more units) | bp 1646718
+    expanded: today 15201560 (drawn detail 393 10548277; blocks units 0 0; attach detail 134) | rule 15201560 (attach detail 134; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 15201560 (attach detail 134) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1560619 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1560619 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1560619
+    expanded: today 299030 (drawn detail 3 252112; blocks units 0 0; attach detail 0) | rule 299030 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 299030 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 1 37565
+    unloaded: today 3112836 (2+1+1+1 ranges; attach blocks units 1 1514652) | rule 3112836 (1 of 1 pieces need a blocks unit for their end, 1 more units) | bp 1598184
+    expanded: today 86586 (drawn detail 3 1377; blocks units 0 0; attach detail 1) | rule 86586 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 86586 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92011544-92012544: window tiles 2 75755; departure bins 3 23390; bytesFor today 2330340
+  [every] records over D 571, within ATTACH_BP with ownTiles 114; attach tiles 2 48534
+    unloaded: today 3743623 (2+2+2+1 ranges; attach blocks units 1 1364749) | rule 2378874 (0 of 113 pieces need a blocks unit for their end, 0 more units) | bp 2378874
+    expanded: today 17067196 (drawn detail 729 16822793; blocks units 0 0; attach detail 2) | rule 17067196 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 17067196 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 8, within ATTACH_BP with ownTiles 2; attach tiles 0 0
+    unloaded: today 2330340 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2330340 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 2330340
+    expanded: today 488261 (drawn detail 6 389116; blocks units 0 0; attach detail 0) | rule 488261 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 488261 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 1, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2330340 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2330340 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2330340
+    expanded: today 107445 (drawn detail 4 8300; blocks units 0 0; attach detail 0) | rule 107445 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 107445 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92012544-92013544: window tiles 2 75755; departure bins 3 23390; bytesFor today 2330340
+  [every] records over D 571, within ATTACH_BP with ownTiles 114; attach tiles 2 48534
+    unloaded: today 3743623 (2+2+2+1 ranges; attach blocks units 1 1364749) | rule 2378874 (0 of 113 pieces need a blocks unit for their end, 0 more units) | bp 2378874
+    expanded: today 17067196 (drawn detail 729 16822793; blocks units 0 0; attach detail 2) | rule 17067196 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 17067196 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 8, within ATTACH_BP with ownTiles 2; attach tiles 0 0
+    unloaded: today 2330340 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2330340 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 2330340
+    expanded: today 488261 (drawn detail 6 389116; blocks units 0 0; attach detail 0) | rule 488261 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 488261 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 1, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2330340 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2330340 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2330340
+    expanded: today 107445 (drawn detail 4 8300; blocks units 0 0; attach detail 0) | rule 107445 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 107445 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92044812-92045812: window tiles 1 37565; departure bins 2 13558; bytesFor today 1565775
+  [every] records over D 593, within ATTACH_BP with ownTiles 135; attach tiles 2 48534
+    unloaded: today 2979058 (2+1+2+1 ranges; attach blocks units 1 1364749) | rule 1614309 (0 of 134 pieces need a blocks unit for their end, 0 more units) | bp 1614309
+    expanded: today 10955250 (drawn detail 391 10758869; blocks units 0 0; attach detail 2) | rule 10955250 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 10955250 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1565775 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1565775 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1565775
+    expanded: today 307579 (drawn detail 3 256456; blocks units 0 0; attach detail 0) | rule 307579 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 307579 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 0 0
+    unloaded: today 1565775 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1565775 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 1565775
+    expanded: today 53181 (drawn detail 3 2058; blocks units 0 0; attach detail 0) | rule 53181 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 53181 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92175884-92176884: window tiles 1 31077; departure bins 2 12278; bytesFor today 1408104
+  [every] records over D 592, within ATTACH_BP with ownTiles 135; attach tiles 2 55022
+    unloaded: today 2977778 (2+1+2+1 ranges; attach blocks units 1 1514652) | rule 1463126 (0 of 134 pieces need a blocks unit for their end, 0 more units) | bp 1463126
+    expanded: today 15845058 (drawn detail 385 11323139; blocks units 0 0; attach detail 132) | rule 15845058 (attach detail 132; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 15845058 (attach detail 132) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1408104 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1408104 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1408104
+    expanded: today 313475 (drawn detail 4 270120; blocks units 0 0; attach detail 0) | rule 313475 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 313475 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 1 37565
+    unloaded: today 2960321 (2+1+1+1 ranges; attach blocks units 1 1514652) | rule 1445669 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 1445669
+    expanded: today 83797 (drawn detail 4 2151; blocks units 0 0; attach detail 1) | rule 83797 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 83797 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:91979308-91980308: window tiles 1 38190; departure bins 2 10439; bytesFor today 765172
+  [every] records over D 460, within ATTACH_BP with ownTiles 3; attach tiles 2 48534
+    unloaded: today 2178455 (2+1+2+1 ranges; attach blocks units 1 1364749) | rule 813706 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 813706
+    expanded: today 6257811 (drawn detail 338 6063924; blocks units 0 0; attach detail 2) | rule 6257811 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 6257811 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 765172 (2+1+0+0 ranges; attach blocks units 0 0) | rule 765172 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 765172
+    expanded: today 181289 (drawn detail 3 132660; blocks units 0 0; attach detail 0) | rule 181289 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 181289 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 1, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 765172 (2+1+0+0 ranges; attach blocks units 0 0) | rule 765172 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 765172
+    expanded: today 54871 (drawn detail 1 6242; blocks units 0 0; attach detail 0) | rule 54871 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 54871 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92208152-92209152: window tiles 2 62610; departure bins 3 18470; bytesFor today 1508728
+  [every] records over D 311, within ATTACH_BP with ownTiles 7; attach tiles 1 17457
+    unloaded: today 1526185 (2+2+1+0 ranges; attach blocks units 0 0) | rule 1526185 (0 of 6 pieces need a blocks unit for their end, 0 more units) | bp 1526185
+    expanded: today 2670268 (drawn detail 221 1206982; blocks units 1 1364749; attach detail 0) | rule 1305519 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 1305519 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1445829 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1445829 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1445829
+    expanded: today 1446079 (drawn detail 1 250; blocks units 1 1364749; attach detail 0) | rule 81330 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 81330 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 1, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1508728 (2+2+0+0 ranges; attach blocks units 0 0) | rule 1508728 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1508728
+    expanded: today 1448560 (drawn detail 5 2731; blocks units 1 1364749; attach detail 0) | rule 83811 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 83811 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr2:92209152-92210152: window tiles 2 62610; departure bins 3 18470; bytesFor today 1508728
+  [every] records over D 311, within ATTACH_BP with ownTiles 7; attach tiles 1 17457
+    unloaded: today 1526185 (2+2+1+0 ranges; attach blocks units 0 0) | rule 1526185 (0 of 6 pieces need a blocks unit for their end, 0 more units) | bp 1526185
+    expanded: today 2670268 (drawn detail 221 1206982; blocks units 1 1364749; attach detail 0) | rule 1305519 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 1305519 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1445829 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1445829 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1445829
+    expanded: today 1446079 (drawn detail 1 250; blocks units 1 1364749; attach detail 0) | rule 81330 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 81330 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 1, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1508728 (2+2+0+0 ranges; attach blocks units 0 0) | rule 1508728 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1508728
+    expanded: today 1448560 (drawn detail 5 2731; blocks units 1 1364749; attach detail 0) | rule 83811 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 83811 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr15:851971-852971: window tiles 2 268078; departure bins 3 15652; bytesFor today 294971
+  [every] records over D 273, within ATTACH_BP with ownTiles 99; attach tiles 9 1066753
+    unloaded: today 1402008 (2+1+9+2 ranges; attach blocks units 2 40284) | rule 1373858 (2 of 11 pieces need a blocks unit for their end, 1 more units) | bp 1361724
+    expanded: today 2242225 (drawn detail 61 798898; blocks units 1 11241; attach detail 11) | rule 2230984 (attach detail 11; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2230984 (attach detail 11) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 0, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 283730 (2+0+0+0 ranges; attach blocks units 0 0) | rule 283730 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 283730
+    expanded: today 283730 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 283730 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 283730 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 1 201671
+    unloaded: today 485401 (2+0+1+0 ranges; attach blocks units 0 0) | rule 485401 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 485401
+    expanded: today 485401 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 485401 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 485401 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr21:785447-786447: window tiles 2 243171; departure bins 3 12468; bytesFor today 257237
+  [every] records over D 244, within ATTACH_BP with ownTiles 46; attach tiles 10 1053488
+    unloaded: today 1318878 (2+1+10+1 ranges; attach blocks units 1 8153) | rule 1317280 (5 of 5 pieces need a blocks unit for their end, 1 more units) | bp 1309127
+    expanded: today 1353414 (drawn detail 0 0; blocks units 1 1598; attach detail 5) | rule 1351816 (attach detail 5; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 1351816 (attach detail 5) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 2; attach tiles 0 0
+    unloaded: today 255639 (2+0+0+0 ranges; attach blocks units 0 0) | rule 255639 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 255639
+    expanded: today 255639 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 255639 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 255639 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 0, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 255639 (2+0+0+0 ranges; attach blocks units 0 0) | rule 255639 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 255639
+    expanded: today 255639 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 255639 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 255639 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr20:32440323-32441323: window tiles 2 313753; departure bins 3 22973; bytesFor today 346975
+  [every] records over D 447, within ATTACH_BP with ownTiles 39; attach tiles 4 866505
+    unloaded: today 1213480 (2+1+4+0 ranges; attach blocks units 0 0) | rule 1213480 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1213480
+    expanded: today 8259666 (drawn detail 151 7046186; blocks units 1 10249; attach detail 0) | rule 8249417 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 8249417 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 4, within ATTACH_BP with ownTiles 1; attach tiles 0 0
+    unloaded: today 346975 (2+1+0+0 ranges; attach blocks units 0 0) | rule 346975 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 346975
+    expanded: today 404910 (drawn detail 2 68184; blocks units 0 0; attach detail 0) | rule 404910 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 404910 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 4, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 336726 (2+0+0+0 ranges; attach blocks units 0 0) | rule 336726 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 336726
+    expanded: today 336726 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 336726 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 336726 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr21:721015-722015: window tiles 2 377114; departure bins 3 13663; bytesFor today 392375
+  [every] records over D 260, within ATTACH_BP with ownTiles 95; attach tiles 8 810612
+    unloaded: today 1211140 (2+1+8+1 ranges; attach blocks units 1 8153) | rule 1209542 (5 of 5 pieces need a blocks unit for their end, 1 more units) | bp 1201389
+    expanded: today 1245676 (drawn detail 0 0; blocks units 1 1598; attach detail 5) | rule 1244078 (attach detail 5; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 1244078 (attach detail 5) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 390777 (2+0+0+0 ranges; attach blocks units 0 0) | rule 390777 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 390777
+    expanded: today 390777 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 390777 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 390777 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 0, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 390777 (2+0+0+0 ranges; attach blocks units 0 0) | rule 390777 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 390777
+    expanded: today 390777 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 390777 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 390777 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr14:13368351-13369351: window tiles 2 169336; departure bins 3 16831; bytesFor today 555993
+  [every] records over D 529, within ATTACH_BP with ownTiles 182; attach tiles 3 286951
+    unloaded: today 1208357 (2+2+3+3 ranges; attach blocks units 3 365413) | rule 1208357 (61 of 63 pieces need a blocks unit for their end, 3 more units) | bp 842944
+    expanded: today 2508886 (drawn detail 748 1717688; blocks units 0 0; attach detail 126) | rule 2351195 (attach detail 63; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2351195 (attach detail 63) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 1; attach tiles 1 105158
+    unloaded: today 853177 (2+2+1+1 ranges; attach blocks units 1 192026) | rule 853177 (1 of 1 pieces need a blocks unit for their end, 1 more units) | bp 661151
+    expanded: today 309865 (drawn detail 6 16455; blocks units 0 0; attach detail 1) | rule 309865 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 309865 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 1 85169
+    unloaded: today 441521 (2+1+1+0 ranges; attach blocks units 0 0) | rule 441521 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 441521
+    expanded: today 273721 (drawn detail 1 2385; blocks units 0 0; attach detail 0) | rule 273721 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 273721 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr14:13369351-13370351: window tiles 2 169336; departure bins 3 16831; bytesFor today 555993
+  [every] records over D 529, within ATTACH_BP with ownTiles 182; attach tiles 3 286951
+    unloaded: today 1208357 (2+2+3+3 ranges; attach blocks units 3 365413) | rule 1208357 (61 of 63 pieces need a blocks unit for their end, 3 more units) | bp 842944
+    expanded: today 2508886 (drawn detail 748 1717688; blocks units 0 0; attach detail 126) | rule 2351195 (attach detail 63; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2351195 (attach detail 63) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 1; attach tiles 1 105158
+    unloaded: today 853177 (2+2+1+1 ranges; attach blocks units 1 192026) | rule 853177 (1 of 1 pieces need a blocks unit for their end, 1 more units) | bp 661151
+    expanded: today 309865 (drawn detail 6 16455; blocks units 0 0; attach detail 1) | rule 309865 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 309865 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 2, within ATTACH_BP with ownTiles 1; attach tiles 1 85169
+    unloaded: today 441521 (2+1+1+0 ranges; attach blocks units 0 0) | rule 441521 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 441521
+    expanded: today 273721 (drawn detail 1 2385; blocks units 0 0; attach detail 0) | rule 273721 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 273721 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr21:753231-754231: window tiles 1 228516; departure bins 2 7764; bytesFor today 237878
+  [every] records over D 253, within ATTACH_BP with ownTiles 78; attach tiles 9 959210
+    unloaded: today 1205241 (2+1+9+1 ranges; attach blocks units 1 8153) | rule 1203643 (5 of 5 pieces need a blocks unit for their end, 1 more units) | bp 1195490
+    expanded: today 1239777 (drawn detail 0 0; blocks units 1 1598; attach detail 5) | rule 1238179 (attach detail 5; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 1238179 (attach detail 5) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 3; attach tiles 1 148598
+    unloaded: today 384878 (2+0+1+0 ranges; attach blocks units 0 0) | rule 384878 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 384878
+    expanded: today 384878 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 384878 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 384878 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 0, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 236280 (2+0+0+0 ranges; attach blocks units 0 0) | rule 236280 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 236280
+    expanded: today 236280 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 236280 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 236280 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr20:32472595-32473595: window tiles 1 252142; departure bins 2 14438; bytesFor today 276829
+  [every] records over D 230, within ATTACH_BP with ownTiles 19; attach tiles 5 928116
+    unloaded: today 1204945 (2+1+5+0 ranges; attach blocks units 0 0) | rule 1204945 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1204945
+    expanded: today 8683037 (drawn detail 159 7478092; blocks units 1 10249; attach detail 0) | rule 8672788 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 8672788 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 1, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 276829 (2+1+0+0 ranges; attach blocks units 0 0) | rule 276829 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 276829
+    expanded: today 334764 (drawn detail 2 68184; blocks units 0 0; attach detail 0) | rule 334764 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 334764 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 3, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 266580 (2+0+0+0 ranges; attach blocks units 0 0) | rule 266580 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 266580
+    expanded: today 266580 (drawn detail 0 0; blocks units 0 0; attach detail 0) | rule 266580 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 266580 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+15.76 s, 79036 KB peak, exit 0
+## four worst chm13
+CHM13#0#chr2:91947073-91948073: window tiles 2 55647; departure bins 3 10808; bytesFor today 782998
+  [every] records over D 26, within ATTACH_BP with ownTiles 6; attach tiles 0 0
+    unloaded: today 782998 (2+1+0+0 ranges; attach blocks units 0 0) | rule 782998 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 782998
+    expanded: today 3196889 (drawn detail 172 2413891; blocks units 1 716543; attach detail 0) | rule 2480346 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2480346 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 0, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 782998 (2+1+0+0 ranges; attach blocks units 0 0) | rule 66455 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 66455
+    expanded: today 782998 (drawn detail 0 0; blocks units 1 716543; attach detail 0) | rule 66455 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 66455 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 0, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 782998 (2+1+0+0 ranges; attach blocks units 0 0) | rule 782998 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 782998
+    expanded: today 72697 (drawn detail 1 6242; blocks units 0 0; attach detail 0) | rule 72697 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 72697 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+CHM13#0#chr6:32504963-32505963: window tiles 2 165342; departure bins 2 10010; bytesFor today 598455
+  [every] records over D 330, within ATTACH_BP with ownTiles 316; attach tiles 0 0
+    unloaded: today 598455 (1+1+0+0 ranges; attach blocks units 0 0) | rule 598455 (0 of 269 pieces need a blocks unit for their end, 0 more units) | bp 598455
+    expanded: today 2949682 (drawn detail 4 31894; blocks units 1 423103; attach detail 0) | rule 2526579 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2526579 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 2, within ATTACH_BP with ownTiles 2; attach tiles 0 0
+    unloaded: today 598455 (1+1+0+0 ranges; attach blocks units 0 0) | rule 175352 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 175352
+    expanded: today 616518 (drawn detail 0 0; blocks units 1 423103; attach detail 0) | rule 193415 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 193415 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 3, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 598455 (1+1+0+0 ranges; attach blocks units 0 0) | rule 175352 (0 of 3 pieces need a blocks unit for their end, 0 more units) | bp 175352
+    expanded: today 623755 (drawn detail 0 0; blocks units 1 423103; attach detail 0) | rule 200652 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 200652 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+0.73 s, 40464 KB peak, exit 0
+## scan grch38
+GRCh38#0#chr2:91421722-91422722: window tiles 2 155409; departure bins 3 39872; bytesFor today 2117772
+  [every] records over D 840, within ATTACH_BP with ownTiles 4; attach tiles 0 0
+    unloaded: today 2117772 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2117772 (0 of 4 pieces need a blocks unit for their end, 0 more units) | bp 2117772
+    expanded: today 16107828 (drawn detail 2095 13981916; blocks units 2 1922491; attach detail 0) | rule 14185337 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 14185337 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 8, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2117772 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2117772 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2117772
+    expanded: today 330300 (drawn detail 18 135019; blocks units 0 0; attach detail 0) | rule 330300 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 330300 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2117772 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2117772 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2117772
+    expanded: today 297488 (drawn detail 16 102207; blocks units 0 0; attach detail 0) | rule 297488 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 297488 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr2:91422722-91423722: window tiles 2 155409; departure bins 3 39872; bytesFor today 2117772
+  [every] records over D 840, within ATTACH_BP with ownTiles 4; attach tiles 0 0
+    unloaded: today 2117772 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2117772 (0 of 4 pieces need a blocks unit for their end, 0 more units) | bp 2117772
+    expanded: today 16107828 (drawn detail 2095 13981916; blocks units 2 1922491; attach detail 0) | rule 14185337 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 14185337 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 8, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2117772 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2117772 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2117772
+    expanded: today 330300 (drawn detail 18 135019; blocks units 0 0; attach detail 0) | rule 330300 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 330300 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2117772 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2117772 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2117772
+    expanded: today 297488 (drawn detail 16 102207; blocks units 0 0; attach detail 0) | rule 297488 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 297488 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr2:91487257-91488257: window tiles 2 223897; departure bins 3 44953; bytesFor today 2100471
+  [every] records over D 1680, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 2100471 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2100471 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 2100471
+    expanded: today 14815590 (drawn detail 2070 12715119; blocks units 2 1831621; attach detail 0) | rule 13150359 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 1 166390) | bp 12983969 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 16, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2100471 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2100471 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2100471
+    expanded: today 533981 (drawn detail 18 98741; blocks units 1 166390; attach detail 0) | rule 367591 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 367591 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 12, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2100471 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2100471 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2100471
+    expanded: today 518697 (drawn detail 14 83457; blocks units 1 166390; attach detail 0) | rule 352307 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 352307 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr2:91488257-91489257: window tiles 2 223897; departure bins 3 44953; bytesFor today 2100471
+  [every] records over D 1680, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 2100471 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2100471 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 2100471
+    expanded: today 14815590 (drawn detail 2069 12684484; blocks units 2 1831621; attach detail 0) | rule 13150359 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 1 166390) | bp 12983969 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 16, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2100471 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2100471 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2100471
+    expanded: today 533981 (drawn detail 18 98741; blocks units 1 166390; attach detail 0) | rule 367591 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 367591 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 12, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 2100471 (2+2+0+0 ranges; attach blocks units 0 0) | rule 2100471 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 2100471
+    expanded: today 518697 (drawn detail 14 83457; blocks units 1 166390; attach detail 0) | rule 352307 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 352307 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr2:91520524-91521524: window tiles 1 120292; departure bins 2 27598; bytesFor today 314280
+  [every] records over D 1813, within ATTACH_BP with ownTiles 130; attach tiles 1 103605
+    unloaded: today 2083116 (2+1+1+1 ranges; attach blocks units 1 1665231) | rule 417885 (0 of 220 pieces need a blocks unit for their end, 0 more units) | bp 417885
+    expanded: today 7155156 (drawn detail 879 6377802; blocks units 1 166390; attach detail 2) | rule 6905782 (attach detail 0; speculative loads 2; blocks units for a run's last piece end 0 0) | bp 6905782 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 19, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 314280 (2+1+0+0 ranges; attach blocks units 0 0) | rule 314280 (0 of 4 pieces need a blocks unit for their end, 0 more units) | bp 314280
+    expanded: today 366328 (drawn detail 9 46903; blocks units 1 166390; attach detail 0) | rule 199938 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 199938 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 13, within ATTACH_BP with ownTiles 1; attach tiles 0 0
+    unloaded: today 314280 (2+1+0+0 ranges; attach blocks units 0 0) | rule 314280 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 314280
+    expanded: today 359016 (drawn detail 6 41637; blocks units 1 166390; attach detail 0) | rule 192626 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 192626 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr2:91454989-91455989: window tiles 1 103605; departure bins 2 24827; bytesFor today 1793663
+  [every] records over D 837, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1793663 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1793663 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1793663
+    expanded: today 8185836 (drawn detail 1190 6392173; blocks units 1 1665231; attach detail 0) | rule 6520605 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 6520605 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 8, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1793663 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1793663 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1793663
+    expanded: today 180539 (drawn detail 10 52107; blocks units 0 0; attach detail 0) | rule 180539 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 180539 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1793663 (2+1+0+0 ranges; attach blocks units 0 0) | rule 1793663 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1793663
+    expanded: today 170252 (drawn detail 8 41820; blocks units 0 0; attach detail 0) | rule 170252 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 170252 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr14:19332128-19333128: window tiles 2 182852; departure bins 3 28141; bytesFor today 1079264
+  [every] records over D 1039, within ATTACH_BP with ownTiles 415; attach tiles 4 173990
+    unloaded: today 1488440 (2+2+4+1 ranges; attach blocks units 1 235186) | rule 1488440 (28 of 126 pieces need a blocks unit for their end, 1 more units) | bp 1253254
+    expanded: today 4512304 (drawn detail 1213 3253340; blocks units 0 0; attach detail 274) | rule 4079000 (attach detail 125; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 4079000 (attach detail 125) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 3; attach tiles 2 121768
+    unloaded: today 1436218 (2+2+2+1 ranges; attach blocks units 1 235186) | rule 1201032 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 1201032
+    expanded: today 369670 (drawn detail 11 27163; blocks units 0 0; attach detail 3) | rule 366971 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 366971 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 11, within ATTACH_BP with ownTiles 3; attach tiles 2 105833
+    unloaded: today 1420283 (2+2+2+1 ranges; attach blocks units 1 235186) | rule 1185097 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 1185097
+    expanded: today 355501 (drawn detail 11 29568; blocks units 0 0; attach detail 3) | rule 349919 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 349919 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr14:19333128-19334128: window tiles 2 182852; departure bins 3 28141; bytesFor today 1079264
+  [every] records over D 1039, within ATTACH_BP with ownTiles 415; attach tiles 4 173990
+    unloaded: today 1488440 (2+2+4+1 ranges; attach blocks units 1 235186) | rule 1488440 (28 of 126 pieces need a blocks unit for their end, 1 more units) | bp 1253254
+    expanded: today 4512304 (drawn detail 1213 3253340; blocks units 0 0; attach detail 274) | rule 4079000 (attach detail 125; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 4079000 (attach detail 125) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 3; attach tiles 2 121768
+    unloaded: today 1436218 (2+2+2+1 ranges; attach blocks units 1 235186) | rule 1201032 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 1201032
+    expanded: today 369670 (drawn detail 11 27163; blocks units 0 0; attach detail 3) | rule 366971 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 366971 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 11, within ATTACH_BP with ownTiles 3; attach tiles 2 105833
+    unloaded: today 1420283 (2+2+2+1 ranges; attach blocks units 1 235186) | rule 1185097 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 1185097
+    expanded: today 355501 (drawn detail 11 29568; blocks units 0 0; attach detail 3) | rule 349919 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 349919 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr14:19397674-19398674: window tiles 2 180446; departure bins 4 35839; bytesFor today 1045438
+  [every] records over D 1044, within ATTACH_BP with ownTiles 419; attach tiles 4 173990
+    unloaded: today 1454614 (2+2+4+1 ranges; attach blocks units 1 235186) | rule 1454614 (28 of 128 pieces need a blocks unit for their end, 1 more units) | bp 1219428
+    expanded: today 4412046 (drawn detail 1176 3147790; blocks units 0 0; attach detail 274) | rule 3978742 (attach detail 125; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 3978742 (attach detail 125) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 3; attach tiles 2 121768
+    unloaded: today 1402392 (2+2+2+1 ranges; attach blocks units 1 235186) | rule 1167206 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 1167206
+    expanded: today 374075 (drawn detail 10 26276; blocks units 0 0; attach detail 3) | rule 371376 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 371376 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 11, within ATTACH_BP with ownTiles 3; attach tiles 2 105833
+    unloaded: today 1386457 (2+2+2+1 ranges; attach blocks units 1 235186) | rule 1151271 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 1151271
+    expanded: today 357593 (drawn detail 10 26368; blocks units 0 0; attach detail 3) | rule 352011 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 352011 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr14:19398674-19399674: window tiles 2 180446; departure bins 4 35839; bytesFor today 1045438
+  [every] records over D 1044, within ATTACH_BP with ownTiles 419; attach tiles 4 173990
+    unloaded: today 1454614 (2+2+4+1 ranges; attach blocks units 1 235186) | rule 1454614 (28 of 128 pieces need a blocks unit for their end, 1 more units) | bp 1219428
+    expanded: today 4412046 (drawn detail 1176 3147790; blocks units 0 0; attach detail 274) | rule 3978742 (attach detail 125; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 3978742 (attach detail 125) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 3; attach tiles 2 121768
+    unloaded: today 1402392 (2+2+2+1 ranges; attach blocks units 1 235186) | rule 1167206 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 1167206
+    expanded: today 374075 (drawn detail 10 26276; blocks units 0 0; attach detail 3) | rule 371376 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 371376 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 11, within ATTACH_BP with ownTiles 3; attach tiles 2 105833
+    unloaded: today 1386457 (2+2+2+1 ranges; attach blocks units 1 235186) | rule 1151271 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 1151271
+    expanded: today 357593 (drawn detail 10 26368; blocks units 0 0; attach detail 3) | rule 352011 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 352011 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr14:19463200-19464200: window tiles 2 169644; departure bins 3 49312; bytesFor today 766849
+  [every] records over D 1040, within ATTACH_BP with ownTiles 416; attach tiles 4 173990
+    unloaded: today 1176025 (1+2+4+1 ranges; attach blocks units 1 235186) | rule 1176025 (28 of 127 pieces need a blocks unit for their end, 1 more units) | bp 940839
+    expanded: today 3299625 (drawn detail 919 2032698; blocks units 0 0; attach detail 274) | rule 2866321 (attach detail 125; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2866321 (attach detail 125) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 3; attach tiles 2 121768
+    unloaded: today 1123803 (1+2+2+1 ranges; attach blocks units 1 235186) | rule 888617 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 888617
+    expanded: today 364333 (drawn detail 6 13863; blocks units 0 0; attach detail 3) | rule 361634 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 361634 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 11, within ATTACH_BP with ownTiles 3; attach tiles 2 105833
+    unloaded: today 1107868 (1+2+2+1 ranges; attach blocks units 1 235186) | rule 872682 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 872682
+    expanded: today 348713 (drawn detail 6 14817; blocks units 0 0; attach detail 3) | rule 343131 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 343131 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr14:19464200-19465200: window tiles 2 169644; departure bins 3 49312; bytesFor today 766849
+  [every] records over D 1040, within ATTACH_BP with ownTiles 416; attach tiles 4 173990
+    unloaded: today 1176025 (1+2+4+1 ranges; attach blocks units 1 235186) | rule 1176025 (28 of 127 pieces need a blocks unit for their end, 1 more units) | bp 940839
+    expanded: today 3299625 (drawn detail 919 2032698; blocks units 0 0; attach detail 274) | rule 2866321 (attach detail 125; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2866321 (attach detail 125) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 3; attach tiles 2 121768
+    unloaded: today 1123803 (1+2+2+1 ranges; attach blocks units 1 235186) | rule 888617 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 888617
+    expanded: today 364333 (drawn detail 6 13863; blocks units 0 0; attach detail 3) | rule 361634 (attach detail 2; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 361634 (attach detail 2) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 11, within ATTACH_BP with ownTiles 3; attach tiles 2 105833
+    unloaded: today 1107868 (1+2+2+1 ranges; attach blocks units 1 235186) | rule 872682 (0 of 1 pieces need a blocks unit for their end, 0 more units) | bp 872682
+    expanded: today 348713 (drawn detail 6 14817; blocks units 0 0; attach detail 3) | rule 343131 (attach detail 1; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 343131 (attach detail 1) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr9:39058469-39059469: window tiles 2 104510; departure bins 3 18406; bytesFor today 765037
+  [every] records over D 540, within ATTACH_BP with ownTiles 38; attach tiles 4 252966
+    unloaded: today 1135827 (2+2+4+1 ranges; attach blocks units 1 117824) | rule 1018003 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1018003
+    expanded: today 3917100 (drawn detail 1082 3537958; blocks units 0 0; attach detail 1) | rule 3913840 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 3913840 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 765037 (2+2+0+0 ranges; attach blocks units 0 0) | rule 765037 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 765037
+    expanded: today 159740 (drawn detail 11 36824; blocks units 0 0; attach detail 0) | rule 159740 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 159740 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 4, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 765037 (2+2+0+0 ranges; attach blocks units 0 0) | rule 765037 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 765037
+    expanded: today 147407 (drawn detail 7 24491; blocks units 0 0; attach detail 0) | rule 147407 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 147407 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr9:39059469-39060469: window tiles 2 104510; departure bins 3 18406; bytesFor today 765037
+  [every] records over D 540, within ATTACH_BP with ownTiles 38; attach tiles 4 252966
+    unloaded: today 1135827 (2+2+4+1 ranges; attach blocks units 1 117824) | rule 1018003 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1018003
+    expanded: today 3917100 (drawn detail 1082 3537958; blocks units 0 0; attach detail 1) | rule 3913840 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 3913840 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 6, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 765037 (2+2+0+0 ranges; attach blocks units 0 0) | rule 765037 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 765037
+    expanded: today 159740 (drawn detail 11 36824; blocks units 0 0; attach detail 0) | rule 159740 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 159740 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 4, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 765037 (2+2+0+0 ranges; attach blocks units 0 0) | rule 765037 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 765037
+    expanded: today 147407 (drawn detail 7 24491; blocks units 0 0; attach detail 0) | rule 147407 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 147407 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr6:32570392-32571392: window tiles 2 168490; departure bins 2 13556; bytesFor today 1135179
+  [every] records over D 342, within ATTACH_BP with ownTiles 316; attach tiles 0 0
+    unloaded: today 1135179 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1135179 (0 of 256 pieces need a blocks unit for their end, 0 more units) | bp 1135179
+    expanded: today 4796493 (drawn detail 430 4190482; blocks units 1 423965; attach detail 0) | rule 4796493 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 1 423965) | bp 4372528 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 1135179 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1135179 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 1135179
+    expanded: today 225234 (drawn detail 5 43188; blocks units 0 0; attach detail 0) | rule 225234 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 225234 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 4, within ATTACH_BP with ownTiles 4; attach tiles 0 0
+    unloaded: today 1135179 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1135179 (0 of 3 pieces need a blocks unit for their end, 0 more units) | bp 1135179
+    expanded: today 656120 (drawn detail 5 50109; blocks units 1 423965; attach detail 0) | rule 656120 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 1 423965) | bp 232155 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr6:32571392-32572392: window tiles 2 168490; departure bins 2 13556; bytesFor today 1135179
+  [every] records over D 342, within ATTACH_BP with ownTiles 316; attach tiles 0 0
+    unloaded: today 1135179 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1135179 (0 of 256 pieces need a blocks unit for their end, 0 more units) | bp 1135179
+    expanded: today 4859651 (drawn detail 438 4253640; blocks units 1 423965; attach detail 0) | rule 4859651 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 1 423965) | bp 4435686 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 3, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 1135179 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1135179 (0 of 2 pieces need a blocks unit for their end, 0 more units) | bp 1135179
+    expanded: today 225234 (drawn detail 5 43188; blocks units 0 0; attach detail 0) | rule 225234 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 225234 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 4, within ATTACH_BP with ownTiles 4; attach tiles 0 0
+    unloaded: today 1135179 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1135179 (0 of 3 pieces need a blocks unit for their end, 0 more units) | bp 1135179
+    expanded: today 656120 (drawn detail 5 50109; blocks units 1 423965; attach detail 0) | rule 656120 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 1 423965) | bp 232155 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr4:49216761-49217761: window tiles 2 106879; departure bins 2 36659; bytesFor today 1088177
+  [every] records over D 792, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 1088177 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1088177 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1088177
+    expanded: today 3180558 (drawn detail 524 2852823; blocks units 1 184197; attach detail 0) | rule 2996361 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2996361 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 7, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1088177 (1+2+0+0 ranges; attach blocks units 0 0) | rule 903980 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 903980
+    expanded: today 353281 (drawn detail 5 25546; blocks units 1 184197; attach detail 0) | rule 169084 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 169084 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 8, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1088177 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1088177 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1088177
+    expanded: today 354167 (drawn detail 6 26432; blocks units 1 184197; attach detail 0) | rule 169970 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 169970 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr4:49217761-49218761: window tiles 2 106879; departure bins 2 36659; bytesFor today 1088177
+  [every] records over D 792, within ATTACH_BP with ownTiles 3; attach tiles 0 0
+    unloaded: today 1088177 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1088177 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1088177
+    expanded: today 3180558 (drawn detail 524 2852823; blocks units 1 184197; attach detail 0) | rule 2996361 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 2996361 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 7, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1088177 (1+2+0+0 ranges; attach blocks units 0 0) | rule 903980 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 903980
+    expanded: today 353281 (drawn detail 5 25546; blocks units 1 184197; attach detail 0) | rule 169084 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 169084 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 8, within ATTACH_BP with ownTiles 0; attach tiles 0 0
+    unloaded: today 1088177 (1+2+0+0 ranges; attach blocks units 0 0) | rule 1088177 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 1088177
+    expanded: today 354167 (drawn detail 6 26432; blocks units 1 184197; attach detail 0) | rule 169970 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 169970 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr9:40369198-40370198: window tiles 2 149229; departure bins 4 41712; bytesFor today 419044
+  [every] records over D 989, within ATTACH_BP with ownTiles 163; attach tiles 7 370287
+    unloaded: today 1072096 (2+2+7+3 ranges; attach blocks units 3 282765) | rule 789331 (0 of 19 pieces need a blocks unit for their end, 0 more units) | bp 789331
+    expanded: today 3350375 (drawn detail 1110 2525394; blocks units 0 0; attach detail 138) | rule 3107396 (attach detail 17; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 3107396 (attach detail 17) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 8, within ATTACH_BP with ownTiles 2; attach tiles 1 86544
+    unloaded: today 619406 (2+2+1+1 ranges; attach blocks units 1 113818) | rule 505588 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 505588
+    expanded: today 314581 (drawn detail 12 29608; blocks units 0 0; attach detail 4) | rule 307093 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 307093 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 8, within ATTACH_BP with ownTiles 2; attach tiles 1 86544
+    unloaded: today 619406 (2+2+1+1 ranges; attach blocks units 1 113818) | rule 505588 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 505588
+    expanded: today 302482 (drawn detail 9 19165; blocks units 0 0; attach detail 3) | rule 296650 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 296650 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+GRCh38#0#chr9:40370198-40371198: window tiles 2 149229; departure bins 4 41712; bytesFor today 419044
+  [every] records over D 989, within ATTACH_BP with ownTiles 163; attach tiles 7 370287
+    unloaded: today 1072096 (2+2+7+3 ranges; attach blocks units 3 282765) | rule 789331 (0 of 19 pieces need a blocks unit for their end, 0 more units) | bp 789331
+    expanded: today 3350375 (drawn detail 1110 2525394; blocks units 0 0; attach detail 138) | rule 3107396 (attach detail 17; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 3107396 (attach detail 17) | pieces between drawn pieces to load, F5: 0
+  [four0] records over D 8, within ATTACH_BP with ownTiles 2; attach tiles 1 86544
+    unloaded: today 619406 (2+2+1+1 ranges; attach blocks units 1 113818) | rule 505588 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 505588
+    expanded: today 314581 (drawn detail 12 29608; blocks units 0 0; attach detail 4) | rule 307093 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 307093 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+  [four1] records over D 8, within ATTACH_BP with ownTiles 2; attach tiles 1 86544
+    unloaded: today 619406 (2+2+1+1 ranges; attach blocks units 1 113818) | rule 505588 (0 of 0 pieces need a blocks unit for their end, 0 more units) | bp 505588
+    expanded: today 302482 (drawn detail 9 19165; blocks units 0 0; attach detail 3) | rule 296650 (attach detail 0; speculative loads 0; blocks units for a run's last piece end 0 0) | bp 296650 (attach detail 0) | pieces between drawn pieces to load, F5: 0
+12.78 s, 85532 KB peak, exit 0
+## rules chm13
+24	ambiguous: ownBp - missingBp - leading == 0: candidate holds NONE, over ATTACH_BP
+38	ambiguous: ownBp - missingBp - leading == 0: candidate holds NONE, within ATTACH_BP
+1	ambiguous: ownBp - missingBp - leading > 0: candidate holds NONE, over ATTACH_BP
+155	ambiguous: ownBp - missingBp - leading > 0: candidate holds own steps, over ATTACH_BP
+26	ambiguous: ownBp - missingBp - leading > 0: candidate holds own steps, within ATTACH_BP
+16.18 s, 68232 KB peak, exit 0
+## rules grch38
+460	ambiguous: ownBp - missingBp - leading == 0: candidate holds NONE, over ATTACH_BP
+150	ambiguous: ownBp - missingBp - leading == 0: candidate holds NONE, within ATTACH_BP
+2	ambiguous: ownBp - missingBp - leading > 0: candidate holds NONE, over ATTACH_BP
+2	ambiguous: ownBp - missingBp - leading > 0: candidate holds NONE, within ATTACH_BP
+70	ambiguous: ownBp - missingBp - leading > 0: candidate holds own steps, over ATTACH_BP
+99	ambiguous: ownBp - missingBp - leading > 0: candidate holds own steps, within ATTACH_BP
+12.32 s, 66632 KB peak, exit 0
+## four-grch38 worst
+zsh:7: no matches found: /home/cdiesh/work/blocks/genome-accept/out/four-*.txt
+ 09:07:04 up 118 days, 16:30, 20 users,  load average: 2.12, 1.52, 1.58

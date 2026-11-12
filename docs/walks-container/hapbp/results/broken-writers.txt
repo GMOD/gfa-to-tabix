@@ -1,0 +1,21 @@
+the writer as it is: 46 files written, 0 builds refused, 276 of 276 checker runs pass
+hapBp as format 7's bp, from the first step on R to the last
+  with the build check: 32 builds refused
+  past the build check: test result: FAILED. 64 passed, 6 failed
+  past the build check: of 46 files, verify7 fails 0, claims7 fails 32, audit7 fails 32, expand7 fails 32, spec8 fails 32, rebuild fails 32
+hapBp as the span on S, end less start
+  with the build check: 34 builds refused
+  past the build check: test result: FAILED. 61 passed, 9 failed
+  past the build check: of 46 files, verify7 fails 0, claims7 fails 34, audit7 fails 34, expand7 fails 34, spec8 fails 34, rebuild fails 34
+hapBp as off by one
+  with the build check: 42 builds refused
+  past the build check: test result: FAILED. 60 passed, 10 failed
+  past the build check: of 46 files, verify7 fails 0, claims7 fails 42, audit7 fails 42, expand7 fails 42, spec8 fails 42, rebuild fails 42
+hapBp as the bp of the line's next piece in the tile
+  with the build check: 3 builds refused
+  past the build check: test result: FAILED. 69 passed, 1 failed
+  past the build check: of 46 files, verify7 fails 0, claims7 fails 3, audit7 fails 3, expand7 fails 3, spec8 fails 3, rebuild fails 3
+hapBp as the bp up to the last step on R, without the trailing run
+  with the build check: 30 builds refused
+  past the build check: test result: FAILED. 64 passed, 6 failed
+  past the build check: of 46 files, verify7 fails 0, claims7 fails 30, audit7 fails 30, expand7 fails 30, spec8 fails 30, rebuild fails 30

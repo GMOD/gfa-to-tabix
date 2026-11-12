@@ -1,0 +1,80 @@
+ 09:03:54 up 118 days, 16:26, 20 users,  load average: 1.44, 1.32, 1.55
+-rw-rw-r-- 1 cdiesh cdiesh 188280064 Nov 11 20:48 pggbY.CHM13.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       163 Nov 11 20:48 pggbY.CHM13.walks.gz.idx
+-rw-rw-r-- 1 cdiesh cdiesh 193514603 Nov 11 20:45 pggbY.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh       210 Nov 11 20:45 pggbY.GRCh38.walks.gz.idx
+## pggbY.GRCh38
+== totals pggbY.GRCh38.walks.gz
+tileBytesAll	11847848
+blocksBytesAll	6825806
+departureBytesAll	14618280
+detailBytesAll	160200867
+blocksRows	112800
+badItem	0
+spanMismatch	0
+abridgedRows	112800
+abridgedSpanMismatch	0
+leading run on a piece other than a line's first	0
+after>0	18761
+before>0	166
+unitsOutOfTileOrder	0
+abridgedTiles	11
+tileDisk	6161168
+tileRe	6384128
+tileWithBp	6507907
+blocksDisk	6825806
+blocksRe	7017124
+blocksWithHap	7526065
+worst tile growth (55289, 'GRCh38#0#chrY:11534336 929279->984568')
+worst blocks growth (210109, 'GRCh38#0#chrY:11534336 2654401->2864510')
+== departure records against abridged pieces
+18638	records naming an abridged tile, path abridged there
+18638	pieces holding own steps
+18638	  trailing run
+18638	  overlap == the run (invariant holds)
+0	  overlap != the run (INVARIANT BROKEN)
+18249	  run == ownBp (record alone is exact)
+18614	  of records within ATTACH_BP
+18225	  of those, run == ownBp
+18225	  of those, run == ownBp - missingBp and one ownTile
+389	  of those, neither
+18638	by-hapOffset pick holds own steps
+389	  run != ownBp: other (steps on another sequence, or in another piece)
+9.04 s, 248048 KB peak
+## pggbY.CHM13
+== totals pggbY.CHM13.walks.gz
+tileBytesAll	42815225
+blocksBytesAll	10723959
+departureBytesAll	57931019
+detailBytesAll	76755011
+blocksRows	321579
+badItem	0
+spanMismatch	0
+abridgedRows	321579
+abridgedSpanMismatch	0
+leading run on a piece other than a line's first	0
+after>0	80955
+before>0	133
+unitsOutOfTileOrder	0
+abridgedTiles	57
+tileDisk	28446722
+tileRe	29418091
+tileWithBp	29922225
+blocksDisk	10723959
+blocksRe	11058757
+blocksWithHap	12593314
+worst tile growth (82431, 'CHM13#0#chrY:35651584 1682862->1765293')
+worst blocks growth (269234, 'CHM13#0#chrY:35651584 1934430->2203664')
+== departure records against abridged pieces
+80879	records naming an abridged tile, path abridged there
+80879	pieces holding own steps
+80879	  trailing run
+80879	  overlap == the run (invariant holds)
+0	  overlap != the run (INVARIANT BROKEN)
+80879	  run == ownBp (record alone is exact)
+80555	  of records within ATTACH_BP
+80555	  of those, run == ownBp
+80555	  of those, run == ownBp - missingBp and one ownTile
+0	  of those, neither
+80879	by-hapOffset pick holds own steps
+22.16 s, 548276 KB peak

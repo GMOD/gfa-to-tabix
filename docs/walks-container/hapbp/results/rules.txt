@@ -1,0 +1,281 @@
+ 09:01:26 up 118 days, 16:24, 20 users,  load average: 1.62, 1.10, 1.53
+## windows chm13
+CHM13#0#chr2:92077080-92078080 [every haplotype]: window tiles 2 71139, departure bins 3 26295, records over D 697, attach tiles 2 48534
+  bytesFor today (tiles + bins + every window blocks unit): 3125787
+  window blocks units: with an abridged row kept 2 3028353; with one whose span is over D 2 3028353
+  unloaded, today: 4539070 bytes; attach blocks units 1 1364749; ranges 2+2+2+1
+  unloaded, reader rule: 3174321 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+2+0
+  unloaded, bp column: 3174321 bytes; attach blocks units 0; ranges 2+2+2
+  attach detail units an expanding cut reads: today (2, 96724), reader rule (2, 96724), bp column (2, 96724)
+CHM13#0#chr2:92077080-92078080 [four, first]: window tiles 2 71139, departure bins 3 26295, records over D 9, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 3125787
+  window blocks units: with an abridged row kept 2 3028353; with one whose span is over D 2 3028353
+  unloaded, today: 3125787 bytes; attach blocks units 0 0; ranges 2+2+0+0
+  unloaded, reader rule: 3125787 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+0+0
+  unloaded, bp column: 3125787 bytes; attach blocks units 0; ranges 2+2+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:92077080-92078080 [four, spread]: window tiles 2 71139, departure bins 3 26295, records over D 2, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 3125787
+  window blocks units: with an abridged row kept 2 3028353; with one whose span is over D 2 3028353
+  unloaded, today: 3125787 bytes; attach blocks units 0 0; ranges 2+2+0+0
+  unloaded, reader rule: 3125787 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+0+0
+  unloaded, bp column: 3125787 bytes; attach blocks units 0; ranges 2+2+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:92142616-92143616 [every haplotype]: window tiles 2 64651, departure bins 3 25015, records over D 700, attach tiles 2 55022
+  bytesFor today (tiles + bins + every window blocks unit): 2968116
+  window blocks units: with an abridged row kept 2 2878450; with one whose span is over D 2 2878450
+  unloaded, today: 4537790 bytes; attach blocks units 1 1514652; ranges 2+2+2+1
+  unloaded, reader rule: 3023138 bytes; attach blocks units 0 0 (0 of 132 candidate leave pieces with no next piece in the read); ranges 2+2+2+0
+  unloaded, bp column: 3023138 bytes; attach blocks units 0; ranges 2+2+2
+  attach detail units an expanding cut reads: today (132, 4423542), reader rule (132, 4423542), bp column (132, 4423542)
+CHM13#0#chr2:92142616-92143616 [four, first]: window tiles 2 64651, departure bins 3 25015, records over D 9, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 2968116
+  window blocks units: with an abridged row kept 2 2878450; with one whose span is over D 2 2878450
+  unloaded, today: 2968116 bytes; attach blocks units 0 0; ranges 2+2+0+0
+  unloaded, reader rule: 2968116 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+0+0
+  unloaded, bp column: 2968116 bytes; attach blocks units 0; ranges 2+2+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:92142616-92143616 [four, spread]: window tiles 2 64651, departure bins 3 25015, records over D 2, attach tiles 1 37565
+  bytesFor today (tiles + bins + every window blocks unit): 2968116
+  window blocks units: with an abridged row kept 2 2878450; with one whose span is over D 2 2878450
+  unloaded, today: 4520333 bytes; attach blocks units 1 1514652; ranges 2+2+1+1
+  unloaded, reader rule: 3005681 bytes; attach blocks units 0 0 (0 of 1 candidate leave pieces with no next piece in the read); ranges 2+2+1+0
+  unloaded, bp column: 3005681 bytes; attach blocks units 0; ranges 2+2+1
+  attach detail units an expanding cut reads: today (1, 726), reader rule (1, 726), bp column (1, 726)
+CHM13#0#chr2:92110348-92111348 [every haplotype]: window tiles 1 33574, departure bins 2 13344, records over D 592, attach tiles 3 86099
+  bytesFor today (tiles + bins + every window blocks unit): 1560619
+  window blocks units: with an abridged row kept 1 1513701; with one whose span is over D 1 1513701
+  unloaded, today: 4526119 bytes; attach blocks units 2 2879401; ranges 2+1+3+2
+  unloaded, reader rule: 1646718 bytes; attach blocks units 0 0 (0 of 132 candidate leave pieces with no next piece in the read); ranges 2+1+3+0
+  unloaded, bp column: 1646718 bytes; attach blocks units 0; ranges 2+1+3
+  attach detail units an expanding cut reads: today (134, 4520266), reader rule (134, 4520266), bp column (134, 4520266)
+CHM13#0#chr2:92110348-92111348 [four, first]: window tiles 1 33574, departure bins 2 13344, records over D 6, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 1560619
+  window blocks units: with an abridged row kept 1 1513701; with one whose span is over D 1 1513701
+  unloaded, today: 1560619 bytes; attach blocks units 0 0; ranges 2+1+0+0
+  unloaded, reader rule: 1560619 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+1+0+0
+  unloaded, bp column: 1560619 bytes; attach blocks units 0; ranges 2+1+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:92110348-92111348 [four, spread]: window tiles 1 33574, departure bins 2 13344, records over D 2, attach tiles 1 37565
+  bytesFor today (tiles + bins + every window blocks unit): 1560619
+  window blocks units: with an abridged row kept 1 1513701; with one whose span is over D 1 1513701
+  unloaded, today: 3112836 bytes; attach blocks units 1 1514652; ranges 2+1+1+1
+  unloaded, reader rule: 3112836 bytes; attach blocks units 1 1514652 (1 of 1 candidate leave pieces with no next piece in the read); ranges 2+1+1+1
+  unloaded, bp column: 1598184 bytes; attach blocks units 0; ranges 2+1+1
+  attach detail units an expanding cut reads: today (1, 726), reader rule (1, 726), bp column (1, 726)
+CHM13#0#chr2:92011544-92012544 [every haplotype]: window tiles 2 75755, departure bins 3 23390, records over D 571, attach tiles 2 48534
+  bytesFor today (tiles + bins + every window blocks unit): 2330340
+  window blocks units: with an abridged row kept 2 2231195; with one whose span is over D 2 2231195
+  unloaded, today: 3743623 bytes; attach blocks units 1 1364749; ranges 2+2+2+1
+  unloaded, reader rule: 2378874 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+2+0
+  unloaded, bp column: 2378874 bytes; attach blocks units 0; ranges 2+2+2
+  attach detail units an expanding cut reads: today (2, 96724), reader rule (2, 96724), bp column (2, 96724)
+CHM13#0#chr2:92011544-92012544 [four, first]: window tiles 2 75755, departure bins 3 23390, records over D 8, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 2330340
+  window blocks units: with an abridged row kept 2 2231195; with one whose span is over D 2 2231195
+  unloaded, today: 2330340 bytes; attach blocks units 0 0; ranges 2+2+0+0
+  unloaded, reader rule: 2330340 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+0+0
+  unloaded, bp column: 2330340 bytes; attach blocks units 0; ranges 2+2+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:92011544-92012544 [four, spread]: window tiles 2 75755, departure bins 3 23390, records over D 1, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 2330340
+  window blocks units: with an abridged row kept 2 2231195; with one whose span is over D 2 2231195
+  unloaded, today: 2330340 bytes; attach blocks units 0 0; ranges 2+2+0+0
+  unloaded, reader rule: 2330340 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+0+0
+  unloaded, bp column: 2330340 bytes; attach blocks units 0; ranges 2+2+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:92208152-92209152 [every haplotype]: window tiles 2 62610, departure bins 3 18470, records over D 311, attach tiles 1 17457
+  bytesFor today (tiles + bins + every window blocks unit): 1508728
+  window blocks units: with an abridged row kept 2 1427648; with one whose span is over D 2 1427648
+  unloaded, today: 1526185 bytes; attach blocks units 0 0; ranges 2+2+1+0
+  unloaded, reader rule: 1526185 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+1+0
+  unloaded, bp column: 1526185 bytes; attach blocks units 0; ranges 2+2+1
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:92208152-92209152 [four, first]: window tiles 2 62610, departure bins 3 18470, records over D 3, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 1508728
+  window blocks units: with an abridged row kept 1 1364749; with one whose span is over D 1 1364749
+  unloaded, today: 1445829 bytes; attach blocks units 0 0; ranges 2+1+0+0
+  unloaded, reader rule: 1445829 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+1+0+0
+  unloaded, bp column: 1445829 bytes; attach blocks units 0; ranges 2+1+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:92208152-92209152 [four, spread]: window tiles 2 62610, departure bins 3 18470, records over D 1, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 1508728
+  window blocks units: with an abridged row kept 2 1427648; with one whose span is over D 2 1427648
+  unloaded, today: 1508728 bytes; attach blocks units 0 0; ranges 2+2+0+0
+  unloaded, reader rule: 1508728 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+2+0+0
+  unloaded, bp column: 1508728 bytes; attach blocks units 0; ranges 2+2+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:91947073-91948073 [every haplotype]: window tiles 2 55647, departure bins 3 10808, records over D 26, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 782998
+  window blocks units: with an abridged row kept 1 716543; with one whose span is over D 1 716543
+  unloaded, today: 782998 bytes; attach blocks units 0 0; ranges 2+1+0+0
+  unloaded, reader rule: 782998 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+1+0+0
+  unloaded, bp column: 782998 bytes; attach blocks units 0; ranges 2+1+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:91947073-91948073 [four, first]: window tiles 2 55647, departure bins 3 10808, records over D 0, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 782998
+  window blocks units: with an abridged row kept 1 716543; with one whose span is over D 0 0
+  unloaded, today: 782998 bytes; attach blocks units 0 0; ranges 2+1+0+0
+  unloaded, reader rule: 66455 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+0+0+0
+  unloaded, bp column: 66455 bytes; attach blocks units 0; ranges 2+0+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+CHM13#0#chr2:91947073-91948073 [four, spread]: window tiles 2 55647, departure bins 3 10808, records over D 0, attach tiles 0 0
+  bytesFor today (tiles + bins + every window blocks unit): 782998
+  window blocks units: with an abridged row kept 1 716543; with one whose span is over D 1 716543
+  unloaded, today: 782998 bytes; attach blocks units 0 0; ranges 2+1+0+0
+  unloaded, reader rule: 782998 bytes; attach blocks units 0 0 (0 of 0 candidate leave pieces with no next piece in the read); ranges 2+1+0+0
+  unloaded, bp column: 782998 bytes; attach blocks units 0; ranges 2+1+0
+  attach detail units an expanding cut reads: today (0, 0), reader rule (0, 0), bp column (0, 0)
+7.12 s, 60824 KB peak, exit 0
+## read-scan grch38
+/home/cdiesh/work/blocks/genome/hprc-v2.1-mc-grch38.GRCh38.walks.gz: 1383 windows; cut read over 4000000 bytes: 0; bytesFor over it: 0
+  GRCh38#0#chr2:91421722-91422722  cut read 2117772  bytesFor 2117772
+  GRCh38#0#chr2:91422722-91423722  cut read 2117772  bytesFor 2117772
+  GRCh38#0#chr2:91487257-91488257  cut read 2100471  bytesFor 2100471
+  GRCh38#0#chr2:91488257-91489257  cut read 2100471  bytesFor 2100471
+  GRCh38#0#chr2:91520524-91521524  cut read 2083116  bytesFor 314280
+## windows grch38
+Traceback (most recent call last):
+  File "<string>", line 419, in <module>
+  File "<string>", line 305, in windows
+AttributeError: 'NoneType' object has no attribute 'group'
+Command exited with non-zero status 1
+0.05 s, 25688 KB peak, exit 1
+## rules chm13
+== totals hprc-v2.1-mc-chm13.CHM13.walks.gz
+0	abridged rows with no blocks row
+65396	abridged pieces
+0	  leading run on a piece that is not first of its line at fragStart
+563	cost: abridged tiles
+61690511	cost: tile bytes on disk
+65434415	cost: tile bytes recompressed
+65607551	cost: with bp column
+65729731	cost: with end column
+1378	cost: worst tile growth, bp
+3283	cost: worst tile growth, end
+1058	cost: departure bins over abridged tiles
+4161985	cost: their bytes recompressed
+4497171	cost: with one more number on each record that has ownTiles
+== records
+0	    leading run != h1 - hapOffset (BROKEN)
+3267	  abridged
+0	  more than one in a tile (UNEXPECTED)
+13237	  of them within ATTACH_BP
+0	abridged leave holders that are not the candidate (MISSED)
+0	abridged rejoin holders that are no candidate (MISSED)
+0	interval rule with bp: overlap != own steps there (BROKEN)
+29210	interval rule with bp: pieces checked
+25117	interval rule with bp: pieces holding own steps
+1721	leave side: T is first of two ownTiles
+1690	leave side: T is first of two ownTiles: abridged candidate holds own steps
+39	leave side: T is first of two ownTiles: abridged candidate holds own steps, within ATTACH_BP
+31	leave side: T is first of two ownTiles: candidate is a walk row or none
+1825	leave side: T is second of two ownTiles
+21	leave side: T is second of two ownTiles: abridged candidate holds NONE
+1	leave side: T is second of two ownTiles: abridged candidate holds NONE, within ATTACH_BP
+1804	leave side: T is second of two ownTiles: candidate is a walk row or none
+1657	leave side: one ownTile, a rejoin candidate there
+63	leave side: one ownTile, a rejoin candidate there: abridged candidate holds NONE
+38	leave side: one ownTile, a rejoin candidate there: abridged candidate holds NONE, within ATTACH_BP
+181	leave side: one ownTile, a rejoin candidate there: abridged candidate holds own steps
+26	leave side: one ownTile, a rejoin candidate there: abridged candidate holds own steps, within ATTACH_BP
+1413	leave side: one ownTile, a rejoin candidate there: candidate is a walk row or none
+20661	leave side: one ownTile, no rejoin candidate there
+19979	leave side: one ownTile, no rejoin candidate there: abridged candidate holds own steps
+12166	leave side: one ownTile, no rejoin candidate there: abridged candidate holds own steps, within ATTACH_BP
+682	leave side: one ownTile, no rejoin candidate there: candidate is a walk row or none
+506	naive pick (abridged rows only): holds NONE
+21850	naive pick (abridged rows only): holds own steps
+25864	records naming an abridged tile where their path has an abridged piece
+3482	rejoin candidates (h0 <= hapOffset < h1)
+1108	trailing bp (over ATTACH_BP):   of them == ownBp - missingBp
+0	trailing bp (over ATTACH_BP):   of them missingBp == 0 (rest is on other sequences or lines)
+0	trailing bp (over ATTACH_BP):   of them one ownTile and missingBp == 0
+2959	trailing bp (over ATTACH_BP): != ownBp, in no field of the tile or the record
+6660	trailing bp (over ATTACH_BP): == ownBp, provable only with the rejoin piece in the read
+9619	trailing bp (over ATTACH_BP): holders
+0	trailing bp (over ATTACH_BP): next piece of the line in this tile
+150	trailing bp (within ATTACH_BP):   of them == ownBp - missingBp
+0	trailing bp (within ATTACH_BP):   of them missingBp == 0 (rest is on other sequences or lines)
+0	trailing bp (within ATTACH_BP):   of them one ownTile and missingBp == 0
+215	trailing bp (within ATTACH_BP): != ownBp, in no field of the tile or the record
+12016	trailing bp (within ATTACH_BP): == ownBp, provable only with the rejoin piece in the read
+12231	trailing bp (within ATTACH_BP): holders
+0	trailing bp (within ATTACH_BP): next piece of the line in this tile
+== examples
+one ownTile, a rejoin candidate there ('CHM13#0#chr1', '2162688', 'CHM13#0#chr1\t2185869\t2190989\tdeparture\tHG00280#2#JBHDWB010000033.1\t2306019\t18293\t18285\t2185870\t+\t1\t2190988\t+\t1\t2162688', 9366, 2263511, 33, 42508, 0)
+one ownTile, a rejoin candidate there ('CHM13#0#chr1', '2162688', 'CHM13#0#chr1\t2185869\t2190989\tdeparture\tHG00323#1#CM087303.1\t2212489\t24075\t24067\t2185870\t+\t1\t2190988\t+\t1\t2162688', 31785, 2169981, 32, 42508, 0)
+one ownTile, a rejoin candidate there ('CHM13#0#chr1', '2162688', 'CHM13#0#chr1\t2185869\t2190989\tdeparture\tHG04115#1#JBHDTF010000060.1\t1491282\t29855\t29847\t2185870\t+\t1\t2190988\t+\t1\t2162688', 1243749, 1448774, 1, 42508, 0)
+T is second of two ownTiles ('CHM13#0#chr1', '126550016', 'CHM13#0#chr1\t126574980\t126650701\tdeparture\tNA18960#1#CM101526.1\t129364578\t134063\t98307\t126650701\t+\t1\t126574980\t+\t1\t126615552,126550016', 129143673, 129143673, 0, 135755, 1)
+T is second of two ownTiles ('CHM13#0#chr1', '126550016', 'CHM13#0#chr1\t126613943\t126634513\tdeparture\tHG00423#2#JBHIIP010000046.1\t126074735\t97226\t15930\t126634513\t+\t1\t126613943\t+\t1\t126615552,126550016', 125896757, 125896757, 0, 147251, 1)
+T is second of two ownTiles ('CHM13#0#chr1', '145686528', 'CHM13#0#chr1\t142709129\t145704987\tdeparture\tNA18879#1#JBJUVM010000011.1\t148896279\t32085\t11155\t142709129\t-\t1\t145704986\t+\t1\t142671872,145686528', 145736475, 145736475, 0, 192657, 125539)
+55.74 s, 76604 KB peak, exit 0
+## rules grch38
+== totals hprc-v2.1-mc-grch38.GRCh38.walks.gz
+0	abridged rows with no blocks row
+74053	abridged pieces
+0	  leading run on a piece that is not first of its line at fragStart
+461	cost: abridged tiles
+44755634	cost: tile bytes on disk
+47943296	cost: tile bytes recompressed
+48119176	cost: with bp column
+48282680	cost: with end column
+4053	cost: worst tile growth, bp
+8990	cost: worst tile growth, end
+864	cost: departure bins over abridged tiles
+3272593	cost: their bytes recompressed
+3464087	cost: with one more number on each record that has ownTiles
+== records
+0	    leading run != h1 - hapOffset (BROKEN)
+1558	  abridged
+0	  more than one in a tile (UNEXPECTED)
+11373	  of them within ATTACH_BP
+0	abridged leave holders that are not the candidate (MISSED)
+0	abridged rejoin holders that are no candidate (MISSED)
+0	interval rule with bp: overlap != own steps there (BROKEN)
+27865	interval rule with bp: pieces checked
+17670	interval rule with bp: pieces holding own steps
+489	leave side: T is first of two ownTiles
+405	leave side: T is first of two ownTiles: abridged candidate holds own steps
+2	leave side: T is first of two ownTiles: abridged candidate holds own steps, within ATTACH_BP
+84	leave side: T is first of two ownTiles: candidate is a walk row or none
+454	leave side: T is second of two ownTiles
+152	leave side: T is second of two ownTiles: abridged candidate holds NONE
+302	leave side: T is second of two ownTiles: candidate is a walk row or none
+1489	leave side: one ownTile, a rejoin candidate there
+614	leave side: one ownTile, a rejoin candidate there: abridged candidate holds NONE
+152	leave side: one ownTile, a rejoin candidate there: abridged candidate holds NONE, within ATTACH_BP
+169	leave side: one ownTile, a rejoin candidate there: abridged candidate holds own steps
+99	leave side: one ownTile, a rejoin candidate there: abridged candidate holds own steps, within ATTACH_BP
+706	leave side: one ownTile, a rejoin candidate there: candidate is a walk row or none
+16340	leave side: one ownTile, no rejoin candidate there
+15538	leave side: one ownTile, no rejoin candidate there: abridged candidate holds own steps
+10249	leave side: one ownTile, no rejoin candidate there: abridged candidate holds own steps, within ATTACH_BP
+802	leave side: one ownTile, no rejoin candidate there: candidate is a walk row or none
+1201	naive pick (abridged rows only): holds NONE
+16112	naive pick (abridged rows only): holds own steps
+18772	records naming an abridged tile where their path has an abridged piece
+1943	rejoin candidates (h0 <= hapOffset < h1)
+818	trailing bp (over ATTACH_BP):   of them == ownBp - missingBp
+0	trailing bp (over ATTACH_BP):   of them missingBp == 0 (rest is on other sequences or lines)
+0	trailing bp (over ATTACH_BP):   of them one ownTile and missingBp == 0
+1297	trailing bp (over ATTACH_BP): != ownBp, in no field of the tile or the record
+4465	trailing bp (over ATTACH_BP): == ownBp, provable only with the rejoin piece in the read
+5762	trailing bp (over ATTACH_BP): holders
+0	trailing bp (over ATTACH_BP): next piece of the line in this tile
+434	trailing bp (within ATTACH_BP):   of them == ownBp - missingBp
+0	trailing bp (within ATTACH_BP):   of them missingBp == 0 (rest is on other sequences or lines)
+0	trailing bp (within ATTACH_BP):   of them one ownTile and missingBp == 0
+535	trailing bp (within ATTACH_BP): != ownBp, in no field of the tile or the record
+9815	trailing bp (within ATTACH_BP): == ownBp, provable only with the rejoin piece in the read
+10350	trailing bp (within ATTACH_BP): holders
+0	trailing bp (within ATTACH_BP): next piece of the line in this tile
+== examples
+one ownTile, a rejoin candidate there ('GRCh38#0#chr1', '2621440', 'GRCh38#0#chr1\t2685721\t2687364\tdeparture\tHG00140#2#CM087132.1\t2341135\t41562\t18976\t2685724\t+\t1\t2686883\t+\t1\t2621440', 22072, 2083379, 32, 257756, 0)
+one ownTile, a rejoin candidate there ('GRCh38#0#chr1', '2621440', 'GRCh38#0#chr1\t2685721\t2687364\tdeparture\tHG00639#2#CM088551.1\t2344473\t41562\t18976\t2685724\t+\t1\t2686883\t+\t1\t2621440', 30515, 2088762, 32, 255711, 0)
+one ownTile, a rejoin candidate there ('GRCh38#0#chr1', '16646144', 'GRCh38#0#chr1\t16681284\t16683061\tdeparture\tHG03225#2#CM089313.1\t16868213\t671930\t671488\t16683061\t+\t1\t16681284\t+\t1\t16646144', 2376774, 16546389, 214, 321824, 0)
+T is second of two ownTiles ('GRCh38#0#chr14', '19202048', 'GRCh38#0#chr14\t19229757\t19658514\tdeparture\tHG00126#1#JBHIKU010000042.1\t557336\t71733\t40470\t19658514\t+\t1\t19229757\t+\t1\t19595264,19202048', 212410, 212410, 0, 62567, 0)
+T is second of two ownTiles ('GRCh38#0#chr14', '19202048', 'GRCh38#0#chr14\t19229757\t19658514\tdeparture\tHG002#2#chr14\t19364642\t76712\t69680\t19658514\t+\t1\t19229757\t+\t1\t19595264,19202048', 18737435, 19058339, 6, 36692, 0)
+T is second of two ownTiles ('GRCh38#0#chr14', '19202048', 'GRCh38#0#chr14\t19229757\t19658514\tdeparture\tHG00235#2#CM094402.1\t14048813\t71640\t40383\t19658514\t+\t1\t19229757\t+\t1\t19595264,19202048', 13028422, 13712221, 13, 65267, 0)
+41.39 s, 68452 KB peak, exit 0
+ 09:03:11 up 118 days, 16:26, 20 users,  load average: 1.94, 1.37, 1.58

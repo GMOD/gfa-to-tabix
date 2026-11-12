@@ -1,0 +1,21 @@
+ 09:07:11 up 118 days, 16:30, 20 users,  load average: 2.03, 1.51, 1.57
+hprc-v2.1-mc-chm13.CHM13.walks.gz {'tiles': 563, 'rows': 65396, 'now': 65434415, 'bp': 65607551, 'end': 65729731, 'trail': 65519489, 'allTiles': 1155067388}
+bp	+173136 B	+0.26% of abridged tiles	+0.0150% of all tiles	2.65 B/row	worst (1378, 'CHM13#0#chr14:3670016 127524->128902')
+end	+295316 B	+0.45% of abridged tiles	+0.0256% of all tiles	4.52 B/row	worst (3283, 'CHM13#0#chr14:13434880 110607->113890')
+trail	+85074 B	+0.13% of abridged tiles	+0.0074% of all tiles	1.30 B/row	worst (1584, 'CHM13#0#chr14:3670016 127524->129108')
+77.78 s, 56616 KB peak
+hprc-v2.1-mc-grch38.GRCh38.walks.gz {'tiles': 461, 'rows': 74053, 'now': 47943296, 'bp': 48119176, 'end': 48282680, 'trail': 48007278, 'allTiles': 1103113393}
+bp	+175880 B	+0.37% of abridged tiles	+0.0159% of all tiles	2.38 B/row	worst (4053, 'GRCh38#0#chr2:91422720 106848->110901')
+end	+339384 B	+0.71% of abridged tiles	+0.0308% of all tiles	4.58 B/row	worst (8990, 'GRCh38#0#chr2:91422720 106848->115838')
+trail	+63982 B	+0.13% of abridged tiles	+0.0058% of all tiles	0.86 B/row	worst (2506, 'GRCh38#0#chr21:8257536 265789->268295')
+57.27 s, 60764 KB peak
+pggbY.GRCh38.walks.gz {'tiles': 11, 'rows': 112800, 'now': 6384128, 'bp': 6507907, 'end': 6794160, 'trail': 6421904, 'allTiles': 11847848}
+bp	+123779 B	+1.94% of abridged tiles	+1.0447% of all tiles	1.10 B/row	worst (55289, 'GRCh38#0#chrY:11534336 929279->984568')
+end	+410032 B	+6.42% of abridged tiles	+3.4608% of all tiles	3.64 B/row	worst (173568, 'GRCh38#0#chrY:11534336 929279->1102847')
+trail	+37776 B	+0.59% of abridged tiles	+0.3188% of all tiles	0.33 B/row	worst (12727, 'GRCh38#0#chrY:11534336 929279->942006')
+5.76 s, 98740 KB peak
+pggbY.CHM13.walks.gz {'tiles': 57, 'rows': 321579, 'now': 29418091, 'bp': 29922225, 'end': 30618133, 'trail': 29588389, 'allTiles': 42815225}
+bp	+504134 B	+1.71% of abridged tiles	+1.1775% of all tiles	1.57 B/row	worst (82431, 'CHM13#0#chrY:35651584 1682862->1765293')
+end	+1200042 B	+4.08% of abridged tiles	+2.8028% of all tiles	3.73 B/row	worst (216054, 'CHM13#0#chrY:35651584 1682862->1898916')
+trail	+170298 B	+0.58% of abridged tiles	+0.3978% of all tiles	0.53 B/row	worst (39497, 'CHM13#0#chrY:35651584 1682862->1722359')
+14.76 s, 122744 KB peak

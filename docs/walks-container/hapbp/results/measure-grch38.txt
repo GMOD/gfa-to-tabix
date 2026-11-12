@@ -1,0 +1,76 @@
+ 08:38:27 up 118 days, 16:01, 20 users,  load average: 0.39, 1.34, 4.01
+bytesfor.ts
+cap.sh
+check.sh
+cost.log
+cost.sh
+cut-cost.ts
+gw-broken-order
+light-chm13.out
+light-grch38.out
+light.sh
+named-chm13.log
+named-grch38.log
+named.sh
+node_modules
+random-broken.log
+random-chm13.log
+random-grch38.log
+random.sh
+read-map.ts
+read-scan.ts
+release.log
+release.sh
+rerun.sh
+runid-trace
+scale
+scale-chr22.out
+scale-chr22.sh
+t2.err
+t2.out
+t.err
+t.out
+unit-bytes.py
+window-read.py
+== totals hprc-v2.1-mc-grch38.GRCh38.walks.gz
+tileBytesAll	1103113393
+blocksBytesAll	18730696
+departureBytesAll	57924577
+detailBytesAll	398888408
+blocksRows	74053
+badItem	0
+spanMismatch	0
+abridgedRows	74053
+abridgedSpanMismatch	0
+leading run on a piece other than a line's first	0
+after>0	17293
+before>0	1868
+unitsOutOfTileOrder	0
+abridgedTiles	461
+tileDisk	44755634
+tileRe	47943296
+tileWithBp	48119176
+blocksDisk	18730696
+blocksRe	19518563
+blocksWithHap	19910377
+worst tile growth (4053, 'GRCh38#0#chr2:91422720 106848->110901')
+worst blocks growth (10053, 'GRCh38#0#chr14:19267584 459786->469839')
+== departure records against abridged pieces
+18772	records naming an abridged tile, path abridged there
+17670	pieces holding own steps
+16112	  trailing run
+17670	  overlap == the run (invariant holds)
+0	  overlap != the run (INVARIANT BROKEN)
+14280	  run == ownBp (record alone is exact)
+10595	  of records within ATTACH_BP
+9815	  of those, run == ownBp
+10393	  of those, run == ownBp - missingBp and one ownTile
+202	  of those, neither
+16112	by-hapOffset pick holds own steps
+1558	  leading run
+2650	  run != ownBp:missingBp>0
+139	records with own steps in 2+ abridged pieces of this tile
+740	  run != ownBp:missingBp>0 twoOwnTiles
+1241	no abridged piece of the path holds own steps (walk row or none)
+1201	by-hapOffset pick holds NO own steps (a wasted detail read)
+45.80 s, 105084 KB peak, exit 0

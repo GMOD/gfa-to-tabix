@@ -1,0 +1,140 @@
+ 08:59:07 up 118 days, 16:22, 20 users,  load average: 0.34, 0.18, 1.32
+#!/usr/bin/env bash
+# cap.sh <MemoryMax> command...: one capped, niced run with no swap, timed
+m=$1
+shift
+export PATH=$HOME/.local/node/bin:$PATH
+exec systemd-run --user --scope -q -p MemoryMax="$m" -p MemorySwapMax=0 nice -n 10 /usr/bin/time -f "%e s, %M KB peak, exit %x" "$@"
+== hprc-v2.1-mc-chm13.CHM13.walks.gz ATTACH 65536 file bytes 1784550373
+65396	abridged rows
+563	abridged tiles
+61690511	tile bytes on disk
+57080734	tile bytes repacked
+57256543	tile bytes with bp
+57375420	tile bytes with hapEnd
+24550576	blocks bytes on disk
+bp: +175809 bytes, 0.308% of abridged tiles, 0.00985% of the file, worst tile (1454, 'CHM13#0#chr14:13303808 83314->84768')
+hapEnd: +294686 bytes, 0.516% of abridged tiles, 0.01651% of the file, worst tile (3287, 'CHM13#0#chr14:13434880 104578->107865')
+-- records: every ownBp
+0	BP:   overlap != that run (BROKEN)
+25117	BP:   overlap == its one leading or trailing run
+25117	BP: pieces whose stretch meets the own stretch
+0	H:   WRONG (a false size stated)
+18676	H:   right
+18676	H: missingBp 0, one ownTile, no leading piece: say ownBp
+3258	H: still needs the blocks unit
+84	U:   of those, it holds none
+21850	U:   of those, the candidate holds own steps
+0	U:   wrong (BROKEN)
+3267	U: leading piece, run = hapStart + ownBp - hapOffset
+21934	U: trailing candidate, end not in the tile (blocks unit needed)
+3258	V: otherwise the blocks unit is needed
+18676	V: the run is ownBp, so the rejoin piece is the line's next: sound if the reader holds that row
+0	W: pieces holding own steps the rule does not load (WRONG)
+84	W: pieces loaded that hold no own steps (wasted detail read)
+25117	W: pieces loaded that hold own steps
+25864	records naming an abridged tile, path abridged there
+-- records: 0 < ownBp <= 65536
+0	BP:   overlap != that run (BROKEN)
+12521	BP:   overlap == its one leading or trailing run
+12521	BP: pieces whose stretch meets the own stretch
+0	H:   WRONG (a false size stated)
+12016	H:   right
+12016	H: missingBp 0, one ownTile, no leading piece: say ownBp
+254	H: still needs the blocks unit
+39	U:   of those, it holds none
+12231	U:   of those, the candidate holds own steps
+0	U:   wrong (BROKEN)
+290	U: leading piece, run = hapStart + ownBp - hapOffset
+12270	U: trailing candidate, end not in the tile (blocks unit needed)
+254	V: otherwise the blocks unit is needed
+12016	V: the run is ownBp, so the rejoin piece is the line's next: sound if the reader holds that row
+0	W: pieces holding own steps the rule does not load (WRONG)
+39	W: pieces loaded that hold no own steps (wasted detail read)
+12521	W: pieces loaded that hold own steps
+13237	records naming an abridged tile, path abridged there
+-- abridged tiles an attach fetch can name (a record within ATTACH whose path is abridged there)
+357	19768988 blocks bytes, largest 1514652	all such tiles
+331	18606773 blocks bytes, largest 1514652	needing the blocks unit under rule U (tile rows alone)
+53	2363988 blocks bytes, largest 192026	needing it under rule U + H
+53	2363988 blocks bytes, largest 192026	needing it under rule U + V (the reader also holds the rejoin piece's row)
+0	0 blocks bytes	needing it with bp on the abridged row
+-- the ten such tiles with the largest blocks units: blocks bytes, attachable records, undetermined under U, under U + V
+CHM13#0#chr2:92012544	1514652	243	243	0
+CHM13#0#chr2:92078080	1513701	105	105	0
+CHM13#0#chr2:92143616	1364749	109	107	0
+CHM13#0#chr2:91947008	716543	1	1	0
+CHM13#0#chr6:32440320	423103	269	269	0
+CHM13#0#chr22:9109504	376338	198	191	0
+CHM13#0#chr22:9437184	327529	240	240	0
+CHM13#0#chr1:128188416	282492	217	215	0
+CHM13#0#chr21:2162688	261709	8	0	0
+CHM13#0#chr14:13369344	199641	1	0	0
+374.26 s, 60872 KB peak, exit 0
+== hprc-v2.1-mc-grch38.GRCh38.walks.gz ATTACH 65536 file bytes 1580791390
+74053	abridged rows
+461	abridged tiles
+44755634	tile bytes on disk
+40826001	tile bytes repacked
+41005453	tile bytes with bp
+41164606	tile bytes with hapEnd
+18730696	blocks bytes on disk
+bp: +179452 bytes, 0.440% of abridged tiles, 0.01135% of the file, worst tile (4249, 'GRCh38#0#chr2:91422720 101648->105897')
+hapEnd: +338605 bytes, 0.829% of abridged tiles, 0.02142% of the file, worst tile (9033, 'GRCh38#0#chr2:91422720 101648->110681')
+-- records: every ownBp
+0	BP:   overlap != that run (BROKEN)
+17670	BP:   overlap == its one leading or trailing run
+17670	BP: pieces whose stretch meets the own stretch
+0	H:   WRONG (a false size stated)
+14280	H:   right
+14280	H: missingBp 0, one ownTile, no leading piece: say ownBp
+2598	H: still needs the blocks unit
+766	U:   of those, it holds none
+16112	U:   of those, the candidate holds own steps
+0	U:   wrong (BROKEN)
+1558	U: leading piece, run = hapStart + ownBp - hapOffset
+16878	U: trailing candidate, end not in the tile (blocks unit needed)
+2598	V: otherwise the blocks unit is needed
+14280	V: the run is ownBp, so the rejoin piece is the line's next: sound if the reader holds that row
+0	W: pieces holding own steps the rule does not load (WRONG)
+766	W: pieces loaded that hold no own steps (wasted detail read)
+17670	W: pieces loaded that hold own steps
+18772	records naming an abridged tile, path abridged there
+-- records: 0 < ownBp <= 65536
+0	BP:   overlap != that run (BROKEN)
+10595	BP:   overlap == its one leading or trailing run
+10595	BP: pieces whose stretch meets the own stretch
+0	H:   WRONG (a false size stated)
+9815	H:   right
+9815	H: missingBp 0, one ownTile, no leading piece: say ownBp
+687	H: still needs the blocks unit
+152	U:   of those, it holds none
+10350	U:   of those, the candidate holds own steps
+0	U:   wrong (BROKEN)
+245	U: leading piece, run = hapStart + ownBp - hapOffset
+10502	U: trailing candidate, end not in the tile (blocks unit needed)
+687	V: otherwise the blocks unit is needed
+9815	V: the run is ownBp, so the rejoin piece is the line's next: sound if the reader holds that row
+0	W: pieces holding own steps the rule does not load (WRONG)
+152	W: pieces loaded that hold no own steps (wasted detail read)
+10595	W: pieces loaded that hold own steps
+11373	records naming an abridged tile, path abridged there
+-- abridged tiles an attach fetch can name (a record within ATTACH whose path is abridged there)
+269	15601015 blocks bytes, largest 1665231	all such tiles
+258	14443575 blocks bytes, largest 1665231	needing the blocks unit under rule U (tile rows alone)
+17	1433386 blocks bytes, largest 273988	needing it under rule U + H
+17	1433386 blocks bytes, largest 273988	needing it under rule U + V (the reader also holds the rejoin piece's row)
+0	0 blocks bytes	needing it with bp on the abridged row
+-- the ten such tiles with the largest blocks units: blocks bytes, attachable records, undetermined under U, under U + V
+GRCh38#0#chr2:91422720	1665231	3	2	0
+GRCh38#0#chr4:49152000	760442	3	0	0
+GRCh38#0#chr6:32505856	529168	256	256	0
+GRCh38#0#chr14:19267584	446709	1	1	0
+GRCh38#0#chr14:19333120	421562	1	1	0
+GRCh38#0#chr14:19398656	407591	6	5	0
+GRCh38#0#chr8:8060928	393539	26	25	0
+GRCh38#0#chr9:38993920	330174	2	1	0
+GRCh38#0#chr9:39059456	311947	47	47	0
+GRCh38#0#chr6:32636928	287681	78	78	0
+ 09:09:47 up 118 days, 16:32, 20 users,  load average: 2.09, 1.78, 1.67
+265.82 s, 64484 KB peak, exit 0

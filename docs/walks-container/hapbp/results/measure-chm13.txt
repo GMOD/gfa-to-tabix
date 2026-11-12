@@ -1,0 +1,192 @@
+ 08:34:42 up 118 days, 15:57, 20 users,  load average: 0.22, 2.25, 4.96
+## scripts
+## read-scan
+zsh:1: no matches found: genome-accept/*.mjs
+/home/cdiesh/work/blocks/genome/hprc-v2.1-mc-chm13.CHM13.walks.gz: 1689 windows; cut read over 4000000 bytes: 5; bytesFor over it: 0
+  CHM13#0#chr2:92077080-92078080  cut read 4539070  bytesFor 3125787
+  CHM13#0#chr2:92078080-92079080  cut read 4539070  bytesFor 3125787
+  CHM13#0#chr2:92142616-92143616  cut read 4537790  bytesFor 2968116
+  CHM13#0#chr2:92143616-92144616  cut read 4537790  bytesFor 2968116
+  CHM13#0#chr2:92110348-92111348  cut read 4526119  bytesFor 1560619
+  CHM13#0#chr2:92011544-92012544  cut read 3743623  bytesFor 2330340
+  CHM13#0#chr2:92012544-92013544  cut read 3743623  bytesFor 2330340
+  CHM13#0#chr2:92044812-92045812  cut read 2979058  bytesFor 1565775
+  CHM13#0#chr2:92175884-92176884  cut read 2977778  bytesFor 1408104
+  CHM13#0#chr2:91979308-91980308  cut read 2178455  bytesFor 765172
+  CHM13#0#chr2:92208152-92209152  cut read 1526185  bytesFor 1508728
+  CHM13#0#chr2:92209152-92210152  cut read 1526185  bytesFor 1508728
+  CHM13#0#chr15:851971-852971  cut read 1402008  bytesFor 294971
+  CHM13#0#chr21:785447-786447  cut read 1318878  bytesFor 257237
+  CHM13#0#chr20:32440323-32441323  cut read 1213480  bytesFor 346975
+  CHM13#0#chr21:721015-722015  cut read 1211140  bytesFor 392375
+  CHM13#0#chr14:13368351-13369351  cut read 1208357  bytesFor 555993
+  CHM13#0#chr14:13369351-13370351  cut read 1208357  bytesFor 555993
+  CHM13#0#chr21:753231-754231  cut read 1205241  bytesFor 237878
+  CHM13#0#chr20:32472595-32473595  cut read 1204945  bytesFor 276829
+829.45 s, 2003696 KB peak, exit 0
+
+  CHM13#0#chr2:91979308-91980308  cut read 2178455  bytesFor 765172
+  CHM13#0#chr2:92208152-92209152  cut read 1526185  bytesFor 1508728
+  CHM13#0#chr2:92209152-92210152  cut read 1526185  bytesFor 1508728
+  CHM13#0#chr15:851971-852971  cut read 1402008  bytesFor 294971
+  CHM13#0#chr21:785447-786447  cut read 1318878  bytesFor 257237
+  CHM13#0#chr20:32440323-32441323  cut read 1213480  bytesFor 346975
+  CHM13#0#chr21:721015-722015  cut read 1211140  bytesFor 392375
+  CHM13#0#chr14:13368351-13369351  cut read 1208357  bytesFor 555993
+  CHM13#0#chr14:13369351-13370351  cut read 1208357  bytesFor 555993
+  CHM13#0#chr21:753231-754231  cut read 1205241  bytesFor 237878
+  CHM13#0#chr20:32472595-32473595  cut read 1204945  bytesFor 276829
+829.45 s, 2003696 KB peak, exit 0
+## read-scan grch38 tail
+  GRCh38#0#chr9:39059469-39060469  cut read 1135827  bytesFor 765037
+  GRCh38#0#chr6:32570392-32571392  cut read 1135179  bytesFor 1135179
+  GRCh38#0#chr6:32571392-32572392  cut read 1135179  bytesFor 1135179
+  GRCh38#0#chr4:49216761-49217761  cut read 1088177  bytesFor 1088177
+  GRCh38#0#chr4:49217761-49218761  cut read 1088177  bytesFor 1088177
+  GRCh38#0#chr9:40369198-40370198  cut read 1072096  bytesFor 419044
+  GRCh38#0#chr9:40370198-40371198  cut read 1072096  bytesFor 419044
+622.69 s, 2466032 KB peak, exit 0
+## cost
+graph-walks-blocks unloaded CHM13#0#chr2:92078080-92079080 cut 1: 2432 ms, 4539070 bytes in 7 reads; 457 fragments (437 with unloaded pieces), 61748 departures, 1504 gaps, 64046 nodes kept
+graph-walks-blocks unloaded CHM13#0#chr2:92078080-92079080 cut 2: 2173 ms, 4539070 bytes in 7 reads; 457 fragments (437 with unloaded pieces), 61748 departures, 1504 gaps, 64046 nodes kept
+graph-walks-blocks unloaded CHM13#0#chr2:92078080-92079080 cut 3: 2186 ms, 4539070 bytes in 7 reads; 457 fragments (437 with unloaded pieces), 61748 departures, 1504 gaps, 64046 nodes kept
+graph-walks-blocks unloaded peak rss 1429 MB
+7.01 s, 1463764 KB peak, exit 0
+graph-walks-blocks loaded CHM13#0#chr2:92078080-92079080 cut 1: 18539 ms, 21549838 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-blocks loaded CHM13#0#chr2:92078080-92079080 cut 2: 18830 ms, 21549838 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-blocks loaded CHM13#0#chr2:92078080-92079080 cut 3: 21411 ms, 21549838 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-blocks loaded peak rss 9066 MB
+59.27 s, 9284076 KB peak, exit 0
+graph-walks-6.2 unloaded CHM13#0#chr2:92078080-92079080 cut 1: 4103 ms, 150318 bytes in 4 reads; 894 fragments (784 with unloaded pieces), 705 departures, 1157 gaps, 2861 nodes kept
+graph-walks-6.2 unloaded CHM13#0#chr2:92078080-92079080 cut 2: 3592 ms, 150318 bytes in 4 reads; 894 fragments (784 with unloaded pieces), 705 departures, 1157 gaps, 2861 nodes kept
+graph-walks-6.2 unloaded CHM13#0#chr2:92078080-92079080 cut 3: 4055 ms, 150318 bytes in 4 reads; 894 fragments (784 with unloaded pieces), 705 departures, 1157 gaps, 2861 nodes kept
+graph-walks-6.2 unloaded peak rss 1401 MB
+11.94 s, 1434796 KB peak, exit 0
+graph-walks-6.2 loaded CHM13#0#chr2:92078080-92079080 cut 1: 50884 ms, 21554188 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-6.2 loaded CHM13#0#chr2:92078080-92079080 cut 2: 62595 ms, 21554188 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-6.2 loaded CHM13#0#chr2:92078080-92079080 cut 3: 63341 ms, 21554188 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-6.2 loaded peak rss 8233 MB
+177.30 s, 8430916 KB peak, exit 0
+## blocks-units
+CHM13#0#chr1 851968 30330
+CHM13#0#chr1 1507328 4350
+CHM13#0#chr1 1703936 111827
+CHM13#0#chr1 2097152 57962
+CHM13#0#chr1 2162688 50854
+CHM13#0#chr1 2228224 73356
+CHM13#0#chr1 12320768 7827
+CHM13#0#chr1 12648448 32094
+CHM13#0#chr1 15990784 24986
+CHM13#0#chr1 16056320 43598
+CHM13#0#chr1 16121856 181994
+CHM13#0#chr1 16187392 111534
+CHM13#0#chrX 47513600 5577
+CHM13#0#chrX 48889856 12321
+CHM13#0#chrX 154206208 21535
+CHM13#0#chrY 12255232 2521
+CHM13#0#chrY 21037056 1011
+## against7
+111492575 lines; 65396 abridged rows in 563 tiles, 0 with no blocks row; lines that differ: header 0, abridged rows 0, other 0, past the end of one file 0
+against-format7 chm13: 195.94 s, 4353172 KB peak
+expand7: hprc-v2.1-mc-chm13.CHM13.walks.gz: 65396 blocks rows, 65396 pieces in detail units, 0 failures
+expand7 chm13: 874.04 s, 294436 KB peak
+c540e5de Spec: a cut trims a piece to the drawn stretch, and an end at its edge is not the line's end
+gfa-to-tabix 4.0.0
+## claims7
+Command terminated by signal 9
+5130.22 s, 31400548 KB peak, exit 0
+## measure chm13
+#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	bytes:i:1784550373
+#header	0	1335
+CHM13#0#chr1	141422590	173988
+CHM13#0#chr10	210501171	82230
+first bytes 1f8b08040000000000ff0600424302003605
+#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000
+#reference	CHM13
+#haplotype	GRCh38#0
+#haplotype	HG00097#1
+#haplotype	HG00097#2
+#haplotype	HG00099#1
+#haplotype	HG00099#2
+#haplotype	HG00126#1
+#haplotype	HG00126#2
+#haplotype	HG00128#1
+#haplotype	HG00128#2
+#haplotype	HG00133#1
+#haplotype	HG00133#2
+#haplotype	HG00140#1
+#haplotype	HG00140#2
+#haplotype	HG0
+--- tile CHM13#0#chr1 851968: 84739 bytes; blocks unit 30330 bytes, 72 rows
+tile row kinds {'ref': 1, 'nodes': 1, 'route': 7354, 'walk': 407, 'abridged': 72}
+  #unit	CHM13#0#chr1	851995	917509	tile	851968
+  CHM13#0#chr1	851995	917509	ref	CHM13#0#chr1	0	851995	13	10216	1550974,4,4,2,4,4,2,4,2,4,2,4,2,4,2,4,2,4,4,2,2,2,4,2,2,2,4,2,4,2,4,2,2,2,4,2,4,2,4,2,4,2,4,4,2,2,2,2,2,4,2,2,4,4,2,2,2,4,2,4,2,4,2,4,2,2,2,4,2,2,2,2,2,2,4,2,4,2,4,4,2,2,4,2,4,2,2,4,4,2,2,2,4,2,2,2, …[42550 chars]
+  CHM13#0#chr1	851995	917509	nodes	775490,11,3,3,3,3,7,5,3,3,8,9,2,18,3,6,5,8,3,3,2,4,9,14,2,7,20,10,12,5,6,7,13,10,21,56,18,11,4,8,5,4,6,22,22,5,8,12,2,37,13,7,4,15,16,11,16,13,11,37,5,15,2,3,2,29,14,5,9,7,18,5,8,15,3,3,11,8,3,1,1,1,1,1,1,6,14,13,1,1,1,6,8,3,2, …[27155 chars]
+  CHM13#0#chr1	851995	917509	route	1550974	6	2
+  CHM13#0#chr1	851995	917509	route	16	4	2
+  CHM13#0#chr1	851995	917509	walk	GRCh38#0#chr1	585988	1420065	13	8235	1550974	402,2168,238,1580,186,106,116,6,1504,10,174,706,10,12,64,32,22,12,10,10,1494,20,12,8,34,14,64,76,16,1802,960,4,470,12,66,532,468,236,266,432,250,2,70
+  CHM13#0#chr1	851995	917509	walk	HG00097#1#CM094060.1	3554	857707	13	9260	1550974	402,2236,198,8,1322,192,30,186,1840,68,14,430,216,330,52,78,18,2,216,42,430,4094,548,972,680,2,70
+  CHM13#0#chr1	851995	917509	abridged	HG02523#1#JBHDTT010000058.1	0	858884	13	10336	0
+  CHM13#0#chr1	851995	917509	abridged	HG00290#1#CM089978.1	9961	864304	13	9593	1
+  
+  #unit	CHM13#0#chr1	851995	917509	blocks	851968
+  CHM13#0#chr1	851995	917509	blocks	HG02523#1#JBHDTT010000058.1	0	13	851995+137,1,1+212,1,1+225,15,0+528,1,1+910,1,1+530,1,1+215,1,1+233,1,1+128,1,1+151,1,1+24,1,1+24,1,1+84,1,1+283,3+10,5,1+181,4,0+14,1,1+106,1,1+23,1,1+117,1,1+507,1,0+48,1,1+235,1,1+121,1,1+32 …[1889 chars]
+  CHM13#0#chr1	851995	917509	blocks	HG00290#1#CM089978.1	9961	13	851995+137,1,1+212,1,1+225,15,0+528,1,1+910,1,1+530,1,1+215,1,1+120,1+112,1,1+37,1,0+91,1,1+151,1,1+24,1,1+24,1,1+84,1,1+283,3+10,3,1+181,4,0+14,1,1+106,1,1+23,1,1+117,1,1+437,1,1+69,1,0+48,1,1+235 …[5509 chars]
+  CHM13#0#chr1	851995	917509	blocks	HG02178#2#CM089934.1	9829	13	851995+4662,1,0+1524,1,1+7,1,1+548,1,1+686,1,0+123,1+81,1+81,1+17,1,0+189,1,1+95,1,0+26,1,0+21,1+1,1,1+9,1,1+3,5+5,1,1+45,1,0+25,1+2,7,0+26,1,0+80,150+9,1,1+1,1,0+21,1,1+8,1,1+26,1,1+1,711+1,2+38,3 …[1629 chars]
+--- tile CHM13#0#chr1 1507328: 102390 bytes; blocks unit 4350 bytes, 13 rows
+tile row kinds {'ref': 1, 'nodes': 1, 'route': 4370, 'walk': 450, 'abridged': 13}
+  #unit	CHM13#0#chr1	1507465	1573041	tile	1507328
+  CHM13#0#chr1	1507465	1573041	ref	CHM13#0#chr1	0	1507465	23	4182	1669392,4,2,4,2,4,2,4,2,6,2,2,4,2,4,2,4,2,4,2,2,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,2,4,4,2,6,2,2,4,2,4,2,4,2,4, …[18101 chars]
+  CHM13#0#chr1	1507465	1573041	nodes	834700,3,3,3,1,4,3,3,3,5,3,3,3,3,3,3,3,3,3,3,3,3,3,6,3,3,3,3,3,3,3,6,3,3,3,3,3,3,2,3,1,4,3,3,3,3,3,3,2,3,4,3,3,3,3,3,3,3,3,3,3,5,3,3,3,3,3,3,3,2,3,3,3,3,3,5,3,3,3,3,3,3,3,3,3,5,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, …[46781 chars]
+  CHM13#0#chr1	1507465	1573041	route	1669396	4	2
+  CHM13#0#chr1	1507465	1573041	route	0	4	2
+  CHM13#0#chr1	1507465	1573041	walk	GRCh38#0#chr1	585988	2071946	23	4375	1669392	870,26,20,56,12,8,18,56,34,30,8,12,10,14,34,16,54,24,4,2,2,14,34,116,64,156,98,6,376,70,40,2,12,26,16,14,16,2,2,6,38,16,16,28,4,30,14,20,60,4,70,40,26,50,38,16,24,16,36,10,2,116,14, …[774 chars]
+  CHM13#0#chr1	1507465	1573041	walk	HG00097#1#CM094060.1	3554	1563891	23	4836	1669392	1438,2,2,8,14,38,34,86,64,4,6,10,286,226,28,2,8,22,4,2,6,26,62,18,16,22,16,8,24,30,20,4,6,2,2,16,18,8,2,2,14,2,2,28,18,12,6,36,10,34,10,4,12,12,24,8,10,40,2,12,50,10,50,70,8,10 …[937 chars]
+  CHM13#0#chr1	1507465	1573041	abridged	HG03041#2#CM088727.1	6650	1511127	23	6132	0
+  CHM13#0#chr1	1507465	1573041	abridged	HG04157#2#CM088436.1	10050	1522299	23	6059	1
+  
+  #unit	CHM13#0#chr1	1507465	1573041	blocks	1507328
+  CHM13#0#chr1	1507465	1573041	blocks	HG03041#2#CM088727.1	6650	23	1507465+607,1+104,1,1+848,1,1+792,1,1+367,1,1+18,1,1+166,1,0+7,1,1+426,1,1+652,1,1+292,1,1+512,1+196,1,1+57,1,1+1,1,1+291,1,1+1839,1,1+539,1,1+224,1,1+427,18,0+189,1,1+459,1,1+95,1,1+638,1,1+327, …[1780 chars]
+  CHM13#0#chr1	1507465	1573041	blocks	HG04157#2#CM088436.1	10050	23	1507465+607,1+104,1,1+407,1,1+440,1,1+792,1,1+64,1,1+302,1,1+18,1,1+166,1,0+434,1,1+652,1,1+292,1,1+512,1+196,1,1+57,1,1+1,1,1+243,1,1+47,1,1+1811,1,1+21,1,1+5,1,1+156,1,1+382,1,1+224,1,1+616,1, …[1911 chars]
+  CHM13#0#chr1	1507465	1573041	blocks	NA19240#1#CM099576.1	4819	23	1507465+607,1+953,1,1+792,1,1+367,1,1+332,1,1+286,1,1+945,1,1+709,1,1+57,1,1+1,1,1+291,1,1+849,1,1+698,1,0+448,1,1+118,1,1+141,1,1+346,1,1+30,1,1+585,1,1+459,1,1+327,1,1+3222,1,1+1202,55,0+28,1,1 …[1756 chars]
+  CHM13#0#chr1	1572838	1573148	departure	HG01346#1#JBHDSR010000049.1	1602507	1	0	1573041	+	1	1573042	+	1	1507328
+  CHM13#0#chr1	1572838	1573148	departure	NA18943#2#CM101685.1	1502819	1	0	1573041	+	1	1573042	+	1	1507328
+  CHM13#0#chr1	1572838	1573148	departure	NA18952#2#CM089808.1	1587806	1	0	1573041	+	1	1573042	+	1	1507328
+== totals hprc-v2.1-mc-chm13.CHM13.walks.gz
+tileBytesAll	1155067388
+blocksBytesAll	24550576
+departureBytesAll	58718495
+detailBytesAll	544090569
+blocksRows	65396
+badItem	0
+spanMismatch	0
+abridgedRows	65396
+abridgedSpanMismatch	0
+after>0	22364
+before>0	3949
+unitsOutOfTileOrder	0
+abridgedTiles	563
+tileDisk	61690511
+tileRe	65434415
+tileWithBp	65607551
+blocksDisk	24550576
+blocksRe	25699395
+blocksWithHap	26046689
+worst tile growth (1378, 'CHM13#0#chr14:3670016 127524->128902')
+worst blocks growth (5421, 'CHM13#0#chr14:13434880 197948->203369')
+== departure records against abridged pieces
+3	shownRec
+25864	records naming an abridged tile, path abridged there
+25117	pieces holding own steps
+21850	  trailing run
+25117	  overlap == the run (invariant holds)
+0	  overlap != the run (INVARIANT BROKEN)
+18676	  run == ownBp (record alone is exact)
+21850	by-hapOffset pick holds own steps
+3267	  leading run
+2969	  run != ownBp:missingBp>0
+3472	  run != ownBp:missingBp>0 twoOwnTiles
+85	records with own steps in 2+ abridged pieces of this tile
+832	no abridged piece of the path holds own steps (walk row or none)
+506	by-hapOffset pick holds NO own steps (a wasted detail read)
+61.48 s, 87180 KB peak, exit 0

@@ -1120,6 +1120,45 @@ fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
     }
 }
 
+// The graphs the hapBp reviews built, each abridged whole: a hairpin that
+// leaves a tile and comes back, so one W line has two pieces of different bp
+// in one tile; own steps before a later W line, on another sequence and in a
+// W line off the reference; a record whose own steps lie in two pieces. Every
+// abridged row's hapBp, its piece's end and each record's own run are checked
+// as `decode_file` reads them
+#[test]
+fn the_hap_bp_graphs_rebuild_with_every_abridged_row_and_record_checked() {
+    for gfa in [
+        "adv.gfa",
+        "hairpin.gfa",
+        "hairpin-span.gfa",
+        "pick-wrong.gfa",
+        "twin-midline-A.gfa",
+        "twin-midline-B.gfa",
+        "twin-otherseq-A.gfa",
+        "twin-otherseq-B.gfa",
+        "twin-own-690.gfa",
+        "twin-own-700.gfa",
+        "two-pieces.gfa",
+        "two-pieces-one-tile.gfa",
+    ] {
+        for options in [
+            &["--tile", "12", "--stay", "0", "--abridge-bytes", "1"][..],
+            &["--tile", "10", "--abridge-steps", "1"][..],
+        ] {
+            let built = build(&hapbp_fixture(gfa), &[&["--refs", "R"], options].concat());
+            let stderr = String::from_utf8_lossy(&built.output.stderr);
+            assert!(built.output.status.success(), "{gfa}: {stderr}");
+            assert!(built.file("R").contains("\tabridged\t"), "{gfa}");
+            assert_rebuilds(
+                &fs::read_to_string(hapbp_fixture(gfa)).unwrap(),
+                &built,
+                &["R"],
+            );
+        }
+    }
+}
+
 // Under --abridge-bytes n, every tile that keeps a walk row has rows, other
 // than its abridged rows and from kind on, newlines included, of at most n
 // bytes
