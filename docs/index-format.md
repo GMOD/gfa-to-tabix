@@ -48,8 +48,10 @@ the file has; see
 - Paths are P lines or W lines, named `sample#haplotype#contig` (PanSN) where
   possible
 - Command: `gfa-to-tabix graph.gfa.gz --reference K12 -o prefix`
-- `--reference` takes a PanSN sample, an assembly or a path name, with or
-  without the `:start-end` range pggb appends. A sample with several
+- `--reference` takes a PanSN sample, an assembly or a path name. A path
+  name is the sequence name its line reads as (below) or the name as the P
+  line writes it, suffix and all; the tool reads no suffix out of the
+  option's own text. A sample with several
   haplotypes anchors on the first in byte order, `HG002#1` before `HG002#2`
 - `--reference` also takes a comma-separated list, and every assembly an item
   names is reference, at rank 0. A genome whose paths have no PanSN names
@@ -67,10 +69,14 @@ the file has; see
   for any order of the P and W lines, which `vg convert` changes from run to
   run
 - **Where a path starts:** a W line at its start column. A P line at the
-  start its name's suffix gives, read as [walk files](walks-format.md#ref)
-  read it, and the suffix leaves the sequence name; a P line without one
-  starts at 0. So `P REF#0#chr:100-109` puts its first node at
-  `REF#0#chr` 100
+  start its name gives, read by the one rule
+  [walk files](walks-format.md#path-names) read it by, and what the rule
+  reads leaves the sequence name; a P line with no suffix starts at 0. So
+  `P REF#0#chr:100-109` over 9 bp puts its first node at `REF#0#chr` 100,
+  and over any other length it is the sequence `REF#0#chr:100-109` from 0
+- **Refused, as `--walks` refuses them:** a P line whose name states an end
+  its steps don't reach or is a suffix alone, and two lines of one sequence
+  that overlap or start at the same base
 - **Segments no path visits** have no row, nor do their links; the tool
   counts them on stderr
 - **Blunt graphs only:** summing node lengths gives the path coordinate only

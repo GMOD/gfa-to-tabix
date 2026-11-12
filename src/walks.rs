@@ -17,7 +17,10 @@ use std::thread;
 use std::time::Instant;
 
 use crate::departures::{self, Departure, End, Holes, Own};
-use crate::gfa::{blunt_error, is_blunt, parse_u64, split_path_name, text};
+use crate::gfa::{
+    blunt_error, collision, haplotype, is_blunt, parse_u64, read_path_name, sample, text,
+    w_coordinate,
+};
 use crate::intern::{FastMap, Interner};
 use crate::node_ids::{NO_SEGMENT, NodeIds, ZERO_BP, permute};
 use crate::routes::{self, PieceRef, Span, Stretch};
@@ -60,11 +63,10 @@ fn node_id(bytes: &[u8]) -> Result<u32, String> {
     }
 }
 
-// A P or W line: the PanSN sample, the name its rows carry, where the path
-// starts and (on a W line) ends on that sequence, and its steps as handles,
-// 2 * id + reverse.
+// A P or W line: the name its rows carry, where the path starts and (on a W
+// line) ends on that sequence, and its steps as handles, 2 * id + reverse. A
+// P line holds its name as written, from 0, until `settle` reads it.
 struct PathLine<'a> {
-    sample: &'a [u8],
     name: Vec<u8>,
     start: u64,
     end: Option<u64>,
@@ -84,8 +86,8 @@ fn past_max(path: &[u8], what: &str, at: u64) -> String {
 }
 
 // Refuses a name a walk file's line would read as a header or `#unit` line,
-// one holding a NUL byte, which ends a name in the writer's sort, and a line
-// that starts past the highest coordinate
+// one holding a NUL byte, which ends a name in the writer's sort, and a W
+// line that starts past the highest coordinate, as `settle` does a P line
 fn named(path: PathLine) -> Result<Option<PathLine>, String> {
     if path.start > MAX_COORDINATE {
         Err(past_max(&path.name, "starts", path.start))
@@ -116,10 +118,9 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
                 ))
             } else {
                 named(PathLine {
-                    sample: cols[0],
                     name: [cols[0], cols[1], cols[2]].join(&b'#'),
-                    start: parse_u64(cols[3], "W line start")?,
-                    end: Some(parse_u64(cols[4], "W line end")?),
+                    start: w_coordinate(cols[3], "W line start")?,
+                    end: Some(w_coordinate(cols[4], "W line end")?),
                     steps: cols[5],
                     walk: true,
                 })
@@ -140,18 +141,59 @@ fn path_line(line: &[u8]) -> Result<Option<PathLine<'_>>, String> {
                     text(bad)
                 )));
             }
-            let (name, start) = split_path_name(cols[0]);
-            named(PathLine {
-                sample: name.split(|&b| b == b'#').next().unwrap_or(name),
-                name: name.to_vec(),
-                start,
-                end: None,
-                steps: cols[1],
-                walk: false,
-            })
+            if cols[1].contains(&b';') {
+                Err(format!(
+                    "path {} has a `;` between steps, a GFA 1.2 jump: it joins two segments no \
+                     link joins, over a distance the line doesn't state, so no step after it has \
+                     an offset. Split the line at each `;` into P lines named with their starts, \
+                     such as name[start]",
+                    text(cols[0])
+                ))
+            } else {
+                named(PathLine {
+                    name: cols[0].to_vec(),
+                    start: 0,
+                    end: None,
+                    steps: cols[1],
+                    walk: false,
+                })
+            }
         }
         _ => Ok(None),
     }
+}
+
+impl PathLine<'_> {
+    fn sample(&self) -> &[u8] {
+        sample(&self.name)
+    }
+}
+
+// A P line's path and start, which its name gives once its steps' bp are known,
+// refused where it starts past the highest coordinate
+fn settle(path: PathLine, bp: u64) -> Result<PathLine, String> {
+    if path.walk {
+        Ok(path)
+    } else {
+        let (name, start) =
+            read_path_name(&path.name, bp).map(|(name, start)| (name.to_vec(), start))?;
+        if start > MAX_COORDINATE {
+            Err(past_max(&name, "starts", start))
+        } else {
+            Ok(PathLine {
+                name,
+                start,
+                ..path
+            })
+        }
+    }
+}
+
+fn bp_of(handles: &[u32], lengths: &[u32]) -> u64 {
+    handles
+        .iter()
+        .map(|&h| u64::from(lengths[(h >> 1) as usize]))
+        .sum()
 }
 
 fn no_segment(path: &PathLine, id: u32) -> String {
@@ -609,33 +651,43 @@ fn first_pass(
                     return Ok(());
                 };
                 let unknown = parse_steps(&path, &nodes, &mut handles)?;
-                if unknown.is_none() && handles.is_empty() {
-                    record(&path, NONE, path.start)?;
+                if unknown.is_some() && !path.walk {
+                    deferred.push((number, records.len()));
+                    records.push(Record {
+                        name: NONE,
+                        start: 0,
+                        end: 0,
+                    });
                 } else {
-                    let sample = samples.id(path.sample) as usize;
-                    stepped.resize(samples.len(), false);
-                    let name = names.id(&path.name);
-                    if unknown.is_none() {
-                        stepped[sample] = true;
-                        ids.clear();
-                        ids.extend(handles.iter().map(|h| h >> 1));
-                        let end = stable.visit(names, name, path.start, &ids, &lengths);
-                        records.push(record(&path, name, end)?);
-                        if let Some(reference) = reference_of(path.sample) {
-                            ref_walks.push(RefWalk {
-                                reference,
+                    let path = settle(path, bp_of(&handles, &lengths))?;
+                    if unknown.is_none() && handles.is_empty() {
+                        record(&path, NONE, path.start)?;
+                    } else {
+                        let sample = samples.id(path.sample()) as usize;
+                        stepped.resize(samples.len(), false);
+                        let name = names.id(&path.name);
+                        if unknown.is_none() {
+                            stepped[sample] = true;
+                            ids.clear();
+                            ids.extend(handles.iter().map(|h| h >> 1));
+                            let end = stable.visit(names, name, path.start, &ids, &lengths);
+                            records.push(record(&path, name, end)?);
+                            if let Some(reference) = reference_of(path.sample()) {
+                                ref_walks.push(RefWalk {
+                                    reference,
+                                    name,
+                                    start: path.start,
+                                    handles: handles.clone(),
+                                });
+                            }
+                        } else {
+                            deferred.push((number, records.len()));
+                            records.push(Record {
                                 name,
                                 start: path.start,
-                                handles: handles.clone(),
+                                end: path.start,
                             });
                         }
-                    } else {
-                        deferred.push((number, records.len()));
-                        records.push(Record {
-                            name,
-                            start: path.start,
-                            end: path.start,
-                        });
                     }
                 }
             }
@@ -670,15 +722,18 @@ fn first_pass(
             if let Some(id) = parse_steps(&path, &nodes, &mut handles)? {
                 return Err(no_segment(&path, id));
             }
+            let path = settle(path, bp_of(&handles, &lengths))?;
             records[at] = if handles.is_empty() {
                 record(&path, NONE, path.start)?
             } else {
                 let name = names.id(&path.name);
-                stepped[samples.get(path.sample).expect("named in the first read") as usize] = true;
+                let sample = samples.id(path.sample()) as usize;
+                stepped.resize(samples.len(), false);
+                stepped[sample] = true;
                 ids.clear();
                 ids.extend(handles.iter().map(|h| h >> 1));
                 let end = stable.visit(names, name, path.start, &ids, &lengths);
-                if let Some(reference) = reference_of(path.sample) {
+                if let Some(reference) = reference_of(path.sample()) {
                     ref_walks.push(RefWalk {
                         reference,
                         name,
@@ -951,20 +1006,13 @@ struct Builder {
     pieces: Vec<(usize, usize)>,
 }
 
-// A path's PanSN haplotype, `sample#haplotype`: its name up to the second `#`.
-fn haplotype(name: &[u8]) -> &[u8] {
-    match name.iter().enumerate().filter(|&(_, &b)| b == b'#').nth(1) {
-        Some((at, _)) => &name[..at],
-        None => name,
-    }
-}
-
 impl Builder {
-    fn path(&mut self, path: &PathLine) -> Result<(), String> {
+    fn path(&mut self, path: PathLine) -> Result<(), String> {
         let mut handles = std::mem::take(&mut self.handles);
-        let result = match parse_steps(path, &self.graph.nodes, &mut handles) {
-            Ok(None) => self.cut_path(path, &handles),
-            Ok(Some(id)) => Err(no_segment(path, id)),
+        let result = match parse_steps(&path, &self.graph.nodes, &mut handles) {
+            Ok(None) => settle(path, bp_of(&handles, &self.graph.lengths))
+                .and_then(|path| self.cut_path(&path, &handles)),
+            Ok(Some(id)) => Err(no_segment(&path, id)),
             Err(e) => Err(e),
         };
         self.handles = handles;
@@ -986,7 +1034,7 @@ impl Builder {
         self.paths += 1;
         self.steps += handles.len() as u64;
         for r in 0..self.references.len() {
-            let own = (self.references[r].sample == path.sample).then(|| {
+            let own = (self.references[r].sample == path.sample()).then(|| {
                 (
                     self.names
                         .get(&path.name)
@@ -1106,7 +1154,7 @@ impl Builder {
         handles: &[u32],
         pieces: &[(usize, usize)],
     ) -> Result<(), String> {
-        let reference = self.references[r].sample == path.sample;
+        let reference = self.references[r].sample == path.sample();
         self.positions.clear();
         if !reference {
             self.positions.extend(self.pass.iter().map(|v| {
@@ -1503,15 +1551,9 @@ fn link_records(records: &[Record], names: &Interner) -> Result<Vec<Link>, Strin
         if a.name != b.name {
             continue;
         }
-        let name = text(&names[a.name as usize]);
-        if a.start == b.start {
-            return Err(format!("path {name} has two lines starting at {}", a.start));
-        }
-        if b.start < a.end {
-            return Err(format!(
-                "path {name}: the line covering {}-{} overlaps the one covering {}-{}",
-                a.start, a.end, b.start, b.end
-            ));
+        let name = &names[a.name as usize];
+        if let Some(refusal) = collision(name, (a.start, a.end), (b.start, b.end)) {
+            return Err(refusal);
         }
         links[pair[0] as usize].next = pair[1];
     }
@@ -1878,7 +1920,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     };
     read_lines(gfa, |_, line| match line.first() {
         Some(b'W' | b'P') if line.get(1) == Some(&b'\t') => match path_line(line)? {
-            Some(path) => builder.path(&path),
+            Some(path) => builder.path(path),
             None => Ok(()),
         },
         _ => Ok(()),

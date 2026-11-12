@@ -62,9 +62,12 @@ impl Step {
 }
 
 pub struct Path {
+    pub line: usize,
+    pub written: Vec<u8>,
     pub name: Vec<u8>,
     pub start: u64,
     pub steps: Vec<Step>,
+    pub walk: bool,
 }
 
 #[derive(Default)]
@@ -77,6 +80,7 @@ pub struct Graph {
     pub links: Vec<Link>,
     pub paths: Vec<Path>,
     pub overlap: Option<String>,
+    pub misnamed: Option<String>,
 }
 
 pub fn text(bytes: &[u8]) -> String {
@@ -105,34 +109,120 @@ pub fn blunt_error(what: &str) -> String {
     )
 }
 
-// A P line's name and where its piece starts. `vg convert` writes a path piece
-// as `sample#hap#contig[start-end]` or, for a haplotype,
-// `sample#hap#contig#start`; `odgi extract` writes `name:start-end`.
-pub fn split_path_name(name: &[u8]) -> (&[u8], u64) {
-    let number = |s: &[u8]| parse_u64(s, "").ok();
-    if let Some(inner) = name.strip_suffix(b"]")
-        && let Some(open) = inner.iter().rposition(|&b| b == b'[')
-        && let Some(start) = inner[open + 1..]
-            .split(|&b| b == b'-')
-            .next()
-            .and_then(number)
-    {
-        return (&name[..open], start);
+pub fn w_coordinate(bytes: &[u8], what: &str) -> Result<u64, String> {
+    if bytes == b"*" {
+        Err(format!(
+            "{what} is *, which GFA allows but which states no offset on the contig, \
+             so the line can't be placed; write the line's start and end"
+        ))
+    } else {
+        parse_u64(bytes, what)
     }
-    if name.iter().filter(|&&b| b == b'#').count() == 3
-        && let Some(hash) = name.iter().rposition(|&b| b == b'#')
-        && let Some(start) = number(&name[hash + 1..])
-    {
-        return (&name[..hash], start);
+}
+
+struct Suffix {
+    at: usize,
+    start: u64,
+    end: Option<u64>,
+}
+
+// `start` or `start-end` after the last `open` of `name`
+fn suffix(name: &[u8], open: u8) -> Option<Suffix> {
+    let number = |digits: &[u8]| parse_u64(digits, "").ok();
+    let at = name.iter().rposition(|&b| b == open)?;
+    let mut ends = name[at + 1..].splitn(2, |&b| b == b'-');
+    let start = ends.next().and_then(number)?;
+    match ends.next() {
+        None => Some(Suffix {
+            at,
+            start,
+            end: None,
+        }),
+        Some(end) => number(end).map(|end| Suffix {
+            at,
+            start,
+            end: Some(end),
+        }),
     }
-    if let Some(colon) = name.iter().rposition(|&b| b == b':')
-        && let [start, end] = name[colon + 1..].split(|&b| b == b'-').collect::<Vec<_>>()[..]
-        && number(end).is_some()
-        && let Some(start) = number(start)
-    {
-        return (&name[..colon], start);
+}
+
+// A P line's path and where the line starts on it, read from the right of
+// its name once the bp of its steps are known: odgi's `:start-end` where the
+// steps span it, beneath it vg's `[start]` or `[start-end]`, beneath that the
+// digits of a fourth `#` field. The starts add up (docs/walks-format.md, ADR
+// 0014).
+pub fn read_path_name(name: &[u8], bp: u64) -> Result<(&[u8], u64), String> {
+    let spans = |range: &Suffix| range.end.and_then(|end| end.checked_sub(range.start)) == Some(bp);
+    let colon = suffix(name, b':').filter(|cut| bp > 0 && spans(cut));
+    let uncut = colon.as_ref().map_or(name, |cut| &name[..cut.at]);
+    let bracket = uncut
+        .strip_suffix(b"]")
+        .and_then(|inner| suffix(inner, b'['));
+    let whole = bracket.as_ref().map_or(uncut, |piece| &uncut[..piece.at]);
+    let fourth = (whole.iter().filter(|&&b| b == b'#').count() == 3)
+        .then(|| suffix(whole, b'#'))
+        .flatten()
+        .filter(|field| field.end.is_none());
+    let path = fourth.as_ref().map_or(whole, |field| &whole[..field.at]);
+    let start = [&colon, &bracket, &fourth]
+        .iter()
+        .try_fold(0u64, |sum, layer| {
+            sum.checked_add(layer.as_ref().map_or(0, |suffix| suffix.start))
+        });
+    let stated_end = bracket
+        .as_ref()
+        .filter(|piece| colon.is_none() && !spans(piece))
+        .and_then(|piece| piece.end.map(|end| (piece.start, end)));
+    match (stated_end, start) {
+        (Some((start, end)), _) => Err(format!(
+            "path {}: the [start-end] in its name ends at {end}, but its steps from {start} end at {}",
+            text(name),
+            start.saturating_add(bp)
+        )),
+        _ if name.is_empty() => Err("a P line has an empty name".into()),
+        _ if path.is_empty() => Err(format!(
+            "path {}: its name is only a start, with no name before it",
+            text(name)
+        )),
+        (_, None) => Err(format!(
+            "path {}: the starts in its name add up past 2^64",
+            text(name)
+        )),
+        (_, Some(start)) => Ok((path, start)),
     }
-    (name, 0)
+}
+
+// Why two lines of one path can't both stand, the stretch `first` covers
+// starting no later than `second`'s: they share a start or overlap
+pub fn collision(path: &[u8], first: (u64, u64), second: (u64, u64)) -> Option<String> {
+    let path = text(path);
+    if first.0 == second.0 {
+        Some(format!("path {path} has two lines starting at {}", first.0))
+    } else if second.0 < first.1 {
+        Some(format!(
+            "path {path}: the line covering {}-{} overlaps the one covering {}-{}. \
+             Where vg wrote the lines from a VCF-phased GBWT, the fourth field of a P \
+             line's name and a W line's start column number phase blocks, which this \
+             tool can't tell from starts",
+            first.0, first.1, second.0, second.1
+        ))
+    } else {
+        None
+    }
+}
+
+pub fn sample(path: &[u8]) -> &[u8] {
+    path.split(|&b| b == b'#').next().unwrap_or(path)
+}
+
+// What a path is listed under: `sample#haplotype` where its name has three
+// fields or more, its sample where it has fewer
+pub fn haplotype(path: &[u8]) -> &[u8] {
+    let mut hashes = memchr::memchr_iter(b'#', path);
+    match (hashes.next(), hashes.next()) {
+        (Some(_), Some(second)) => &path[..second],
+        _ => sample(path),
+    }
 }
 
 impl Graph {
@@ -147,15 +237,41 @@ impl Graph {
             match cols[0] {
                 b"S" => graph.segment(&cols),
                 b"L" => graph.link(&cols),
-                b"P" => graph.p_line(&cols),
-                b"W" => graph.w_line(&cols),
+                b"P" => graph.p_line(&cols, number + 1),
+                b"W" => graph.w_line(&cols, number + 1),
                 _ => Ok(()),
             }
             .map_err(|e| format!("line {}: {e}", number + 1))?;
         }
         let mut seen = HashSet::with_capacity(graph.links.len());
         graph.links.retain(|link| seen.insert(link.key()));
+        graph.name_paths();
         Ok(graph)
+    }
+
+    // Reads each P line's name, its steps' lengths now known. A line on a
+    // segment with no length keeps its name: no placement gets past it
+    fn name_paths(&mut self) {
+        let Graph {
+            paths,
+            lengths,
+            misnamed,
+            ..
+        } = self;
+        for path in paths.iter_mut().filter(|path| !path.walk) {
+            let bp: Option<u64> = path
+                .steps
+                .iter()
+                .map(|step| lengths[step.node() as usize])
+                .sum();
+            match bp.map(|bp| read_path_name(&path.written, bp)) {
+                Some(Ok((name, start))) => (path.name, path.start) = (name.to_vec(), start),
+                Some(Err(e)) => {
+                    misnamed.get_or_insert(format!("line {}: {e}", path.line));
+                }
+                None => {}
+            }
+        }
     }
 
     fn node(&mut self, id: &[u8]) -> u32 {
@@ -245,7 +361,7 @@ impl Graph {
         Ok(())
     }
 
-    fn p_line(&mut self, cols: &[&[u8]]) -> Result<(), String> {
+    fn p_line(&mut self, cols: &[&[u8]], line: usize) -> Result<(), String> {
         if cols.len() < 3 {
             return Err("P line with too few fields".into());
         }
@@ -259,8 +375,6 @@ impl Graph {
                 text(bad)
             ));
         }
-        let (name, start) = split_path_name(cols[1]);
-        let name = name.to_vec();
         let mut steps = Vec::new();
         for step in cols[2].split(|&b| b == b',').filter(|s| !s.is_empty()) {
             let (id, reversed) = match step.split_last() {
@@ -276,11 +390,18 @@ impl Graph {
             };
             steps.push(Step::new(self.node(id), reversed));
         }
-        self.paths.push(Path { name, start, steps });
+        self.paths.push(Path {
+            line,
+            written: cols[1].to_vec(),
+            name: cols[1].to_vec(),
+            start: 0,
+            steps,
+            walk: false,
+        });
         Ok(())
     }
 
-    fn w_line(&mut self, cols: &[&[u8]]) -> Result<(), String> {
+    fn w_line(&mut self, cols: &[&[u8]], line: usize) -> Result<(), String> {
         if cols.len() < 7 {
             return Err("W line with too few fields".into());
         }
@@ -292,7 +413,7 @@ impl Graph {
             ));
         }
         let name = [cols[1], cols[2], cols[3]].join(&b'#');
-        let start = parse_u64(cols[4], "W line start")?;
+        let start = w_coordinate(cols[4], "W line start")?;
         let mut steps = Vec::new();
         let mut rest = walk;
         while let Some((&strand, tail)) = rest.split_first() {
@@ -302,7 +423,14 @@ impl Graph {
             }
             rest = &tail[end..];
         }
-        self.paths.push(Path { name, start, steps });
+        self.paths.push(Path {
+            line,
+            written: name.clone(),
+            name,
+            start,
+            steps,
+            walk: true,
+        });
         Ok(())
     }
 
@@ -401,31 +529,113 @@ mod tests {
         assert!(error.contains("strand x is not + or -"), "{error}");
     }
 
+    const NAMES: &str = include_str!("../docs/walks-container/dialect/p-names.tsv");
+
+    fn refusal(error: &str) -> &'static str {
+        if error.contains("the [start-end] in its name ends at") {
+            "end"
+        } else if error.contains("its name is only a start") || error.contains("an empty name") {
+            "empty"
+        } else {
+            "other"
+        }
+    }
+
     #[test]
-    fn a_path_piece_name_gives_its_start() {
-        let names = [
-            "G#0#chr1[100-106]",
-            "G#0#chr1[100]",
-            "G#1#chr1#100",
-            "G#0#chr1:100-106",
-            "M#1#c#d#7",
-        ];
-        let text: String = names.iter().map(|n| format!("P\t{n}\ta+\t*\n")).collect();
-        let graph = Graph::read(text.as_bytes()).unwrap();
-        let read: Vec<(&[u8], u64)> = graph
-            .paths
-            .iter()
-            .map(|p| (p.name.as_slice(), p.start))
+    fn a_p_line_name_reads_as_the_shared_table_says() {
+        let rows: Vec<Vec<&str>> = NAMES
+            .lines()
+            .skip(1)
+            .map(|row| row.split('\t').collect())
             .collect();
-        assert_eq!(
-            read,
-            [
-                (b"G#0#chr1".as_slice(), 100),
-                (b"G#0#chr1", 100),
-                (b"G#1#chr1", 100),
-                (b"G#0#chr1", 100),
-                (b"M#1#c#d#7", 0),
+        assert!(rows.len() > 60);
+        for row in rows {
+            let (name, bp) = (row[0].as_bytes(), row[1].parse().unwrap());
+            let read = match read_path_name(name, bp) {
+                Ok((path, start)) => [text(path), start.to_string(), text(haplotype(path))],
+                Err(e) => ["refused".into(), refusal(&e).into(), ".".into()],
+            };
+            assert_eq!(read[..], row[2..], "{} of {bp} bp", row[0]);
+        }
+    }
+
+    #[test]
+    fn the_specs_table_of_p_line_names_reads_as_it_says() {
+        let rows: Vec<Vec<&str>> = include_str!("../docs/walks-format.md")
+            .lines()
+            .skip_while(|line| !line.starts_with("| P line name |"))
+            .skip(2)
+            .take_while(|line| line.starts_with('|'))
+            .map(|line| {
+                line.trim_matches('|')
+                    .split('|')
+                    .map(|cell| cell.trim().trim_matches('`'))
+                    .collect()
+            })
+            .collect();
+        assert_eq!(rows.len(), 11);
+        for row in rows {
+            let said = match read_path_name(row[0].as_bytes(), row[1].parse().unwrap()) {
+                Ok((path, start)) => [text(path), start.to_string()],
+                Err(_) => ["refused".into(), String::new()],
+            };
+            assert_eq!(said[..], row[2..4], "{}", row[0]);
+        }
+    }
+
+    #[test]
+    fn a_p_line_is_named_whether_its_segments_come_before_or_after_it() {
+        let segments = "S\ta\tACGTAC\n";
+        let paths = "P\tG#0#chr1[100-106]\ta+\t*\nP\tG#1#chr1#100\ta+\t*\n\
+                     P\tG#2#chr1:100-106\ta+\t*\nP\tG#3#chr1:101-106\ta+\t*\n";
+        for gfa in [format!("{segments}{paths}"), format!("{paths}{segments}")] {
+            let graph = Graph::read(gfa.as_bytes()).unwrap();
+            let read: Vec<(String, u64)> = graph
+                .paths
+                .iter()
+                .map(|p| (text(&p.name), p.start))
+                .collect();
+            let expected = [
+                ("G#0#chr1", 100),
+                ("G#1#chr1", 100),
+                ("G#2#chr1", 100),
+                ("G#3#chr1:101-106", 0),
             ]
+            .map(|(name, start)| (name.to_string(), start));
+            assert_eq!(read, expected);
+            assert_eq!(graph.misnamed, None);
+        }
+    }
+
+    #[test]
+    fn the_first_misnamed_p_line_is_kept_for_the_placement_to_refuse() {
+        let gfa = "S\ta\tACGTAC\nP\tok\ta+\t*\nP\tG#0#chr1[100-900]\ta+\t*\nP\t[5]\ta+\t*\n";
+        let graph = Graph::read(gfa.as_bytes()).unwrap();
+        assert_eq!(
+            graph.misnamed.as_deref(),
+            Some(
+                "line 3: path G#0#chr1[100-900]: the [start-end] in its name ends at 900, \
+                 but its steps from 100 end at 106"
+            )
+        );
+    }
+
+    #[test]
+    fn starts_that_add_up_past_2_to_the_64_are_refused() {
+        let error = read_path_name(b"H#1#c#9999999999999999999[9999999999999999999]", 6)
+            .err()
+            .unwrap();
+        assert!(error.contains("add up past 2^64"), "{error}");
+    }
+
+    #[test]
+    fn a_w_line_start_of_star_is_refused_as_stating_no_offset() {
+        let error = Graph::read("S\t1\tA\nW\tH\t1\tc\t*\t*\t>1\n".as_bytes())
+            .err()
+            .unwrap();
+        assert!(
+            error.contains("W line start is *, which GFA allows but which states no offset"),
+            "{error}"
         );
     }
 }

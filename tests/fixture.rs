@@ -239,11 +239,25 @@ fn an_unknown_reference_lists_the_paths() {
 }
 
 #[test]
-fn a_reference_named_with_a_range_matches_its_path() {
-    let (named, nodes, _) = run("paths.gfa", &["--reference", "alt#1#ctg"]);
-    let (ranged, ranged_nodes, _) = run("paths.gfa", &["--reference", "alt#1#ctg:0-8"]);
-    assert!(named.status.success() && ranged.status.success());
-    assert_eq!(ranged_nodes, nodes);
+fn a_reference_names_a_path_as_it_reads_or_as_its_p_line_writes_it() {
+    let fixture = "ecoli_pggb_subgraph.gfa";
+    let (read, nodes, _) = run(fixture, &["--reference", "K12#1#chr"]);
+    let (written, written_nodes, _) = run(fixture, &["--reference", "K12#1#chr:1004500-1004961"]);
+    assert!(read.status.success() && written.status.success());
+    assert!(nodes.contains("K12#1#chr\t1004500\t"), "{nodes}");
+    assert_eq!(written_nodes, nodes);
+}
+
+#[test]
+fn a_range_no_p_line_writes_names_no_reference() {
+    let (output, nodes, _) = run("paths.gfa", &["--reference", "alt#1#ctg:0-8"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(nodes.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("--reference alt#1#ctg:0-8 matches no path"),
+        "{stderr}"
+    );
 }
 
 #[test]

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, OnceLock};
 
 use crate::bed::Format;
-use crate::gfa::{Graph, blunt_error, split_path_name, text};
+use crate::gfa::{Graph, blunt_error, collision, haplotype, sample, text};
 use crate::intern::Interner;
 
 pub struct Node {
@@ -94,10 +94,6 @@ pub fn from_tags(graph: &Graph) -> Placed {
     }
 }
 
-fn sample(name: &[u8]) -> &[u8] {
-    name.split(|&b| b == b'#').next().unwrap_or(name)
-}
-
 // PanSN identifies an assembly by its first two fields: HG002#1#chr1 -> HG002.1
 fn assembly(name: &[u8]) -> Vec<u8> {
     let fields: Vec<&[u8]> = name.split(|&b| b == b'#').collect();
@@ -105,15 +101,6 @@ fn assembly(name: &[u8]) -> Vec<u8> {
         [fields[0], fields[1]].join(&b'.')
     } else {
         fields[0].to_vec()
-    }
-}
-
-// An assembly as --reference names it: HG002#1#chr1 -> HG002#1
-fn typed(name: &[u8]) -> &[u8] {
-    let mut hashes = memchr::memchr_iter(b'#', name);
-    match (hashes.next(), hashes.next()) {
-        (Some(_), Some(second)) => &name[..second],
-        _ => sample(name),
     }
 }
 
@@ -150,6 +137,9 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
     if let Some(overlap) = &graph.overlap {
         return Err(format!("{} Or use an rGFA.", blunt_error(overlap)));
     }
+    if let Some(misnamed) = &graph.misnamed {
+        return Err(misnamed.clone());
+    }
     let paths = &graph.paths;
     if paths.is_empty() && graph.has_tags() {
         return Err("--reference needs P or W lines, and this graph has none; \
@@ -182,7 +172,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
     let mut notes = Vec::new();
     match reference {
         None => {
-            let mut distinct: Vec<&[u8]> = paths.iter().map(|p| typed(&p.name)).collect();
+            let mut distinct: Vec<&[u8]> = paths.iter().map(|p| haplotype(&p.name)).collect();
             distinct.sort();
             distinct.dedup();
             if distinct.len() > 1 {
@@ -198,10 +188,14 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
         Some(given) => {
             let (mut chosen, mut genomes) = (Vec::new(), Vec::new());
             for item in given.split(',').filter(|item| !item.is_empty()) {
-                let (wanted, _) = split_path_name(item.as_bytes());
+                let wanted = item.as_bytes();
                 let prefix = [wanted, b"#"].concat();
                 let path = (0..paths.len())
-                    .filter(|&i| paths[i].name == wanted || paths[i].name.starts_with(&prefix))
+                    .filter(|&i| {
+                        paths[i].name == wanted
+                            || paths[i].written == wanted
+                            || paths[i].name.starts_with(&prefix)
+                    })
                     .min_by_key(|&i| (&assemblies[i], i))
                     .ok_or_else(|| {
                         let mut names: Vec<&[u8]> =
@@ -217,7 +211,7 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
                     chosen.push(path);
                 }
                 if paths[path].name.contains(&b'#') {
-                    genomes.push(typed(&paths[path].name));
+                    genomes.push(haplotype(&paths[path].name));
                 }
             }
             if references.is_empty() {
@@ -285,6 +279,8 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
     let mut first_visit: Vec<Option<(usize, u64, i64)>> = vec![None; graph.node_ids.len()];
     let mut flipped = vec![false; graph.node_ids.len()];
     let mut carriers: Vec<Vec<u32>> = vec![Vec::new(); graph.node_ids.len()];
+    // the last line with bases: its path, and the stretch of it the line covers
+    let mut before: Option<(&[u8], (u64, u64))> = None;
     for i in order {
         let path = &paths[i];
         let rank = if is_reference[i] { 0 } else { 1 };
@@ -314,6 +310,16 @@ pub fn from_paths(graph: &Graph, reference: Option<&str>) -> Result<Placed, Stri
                 carriers[node].push(assembly_ids[i]);
             }
             offset += length;
+        }
+        if offset > path.start {
+            let covers = (path.start, offset);
+            let refusal = before
+                .filter(|&(name, _)| name == path.name)
+                .and_then(|(name, earlier)| collision(name, earlier, covers));
+            if let Some(refusal) = refusal {
+                return Err(refusal);
+            }
+            before = Some((&path.name, covers));
         }
     }
 
@@ -417,6 +423,66 @@ mod tests {
         let graph = Graph::read(gfa.as_bytes()).unwrap();
         let error = from_paths(&graph, Some("ref")).err().unwrap();
         assert!(error.contains("a,b.1, which holds a comma"), "{error}");
+    }
+
+    fn refusal(paths: &str) -> String {
+        let gfa = format!("S\ta\t*\tLN:i:4\nP\tref#1#chr\ta+\t*\n{paths}");
+        let graph = Graph::read(gfa.as_bytes()).unwrap();
+        from_paths(&graph, Some("ref")).err().unwrap()
+    }
+
+    #[test]
+    fn a_misnamed_p_line_is_refused() {
+        for (path, error) in [
+            (
+                "P\talt#1#c[5-900]\ta+\t*\n",
+                "line 3: path alt#1#c[5-900]: the [start-end] in its name ends at 900, \
+                 but its steps from 5 end at 9",
+            ),
+            (
+                "P\t[5]\ta+\t*\n",
+                "line 3: path [5]: its name is only a start",
+            ),
+        ] {
+            let refusal = refusal(path);
+            assert!(refusal.contains(error), "{refusal}");
+        }
+    }
+
+    #[test]
+    fn lines_of_a_path_that_overlap_or_share_a_start_are_refused() {
+        for (paths, error) in [
+            (
+                "P\talt#1#c[0-4]\ta+\t*\nP\talt#1#c[2-6]\ta+\t*\n",
+                "path alt#1#c: the line covering 0-4 overlaps the one covering 2-6",
+            ),
+            (
+                "P\talt#1#c\ta+\t*\nW\talt\t1\tc\t0\t4\t>a\n",
+                "path alt#1#c has two lines starting at 0",
+            ),
+        ] {
+            let refusal = refusal(paths);
+            assert!(refusal.contains(error), "{refusal}");
+        }
+    }
+
+    #[test]
+    fn a_line_with_no_bases_collides_with_none() {
+        let gfa = "S\ta\t*\tLN:i:4\nP\tref\ta+\t*\nP\tref\t\t*\nP\tref[2]\t\t*\n";
+        let graph = Graph::read(gfa.as_bytes()).unwrap();
+        assert!(from_paths(&graph, Some("ref")).is_ok());
+    }
+
+    #[test]
+    fn reference_names_a_path_as_it_reads_or_as_it_is_written() {
+        let gfa = "S\ta\t*\tLN:i:4\nP\talt#1#c\ta+\t*\nP\tref:5-9\ta+\t*\n";
+        let graph = Graph::read(gfa.as_bytes()).unwrap();
+        for reference in ["ref", "ref:5-9"] {
+            let placed = from_paths(&graph, Some(reference)).unwrap();
+            let node = placed.nodes[0].as_ref().unwrap();
+            assert_eq!(placed.sequences[node.sequence as usize], b"ref");
+            assert_eq!((node.start, node.end, node.rank), (5, 9, 0));
+        }
     }
 
     #[test]

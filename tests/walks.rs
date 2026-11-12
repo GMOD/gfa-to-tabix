@@ -2944,6 +2944,121 @@ fn a_w_line_whose_end_disagrees_with_its_steps_is_refused() {
     }
 }
 
+#[test]
+fn a_p_line_whose_bracket_end_disagrees_with_its_steps_is_refused() {
+    for (first, number) in [(false, 18), (true, 1)] {
+        let built = build_lines("p-end", &["P F#1#f[5-900] 1+,2+ *"], first);
+        let stderr = refused_in_first_pass(&built);
+        assert!(
+            stderr.contains(&format!(
+                "line {number}: path F#1#f[5-900]: the [start-end] in its name ends at 900, \
+                 but its steps from 5 end at 17"
+            )),
+            "{stderr}"
+        );
+    }
+}
+
+#[test]
+fn a_p_line_named_by_a_start_alone_is_refused() {
+    for (line, error) in [
+        ("P [5] 1+,2+ *", "path [5]: its name is only a start"),
+        ("P :5-17 1+,2+ *", "path :5-17: its name is only a start"),
+        (
+            "P [5]:0-12 1+,2+ *",
+            "path [5]:0-12: its name is only a start",
+        ),
+        ("P  1+,2+ *", "a P line has an empty name"),
+    ] {
+        for first in [false, true] {
+            let stderr = refused_in_first_pass(&build_lines("p-start-alone", &[line], first));
+            assert!(stderr.contains(error), "{line}: {stderr}");
+        }
+    }
+}
+
+// Each name's layers add up: a start in an odgi `:start-end` its steps span,
+// in a vg bracket beneath it, in a fourth field beneath that. A colon range
+// its steps don't span, or one beneath a fourth field, stays in the name.
+#[test]
+fn a_p_line_reads_the_same_before_its_segments_as_after_them() {
+    let lines = [
+        "P F#1#f#100[16-28] 1+,2+ *",
+        "P E#1#e#0[100-112]:6-12 2+ *",
+        "P D#d:5-17 1+,2+ *",
+        "P C#1#c:6-17 1+,2+ *",
+        "P B#1#b:5-17#0 1+,2+ *",
+    ];
+    let after = build_lines("p-after", &lines, false);
+    let before = build_lines("p-before", &lines, true);
+    assert!(after.output.status.success());
+    assert_eq!(before.walks, after.walks);
+    for line in [
+        "F#1#f\t116\t116",
+        "E#1#e\t106\t106",
+        "D#d\t5\t5",
+        "C#1#c:6-17\t0\t0",
+        "B#1#b:5-17\t0\t0",
+    ] {
+        assert!(after.walks.contains(&format!("\twalk\t{line}\t")), "{line}");
+    }
+    assert!(header(&after.walks).ends_with(&tsv(&[
+        "#haplotype B#1",
+        "#haplotype C#1",
+        "#haplotype D",
+        "#haplotype E#1",
+        "#haplotype F#1",
+        "#haplotype G#1",
+        "#haplotype H#1",
+    ])));
+}
+
+#[test]
+fn refs_names_the_sample_a_p_lines_name_reads_as() {
+    let lines = ["S 1 AAAAAA", "P chrR:5-11 1+ *", "P H#1#c 1+ *"];
+    let built = build_text("refs-read", &lines, &["--refs", "chrR"]);
+    assert!(built.output.status.success());
+    assert!(built.walks.contains("\tref\tchrR\t5\t5\t"));
+    let written = build_text("refs-written", &lines, &["--refs", "chrR:5-11"]);
+    assert!(
+        String::from_utf8_lossy(&written.output.stderr)
+            .contains("--refs chrR:5-11 matches no path's sample; have: chrR, H")
+    );
+}
+
+#[test]
+fn a_jump_in_a_p_line_and_a_star_for_a_w_lines_start_are_refused_as_what_they_are() {
+    for (line, error) in [
+        (
+            "P J#1#j 1+;3+ *",
+            "path J#1#j has a `;` between steps, a GFA 1.2 jump",
+        ),
+        (
+            "W J 1 j * * >1>2",
+            "W line start is *, which GFA allows but which states no offset",
+        ),
+    ] {
+        for first in [false, true] {
+            let stderr = refused_in_first_pass(&build_lines("jump-star", &[line], first));
+            assert!(stderr.contains(error), "{line}: {stderr}");
+        }
+    }
+}
+
+#[test]
+fn an_overlap_refusal_says_vg_numbers_phase_blocks_where_this_tool_reads_starts() {
+    let lines = ["P S1#0#chr1#0 1+,2+ *", "P S1#0#chr1#1 2+,3+ *"];
+    let stderr = refused_in_first_pass(&build_lines("phase-blocks", &lines, false));
+    assert!(
+        stderr.contains(
+            "path S1#0#chr1: the line covering 0-12 overlaps the one covering 1-13. Where vg \
+             wrote the lines from a VCF-phased GBWT, the fourth field of a P line's name and a \
+             W line's start column number phase blocks, which this tool can't tell from starts"
+        ),
+        "{stderr}"
+    );
+}
+
 // The tool drops a segment of 0 bp as it reads the GFA: its steps leave every
 // W and P line, a line left with no steps is skipped, and a reference
 // sequence left with no bases has no units. So `lines` give the same files as

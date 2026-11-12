@@ -146,8 +146,8 @@ from the rows, and relies on the invariants of
 - A contig can span several W lines, one per stretch the graph holds, as
   where Minigraph-Cactus clips a haplotype. On its first read of the GFA
   the tool refuses a W line whose end column is not its start plus its
-  nodes' lengths <!-- C18 -->, and two W lines of a contig with steps that
-  overlap or start at the same base. <!-- C17 --> The lines are the same
+  nodes' lengths <!-- C18 -->, and two lines of a `path` with steps, W or
+  P, that overlap or start at the same base. <!-- C17 --> The lines are the same
   for any order of the W lines, which `vg convert` changes from run to run
   <!-- C19 -->
 - The tool refuses a W or P line that starts or ends past 2^53 on its
@@ -155,6 +155,9 @@ from the rows, and relies on the invariants of
   coordinate a file states is above 2^53, a line's end, a unit's `end`,
   `hapOffset + hapBp` and `hapStart + ownBp` among them, and a reader
   holding numbers as doubles reads each one exactly <!-- C172 -->
+- A P line states its `path` and its start in its name, which
+  [Path names](#path-names) reads; the rules on this page say "W line" of
+  both
 - The tool drops every segment of 0 bp as it reads the GFA: its steps
   leave every W and P line, so the steps either side of one become
   consecutive, and a line left with no steps is skipped as the next rule
@@ -207,6 +210,92 @@ from the rows, and relies on the invariants of
   exists: a pass over `D` before any other, then the row whose path sorts
   first in bytes, at its earliest start. Other nodes take haplotype offsets
   <!-- C119 -->
+
+## Path names
+
+[ADR 0014](adr/0014-p-line-names.md) gives the reasons for this reading,
+the vg and odgi runs behind it and the readings turned down.
+
+- A row's `path` and `fragStart` name one line of the GFA: `path` is the
+  sequence the line is a stretch of, and `fragStart` the 0-based offset on
+  that sequence of the line's first base. <!-- C180 --> A `path` is final:
+  a reader takes it whole and reads no start, range or field out of it,
+  whatever its text looks like <!-- C180 -->
+- **A W line's** `path` is its `sample#haplotype#contig` and its
+  `fragStart` its start column. GFA allows `*` for that column, which
+  states no offset, and the tool refuses it <!-- C181 -->
+- **A P line** has one name and no column for a start, so the tool reads
+  the name from its right end, once it has summed the bp of the line's
+  steps, `bp` below. A **number** is one to nineteen of the digits `0` to
+  `9`, read in base 10, leading zeros allowed; text that would be a suffix
+  but for a number that is no number is no suffix. The tool takes three
+  steps in this order, each at most once, each on the text the step before
+  left: <!-- C182 -->
+  - **`:a-b`, the cut `odgi extract` writes.** Where the name ends in `:`,
+    a number `a`, `-` and a number `b`, with `b − a` equal to `bp` and
+    above 0, that text leaves the name and adds `a`. Where `b − a` is
+    anything else the text stays in the name and adds nothing, so a
+    1-based range, as `samtools faidx` names a region, is not read
+    <!-- C183 -->
+  - **`[s]` or `[s-e]`, vg's subrange.** Where the text ends in `[`, a
+    number `s` and `]`, or in `[`, `s`, `-`, a number `e` and `]`, that
+    text leaves the name and adds `s`. With an `e`, and no `:a-b` read
+    before it, the tool refuses the line unless `e − s` equals `bp`, as
+    it refuses a W line's end column. Beneath a `:a-b` it reads no `e`:
+    the bracket is of the piece the cut was taken from, and `e` is that
+    piece's end <!-- C184 -->
+  - **A fourth field.** Where the text holds exactly three `#` and a
+    number after the last, that `#` and the number leave the name and
+    the number is added. <!-- C185 --> `#0`, which vg appends to the name of a
+    haplotype it reads from a P line, adds 0 <!-- C185 -->
+- The text left is `path` and the sum is `fragStart`. The tool refuses a
+  line that leaves no text, such as one named `[5]`, and a sum past 2^53,
+  as it refuses a W line's start past it. <!-- C186 --> A P line with no
+  suffix is its name whole, from 0.
+  The tool reads no suffix beneath a fourth field and no second suffix of
+  a kind: a `:a-b` there is part of `path`, as it is in the contig column
+  of the W line vg writes for the same path <!-- C186 -->
+- The fixtures of [dialect](walks-container/dialect/) hold the same paths
+  as vg wrote them in W lines and in P lines, and as odgi cut vg's P
+  lines. The forms of one graph give one walk file, byte for byte
+  <!-- C187 -->
+
+| P line name | bp of its steps | `path` | `fragStart` | where such a name comes from |
+| --- | --- | --- | --- | --- |
+| `H#1#c` | 16 | `H#1#c` | 0 | pggb, from a PanSN FASTA record |
+| `H#1#c#0` | 16 | `H#1#c` | 0 | vg, of a P line it read |
+| `H#1#c#100` | 14 | `H#1#c` | 100 | vg, of a GBZ haplotype clipped from 100 |
+| `H#1#c[100-116]` | 16 | `H#1#c` | 100 | vg, a subrange |
+| `H#1#c#100[16-22]` | 6 | `H#1#c` | 116 | `vg chunk` of that clipped haplotype |
+| `H#1#c:5-21` | 16 | `H#1#c` | 5 | `odgi extract` |
+| `H#1#c#0[100-114]:6-14` | 8 | `H#1#c` | 106 | `odgi extract` of a vg subrange |
+| `H#1#c:5-21#0` | 16 | `H#1#c:5-21` | 0 | vg, of an `odgi extract` |
+| `H#1#c:6-21` | 16 | `H#1#c:6-21` | 0 | a 1-based region name |
+| `H#1#c[100-900]` | 16 | refused | | a stated end its steps contradict |
+| `[5]` | 16 | refused | | a suffix alone |
+
+- `path` is `sample#haplotype#contig` where the line is a W line or its
+  name has three fields. A P line's `path` can have any number of fields:
+  pggb copies FASTA record names unchanged, and odgi's and vg's own
+  examples include `sample#contig`
+- **What a path is listed under** in `#haplotype` is its `path` up to the
+  second `#`, its PanSN `sample#haplotype`; with one `#`,
+  `sample#contig`, its text up to that `#`, the sample; with none, its
+  whole name. <!-- C188 --> A path's sample, which `--refs` and
+  `#reference` name, is its `path` up to the first `#`, or its whole name
+  <!-- C188 -->
+- The tool refuses a P line whose steps hold a `;`, GFA 1.2's jump. A
+  jump joins two segments no link joins, over a distance the line doesn't
+  state, so no step after it has an offset <!-- C189 -->
+- **A limit: phase blocks.** For haplotypes from a VCF-phased GBWT, vg
+  numbers the phase blocks of a contig 0, 1, 2 and writes that counter in
+  the fourth field of a P line's name and in a W line's start column.
+  Nothing in such a line tells a counter from a start, and the tool reads
+  a start. It refuses the graph where two blocks' stretches then overlap,
+  with a message that says this. A block alone, or blocks that don't
+  collide, are placed at their counter, which is false. The fourth field
+  of a haplotype clipped out of a Minigraph-Cactus GBZ is a start, and
+  those are the graphs this reading is for
 
 ## Paralogs and collapsed repeats
 <!-- background -->
@@ -419,9 +508,10 @@ The header unit's lines start with `#`:
     reader that ignores it draws nothing false. A change that can't
     keep to that is another format
 - `#reference` names the reference sample <!-- C157 -->
-- `#haplotype` lists each other haplotype with rows in the file, as its PanSN
-  `sample#haplotype`, a path name up to its second `#` or whole where it
-  has fewer, once each in byte order <!-- C51 -->
+- `#haplotype` lists what each other path with rows in the file is listed
+  under, once each in byte order: its PanSN `sample#haplotype` where its
+  `path` has three fields or more, its sample where it has fewer
+  ([Path names](#path-names)) <!-- C51 -->
 - `#hole` gives each stretch of a reference sequence that no line of the
   reference covers, between its lines and before its first: sequence,
   start, end, `start` below `end`, in order of sequence name in bytes and
@@ -482,12 +572,10 @@ seq start end ref path fragStart hapOffset piece nsteps steps lengths passes [SQ
   one, at least one per tile, and all of them pieces of S <!-- C61 -->;
   rows in `hapOffset` order, and each piece's steps start in `[name, name
   + tile)` <!-- C127 -->
-- `path` is `sample#haplotype#contig`. `fragStart` is where the W line starts on
-  that contig, or the start in a P line's name, as written: `[start]` or
-  `[start-end]`, `#start` where the name has exactly three `#`, or
-  `:start-end`. <!-- C158 --> `path` is the name without that suffix,
-  and a P line with none starts at 0 <!-- C158 -->. `hapOffset` is where
-  the piece starts
+- `path` and `fragStart` name the line the piece is cut from: a W line's
+  `sample#haplotype#contig` and start column, or what a P line's name
+  reads as, by the three steps of [Path names](#path-names) and no other
+  rule. <!-- C158 --> `hapOffset` is where the piece starts
 - `steps` is the piece's handles as delta tokens, the first from 0
 - `lengths` lists each step's node length in bp <!-- C146 -->
 - `passes` lists for each step how many times the reference's paths pass
