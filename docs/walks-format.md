@@ -61,8 +61,8 @@ chr22.CHM13.walks.gz   chr22.CHM13.walks.gz.idx
 
 <!-- C6 C7 C8 -->
 
-Each option takes at most 2^40, which the tool refuses above: a pyramid
-block of 512 tiles past any position it reads stays below 2^64, and the
+Each option takes at most 2^40, which the tool refuses above: a departure
+bin of 512 tiles past any position it reads stays below 2^64, and the
 header states every value exactly for a reader holding numbers as
 doubles. <!-- C153 -->
 
@@ -258,10 +258,10 @@ it alone, and `zcat` reads the whole file as text.
   with no `#unit` line <!-- C30 -->
 - **Per reference sequence,** in byte order of the names <!-- C31 -->: its
   `tile` and `departures` units in order of position, a tile at its
-  `name` and a block at its `start`; then its `detail` units, a tile's
+  `name` and a departure bin at its `start`; then its `detail` units, a tile's
   followed by its `blocks` unit; then its `table` unit, which lists them.
   <!-- C32 --> At one start a tile comes
-  before the departure blocks that start there, and smaller blocks before
+  before the departure bins that start there, and smaller bins before
   larger <!-- C33 -->
 - **Every unit but the header** starts with a line
   `#unit seq start end kind name` <!-- C34 -->, so the file delimits
@@ -278,7 +278,7 @@ it alone, and `zcat` reads the whole file as text.
 | kind | `start end` | `name` | holds |
 |---|---|---|---|
 | `tile` | the tile's extent | the tile's start, a multiple of `tile` in decimal with no leading zero | its `ref`, `nodes`, `route`, `walk` and `abridged` rows |
-| `departures` | the block | `.` | the departure records of one block of the pyramid |
+| `departures` | the bin | `.` | the departure records of one bin of the pyramid |
 | `detail` | from the first base its walk rows' spans cover to the last | `cs:d`, the tile's start and the `abridged` rows' `detail` | one W line's moved pieces in tile `cs` |
 | `blocks` | from the first base its rows' blocks cover to the last | `cs`, the tile's start | a `blocks` row per `abridged` row of tile `cs` |
 | `table` | 0 to `\|S\|` | `.` | one `#entry` line per unit of the sequence |
@@ -289,7 +289,7 @@ it alone, and `zcat` reads the whole file as text.
   start, which a departure record's `ownTiles` lists and its `blocks`
   unit takes, and a detail unit's `cs:d`, which an `abridged` row's
   `detail` and its tile's start give. It
-  is `.` where nothing points at the unit, a departure block or a table.
+  is `.` where nothing points at the unit, a departure bin or a table.
   Every other name is unique within its kind and sequence <!-- C39 -->
 - **A tile's extent** runs from the first base of its `ref` rows' steps
   to the last, over any gap between two lines of the reference.
@@ -297,12 +297,12 @@ it alone, and `zcat` reads the whole file as text.
   is on R <!-- C41 -->. So a node longer than a tile, or a pass that runs
   past the tile's end, needs no widening by a reader. Readers address
   tiles by extent, never by `floor(base / tile)` <!-- C145 -->
-- **The departure pyramid** has blocks of `tile × 8^L` bp for L from 0 to
+- **The departure pyramid** has bins of `tile × 8^L` bp for L from 0 to
   3 (64 kb, 512 kb, 4 Mb and 32 Mb at the default tile), each at a
   multiple of its size. <!-- C43 --> A record's cover runs from `floor(start / tile) ×
   tile` to `ceil(end / tile) × tile` over its line's `start end`, taking
-  at each point the largest block aligned there that fits. <!-- C43 --> Its line is in every block of its
-  cover and no other, the same text in each. <!-- C88 --> Within a block
+  at each point the largest bin aligned there that fits. <!-- C43 --> Its line is in every bin of its
+  cover and no other, the same text in each. <!-- C88 --> Within a bin
   lines are in order of `start`, `end`, then text <!-- C44 -->
 - **A table** lists each unit of its sequence before it, in file order, as
   `#entry seq start end kind name offset length`: the unit's `#unit`
@@ -368,7 +368,7 @@ The header unit's lines start with `#`:
   newline, as a unit cut short does <!-- C154 -->
 - A reader refuses a row of a unit that belongs to another sequence, or
   is of a kind its unit doesn't hold: a tile holds `ref`, `nodes`,
-  `route`, `walk` and `abridged` rows, a departure block `departure`
+  `route`, `walk` and `abridged` rows, a departure bin `departure`
   rows, a detail unit `nodes`, `route` and `walk` rows, a blocks unit
   `blocks` rows <!-- C155 -->
 - A reader refuses a table that doesn't start with its own
@@ -528,13 +528,13 @@ seq start end route entry interior exit
 ### walk
 
 ```
-seq start end walk path fragStart hapOffset piece nsteps start[@k] choices
+seq start end walk path fragStart hapOffset piece nsteps startHandle[@k] choices
 ```
 
 - One row per piece of every other line, the other references' included.
   <!-- C147 --> `path`, `fragStart`, `hapOffset`, `piece` and `nsteps` are as on a `ref` row
-- `start` (the column after `nsteps`) is the piece's first handle on R,
-  absolute; every piece has one <!-- C69 -->
+- `startHandle` is the piece's first handle on R, absolute; every piece
+  has one <!-- C69 -->
 - `choices` lists the routes the piece takes in order, `.` for none. Each
   token is `2 × (route id − previous route id) + flip`, the first from 0,
   where flip 1 means the piece takes the route the other way round.
@@ -543,7 +543,7 @@ seq start end walk path fragStart hapOffset piece nsteps start[@k] choices
   decimal, then `@` and a decimal, as `-10:1@2`. See
   [Decoding a walk row](#decoding-a-walk-row)
 - Where R holds a node more than once, `k` names an occurrence, counting R's
-  positions holding the node, in either orientation, from 0. `start@k` is
+  positions holding the node, in either orientation, from 0. `startHandle@k` is
   the occurrence the piece starts on, where it is not R's first. On a choice, `:k` is the occurrence
   of the entry's node the walk leaves R from, where stepping along R from
   where it last landed until it reads the entry would stop at an earlier
@@ -682,7 +682,7 @@ adjacent there at the passes they took and lie in different pieces.
 departure inside one piece has no record: a reader computes it from the
 piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
 
-![The W lines of a GFA where HG002#1 leaves GRCh38 after node 2 and rejoins at node 6 across the tile edge at 30 bp; the walk file read for chr1:1-60: the .idx line, chr1's table with two tiles and two departure blocks, and those four units, the departure line highlighted in both blocks; and the graph graph-walks cuts for chr1:1-60 drawn by bandage-core, HG002 running from node 2 through its node 7 below the row to node 6, 25 bp shorter than GRCh38](figures/walks-leave-figure.svg)
+![The W lines of a GFA where HG002#1 leaves GRCh38 after node 2 and rejoins at node 6 across the tile edge at 30 bp; the walk file read for chr1:1-60: the .idx line, chr1's table with two tiles and two departure bins, and those four units, the departure line highlighted in both bins; and the graph graph-walks cuts for chr1:1-60 drawn by bandage-core, HG002 running from node 2 through its node 7 below the row to node 6, 25 bp shorter than GRCh38](figures/walks-leave-figure.svg)
 
 - Departures are per reference sequence: for S, the path's steps on S in
   order, with its steps on the reference's other sequences counted as its own
@@ -737,7 +737,7 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
     tiles, and own steps in a W line with no step on the reference, and
     own sequence in no W line, are in no tile; `ownTiles` lists none of
     them, and an attach fetch doesn't read them <!-- C87 -->
-- The record's line is in every [pyramid](#units) block of that extent's
+- The record's line is in every [pyramid](#units) bin of that extent's
   cover, the same text in each, and a reader drops exact duplicates
   <!-- C88 -->
 - An attach fetch, for a record whose leave piece or rejoin piece the
@@ -810,9 +810,10 @@ demands every W or P line back step for step, the reference's own lines
 from their `ref` rows with their lengths, and no line more or fewer; it
 shards by path, so it runs on a whole chromosome. <!-- C1 --> A reader
 check, `scripts/graph-walks-rebuild.mjs`, opens every fixture's files with
-@jbrowse/graph-walks 6 in CI, cuts each reference sequence whole and
-demands every path, placement and departure back as the GFA states them.
-<!-- C1 -->
+@jbrowse/graph-walks 7 in CI, cuts each reference sequence whole with
+every abridged piece expanded and demands every path, placement and
+departure back as the GFA states them, then cuts it again with none
+expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
 
 - The header, the units, the tables and the EOF block partition the data
   file; every unit starts and ends a gzip member and starts with its
@@ -826,8 +827,8 @@ demands every path, placement and departure back as the GFA states them.
 - A tile's extent runs from the first base of its `ref` rows' steps to
   the last (tests, files); every tile, detail and blocks line lies within
   its unit's `start end` (build, tests, files) <!-- C137 -->
-- Every departure line overlaps each block it is in; every departure
-  record is in every block of its cover and no other (build, tests,
+- Every departure line overlaps each bin it is in; every departure
+  record is in every bin of its cover and no other (build, tests,
   files) <!-- C89 -->
 - Each walk and abridged row's `start end` is the span of the steps it
   decodes to: the tool decodes every walk row it writes, compares the
@@ -922,7 +923,7 @@ emitted with its position in R, and so with its offset and pass.
 <!-- C141 -->
 
 1. If the first route has no entry, emit its interior
-2. Emit `start`, at occurrence `k` of its node in R with `@k`, else at the
+2. Emit `startHandle`, at occurrence `k` of its node in R with `@k`, else at the
    first
 3. For each route with an entry <!-- C141 -->:
    - step along R, emitting each handle, until the current handle is the
@@ -949,7 +950,7 @@ twice, and no walk row needs `@k` or `:k` <!-- C142 -->
 `tests/walks.rs` builds `tests/data/walks-two-refs.gfa` with `--tile 10
 --stay 0` and checks every row. <!-- C104 --> Part of GRCh38's file: the directory, part of
 the tile at 0 (D's and I's walk rows left out) and two of the departure
-block 0-10's four lines, with the byte offsets and lengths, which depend
+bin 0-10's four lines, with the byte offsets and lengths, which depend
 on the compressor, elided:
 
 ```
@@ -982,10 +983,10 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
   steps: `>1 >2`, spanning 0-12
 - Q leaves R at 1's end, 6, walks 6 bp of its own, node 6, and rejoins at
   3's start, 12, in a piece filed under tile 10. Its record's extent runs
-  from 1's first base to 3's last, 0-18, so it lies in blocks 0-10 and
+  from 1's first base to 3's last, 0-18, so it lies in bins 0-10 and
   10-20. Its own step, 6, is in its piece in tile 0, so `ownTiles` is 0
 - D jumps back from 4's end, 24, to 1's start, 0, over nothing of its own:
-  0-24, in the blocks at 0, 10 and 20, with `ownTiles` `.`
+  0-24, in the bins at 0, 10 and 20, with `ownTiles` `.`
 
 ## Scale
 
@@ -999,11 +1000,11 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
   128 MB of memory and then in compressed runs in a temporary directory
   beside the output. <!-- C106 --> The sort's merge encodes the tiles on
   all cores, and the densest tiles set the peak. A sequence's detail
-  records wait on disk until its tiles and departure blocks are written
+  records wait on disk until its tiles and departure bins are written
 - [walks-container/writer/](walks-container/writer/README.md) gives the
   time, peak memory and file sizes of MC chr22 and pggb chrY in format 7
 - A reader reads the directory, the header unit and one sequence's table at
-  open, and per window the tiles and departure blocks over it, plus any
+  open, and per window the tiles and departure bins over it, plus any
   attach fetches
 
 ## Readers
