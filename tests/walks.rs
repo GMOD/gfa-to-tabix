@@ -630,6 +630,8 @@ fn decode_file(text: &str) -> Decoded {
     // sequence and tile, and where it lies on R its stretch there and
     // whether it runs against R
     let mut placed: BTreeMap<String, Vec<Placed>> = BTreeMap::new();
+    // by `path@fragStart` and piece, where the piece starts on its contig
+    let mut starts: BTreeMap<(String, u64), u64> = BTreeMap::new();
     let mut decode_rows = |seq: &str, cs: u64, path: &RefPath, rows: &[Vec<&str>], detail: bool| {
         let mut previous = 0i64;
         let routes: Vec<Route> = rows
@@ -690,6 +692,10 @@ fn decode_file(text: &str) -> Decoded {
                 offset,
                 steps.clone(),
             ));
+            starts.insert(
+                (format!("{}@{}", cols[4], cols[5]), cols[7].parse().unwrap()),
+                offset,
+            );
             pieces
                 .entry(format!("{}@{}", cols[4], cols[5]))
                 .or_default()
@@ -701,6 +707,7 @@ fn decode_file(text: &str) -> Decoded {
         decoded
     };
     let mut abridged_stretches = Vec::new();
+    let mut abridged_pieces = Vec::new();
     for ((seq, cs), rows) in &tiles {
         let mut refs: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "ref").collect();
         refs.sort_by_key(|c| c[6].parse::<u64>().unwrap());
@@ -720,7 +727,7 @@ fn decode_file(text: &str) -> Decoded {
         };
         decode_rows(seq, *cs, &path, rows, false);
         let abridged: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "abridged").collect();
-        let mut held: Vec<u64> = abridged.iter().map(|c| c[9].parse().unwrap()).collect();
+        let mut held: Vec<u64> = abridged.iter().map(|c| c[10].parse().unwrap()).collect();
         held.dedup();
         let listed = blocks.remove(&(seq.clone(), *cs)).unwrap_or_default();
         assert_eq!(
@@ -740,7 +747,7 @@ fn decode_file(text: &str) -> Decoded {
             let decoded = decode_rows(seq, *cs, &path, record, true);
             let stands: Vec<&&Vec<&str>> = abridged
                 .iter()
-                .filter(|c| c[9].parse::<u64>().unwrap() == k)
+                .filter(|c| c[10].parse::<u64>().unwrap() == k)
                 .collect();
             assert_eq!(
                 stands.len(),
@@ -749,7 +756,13 @@ fn decode_file(text: &str) -> Decoded {
             );
             for ((name, piece, offset, steps), cols) in decoded.iter().zip(stands) {
                 let (start, end, first, last) = on_r(*offset, steps);
-                assert_eq!(cols.len(), 10, "{cols:?}");
+                assert_eq!(cols.len(), 11, "{cols:?}");
+                let hap_bp: u64 = cols[9].parse().unwrap();
+                assert_eq!(
+                    hap_bp,
+                    bp_of(steps),
+                    "an abridged row's hapBp is the bp of all its piece's steps, on R or off: {cols:?}"
+                );
                 assert_eq!(
                     path.span(steps.iter().filter_map(|s| s.1)),
                     (cols[1].parse().unwrap(), cols[2].parse().unwrap()),
@@ -811,6 +824,18 @@ fn decode_file(text: &str) -> Decoded {
                     (bp_of(&steps[..first]), bp_of(&steps[last + 1..])),
                     "{row:?}"
                 );
+                assert_eq!(
+                    walked.iter().map(|b| b.0.abs_diff(b.1) + b.2).sum::<u64>() + off,
+                    hap_bp,
+                    "a blocks row's items add up to its abridged row's hapBp: {row:?}"
+                );
+                abridged_pieces.push(Abridged {
+                    seq: seq.clone(),
+                    path: cols[4].to_string(),
+                    order: (cols[5].parse().unwrap(), *piece),
+                    contig: (*offset, *offset + hap_bp),
+                    runs: (walked[0].2, off),
+                });
                 assert!(
                     walked[0].2 == 0 || *piece == 0,
                     "only a line's first piece begins off R: {row:?}"
@@ -844,12 +869,55 @@ fn decode_file(text: &str) -> Decoded {
     for (key, stretch) in abridged_stretches {
         stretches.entry(key).or_default().push(stretch);
     }
+    for piece in &abridged_pieces {
+        let (frag, number) = piece.order;
+        assert!(
+            number > 0 || piece.contig.0 == frag,
+            "a line's piece 0 starts at fragStart: {} {frag}",
+            piece.path
+        );
+        if let Some(&next) = starts.get(&(format!("{}@{frag}", piece.path), number + 1)) {
+            assert_eq!(
+                piece.contig.1, next,
+                "an abridged piece's hapOffset plus hapBp is the next piece's hapOffset: {} {frag} {number}",
+                piece.path
+            );
+        }
+    }
     for steps in placed.values_mut() {
         steps.sort_by_key(|p| p.order);
     }
     for (seq, cols) in records {
         let (start, own): (u64, u64) = (cols[2].parse().unwrap(), cols[3].parse().unwrap());
-        let holding = own_tiles(&placed[cols[1]], &seq, &cols);
+        let steps = &placed[cols[1]];
+        let between = own_steps(steps, &seq, &cols);
+        let holding = own_tiles(&steps[between.clone()], &seq);
+        for piece in abridged_pieces
+            .iter()
+            .filter(|a| a.seq == seq && a.path == cols[1])
+        {
+            let held: u64 = steps[between.clone()]
+                .iter()
+                .filter(|s| s.seq == seq && (s.order.0, s.order.1) == piece.order)
+                .map(|s| s.contig.1 - s.contig.0)
+                .sum();
+            let overlap = (start + own)
+                .min(piece.contig.1)
+                .saturating_sub(start.max(piece.contig.0));
+            assert_eq!(
+                overlap, held,
+                "a record's own steps in an abridged piece are its stretch from hapStart over ownBp, cut to the piece's from hapOffset over hapBp: {cols:?}"
+            );
+            let run = if piece.contig.0 >= start {
+                piece.runs.0
+            } else {
+                piece.runs.1
+            };
+            assert!(
+                overlap == 0 || (overlap == run && overlap < piece.contig.1 - piece.contig.0),
+                "a record's own steps in an abridged piece are its list's whole leading or trailing run, never the whole piece: {cols:?}"
+            );
+        }
         let named: Vec<u64> = if cols[11] == "." {
             Vec::new()
         } else {
@@ -912,12 +980,22 @@ struct Placed {
     on_r: Option<((u64, u64), bool)>,
 }
 
-// The tiles of S holding a record's own steps, the steps of its path strictly
-// between its leave step and its rejoin step, in the path's order. The leave
-// is a step on S ending at `hapStart` on its contig, at `leavePos` and
-// `leaveStrand`; the rejoin is the path's next step on S, starting
-// `ownBp` later, at `rejoinPos` and `rejoinStrand`.
-fn own_tiles(steps: &[Placed], seq: &str, cols: &[&str]) -> Vec<u64> {
+// An abridged piece as its rows state it: its sequence, path, W line and
+// number, its stretch of its contig from `hapOffset` over `hapBp`, and its
+// list's leading and trailing runs off R
+struct Abridged {
+    seq: String,
+    path: String,
+    order: (u64, u64),
+    contig: (u64, u64),
+    runs: (u64, u64),
+}
+
+// A record's own steps, the steps of its path strictly between its leave step
+// and its rejoin step. The leave is a step on S ending at `hapStart` on its
+// contig, at `leavePos` and `leaveStrand`; the rejoin is the path's next step
+// on S, starting `ownBp` later, at `rejoinPos` and `rejoinStrand`.
+fn own_steps(steps: &[Placed], seq: &str, cols: &[&str]) -> std::ops::Range<usize> {
     let number = |k: usize| cols[k].parse::<u64>().unwrap();
     let (start, own, leave_pos, rejoin_pos) = (number(2), number(3), number(5), number(8));
     let on_s: Vec<usize> = (0..steps.len())
@@ -938,8 +1016,13 @@ fn own_tiles(steps: &[Placed], seq: &str, cols: &[&str]) -> Vec<u64> {
     let (leave, rejoin) = pair
         .map(|w| (w[0], w[1]))
         .unwrap_or_else(|| panic!("no leave and rejoin step for {cols:?}"));
+    leave + 1..rejoin
+}
+
+// The tiles of S holding `own`, a record's own steps, in the path's order
+fn own_tiles(own: &[Placed], seq: &str) -> Vec<u64> {
     let mut tiles = Vec::new();
-    for step in &steps[leave + 1..rejoin] {
+    for step in own {
         if step.seq == seq && !tiles.contains(&step.tile) {
             tiles.push(step.tile);
         }
@@ -1126,7 +1209,8 @@ fn a_tile_over_its_byte_budget_moves_the_fewest_paths_that_bring_it_within() {
 // D#1#d's pieces 0 and 2 lie in tile 0, with piece 1 in tile 10 between
 // them, so tile 0 has a row for each, both naming the tile's second detail
 // record, unit 0:1, and each row's hapOffset gives where its own piece starts
-// on the contig, 0 and 24. Each row's span is
+// on the contig, 0 and 24, and its hapBp how far it runs there, 12, to where
+// the line's next piece starts. Each row's span is
 // its piece's on R, nodes 1 and 2, 0 to 12; the detail unit's extent is the
 // union of its walk rows' spans
 #[test]
@@ -1136,11 +1220,11 @@ fn an_abridged_row_stands_for_one_piece_and_names_its_detail_record() {
     assert_eq!(
         rows_of(r, "GRCh38#0#chr", "abridged", "D#1#d"),
         tsv(&[
-            "GRCh38#0#chr 0 12 abridged D#1#d 0 0 0 2 1",
-            "GRCh38#0#chr 0 12 abridged D#1#d 0 24 2 2 1",
-            "GRCh38#0#chr 12 24 abridged D#1#d 0 12 1 2 1",
-            "GRCh38#0#chr 12 24 abridged D#1#d 0 36 3 2 1",
-            "GRCh38#0#chr 24 30 abridged D#1#d 0 48 4 1 0",
+            "GRCh38#0#chr 0 12 abridged D#1#d 0 0 0 2 12 1",
+            "GRCh38#0#chr 0 12 abridged D#1#d 0 24 2 2 12 1",
+            "GRCh38#0#chr 12 24 abridged D#1#d 0 12 1 2 12 1",
+            "GRCh38#0#chr 12 24 abridged D#1#d 0 36 3 2 12 1",
+            "GRCh38#0#chr 24 30 abridged D#1#d 0 48 4 1 6 0",
         ])
     );
     assert_eq!(
@@ -1159,7 +1243,8 @@ fn an_abridged_row_stands_for_one_piece_and_names_its_detail_record() {
 // L's piece 0 over 3 and 4 and M's piece 1 over 3 alone, and gives the
 // piece's start on its contig and all its steps, 5 and 4, as its detail
 // record's walk row does. The 30 bp are the run that leads L's blocks row
-// and ends M's.
+// and ends M's, and each row's hapBp counts them: 42 and 36 bp over spans of
+// 12 and 6.
 #[test]
 fn an_abridged_row_spans_its_piece_from_its_first_step_on_r_to_its_last() {
     let built = build(
@@ -1170,11 +1255,11 @@ fn an_abridged_row_spans_its_piece_from_its_first_step_on_r_to_its_last() {
     assert_eq!(
         rows_of(r, "R#0#c", "abridged", "L#1#c") + &rows_of(r, "R#0#c", "abridged", "M#1#c"),
         tsv(&[
-            "R#0#c 12 24 abridged L#1#c 0 0 0 5 0",
-            "R#0#c 24 30 abridged L#1#c 0 42 1 1 0",
-            "R#0#c 30 36 abridged L#1#c 0 48 2 1 0",
-            "R#0#c 0 12 abridged M#1#c 0 0 0 2 0",
-            "R#0#c 12 18 abridged M#1#c 0 12 1 4 1",
+            "R#0#c 12 24 abridged L#1#c 0 0 0 5 42 0",
+            "R#0#c 24 30 abridged L#1#c 0 42 1 1 6 0",
+            "R#0#c 30 36 abridged L#1#c 0 48 2 1 6 0",
+            "R#0#c 0 12 abridged M#1#c 0 0 0 2 12 0",
+            "R#0#c 12 18 abridged M#1#c 0 12 1 4 36 1",
         ])
     );
     assert_eq!(
@@ -1308,7 +1393,9 @@ fn a_departure_block_is_named_dot_and_every_other_name_is_unique() {
 // second block runs against R from where the first ended, the third begins
 // 24 bp on, and the last 24 bp back. The items add up to the piece's 109 bp.
 // Both rows span the piece's steps on R, 0 to 36, and the abridged row gives
-// its start on its contig, 0, and its 11 steps
+// its start on its contig, 0, its 11 steps and its hapBp, the 109: not the
+// 52 bp from its first step on R to its last, which format 7 stated, nor the
+// 36 bp of its span
 #[test]
 fn a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order() {
     let built = build_text(
@@ -1332,13 +1419,162 @@ fn a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order() {
     let r = built.file("R");
     assert_eq!(
         rows_of(r, "R#0#c", "abridged", "H#1#c"),
-        tsv(&["R#0#c 0 36 abridged H#1#c 0 0 0 11 0"])
+        tsv(&["R#0#c 0 36 abridged H#1#c 0 0 0 11 109 0"])
     );
     assert_eq!(
         unit(r, "blocks", "0"),
         tsv(&[
             "#unit R#0#c 0 36 blocks 0",
             "R#0#c 0 36 blocks H#1#c 0 0 7,0+12,0-12,10,24+12,-24+6,50",
+        ])
+    );
+}
+
+// R is 1-12, 10 bp each. HAIRPIN walks 7 8 9 10, 7 bp of its own on 21, and
+// back over 10 9 8 7 against R: 87 bp of its contig over a span of 40 bp, so
+// hapBp is neither the span nor at most it
+#[test]
+fn an_abridged_rows_hap_bp_is_how_far_its_piece_runs_on_its_contig() {
+    let built = build(
+        &hapbp_fixture("hairpin-span.gfa"),
+        &["--refs", "R", "--tile", "60", "--abridge-bytes", "1"],
+    );
+    let r = built.file("R");
+    assert_eq!(
+        rows_of(r, "R#0#c", "abridged", "HAIRPIN#1#c"),
+        tsv(&["R#0#c 60 100 abridged HAIRPIN#1#c 0 0 0 9 87 0"])
+    );
+    assert_eq!(
+        unit(r, "blocks", "60"),
+        tsv(&[
+            "#unit R#0#c 60 100 blocks 60",
+            "R#0#c 60 100 blocks HAIRPIN#1#c 0 0 60+40,7,0-40",
+        ])
+    );
+}
+
+fn hapbp_fixture(name: &str) -> String {
+    format!(
+        "{}/docs/walks-container/hapbp/{name}",
+        env!("CARGO_MANIFEST_DIR")
+    )
+}
+
+// The tile and departures units of a sequence, each abridged row with its
+// hapBp or with `-` in its place
+fn tiles_and_records(text: &str, seq: &str, hap_bp: bool) -> String {
+    units(text)
+        .into_iter()
+        .filter(|(head, _)| head[0] == seq && matches!(head[3], "tile" | "departures"))
+        .flat_map(|(_, lines)| lines)
+        .map(|line| {
+            let mut cols: Vec<&str> = line.split('\t').collect();
+            if cols[3] == "abridged" && !hap_bp {
+                cols[9] = "-";
+            }
+            cols.join("\t") + "\n"
+        })
+        .collect()
+}
+
+// Each pair of graphs differs in how much of a record's own sequence lies in
+// its leave piece: 10 or 5 bp before the next W line, before a piece on
+// another sequence, or 700 or 690 bp of 810. The tiles and departure bins of
+// the record's sequence are the same but for hapBp, so the own run comes from
+// the abridged row and the record and from nothing else a reader of those
+// units holds: [hapStart, hapStart + ownBp) cut to [hapOffset, hapOffset +
+// hapBp)
+#[test]
+fn twin_graphs_differ_in_hap_bp_alone_in_their_tiles_and_records() {
+    for (a, b, seq, path, runs) in [
+        (
+            "twin-midline-A.gfa",
+            "twin-midline-B.gfa",
+            "R#0#chr1",
+            "H#1#c",
+            (10, 5),
+        ),
+        (
+            "twin-otherseq-A.gfa",
+            "twin-otherseq-B.gfa",
+            "R#0#chr1",
+            "H#1#c",
+            (10, 5),
+        ),
+        (
+            "twin-own-700.gfa",
+            "twin-own-690.gfa",
+            "R#0#c",
+            "P#1#c",
+            (700, 690),
+        ),
+    ] {
+        let own_run = |name: &str| {
+            let built = build(
+                &hapbp_fixture(name),
+                &[
+                    "--refs",
+                    "R",
+                    "--tile",
+                    "12",
+                    "--stay",
+                    "0",
+                    "--abridge-bytes",
+                    "1",
+                ],
+            );
+            let text = built.file("R").to_string();
+            let number = |cols: &[&str], k: usize| cols[k].parse::<u64>().unwrap();
+            let rows: Vec<Vec<&str>> = text.lines().map(|l| l.split('\t').collect()).collect();
+            let record = rows
+                .iter()
+                .find(|c| c.len() > 4 && c[0] == seq && c[3] == "departure" && c[4] == path)
+                .unwrap();
+            let piece = rows
+                .iter()
+                .find(|c| c.len() > 7 && c[0] == seq && c[3] == "abridged" && c[7] == "0")
+                .unwrap();
+            let (start, own) = (number(record, 5), number(record, 6));
+            let (offset, bp) = (number(piece, 6), number(piece, 9));
+            let run = (start + own).min(offset + bp) - start.max(offset);
+            (text.clone(), run)
+        };
+        let ((first, first_run), (second, second_run)) = (own_run(a), own_run(b));
+        assert_eq!((first_run, second_run), runs, "{a} {b}");
+        assert_eq!(
+            tiles_and_records(&first, seq, false),
+            tiles_and_records(&second, seq, false),
+            "{a} {b}"
+        );
+        assert_ne!(
+            tiles_and_records(&first, seq, true),
+            tiles_and_records(&second, seq, true),
+            "{a} {b}"
+        );
+    }
+}
+
+// CROSS, NOREF and PLAIN leave the reference after node 3 and rejoin at node
+// 10 with 7, 7 and 6 bp of their own before a piece on another sequence, a
+// W line off the reference, or the rejoin. Their rows in the leave tile are
+// the same but for the path, the record number and hapBp, 37, 37 and 36
+#[test]
+fn rows_alike_but_for_path_differ_in_hap_bp_where_their_own_runs_do() {
+    let built = build(
+        &hapbp_fixture("adv.gfa"),
+        &["--refs", "R", "--tile", "60", "--abridge-bytes", "1"],
+    );
+    let r = built.file("R");
+    assert_eq!(
+        unit(r, "tile", "0")
+            .lines()
+            .filter(|l| l.starts_with("R#0#c1\t") && l.contains("\tabridged\t"))
+            .map(|l| l.to_string() + "\n")
+            .collect::<String>(),
+        tsv(&[
+            "R#0#c1 0 30 abridged CROSS#1#c 0 0 0 4 37 0",
+            "R#0#c1 0 30 abridged NOREF#1#c 0 0 0 4 37 1",
+            "R#0#c1 0 30 abridged PLAIN#1#c 0 0 0 4 36 2",
         ])
     );
 }
@@ -1509,7 +1745,7 @@ fn a_route_exit_names_the_copy_where_it_is_not_the_nearest_and_a_block_lies_on_i
     );
     assert_eq!(
         rows_of(abridged.file("R"), "R#0#chr", "abridged", "H#1#h"),
-        tsv(&["R#0#chr 0 50 abridged H#1#h 0 0 0 3 0"])
+        tsv(&["R#0#chr 0 50 abridged H#1#h 0 0 0 3 45 0"])
     );
     assert_eq!(
         unit(abridged.file("R"), "blocks", "0"),

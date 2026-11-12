@@ -892,8 +892,9 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         members.sort_by_key(|&k| pieces[k].offset);
         let alone = encode_all(&path, &pieces, members)?;
         for (piece, walk, _) in &alone.walks {
-            let (hull, row) = blocks_row(&path, piece, walk, lengths)?;
-            emit(Stretch::Piece(hull), &summary_row(piece, k))?;
+            let bp = piece_bp(piece, lengths);
+            let (hull, row) = blocks_row(&path, piece, walk, lengths, bp)?;
+            emit(Stretch::Piece(hull), &summary_row(piece, k, bp))?;
             moved_out.blocks.push((Stretch::Piece(hull), row));
         }
         let mut record = Vec::new();
@@ -916,10 +917,20 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     Ok(())
 }
 
+// The bp of all a piece's steps, on R or off: how far it runs on its contig
+fn piece_bp(piece: &Piece, lengths: &[u32]) -> u64 {
+    piece
+        .handles
+        .iter()
+        .map(|&h| u64::from(lengths[(h >> 1) as usize]))
+        .sum()
+}
+
 // The `abridged` row of one piece of a path whose pieces in the chunk are
 // detail record `k`: where the piece starts on its contig and how many steps
-// it has, as its walk row in that record states them
-fn summary_row(piece: &Piece, k: usize) -> Vec<u8> {
+// it has, as its walk row in that record states them, and `bp`, how far it
+// runs on its contig
+fn summary_row(piece: &Piece, k: usize, bp: u64) -> Vec<u8> {
     let mut line = b"abridged\t".to_vec();
     line.extend_from_slice(piece.name);
     for n in [
@@ -927,6 +938,7 @@ fn summary_row(piece: &Piece, k: usize) -> Vec<u8> {
         piece.offset,
         u64::from(piece.piece),
         piece.handles.len() as u64,
+        bp,
         k as u64,
     ] {
         line.push(b'\t');
@@ -970,6 +982,17 @@ impl Block {
 struct Collapsed {
     blocks: Vec<Block>,
     after: u64,
+}
+
+impl Collapsed {
+    fn bp(&self) -> u64 {
+        self.after
+            + self
+                .blocks
+                .iter()
+                .map(|b| b.off + b.span.1 - b.span.0)
+                .sum::<u64>()
+    }
 }
 
 fn collapsed(path: &Path, piece: &Piece, lengths: &[u32]) -> Collapsed {
@@ -1058,13 +1081,15 @@ fn read_collapsed(list: &[u8]) -> Option<Collapsed> {
 // The `blocks` row of an abridged piece, keyed as its `abridged` row is, and
 // the span of R its blocks cover. Its list must read back as the collapsed
 // piece, whose blocks must begin at the piece's first step on R and end at its
-// last and, with the runs off R between them, hold the `abridged` row's bp;
-// and only a line's first piece may begin off R
+// last and, with the runs off R between them, hold the bp between those
+// steps; its items must add up to `hap_bp`, the `abridged` row's hapBp; and
+// only a line's first piece may begin off R
 fn blocks_row(
     path: &Path,
     piece: &Piece,
     walk: &Walk,
     lengths: &[u32],
+    hap_bp: u64,
 ) -> Result<(Span, Vec<u8>), String> {
     let whole = collapsed(path, piece, lengths);
     let blocks = &whole.blocks;
@@ -1106,15 +1131,15 @@ fn blocks_row(
         .iter()
         .map(|b| b.span)
         .reduce(|(a, b), (c, d)| (a.min(c), b.max(d)));
+    let reads_back =
+        read_collapsed(&line[listed..]).is_some_and(|read| read == whole && read.bp() == hap_bp);
     match hull {
-        Some(hull)
-            if read_collapsed(&line[listed..]).as_ref() == Some(&whole) && held == bp && ends =>
-        {
+        Some(hull) if reads_back && held == bp && ends => {
             line.push(b'\n');
             Ok((hull, line))
         }
         _ => Err(format!(
-            "{}: the blocks row does not read back as its piece, with blocks from its first step on R to its last holding its {bp} bp",
+            "{}: the blocks row does not read back as its piece, with blocks from its first step on R to its last holding its {bp} bp and items adding up to its hapBp {hap_bp}",
             String::from_utf8_lossy(piece.name)
         )),
     }
