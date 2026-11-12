@@ -37,6 +37,56 @@ def flip(h):
     return h ^ 1
 
 
+def number(text):
+    """Path names: a number is one to nineteen of the digits 0 to 9."""
+    return int(text) if 1 <= len(text) <= 19 and all(ch in "0123456789" for ch in text) else None
+
+
+def p_line_name(name, bp):
+    """A P line's (path, fragStart) by the three steps of the page's Path
+    names, taken from the right of its name; Refuse where the tool refuses."""
+    start, cut = 0, False
+    head, colon, tail = name.rpartition(":")
+    a, dash, b = tail.partition("-")
+    if colon and dash and number(a) is not None and number(b) is not None and 0 < number(b) - number(a) == bp:
+        name, start, cut = head, number(a), True
+    if name.endswith("]") and "[" in name:
+        head, _, tail = name[:-1].rpartition("[")
+        s, dash, e = tail.partition("-")
+        if number(s) is not None and (not dash or number(e) is not None):
+            if dash and not cut and number(e) - number(s) != bp:
+                raise Refuse(f"P line {name}: its [start-end] is not its steps' {bp} bp")
+            name, start = head, start + number(s)
+    fields = name.split("#")
+    if len(fields) == 4 and number(fields[3]) is not None:
+        name, start = "#".join(fields[:3]), start + number(fields[3])
+    if not name:
+        raise Refuse("P line whose name leaves no path")
+    return name, start
+
+
+def listed_under(path):
+    """Path names: sample#haplotype of three fields or more, else the sample."""
+    fields = path.split("#")
+    return "#".join(fields[:2]) if len(fields) > 2 else fields[0]
+
+
+def check_p_names_table():
+    """p_line_name and listed_under against the table every reader of P line names shares."""
+    table = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../walks-container/dialect/p-names.tsv")
+    for row in open(table, encoding="utf-8").read().split("\n")[1:]:
+        if not row:
+            continue
+        name, bp, path, start, under = row.split("\t")
+        try:
+            got = p_line_name(name, int(bp))
+            got = (got[0], str(got[1]), listed_under(got[0]))
+        except Refuse:
+            got = ("refused", start, ".")
+        if got != (path, start, under):
+            sys.exit(f"spec8.py: reads P line name {name!r} of {bp} bp as {got}, p-names.tsv says {(path, start, under)}")
+
+
 def delta_tokens(col, prev):
     """Delta tokens to handles; returns (handles, last id)."""
     out = []
@@ -1132,10 +1182,8 @@ def main():
         refs = set(w.reference)
         haps = set()
         for pth in by_path:
-            parts = pth.split("#")
-            hp = "#".join(parts[:2]) if len(parts) > 2 else pth
-            if parts[0] not in refs:
-                haps.add(hp)
+            if pth.split("#")[0] not in refs:
+                haps.add(listed_under(pth))
         if sorted(haps) != sorted(w.haplotypes):
             rep.bad("#haplotype lines are not the other haplotypes with rows", f"{sorted(haps ^ set(w.haplotypes))[:6]}")
         else:
@@ -1303,9 +1351,12 @@ def check_gfa(rep, w, gfa, pieces, truth_steps):
             lines.append((f"{c[1]}#{c[2]}#{c[3]}", c[4], steps))
         elif c[0] == "P":
             steps = [(2 * int(s[:-1]) + (1 if s[-1] == "-" else 0)) for s in c[2].split(",") if s]
-            lines.append((c[1], "0", steps))
+            lines.append((c[1], None, steps))
     for name, frag, steps in lines:
         steps = [h for h in steps if seglen[h >> 1] > 0]
+        if frag is None:
+            name, frag = p_line_name(name, sum(seglen[h >> 1] for h in steps))
+            frag = str(frag)
         ps = pieces.get((name, frag))
         if ps is None:
             rep.good("GFA lines with no rows (fine if they have no step on the reference)")
@@ -1325,6 +1376,7 @@ def check_gfa(rep, w, gfa, pieces, truth_steps):
 
 
 if __name__ == "__main__":
+    check_p_names_table()
     try:
         sys.exit(main())
     except (Refuse, EOFError, OSError, zlib.error) as x:

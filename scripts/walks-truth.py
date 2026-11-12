@@ -462,7 +462,7 @@ def pct(a, b):
 def score(args):
     reference_of(args.walks)
     haps = set(args.haps.split(","))
-    pieces, _, _, _, _, extents, size, _, _ = walk_rows(args.walks, lambda name: name.rsplit("#", 1)[0] in haps)
+    pieces, _, _, _, _, extents, size, _, _ = walk_rows(args.walks, lambda name: listed_under(name) in haps)
     broken = [p for ps in pieces.values() for p in ps if p.error]
     if broken:
         sys.exit(f"{len(broken)} walk rows don't decode, the first {broken[0].line} piece {broken[0].piece}: {broken[0].error}")
@@ -634,14 +634,80 @@ def gfa_bytes(path):
             yield from f
 
 
-def name_of(line):
+NUMBER = "([0-9]{1,19})"
+COLON = re.compile("(.*):" + NUMBER + "-" + NUMBER, re.S)
+BRACKET = re.compile(r"(.*)\[" + NUMBER + "(?:-" + NUMBER + r")?\]", re.S)
+FOURTH = re.compile("([^#]*#[^#]*#[^#]*)#" + NUMBER, re.S)
+
+
+class Refused(ValueError):
+    pass
+
+
+def read_p_name(text, bp):
+    """A P line's path and where the line starts on it, from its name and
+    its steps' bp, by the three steps of walks-format.md's Path names: from
+    the right, a `:a-b` the steps span, a `[s]` or `[s-e]`, a fourth `#`
+    field of digits, the starts summed. Raises Refused where the tool
+    refuses the line."""
+    start = 0
+    colon = COLON.fullmatch(text)
+    cut = bool(colon) and 0 < int(colon.group(3)) - int(colon.group(2)) == bp
+    if cut:
+        text, start = colon.group(1), int(colon.group(2))
+    bracket = BRACKET.fullmatch(text)
+    if bracket:
+        if not cut and bracket.group(3) is not None and int(bracket.group(3)) - int(bracket.group(2)) != bp:
+            raise Refused("end")
+        text, start = bracket.group(1), start + int(bracket.group(2))
+    fourth = FOURTH.fullmatch(text)
+    if fourth:
+        text, start = fourth.group(1), start + int(fourth.group(2))
+    if not text:
+        raise Refused("empty")
+    return text, start
+
+
+def listed_under(path):
+    """What `#haplotype` lists a path under: sample#haplotype where its name
+    has three fields or more, its sample where it has fewer."""
+    fields = path.split("#")
+    return "#".join(fields[:2]) if len(fields) > 2 else fields[0]
+
+
+def check_p_names():
+    """read_p_name and listed_under against the table every reader of P line
+    names shares; exits where they differ."""
+    table = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../docs/walks-container/dialect/p-names.tsv")
+    with open(table, encoding="utf-8") as f:
+        rows = [line.rstrip("\n").split("\t") for line in f][1:]
+    for name, bp, path, start, under in rows:
+        try:
+            read = read_p_name(name, int(bp))
+            got = (read[0], str(read[1]), listed_under(read[0]))
+        except Refused as why:
+            got = ("refused", str(why), ".")
+        if got != (path, start, under):
+            sys.exit(f"walks-truth.py: reads P line name {name!r} of {bp} bp as {got}, p-names.tsv says {(path, start, under)}")
+
+
+def written(line):
+    """A W line's sample#haplotype#contig, or a P line's name as written."""
+    c = line.split(b"\t", 5)
+    return (b"#".join(c[1:4]) if line[:1] == b"W" else c[1]).decode("utf-8", "surrogateescape")
+
+
+def name_of(line, lengths):
+    """A W or P line's path and start. A P line's steps are summed only
+    where its name ends in a range, which alone makes its bp matter."""
     if line[:1] == b"W":
-        c = line.split(b"\t", 5)
-        return b"#".join(c[1:4]).decode("utf-8", "surrogateescape"), int(c[4])
-    text = line.split(b"\t", 2)[1].decode("utf-8", "surrogateescape")
-    named = (re.fullmatch(r"(.*)\[(\d+)(?:-[^\]]*)?\]", text) or re.fullmatch(r"([^#]*#[^#]*#[^#]*)#(\d+)", text)
-             or re.fullmatch(r"(.*):(\d+)-\d+", text))
-    return (named.group(1), int(named.group(2))) if named else (text, 0)
+        return written(line), int(line.split(b"\t", 5)[4])
+    text = written(line)
+    ranged = COLON.fullmatch(text) or BRACKET.fullmatch(text)
+    stored = [lengths[h >> 1] for h in steps_of(line)] if ranged else []
+    if 0 in stored:
+        raise KeyError(f"{text} steps on a segment with no S line")
+    return read_p_name(text, sum(n - 1 for n in stored))
 
 
 def steps_of(line):
@@ -650,7 +716,7 @@ def steps_of(line):
         ids = c[6].replace(b"<", b">").split(b">")[1:]
         strands = c[6].translate(None, b"0123456789")
         if len(ids) != len(strands):
-            raise ValueError(f"{name_of(line)[0]}: a walk that is not >id or <id steps")
+            raise ValueError(f"{written(line)}: a walk that is not >id or <id steps")
         return [2 * int(x) + (s == 60) for x, s in zip(ids, strands)]
     return [2 * int(x[:-1]) + (x[-1:] == b"-") for x in c[2].split(b",")] if c[2] not in (b"*", b"") else []
 
@@ -660,7 +726,7 @@ def handles_of(line, lengths):
     hs = steps_of(line)
     stored = [lengths[h >> 1] for h in hs]
     if 0 in stored:
-        raise KeyError(f"{name_of(line)[0]} steps on segment {hs[stored.index(0)] >> 1}, which has no S line")
+        raise KeyError(f"{written(line)} steps on segment {hs[stored.index(0)] >> 1}, which has no S line")
     return array("I", (h for h, n in zip(hs, stored) if n > 1))
 
 
@@ -673,11 +739,22 @@ def gfa_nodes(path, reference):
     lines step on, from one read of the GFA: S lines and path lines may
     interleave, so these are complete only at its end."""
     lengths, on_reference = ByNode("Q"), ByNode("B")
+    # P lines of one field that begin with the reference's name: whether
+    # the name reads as the reference waits on their steps' bp
+    held = []
     for line in gfa_bytes(path):
         if line.startswith(b"S\t"):
             c = line.rstrip(b"\r\n").split(b"\t")
             lengths[int(c[1])] = 1 + (len(c[2]) if c[2] != b"*" else int(next(t[5:] for t in c[3:] if t.startswith(b"LN:i:"))))
-        elif is_path(line) and name_of(line)[0].split("#")[0] == reference:
+        elif is_path(line):
+            name = written(line)
+            if "#" not in name and name != reference and name.startswith(reference):
+                held.append(line)
+            elif name.split("#")[0] == reference:
+                for h in steps_of(line):
+                    on_reference[h >> 1] = 1
+    for line in held:
+        if name_of(line, lengths)[0] == reference:
             for h in steps_of(line):
                 on_reference[h >> 1] = 1
     return lengths, on_reference
@@ -729,7 +806,7 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
         wrong.append(f"{seq} tile {tile}{'' if detail is None else f' detail {detail}'}: its nodes row gives node {node} "
                      f"{stated} bp, the GFA {length if length >= 0 else 'no segment'}")
     for line in lines:
-        name, start = name_of(line)
+        name, start = name_of(line, lengths)
         want = list(handles_of(line, lengths))
         if not any(on_reference[h >> 1] for h in want):
             continue
@@ -842,7 +919,7 @@ def rebuild(args):
         closed = set()
         for line in gfa_bytes(args.gfa):
             if is_path(line):
-                shard = zlib.crc32(name_of(line)[0].encode("utf-8", "surrogateescape")) % args.shards
+                shard = zlib.crc32(name_of(line, lengths)[0].encode("utf-8", "surrogateescape")) % args.shards
                 if shard in feeds and shard not in closed:
                     try:
                         feeds[shard].write(line)
@@ -887,6 +964,7 @@ def main():
     c.add_argument("--top", type=int, default=5)
     args = p.parse_args()
     sys.stdout.reconfigure(errors="surrogateescape")
+    check_p_names()
     {"lift": lift, "score": score, "rebuild": rebuild, "cost": cost}[args.cmd](args)
 
 

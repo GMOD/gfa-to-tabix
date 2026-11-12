@@ -61,7 +61,7 @@
 // Needs a Node that strips types (22.18 or later): it imports the
 // checkout's src/index.ts directly.
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { open, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -70,6 +70,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const DATA = join(REPO, 'tests/data')
 const BROKEN_DIR = join(REPO, 'docs/departures/scripts/broken')
+const P_NAMES = join(REPO, 'docs/walks-container/dialect/p-names.tsv')
 const OPTION_SETS = [
   '--tile 10',
   '--tile 7 --stay 0',
@@ -197,27 +198,65 @@ class LocalFile {
   }
 }
 
-const integer = text => (/^\d+$/.test(text) ? Number(text) : undefined)
+const COLON = /^(.*):([0-9]{1,19})-([0-9]{1,19})$/s
+const BRACKET = /^(.*)\[([0-9]{1,19})(?:-([0-9]{1,19}))?\]$/s
+const FOURTH = /^([^#]*#[^#]*#[^#]*)#([0-9]{1,19})$/s
 
-function splitPathName(name) {
-  const open = name.endsWith(']') ? name.lastIndexOf('[') : -1
-  const bracketStart =
-    open < 0 ? undefined : integer(name.slice(open + 1, -1).split('-')[0])
-  const hashes = name.split('#')
-  const hashStart = hashes.length === 4 ? integer(hashes[3]) : undefined
-  const colon = name.lastIndexOf(':')
-  const range = colon < 0 ? [] : name.slice(colon + 1).split('-')
-  const colonStart =
-    range.length === 2 && integer(range[1]) !== undefined
-      ? integer(range[0])
-      : undefined
-  return bracketStart !== undefined
-    ? [name.slice(0, open), bracketStart]
-    : hashStart !== undefined
-      ? [hashes.slice(0, 3).join('#'), hashStart]
-      : colonStart !== undefined
-        ? [name.slice(0, colon), colonStart]
-        : [name, 0]
+// A P line's path and where the line starts on it, from its name and its
+// steps' bp, by the three steps of walks-format.md's Path names: from the
+// right, a `:a-b` the steps span, a `[s]` or `[s-e]`, a fourth `#` field of
+// digits, the starts summed. `refused` says why the tool refuses the line.
+function readPathName(written, bp) {
+  const colon = COLON.exec(written)
+  const cut =
+    colon !== null && bp > 0 && Number(colon[3]) - Number(colon[2]) === bp
+  const uncut = cut ? colon[1] : written
+  const bracket = BRACKET.exec(uncut)
+  const whole = bracket === null ? uncut : bracket[1]
+  const fourth = FOURTH.exec(whole)
+  const name = fourth === null ? whole : fourth[1]
+  const fragStart =
+    (cut ? Number(colon[2]) : 0) +
+    (bracket === null ? 0 : Number(bracket[2])) +
+    (fourth === null ? 0 : Number(fourth[2]))
+  return bracket !== null &&
+    !cut &&
+    bracket[3] !== undefined &&
+    Number(bracket[3]) - Number(bracket[2]) !== bp
+    ? { refused: 'end' }
+    : name === ''
+      ? { refused: 'empty' }
+      : { name, fragStart }
+}
+
+const sampleOf = name => name.split('#')[0]
+// What `#haplotype` lists a path under: sample#haplotype where its name has
+// three fields or more, its sample where it has fewer
+const haplotypeOf = name => {
+  const fields = name.split('#')
+  return fields.length > 2 ? `${fields[0]}#${fields[1]}` : fields[0]
+}
+
+// readPathName and haplotypeOf against the table every reader of P line
+// names shares
+function checkPathNames() {
+  const failures = []
+  for (const row of readFileSync(P_NAMES, 'utf8').split('\n').slice(1)) {
+    if (row !== '') {
+      const [written, bp, path, start, under] = row.split('\t')
+      const read = readPathName(written, Number(bp))
+      const got =
+        read.refused === undefined
+          ? [read.name, String(read.fragStart), haplotypeOf(read.name)]
+          : ['refused', read.refused, '.']
+      if (got.join('\t') !== [path, start, under].join('\t')) {
+        failures.push(
+          `reads P line name ${written} of ${bp} bp as ${got.join(' ')}, p-names.tsv says ${path} ${start} ${under}`,
+        )
+      }
+    }
+  }
+  return failures
 }
 
 function parseGfa(text) {
@@ -243,10 +282,8 @@ function parseGfa(text) {
         })),
       })
     } else if (cols[0] === 'P') {
-      const [name, fragStart] = splitPathName(cols[1])
       lines.push({
-        name,
-        fragStart,
+        written: cols[1],
         steps: cols[2].split(',').map(step => ({
           id: Number(step.slice(0, -1)),
           rev: step.endsWith('-'),
@@ -262,14 +299,26 @@ function parseGfa(text) {
       for (const step of steps) {
         prefix.push(prefix.at(-1) + lengths.get(step.id))
       }
-      kept.push({ ...line, steps, prefix, end: line.fragStart + prefix.at(-1) })
+      const read =
+        line.written === undefined
+          ? line
+          : readPathName(line.written, prefix.at(-1))
+      if (read.refused !== undefined) {
+        throw new Error(
+          `P line ${line.written}: the tool refuses its name (${read.refused})`,
+        )
+      }
+      kept.push({
+        name: read.name,
+        fragStart: read.fragStart,
+        steps,
+        prefix,
+        end: read.fragStart + prefix.at(-1),
+      })
     }
   }
   return { lengths, bases, lines: kept }
 }
-
-const sampleOf = name => name.split('#')[0]
-const haplotypeOf = name => name.split('#').slice(0, 2).join('#')
 
 function referenceOf(gfa, sample) {
   const sequences = new Map()
@@ -773,6 +822,11 @@ async function checkBuilds(graphWalks, binary, builds) {
   return ok
 }
 
+const misread = checkPathNames()
+if (misread.length > 0) {
+  console.error(misread.join('\n'))
+  process.exit(1)
+}
 const [checkout, binary, ...rest] = process.argv.slice(2)
 if (checkout === undefined || binary === undefined) {
   console.error(

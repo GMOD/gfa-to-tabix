@@ -15,6 +15,7 @@ import array
 import bisect
 import collections
 import gzip
+import os
 import re
 import sys
 import zlib
@@ -52,6 +53,26 @@ def bad(key, example):
 
 def seen(key):
     counts[key] += 0
+
+
+def listed_under(path):
+    # what #haplotype lists a path under: sample#haplotype where its name has
+    # three fields or more, its sample where it has fewer
+    fields = path.split('#')
+    return '#'.join(fields[:2]) if len(fields) > 2 else fields[0]
+
+
+def check_listed_under():
+    # listed_under against the table every reader of P line names shares
+    table = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../walks-container/dialect/p-names.tsv')
+    with open(table, encoding='utf-8') as f:
+        rows = [line.rstrip('\n').split('\t') for line in f][1:]
+    for _, _, path, _, under in rows:
+        if path != 'refused' and listed_under(path) != under:
+            sys.exit(f'claims7: lists {path!r} under {listed_under(path)!r}, p-names.tsv says {under!r}')
+
+
+check_listed_under()
 
 
 def deltas(field, prev=0):
@@ -237,8 +258,8 @@ claim('U8', 'a table\'s #unit line runs from 0 to |S|, where its sequence\'s las
 claim('U9', 'a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks '
       'departure, detail units nodes/route/walk, blocks units blocks; a unit of another kind is skipped with its rows')
 claim('U10', 'every sequence in the file has at least one tile, so no table is empty')
-claim('H1', '#haplotype lists each haplotype with walk or abridged rows, sample#haplotype, once each in byte order, '
-      'and no other')
+claim('H1', '#haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three '
+      'fields or more and the sample of fewer, once each in byte order, and no other')
 claim('H2', 'revisited:i:0 means no ref row or departure record has a pass count above 1 and no walk row has @k '
       'or :k')
 claim('H3', '#reference names the reference sample, the sample of every ref row\'s path')
@@ -774,7 +795,7 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             u.setdefault('walks', []).append((c, choices))
             u.setdefault('routes_used', set()).update(r for r, *_ in choices)
             if u['kind'] == 'tile':
-                haplotypes_with_rows.add('#'.join(path.split('#')[:2]))
+                haplotypes_with_rows.add(listed_under(path))
                 if piece in pieces[(path, frag)]:
                     bad('W5', ('two rows', path, frag, piece))
                 pieces[(path, frag)].add(piece)
@@ -799,7 +820,7 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             continue
         if kind == 'abridged':
             path, frag, piece = c[4], int(c[5]), int(c[7])
-            haplotypes_with_rows.add('#'.join(path.split('#')[:2]))
+            haplotypes_with_rows.add(listed_under(path))
             if piece in pieces[(path, frag)]:
                 bad('W5', ('two rows', path, frag, piece))
             pieces[(path, frag)].add(piece)

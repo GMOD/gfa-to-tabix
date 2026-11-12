@@ -77,14 +77,41 @@ def must_be_0(n, text):
         failures.append(text)
 
 
-def path_start(name):
-    # A P line's contig and start: `[start]` or `[start-end]`, `#start` after
-    # three fields, or `:start-end`; else the whole name, from 0
-    bracket = re.fullmatch(r'(.*)\[(\d+)(?:-[^\]]*)?\]', name)
-    hashed = re.fullmatch(r'([^#]*#[^#]*#[^#]*)#(\d+)', name)
-    colon = re.fullmatch(r'(.*):(\d+)-(\d+)', name)
-    match = bracket or hashed or colon
-    return (match.group(1), int(match.group(2))) if match else (name, 0)
+NUMBER = '([0-9]{1,19})'
+
+
+def path_start(name, bp):
+    # A P line's path and start, by walks-format.md's Path names: from the
+    # right, a `:a-b` its bp span, a `[s]` or `[s-e]`, a fourth `#` field of
+    # digits, the starts summed; (None, why) for a line the tool refuses
+    start = 0
+    colon = re.fullmatch('(.*):' + NUMBER + '-' + NUMBER, name, re.S)
+    cut = bool(colon) and bp > 0 and int(colon.group(3)) - int(colon.group(2)) == bp
+    if cut:
+        name, start = colon.group(1), int(colon.group(2))
+    bracket = re.fullmatch(r'(.*)\[' + NUMBER + '(?:-' + NUMBER + r')?\]', name, re.S)
+    if bracket:
+        if not cut and bracket.group(3) is not None and int(bracket.group(3)) - int(bracket.group(2)) != bp:
+            return None, 'end'
+        name, start = bracket.group(1), start + int(bracket.group(2))
+    fourth = re.fullmatch('([^#]*#[^#]*#[^#]*)#' + NUMBER, name, re.S)
+    if fourth:
+        name, start = fourth.group(1), start + int(fourth.group(2))
+    return (name, start) if name else (None, 'empty')
+
+
+def check_path_names():
+    # path_start against the table every reader of P line names shares
+    table = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../walks-container/dialect/p-names.tsv')
+    with open(table, encoding='utf-8') as f:
+        rows = [line.rstrip('\n').split('\t') for line in f][1:]
+    for name, bp, path, start, _ in rows:
+        want = (None, start) if path == 'refused' else (path, int(start))
+        if path_start(name, int(bp)) != want:
+            sys.exit(f'audit7: path_start reads {name!r} of {bp} bp as {path_start(name, int(bp))}, p-names.tsv says {want}')
+
+
+check_path_names()
 
 
 def read_gfa(path):
@@ -102,10 +129,14 @@ def read_gfa(path):
             elif c[0] == 'W' and c[6]:
                 paths.append((f'{c[1]}#{c[2]}#{c[3]}', int(c[4]), [int(x) for x in re.findall(r'[<>](\d+)', c[6])]))
             elif c[0] == 'P' and c[2] not in ('', '*'):
-                name, start = path_start(c[1])
-                paths.append((name, start, [int(x.rstrip('+-')) for x in c[2].split(',')]))
+                paths.append((c[1], None, [int(x.rstrip('+-')) for x in c[2].split(',')]))
     for name, start, steps in paths:
-        lines[name].append((start, start + sum(lengths[x] for x in steps)))
+        bp = sum(lengths[x] for x in steps)
+        if start is None:
+            name, start = path_start(name, bp)
+            if name is None:
+                sys.exit(f'audit7: {path}: a P line whose name the tool refuses ({start})')
+        lines[name].append((start, start + bp))
     return bases, lines, lengths
 
 
