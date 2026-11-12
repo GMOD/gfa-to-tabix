@@ -794,6 +794,17 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
   <!-- C135 --> A
   departure between two pieces is a record, even where the read holds
   both, so none comes back twice <!-- C135 -->
+- **A piece comes back trimmed** to its steps on the drawn stretch, with
+  the bp of it the read holds past either end stated, not as the whole
+  piece: a record for where the line goes after a step outside the
+  drawn stretch need not overlap `D`, so a whole piece could show its
+  line ending where it goes on
+- **An end at the drawn stretch's edge is not the line's end.** Inside
+  the drawn stretch a reader holds either the line's next step on the
+  sequence or the record that gives it, so a line with neither ends
+  there. At the edge it holds neither for a line that ends there and for
+  one that goes on in a tile it didn't read, and it says nothing of
+  which
 - Under the overlap rule, a reader can see two fragments of a path where
   format 6's lookback joined them through steps 80–92 kb outside the
   window, with nothing in the window missing; an attach fetch, which takes
