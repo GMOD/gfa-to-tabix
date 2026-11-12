@@ -11,7 +11,7 @@ set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(cd "$HERE/../../../.." && pwd)
 WORK=$(readlink -f "${1:?a directory to build in}")
-OLD=${2:-36a190d}
+OLD=${2:-17b5bc5}
 RUN=${RUN:-}
 escaped=0
 clean() { sed -E "s#/tmp/tmp\.[A-Za-z0-9]+/##g; s#$WORK/[a-z]+/##g" | cut -c1-330; }
