@@ -1894,7 +1894,7 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     for reference in &references {
         let path = format!("{prefix}.{}.walks.gz", text(&reference.sample));
         let mut header = format!(
-            "#walks\tformat:i:7\ttile:i:{}\trevisited:i:{}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
+            "#walks\tformat:i:8\ttile:i:{}\trevisited:i:{}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
             chunks.size,
             reference.visits_of.len(),
             options.stay,

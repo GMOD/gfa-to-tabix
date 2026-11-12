@@ -137,7 +137,7 @@ fn cover(lo: u64, hi: u64, tile: u64) -> Vec<(u64, u64)> {
 fn verify(data: &[u8], directory: &str, tile: u64) {
     let lines: Vec<Vec<&str>> = directory.lines().map(|l| l.split('\t').collect()).collect();
     let walks = &lines[0];
-    assert_eq!(walks[..2], ["#walks", "format:i:7"]);
+    assert_eq!(walks[..2], ["#walks", "format:i:8"]);
     assert_eq!(
         walks.last().unwrap(),
         &format!("bytes:i:{}", data.len()).as_str()
@@ -720,7 +720,7 @@ fn decode_file(text: &str) -> Decoded {
         };
         decode_rows(seq, *cs, &path, rows, false);
         let abridged: Vec<&Vec<&str>> = rows.iter().filter(|c| c[3] == "abridged").collect();
-        let mut held: Vec<u64> = abridged.iter().map(|c| c[12].parse().unwrap()).collect();
+        let mut held: Vec<u64> = abridged.iter().map(|c| c[9].parse().unwrap()).collect();
         held.dedup();
         let listed = blocks.remove(&(seq.clone(), *cs)).unwrap_or_default();
         assert_eq!(
@@ -740,7 +740,7 @@ fn decode_file(text: &str) -> Decoded {
             let decoded = decode_rows(seq, *cs, &path, record, true);
             let stands: Vec<&&Vec<&str>> = abridged
                 .iter()
-                .filter(|c| c[12].parse::<u64>().unwrap() == k)
+                .filter(|c| c[9].parse::<u64>().unwrap() == k)
                 .collect();
             assert_eq!(
                 stands.len(),
@@ -749,40 +749,26 @@ fn decode_file(text: &str) -> Decoded {
             );
             for ((name, piece, offset, steps), cols) in decoded.iter().zip(stands) {
                 let (start, end, first, last) = on_r(*offset, steps);
-                let (start_handle, start_copy) = with_copy(cols[10]);
-                let (end_handle, end_copy) = with_copy(cols[11]);
-                let (start_handle, end_handle) =
-                    (start_handle.parse().unwrap(), end_handle.parse().unwrap());
-                let start_at = path.copy(start_handle, start_copy);
-                let end_at = match end_copy {
-                    Some(k) => path.copy(end_handle, Some(k)),
-                    None => path.nearest(end_handle, start_at),
-                };
+                assert_eq!(cols.len(), 10, "{cols:?}");
                 assert_eq!(
-                    path.span([start_at, end_at].into_iter()),
+                    path.span(steps.iter().filter_map(|s| s.1)),
                     (cols[1].parse().unwrap(), cols[2].parse().unwrap()),
-                    "an abridged row's span is its start's and end's: {cols:?}"
+                    "an abridged row's span is its piece's steps on R: {cols:?}"
                 );
                 assert_eq!(
                     (
                         name.clone(),
+                        offset.to_string(),
                         piece.to_string(),
-                        start.to_string(),
                         steps.len().to_string(),
-                        (end - start).to_string(),
-                        steps[first],
-                        steps[last],
                     ),
                     (
                         format!("{}@{}", cols[4], cols[5]),
-                        cols[7].to_string(),
                         cols[6].to_string(),
+                        cols[7].to_string(),
                         cols[8].to_string(),
-                        cols[9].to_string(),
-                        (start_handle, Some(start_at)),
-                        (end_handle, Some(end_at)),
                     ),
-                    "{cols:?}"
+                    "an abridged row states its piece's start and steps as its detail row does: {cols:?}"
                 );
                 let row = listed
                     .iter()
@@ -832,8 +818,8 @@ fn decode_file(text: &str) -> Decoded {
                 assert_eq!(
                     walked.iter().map(|b| b.0.abs_diff(b.1)).sum::<u64>()
                         + walked[1..].iter().map(|b| b.2).sum::<u64>(),
-                    cols[9].parse::<u64>().unwrap(),
-                    "a blocks row's items from its first block to its last add up to its abridged row's bp: {row:?}"
+                    end - start,
+                    "a blocks row's items from its first block to its last add up to its piece's bp from its first step on R to its last: {row:?}"
                 );
                 assert_eq!(
                     (
@@ -1139,8 +1125,8 @@ fn a_tile_over_its_byte_budget_moves_the_fewest_paths_that_bring_it_within() {
 }
 // D#1#d's pieces 0 and 2 lie in tile 0, with piece 1 in tile 10 between
 // them, so tile 0 has a row for each, both naming the tile's second detail
-// record, unit 0:1, and each row's hapOffset and bp give where its own piece
-// lies on the contig: 0 to 12 and 24 to 36, not 0 to 24. Each row's span is
+// record, unit 0:1, and each row's hapOffset gives where its own piece starts
+// on the contig, 0 and 24. Each row's span is
 // its piece's on R, nodes 1 and 2, 0 to 12; the detail unit's extent is the
 // union of its walk rows' spans
 #[test]
@@ -1150,11 +1136,11 @@ fn an_abridged_row_stands_for_one_piece_and_names_its_detail_record() {
     assert_eq!(
         rows_of(r, "GRCh38#0#chr", "abridged", "D#1#d"),
         tsv(&[
-            "GRCh38#0#chr 0 12 abridged D#1#d 0 0 0 2 12 2 4 1",
-            "GRCh38#0#chr 0 12 abridged D#1#d 0 24 2 2 12 2 4 1",
-            "GRCh38#0#chr 12 24 abridged D#1#d 0 12 1 2 12 6 8 1",
-            "GRCh38#0#chr 12 24 abridged D#1#d 0 36 3 2 12 6 8 1",
-            "GRCh38#0#chr 24 30 abridged D#1#d 0 48 4 1 6 10 10 0",
+            "GRCh38#0#chr 0 12 abridged D#1#d 0 0 0 2 1",
+            "GRCh38#0#chr 0 12 abridged D#1#d 0 24 2 2 1",
+            "GRCh38#0#chr 12 24 abridged D#1#d 0 12 1 2 1",
+            "GRCh38#0#chr 12 24 abridged D#1#d 0 36 3 2 1",
+            "GRCh38#0#chr 24 30 abridged D#1#d 0 48 4 1 0",
         ])
     );
     assert_eq!(
@@ -1169,10 +1155,11 @@ fn an_abridged_row_stands_for_one_piece_and_names_its_detail_record() {
 
 // R is 1-6, 6 bp each; L starts with 30 bp of its own, 11 12 13, before 3,
 // and M ends with them after 3. Those steps lie at the contig's ends, where
-// no record covers them, so each abridged row spans its piece from its
-// first step on R to its last: L's piece 0 from 3's start at 30 for 12 bp,
-// M's piece 1 over 3 alone, at 12 for 6. nsteps still counts the whole
-// piece, 5 and 4 steps, which its detail record decodes.
+// no record covers them. Each abridged row spans its piece's steps on R,
+// L's piece 0 over 3 and 4 and M's piece 1 over 3 alone, and gives the
+// piece's start on its contig and all its steps, 5 and 4, as its detail
+// record's walk row does. The 30 bp are the run that leads L's blocks row
+// and ends M's.
 #[test]
 fn an_abridged_row_spans_its_piece_from_its_first_step_on_r_to_its_last() {
     let built = build(
@@ -1183,11 +1170,19 @@ fn an_abridged_row_spans_its_piece_from_its_first_step_on_r_to_its_last() {
     assert_eq!(
         rows_of(r, "R#0#c", "abridged", "L#1#c") + &rows_of(r, "R#0#c", "abridged", "M#1#c"),
         tsv(&[
-            "R#0#c 12 24 abridged L#1#c 0 30 0 5 12 6 8 0",
-            "R#0#c 24 30 abridged L#1#c 0 42 1 1 6 10 10 0",
-            "R#0#c 30 36 abridged L#1#c 0 48 2 1 6 12 12 0",
-            "R#0#c 0 12 abridged M#1#c 0 0 0 2 12 2 4 0",
-            "R#0#c 12 18 abridged M#1#c 0 12 1 4 6 6 6 1",
+            "R#0#c 12 24 abridged L#1#c 0 0 0 5 0",
+            "R#0#c 24 30 abridged L#1#c 0 42 1 1 0",
+            "R#0#c 30 36 abridged L#1#c 0 48 2 1 0",
+            "R#0#c 0 12 abridged M#1#c 0 0 0 2 0",
+            "R#0#c 12 18 abridged M#1#c 0 12 1 4 1",
+        ])
+    );
+    assert_eq!(
+        unit(r, "blocks", "10"),
+        tsv(&[
+            "#unit R#0#c 12 24 blocks 10",
+            "R#0#c 12 24 blocks L#1#c 0 0 30,12+12",
+            "R#0#c 12 18 blocks M#1#c 0 1 12+6,30",
         ])
     );
     assert_eq!(departures(r), "");
@@ -1311,9 +1306,9 @@ fn a_departure_block_is_named_dot_and_every_other_name_is_unique() {
 // back over 2 1 against R, 10 bp off R, 5 6, then 3, and ends with 50 bp
 // off R. Its list has the four blocks and the three runs in that order: the
 // second block runs against R from where the first ended, the third begins
-// 24 bp on, and the last 24 bp back. From the first block to the last the
-// items are the abridged row's 52 bp. The blocks row spans 0 to 36, where
-// the abridged row spans its end steps, 1 and 3, 0 to 18
+// 24 bp on, and the last 24 bp back. The items add up to the piece's 109 bp.
+// Both rows span the piece's steps on R, 0 to 36, and the abridged row gives
+// its start on its contig, 0, and its 11 steps
 #[test]
 fn a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order() {
     let built = build_text(
@@ -1337,7 +1332,7 @@ fn a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order() {
     let r = built.file("R");
     assert_eq!(
         rows_of(r, "R#0#c", "abridged", "H#1#c"),
-        tsv(&["R#0#c 0 18 abridged H#1#c 0 7 0 11 52 2 6 0"])
+        tsv(&["R#0#c 0 36 abridged H#1#c 0 0 0 11 0"])
     );
     assert_eq!(
         unit(r, "blocks", "0"),
@@ -1485,10 +1480,10 @@ fn a_walk_row_names_the_copy_it_starts_on_where_it_is_not_the_first() {
 // R walks 1 2 3 2 3 4 with 10 bp nodes, all in one tile. H carries 25 bp of
 // its own on node 5 between 1 and 3, so placement predicts 3 at 35 and puts
 // it on the second 3, at 40, though the occurrence nearest the route's entry
-// is the first: the choice names occurrence 1. Abridged, the row's end names
-// it too, since the 3 nearest its start is the first.
+// is the first: the choice names occurrence 1. Abridged, its last block lies
+// on that occurrence, 30 bp on from where the first block ended.
 #[test]
-fn a_route_exit_and_an_abridged_end_name_the_copy_where_it_is_not_the_nearest() {
+fn a_route_exit_names_the_copy_where_it_is_not_the_nearest_and_a_block_lies_on_it() {
     let lines = [
         "S 1 AAAAAAAAAA",
         "S 2 AAAAAAAAAA",
@@ -1514,7 +1509,14 @@ fn a_route_exit_and_an_abridged_end_name_the_copy_where_it_is_not_the_nearest() 
     );
     assert_eq!(
         rows_of(abridged.file("R"), "R#0#chr", "abridged", "H#1#h"),
-        tsv(&["R#0#chr 0 50 abridged H#1#h 0 0 0 3 45 2 6@1 0"])
+        tsv(&["R#0#chr 0 50 abridged H#1#h 0 0 0 3 0"])
+    );
+    assert_eq!(
+        unit(abridged.file("R"), "blocks", "0"),
+        tsv(&[
+            "#unit R#0#chr 0 50 blocks 0",
+            "R#0#chr 0 50 blocks H#1#h 0 0 0+10,25,30+10",
+        ])
     );
     assert_eq!(
         unit(abridged.file("R"), "detail", "0:0"),
@@ -1565,7 +1567,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         ("GRCh38", ["D#1", "H#1", "I#1", "Q#0"]),
         ("Q", ["D#1", "GRCh38#0", "H#1", "I#1"]),
     ] {
-        let walks = "#walks format:i:7 tile:i:10 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000";
+        let walks = "#walks format:i:8 tile:i:10 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000";
         let reference = format!("#reference {sample}");
         let listed = haplotypes.map(|h| format!("#haplotype {h}"));
         let lines: Vec<&str> = [walks, &reference]
@@ -1667,7 +1669,7 @@ fn a_reference_files_its_own_revisits_at_its_own_offset() {
     assert!(built.output.status.success());
     let walks = built.file("R");
     assert!(
-        header(walks).starts_with("#walks\tformat:i:7\ttile:i:10\trevisited:i:2\tstay:i:311\t")
+        header(walks).starts_with("#walks\tformat:i:8\ttile:i:10\trevisited:i:2\tstay:i:311\t")
     );
     assert_eq!(
         rows_of(walks, "R#0#chr", "ref", "R#0#chr"),
@@ -2143,7 +2145,7 @@ fn the_defaults_are_65536_311_1000000_and_3000000() {
     assert!(output.status.success());
     assert!(
         directory.starts_with(
-            "#walks\tformat:i:7\ttile:i:65536\trevisited:i:0\tstay:i:311\tabridge:i:1000000\tabridgebytes:i:3000000\tbytes:i:"
+            "#walks\tformat:i:8\ttile:i:65536\trevisited:i:0\tstay:i:311\tabridge:i:1000000\tabridgebytes:i:3000000\tbytes:i:"
         ),
         "{directory}"
     );
@@ -2474,7 +2476,7 @@ fn a_contig_departs_once_from_each_w_line_to_the_next_with_a_step_on_r() {
     let built = build("walks-records.gfa", &["--refs", "R"]);
     assert!(built.output.status.success());
     let walks = built.file("R");
-    assert!(header(walks).starts_with("#walks\tformat:i:7\t"));
+    assert!(header(walks).starts_with("#walks\tformat:i:8\t"));
     assert_eq!(
         rows_of(walks, "R#0#chr", "walk", "H#1#h"),
         tsv(&[

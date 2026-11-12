@@ -331,7 +331,6 @@ struct Walk {
     start: u32,
     start_at: usize,
     start_copy: Option<u32>,
-    end: u32,
     end_at: usize,
     choices: Vec<Choice>,
 }
@@ -439,7 +438,6 @@ fn encode(path: &Path, handles: &[u32], targets: &[u32], routes: &mut Routes) ->
         start,
         start_at,
         start_copy: (path.first(start) != Some(start_at)).then(|| path.rank(start_at)),
-        end,
         end_at,
         choices,
     })
@@ -894,9 +892,8 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
         members.sort_by_key(|&k| pieces[k].offset);
         let alone = encode_all(&path, &pieces, members)?;
         for (piece, walk, _) in &alone.walks {
-            let (span, row) = summary_row(&path, piece, walk, nodes, k)?;
-            emit(Stretch::Piece(span), &row)?;
             let (hull, row) = blocks_row(&path, piece, walk, lengths)?;
+            emit(Stretch::Piece(hull), &summary_row(piece, k))?;
             moved_out.blocks.push((Stretch::Piece(hull), row));
         }
         let mut record = Vec::new();
@@ -919,67 +916,24 @@ pub fn write_chunk<'g, S: Fn(usize) -> Option<&'g [u8]>>(
     Ok(())
 }
 
-// The `abridged` row standing for one piece of a path whose pieces in the
-// chunk are detail record `k`: its stretch on the contig from its first step
-// on R to its last, and all its steps; and the span on R of the first and
-// last steps its start and end decode to, which must be the piece's
-fn summary_row(
-    path: &Path,
-    piece: &Piece,
-    walk: &Walk,
-    nodes: Nodes,
-    k: usize,
-) -> Result<(Span, Vec<u8>), String> {
-    let Nodes { lengths, ids, .. } = nodes;
-    let on_r = |t: &u32| *t != NONE;
-    let first = piece.targets.iter().position(on_r).expect("a step on R");
-    let last = piece.targets.iter().rposition(on_r).expect("a step on R");
-    let bp = |steps: &[u32]| -> u64 {
-        steps
-            .iter()
-            .map(|&h| u64::from(lengths[(h >> 1) as usize]))
-            .sum()
-    };
+// The `abridged` row of one piece of a path whose pieces in the chunk are
+// detail record `k`: where the piece starts on its contig and how many steps
+// it has, as its walk row in that record states them
+fn summary_row(piece: &Piece, k: usize) -> Vec<u8> {
     let mut line = b"abridged\t".to_vec();
     line.extend_from_slice(piece.name);
     for n in [
         piece.frag,
-        piece.offset + bp(&piece.handles[..first]),
+        piece.offset,
         u64::from(piece.piece),
         piece.handles.len() as u64,
-        bp(&piece.handles[first..=last]),
+        k as u64,
     ] {
         line.push(b'\t');
         line.extend_from_slice(n.to_string().as_bytes());
     }
-    line.push(b'\t');
-    push_copy(&mut line, ids, walk.start, walk.start_copy);
-    line.push(b'\t');
-    let end_copy = (path.nearest(walk.end, walk.start_at) != Some(walk.end_at))
-        .then(|| path.rank(walk.end_at));
-    push_copy(&mut line, ids, walk.end, end_copy);
-    line.push(b'\t');
-    line.extend_from_slice(k.to_string().as_bytes());
     line.push(b'\n');
-    let start_at = match walk.start_copy {
-        Some(k) => path.copy(walk.start, k),
-        None => path.first(walk.start),
-    };
-    let end_at = start_at.and_then(|i| match end_copy {
-        Some(k) => path.copy(walk.end, k),
-        None => path.nearest(walk.end, i),
-    });
-    if (start_at, end_at) == (Some(walk.start_at), Some(walk.end_at)) {
-        let span = path
-            .span([walk.start_at, walk.end_at].into_iter())
-            .expect("two steps");
-        Ok((span, line))
-    } else {
-        Err(format!(
-            "{}: the abridged row does not decode to its piece's first and last steps on R",
-            String::from_utf8_lossy(piece.name)
-        ))
-    }
+    line
 }
 
 // A stretch of R that consecutive steps of a piece cover one after another in
