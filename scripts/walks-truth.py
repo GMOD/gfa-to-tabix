@@ -44,7 +44,8 @@ to its reference, and measure what a window costs to read.
       exactly the blocks the piece's decoded steps make: each a maximal run of
       consecutive steps on R, each beginning where the last ended on R, one
       way, with no step off R between, from the piece's first step on R to
-      its last. Prints each line, abridged row or blocks row that differs
+      its last; and whose ownBefore and ownAfter are the bp of the piece's
+      steps before its first step on R and after its last. Prints each line, abridged row or blocks row that differs
       and exits 1 if any does. The GFA can be gzip. One read
       of it takes each segment's length and the reference's nodes; --shards
       splits the paths by their names' hash, and each further read feeds
@@ -316,13 +317,15 @@ def stretch(steps, lens, offset):
 
 
 def blocks(steps, lens, tile):
-    """A detail piece's blocks as its blocks row states them, start, end and
-    list, or None with no step on R. A block is a maximal run of consecutive
-    steps on R, from the piece's first there to its last, each beginning where
-    the last ended on R, one way, with no step off R between. The list gives
-    each in path order as <d><+|-><len>[:<own>]: d where it begins on R less
-    where the block before ended, or less 0; + along R, - against; len its
-    bp; own the piece's bp off R since the block before, left out when 0."""
+    """A detail piece's blocks as its blocks row states them, start, end,
+    ownBefore, ownAfter and list, or None with no step on R. A block is a
+    maximal run of consecutive steps on R, from the piece's first there to its
+    last, each beginning where the last ended on R, one way, with no step off
+    R between. The list gives each in path order as <d><+|-><len>[:<own>]: d
+    where it begins on R less where the block before ended, or less 0; +
+    along R, - against; len its bp; own the piece's bp off R since the block
+    before, left out when 0. ownBefore and ownAfter are the piece's bp before
+    its first step on R and after its last."""
     on = [k for k, (_, i) in enumerate(steps) if i is not None]
     counted = slice(on[0], on[-1] + 1) if on else slice(0)
     runs, own, touching = [], 0, False
@@ -340,7 +343,8 @@ def blocks(steps, lens, tile):
     for begin, end, own in runs:
         tokens.append(f"{begin - at}{'+' if begin < end else '-'}{abs(end - begin)}" + (f":{own}" if own else ""))
         at = end
-    return (min(min(r[:2]) for r in runs), max(max(r[:2]) for r in runs), ",".join(tokens)) if runs else None
+    return (min(min(r[:2]) for r in runs), max(max(r[:2]) for r in runs), str(sum(lens[:counted.start])),
+            str(sum(lens[counted.stop:])), ",".join(tokens)) if runs else None
 
 
 class Summary:
@@ -396,7 +400,7 @@ def walk_rows(path, keep):
             if line[0] != "#" and listing is not None:
                 c = line.rstrip("\n").split("\t")
                 if c[3] == "blocks" and keep(c[4]):
-                    listed[((c[4], int(c[5])), int(c[6]))].append((listing, int(c[1]), int(c[2]), c[7]))
+                    listed[((c[4], int(c[5])), int(c[6]))].append((listing, int(c[1]), int(c[2])) + tuple(c[7:]))
             if line[0] == "#" or unit is None:
                 continue
             c = line.rstrip("\n").split("\t")
@@ -759,10 +763,10 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
             if len(stated) != 1:
                 wrong.append(f"{where} has {len(stated)} blocks rows")
             elif stated[0] != (unit,) + p.blocks:
-                (seq, name), lo, hi, text = stated[0]
-                wrong.append(f"{where}: its blocks row, in blocks unit {seq}:{name}, says {lo} {hi} {clipped(text)}; its piece "
-                             f"in detail unit {p.detail} decodes to {p.blocks[0]} {p.blocks[1]} {clipped(p.blocks[2])}, "
-                             f"for blocks unit {unit[0]}:{unit[1]}")
+                (seq, name), lo, hi, *text = stated[0]
+                wrong.append(f"{where}: its blocks row, in blocks unit {seq}:{name}, says {lo} {hi} {clipped(' '.join(text))}; "
+                             f"its piece in detail unit {p.detail} decodes to {p.blocks[0]} {p.blocks[1]} "
+                             f"{clipped(' '.join(p.blocks[2:]))}, for blocks unit {unit[0]}:{unit[1]}")
     for (line, piece), stated in sorted(listed.items()):
         wrong.append(f"{line[0]} line at {line[1]}: {len(stated)} blocks rows of piece {piece}, which has no abridged row")
     for w in wrong:

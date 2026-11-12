@@ -6,11 +6,12 @@
 # a case where the file contradicts the claim, with examples below it, and
 # the script then exits 1. Reads the file as text a line at a time and
 # decodes each tile's walk rows by the spec's decoding rules, holding one
-# sequence's abridged rows and, with --own, the steps of the paths in its
-# shard.
+# sequence's abridged rows, each piece's stretch on its contig and, with
+# --own, the steps of the paths in its shard.
 #
 # Usage: claims7.py walks.gz [--own] [--shard I/N] [--examples 3]
 import argparse
+import array
 import bisect
 import collections
 import gzip
@@ -281,6 +282,14 @@ claim('K5', 'a blocks row\'s first block begins at its abridged row\'s start ste
 claim('K6', 'a block is maximal: none begins where the one before ended, running the same way, with no own bp between')
 claim('K7', 'a blocks row\'s list writes each block as <d><+|-><len>[:<own>] in decimal with no leading zero, len at '
       'least 1 and own left out when 0')
+claim('K8', 'a blocks row has ownBefore, ownAfter and list, the first two decimal integers of 0 or more with no '
+      'leading zero')
+claim('K9', 'a W line\'s pieces tile its contig: a piece ends where the line\'s next piece starts, a walk row\'s piece '
+      'running from hapOffset over its steps\' bp and an abridged one from hapOffset - ownBefore to hapOffset + bp + '
+      'ownAfter')
+claim('K10', 'a W line\'s piece 0 starts at fragStart: a walk row\'s hapOffset, an abridged row\'s hapOffset - ownBefore')
+claim('K11', 'a departure record of an abridged piece\'s sequence and path whose hapStart is the piece\'s hapOffset + bp '
+      'has an ownBp of at least the piece\'s ownAfter')
 claim('D1', 'a departure record\'s ownTiles are tile names of its sequence that exist, in no repeat')
 claim('D2', 'a record has at most two ownTiles')
 claim('D3', 'a departure record\'s extent holds both breakpoints and is at least the breakpoint stretch')
@@ -315,7 +324,9 @@ interior_nodes = set()
 haplotypes_with_rows = set()
 pieces = collections.defaultdict(set)   # (path, frag) -> piece numbers
 abridged = []           # (seq, tile, path, frag, piece, d, (a, b))
-abridged_of = collections.defaultdict(list)  # (seq, tile) -> [(path, frag, piece, bp, (begin, along), (end, along))]
+abridged_of = collections.defaultdict(list)  # (seq, tile) -> [(path, frag, piece, bp, (begin, along), (end, along), hapOffset)]
+stretches = collections.defaultdict(lambda: array.array('q'))  # (path, frag) -> piece, start, end on the contig, per piece
+left_after = []         # (seq, path, hapOffset + bp, ownAfter) of the abridged pieces
 blocks_units = collections.Counter()    # (seq, name) of the blocks units
 detail_pieces = {}      # (seq, tile, d) -> {(path, frag, piece): span of all placed steps}
 detail_paths = collections.defaultdict(set)
@@ -340,6 +351,7 @@ reference = None
 detail_cost = {}  # (seq, cs, d) -> the cost of the record's pieces
 
 
+OWN = re.compile(r'0|[1-9][0-9]*')
 BLOCK = re.compile(r'(0|-?[1-9][0-9]*)([+-])([1-9][0-9]*)(?::([1-9][0-9]*))?')
 
 
@@ -369,18 +381,24 @@ def check_blocks(u):
         bad('K4', (key, 'unit', (u['lo'], u['hi']), 'its rows span',
                    (min(r[0] for r in rows), max(r[1] for r in rows))))
     by_key = {s[:3]: s for s in stand}
-    for a, b, path, frag, piece, field in rows:
-        blocks, unread = listed_blocks(field)
-        where = (key, path, frag, piece, field[:60])
+    for a, b, path, frag, piece, stated in rows:
+        where = (key, path, frag, piece, ' '.join(stated)[:60])
+        s = by_key.get((path, frag, piece))
+        owns = [int(x) for x in stated[:2] if OWN.fullmatch(x)]
+        if len(stated) != 3 or len(owns) != 2:
+            bad('K8', where)
+        elif s is not None:
+            stretches[(path, frag)].extend((piece, s[6] - owns[0], s[6] + s[3] + owns[1]))
+            left_after.append((u['seq'], path, s[6] + s[3], owns[1]))
+        blocks, unread = listed_blocks(stated[2]) if len(stated) == 3 else ([], [])
         if unread:
             bad('K7', where + ('token', unread[0][:20]))
-        else:
+        elif blocks:
             hull = (min(min(x[:2]) for x in blocks), max(max(x[:2]) for x in blocks))
             if hull != (a, b):
                 bad('K4', where + ('row', (a, b), 'its blocks span', hull))
             if any(p[1] == q[0] and (p[0] < p[1]) == (q[0] < q[1]) and not q[2] for p, q in zip(blocks, blocks[1:])):
                 bad('K6', where)
-            s = by_key.get((path, frag, piece))
             if s is not None:
                 held = sum(abs(x[1] - x[0]) + x[2] for x in blocks)
                 if held != s[3]:
@@ -515,7 +533,7 @@ with gzip.open(args.file, 'rt') as f:
         seen('U9')
         if u['kind'] == 'blocks':
             if kind == 'blocks':
-                u.setdefault('blocks', []).append((a, b, c[4], int(c[5]), int(c[6]), c[7]))
+                u.setdefault('blocks', []).append((a, b, c[4], int(c[5]), int(c[6]), c[7:]))
             continue
         if u['kind'] == 'departures':
             key = (a, b, '\t'.join(c[3:]))
@@ -678,6 +696,8 @@ with gzip.open(args.file, 'rt') as f:
                 if piece in pieces[(path, frag)]:
                     bad('W5', ('two rows', path, frag, piece))
                 pieces[(path, frag)].add(piece)
+                stretches[(path, frag)].extend((piece, int(c[6]), int(c[6]) + sum(
+                    t.len[i] if i is not None else t.nodes.get(h >> 1, 0) for h, i in steps)))
             else:
                 detail_pieces.setdefault((t.seq, u['cs'], u['d']), {})[(path, frag, piece)] = span(t, placed)
                 detail_paths[(t.seq, u['cs'], u['d'])].add((path, frag))
@@ -718,7 +738,7 @@ with gzip.open(args.file, 'rt') as f:
             abridged_of[(t.seq, t.name)].append((
                 path, frag, piece, int(c[9]),
                 (t.off[si] if along_start else t.off[si] + t.len[si], along_start),
-                (t.off[ei] + t.len[ei] if along_end else t.off[ei], along_end)))
+                (t.off[ei] + t.len[ei] if along_end else t.off[ei], along_end), int(c[6])))
             held_tiles[(t.seq, t.name)] = t
             continue
     finish_unit(unit)
@@ -842,7 +862,15 @@ for k in ('A2', 'A3', 'A4', 'A5', 'A7'):
 for key in sorted(set(abridged_of) | set(blocks_units)):
     if blocks_units[key] != (key in abridged_of):
         bad('K1', (key, 'abridged rows', len(abridged_of.get(key, [])), 'blocks units', blocks_units[key]))
-for k in ('K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7'):
+# K9, K10: each line's pieces by number, from their rows
+for (path, frag), flat in stretches.items():
+    line = sorted(zip(flat[0::3], flat[1::3], flat[2::3]))
+    if line[0][0] == 0 and line[0][1] != frag:
+        bad('K10', (path, frag, 'piece 0 starts at', line[0][1]))
+    for (piece, _, end), (after, start, _) in zip(line, line[1:]):
+        if after == piece + 1 and end != start:
+            bad('K9', (path, frag, 'piece', piece, 'ends at', end, 'piece', after, 'starts at', start))
+for k in ('K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10'):
     seen(k)
 
 
@@ -944,6 +972,16 @@ for (seq, _), c in recs.items():
             bad('D4', (seq, bp, strand, 'leave' if leave else 'rejoin', sorted(held)[:4]))
 for k in ('D1', 'D2', 'D3', 'D4', 'D5'):
     seen(k)
+
+# K11
+own_from = collections.defaultdict(list)
+for (seq, _), c in recs.items():
+    own_from[(seq, c[4], int(c[5]))].append(int(c[6]))
+for seq, path, at, after in left_after:
+    for own in own_from.get((seq, path, at), []):
+        if own < after:
+            bad('K11', (seq, path, 'hapStart', at, 'ownBp', own, 'ownAfter', after))
+seen('K11')
 
 # O1, O2, O4, L1: own steps from the decoded rows of the shard's paths
 if args.own:

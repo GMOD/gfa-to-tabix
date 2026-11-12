@@ -11,12 +11,16 @@ DATA=$REPO/tests/data
 mkdir -p "$W"
 "$BIN" "$BROKEN/blocks.gfa" --walks --refs R --tile 36 --abridge-bytes 1 -o "$W/b" > /dev/null 2>&1
 "$BIN" "$DATA/walks-two-refs.gfa" --walks --refs GRCh38 --tile 1000 --abridge-steps 1 -o "$W/t2" > /dev/null 2>&1
+"$BIN" "$DATA/walks-two-refs.gfa" --walks --refs GRCh38 --tile 10 --abridge-bytes 1 -o "$W/t10" > /dev/null 2>&1
 "$BIN" "$DATA/walks-contig-ends.gfa" --walks --refs R --tile 10 --abridge-bytes 1 -o "$W/ce" > /dev/null 2>&1
 "$BIN" "$DATA/walks-contig-ends.gfa" --walks --refs R --tile 10 --abridge-steps 1 -o "$W/cs" > /dev/null 2>&1
+"$BIN" "$DATA/walks-records.gfa" --walks --refs R --tile 1000 --abridge-steps 1 -o "$W/rc" > /dev/null 2>&1
 B=$W/b.R.walks.gz
 T2=$W/t2.GRCh38.walks.gz
+T10=$W/t10.GRCh38.walks.gz
 CE=$W/ce.R.walks.gz
 CS=$W/cs.R.walks.gz
+RC=$W/rc.R.walks.gz
 corrupt() {
   local name=$1 base=$2
   python3 -I "$BROKEN/corrupt.py" "$base" "$BROKEN/$name.walks.gz" "${@:3}"
@@ -37,22 +41,30 @@ corrupt blocks-unmerged "$B" '24+12:10' '24+6:10,0+6'
 corrupt blocks-first "$B" '0+12,0-12,' '12-12,12-12,'
 corrupt blocks-last "$B" '-24+6' '-18-6'
 corrupt blocks-own-zero "$B" '0+12,0-12,' '0+12,0-12:0,'
+corrupt blocks-after-zeroed "$B" $'\t7\t50\t0+12' $'\t7\t0\t0+12'
+corrupt blocks-after-off "$B" $'\t7\t50\t0+12' $'\t7\t51\t0+12'
+corrupt blocks-before-off "$B" $'\t7\t50\t0+12' $'\t8\t50\t0+12'
+corrupt blocks-ends-swapped "$B" $'\t7\t50\t0+12' $'\t50\t7\t0+12'
+corrupt blocks-before-leading-zero "$B" $'\t7\t50\t0+12' $'\t07\t50\t0+12'
+corrupt blocks-ends-missing "$B" $'\t7\t50\t0+12' $'\t0+12'
 
-H=$G$'\t0\t30\tblocks\tH#1#h\t100\t0\t0+18,0+12:3\n'
-D=$G$'\t0\t30\tblocks\tD#1#d\t0\t0\t0+24,-24+30\n'
+H=$G$'\t0\t30\tblocks\tH#1#h\t100\t0\t0\t0\t0+18,0+12:3\n'
+D=$G$'\t0\t30\tblocks\tD#1#d\t0\t0\t0\t0\t0+24,-24+30\n'
 corrupt blocks-merged "$T2" '0+6,6+18:6' '0+30'
 corrupt blocks-row-dropped "$T2" "$D" ''
 corrupt blocks-rows-swapped "$T2" "$H$D" "$D$H"
 corrupt blocks-row-twice "$T2" "$H" "$H$H"
 corrupt blocks-row-span "$T2" $'\t0\t30\tblocks\tH#1#h' $'\t0\t24\tblocks\tH#1#h'
+corrupt blocks-after-zeroed-mid "$T10" $'blocks\tQ#0#chr\t0\t0\t0\t6\t0+6' $'blocks\tQ#0#chr\t0\t0\t0\t0\t0+6'
+corrupt blocks-after-over-record "$RC" $'blocks\tG#1#g\t0\t0\t0\t0\t0+12' $'blocks\tG#1#g\t0\t0\t0\t19\t0+12'
 
 U10=$'#unit\tR#0#c\t12\t24\tblocks\t10\n'
-L10=$'R#0#c\t12\t24\tblocks\tL#1#c\t0\t0\t12+12\n'
-M10=$'R#0#c\t12\t18\tblocks\tM#1#c\t0\t1\t12+6\n'
+L10=$'R#0#c\t12\t24\tblocks\tL#1#c\t0\t0\t30\t0\t12+12\n'
+M10=$'R#0#c\t12\t18\tblocks\tM#1#c\t0\t1\t0\t30\t12+6\n'
 D100=$'#unit\tR#0#c\t12\t24\tdetail\t10:0\n'
 U20=$'#unit\tR#0#c\t24\t30\tblocks\t20\n'
-L20=$'R#0#c\t24\t30\tblocks\tL#1#c\t0\t1\t24+6\n'
-M0=$'R#0#c\t0\t12\tblocks\tM#1#c\t0\t0\t0+12\n'
+L20=$'R#0#c\t24\t30\tblocks\tL#1#c\t0\t1\t0\t0\t24+6\n'
+M0=$'R#0#c\t0\t12\tblocks\tM#1#c\t0\t0\t0\t0\t0+12\n'
 corrupt blocks-unit-wide "$CE" "$U10" $'#unit\tR#0#c\t12\t30\tblocks\t10\n'
 corrupt blocks-unit-dropped "$CE" "$U10$L10$M10" ''
 corrupt blocks-unit-early "$CE" "$U10$L10$M10" '' "$D100" "$U10$L10$M10$D100"
@@ -60,3 +72,4 @@ corrupt blocks-unit-empty "$CE" "$L20" ''
 corrupt blocks-row-misfiled "$CE" "$M10" '' "$U20" $'#unit\tR#0#c\t12\t30\tblocks\t20\n'"$M10"
 corrupt blocks-foreign-row "$CE" "$M0" "$M0"$'R#0#c\t0\t12\twalk\tM#1#c\t0\t0\t0\t2\t2\t.\n'
 corrupt blocks-unit-stray "$CS" "$M10" "$M10"$'#unit\tR#0#c\t0\t12\tblocks\t0\n'"$M0"
+corrupt blocks-before-off-later "$CE" "$L20" $'R#0#c\t24\t30\tblocks\tL#1#c\t0\t1\t1\t0\t24+6\n'
