@@ -807,7 +807,15 @@ fn decode_file(text: &str) -> Decoded {
                     }
                 }
                 assert_eq!(
-                    listed_blocks(row[7]),
+                    (
+                        row[7].parse::<u64>().unwrap(),
+                        row[8].parse::<u64>().unwrap()
+                    ),
+                    (bp_of(&steps[..first]), bp_of(&steps[last + 1..])),
+                    "a blocks row states its piece's bp off R before its first step on R and after its last: {row:?}"
+                );
+                assert_eq!(
+                    listed_blocks(row[9]),
                     walked,
                     "a blocks row lists the runs its piece's detail row decodes to: {row:?}"
                 );
@@ -1288,8 +1296,9 @@ fn a_departure_block_is_named_dot_and_every_other_name_is_unique() {
     assert_eq!(named.iter().collect::<BTreeSet<_>>().len(), named.len());
 }
 
-// R is 1-6, 6 bp each, in one tile. H walks 1 2, back over 2 1 against R,
-// 10 bp of its own, 5 6, then 3: four blocks. The second runs against R from where the
+// R is 1-6, 6 bp each, in one tile. H starts with 7 bp of its own, walks 1 2,
+// back over 2 1 against R, 10 bp of its own, 5 6, then 3, and ends with 50 bp
+// of its own: four blocks, with 7 bp before them and 50 after. The second runs against R from where the
 // first ended, the third begins 24 bp on with the 10 bp before it, and the
 // last 24 bp back. Their 42 bp and the 10 are the abridged row's 52. The
 // blocks row spans 0 to 36, where the abridged row spans its end steps, 1
@@ -1306,21 +1315,24 @@ fn a_blocks_row_lists_an_abridged_pieces_runs_on_r_in_path_order() {
             "S 5 AAAAAA",
             "S 6 CCCCCC",
             "S 11 GGGGGGGGGG",
+            "S 12 TTTTTTT",
+            "S 13 AAAAAAAAAAAAAAAAAAAA",
+            "S 14 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
             "W R 0 c 0 36 >1>2>3>4>5>6",
-            "W H 1 c 0 52 >1>2<2<1>11>5>6>3",
+            "W H 1 c 0 109 >12>1>2<2<1>11>5>6>3>13>14",
         ],
         &["--refs", "R", "--tile", "36", "--abridge-bytes", "1"],
     );
     let r = built.file("R");
     assert_eq!(
         rows_of(r, "R#0#c", "abridged", "H#1#c"),
-        tsv(&["R#0#c 0 18 abridged H#1#c 0 0 0 8 52 2 6 0"])
+        tsv(&["R#0#c 0 18 abridged H#1#c 0 7 0 11 52 2 6 0"])
     );
     assert_eq!(
         unit(r, "blocks", "0"),
         tsv(&[
             "#unit R#0#c 0 36 blocks 0",
-            "R#0#c 0 36 blocks H#1#c 0 0 0+12,0-12,24+12:10,-24+6",
+            "R#0#c 0 36 blocks H#1#c 0 0 7 50 0+12,0-12,24+12:10,-24+6",
         ])
     );
 }

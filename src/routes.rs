@@ -1091,8 +1091,9 @@ fn read_blocks(list: &[u8]) -> Option<Vec<Block>> {
         .collect()
 }
 
-// The `blocks` row of an abridged piece, keyed as its `abridged` row is, and
-// the span of R its blocks cover. Its list must read back as the blocks, which
+// The `blocks` row of an abridged piece, keyed as its `abridged` row is, with
+// its bp off R before its first step on R and after its last, and the span of
+// R its blocks cover. Its list must read back as the blocks, which
 // must begin at the piece's first step on R, end at its last, and with their
 // own bp hold every bp between
 fn blocks_row(
@@ -1102,22 +1103,30 @@ fn blocks_row(
     lengths: &[u32],
 ) -> Result<(Span, Vec<u8>), String> {
     let blocks = blocks_of(path, piece, lengths);
+    let on_r = |t: &u32| *t != NONE;
+    let first = piece.targets.iter().position(on_r).expect("a step on R");
+    let last = piece.targets.iter().rposition(on_r).expect("a step on R");
+    let bp_of = |steps: &[u32]| -> u64 {
+        steps
+            .iter()
+            .map(|&h| u64::from(lengths[(h >> 1) as usize]))
+            .sum()
+    };
+    let bp = bp_of(&piece.handles[first..=last]);
     let mut line = b"blocks\t".to_vec();
     line.extend_from_slice(piece.name);
-    for n in [piece.frag, u64::from(piece.piece)] {
+    for n in [
+        piece.frag,
+        u64::from(piece.piece),
+        bp_of(&piece.handles[..first]),
+        bp_of(&piece.handles[last + 1..]),
+    ] {
         line.push(b'\t');
         line.extend_from_slice(n.to_string().as_bytes());
     }
     line.push(b'\t');
     let listed = line.len();
     push_blocks(&mut line, &blocks);
-    let on_r = |t: &u32| *t != NONE;
-    let first = piece.targets.iter().position(on_r).expect("a step on R");
-    let last = piece.targets.iter().rposition(on_r).expect("a step on R");
-    let bp: u64 = piece.handles[first..=last]
-        .iter()
-        .map(|&h| u64::from(lengths[(h >> 1) as usize]))
-        .sum();
     let held: u64 = blocks.iter().map(|b| b.span.1 - b.span.0 + b.own).sum();
     let step = |at: usize| (path.offsets[at], path.ends[at]);
     let within = |b: &Block, (lo, hi): Span| b.span.0 <= lo && hi <= b.span.1;
