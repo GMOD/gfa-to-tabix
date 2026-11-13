@@ -102,9 +102,9 @@ taken flipped, and its departure records.
 - **Own steps:** a departure record's path's steps strictly between its
   leave step and its rejoin step <!-- C11 -->
 - **Attach fetch:** a reader's read of the tiles a departure record's
-  `ownTiles` names, for a record whose leave piece or rejoin piece the
-  window's read lacks. It takes the record's own steps from them and
-  nothing else ([departure](#departure)) <!-- C117 -->
+  `ownTiles` names, for a record whose own steps it wants and whose leave
+  piece or rejoin piece the window's read lacks. It takes the record's own
+  steps from them and nothing else ([departure](#departure)) <!-- C117 -->
 - **Drawn stretch:** one stretch of S, from the lowest start to the highest
   end over the reference nodes overlapping `D`, whole, and every step of
   a piece read whose position overlaps `D`
@@ -892,6 +892,11 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
 - The record's line is in every [pyramid](#units) bin of that extent's
   cover, the same text in each, and a reader drops exact duplicates
   <!-- C88 -->
+- Which records get an attach fetch is the reader's choice: a record's
+  line gives its two ends and its `ownBp` without one.
+  @jbrowse/graph-walks 7 makes one for a record that leaves or rejoins on
+  `D` ([Reading a window](#reading-a-window)) with own steps within its
+  `attachBp`, and for no other record
 - An attach fetch, for a record whose leave piece or rejoin piece the
   window's read lacks, reads the tiles `ownTiles` names and takes the
   record's own steps from them: the path's steps after its leave step and
@@ -921,8 +926,9 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
 - Gunzip each unit. <!-- C149 --> Decode a tile's rows from `kind` on by the rules below.
   Keep the departure lines overlapping `D` and drop exact duplicates
   <!-- C149 -->
-- An attach fetch reads the tiles a record's `ownTiles` names and takes
-  the record's own steps from them alone ([departure](#departure)). It
+- An attach fetch, for a record whose own steps the reader wants, reads
+  the tiles its `ownTiles` names and takes the record's own steps from
+  them alone ([departure](#departure)). It
   reads no `blocks` unit: an abridged piece's own run comes from its
   `abridged` row and the record
 - A cut that leaves an abridged piece of a window's tile unexpanded
