@@ -9,7 +9,16 @@
 # sequence's abridged rows, each piece's stretch on its contig and, with
 # --own, the steps of the paths in its shard.
 #
-# Usage: claims7.py walks.gz [--own] [--shard I/N] [--examples 3]
+# What it holds grows with the file, about 0.1 GB a MB, so a genome-wide
+# file is checked a sequence at a time: --seq S decodes the units of S alone,
+# and given more than once those of each S named. Of the other sequences'
+# rows it reads each piece's line, number and hapOffset and whether a row
+# has bases, which is all the claims about a whole line, the #haplotype
+# list and SQ:Z: take; N2 and N3, about a node, are then checked within the
+# sequences named, and every other claim is about one sequence.
+# claims7-seqs.sh runs it on every sequence of a file.
+#
+# Usage: claims7.py walks.gz [--own] [--shard I/N] [--seq S]... [--examples 3]
 import argparse
 import array
 import bisect
@@ -25,10 +34,14 @@ ap.add_argument('file')
 ap.add_argument('--own', action='store_true',
                 help='decode every path of the shard into steps and check each record\'s own steps and ownTiles')
 ap.add_argument('--shard', default='0/1', help='I/N: the paths --own checks, by a hash of their name')
+ap.add_argument('--seq', action='append', help='check this reference sequence alone, or each one named, so a '
+                'genome-wide file fits in memory: the claims about a line, the #haplotype list and SQ:Z: still read '
+                'every sequence, N2 and N3 only those named')
 ap.add_argument('--examples', type=int, default=3)
 args = ap.parse_args()
 sys.stdout.reconfigure(errors='surrogateescape')
 SHARD, SHARDS = map(int, args.shard.split('/'))
+SEQS = None if args.seq is None else set(args.seq)
 
 counts = collections.Counter()
 examples = collections.defaultdict(list)
@@ -385,6 +398,18 @@ detail_paths = collections.defaultdict(set)
 records = []
 breakpoints = collections.defaultdict(lambda: collections.defaultdict(set))  # seq -> bp -> {('end'|'start', node, pass offset)}
 own_steps = collections.defaultdict(list)  # path -> [(frag, hapOffset of step, end, seq, tile, handle, pos, step index)]
+elsewhere = collections.defaultdict(lambda: array.array('q'))  # (path, frag) -> piece, hapOffset, per piece off --seq
+
+
+def row_elsewhere(kind, line):
+    # a row of a sequence --seq leaves out: what the claims about a whole line, #haplotype and SQ:Z: take of it
+    c = line.split('\t', 8)
+    row = c[3] if len(c) > 3 else None
+    if kind == 'tile' and row in ('walk', 'abridged') and len(c) > 7:
+        haplotypes_with_rows.add(listed_under(c[4]))
+        elsewhere[(c[4], int(c[5]))].extend((int(c[7]), int(c[6])))
+    elif row in ('ref', 'nodes'):
+        rows_with_bases['\tSQ:Z:' in line] += 1
 
 
 def in_shard(path):
@@ -547,6 +572,7 @@ def kinds_in_order(kinds, order):
 
 
 unit = None
+kind_elsewhere = None
 dep_prev = None
 with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f:
     for line in f:
@@ -575,6 +601,11 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
                 holes.append((c[1], int(c[2]), int(c[3])))
             elif c[0] == '#reference':
                 reference = c[1]
+            elif c[0] == '#unit' and SEQS is not None and c[1] not in SEQS:
+                finish_unit(unit)
+                unit, kind_elsewhere = None, c[4]
+                if not sequences or sequences[-1] != c[1]:
+                    sequences.append(c[1])
             elif c[0] == '#unit' and c[4] == 'table':
                 finish_unit(unit)
                 unit = dict(kind='table', name=c[5], seq=c[1], lo=int(c[2]), hi=int(c[3]), tile=None)
@@ -606,6 +637,9 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
                 dep_prev = None
             continue
         u = unit
+        if u is None:
+            row_elsewhere(kind_elsewhere, line)
+            continue
         if u['kind'] not in ROWS:
             continue
         c = line.split('\t')
@@ -836,6 +870,10 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             continue
     finish_unit(unit)
 
+for seq in sorted(SEQS or ()):
+    if seq not in units_of:
+        sys.exit(f'claims7.py: {args.file}: no sequence {seq}')
+
 # U1: unit order, U4: points, U8: tables
 for seq, us in units_of.items():
     kinds = [k for k, *_ in us]
@@ -896,7 +934,7 @@ for (s1, a1, b1), (s2, a2, b2) in zip(holes, holes[1:]):
 stated_holes = collections.defaultdict(list)
 for s_, a_, b_ in holes:
     stated_holes[s_].append((a_, b_))
-for seq in sorted(set(units_of) | set(stated_holes)):
+for seq in sorted(s for s in set(units_of) | set(stated_holes) if SEQS is None or s in SEQS):
     expected = uncovered(ref_stretches[seq], seq_end[seq])
     if sorted(stated_holes.get(seq, [])) != expected:
         bad('G5', (seq, 'stated', sorted(stated_holes.get(seq, []))[:4], 'uncovered by ref rows', expected[:4]))
@@ -922,8 +960,9 @@ seen('S1')
 
 # W5: piece numbering
 for (path, frag), ps in pieces.items():
-    if sorted(ps) != list(range(len(ps))):
-        bad('W5', (path, frag, sorted(ps)[:10]))
+    numbered = sorted([*ps, *elsewhere.get((path, frag), ())[0::2]])
+    if numbered != list(range(len(numbered))):
+        bad('W5', (path, frag, numbered[:10]))
 seen('W5')
 
 # A2-A8
@@ -967,11 +1006,13 @@ for key in sorted(set(abridged_of) | set(blocks_units)):
         bad('K1', (key, 'abridged rows', len(abridged_of.get(key, [])), 'blocks units', blocks_units[key]))
 # K9, K10: each line's pieces by number, from their rows
 for (path, frag), flat in stretches.items():
-    line = sorted(zip(flat[0::3], flat[1::3], flat[2::3]))
-    if line[0][0] == 0 and line[0][1] != frag:
+    off = elsewhere.get((path, frag), ())
+    line = sorted([*zip(flat[0::3], flat[1::3], flat[2::3]), *((piece, start, None) for piece, start in zip(off[0::2], off[1::2]))],
+                  key=lambda x: x[:2])
+    if line[0][0] == 0 and line[0][2] is not None and line[0][1] != frag:
         bad('K10', (path, frag, 'piece 0 starts at', line[0][1]))
     for (piece, _, end), (after, start, _) in zip(line, line[1:]):
-        if after == piece + 1 and end != start:
+        if after == piece + 1 and end is not None and end != start:
             bad('K9', (path, frag, 'piece', piece, 'ends at', end, 'piece', after, 'starts at', start))
 for k in ('K1', 'K2', 'K3', 'K4', 'K6', 'K7', 'K8', 'K9', 'K10', 'K12'):
     seen(k)
@@ -981,7 +1022,9 @@ for _, _, path, frag, piece, _, _, offset, _, hap_bp in abridged:
     abridged_lines[(path, frag)][piece] = (offset, hap_bp)
 for (path, frag), rows in abridged_lines.items():
     flat = stretches.get((path, frag), ())
-    starts = dict(zip(flat[0::3], flat[1::3]))
+    off = elsewhere.get((path, frag), ())
+    starts = dict(zip(off[0::2], off[1::2]))
+    starts.update(zip(flat[0::3], flat[1::3]))
     starts.update((piece, offset) for piece, (offset, _) in rows.items())
     for piece, (offset, hap_bp) in rows.items():
         if piece == 0 and offset != frag:
@@ -1221,6 +1264,8 @@ if args.own:
 
 print(f'# {args.file}: {sum(len(v) for v in units_of.values())} units, {len(recs)} departure records, '
       f'{len(abridged)} abridged rows, {copies_seen} walk rows with copies')
+if SEQS is not None:
+    print(f'# --seq: the units of {len(SEQS)} of {len(sequences)} sequences; N2 and N3 hold their nodes to their own rows')
 for key in CLAIMS:
     if key in counts:
         print(f'{counts[key]}\t{key} {CLAIMS[key]}')

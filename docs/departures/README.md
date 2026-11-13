@@ -42,9 +42,15 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
   with no steps, abutting W lines, paths that cross sequences, paths off
   one or both references, and sometimes its path lines before its S lines.
   CI runs seeds 1 to 6 (`scripts/check-walks.sh`)
-- `claims7.py walks.gz [--own] [--shard I/N]`: each claim of
+- `claims7.py walks.gz [--own] [--shard I/N] [--seq NAME]`: each claim of
   [claims7.md](claims7.md) that a file can show, checked from the spec's
-  sentence; exits 1 where the file contradicts one
+  sentence; exits 1 where the file contradicts one. What it holds grows
+  with the file, so `claims7-seqs.sh walks.gz` checks a genome-wide file a
+  sequence at a time, with `--seq` on each and the counts added up. Of the
+  other sequences a `--seq` run reads each piece's line, number and
+  `hapOffset` and whether a row has bases, so the claims about a whole
+  line, the `#haplotype` list and `SQ:Z:` still take the whole file. N2
+  and N3, about a node, are then checked within one sequence
 - `audit6.py walks.bed.gz [--truth dep.tsv] [--shard I/N] [--seq NAME]`:
   reads a format 6 file, from gfa-to-tabix 3.x, as a reader would and
   checks it, as the rebuild's README describes. `--shard` splits the paths so a large graph fits in

@@ -2,7 +2,8 @@
 # Builds fuzz7-gen.py's random graphs under thirteen option sets, with two
 # references, R and Q, every third seed with 0 bp nodes, every second with
 # a second haplotype of R and every third with same-node hairpins, and runs on each file the release checks
-# (verify7.py), the claims checks (claims7.py --own), the audit (audit7.py,
+# (verify7.py), the claims checks (claims7.py --own, whole and a sequence at
+# a time by claims7-seqs.sh), the audit (audit7.py,
 # given the graph), the blocks rows expanded against their tiles' ref rows
 # (expand7.py), the reader written from the spec alone (spec8.py) and walks-truth.py's rebuild of every line against the
 # GFA; prints every seed whose
@@ -37,6 +38,10 @@ for seed in $(seq "$from" "$to"); do
       f=$out.$r.walks.gz
       checks=$(python3 -I "$HERE/verify7.py" "$f" 2>&1) || bad="$bad $r verify7: $checks;"
       claims=$(python3 -I "$HERE/claims7.py" "$f" --own 2>&1) || bad="$bad $r claims7: $(echo "$claims" | grep -E '^[1-9][0-9]*'$'\t''|Traceback|Error' | tr '\n' ' ');"
+      seqs=$(bash "$HERE/claims7-seqs.sh" "$f" --own 2>&1) ||
+        bad="$bad $r claims7 a sequence at a time: $(echo "$seqs" | grep -E '^[1-9][0-9]*'$'\t''|Traceback|Error' | tr '\n' ' ');"
+      [ "$(grep -E '^[0-9]+'$'\t' <<< "$claims" | sort)" = "$(grep -E '^[0-9]+'$'\t' <<< "$seqs" | sort)" ] ||
+        bad="$bad $r claims7 checks other claims a sequence at a time than on the whole file;"
       audit=$(python3 -I "$HERE/audit7.py" "$f" --gfa "g$seed.gfa" --window 64 --point 16 2>&1) ||
         bad="$bad $r audit7: $(echo "$audit" | sed -n '/^audit7: /,$p' | tr '\n' ' ')$(echo "$audit" | grep -E 'Traceback|Error' | tr '\n' ' ');"
       expanded=$(python3 -I "$HERE/expand7.py" "$f" 2>&1) || bad="$bad $r expand7: $(echo "$expanded" | tr '\n' ' ');"

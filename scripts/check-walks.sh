@@ -3,7 +3,8 @@
 # check-dialect.sh on the GFAs of docs/walks-container/dialect; builds every
 # walk fixture under four option sets, and some under options of their
 # own, and runs on each file the release checks (verify7.py), the claims
-# checks (claims7.py --own), the audit (audit7.py, given the fixture), the
+# checks (claims7.py --own, whole and by claims7-seqs.sh a sequence at a
+# time, which must check the same claims), the audit (audit7.py, given the fixture), the
 # blocks rows expanded against their tiles' ref rows (expand7.py), the
 # reader written from the spec alone (spec8.py) and walks-truth.py's rebuild
 # of every line against the GFA; runs them too on files that use the
@@ -26,10 +27,14 @@ bash "$S/broken.sh" || failed=1
 bash "$REPO/scripts/check-dialect.sh" "$B" || failed=1
 # runs the six checks on walk file $2, built from the GFA $3
 checks() {
-  local label=$1 f=$2 gfa=$3 out
+  local label=$1 f=$2 gfa=$3 out seqs
   out=$(python3 -I "$S/verify7.py" "$f" 2>&1) || { echo "$label: $out"; failed=1; }
   out=$(python3 -I "$S/claims7.py" "$f" --own 2>&1) ||
     { echo "$label:"; echo "$out" | grep -vE '^0'$'\t'; failed=1; }
+  seqs=$(bash "$S/claims7-seqs.sh" "$f" --own 2>&1) ||
+    { echo "$label, a sequence at a time:"; echo "$seqs" | grep -vE '^0'$'\t'; failed=1; }
+  [ "$(grep -E '^[0-9]+'$'\t' <<< "$out" | sort)" = "$(grep -E '^[0-9]+'$'\t' <<< "$seqs" | sort)" ] ||
+    { echo "$label: claims7 checks other claims a sequence at a time than on the whole file"; failed=1; }
   out=$(python3 -I "$S/audit7.py" "$f" --gfa "$gfa" --window 64 --point 16 2>&1) ||
     { echo "$label:"; echo "$out" | sed -n '/^audit7: /,$p'; echo "$out" | grep -E 'Traceback|Error'; failed=1; }
   out=$(python3 -I "$S/expand7.py" "$f" 2>&1) || { echo "$label: $out"; failed=1; }

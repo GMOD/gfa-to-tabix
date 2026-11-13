@@ -105,6 +105,9 @@ row-new-kind-in-blocks	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 r
 row-new-kind-in-departures	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row in every departure block
 row-new-kind-in-detail	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row in every detail unit
 row-new-kind-in-tile	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row in every tile
+seq-bases-missing	walks-sequences.gfa	claims7	the SQ:Z: tag dropped from chr10's first ref row, in a file of ten sequences whose other rows carry bases
+seq-piece-number	walks-sequences.gfa	claims7 spec8 rebuild	H#1's piece 2, on chr10, numbered 20, on a line with pieces on ten sequences
+seq-piece-offset	walks-sequences.gfa	claims7 audit7 spec8 rebuild	the hapOffset 16 of H#1's piece 2, on chr10, made 17, where its piece 1, on chr9, ends at 16
 sqbad	walks-sequences.gfa	audit7	a base of a ref row's SQ:Z: changed
 table-S-wrong	walks-two-refs.gfa	verify7 claims7	the table stating 0 40 for 0 36
 table-named	walks-two-refs.gfa	claims7 spec8	the table named x
