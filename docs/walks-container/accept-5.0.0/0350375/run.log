@@ -1,0 +1,13 @@
+2026-11-13 06:09:10 start 0350375 Link no step of a piece an expanding cut does not build
+2026-11-13 06:09:14 suite exit 0
+2026-11-13 06:09:14 typecheck exit 0
+2026-11-13 06:09:14 lint exit 0
+2026-11-13 06:09:15 format exit 0
+2026-11-13 06:10:14 release-check grch38 exit 0
+2026-11-13 06:11:20 release-check chm13 exit 0
+2026-11-13 06:24:41 equality pggbY exit 1
+2026-11-13 07:49:59 equality grch38.0 exit 0
+2026-11-13 07:52:09 equality grch38.1 exit 0
+2026-11-13 08:10:15 equality chm13.1 exit 0
+2026-11-13 08:10:53 equality chm13.0 exit 0
+2026-11-13 08:10:53 done

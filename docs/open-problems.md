@@ -490,16 +490,45 @@ W  B  1  c     0  32  >1>2>6>3
   reversed ([revref.gfa](walks-container/pggbY/revref.gfa)). graph-walks
   cbca728 reads the strand from the tile's `ref` rows, and sets the
   difference above aside by name where `revisited` is above 0
-- With both mended, ten links still differ over seven GRCh38 windows,
-  at 11.56 and 20.08 Mb: each joins two reference nodes, only the loaded
-  cut holds it, and no fragment or departure of either cut walks it. One
-  was traced to steps the loaded cut decodes and doesn't return; the
-  other nine are untraced, and the harness still fails on them
+- With both mended, ten links still differed over seven GRCh38 windows,
+  at 11.56 and 20.08 Mb: each joined two reference nodes, only the loaded
+  cut held it, and no fragment or departure of either cut walked it.
+  That was graph-walks cbca728 on the file built before `hapBp`, and has
+  not been run again
+- **The cause, traced on the files gfa-to-tabix 5.0.0 built**
+  ([outputs](walks-container/accept-5.0.0/)): a detail unit holds every
+  moved piece of one W line in its tile, and a cut that expanded the walk
+  linked each route of the unit, whichever of its pieces it built. A
+  piece it stated as bp alone so gave it links between reference nodes
+  that other walks' steps kept, and the cut that expands nothing held
+  none of them. graph-walks 8e3d397 shows it on Minigraph-Cactus too: 6
+  links in 1 of 1,000 windows of HPRC v2.1's CHM13 file, at chr1
+  16.39 Mb ([probe](walks-container/accept-5.0.0/probe-why.ts)), none
+  in 1,000 of its GRCh38 file, and 660 over 24 windows of pggb chrY on
+  CHM13
+- graph-walks 0350375 links the routes of
+  the pieces a cut builds and no other. Both genome files then differ
+  nowhere over the same 1,000 windows each, and pggb chrY in 4 links
+  over 2 of its 24 windows
+- Those 4 are the first difference above where no step shows it: a piece
+  the cut builds takes a route through a node the reference passes
+  elsewhere, on steps the cut trims off its fragment
+  ([probe](walks-container/accept-5.0.0/probe-pggb.ts)). It can't happen
+  where `revisited` is 0
+- One pggb window differs otherwise, and is untraced: at CHM13 chrY
+  28.84 Mb the loaded cut walks links with an end off the reference
+  7,298 times and the unloaded one 7,294
 - Suggested next step, when someone asks for pggb walk tracks: measure
   inline own steps under a size cap on the Yq12 windows, as
   [the section above](#departure-records-and-attach-fetches-on-pggb)
   proposes. A unit kind holding them is a later addition a format 8
   reader skips
+- Suggested next step for the links: decide whether a cut should list
+  the reference's links and those its returned steps walk, and no
+  other. That would end the 4 above, and the links with an end off the
+  reference that a cut walks nowhere, which the harness sets aside in
+  both cuts. It would also drop links from cuts of tiles nothing is
+  abridged in, so measure it on bandage-core's views first
 
 ## Alleles on two reference samples
 

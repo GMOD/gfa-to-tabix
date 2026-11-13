@@ -1,0 +1,13 @@
+~/work/blocks/genome-5.0.0/hprc-v2.1-mc-chm13.CHM13.walks.gz: 563 abridged tiles, 463 haplotypes cut 64 at a time; the 1 windows stated, plain, contained, contained+1000
+DIFF links-only-loaded-no-returned-step-walks CHM13#0#chr1:16394106-16395106 plain haplotypes 1-64 between reference nodes: 2032104] 2032108[
+DIFF links-only-loaded-no-returned-step-walks CHM13#0#chr1:16394106-16395106 plain haplotypes 1-64 between reference nodes: 2033985] 2033988[
+DIFF links-only-loaded-no-returned-step-walks CHM13#0#chr1:16394106-16395106 plain haplotypes 193-256 between reference nodes: 2031082] 2031086[
+DIFF links-only-loaded-no-returned-step-walks CHM13#0#chr1:16394106-16395106 plain haplotypes 193-256 between reference nodes: 2033535] 2033537[
+DIFF links-only-loaded-no-returned-step-walks CHM13#0#chr1:16394106-16395106 plain haplotypes 321-384 between reference nodes: 2034493] 2034495[
+DIFF links-only-loaded-no-returned-step-walks CHM13#0#chr1:16394106-16395106 plain haplotypes 385-448 between reference nodes: 2034508] 2034510[
+read: 4187952 bytes by the unloaded cuts, each held to bytesFor as its most; 0 tiles read past a window's, each held to a record that leaves or rejoins on the window and its context; 169670 departures that leave or rejoin there within the attach limit and 1443 that do not, each held to own steps for the first alone; 0 of those records held to their tiles' blocks rows, 0 of them with own steps in an abridged piece; 0 pairs of cuts threw
+compared: 1 windows, 24 pairs of cuts, 2054 fragments (634 with unloaded pieces, 64115 placeholder steps), 171113 departures, 4352 gaps, 1389 haplotype covers, 34535 reference nodes kept, 760138 links
+fragment ends where the loaded cut ran on to the end of the node straddling the context: 0
+set aside, not compared: 334 links of the unloaded cuts and 279 of the loaded with an end off the reference that the cut walks nowhere; the identity of the 73320 nodes and placeholders off the reference the unloaded cuts keep and the 9950 nodes the loaded keep, whose bp are compared run by run; links between two nodes off the reference; each fragment's list of unloaded pieces and its unloadedSteps, which only an unloaded cut has
+set aside, by design: 0 reference nodes and 0 links between reference nodes that only a loaded cut keeps, by a step inside a run the unloaded cut holds as a placeholder, on a node the file's reference passes elsewhere (revisited:i:0); such a step's links are walked as a node's off the reference
+differences from the loaded cut: 6 in 4 pairs of cuts, links-only-loaded-no-returned-step-walks 6

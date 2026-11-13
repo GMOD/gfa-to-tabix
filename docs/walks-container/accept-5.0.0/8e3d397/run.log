@@ -1,0 +1,10 @@
+2026-11-12 22:42:46 start
+2026-11-12 22:43:55 release-check grch38 exit 0
+2026-11-12 22:45:12 release-check chm13 exit 0
+2026-11-12 22:52:24 read-scan grch38 exit 0
+2026-11-12 23:01:40 read-scan chm13 exit 0
+2026-11-13 00:36:41 equality grch38.0 exit 0
+2026-11-13 00:37:51 equality grch38.1 exit 0
+2026-11-13 00:55:53 equality chm13.1 exit 0
+2026-11-13 00:57:27 equality chm13.0 exit 1
+2026-11-13 00:57:27 done
