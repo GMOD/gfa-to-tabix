@@ -44,8 +44,11 @@ detail-interior-flipped	walks-contig-ends.gfa	rebuild	detail 10:0's route interi
 dir-tag-header-line	walks-two-refs.gfa	verify7 spec8	a tag on the directory's #header line
 dir-tag-seq-line	walks-two-refs.gfa	verify7 audit7 spec8	a tag on the directory's line of GRCh38#0#chr
 empty-block	walks-two-refs.gfa	verify7 claims7	an empty departure block after the table
+entry-dropped	walks-two-refs.gfa	verify7	the table entry of the departures unit at 10 left out, the unit's bytes kept, so the entries no longer tile the bytes
 format-7	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	the header and directory stating format:i:7
 g1-walk-order	walks-two-refs.gfa	claims7 spec8	H's and D's walk rows swapped in tile 0
+graph-other	walks-two-refs.gfa	rebuild	graph:Z: 7619ff637c3b074b, the hash of the GFA's S lines, made 7619ff637c3b074c
+graph-uppercase	walks-two-refs.gfa	verify7 rebuild	graph:Z: written in uppercase hex digits
 gzip-not-bgzf	walks-two-refs.gfa	verify7	each unit one plain gzip member, not BGZF members
 hap-dup	walks-two-refs.gfa	claims7 spec8	#haplotype D#1 listed twice
 hap-missing	walks-two-refs.gfa	claims7 spec8	#haplotype D#1 left out
@@ -66,6 +69,8 @@ interior-flipped	walks-two-refs.gfa	rebuild	tile 0's route interior <6 made >6, 
 interior-lengths-traded	broken/follow.gfa	audit7 rebuild	nodes 13 and 14, 20 and 30 bp, which B always walks together, stated as 25 and 25
 interior-lengths-traded-abridged	broken/follow.gfa	audit7 rebuild	the same in B's detail record
 last-piece-dropped	walks-two-refs.gfa	claims7 audit7 spec8 rebuild	D's piece 3 in tile 10 left out
+leftout-other	walks-two-refs.gfa	rebuild	leftout:i: 1, U#1#u's line, made 0
+leftout-twice	walks-two-refs.gfa	verify7 rebuild	leftout:i:1 stated twice
 line-end-longer	broken/follow.gfa	audit7 rebuild	node 11, the 10 bp B ends on off the reference, stated as 17 bp: B's line runs 7 bp past its end
 line-end-longer-abridged	broken/follow.gfa	audit7 rebuild	the same in B's detail record, its blocks row's trailing run 10 made 17 with it
 missing-overstated	broken/ends-off.gfa	claims7 audit7 spec8	G's record, 39 bp of its 72 own bp between its two W lines, stating missingBp 60
@@ -122,7 +127,3 @@ walk-span-wrong	walks-two-refs.gfa	claims7 audit7 spec8	D's piece 1 in tile 10 s
 walks-differ-ctl	walks-two-refs.gfa	verify7 spec8	the data's #walks line stating stay:i:5, the directory's stay:i:0
 walks-differ-len100	walks-two-refs.gfa	verify7 spec8	the data's #walks line differing, and #header 0 100
 wide	walks-two-refs.gfa	verify7 claims7 spec8	a walk row and tile 0 widened to 0 15 past its ref rows' 0 12
-graph-other	walks-two-refs.gfa	rebuild	graph:Z: 7619ff637c3b074b, the hash of the GFA's S lines, made 7619ff637c3b074c
-graph-uppercase	walks-two-refs.gfa	verify7 rebuild	graph:Z: written in uppercase hex digits
-leftout-other	walks-two-refs.gfa	rebuild	leftout:i: 1, U#1#u's line, made 0
-leftout-twice	walks-two-refs.gfa	verify7 rebuild	leftout:i:1 stated twice

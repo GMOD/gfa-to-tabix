@@ -80,6 +80,7 @@ corrupt passes-second-row "$RP" $'\tref\tR#0#chr\t0\t12\t1\t2\t6,-2\t6,6\t2,2' $
 corrupt point "$T0" $'\t0\t10\tdepartures\t.\n'"$I6" $'\t0\t10\tdepartures\t.\n'"$I6"$G$'\t5\t5\tdeparture\tI#1#i\t6\t0\t0\t6\t+\t1\t18\t-\t1\t.\n'
 corrupt record-bogus-path "$T0" --all "$Q6" "$Q6"$G$'\t0\t18\tdeparture\tZ#1#z\t6\t6\t0\t6\t+\t1\t12\t+\t1\t.\n'
 corrupt record-dropped "$T0" --all "$Q6" ''
+corrupt entry-dropped "$T0" --drop-entry $'#entry\t'$G$'\t10\t20\tdepartures\t.\t'
 corrupt record-leavepasses "$T0" --all $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12' $'Q#0#chr\t6\t6\t0\t6\t+\t2\t12'
 corrupt record-within-piece "$T0" "$I18"$'#unit\t'$G$'\t24\t30\ttile' "$I18$H118"$'#unit\t'$G$'\t24\t30\ttile' \
   $'\t20\t30\tdepartures\t.\n'"$D24$I18" $'\t20\t30\tdepartures\t.\n'"$D24$I18$H118"

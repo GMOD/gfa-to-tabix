@@ -10,8 +10,9 @@
 # - --header N: the directory states `#header 0 N`
 # - --append UNIT: a unit's text after the last table, in no table
 # - --tag TAG: TAG as a last column on every row and on the #walks line
+# - --drop-entry PREFIX: the one rebuilt table line starting with PREFIX left out, its unit kept
 # With no edit, a text is packed as it is.
-# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT | --tag TAG]...
+# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT | --tag TAG | --drop-entry PREFIX]...
 import gzip
 import struct
 import sys
@@ -19,11 +20,13 @@ import zlib
 
 src, dst, *args = sys.argv[1:]
 edits = dict(once=[], all=[], table=[], idx=[])
-appended, tags, header_stated = [], [], None
+appended, tags, dropped, header_stated = [], [], [], None
 while args:
-    kind = args.pop(0)[2:] if args[0] in ('--all', '--table', '--idx', '--header', '--append', '--tag') else 'once'
+    kind = args.pop(0)[2:] if args[0] in ('--all', '--table', '--idx', '--header', '--append', '--tag', '--drop-entry') else 'once'
     if kind == 'append':
         appended.append(args.pop(0))
+    elif kind == 'drop-entry':
+        dropped.append(args.pop(0))
     elif kind == 'tag':
         tags.append(args.pop(0))
     elif kind == 'header':
@@ -68,6 +71,7 @@ walks = header.split('\n')[0]
 data, tables, entries, at = bgzf(header.encode()), [], [], 0
 header_length = len(data)
 table_edits = {pair: 0 for pair in edits['table']}
+drops = {prefix: 0 for prefix in dropped}
 for n, unit in enumerate(units):
     seq, lo, hi, kind, name = unit.split('\n')[0].split('\t')[1:6]
     packed = bgzf(unit.encode())
@@ -81,6 +85,10 @@ for n, unit in enumerate(units):
         for old, new in [pair for pair in table_edits if pair[0] in listing]:
             table_edits[(old, new)] += listing.count(old)
             listing = listing.replace(old, new)
+        for prefix in drops:
+            kept = [l for l in listing.splitlines(keepends=True) if not l.startswith(prefix)]
+            drops[prefix] += listing.count('\n') - ''.join(kept).count('\n')
+            listing = ''.join(kept)
         table = bgzf(listing.encode())
         tables.append(f'{seq}\t{len(data)}\t{len(table)}\n')
         data += table
@@ -88,6 +96,9 @@ for n, unit in enumerate(units):
 for (old, new), n in table_edits.items():
     if n != 1:
         sys.exit(f'corrupt.py: {old!r} occurs {n} times in the tables, not once')
+for prefix, n in drops.items():
+    if n != 1:
+        sys.exit(f'corrupt.py: {prefix!r} starts {n} table lines, not one')
 for unit in appended:
     data += bgzf(unit.encode())
 data += EOF

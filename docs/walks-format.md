@@ -1103,7 +1103,9 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   directory; tests and files for `|S|`) <!-- C94 -->
 - So a table's entries tile the bytes from the end of the table before
   it, or of the header unit, to the table's own offset, with no gap and
-  no overlap (files: the hosted GRCh38 file's every sequence) <!-- C194 -->
+  no overlap (verify7 walks the gzip members and holds the table to
+  them; broken file entry-dropped; files: the hosted GRCh38 file's every
+  sequence) <!-- C194 -->
 - No two units of a kind and sequence share a name other than `.` (build,
   tests, files) <!-- C136 -->
 - A tile's extent runs from the first base of its `ref` rows' steps to
