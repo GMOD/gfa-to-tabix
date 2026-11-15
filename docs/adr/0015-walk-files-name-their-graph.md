@@ -100,7 +100,19 @@ changed and why.
   directory differs in its line 1 and in each table's offset. The header
   unit grows 24 to 29 bytes compressed and a table −2 to +3, from its
   shifted offsets
-- **Whole-genome files:** `<!-- WHOLE-GENOME BYTE CHECK: the coordinator fills this in after the hosted GRCh38 and CHM13 files are rebuilt, from scripts/walks-header-diff.py run on each old and new pair -->`
+- **Whole-genome files:** HPRC v2.1 Minigraph-Cactus GRCh38 and CHM13,
+  rebuilt with this writer from the same GFA text as the hosted files and
+  compared pair by pair with `scripts/walks-header-diff.py`: each new data
+  file is the old with the two tags on its `#walks` line (`graph:Z:c9aa0d5f6907f27c
+  leftout:i:1698` for GRCh38, `graph:Z:496a04d0071827a0 leftout:i:3312` for
+  CHM13), every `#entry` offset moved by the header's and tables' changed
+  size, and every other byte the same (1,578,826,994 and 1,782,593,446
+  bytes compared, 0 differences); the writer's printed counts of pieces,
+  records, rows and left-out lines are identical old and new. The rebuilt
+  files replaced the hosted `-f8` copies, sha256 read back from each URL.
+  The walk writer also takes the last of two `LN:i:` tags on one segment,
+  as the index does, so `graph:Z:` hashes the lengths the index hashed;
+  no hosted graph has such a segment
 - **The bytes don't depend on the thread count,** one core against all
   (`a_walk_file_is_the_same_bytes_on_one_core_as_on_all`)
 - **Each check fails when broken**
