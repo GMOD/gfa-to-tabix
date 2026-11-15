@@ -501,14 +501,19 @@ The header unit's lines start with `#`:
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
   `--abridge-bytes` budgets the file was written with; 0 means none. A reader
   ignores them
-- `graph` names the GFA by the hash the node and link index states in its
-  own `graph:Z:` ([index format](index-format.md#what-the-file-holds)):
-  FNV-1a 64 over each S line's id as written, a byte 0xff and the
-  segment's length as 8 bytes little-endian, summed over the S lines
-  modulo 2^64 and written as 16 lowercase hex digits. <!-- C190 --> A walk
-  file and an index built from the same GFA state the same value, whatever
-  order its S lines come in. <!-- C190 --> It names the set of segments:
-  two GFAs with the same segments and other links or paths share it
+- `graph` names the GFA by the hash the full-resolution node and link
+  index states in its own `graph:Z:`
+  ([index format](index-format.md#what-the-file-holds)): FNV-1a 64 over
+  each S line's id as written, a byte 0xff and the length of its
+  sequence, or of its last `LN:i:` where the sequence is `*`, as 8 bytes
+  little-endian, summed over the S lines modulo 2^64 and written as 16
+  lowercase hex digits. <!-- C190 --> A walk file and the full-resolution
+  index built from the same GFA state the same value, whatever order its S
+  lines come in. <!-- C190 --> A tier that `fold` or `build --tier` writes
+  hashes the folded graph, so its value differs
+  ([ADR 0015](adr/0015-walk-files-name-their-graph.md#consequences)). The
+  value names the set of segments: two GFAs with the same segments and
+  other links or paths share it
 - `leftout` is how many of the GFA's W and P lines with a step visit no
   node of the reference and so have no piece in the file, the count the
   writer also prints. A line whose every step is on a segment of 0 bp has
@@ -516,8 +521,9 @@ The header unit's lines start with `#`:
 - `graph` and `leftout` are additions to format 8, written from
   gfa-to-tabix 5.0.0 on ([ADR 0015](adr/0015-walk-files-name-their-graph.md)).
   A file without them is format 8, and a reader doesn't refuse it.
-  <!-- C192 --> A reader that opens a walk file beside an index can compare
-  their `graph:Z:` values to tell whether both came from one GFA
+  <!-- C192 --> A reader that opens a walk file beside the full-resolution
+  index can compare their `graph:Z:` values to tell that the segments
+  differ
 - The header names no writer and no version: a file's rows depend only on
   the GFA and the options it was written with, and its bytes also on the
   compressor ([Example](#example)), so a writer release that changes no
@@ -1160,8 +1166,8 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
 - The data file is written under a temporary name and renamed, then the
   directory likewise, so a directory never names a data file still being
   written (build, tests) <!-- C96 -->
-- The `#walks` line's `graph:Z:` is the hash the node and link index of
-  the same GFA states, and its `leftout:i:` the count of the GFA's lines
+- The `#walks` line's `graph:Z:` is the hash the full-resolution node and
+  link index of the same GFA states, and its `leftout:i:` the count of the GFA's lines
   with a step that visit no node of the reference (tests; files with the
   GFA) <!-- C190 C191 -->
 - Offsets and lengths are the BGZF writer's u64 block starts, written as
