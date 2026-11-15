@@ -489,9 +489,8 @@ The header unit's lines start with `#`:
   guarantees: a table's entries, in file order, tile the bytes from the
   end of the table before it (the header unit for the first) to the
   table's own offset, with no gap and no overlap, so a reader can tell a
-  missing entry by the gap it leaves. graph-walks 7.0.0 does not check
-  it yet and reads such a table as a sequence without that unit
-  <!-- C156 -->
+  missing entry by the gap it leaves and may refuse the table
+  ([What a reader relies on](#what-a-reader-relies-on)) <!-- C156 -->
 - `tile` is the tile size in bp
 - `revisited` is how many nodes the reference's paths pass more than once,
   all its sequences counted. <!-- C50 --> 0 means every position in the
@@ -1062,6 +1061,9 @@ on nothing else about how a file was made.
 - **A record is in every bin of its cover,** which tiles its line's
   stretch, so the departures units over `D` hold every record whose
   line overlaps `D` <!-- C88 -->
+- **A table's entries tile its bytes,** from the end of the table before
+  it, or of the header unit, to the table's own offset, so a reader may
+  refuse a table whose entries leave a gap or overlap <!-- C194 -->
 - **No coordinate is above 2^53** <!-- C172 -->
 
 What this writer chooses, and another writer of format 8 could choose
@@ -1110,9 +1112,7 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   directory; tests and files for `|S|`) <!-- C94 -->
 - So a table's entries tile the bytes from the end of the table before
   it, or of the header unit, to the table's own offset, with no gap and
-  no overlap (verify7 walks the gzip members and holds the table to
-  them; broken file entry-dropped; files: the hosted GRCh38 file's every
-  sequence) <!-- C194 -->
+  no overlap (build, tests, files) <!-- C194 -->
 - No two units of a kind and sequence share a name other than `.` (build,
   tests, files) <!-- C136 -->
 - A tile's extent runs from the first base of its `ref` rows' steps to

@@ -833,3 +833,15 @@ W  B  1  c     0  32  >1>2>6>3
   a long record pays for it at every zoom. A paged detail kind or a coarser
   layer can bypass either; neither removes it
 
+## A reader does not yet refuse a gapped table
+
+- A table's entries tile the bytes from the end of the table before it to
+  its own offset, so a table that leaves out a unit's entry leaves a gap a
+  reader can tell, and a reader may refuse it
+  ([What a reader relies on](walks-format.md#what-a-reader-relies-on)).
+  graph-walks, at main 4b14ee3 before 7.0.0, does not check the tiling:
+  it reads such a table as a sequence without that unit, so a window over
+  the unit draws nothing there and says nothing. verify7 fails such a
+  file ([entry-dropped](departures/scripts/broken/cases.tsv))
+- Suggested next step: a graph-walks release whose table read refuses a
+  gap or an overlap, with a test on entry-dropped's bytes
