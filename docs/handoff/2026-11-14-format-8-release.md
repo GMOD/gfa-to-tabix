@@ -68,7 +68,7 @@ Next, in order of dependency:
   - Push main and tag `v7.0.0` on that head; CI publishes.
   - Re-run release-check on the hosted URLs if the reader changed after 031ab8f.
 - **gfa-to-tabix.**
-  - Move push.yml's rebuild-job pin from the format 7 commit to graph-walks v7.0.0's commit.
+  - Move push.yml's rebuild-job pin from the format 7 commit to graph-walks v7.0.0's commit. That job's check-claims run holds docs/walks-container/reader/graph-walks-tests.txt, listed from graph-walks main 4b14ee3, to the pinned checkout's tests: regenerate it with scripts/graph-walks-tests.py if v7.0.0's differ.
   - Run the whole CI locally.
   - Push main. That push is the 5.0.0 release (crates.io and the Release workflow), so it goes last among the gfa-to-tabix steps.
 - **bandage-core 14.0.0.**

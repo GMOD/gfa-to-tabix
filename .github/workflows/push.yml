@@ -98,3 +98,6 @@ jobs:
           key: cargo-rebuild-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
       - run: cargo build --release --locked
       - run: scripts/graph-walks-rebuild.mjs graph-walks target/release/gfa-to-tabix
+      - run: python3 scripts/check-claims.py
+        env:
+          GRAPH_WALKS: graph-walks
