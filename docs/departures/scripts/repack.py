@@ -352,6 +352,13 @@ def _(w):
     return 1
 
 
+@variant('unit-new-kind-other-seq', 'forbidden', 'a unit of an unknown kind about no sequence of the file, listed in '
+         'the first sequence\'s table: a later unit of a sequence is listed in that sequence\'s table')
+def _(w):
+    w.seqs[0].units.append(Unit(['#unit', '.', '0', '0', 'meta', '.'], [['.', '0', '0', 'meta', 'a later addition']]))
+    return 1
+
+
 def new_row(kind):
     def edit(w):
         units = w.units(kind)

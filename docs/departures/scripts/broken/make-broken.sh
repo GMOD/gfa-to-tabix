@@ -278,7 +278,7 @@ corrupt leftout-twice "$T311" $'leftout:i:1' $'leftout:i:1\tleftout:i:1'
 # it writes them, tables and directory included
 FORBIDDEN="tag-unit-tile tag-unit-table tag-entry dir-tag-seq-line dir-tag-header-line row-new-kind-in-tile
   row-new-kind-in-departures row-new-kind-in-detail row-new-kind-in-blocks unit-new-kind-no-seq gzip-not-bgzf
-  tag-row-walk-underscore"
+  tag-row-walk-underscore unit-new-kind-other-seq"
 python3 -I "$BROKEN/../repack.py" "$T10" "$W/repack" $FORBIDDEN > /dev/null
 for v in $FORBIDDEN; do
   cp "$W/repack/$v/f.walks.gz" "$BROKEN/$v.walks.gz"

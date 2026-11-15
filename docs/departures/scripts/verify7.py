@@ -20,8 +20,8 @@
 #   every unit starts on a gzip member with its `#unit` line: a member that
 #   begins `#unit<TAB>` after one whose text ended in a newline, as a member
 #   cut inside a line of a sequence named `...#unit` begins so too
-# - a unit of a kind this script doesn't know is listed by its table like
-#   any other, and its rows are not read
+# - a unit of a kind this script doesn't know is listed by its own
+#   sequence's table like any other, and its rows are not read
 # - each table lists exactly the units of its sequence since the last
 #   table, in file order, as they are, at their offsets and lengths, each
 #   above 0 bytes, and its `#unit` line runs from 0 to `|S|`, where the
@@ -189,6 +189,8 @@ def check_table(at, length, seq, head_lo, head_hi, lines):
         fail(f'the table of {seq} does not list its units as they are, in file order')
     if any(int(l.split('\t')[7]) <= 0 for l in lines):
         fail(f'the table of {seq} lists a unit of 0 bytes')
+    if any(l.split('\t')[1] != seq for l in lines):
+        fail(f'the table of {seq} lists a unit of another sequence')
     length = state['ref_end']
     if (head_lo, head_hi) != (0, length):
         fail(f'the table of {seq} states {head_lo} {head_hi}, not 0 and |S| {length}')

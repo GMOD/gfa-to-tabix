@@ -124,6 +124,7 @@ tag-unit-table	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a
 tag-unit-tile	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a tag on every tile's #unit line
 u2-leading-zero	walks-two-refs.gfa	claims7 spec8	tile 10 named 010
 unit-new-kind-no-seq	walks-two-refs.gfa	verify7	a unit in no table, after the last one, which a #meta line of the directory names
+unit-new-kind-other-seq	walks-two-refs.gfa	verify7 spec8	a unit of an unknown kind about no sequence, its #entry saying so, listed in GRCh38#0#chr's table
 walk-span-wrong	walks-two-refs.gfa	claims7 audit7 spec8	D's piece 1 in tile 10 stating 12 18 for 12 24
 walks-differ-ctl	walks-two-refs.gfa	verify7 spec8	the data's #walks line stating stay:i:5, the directory's stay:i:0
 walks-differ-len100	walks-two-refs.gfa	verify7 spec8	the data's #walks line differing, and #header 0 100

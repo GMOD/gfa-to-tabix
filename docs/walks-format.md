@@ -541,8 +541,9 @@ The header unit's lines start with `#`:
     follows the `#walks` line
   - a unit of a kind it doesn't know is skipped, whatever rows it holds;
     its `#entry` carries its sequence and integer `start end offset
-    length` like any other, so a unit about no sequence is a file of its
-    own
+    length` like any other. A later unit of a sequence lies before that
+    sequence's table and is listed there <!-- C196 -->, so a unit about no
+    sequence is a file of its own
   - `#unit` lines, `#entry` lines and the directory's lines for the
     header and the sequences take no tags; a directory line that starts
     with `#` and a word a reader doesn't know is ignored
