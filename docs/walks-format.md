@@ -1064,9 +1064,10 @@ on nothing else about how a file was made.
 - **A record is in every bin of its cover,** which tiles its line's
   stretch, so the departures units over `D` hold every record whose
   line overlaps `D` <!-- C88 -->
-- **A table's entries tile its bytes,** from the end of the table before
-  it, or of the header unit, to the table's own offset, so a reader may
-  refuse a table whose entries leave a gap or overlap <!-- C194 -->
+- **A table's entries tile the bytes before the table,** from the end of
+  the table before it, or of the header unit, to the table's own offset,
+  so a reader may refuse a table whose entries leave a gap or overlap
+  <!-- C194 -->
 - **No coordinate is above 2^53** <!-- C172 -->
 
 What this writer chooses, and another writer of format 8 could choose
@@ -1347,8 +1348,7 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
   naming them then reads format 8, which the released readers open,
   rather than format 7, which none does. The data file goes up before its
   directory, and a reader that meets a directory of the other build
-  refuses the pair, its line 1 differing from the data's `#walks` line
-  ([The directory](#the-directory)). The `-f8` names stay the ones to cite
+  refuses the pair. The `-f8` names stay the ones to cite
 
 In a JBrowse graph track, `walksUri` takes the prefix up to the reference
 sample, so a track on hg38 reads the GRCh38 file of the GRCh38-referenced

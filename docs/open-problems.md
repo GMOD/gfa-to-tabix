@@ -340,9 +340,11 @@ than replace it. Take one up only when someone asks for pggb walk tracks:
   pggb chrY a 1 bp node the reference passes once, at 9,394,014, is walked
   by seven of eight haplotypes inside the TSPY copy near 9,482,842. The
   file states the single pass, so a reader that follows it draws an
-  88.8 kb skip there, in the graph and the rows alike. The graph holds no
-  fact that picks the copy; a later tag could say that a once-passed
-  node's place is borrowed where its neighbours lie elsewhere
+  88.8 kb skip there, in the graph and the rows alike
+  ([the drawing check's rows](walks-container/pggbY/once-passed-node.tsv),
+  on the file [pggbY](walks-container/pggbY/notes.md) builds). The graph
+  holds no fact that picks the copy; a later tag could say that a
+  once-passed node's place is borrowed where its neighbours lie elsewhere
 
 ## Stubs for a component over `--max-component`
 
@@ -798,11 +800,11 @@ W  B  1  c     0  32  >1>2>6>3
 
 - A walk-file cut lists the links its kept walks take and no other, so it
   cannot give a loaded node's complete adjacency, and no reader rule
-  recovers it: in a four-link test graph cut with every haplotype loaded,
-  a node reads as a clean insertion bubble while the GFA holds four more
-  links at loaded nodes, one no path walks, one only a left-out line walks,
-  two a shown haplotype walks from a piece filed in another tile, with no
-  trace in the window ([g4.gfa](walks-container/freeze-review/g4/g4.gfa),
+  recovers it: in a test graph cut with every haplotype loaded, a node
+  reads as a clean insertion bubble while the GFA holds five more links at
+  loaded nodes, one no path walks, one only a left-out line walks, and
+  three shown paths walk from pieces filed in another tile, the
+  reference's own `2+>3+` among them, with no trace in the window ([g4.gfa](walks-container/freeze-review/g4/g4.gfa),
   [its cuts](walks-container/freeze-review/g4/cuts.txt))
 - The node and link index holds every link of a path-visited node but is
   not built for whole-genome graphs

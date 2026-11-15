@@ -14,6 +14,7 @@ GFA: ~/work/arb-format-opus/in/pggbY.gfa (1053 P lines; GRCh38#0#chrY, GRCh38#0#
 ## Results (all on ada under ~/work/blocks/pggbY)
 - checkers: verify7/expand7/claims7/audit7(--gfa; CHM13 in 2 shards)/spec8/rebuild(24 shards) pass on both files: *.out, *.time, *.rc
 - windows: win1.GRCh38.log, win2-5.GRCh38.log, win.CHM13.log (all haplotypes, equality), four.*.log (4 haplotypes, default budgets)
+- once-passed-node.tsv: the drawing check's rows for node 408455, which GRCh38 passes once at 9,394,014 and seven haplotypes walk inside the TSPY copy near 9,482,842, its link drawn as no 88.8 kb skip (bandage-core drawcheck, window Y-9.3M)
 - stay: stay0.GRCh38.walks.gz, staydiff.out (1,785,011 steps moved, 0.36%; pieces 618,112 -> 471,098)
 - fixture coverage: fixcov/*.json (maxK 7, passes 11, abridged/tile 51, bin lines 29)
 - harness fault reduced: tiny/revref.gfa (reference walking 1-,2-,4-; link-missing in both cuts)
