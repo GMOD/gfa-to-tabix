@@ -18,8 +18,8 @@ use std::time::Instant;
 
 use crate::departures::{self, Departure, End, Holes, Own};
 use crate::gfa::{
-    blunt_error, collision, haplotype, is_blunt, parse_u64, read_path_name, sample, text,
-    w_coordinate,
+    GraphHash, blunt_error, collision, haplotype, is_blunt, parse_u64, read_path_name, sample,
+    text, w_coordinate,
 };
 use crate::intern::{FastMap, Interner};
 use crate::node_ids::{NO_SEGMENT, NodeIds, ZERO_BP, permute};
@@ -265,6 +265,7 @@ struct Graph {
     lengths: Vec<u32>,
     sequence_at: Vec<u64>,
     bases: Vec<u8>,
+    hash: GraphHash,
 }
 
 impl Graph {
@@ -575,6 +576,7 @@ fn first_pass(
     names: &mut Interner,
 ) -> Result<(Graph, Vec<Reference>, Vec<Record>), String> {
     let mut nodes = NodeIds::default();
+    let mut hash = GraphHash::default();
     let mut lengths: Vec<u32> = Vec::new();
     let mut sequence_at: Vec<u64> = Vec::new();
     let mut bases = Vec::new();
@@ -594,10 +596,10 @@ fn first_pass(
         match line.first() {
             Some(b'S') if line.get(1) == Some(&b'\t') => {
                 let mut cols = line.split(|&b| b == b'\t').skip(1);
-                let (Some(id), Some(sequence)) = (cols.next(), cols.next()) else {
+                let (Some(written), Some(sequence)) = (cols.next(), cols.next()) else {
                     return Err("S line with too few fields".into());
                 };
-                let id = node_id(id)?;
+                let id = node_id(written)?;
                 let length = if sequence == b"*" {
                     cols.find_map(|tag| tag.strip_prefix(b"LN:i:"))
                         .map(|ln| parse_u64(ln, "LN tag"))
@@ -617,6 +619,7 @@ fn first_pass(
                 if !nodes.add(id, length == 0) {
                     return Err(format!("segment {id} has two S lines"));
                 }
+                hash.add(written, Some(length));
                 if length > 0 {
                     lengths.push(length as u32);
                     if options.sequences {
@@ -845,6 +848,7 @@ fn first_pass(
             lengths,
             sequence_at,
             bases,
+            hash,
         },
         references,
         records,
@@ -1957,12 +1961,14 @@ pub fn run(gfa: &str, prefix: &str, options: &Options) -> Result<(), String> {
     for reference in &references {
         let path = format!("{prefix}.{}.walks.gz", text(&reference.sample));
         let mut header = format!(
-            "#walks\tformat:i:8\ttile:i:{}\trevisited:i:{}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\n#reference\t{}\n",
+            "#walks\tformat:i:8\ttile:i:{}\trevisited:i:{}\tstay:i:{}\tabridge:i:{}\tabridgebytes:i:{}\tgraph:Z:{}\tleftout:i:{}\n#reference\t{}\n",
             chunks.size,
             reference.visits_of.len(),
             options.stay,
             options.budget.cost,
             options.budget.bytes,
+            graph.hash,
+            reference.unplaced,
             text(&reference.sample)
         )
         .into_bytes();

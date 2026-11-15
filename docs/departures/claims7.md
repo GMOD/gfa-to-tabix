@@ -207,6 +207,10 @@ in, and the root cause.
 | C187 | The dialect fixtures' forms of one graph, W lines and P lines as vg wrote them and as odgi cut them, give one walk file byte for byte | `script:tests/dialect.rs` `script:scripts/check-dialect.sh` `script:docs/walks-container/dialect/expected.tsv` `test:p_lines_give_the_rows_w_lines_do` | `read_path_name` | holds |
 | C188 | A path is listed under its `path` up to the second `#`, up to its only `#`, or whole; its sample is its `path` up to the first `#` | `unit:a_p_line_name_reads_as_the_shared_table_says` `test:refs_names_the_sample_a_p_lines_name_reads_as` `claims7:H1` `script:docs/walks-container/dialect/p-arity2.gfa` | `haplotype`, `sample` | holds |
 | C189 | A P line whose steps hold a `;`, GFA 1.2's jump, is refused | `test:a_jump_in_a_p_line_and_a_star_for_a_w_lines_start_are_refused_as_what_they_are` | `path_line` | holds |
+| C190 | The `#walks` line's `graph:Z:` is the `graph:Z:` the node and link index of the same GFA states, 16 lowercase hex digits, whatever the order of the S lines, over every S line, 0 bp or not | `test:a_walk_file_names_its_graph_as_the_index_of_the_same_gfa_does` `test:steps_of_0_bp_with_the_same_departure_text_twice_build` `verify7:not one {name} of {form}` `script:scripts/walks-truth.py` `script:docs/departures/scripts/broken/cases.tsv` | `GraphHash`, `first_pass` | holds |
+| C191 | `leftout:i:` counts the GFA's W and P lines with a step that visit no node of the reference; a line of 0 bp steps alone is not counted | `test:a_walk_file_counts_the_lines_it_leaves_out` `script:scripts/walks-truth.py` `script:docs/departures/scripts/broken/cases.tsv` | `cut_path` | holds |
+| C192 | A file without `graph:Z:` and `leftout:i:` is format 8, and a reader doesn't refuse it | `script:scripts/check-walks.sh` | the later-additions rule, C124 | holds |
+| C193 | The header names no writer and no version, so a file's bytes depend only on the GFA and the options | `test:a_walk_files_header_names_no_writer_or_version` `test:a_walk_file_is_the_same_bytes_on_one_core_as_on_all` | `run` | holds |
 
 ## The audit
 

@@ -122,3 +122,7 @@ walk-span-wrong	walks-two-refs.gfa	claims7 audit7 spec8	D's piece 1 in tile 10 s
 walks-differ-ctl	walks-two-refs.gfa	verify7 spec8	the data's #walks line stating stay:i:5, the directory's stay:i:0
 walks-differ-len100	walks-two-refs.gfa	verify7 spec8	the data's #walks line differing, and #header 0 100
 wide	walks-two-refs.gfa	verify7 claims7 spec8	a walk row and tile 0 widened to 0 15 past its ref rows' 0 12
+graph-other	walks-two-refs.gfa	rebuild	graph:Z: 7619ff637c3b074b, the hash of the GFA's S lines, made 7619ff637c3b074c
+graph-uppercase	walks-two-refs.gfa	verify7 rebuild	graph:Z: written in uppercase hex digits
+leftout-other	walks-two-refs.gfa	rebuild	leftout:i: 1, U#1#u's line, made 0
+leftout-twice	walks-two-refs.gfa	verify7 rebuild	leftout:i:1 stated twice

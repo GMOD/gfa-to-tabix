@@ -107,7 +107,7 @@ corrupt wide "$T0" $'\t0\t12\ttile\t0\n' $'\t0\t15\ttile\t0\n' $'\t0\t12\tref\t'
 # what a writer since repaired wrote for broken/hole-inside.gfa and
 # broken/hole-trailing.gfa at --tile 4, in format 8's header
 pack hole-inside << 'EOF'
-#walks format:i:8 tile:i:4 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000
+#walks format:i:8 tile:i:4 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000 graph:Z:b99446c7ac2291d3 leftout:i:0
 #reference R
 #haplotype H#1
 #hole R#0#chr 10 20
@@ -137,7 +137,7 @@ R#0#chr 15 25 departure H#1#h 10 0 0 15 + 1 20 + 1 .
 R#0#chr 15 25 departure H#1#h 10 0 0 15 + 1 20 + 1 .
 EOF
 pack hole-trailing << 'EOF'
-#walks format:i:8 tile:i:4 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000
+#walks format:i:8 tile:i:4 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000 graph:Z:62d264cc33d360d1 leftout:i:0
 #reference R
 #haplotype H#1
 #unit R#0#chr 0 10 tile 0
@@ -267,6 +267,10 @@ corrupt piece-split-at-jump "$JUMPS100" --all $'R#0#c\t0\t36\twalk\tC#1#c\t0\t0\
 corrupt missing-overstated "$ENDSOFF10" --all $'departure\tG#1#c\t31\t72\t39\t24' $'departure\tG#1#c\t31\t72\t60\t24'
 corrupt nodes-bases-missing "$FOLLOW100SA" --all $'10,20,30\tSQ:Z:ACGTACGTACACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTAC' $'10,20,30'
 corrupt revisited-count "$REPEAT100" $'revisited:i:2' $'revisited:i:7'
+corrupt graph-other "$T311" $'graph:Z:7619ff637c3b074b' $'graph:Z:7619ff637c3b074c'
+corrupt graph-uppercase "$T311" $'graph:Z:7619ff637c3b074b' $'graph:Z:7619FF637C3B074B'
+corrupt leftout-other "$T311" $'leftout:i:1' $'leftout:i:0'
+corrupt leftout-twice "$T311" $'leftout:i:1' $'leftout:i:1\tleftout:i:1'
 
 # the forbidden variants of repack.py on a file with every kind of unit, as
 # it writes them, tables and directory included

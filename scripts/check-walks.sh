@@ -10,7 +10,8 @@
 # of every line against the GFA; runs them too on files that use the
 # format's room for additions, a tag on every row and on the #walks line, a
 # unit of an unknown kind, an unknown header line and each legal variant of
-# repack.py, on a file whose path names hold bytes that are not UTF-8, and
+# repack.py, and on one without the #walks line's graph:Z: and leftout:i:,
+# which walks-truth.py's rebuild alone must fail, on a file whose path names hold bytes that are not UTF-8, and
 # on a file where a gzip member cut inside a row begins `#unit<TAB>`, all
 # of which must pass; then fuzz7.sh's batch of seeds 1 to $SEEDS (6 by
 # default). Each check fails by its exit status. Exits 1 on any failure,
@@ -25,7 +26,8 @@ trap 'rm -rf "$dir"' EXIT
 failed=0
 bash "$S/broken.sh" || failed=1
 bash "$REPO/scripts/check-dialect.sh" "$B" || failed=1
-# runs the six checks on walk file $2, built from the GFA $3
+# runs the six checks on walk file $2, built from the GFA $3, all but
+# walks-truth.py's rebuild where $4 is `norebuild`
 checks() {
   local label=$1 f=$2 gfa=$3 out seqs
   out=$(python3 -I "$S/verify7.py" "$f" 2>&1) || { echo "$label: $out"; failed=1; }
@@ -40,7 +42,8 @@ checks() {
   out=$(python3 -I "$S/expand7.py" "$f" 2>&1) || { echo "$label: $out"; failed=1; }
   out=$(python3 -I "$S/spec8.py" "$f" 2>&1) ||
     { echo "$label: spec8:"; echo "$out" | sed -n '/^== disagreed ==/,$p'; echo "$out" | grep -E 'Traceback|Error|^spec8'; failed=1; }
-  out=$(python3 -I "$REPO/scripts/walks-truth.py" rebuild "$f" "$gfa" 2>&1) || { echo "$label: $out"; failed=1; }
+  [ "${4:-}" = norebuild ] ||
+    out=$(python3 -I "$REPO/scripts/walks-truth.py" rebuild "$f" "$gfa" 2>&1) || { echo "$label: $out"; failed=1; }
 }
 check() {
   local gfa=$1 refs=$2 label="$1 ${*:3}"
@@ -76,6 +79,14 @@ if "$B" "$S/broken/follow.gfa" --walks --refs R --tile 100 --sequences --abridge
   addition tags --tag zz:i:1
   addition unit-kind $'#unit\tR#0#c\t0\t36\ttable\t.\n' $'#unit\tR#0#c\t0\t36\tfuture\tx\nR#0#c\t0\t36\tfuture\tanything\n#unit\tR#0#c\t0\t36\ttable\t.\n'
   addition header-line $'#reference\tR\n' $'#reference\tR\n#future\tx\n'
+  stated=$(gzip -dc "$dir/follow.R.walks.gz" | head -1 | grep -o $'\tgraph:Z:[0-9a-f]*\tleftout:i:[0-9]*')
+  if python3 -I "$S/broken/corrupt.py" "$dir/follow.R.walks.gz" "$dir/untagged.walks.gz" "$stated" '' > "$dir/log" 2>&1; then
+    checks "without graph:Z: and leftout:i:" "$dir/untagged.walks.gz" "$S/broken/follow.gfa" norebuild
+    python3 -I "$REPO/scripts/walks-truth.py" rebuild "$dir/untagged.walks.gz" "$S/broken/follow.gfa" > /dev/null 2>&1 &&
+      { echo "without graph:Z: and leftout:i:: walks-truth.py rebuild passes it"; failed=1; }
+  else
+    echo "without graph:Z: and leftout:i:: $(tail -1 "$dir/log")"; failed=1
+  fi
   mapfile -t legal < <(python3 -I "$S/repack.py" --legal)
   if python3 -I "$S/repack.py" "$dir/follow.R.walks.gz" "$dir/repack" "${legal[@]}" > "$dir/log" 2>&1; then
     for v in "${legal[@]}"; do

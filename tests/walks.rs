@@ -1832,9 +1832,9 @@ fn a_walk_row_names_the_copy_it_leaves_r_from_where_stepping_would_stop_early() 
     );
 }
 
-// U#1#u visits no reference node, so it has no rows and no line. Each walk
-// file lists the other reference among its haplotypes, since its walk has
-// rows there.
+// U#1#u visits no reference node, so it has no rows and no line, and each
+// file counts it in leftout. Each walk file lists the other reference among
+// its haplotypes, since its walk has rows there.
 #[test]
 fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
     let built = build("walks-two-refs.gfa", &[]);
@@ -1842,7 +1842,7 @@ fn a_walk_file_names_its_format_reference_and_each_haplotype_with_rows() {
         ("GRCh38", ["D#1", "H#1", "I#1", "Q#0"]),
         ("Q", ["D#1", "GRCh38#0", "H#1", "I#1"]),
     ] {
-        let walks = "#walks format:i:8 tile:i:10 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000";
+        let walks = "#walks format:i:8 tile:i:10 revisited:i:0 stay:i:311 abridge:i:1000000 abridgebytes:i:3000000 graph:Z:7619ff637c3b074b leftout:i:1";
         let reference = format!("#reference {sample}");
         let listed = haplotypes.map(|h| format!("#haplotype {h}"));
         let lines: Vec<&str> = [walks, &reference]
@@ -2403,6 +2403,192 @@ fn a_line_on_one_references_nodes_is_in_that_references_file_alone() {
     assert_rebuilds(&gfa, &built, &["GRCh38", "Q"]);
 }
 
+fn first_line_tag(first_line: &str, name: &str) -> String {
+    first_line
+        .split('\t')
+        .find_map(|tag| tag.strip_prefix(name))
+        .unwrap_or_else(|| panic!("no {name} in {first_line}"))
+        .to_string()
+}
+
+// The graph:Z: of the walk file and of the node and link index of `gfa`
+fn graph_of_walks_and_index(gfa: &str, reference: &str) -> (String, String) {
+    static RUNS: AtomicUsize = AtomicUsize::new(0);
+    let dir = std::env::temp_dir().join(format!(
+        "walks-graph-{}-{}",
+        std::process::id(),
+        RUNS.fetch_add(1, Ordering::Relaxed)
+    ));
+    fs::create_dir_all(&dir).unwrap();
+    let out = dir.join("out");
+    for args in [
+        ["--walks", "--refs"].as_slice(),
+        ["--format", "2", "--reference"].as_slice(),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix"))
+            .arg(gfa)
+            .arg("-o")
+            .arg(&out)
+            .args(args)
+            .arg(reference)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{gfa} {args:?}: {output:?}");
+    }
+    let first_line = |file: &str| {
+        let text = gunzip(&fs::read(dir.join(file)).unwrap());
+        text.lines().next().unwrap().to_string()
+    };
+    let walks = first_line(&format!("out.{reference}.walks.gz"));
+    let index = first_line("out.graph.bed.gz");
+    fs::remove_dir_all(&dir).unwrap();
+    (
+        first_line_tag(&walks, "graph:Z:"),
+        first_line_tag(&index, "graph:Z:"),
+    )
+}
+
+// A walk file names its graph by the hash the node and link index of the same
+// GFA states, on every fixture both can be built from, and on S lines after
+// the paths, one of 0 bp and one stated by LN:i:
+#[test]
+fn a_walk_file_names_its_graph_as_the_index_of_the_same_gfa_does() {
+    let mut graphs = BTreeSet::new();
+    for (gfa, reference) in [
+        ("cactus.gfa", "ref"),
+        ("diploid.gfa", "ref"),
+        ("ecoli_pggb_subgraph.gfa", "CFT073"),
+        ("genome.gfa", "chr1"),
+        ("haplotype.gfa", "HG002"),
+        ("order.gfa", "ref"),
+        ("paths.gfa", "ref"),
+        ("reversed.gfa", "ref"),
+        ("walks.gfa", "ref"),
+        ("walks-abridge-bytes.gfa", "R"),
+        ("walks-contig-ends.gfa", "R"),
+        ("walks-long-jump.gfa", "R"),
+        ("walks-loop.gfa", "R"),
+        ("walks-records.gfa", "R"),
+        ("walks-repeat.gfa", "R"),
+        ("walks-sequences.gfa", "R"),
+        ("walks-skip.gfa", "R"),
+        ("walks-two-refs.gfa", "GRCh38"),
+        ("walks-two-refs-p.gfa", "GRCh38"),
+    ] {
+        let (walks, index) = graph_of_walks_and_index(&fixture(gfa), reference);
+        assert_eq!(walks, index, "{gfa}");
+        assert!(walks.len() == 16 && walks.bytes().all(|b| b.is_ascii_hexdigit()));
+        graphs.insert(walks);
+    }
+    assert_eq!(graphs.len(), 13);
+    let path = std::env::temp_dir().join(format!("walks-graph-late-{}.gfa", std::process::id()));
+    fs::write(
+        &path,
+        tsv(&[
+            "W R 0 chr 0 10 >1>5>2",
+            "W H 1 c 0 6 >1>3",
+            "S 2 * LN:i:6",
+            "S 1 ACGT",
+            "S 5 * LN:i:0",
+            "S 3 AC",
+        ]),
+    )
+    .unwrap();
+    let (walks, index) = graph_of_walks_and_index(path.to_str().unwrap(), "R");
+    fs::remove_file(&path).unwrap();
+    assert_eq!(walks, index);
+}
+
+// leftout counts the lines with a step that visit no node of the file's
+// reference, as stderr does: X's and Y's here, not Z's, whose one step is on
+// a segment of 0 bp, nor R's own
+#[test]
+fn a_walk_file_counts_the_lines_it_leaves_out() {
+    let built = build_text(
+        "leftout",
+        &[
+            "S 1 ACGTAC",
+            "S 2 ACGTAC",
+            "S 3 ACG",
+            "S 4 ACG",
+            "S 5 * LN:i:0",
+            "W R 0 chr 0 12 >1>2",
+            "W H 1 c 0 9 >1>3",
+            "W X 1 c 0 3 >3",
+            "P Y#1#c 3+,4+ *",
+            "W Z 1 c 0 0 >5",
+        ],
+        &["--refs", "R"],
+    );
+    assert!(built.output.status.success());
+    let stderr = String::from_utf8_lossy(&built.output.stderr);
+    assert!(stderr.contains("2 paths visit no R node"), "{stderr}");
+    assert_eq!(
+        first_line_tag(built.file("R").lines().next().unwrap(), "leftout:i:"),
+        "2"
+    );
+}
+
+// The writer's version is in no tag of the header, so a writer release that
+// changes no row leaves every byte of a walk file as it was
+#[test]
+fn a_walk_files_header_names_no_writer_or_version() {
+    let built = build("walks-two-refs.gfa", &[]);
+    let walks_line = built.file("GRCh38").lines().next().unwrap();
+    let names: Vec<&str> = walks_line
+        .split('\t')
+        .skip(1)
+        .map(|tag| tag.split(':').next().unwrap())
+        .collect();
+    assert_eq!(
+        names,
+        [
+            "format",
+            "tile",
+            "revisited",
+            "stay",
+            "abridge",
+            "abridgebytes",
+            "graph",
+            "leftout"
+        ]
+    );
+    assert!(!walks_line.contains(env!("CARGO_PKG_VERSION")));
+}
+
+// The files' bytes don't depend on how many threads write them
+#[test]
+fn a_walk_file_is_the_same_bytes_on_one_core_as_on_all() {
+    let dir = std::env::temp_dir().join(format!("walks-threads-{}", std::process::id()));
+    fs::create_dir_all(&dir).unwrap();
+    let written = |mut command: Command, out: &str| {
+        let output = command
+            .arg(fixture("walks-abridge-bytes.gfa"))
+            .arg("-o")
+            .arg(dir.join(out))
+            .args([
+                "--walks",
+                "--refs",
+                "R",
+                "--tile",
+                "10",
+                "--abridge-bytes",
+                "200",
+            ])
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        [".R.walks.gz", ".R.walks.gz.idx"]
+            .map(|suffix| fs::read(dir.join(format!("{out}{suffix}"))).unwrap())
+    };
+    let all = written(Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix")), "all");
+    let mut one_core = Command::new("taskset");
+    one_core.args(["-c", "0", env!("CARGO_BIN_EXE_gfa-to-tabix")]);
+    let one = written(one_core, "one");
+    fs::remove_dir_all(&dir).unwrap();
+    assert!(all == one);
+}
+
 // Built with no option but --refs, a file's header states the defaults
 #[test]
 fn the_defaults_are_65536_311_1000000_and_3000000() {
@@ -2420,7 +2606,7 @@ fn the_defaults_are_65536_311_1000000_and_3000000() {
     assert!(output.status.success());
     assert!(
         directory.starts_with(
-            "#walks\tformat:i:8\ttile:i:65536\trevisited:i:0\tstay:i:311\tabridge:i:1000000\tabridgebytes:i:3000000\tbytes:i:"
+            "#walks\tformat:i:8\ttile:i:65536\trevisited:i:0\tstay:i:311\tabridge:i:1000000\tabridgebytes:i:3000000\tgraph:Z:7619ff637c3b074b\tleftout:i:1\tbytes:i:"
         ),
         "{directory}"
     );
@@ -3062,7 +3248,9 @@ fn an_overlap_refusal_says_vg_numbers_phase_blocks_where_this_tool_reads_starts(
 // The tool drops a segment of 0 bp as it reads the GFA: its steps leave every
 // W and P line, a line left with no steps is skipped, and a reference
 // sequence left with no bases has no units. So `lines` give the same files as
-// `stripped`, the same graph with its 0 bp segments removed by hand.
+// `stripped`, the same graph with its 0 bp segments removed by hand, but for
+// graph:Z:, which names every S line of the GFA as the index's does, and the
+// offsets the header's size moves.
 fn assert_same_without_0_bp(name: &str, lines: &[&str], stripped: &[&str], args: &[&str]) {
     let with = build_text(&format!("{name}-0bp"), lines, args);
     let without = build_text(name, stripped, args);
@@ -3076,7 +3264,33 @@ fn assert_same_without_0_bp(name: &str, lines: &[&str], stripped: &[&str], args:
         "{}",
         String::from_utf8_lossy(&with.output.stderr)
     );
-    assert_eq!(with.files, without.files);
+    let graph = |text: &str| first_line_tag(text.lines().next().unwrap(), "graph:Z:");
+    let ungraphed = |built: &Built| -> BTreeMap<String, Vec<String>> {
+        built
+            .files
+            .iter()
+            .map(|(sample, text)| {
+                let tag = format!("\tgraph:Z:{}", graph(text));
+                let lines = text
+                    .replacen(&tag, "", 1)
+                    .lines()
+                    .map(|line| {
+                        let cols: Vec<&str> = line.split('\t').collect();
+                        if cols[0] == "#entry" {
+                            [&cols[..6], &cols[7..]].concat().join("\t")
+                        } else {
+                            line.to_string()
+                        }
+                    })
+                    .collect();
+                (sample.clone(), lines)
+            })
+            .collect()
+    };
+    assert_eq!(ungraphed(&with), ungraphed(&without));
+    for (sample, text) in &with.files {
+        assert_ne!(graph(text), graph(without.file(sample)), "{sample}");
+    }
 }
 
 // Every step between H's first and third steps is 0 bp, so its two

@@ -11,6 +11,9 @@
 #   line that starts with `#` past line 2 is a later addition, skipped; the
 #   `#header` and sequence lines, `#unit` lines and `#entry` lines hold no
 #   tag
+# - the `#walks` line states `graph:Z:` as 16 lowercase hex digits and
+#   `leftout:i:` as a decimal integer, each at most once; a file without
+#   them is checked as one with them
 # - every unit is BGZF members, and every row of a tile, departure block,
 #   detail unit or blocks unit is of a kind that unit holds
 # - the header, the units, the tables and the EOF block partition the file;
@@ -42,6 +45,7 @@
 import hashlib
 import json
 import os
+import re
 import struct
 import sys
 import zlib
@@ -64,6 +68,10 @@ stated = [t for t in first if t.startswith('bytes:i:')]
 walks = [t for t in first if not t.startswith('bytes:i:')]
 if walks[0] != '#walks' or [t for t in walks if t.startswith('format:i:')] != ['format:i:8'] or len(stated) != 1:
     fail('directory line 1 is not a format 8 #walks line with one bytes:i:')
+for name, form in (('graph:Z:', '[0-9a-f]{16}'), ('leftout:i:', '0|[1-9][0-9]*')):
+    values = [t[len(name):] for t in walks if t.startswith(name)]
+    if len(values) > 1 or not all(re.fullmatch(form, v) for v in values):
+        fail(f'the #walks line states {" ".join(name + v for v in values)}, not one {name} of {form}')
 if int(stated[0][8:]) != size:
     fail(f'bytes:i: is {stated[0][8:]}, the file {size}')
 if len(directory) < 2 or directory[1][:2] != ['#header', '0'] or len(directory[1]) != 3:

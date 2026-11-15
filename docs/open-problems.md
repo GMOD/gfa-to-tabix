@@ -604,24 +604,25 @@ W  B  1  c     0  32  >1>2>6>3
   tests and order are in the [handoff](handoff/2026-11-11-abridged-pieces.md).
   The build, the hosted rebuild and the releases are still to come
 
-## Walk files name no graph
+## Walk files name no writer
 
-- The node and link index names its graph in `graph:Z:`, a hash of the
-  segments; a walk file's header names none. So nothing can tell that a
-  walk file came from a given GFA, or pair it with an index. A directory
-  from another build still fails a reader's `#unit` check on the first
-  unit it reads
-- Nor does it name its writer: no tool or version is in the file, and the
-  count of lines left out because they step on no reference node goes to
-  stderr alone, as `N paths visit no R node and are left out`
+- A walk file names its graph in `graph:Z:`, the hash the node and link
+  index states, and counts the lines it leaves out in `leftout:i:`
+  ([ADR 0015](adr/0015-walk-files-name-their-graph.md)). No host or viewer
+  compares a walk file's `graph:Z:` with its index's yet, so a walk file
+  beside an index of another graph is drawn without a word, and a
+  directory from another build still fails only a reader's `#unit` check
+  on the first unit it reads
+- Nor does it name its writer: no tool or version is in the file. That
+  was left out on purpose: a version stamp changes every file's bytes at
+  each writer release, even one that changes no row, so every hosted file
+  would be uploaded again on a sync. A walk file's bytes depend only on
+  the GFA and the options it was written with
 - Suggested next step, once a consumer reads a walk file beside an index
-  of the same graph: give the tool, its version, a hash of the segments as
-  the index's `graph:Z:` is, and that count, in a header line or in tags
-  after the `#walks` line's others. A reader already ignores a header line
-  whose first word it doesn't know. Not a `#` line of the directory, nor
-  a tag before `format:i:`: those were the two places readers and
-  checkers handled worst when a review repacked files with each kind of
-  addition. It is still an addition to the format, under ADR 0011's rules
+  of the same graph: compare the two `graph:Z:` values and say so when
+  they differ. A writer's name and version can still come later as tags,
+  under the spec's rule for additions, if a need for them outweighs
+  uploading every file again
 
 ## The index and walk files disagree on a node's strand
 

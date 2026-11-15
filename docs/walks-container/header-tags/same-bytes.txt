@@ -1,0 +1,115 @@
+# scripts/walks-header-diff.sh <main's writer at 8a965ac> <the provenance writer> "L8-kiv2.gfa GRCh38" "L6-amylase.gfa GRCh38" "maize_nam_chr8.full.gfa.gz B73"
+# L8-kiv2 and L6-amylase: HPRC slices around LPA kiv2 and amylase; maize_nam_chr8: a maize NAM chr8 slice
+== walks-two-refs.gfa GRCh38 --tile 10
+o.GRCh38.walks.gz: header 140 -> 168 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 158 -> 158 bytes, 6 #entry offsets and 1 directory offsets moved, 907 other bytes compared, 0 differences
+== walks-two-refs.gfa Q --tile 10
+o.Q.walks.gz: header 143 -> 170 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 150 -> 151 bytes, 6 #entry offsets and 1 directory offsets moved, 866 other bytes compared, 0 differences
+== walks-two-refs.gfa GRCh38 --tile 7 --stay 0
+o.GRCh38.walks.gz: header 140 -> 167 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 176 -> 177 bytes, 8 #entry offsets and 1 directory offsets moved, 1222 other bytes compared, 0 differences
+== walks-two-refs.gfa Q --tile 7 --stay 0
+o.Q.walks.gz: header 142 -> 169 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 169 -> 169 bytes, 8 #entry offsets and 1 directory offsets moved, 1223 other bytes compared, 0 differences
+== walks-two-refs.gfa GRCh38 --tile 10 --abridge-bytes 1
+o.GRCh38.walks.gz: header 140 -> 167 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 289 -> 288 bytes, 21 #entry offsets and 1 directory offsets moved, 2417 other bytes compared, 0 differences
+== walks-two-refs.gfa Q --tile 10 --abridge-bytes 1
+o.Q.walks.gz: header 141 -> 168 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 274 -> 275 bytes, 21 #entry offsets and 1 directory offsets moved, 2316 other bytes compared, 0 differences
+== walks-two-refs.gfa GRCh38 --tile 1000 --abridge-steps 1
+o.GRCh38.walks.gz: header 142 -> 169 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 140 -> 141 bytes, 6 #entry offsets and 1 directory offsets moved, 728 other bytes compared, 0 differences
+== walks-two-refs.gfa Q --tile 1000 --abridge-steps 1
+o.Q.walks.gz: header 143 -> 170 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 131 -> 131 bytes, 6 #entry offsets and 1 directory offsets moved, 750 other bytes compared, 0 differences
+== walks-two-refs-p.gfa GRCh38 --tile 10
+o.GRCh38.walks.gz: header 140 -> 168 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 158 -> 158 bytes, 6 #entry offsets and 1 directory offsets moved, 907 other bytes compared, 0 differences
+== walks-two-refs-p.gfa Q --tile 10
+o.Q.walks.gz: header 143 -> 170 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 150 -> 151 bytes, 6 #entry offsets and 1 directory offsets moved, 866 other bytes compared, 0 differences
+== walks-two-refs-p.gfa GRCh38 --tile 7 --stay 0
+o.GRCh38.walks.gz: header 140 -> 167 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 176 -> 177 bytes, 8 #entry offsets and 1 directory offsets moved, 1222 other bytes compared, 0 differences
+== walks-two-refs-p.gfa Q --tile 7 --stay 0
+o.Q.walks.gz: header 142 -> 169 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 169 -> 169 bytes, 8 #entry offsets and 1 directory offsets moved, 1223 other bytes compared, 0 differences
+== walks-two-refs-p.gfa GRCh38 --tile 10 --abridge-bytes 1
+o.GRCh38.walks.gz: header 140 -> 167 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 289 -> 288 bytes, 21 #entry offsets and 1 directory offsets moved, 2417 other bytes compared, 0 differences
+== walks-two-refs-p.gfa Q --tile 10 --abridge-bytes 1
+o.Q.walks.gz: header 141 -> 168 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 274 -> 275 bytes, 21 #entry offsets and 1 directory offsets moved, 2316 other bytes compared, 0 differences
+== walks-two-refs-p.gfa GRCh38 --tile 1000 --abridge-steps 1
+o.GRCh38.walks.gz: header 142 -> 169 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 140 -> 141 bytes, 6 #entry offsets and 1 directory offsets moved, 728 other bytes compared, 0 differences
+== walks-two-refs-p.gfa Q --tile 1000 --abridge-steps 1
+o.Q.walks.gz: header 143 -> 170 bytes, adds graph:Z:7619ff637c3b074b leftout:i:1, tables 131 -> 131 bytes, 6 #entry offsets and 1 directory offsets moved, 750 other bytes compared, 0 differences
+== walks-repeat.gfa R --tile 10
+o.R.walks.gz: header 125 -> 150 bytes, adds graph:Z:1299b2fb89990473 leftout:i:0, tables 120 -> 120 bytes, 4 #entry offsets and 1 directory offsets moved, 399 other bytes compared, 0 differences
+== walks-repeat.gfa R --tile 7 --stay 0
+o.R.walks.gz: header 126 -> 150 bytes, adds graph:Z:1299b2fb89990473 leftout:i:0, tables 129 -> 132 bytes, 5 #entry offsets and 1 directory offsets moved, 480 other bytes compared, 0 differences
+== walks-repeat.gfa R --tile 10 --abridge-bytes 1
+o.R.walks.gz: header 123 -> 148 bytes, adds graph:Z:1299b2fb89990473 leftout:i:0, tables 198 -> 201 bytes, 12 #entry offsets and 1 directory offsets moved, 1050 other bytes compared, 0 differences
+== walks-repeat.gfa R --tile 1000 --abridge-steps 1
+o.R.walks.gz: header 125 -> 152 bytes, adds graph:Z:1299b2fb89990473 leftout:i:0, tables 109 -> 109 bytes, 3 #entry offsets and 1 directory offsets moved, 284 other bytes compared, 0 differences
+== walks-loop.gfa R --tile 10
+o.R.walks.gz: header 140 -> 168 bytes, adds graph:Z:43e198af471a8e12 leftout:i:0, tables 176 -> 178 bytes, 9 #entry offsets and 1 directory offsets moved, 1222 other bytes compared, 0 differences
+== walks-loop.gfa R --tile 7 --stay 0
+o.R.walks.gz: header 142 -> 167 bytes, adds graph:Z:43e198af471a8e12 leftout:i:0, tables 207 -> 207 bytes, 12 #entry offsets and 1 directory offsets moved, 1642 other bytes compared, 0 differences
+== walks-loop.gfa R --tile 10 --abridge-bytes 1
+o.R.walks.gz: header 139 -> 166 bytes, adds graph:Z:43e198af471a8e12 leftout:i:0, tables 381 -> 382 bytes, 36 #entry offsets and 1 directory offsets moved, 3688 other bytes compared, 0 differences
+== walks-loop.gfa R --tile 1000 --abridge-steps 1
+o.R.walks.gz: header 142 -> 168 bytes, adds graph:Z:43e198af471a8e12 leftout:i:0, tables 139 -> 139 bytes, 7 #entry offsets and 1 directory offsets moved, 811 other bytes compared, 0 differences
+== walks-records.gfa R --tile 10
+o.R.walks.gz: header 129 -> 156 bytes, adds graph:Z:619819b0fa21ab29 leftout:i:1, tables 134 -> 135 bytes, 5 #entry offsets and 1 directory offsets moved, 575 other bytes compared, 0 differences
+== walks-records.gfa R --tile 7 --stay 0
+o.R.walks.gz: header 130 -> 155 bytes, adds graph:Z:619819b0fa21ab29 leftout:i:1, tables 157 -> 157 bytes, 7 #entry offsets and 1 directory offsets moved, 752 other bytes compared, 0 differences
+== walks-records.gfa R --tile 10 --abridge-bytes 1
+o.R.walks.gz: header 127 -> 154 bytes, adds graph:Z:619819b0fa21ab29 leftout:i:1, tables 205 -> 204 bytes, 12 #entry offsets and 1 directory offsets moved, 1182 other bytes compared, 0 differences
+== walks-records.gfa R --tile 1000 --abridge-steps 1
+o.R.walks.gz: header 130 -> 157 bytes, adds graph:Z:619819b0fa21ab29 leftout:i:1, tables 144 -> 143 bytes, 5 #entry offsets and 1 directory offsets moved, 546 other bytes compared, 0 differences
+== walks-contig-ends.gfa R --tile 10
+o.R.walks.gz: header 129 -> 157 bytes, adds graph:Z:aa95c5243bc9cc6c leftout:i:0, tables 119 -> 120 bytes, 4 #entry offsets and 1 directory offsets moved, 449 other bytes compared, 0 differences
+== walks-contig-ends.gfa R --tile 7 --stay 0
+o.R.walks.gz: header 130 -> 156 bytes, adds graph:Z:aa95c5243bc9cc6c leftout:i:0, tables 132 -> 133 bytes, 5 #entry offsets and 1 directory offsets moved, 537 other bytes compared, 0 differences
+== walks-contig-ends.gfa R --tile 10 --abridge-bytes 1
+o.R.walks.gz: header 127 -> 156 bytes, adds graph:Z:aa95c5243bc9cc6c leftout:i:0, tables 210 -> 211 bytes, 13 #entry offsets and 1 directory offsets moved, 1215 other bytes compared, 0 differences
+== walks-contig-ends.gfa R --tile 1000 --abridge-steps 1
+o.R.walks.gz: header 130 -> 158 bytes, adds graph:Z:aa95c5243bc9cc6c leftout:i:0, tables 122 -> 123 bytes, 4 #entry offsets and 1 directory offsets moved, 462 other bytes compared, 0 differences
+== walks-skip.gfa R --tile 10
+o.R.walks.gz: header 133 -> 161 bytes, adds graph:Z:4a5f08915878cb4b leftout:i:0, tables 193 -> 194 bytes, 12 #entry offsets and 1 directory offsets moved, 1290 other bytes compared, 0 differences
+== walks-skip.gfa Q --tile 10
+o.Q.walks.gz: header 133 -> 161 bytes, adds graph:Z:4a5f08915878cb4b leftout:i:0, tables 193 -> 194 bytes, 12 #entry offsets and 1 directory offsets moved, 1290 other bytes compared, 0 differences
+== walks-skip.gfa R --tile 7 --stay 0
+o.R.walks.gz: header 133 -> 160 bytes, adds graph:Z:4a5f08915878cb4b leftout:i:0, tables 232 -> 231 bytes, 16 #entry offsets and 1 directory offsets moved, 1739 other bytes compared, 0 differences
+== walks-skip.gfa Q --tile 7 --stay 0
+o.Q.walks.gz: header 133 -> 160 bytes, adds graph:Z:4a5f08915878cb4b leftout:i:0, tables 232 -> 231 bytes, 16 #entry offsets and 1 directory offsets moved, 1739 other bytes compared, 0 differences
+== walks-skip.gfa R --tile 10 --abridge-bytes 1
+o.R.walks.gz: header 131 -> 159 bytes, adds graph:Z:4a5f08915878cb4b leftout:i:0, tables 338 -> 339 bytes, 28 #entry offsets and 1 directory offsets moved, 2648 other bytes compared, 0 differences
+== walks-skip.gfa Q --tile 10 --abridge-bytes 1
+o.Q.walks.gz: header 131 -> 159 bytes, adds graph:Z:4a5f08915878cb4b leftout:i:0, tables 338 -> 339 bytes, 28 #entry offsets and 1 directory offsets moved, 2648 other bytes compared, 0 differences
+== walks-skip.gfa R --tile 1000 --abridge-steps 1
+o.R.walks.gz: header 134 -> 161 bytes, adds graph:Z:4a5f08915878cb4b leftout:i:0, tables 116 -> 117 bytes, 4 #entry offsets and 1 directory offsets moved, 422 other bytes compared, 0 differences
+== walks-skip.gfa Q --tile 1000 --abridge-steps 1
+o.Q.walks.gz: header 134 -> 161 bytes, adds graph:Z:4a5f08915878cb4b leftout:i:0, tables 116 -> 117 bytes, 4 #entry offsets and 1 directory offsets moved, 422 other bytes compared, 0 differences
+== walks-sequences.gfa R --tile 10
+o.R.walks.gz: header 164 -> 191 bytes, adds graph:Z:c27e6fb8fe65577a leftout:i:0, tables 1297 -> 1296 bytes, 40 #entry offsets and 10 directory offsets moved, 4087 other bytes compared, 0 differences
+== walks-sequences.gfa R --tile 7 --stay 0
+o.R.walks.gz: header 164 -> 191 bytes, adds graph:Z:c27e6fb8fe65577a leftout:i:0, tables 1513 -> 1513 bytes, 60 #entry offsets and 10 directory offsets moved, 6032 other bytes compared, 0 differences
+== walks-sequences.gfa R --tile 10 --abridge-bytes 1
+o.R.walks.gz: header 162 -> 190 bytes, adds graph:Z:c27e6fb8fe65577a leftout:i:0, tables 1923 -> 1925 bytes, 100 #entry offsets and 10 directory offsets moved, 9318 other bytes compared, 0 differences
+== walks-sequences.gfa R --tile 1000 --abridge-steps 1
+o.R.walks.gz: header 165 -> 193 bytes, adds graph:Z:c27e6fb8fe65577a leftout:i:0, tables 1122 -> 1123 bytes, 30 #entry offsets and 10 directory offsets moved, 3060 other bytes compared, 0 differences
+== walks-long-jump.gfa R --tile 10
+o.R.walks.gz: header 125 -> 150 bytes, adds graph:Z:61d83242a1ea91cf leftout:i:0, tables 189 -> 188 bytes, 10 #entry offsets and 1 directory offsets moved, 961 other bytes compared, 0 differences
+== walks-long-jump.gfa R --tile 7 --stay 0
+o.R.walks.gz: header 124 -> 150 bytes, adds graph:Z:61d83242a1ea91cf leftout:i:0, tables 249 -> 247 bytes, 16 #entry offsets and 1 directory offsets moved, 1565 other bytes compared, 0 differences
+== walks-long-jump.gfa R --tile 10 --abridge-bytes 1
+o.R.walks.gz: header 123 -> 148 bytes, adds graph:Z:61d83242a1ea91cf leftout:i:0, tables 237 -> 236 bytes, 14 #entry offsets and 1 directory offsets moved, 1289 other bytes compared, 0 differences
+== walks-long-jump.gfa R --tile 1000 --abridge-steps 1
+o.R.walks.gz: header 125 -> 152 bytes, adds graph:Z:61d83242a1ea91cf leftout:i:0, tables 168 -> 169 bytes, 9 #entry offsets and 1 directory offsets moved, 890 other bytes compared, 0 differences
+== walks-abridge-bytes.gfa R --tile 10
+o.R.walks.gz: header 348 -> 376 bytes, adds graph:Z:1cb30f02756f1d97 leftout:i:0, tables 77 -> 77 bytes, 1 #entry offsets and 1 directory offsets moved, 1157 other bytes compared, 0 differences
+== walks-abridge-bytes.gfa R --tile 7 --stay 0
+o.R.walks.gz: header 347 -> 375 bytes, adds graph:Z:1cb30f02756f1d97 leftout:i:0, tables 77 -> 77 bytes, 1 #entry offsets and 1 directory offsets moved, 1157 other bytes compared, 0 differences
+== walks-abridge-bytes.gfa R --tile 10 --abridge-bytes 1
+o.R.walks.gz: header 346 -> 375 bytes, adds graph:Z:1cb30f02756f1d97 leftout:i:0, tables 414 -> 414 bytes, 62 #entry offsets and 1 directory offsets moved, 8988 other bytes compared, 0 differences
+== walks-abridge-bytes.gfa R --tile 1000 --abridge-steps 1
+o.R.walks.gz: header 349 -> 378 bytes, adds graph:Z:1cb30f02756f1d97 leftout:i:0, tables 403 -> 403 bytes, 60 #entry offsets and 1 directory offsets moved, 8743 other bytes compared, 0 differences
+== walks-sequences.gfa R --tile 10 --sequences
+o.R.walks.gz: header 164 -> 191 bytes, adds graph:Z:c27e6fb8fe65577a leftout:i:0, tables 1303 -> 1304 bytes, 40 #entry offsets and 10 directory offsets moved, 4400 other bytes compared, 0 differences
+== L8-kiv2.gfa GRCh38 
+o.GRCh38.walks.gz: header 181 -> 208 bytes, adds graph:Z:79e7e58d772d420f leftout:i:0, tables 170 -> 170 bytes, 4 #entry offsets and 1 directory offsets moved, 24142 other bytes compared, 0 differences
+== L6-amylase.gfa GRCh38 
+o.GRCh38.walks.gz: header 181 -> 207 bytes, adds graph:Z:f8339b24277c3e15 leftout:i:0, tables 233 -> 234 bytes, 8 #entry offsets and 1 directory offsets moved, 20699 other bytes compared, 0 differences
+== maize_nam_chr8.full.gfa.gz B73 
+o.B73.walks.gz: header 234 -> 260 bytes, adds graph:Z:0c60829db99c0890 leftout:i:0, tables 280 -> 279 bytes, 14 #entry offsets and 1 directory offsets moved, 46849 other bytes compared, 0 differences
+walks-header-diff: 56 pairs, none differ beyond the #walks line's tags

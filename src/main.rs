@@ -192,7 +192,7 @@ fn write_graph(
         Layout::Contig => "contig",
     };
     let mut header = format!(
-        "#gfa-to-tabix\tformat:i:2\tlayout:Z:{layout}\tgraph:Z:{:016x}\n",
+        "#gfa-to-tabix\tformat:i:2\tlayout:Z:{layout}\tgraph:Z:{}\n",
         graph.content_hash()
     )
     .into_bytes();

@@ -1,12 +1,12 @@
-#walks	format:i:8	tile:i:10	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	bytes:i:5793
-#header	0	162
-R#0#chr1	593	127
-R#0#chr10	1126	129
-R#0#chr11	1693	131
-R#0#chr2	2255	130
-R#0#chr22	2826	130
-R#0#chr3	3393	130
-R#0#chr9	3940	132
-R#0#chrM	4502	130
-R#0#chrX	5063	131
-R#0#chrY	5632	133
+#walks	format:i:8	tile:i:10	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	graph:Z:c27e6fb8fe65577a	leftout:i:0	bytes:i:5821
+#header	0	190
+R#0#chr1	621	127
+R#0#chr10	1154	130
+R#0#chr11	1722	131
+R#0#chr2	2284	131
+R#0#chr22	2856	130
+R#0#chr3	3423	130
+R#0#chr9	3970	130
+R#0#chrM	4530	130
+R#0#chrX	5091	132
+R#0#chrY	5661	132

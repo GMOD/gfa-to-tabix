@@ -162,7 +162,8 @@ from the rows, and relies on the invariants of
   leave every W and P line, so the steps either side of one become
   consecutive, and a line left with no steps is skipped as the next rule
   says. <!-- C152 --> A reference sequence left with no bases has no
-  units and no directory line. Neither HPRC's Minigraph-Cactus chr22 nor pggb's chrY
+  units and no directory line. The header's `graph` still names every S
+  line, 0 bp or not, as the index's does. <!-- C190 --> Neither HPRC's Minigraph-Cactus chr22 nor pggb's chrY
   has a segment of 0 bp ([counts](walks-container/writer/results/zero-bp.txt)),
   so no rule below speaks of one <!-- C152 -->
 - A W or P line with an empty steps field is skipped once its end
@@ -374,7 +375,7 @@ it alone, and `zcat` reads the whole file as text.
   no stretch, and any `seq start end` it stated would be made up
   ([ADR 0010](adr/0010-walks-unit-table.md#costs-decided))
 
-![The walk file of walks-schematic.gfa, built with --tile 30, read for chr1:31-60: the .idx line giving chr1's table at bytes 828-977, the data file as a bar of its units with their byte offsets, the header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and the table, with tile 30 and departures 30-60 shaded as the one request for bytes 380-606, then the rows those two units hold](figures/walks-bytes.svg)
+![The walk file of walks-schematic.gfa, built with --tile 30, read for chr1:31-60: the .idx line giving chr1's table at bytes 855-1004, the data file as a bar of its units with their byte offsets, the header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and the table, with tile 30 and departures 30-60 shaded as the one request for bytes 407-633, then the rows those two units hold](figures/walks-bytes.svg)
 
 ### Units
 
@@ -419,7 +420,7 @@ it alone, and `zcat` reads the whole file as text.
 `<prefix>.<sample>.walks.gz.idx` is plain text:
 
 ```
-#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	bytes:i:<data file length>
+#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	graph:Z:6f8a0816aa66e2d6	leftout:i:0	bytes:i:<data file length>
 #header	0	<length>
 GRCh38#0#chr22	<offset>	<length>
 ```
@@ -451,7 +452,7 @@ zcat f.walks.gz | awk -F'\t' '$1=="GRCh38#0#chr22" && $2<20001000 && $3>20000000
 The header unit's lines start with `#`:
 
 ```
-#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000
+#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	graph:Z:6f8a0816aa66e2d6	leftout:i:0
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
@@ -491,6 +492,26 @@ The header unit's lines start with `#`:
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
   `--abridge-bytes` budgets the file was written with; 0 means none. A reader
   ignores them
+- `graph` names the GFA by the hash the node and link index states in its
+  own `graph:Z:` ([index format](index-format.md#what-the-file-holds)):
+  FNV-1a 64 over each S line's id as written, a byte 0xff and the
+  segment's length as 8 bytes little-endian, summed over the S lines
+  modulo 2^64 and written as 16 lowercase hex digits. <!-- C190 --> A walk
+  file and an index built from the same GFA state the same value, whatever
+  order its S lines come in. <!-- C190 --> It names the set of segments:
+  two GFAs with the same segments and other links or paths share it
+- `leftout` is how many of the GFA's W and P lines with a step visit no
+  node of the reference and so have no rows in the file, the count the
+  writer also prints. A line whose every step is on a segment of 0 bp has
+  no step, and is not counted <!-- C191 -->
+- `graph` and `leftout` are additions to format 8, written from
+  gfa-to-tabix 5.0.0 on ([ADR 0015](adr/0015-walk-files-name-their-graph.md)).
+  A file without them is format 8, and a reader doesn't refuse it.
+  <!-- C192 --> A reader that opens a walk file beside an index can compare
+  their `graph:Z:` values to tell whether both came from one GFA
+- The header names no writer and no version: a file's bytes depend only on
+  the GFA and the options it was written with, so a writer release that
+  changes no row leaves every file as it was <!-- C193 -->
 - Later additions are tags, header lines, unit kinds or files, and a
   reader of format 8 reads a file that has them as it reads one that
   doesn't <!-- C124 -->:
@@ -1118,6 +1139,10 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
 - The data file is written under a temporary name and renamed, then the
   directory likewise, so a directory never names a data file still being
   written (build, tests) <!-- C96 -->
+- The `#walks` line's `graph:Z:` is the hash the node and link index of
+  the same GFA states, and its `leftout:i:` the count of the GFA's lines
+  with a step that visit no node of the reference (tests; files with the
+  GFA) <!-- C190 C191 -->
 - Offsets and lengths are the BGZF writer's u64 block starts, written as
   decimal, so a file past 2^32 bytes needs nothing different; a unit test
   writes one whose blocks start past 2^31, 2^32 and 2^40 <!-- C98 -->
@@ -1212,7 +1237,7 @@ bin 0-10's four lines, with the byte offsets and lengths, which depend
 on the compressor, elided:
 
 ```
-#walks  format:i:8  tile:i:10  revisited:i:0  stay:i:0  abridge:i:1000000  abridgebytes:i:3000000  bytes:i:…
+#walks  format:i:8  tile:i:10  revisited:i:0  stay:i:0  abridge:i:1000000  abridgebytes:i:3000000  graph:Z:7619ff637c3b074b  leftout:i:1  bytes:i:…
 #header  0  …
 GRCh38#0#chr  …  …
 ```

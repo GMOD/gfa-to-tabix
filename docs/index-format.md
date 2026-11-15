@@ -176,7 +176,8 @@ ref#1#chr  0  9  N  3  1  alt#1#ctg  4  5  SB:H:1
 - The first line names the format, the layout, and the graph by a hash of its
   segments' ids and lengths that ignores their order. The hash names the
   segment set only: two graphs with the same segments and different links,
-  paths or reference share it
+  paths or reference share it. A walk file built from the same GFA states
+  the same `graph:Z:` ([Header](walks-format.md#header))
 - A plain GFA adds a `#samples` line listing its assemblies, written
   `sample.haplotype`, comma-separated, in byte order. PanSN haplotypes
   are integers, so a reader splits a name at its last dot, whatever dots

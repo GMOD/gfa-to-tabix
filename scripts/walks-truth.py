@@ -45,8 +45,11 @@ to its reference, and measure what a window costs to read.
       its bp, leading and trailing ones included, and each block, a maximal
       run of consecutive steps on R, each beginning where the last ended on
       R, one way, with no step off R between. Each length a nodes row
-      states is its segment's in the GFA. Prints each line, abridged row or blocks row that differs
-      and exits 1 if any does. The GFA can be gzip. One read
+      states is its segment's in the GFA. The #walks line's graph:Z: is the
+      hash of the GFA's S lines that the node and link index states, and its
+      leftout:i: the number of W or P lines with a step that visit no node
+      of the reference's own lines. Prints each line, abridged row or blocks
+      row that differs, and each of those tags, and exits 1 if any does. The GFA can be gzip. One read
       of it takes each segment's length and the reference's nodes; --shards
       splits the paths by their names' hash, and each further read feeds
       the lines of --jobs shards to a process per shard, which holds only
@@ -82,6 +85,8 @@ CIGAR = re.compile(rb"(\d+)([=XIDM])")
 TAG = re.compile(r"[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*")
 ROWS = {"tile": ("ref", "nodes", "route", "walk", "abridged"), "departures": ("departure",),
         "detail": ("nodes", "route", "walk"), "blocks": ("blocks",)}
+FNV_OFFSET, FNV_PRIME, MASK = 0xcbf29ce484222325, 0x100000001b3, (1 << 64) - 1
+LEFT_OUT = "left out by shard\t"
 BYTE_BUDGET = 8 << 20
 STEP_BUDGET = 32_000_000
 
@@ -734,18 +739,30 @@ def is_path(line):
     return line[:1] in (b"W", b"P") and line[1:2] == b"\t"
 
 
+def segment_hash(name, length):
+    """FNV-1a of a segment's id and its length, 8 bytes little-endian, which
+    the graph:Z: of the node and link index sums over its S lines."""
+    h = FNV_OFFSET
+    for b in name + b"\xff" + length.to_bytes(8, "little"):
+        h = ((h ^ b) * FNV_PRIME) & MASK
+    return h
+
+
 def gfa_nodes(path, reference):
-    """Each segment's length plus 1, and which nodes the reference sample's
-    lines step on, from one read of the GFA: S lines and path lines may
-    interleave, so these are complete only at its end."""
-    lengths, on_reference = ByNode("Q"), ByNode("B")
+    """Each segment's length plus 1, which nodes the reference sample's
+    lines step on, and the graph:Z: of its S lines, from one read of the
+    GFA: S lines and path lines may interleave, so these are complete only
+    at its end."""
+    lengths, on_reference, graph = ByNode("Q"), ByNode("B"), 0
     # P lines of one field that begin with the reference's name: whether
     # the name reads as the reference waits on their steps' bp
     held = []
     for line in gfa_bytes(path):
         if line.startswith(b"S\t"):
             c = line.rstrip(b"\r\n").split(b"\t")
-            lengths[int(c[1])] = 1 + (len(c[2]) if c[2] != b"*" else int(next(t[5:] for t in c[3:] if t.startswith(b"LN:i:"))))
+            length = len(c[2]) if c[2] != b"*" else int(next(t[5:] for t in c[3:] if t.startswith(b"LN:i:")))
+            lengths[int(c[1])] = 1 + length
+            graph = (graph + segment_hash(c[1], length)) & MASK
         elif is_path(line):
             name = written(line)
             if "#" not in name and name != reference and name.startswith(reference):
@@ -757,12 +774,12 @@ def gfa_nodes(path, reference):
         if name_of(line, lengths)[0] == reference:
             for h in steps_of(line):
                 on_reference[h >> 1] = 1
-    return lengths, on_reference
+    return lengths, on_reference, f"{graph:016x}"
 
 
 def walk_header(path):
-    """A walk file's format tags, of its #walks line in any order, and its
-    reference sample, from its header lines."""
+    """A walk file's #walks line's tags, in any order, and its reference
+    sample, from its header lines."""
     found = {}
     with gzip.open(path, "rt", encoding="utf-8", errors="surrogateescape") as f:
         for line in f:
@@ -770,12 +787,13 @@ def walk_header(path):
             if c[0] == "#unit" or not line.startswith("#"):
                 break
             found.setdefault(c[0], c[1:])
-    return [t for t in found.get("#walks", []) if t.startswith("format:i:")], found.get("#reference", [None])[0]
+    return found.get("#walks", []), found.get("#reference", [None])[0]
 
 
 def reference_of(path):
     """The reference sample of a walk format 8 file; exits on any other format."""
     tags, reference = walk_header(path)
+    tags = [t for t in tags if t.startswith("format:i:")]
     if tags != ["format:i:8"]:
         sys.exit(f"walks-truth.py: {path}: {' '.join(tags) or 'no format:i:'}, not walk format 8")
     return reference
@@ -801,7 +819,7 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
     for ps in list(rows.values()) + list(refs.values()):
         for p in ps:
             held[p.line].append(p)
-    wrong_of_reference, wrong, expected, seen = [], malformed if shard == 0 else [], 0, set()
+    wrong_of_reference, wrong, expected, seen, left_out = [], malformed if shard == 0 else [], 0, set(), 0
     for seq, tile, detail, node, stated, length in unlike:
         wrong.append(f"{seq} tile {tile}{'' if detail is None else f' detail {detail}'}: its nodes row gives node {node} "
                      f"{stated} bp, the GFA {length if length >= 0 else 'no segment'}")
@@ -809,6 +827,7 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
         name, start = name_of(line, lengths)
         want = list(handles_of(line, lengths))
         if not any(on_reference[h >> 1] for h in want):
+            left_out += len(want) > 0
             continue
         faults = []
         expected += 1
@@ -875,6 +894,7 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
         print("  " + w)
     print(f"{walks}: shard {shard}/{shards}: {len(held)} lines with rows, {expected} on the reference in the GFA, "
           f"{len(summaries)} abridged rows, {blocks_rows} blocks rows, {len(wrong)} wrong")
+    print(f"{LEFT_OUT}{left_out}")
     return bool(wrong)
 
 
@@ -907,9 +927,21 @@ def fork_shard(args, shard, lengths, on_reference, parent_ends):
     return pid, lines_w, report_r
 
 
+def stated_once(tags, name):
+    values = [t[len(name):] for t in tags if t.startswith(name)]
+    return values[0] if len(values) == 1 else f"{len(values)} times"
+
+
 def rebuild(args):
-    lengths, on_reference = gfa_nodes(args.gfa, reference_of(args.walks))
+    tags, _ = walk_header(args.walks)
+    lengths, on_reference, graph = gfa_nodes(args.gfa, reference_of(args.walks))
     failed = 0
+    if stated_once(tags, "graph:Z:") != graph:
+        print(f"{args.walks}: the #walks line states graph:Z: {stated_once(tags, 'graph:Z:')}, the GFA's S lines hash to {graph}")
+        failed += 1
+    else:
+        print(f"{args.walks}: graph:Z: {graph}, as the GFA's S lines hash")
+    left_out = []
     for first in range(0, args.shards, args.jobs):
         group = range(first, min(first + args.jobs, args.shards))
         ends = {}
@@ -932,12 +964,25 @@ def rebuild(args):
                 pass
         for shard, (pid, _, report) in ends.items():
             with os.fdopen(report, "rb") as f:
-                sys.stdout.buffer.write(f.read())
+                for line in f:
+                    if line.startswith(LEFT_OUT.encode()):
+                        left_out.append(int(line[len(LEFT_OUT):]))
+                    else:
+                        sys.stdout.buffer.write(line)
             code = os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1])
             if code < 0:
                 print(f"{args.walks}: shard {shard}/{args.shards}: killed by signal {-code}")
             sys.stdout.flush()
             failed += code != 0
+    if len(left_out) != args.shards:
+        print(f"{args.walks}: {args.shards - len(left_out)} shards counted no lines left out")
+        failed += 1
+    elif stated_once(tags, "leftout:i:") != str(sum(left_out)):
+        print(f"{args.walks}: the #walks line states leftout:i: {stated_once(tags, 'leftout:i:')}, "
+              f"{sum(left_out)} lines of the GFA with a step visit no node of the reference")
+        failed += 1
+    else:
+        print(f"{args.walks}: leftout:i: {sum(left_out)}, as the GFA's lines give it")
     sys.exit(1 if failed else 0)
 
 

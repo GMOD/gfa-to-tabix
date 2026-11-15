@@ -450,24 +450,43 @@ impl Graph {
         self.declared.iter().filter(|&&d| d).count()
     }
 
-    // FNV-1a of each segment's id and length, summed, so the order of the S
-    // lines doesn't change it
-    pub fn content_hash(&self) -> u64 {
-        self.node_ids
+    pub fn content_hash(&self) -> GraphHash {
+        let mut hash = GraphHash::default();
+        for ((id, length), _) in self
+            .node_ids
             .iter()
             .zip(&self.lengths)
             .zip(&self.declared)
             .filter(|(_, declared)| **declared)
-            .map(|((id, length), _)| {
-                let length = length.unwrap_or(u64::MAX).to_le_bytes();
-                id.iter()
-                    .chain(&[0xff])
-                    .chain(&length)
-                    .fold(0xcbf29ce484222325u64, |h, &b| {
-                        (h ^ b as u64).wrapping_mul(0x100000001b3)
-                    })
-            })
-            .fold(0, u64::wrapping_add)
+        {
+            hash.add(id, *length);
+        }
+        hash
+    }
+}
+
+// The graph:Z: of a node and link index and of a walk file: FNV-1a of each
+// S line's id and length, summed, so the order of the S lines doesn't change
+// it
+#[derive(Default, Clone, Copy, PartialEq, Debug)]
+pub struct GraphHash(u64);
+
+impl GraphHash {
+    pub fn add(&mut self, id: &[u8], length: Option<u64>) {
+        let segment = id
+            .iter()
+            .chain(&[0xff])
+            .chain(&length.unwrap_or(u64::MAX).to_le_bytes())
+            .fold(0xcbf29ce484222325u64, |h, &b| {
+                (h ^ b as u64).wrapping_mul(0x100000001b3)
+            });
+        self.0 = self.0.wrapping_add(segment);
+    }
+}
+
+impl std::fmt::Display for GraphHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:016x}", self.0)
     }
 }
 

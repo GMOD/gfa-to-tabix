@@ -1,3 +1,3 @@
-#walks	format:i:8	tile:i:1000	revisited:i:0	stay:i:311	abridge:i:1	abridgebytes:i:3000000	bytes:i:1001
-#header	0	141
-GRCh38#0#chr	831	142
+#walks	format:i:8	tile:i:1000	revisited:i:0	stay:i:311	abridge:i:1	abridgebytes:i:3000000	graph:Z:7619ff637c3b074b	leftout:i:1	bytes:i:1027
+#header	0	169
+GRCh38#0#chr	859	140
