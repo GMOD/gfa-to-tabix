@@ -2491,6 +2491,7 @@ fn a_walk_file_names_its_graph_as_the_index_of_the_same_gfa_does() {
             "S 1 ACGT",
             "S 5 * LN:i:0",
             "S 3 AC",
+            "S 4 * LN:i:9 LN:i:3",
         ]),
     )
     .unwrap();

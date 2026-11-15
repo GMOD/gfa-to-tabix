@@ -601,7 +601,8 @@ fn first_pass(
                 };
                 let id = node_id(written)?;
                 let length = if sequence == b"*" {
-                    cols.find_map(|tag| tag.strip_prefix(b"LN:i:"))
+                    cols.filter_map(|tag| tag.strip_prefix(b"LN:i:"))
+                        .last()
                         .map(|ln| parse_u64(ln, "LN tag"))
                         .transpose()?
                         .ok_or_else(|| {
