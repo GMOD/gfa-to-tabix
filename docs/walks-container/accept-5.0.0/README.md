@@ -29,6 +29,10 @@ cut. pggb chrY: 24 windows.
   departures and links as before; [pggb chrY](0350375/eq-pggbY.out) keeps
   the differences [open-problems.md](../../open-problems.md#pggb-chry-in-walk-format-8)
   describes
+- **graph-walks 4b14ee3,** the release head, on the 5.0.0 files with
+  the header ([README](4b14ee3/README.md)): neither genome file differs
+  anywhere, nor pggb chrY on GRCh38, beside the rest of ADR 0012's
+  acceptance runs, all passed
 - **What it would catch:** 8e3d397 is the broken reader here, and the
   harness fails it on the window above. The same difference is a test of
   graph-walks, on `unbuilt.R.gfa`, that fails without the change

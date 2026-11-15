@@ -1,0 +1,5 @@
+[  22.0 s, 0.3 GiB peak] reference GRCh38: 2 paths, 263414 nodes
+[  64.0 s, 1.1 GiB peak] 1053 paths, 544640313 steps
+GRCh38: 471497 pieces, 425040 departure records in 1558946 rows, 527 paths visit no GRCh38 node and are left out
+[ 121.6 s, 6.6 GiB peak] 3245676 lines in 1518 units -> pggbY.GRCh38.walks.gz (+ .idx): 130001 routes, 358298 walk rows, 295090 copies named; 684 paths abridged to 112800 detail walk rows
+121.62 s, 6966828 KB peak, exit 0

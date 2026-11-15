@@ -1,0 +1,18 @@
+gfa-to-tabix 5.0.0, /home/cdiesh/work/arb-format-opus/in/mc22.gfa --walks --refs GRCh38: all 24 cores, then under taskset -c 0 (1 core)
+af396b59ade608c2cacdd6ef17fc11313bb97743552aceb9283bde6ef8768493  all/mc22.GRCh38.walks.gz
+fa8dbf682f9bbb992395aa73c748f09a84a4b112386f6bfef0fb5edd36e24633  all/mc22.GRCh38.walks.gz.idx
+af396b59ade608c2cacdd6ef17fc11313bb97743552aceb9283bde6ef8768493  one/mc22.GRCh38.walks.gz
+fa8dbf682f9bbb992395aa73c748f09a84a4b112386f6bfef0fb5edd36e24633  one/mc22.GRCh38.walks.gz.idx
+all:
+total 57740
+-rw-rw-r-- 1 cdiesh cdiesh 59120815 Nov 15 12:30 mc22.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh      197 Nov 15 12:30 mc22.GRCh38.walks.gz.idx
+
+one:
+total 57740
+-rw-rw-r-- 1 cdiesh cdiesh 59120815 Nov 15 12:32 mc22.GRCh38.walks.gz
+-rw-rw-r-- 1 cdiesh cdiesh      197 Nov 15 12:32 mc22.GRCh38.walks.gz.idx
+mc22.GRCh38.walks.gz: identical
+mc22.GRCh38.walks.gz.idx: identical
+all build: 51.60 s, 1085404 KB peak, exit 0
+one build: 74.43 s, 808352 KB peak, exit 0

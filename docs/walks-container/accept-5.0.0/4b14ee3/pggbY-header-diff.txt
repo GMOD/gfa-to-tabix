@@ -1,0 +1,2 @@
+/home/cdiesh/work/blocks/accept-5.0.0/4b14ee3/pggbY/pggbY.GRCh38.walks.gz: header 526 -> 556 bytes, adds graph:Z:2fad6ac56fe993d0 leftout:i:527, tables 21232 -> 21239 bytes, 1518 #entry offsets and 2 directory offsets moved, 193619650 other bytes compared, 0 differences
+9.36 s, 81480 KB peak, exit 0

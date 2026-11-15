@@ -1,0 +1,26 @@
+2026-11-15 12:15:52 start graph-walks 4b14ee334e0b4ac9a1d9337a596db41facf2f345, gfa-to-tabix 5.0.0 at 9e46a4634c1742f50210be582e0963e36a53e0ed
+2026-11-15 12:17:41 release-check grch38 exit 0
+2026-11-15 12:19:14 release-check chm13 exit 0
+2026-11-15 12:19:16 cost grch38 gw-4b14ee3 unloaded exit 0
+2026-11-15 12:19:19 cost grch38 gw-4b14ee3 loaded exit 0
+2026-11-15 12:19:20 cost grch38 graph-walks-6.2 unloaded exit 0
+2026-11-15 12:19:32 cost grch38 graph-walks-6.2 loaded exit 0
+2026-11-15 12:19:37 cost chm13 gw-4b14ee3 unloaded exit 0
+2026-11-15 12:20:17 cost chm13 gw-4b14ee3 loaded exit 0
+2026-11-15 12:20:27 cost chm13 graph-walks-6.2 unloaded exit 0
+2026-11-15 12:22:40 cost chm13 graph-walks-6.2 loaded exit 0
+2026-11-15 12:26:09 against-format7 grch38 exit 1: 97324222 lines; 74053 abridged rows in 461 tiles, 0 with no blocks row; lines that differ: header 1, abridged rows 0, other 0, past the end of one file 0
+2026-11-15 12:30:07 against-format7 chm13 exit 1: 111492575 lines; 65396 abridged rows in 563 tiles, 0 with no blocks row; lines that differ: header 1, abridged rows 0, other 0, past the end of one file 0
+2026-11-15 12:30:59 chr22 build, all cores (24) exit 0
+2026-11-15 12:32:13 chr22 build, one core (1) exit 0
+2026-11-15 12:32:14 threads: 2 of 2 files identical
+2026-11-15 12:34:15 pggbY GRCh38 build exit 0
+2026-11-15 12:34:25 pggbY header diff exit 0
+2026-11-15 12:45:24 read-scan grch38 exit 0
+2026-11-15 12:48:28 read-scan chm13 exit 0
+2026-11-15 13:03:39 equality pggbY exit 0: 1754.36 s, 6684444 KB peak, exit 0
+2026-11-15 13:53:23 equality grch38.1 exit 0: 4738.64 s, 1581292 KB peak, exit 0
+2026-11-15 13:54:08 equality grch38.0 exit 0: 4783.34 s, 1990564 KB peak, exit 0
+2026-11-15 14:05:21 equality chm13.1 exit 0: 5456.01 s, 1372684 KB peak, exit 0
+2026-11-15 14:06:38 equality chm13.0 exit 0: 5533.11 s, 1307464 KB peak, exit 0
+2026-11-15 14:06:38 done

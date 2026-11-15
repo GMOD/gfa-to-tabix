@@ -1,0 +1,20 @@
+gw-4b14ee3 unloaded CHM13#0#chr2:92078080-92079080 cut 1: 1574 ms, 3127376 bytes in 4 reads; 457 fragments (437 with unloaded pieces), 61748 departures, 1504 gaps, 63903 nodes kept
+gw-4b14ee3 unloaded CHM13#0#chr2:92078080-92079080 cut 2: 1487 ms, 3127376 bytes in 4 reads; 457 fragments (437 with unloaded pieces), 61748 departures, 1504 gaps, 63903 nodes kept
+gw-4b14ee3 unloaded CHM13#0#chr2:92078080-92079080 cut 3: 1393 ms, 3127376 bytes in 4 reads; 457 fragments (437 with unloaded pieces), 61748 departures, 1504 gaps, 63903 nodes kept
+gw-4b14ee3 unloaded peak rss 1149 MB
+4.63 s, 1176236 KB peak, exit 0
+gw-4b14ee3 loaded CHM13#0#chr2:92078080-92079080 cut 1: 13856 ms, 21406169 bytes in 786 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12950 nodes kept
+gw-4b14ee3 loaded CHM13#0#chr2:92078080-92079080 cut 2: 13328 ms, 21406169 bytes in 786 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12950 nodes kept
+gw-4b14ee3 loaded CHM13#0#chr2:92078080-92079080 cut 3: 12999 ms, 21406169 bytes in 786 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12950 nodes kept
+gw-4b14ee3 loaded peak rss 5427 MB
+40.53 s, 5557400 KB peak, exit 0
+graph-walks-6.2 unloaded CHM13#0#chr2:92078080-92079080 cut 1: 3308 ms, 150318 bytes in 4 reads; 894 fragments (784 with unloaded pieces), 705 departures, 1157 gaps, 2861 nodes kept
+graph-walks-6.2 unloaded CHM13#0#chr2:92078080-92079080 cut 2: 2925 ms, 150318 bytes in 4 reads; 894 fragments (784 with unloaded pieces), 705 departures, 1157 gaps, 2861 nodes kept
+graph-walks-6.2 unloaded CHM13#0#chr2:92078080-92079080 cut 3: 3115 ms, 150318 bytes in 4 reads; 894 fragments (784 with unloaded pieces), 705 departures, 1157 gaps, 2861 nodes kept
+graph-walks-6.2 unloaded peak rss 1400 MB
+9.55 s, 1433416 KB peak, exit 0
+graph-walks-6.2 loaded CHM13#0#chr2:92078080-92079080 cut 1: 40501 ms, 21554188 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-6.2 loaded CHM13#0#chr2:92078080-92079080 cut 2: 46064 ms, 21554188 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-6.2 loaded CHM13#0#chr2:92078080-92079080 cut 3: 46499 ms, 21554188 bytes in 790 reads; 457 fragments (0 with unloaded pieces), 61748 departures, 1504 gaps, 12989 nodes kept
+graph-walks-6.2 loaded peak rss 8312 MB
+133.66 s, 8511956 KB peak, exit 0

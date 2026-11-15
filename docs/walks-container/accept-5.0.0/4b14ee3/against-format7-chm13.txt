@@ -1,0 +1,6 @@
+line 1, header:
+  format 8 as 7: b'#walks\tformat:i:7\ttile:i:65536\trevisited:i:0\tstay:i:311\tabridge:i:1000000\tabridgebytes:i:3000000\tgraph:Z:496a04d0071827a0\tleftout:i:3312\n'
+  format 7:      b'#walks\tformat:i:7\ttile:i:65536\trevisited:i:0\tstay:i:311\tabridge:i:1000000\tabridgebytes:i:3000000\n'
+111492575 lines; 65396 abridged rows in 563 tiles, 0 with no blocks row; lines that differ: header 1, abridged rows 0, other 0, past the end of one file 0
+Command exited with non-zero status 1
+237.85 s, 4358172 KB peak, exit 1

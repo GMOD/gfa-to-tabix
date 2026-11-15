@@ -1,0 +1,22 @@
+/home/cdiesh/work/blocks/genome-5.0.0-hdr/hprc-v2.1-mc-grch38.GRCh38.walks.gz: 1383 windows; cut read over 4000000 bytes: 0; bytesFor over it: 0
+  GRCh38#0#chr2:91421722-91422722  cut read 2122430  bytesFor 2122430
+  GRCh38#0#chr2:91422722-91423722  cut read 2122430  bytesFor 2122430
+  GRCh38#0#chr2:91487257-91488257  cut read 2108272  bytesFor 2108272
+  GRCh38#0#chr2:91488257-91489257  cut read 2108272  bytesFor 2108272
+  GRCh38#0#chr2:91454989-91455989  cut read 1797651  bytesFor 1797651
+  GRCh38#0#chr6:32570392-32571392  cut read 1136040  bytesFor 1136040
+  GRCh38#0#chr6:32571392-32572392  cut read 1136040  bytesFor 1136040
+  GRCh38#0#chr4:49216761-49217761  cut read 1089401  bytesFor 1089401
+  GRCh38#0#chr4:49217761-49218761  cut read 1089401  bytesFor 1089401
+  GRCh38#0#chr14:19332128-19333128  cut read 1084132  bytesFor 1084132
+  GRCh38#0#chr14:19333128-19334128  cut read 1084132  bytesFor 1084132
+  GRCh38#0#chr14:19397674-19398674  cut read 1050745  bytesFor 1050745
+  GRCh38#0#chr14:19398674-19399674  cut read 1050745  bytesFor 1050745
+  GRCh38#0#chr4:49151010-49152010  cut read 980910  bytesFor 980910
+  GRCh38#0#chr4:49152010-49153010  cut read 980910  bytesFor 980910
+  GRCh38#0#chr14:19266586-19267586  cut read 908655  bytesFor 908655
+  GRCh38#0#chr14:19267586-19268586  cut read 908655  bytesFor 908655
+  GRCh38#0#chr6:32635935-32636935  cut read 890076  bytesFor 890076
+  GRCh38#0#chr6:32636935-32637935  cut read 890076  bytesFor 890076
+  GRCh38#0#chr4:49184385-49185385  cut read 816900  bytesFor 816900
+659.22 s, 1709400 KB peak, exit 0
