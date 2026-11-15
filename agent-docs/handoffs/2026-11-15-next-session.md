@@ -65,9 +65,6 @@ task output under
 - bandage-core `clearance-force` (~/src/bandage-core-clearforce, 9da7c22):
   the clearance only on the stress engine, which lays the reference straight;
   force pictures were still rendering. Task a5b0379ca4f063d0c.
-- bandage-core `host-fit` (~/src/bandage-core-hostfit, b3054d0; plugin
-  `host-fit` 31c1723, BandageJS `host-fit-f8` 2a9757af, ggbandage `host-fit`
-  76d0297): the force layout takes the host's fit size. Task a64c26b15376c77ee.
 
 ## Side branches ready, not landed (bandage-core unless said)
 
@@ -85,7 +82,21 @@ task output under
 - `link-ends` dea6def (~/src/bandage-core-linkends, on 43696f3): lane on the
   right link, arrows with the reference, lane joins, hit test strandedness
   required.
-- `clearance-force` and `host-fit` above.
+- `host-fit` b3054d0 (~/src/bandage-core-hostfit, on 43696f3; plugin `host-fit`
+  31c1723, BandageJS `host-fit-f8` 2a9757af, ggbandage `host-fit` 76d0297):
+  `forceLayout(graph, settings, engine, fit?)` sizes the clearance and the
+  compress floor for the host's pane (the plugin passes width less the key
+  column and track height less the strip; BandageJS its canvas; the figure
+  path `figureFit(spec)`, 1200 by 800 by default); `ASSUMED_FIT` 1200 by 280
+  when none; the fit is in the cache key. Tests in all four repos; core 1080.
+  Pictures `*host-fit*`: KIV-2 in the plugin pixel-identical (it binds on
+  height); ggbandage at 900 by 450 under compress no longer puts alleles on
+  long sticks. To know: figures taller than about 0.18 of their width now
+  draw a narrower, correct allele gap, so committed renders differ; on
+  resize no host re-lays out, and below about 0.8 of the room the layout was
+  sized for ink starts to touch (recommended: re-apply the cheap clearance
+  pass on shrink, not the engine).
+- `clearance-force` above.
 - Readers' switch-over to graph-walks' presets and counts, each on a branch
   off its format8 head, package.json and lockfile pointing at a scratch
   tarball uncommitted: BandageJS `switch-f8` 74fd1e1d, plugin `switch`
