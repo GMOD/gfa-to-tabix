@@ -82,6 +82,7 @@ corrupt record-bogus-path "$T0" --all "$Q6" "$Q6"$G$'\t0\t18\tdeparture\tZ#1#z\t
 corrupt record-dropped "$T0" --all "$Q6" ''
 corrupt entry-dropped "$T0" --drop-entry $'#entry\t'$G$'\t10\t20\tdepartures\t.\t'
 corrupt line-before-walks "$T0" --prepend-header $'#future\tx'
+corrupt entry-start-not-integer "$T0" --table $'#entry\t'$G$'\t10\t20\tdepartures' $'#entry\t'$G$'\t1e1\t20\tdepartures'
 corrupt record-leavepasses "$T0" --all $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12' $'Q#0#chr\t6\t6\t0\t6\t+\t2\t12'
 corrupt record-within-piece "$T0" "$I18"$'#unit\t'$G$'\t24\t30\ttile' "$I18$H118"$'#unit\t'$G$'\t24\t30\ttile' \
   $'\t20\t30\tdepartures\t.\n'"$D24$I18" $'\t20\t30\tdepartures\t.\n'"$D24$I18$H118"

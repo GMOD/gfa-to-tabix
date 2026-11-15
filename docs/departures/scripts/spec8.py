@@ -542,6 +542,8 @@ class Walks:
                 c = l.split("\t")
                 if c[0] != "#entry" or len(c) != 8:
                     raise Refuse("table holds a line that isn't an #entry of seven columns")
+                if not all(x.isascii() and x.isdigit() for x in (c[2], c[3], c[6], c[7])):
+                    raise Refuse("table entry's start, end, offset or length is not a decimal integer")
                 entries.append(Entry(c[1:8]))
             self._table[seq] = (int(u[3]), entries)
         return self._table[seq]

@@ -45,6 +45,7 @@ dir-tag-header-line	walks-two-refs.gfa	verify7 spec8	a tag on the directory's #h
 dir-tag-seq-line	walks-two-refs.gfa	verify7 audit7 spec8	a tag on the directory's line of GRCh38#0#chr
 empty-block	walks-two-refs.gfa	verify7 claims7	an empty departure block after the table
 entry-dropped	walks-two-refs.gfa	verify7	the table entry of the departures unit at 10 left out, the unit's bytes kept, so the entries no longer tile the bytes
+entry-start-not-integer	walks-two-refs.gfa	verify7 spec8	the table entry of the departures unit at 10 stating its start as 1e1, its unit's #unit line kept at 10
 format-7	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	the header and directory stating format:i:7
 g1-walk-order	walks-two-refs.gfa	claims7 spec8	H's and D's walk rows swapped in tile 0
 graph-other	walks-two-refs.gfa	rebuild	graph:Z: 7619ff637c3b074b, the hash of the GFA's S lines, made 7619ff637c3b074c
