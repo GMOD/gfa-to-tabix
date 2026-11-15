@@ -19,6 +19,10 @@ One session took over both lanes, then stopped launching work when usage ran sho
   - no row says a line ends or continues on another reference sequence; a tag could later;
   - tile extents and `#hole` lines may let a reader tell that a table lacks an entry, which the spec says it can't; unproved;
   - a several-megabase window of every haplotype gets only a zoom-in notice; a zoom layer or bubble hierarchy fits as a separate file under the additions rule.
+- **A second independent design, allowed to read pangyplot, keeps the bubble hierarchy as a later layer and not as the file layout.** It is in ~/src/walks8-evidence/22a29087/blind-design-bubbles/DESIGN.txt, with its reading of pangyplot by file and line. It was not shown our spec, and its claims about pangyplot's code are unchecked.
+  - Its reasons: one bubble can span megabases, repeats and tangles yield no bubbles, and decompositions differ between tools.
+  - What it says a base format needs so the layer can come later: stable node ids, every link of a loaded node, own coordinates at reference anchors, layers a reader may ignore, and a deterministic build.
+  - Its reading of pangyplot: bubbles come from topology alone, a collapsed mark says nothing per haplotype, regions over 50,000 segments are refused, and above about 2 Mb the hierarchy isn't used.
 - **The VCF drawing checker was written and never run.** Its source is ~/src/walks8-evidence/a36cf6aa/drawcheck/src/. The raw VCF sliced to its 66 Minigraph-Cactus windows is on ada at /mnt/sdb/cdiesh/vcfcheck/drawcheck-slice.raw.vcf.gz (+ .tbi).
 - **Evidence** from all three sessions is copied to ~/src/walks8-evidence/. The release page is https://claude.ai/artifact/PFkwJvV1eSiHnGG4REsH1s.
 
