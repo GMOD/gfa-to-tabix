@@ -110,6 +110,11 @@ changed and why.
   bytes compared, 0 differences); the writer's printed counts of pieces,
   records, rows and left-out lines are identical old and new. The rebuilt
   files replaced the hosted `-f8` copies, sha256 read back from each URL.
+  `leftout` was counted again on the whole graphs by a second session's
+  program that reads the GFA text once with no writer code
+  (walks8-evidence fab8f323/leftout/leftout.c, streamed from `vg convert`
+  of each GBZ): 1698 of 53,150 path lines for GRCh38 and 3312 of 60,807
+  for CHM13, equal to the headers; neither graph has a 0 bp segment.
   The walk writer also takes the last of two `LN:i:` tags on one segment,
   as the index does, so `graph:Z:` hashes the lengths the index hashed;
   no hosted graph has such a segment
