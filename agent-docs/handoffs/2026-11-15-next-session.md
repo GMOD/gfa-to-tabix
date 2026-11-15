@@ -56,15 +56,14 @@ gallery repair and the paper patch; its index is
 
 ## Agents that were still running when this session stopped
 
+None: all reported before the session ended; their results are below.
+
 Their branches exist with the heads listed; each may have added commits or a
 reply after this file was written. Read `git log` in the worktree and the
 task output under
 `/tmp/claude-1001/-home-cdiesh-src-gfa-to-tabix/7a96682c-92be-45ca-9e3d-55bf7fb5184d/tasks/`
 (the agent's JSONL transcript; its last assistant message is the report).
 
-- bandage-core `clearance-force` (~/src/bandage-core-clearforce, 9da7c22):
-  the clearance only on the stress engine, which lays the reference straight;
-  force pictures were still rendering. Task a5b0379ca4f063d0c.
 
 ## Side branches ready, not landed (bandage-core unless said)
 
@@ -96,7 +95,21 @@ task output under
   resize no host re-lays out, and below about 0.8 of the room the layout was
   sized for ink starts to touch (recommended: re-apply the cheap clearance
   pass on shrink, not the engine).
-- `clearance-force` above.
+- `clearance-force` 9da7c22 (~/src/bandage-core-clearforce, on 43696f3):
+  `clearOfReference` runs only under the stress engine (pipeline.ts:272);
+  FMMM leaves the engine's positions; README 119-124; a test fails on
+  43696f3. Pictures `*clearance-force*`: bandage-core's kiv2_walks figure,
+  the plugin's force_kiv2_overlay and syng_c4 and the KIV-2 FMMM view are
+  clean again; KIV-2 stress pixel-identical; the 571 gap FMMM loses the
+  lens-shaped alleles 7351107 gave it where FMMM's reference is nearly
+  straight (a real loss); force_gstm1_walk keeps its teeth because the
+  plugin's track uses stress and a lifted lane steps out to each pushed
+  allele and back (needs a rule for lifted lanes beside pushed alleles).
+  Also seen: the KIV-2 views, stress and FMMM, are flooded with stacked
+  "1 bp" placeholder labels on leaders, from 4c673cb (placeholders skip the
+  drawn-length gate): the review must decide the rule for one-step
+  placeholders (a floor on the label count, or lengths under some bp
+  summarised).
 - Readers' switch-over to graph-walks' presets and counts, each on a branch
   off its format8 head, package.json and lockfile pointing at a scratch
   tarball uncommitted: BandageJS `switch-f8` 74fd1e1d, plugin `switch`
@@ -117,7 +130,9 @@ task output under
   step count): BandageJS derived.ts, the tube map's AbridgedWalksPanel, the
   plugin's abridged list and jb2hubs still read `steps`.
 - One Fable review of the six bandage-core branches (nested-arcs, graph-key,
-  compress-rank, link-ends, clearance-force, host-fit) as the earlier batch
+  compress-rank, link-ends, clearance-force, host-fit), plus the two
+  stress-layout items clearance-force left (lifted lanes stepping to pushed
+  alleles; the "1 bp" label flood at KIV-2) as the earlier batch
   reviews were run: criteria first, a mutant per branch, composition in a
   scratch merge, landing order, the two nested-arcs calls, the ring look,
   BandageJS's gene tests. Land in its order on release-fixes (core, plugin,
