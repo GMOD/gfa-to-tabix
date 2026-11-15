@@ -518,9 +518,10 @@ The header unit's lines start with `#`:
   A file without them is format 8, and a reader doesn't refuse it.
   <!-- C192 --> A reader that opens a walk file beside an index can compare
   their `graph:Z:` values to tell whether both came from one GFA
-- The header names no writer and no version: a file's bytes depend only on
-  the GFA and the options it was written with, so a writer release that
-  changes no row leaves every file as it was <!-- C193 -->
+- The header names no writer and no version: a file's rows depend only on
+  the GFA and the options it was written with, and its bytes also on the
+  compressor ([Example](#example)), so a writer release that changes no
+  row and not the compression leaves every file as it was <!-- C193 -->
 - Later additions are tags, header lines, unit kinds or files, and a
   reader of format 8 reads a file that has them as it reads one that
   doesn't <!-- C124 -->:

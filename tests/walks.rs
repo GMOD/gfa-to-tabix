@@ -2590,6 +2590,39 @@ fn a_walk_file_is_the_same_bytes_on_one_core_as_on_all() {
     assert!(all == one);
 }
 
+// A writer release that changes no row and not the compression leaves every
+// file as it was. A dependency bump or compression change that moves these
+// bytes moves every hosted file's offsets, so it must be a deliberate release
+// decision, never a hash updated to make this pass
+#[test]
+fn a_walk_files_compressed_bytes_are_as_pinned() {
+    let dir = std::env::temp_dir().join(format!("walks-pinned-{}", std::process::id()));
+    fs::create_dir_all(&dir).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix"))
+        .arg(fixture("walks-two-refs.gfa"))
+        .arg("-o")
+        .arg(dir.join("out"))
+        .args(["--walks", "--refs", "GRCh38", "--tile", "10"])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let fnv = |suffix: &str| {
+        fs::read(dir.join(format!("out.GRCh38{suffix}")))
+            .unwrap()
+            .iter()
+            .fold(0xcbf29ce484222325u64, |h, &b| {
+                (h ^ u64::from(b)).wrapping_mul(0x100000001b3)
+            })
+    };
+    let hashes = [".walks.gz", ".walks.gz.idx"].map(fnv);
+    fs::remove_dir_all(&dir).unwrap();
+    assert_eq!(
+        hashes,
+        [0x49dc4301b0066637, 0xe4c251b74b1555cc],
+        "{hashes:x?}"
+    );
+}
+
 // Built with no option but --refs, a file's header states the defaults
 #[test]
 fn the_defaults_are_65536_311_1000000_and_3000000() {
