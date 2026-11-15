@@ -336,6 +336,14 @@ than replace it. Take one up only when someone asks for pggb walk tracks:
 - [ADR 0008](adr/0008-index-keeps-its-placement.md) rejects filing by pass, and
   [ADR 0005](adr/0005-giant-components.md) capping a link's interval
 
+- **A node the reference passes once, walked inside another copy.** On
+  pggb chrY a 1 bp node the reference passes once, at 9,394,014, is walked
+  by seven of eight haplotypes inside the TSPY copy near 9,482,842. The
+  file states the single pass, so a reader that follows it draws an
+  88.8 kb skip there, in the graph and the rows alike. The graph holds no
+  fact that picks the copy; a later tag could say that a once-passed
+  node's place is borrowed where its neighbours lie elsewhere
+
 ## Stubs for a component over `--max-component`
 
 - The JBrowse plugin draws a moved component as faded dead-end nodes where it
