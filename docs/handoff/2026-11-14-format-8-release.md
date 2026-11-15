@@ -80,8 +80,8 @@ Next, in order of dependency:
   - Release each the way its repo does.
   - jb2hubs: swap its HPRC config to the `-f8` file and the new pins, upload the config, and commit the uploaded stamp.
 - **Configs, in one pass.**
-  - Edit jbrowse-components `demos/hprc/config.json` (lines 254, 343), `demos/hprc_multiway/config.json` (307) and `test_data/graphgenomeview/hprc.json` (160) to name the `-f8` files, then deploy them with `deploy-demo.sh`.
-  - `test_data/graphgenomeview/paper_hprc.json` stays on format 7 with plugin 9.0.0, by design.
+  - Edit jbrowse-components `demos/hprc/config.json` (lines 254, 343), `demos/hprc_multiway/config.json` (307), `test_data/graphgenomeview/hprc.json` (160) and `test_data/graphgenomeview/paper_hprc.json` to name the `-f8` files, then deploy them with `deploy-demo.sh`.
+  - **Hard cutover, decided by the owner on 2026-11-15:** nothing is kept working on format 7. `paper_hprc.json` moves to format 8 and plugin 10 like the rest, and its figures are re-rendered. Once plugin 10 is on `latest/`, upload the format 8 files over the plain names too (`hprc/hprc-v2.1-mc-grch38.GRCh38.walks.gz`, `hprc/hprc-v2.1-mc-chm13.CHM13.walks.gz`, each with its `.idx`, data file then idx, with `deploy-demo.sh`), so no hosted walk file serves format 7 and any URL still naming the plain files gets format 8. The `-f8` names stay as the canonical ones the paper, the READMEs and the consumers cite. The `-f7` and `-f5s` files are not deleted in this release.
 - **The plugin.**
   - Wait for ci-green on the hosted config.
   - `pnpm version major` gives 10.0.0.
