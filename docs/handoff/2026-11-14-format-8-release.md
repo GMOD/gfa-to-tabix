@@ -2,6 +2,31 @@
 
 The owner asked for gfa-to-tabix 5.0.0, which writes walk format 8, to be released across every reader as major versions with a hard cut. Format 7 support is dropped. Each step below waits on the one before it. Nothing is pushed until the gates above that step pass.
 
+## State on 2026-11-15
+
+One session took over both lanes, then stopped launching work when usage ran short. Nothing is pushed, tagged, published or uploaded. Everything below is local.
+
+- **Decided: the walk header names its graph.** The `#walks` line gains `graph:Z:` (the index's hash) and `leftout:i:`. It names no writer and no version, at the owner's request: a version stamp would change every file's bytes at each writer release and force a re-upload on sync. The format number stays 8. See ADR 0015 on the branch.
+  - gfa-to-tabix branch `provenance`, head 8fe5434, in ~/src/gfa-to-tabix-provenance: three commits above main 8a965ac. Not merged, because main's checkers then fail the hosted files until they are rebuilt.
+  - graph-walks branch `provenance`, head ae6e0ff, in ~/src/graph-walks-provenance, on top of d20d416: fixtures rebuilt, `reader.header()` returns the two values.
+  - ADR 0015 has one marked line to fill in after the whole-genome byte check.
+- **Drawing fixes landed.** bandage-core `release-fixes` is at 76e0324 (~/src/bandage-core-rel) and the plugin's at 8fbe392: small skips no longer draw as darts, placeholder lengths are always labelled, the FMMM seed stretch has a straightness test, `classifyBubble.ts` is `bubbleLabel.ts`, the menu says "Show links that skip reference", and the node-thickness key shows its two ends. Checked by eye on fresh screenshots at the 571 bp gap, amylase and GSTM1.
+  - Hosts must follow: the `bubbles/bubbleLabel` import, `labelledNodeLengths` in place of `nodeLengthLabels`, `depthKey` in place of `depthRange`. BandageJS still imports the old names.
+  - The plugin's typecheck shows 3 errors in `GbzBaseSyntenyAdapter.ts`, put down to its hand-linked `node_modules`. Confirm on the clean install.
+  - bandage-core's own SVG figure writes no node or placeholder lengths, so ggbandage's static figures lack them.
+- **S5 (walk-row lengths).** The dead agent's uncommitted diff is parked as d19c255 on branch `s5-premise` in ~/src/bandage-core-s5. `release-fixes` holds nothing of it. The premise review's result is recorded at the end of this section.
+- **An independent design, made from the requirement alone, says freeze format 8 as it is.** Its design and its comparison with the spec are in ~/src/walks8-evidence/22a29087/blind-design/. For open-problems.md, from it:
+  - no row says a line ends or continues on another reference sequence; a tag could later;
+  - tile extents and `#hole` lines may let a reader tell that a table lacks an entry, which the spec says it can't; unproved;
+  - a several-megabase window of every haplotype gets only a zoom-in notice; a zoom layer or bubble hierarchy fits as a separate file under the additions rule.
+- **The VCF drawing checker was written and never run.** Its source is ~/src/walks8-evidence/a36cf6aa/drawcheck/src/. The raw VCF sliced to its 66 Minigraph-Cactus windows is on ada at /mnt/sdb/cdiesh/vcfcheck/drawcheck-slice.raw.vcf.gz (+ .tbi).
+- **Evidence** from all three sessions is copied to ~/src/walks8-evidence/. The release page is https://claude.ai/artifact/PFkwJvV1eSiHnGG4REsH1s.
+
+Next, in order of dependency:
+- Act on the graph-walks review. If it passes: merge d20d416, then `provenance`, put the version commit at the head, name the `-f8` files in the README, repack.
+- Merge gfa-to-tabix `provenance`, rebuild both genome files on ada, run `scripts/walks-header-diff.py` on each old and new pair, fill ADR 0015's line, re-upload under the `-f8` names, then sha256 and release-check from both URLs.
+- Then the gates below, none of them started: the acceptance runs, the drawing check, the reshoot and the blind layout judge, the integration pass, the parity audit.
+
 ## Done
 
 - **Format 8 needed no byte change.** See the readiness audit and the decisions in ADRs 0012–0014.
