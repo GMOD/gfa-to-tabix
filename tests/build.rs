@@ -8,8 +8,9 @@ use std::fs;
 use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output, Stdio};
+use std::process::{Child, Command, Output, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use flate2::read::MultiGzDecoder;
 
@@ -35,10 +36,24 @@ fn scratch() -> PathBuf {
     dir
 }
 
+// Held while a test writes an executable and while it spawns a child, so no
+// child is forked while a script's write descriptor is open: a child holding
+// one would make exec of that script fail with ETXTBSY
+fn forking() -> MutexGuard<'static, ()> {
+    static FORKS: Mutex<()> = Mutex::new(());
+    FORKS.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+fn spawn(command: &mut Command) -> Child {
+    let _forking = forking();
+    command.spawn().unwrap()
+}
+
 // A gfatools that keeps what it reads in stdin.gfa and runs `script`.
 fn fake_gfatools(dir: &Path, script: &str) {
     let path = dir.join("gfatools");
     let stdin = dir.join("stdin.gfa");
+    let _forking = forking();
     fs::write(
         &path,
         format!("#!/bin/sh\n/bin/cat > '{}'\n{script}\n", stdin.display()),
@@ -48,15 +63,15 @@ fn fake_gfatools(dir: &Path, script: &str) {
 }
 
 fn build(dir: &Path, args: &[&str], stdin: Option<&str>) -> Output {
-    let mut child = Command::new(BINARY)
-        .arg("build")
-        .args(args)
-        .env("PATH", dir)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
+    let mut child = spawn(
+        Command::new(BINARY)
+            .arg("build")
+            .args(args)
+            .env("PATH", dir)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped()),
+    );
     let mut pipe = child.stdin.take().unwrap();
     if let Some(path) = stdin {
         pipe.write_all(&fs::read(path).unwrap()).unwrap();
@@ -579,12 +594,17 @@ fn a_partly_tagged_graph_with_no_paths_skips_gfatools() {
 }
 
 fn index(dir: &Path, gfa: &str, reference: &[&str], prefix: &str, format: &str) {
-    let output = Command::new(BINARY)
-        .args([gfa, "--layout", "contig", "--format", format, "-o"])
-        .arg(dir.join(prefix))
-        .args(reference)
-        .output()
-        .unwrap();
+    let output = spawn(
+        Command::new(BINARY)
+            .args([gfa, "--layout", "contig", "--format", format, "-o"])
+            .arg(dir.join(prefix))
+            .args(reference)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped()),
+    )
+    .wait_with_output()
+    .unwrap();
     assert!(output.status.success(), "{output:?}");
 }
 
@@ -659,9 +679,14 @@ fn the_contig_index_takes_the_build_format() {
 
 #[test]
 fn a_graph_and_an_output_prefix_are_required() {
-    let output = Command::new(BINARY)
-        .args(["build", "x.gfa"])
-        .output()
-        .unwrap();
+    let output = spawn(
+        Command::new(BINARY)
+            .args(["build", "x.gfa"])
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped()),
+    )
+    .wait_with_output()
+    .unwrap();
     assert_eq!(output.status.code(), Some(2));
 }
