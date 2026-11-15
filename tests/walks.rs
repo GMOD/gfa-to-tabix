@@ -2590,35 +2590,89 @@ fn a_walk_file_is_the_same_bytes_on_one_core_as_on_all() {
     assert!(all == one);
 }
 
+// A reference of 4,000 nodes of 25 bp and eight haplotypes that each swap
+// every (6 + h)th node for one of their own, with bases from a fixed
+// generator, so --sequences gives a tile whose text spans several BGZF blocks
+fn many_blocks_gfa() -> String {
+    let mut state = 1u64;
+    let mut bases = |n: usize| -> String {
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                char::from(b"ACGT"[(state >> 62) as usize])
+            })
+            .collect()
+    };
+    let walks: Vec<(String, Vec<u32>)> =
+        std::iter::once(("R\t0\tchr".to_string(), (1..=4000).collect()))
+            .chain((1..=8u32).map(|h| {
+                let path = (1..=4000u32)
+                    .map(|j| if j % (6 + h) == 0 { 10_000 * h + j } else { j })
+                    .collect();
+                (format!("H{h}\t1\tc"), path)
+            }))
+            .collect();
+    let nodes: BTreeSet<u32> = walks
+        .iter()
+        .flat_map(|(_, path)| path.iter().copied())
+        .collect();
+    let links: BTreeSet<(u32, u32)> = walks
+        .iter()
+        .flat_map(|(_, path)| path.windows(2).map(|w| (w[0], w[1])))
+        .collect();
+    let mut gfa = String::from("H\tVN:Z:1.1\n");
+    for id in nodes {
+        gfa += &format!("S\t{id}\t{}\n", bases(25));
+    }
+    for (a, b) in links {
+        gfa += &format!("L\t{a}\t+\t{b}\t+\t0M\n");
+    }
+    for (name, path) in &walks {
+        let steps: String = path.iter().map(|id| format!(">{id}")).collect();
+        gfa += &format!("W\t{name}\t0\t{}\t{steps}\n", 25 * path.len());
+    }
+    gfa
+}
+
 // A writer release that changes no row and not the compression leaves every
 // file as it was. A dependency bump or compression change that moves these
 // bytes moves every hosted file's offsets, so it must be a deliberate release
-// decision, never a hash updated to make this pass
+// decision, never a hash updated to make this pass. Run with LEVEL at 6 the
+// data file hashed 0x8517f70fb9c0f493 and the directory 0x25ca2335786cede5,
+// and at 9 0x4d504890de752fca and 0x969af7dffc4a5596, and the test failed
 #[test]
 fn a_walk_files_compressed_bytes_are_as_pinned() {
     let dir = std::env::temp_dir().join(format!("walks-pinned-{}", std::process::id()));
     fs::create_dir_all(&dir).unwrap();
+    let gfa = dir.join("many-blocks.gfa");
+    fs::write(&gfa, many_blocks_gfa()).unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_gfa-to-tabix"))
-        .arg(fixture("walks-two-refs.gfa"))
+        .arg(&gfa)
         .arg("-o")
         .arg(dir.join("out"))
-        .args(["--walks", "--refs", "GRCh38", "--tile", "10"])
+        .args(["--walks", "--refs", "R", "--tile", "1000000", "--sequences"])
         .output()
         .unwrap();
     assert!(output.status.success(), "{output:?}");
+    let read = |suffix: &str| fs::read(dir.join(format!("out.R{suffix}"))).unwrap();
+    let largest_unit = gunzip(&read(".walks.gz"))
+        .split("\n#unit\t")
+        .map(str::len)
+        .max()
+        .unwrap();
     let fnv = |suffix: &str| {
-        fs::read(dir.join(format!("out.GRCh38{suffix}")))
-            .unwrap()
-            .iter()
-            .fold(0xcbf29ce484222325u64, |h, &b| {
-                (h ^ u64::from(b)).wrapping_mul(0x100000001b3)
-            })
+        read(suffix).iter().fold(0xcbf29ce484222325u64, |h, &b| {
+            (h ^ u64::from(b)).wrapping_mul(0x100000001b3)
+        })
     };
     let hashes = [".walks.gz", ".walks.gz.idx"].map(fnv);
     fs::remove_dir_all(&dir).unwrap();
+    assert!(largest_unit > 2 * 65280, "{largest_unit}");
     assert_eq!(
         hashes,
-        [0x49dc4301b0066637, 0xe4c251b74b1555cc],
+        [0x3aa8f8a2a3eb5ba2, 0xf211e8ca9ba83046],
         "{hashes:x?}"
     );
 }
