@@ -1,0 +1,4 @@
+nodes ["1","4","3"]
+linksNamed 1+>3+ 1+>4+ 4+>3+
+fragment R#0#chr 0 25 ids 1,4,3 trimmedBefore 0 trimmedAfter 0
+fragment H#1#h 0 20 ids 1,3 trimmedBefore 0 trimmedAfter 0

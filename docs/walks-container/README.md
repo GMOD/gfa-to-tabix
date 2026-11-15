@@ -34,6 +34,14 @@ The candidate files themselves are on ada under `~/work/arb-arbA/out/` and
 v2.1 Minigraph-Cactus chr22 (`~/work/rel3/mc22.GRCh38.walks.bed.gz`) and
 HPRC release 2 pggb chrY (`~/work/pggbY.GRCh38.walks.bed.gz`), both on
 GRCh38.
+- `freeze-review/`: two cases from the format 8 freeze review, each a GFA
+  and what graph-walks cut from its walk file with every haplotype loaded,
+  by `cut.mjs` (`node cut.mjs <walks.gz> <sequence> <start> <end>`):
+  `g4/`, built with `--refs R --tile 20`, whose cut of `R#0#chr:0-20` and
+  of 40-60 lacks GFA links at loaded nodes, and `zero/`, built with
+  `--refs R --tile 100`, whose cut lists a link `1+>3+` the GFA lacks
+  where a 0 bp segment is dropped. The walk files were built before the
+  `#walks` line named its graph; neither cut depends on that
 - `genome/`: the genome-wide check of the prototype on GRCh38 and CHM13
   by the session deploying the walk files: `report.md`, `summary.md`, its
   scripts and `res/` (copied from ada `~/work/s7-genome/res/`; the report's

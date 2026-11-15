@@ -1,0 +1,10 @@
+S	1	AAAAAAAAAA
+S	2	*	LN:i:0
+S	3	AAAAAAAAAA
+S	4	AAAAA
+L	1	+	2	+	0M
+L	2	+	3	+	0M
+L	1	+	4	+	0M
+L	4	+	3	+	0M
+W	R	0	chr	0	25	>1>4>3
+W	H	1	h	0	20	>1>2>3

@@ -618,9 +618,12 @@ W  B  1  c     0  32  >1>2>6>3
   index states, and counts the lines it leaves out in `leftout:i:`
   ([ADR 0015](adr/0015-walk-files-name-their-graph.md)). No host or viewer
   compares a walk file's `graph:Z:` with its index's yet, so a walk file
-  beside an index of another graph is drawn without a word, and a
-  directory from another build still fails only a reader's `#unit` check
-  on the first unit it reads
+  beside an index of another graph is drawn without a word. A directory
+  from another build is refused where its line 1 differs from the data's
+  `#walks` line or its `bytes:i:` from the data's length
+  ([The directory](walks-format.md#the-directory)); a reader that can't
+  learn the length, behind a server that hides Content-Range, falls back
+  on its `#unit` check of the first unit it reads
 - Nor does it name its writer: no tool or version is in the file. That
   was left out on purpose: a version stamp changes every file's bytes at
   each writer release, even one that changes no row, so every hosted file
@@ -799,7 +802,8 @@ W  B  1  c     0  32  >1>2>6>3
   a node reads as a clean insertion bubble while the GFA holds four more
   links at loaded nodes, one no path walks, one only a left-out line walks,
   two a shown haplotype walks from a piece filed in another tile, with no
-  trace in the window
+  trace in the window ([g4.gfa](walks-container/freeze-review/g4/g4.gfa),
+  [its cuts](walks-container/freeze-review/g4/cuts.txt))
 - The node and link index holds every link of a path-visited node but is
   not built for whole-genome graphs
 - So a bubble or chain layer that verifies superbubbles on the loaded
@@ -815,6 +819,8 @@ W  B  1  c     0  32  >1>2>6>3
 - The writer drops steps on 0 bp segments, so a cut of a GFA with `1>2`
   and `2>3`, 2 of 0 bp, lists the link `1+>3+`, which the GFA lacks, and
   nothing in the file marks that steps were dropped
+  ([zero.gfa](walks-container/freeze-review/zero/zero.gfa),
+  [its cut](walks-container/freeze-review/zero/cut.txt))
 - A header count of dropped steps is a legal later addition. Neither
   hosted chromosome set has such a segment
 
@@ -823,8 +829,11 @@ W  B  1  c     0  32  >1>2>6>3
 - `graph:Z:` names the GFA's segments, not the walk file: two `--refs` of
   one GFA share it, and a side file naming pieces depends on `tile`,
   `stay` and the abridging budgets as well
-- A side file can copy the whole `#walks` line it was built against; a
-  hash of the paths could come later as a tag
+- A side file can copy the whole `#walks` line it was built against, and
+  must also name the reference sample: two `--refs` files of one GFA and
+  options can state the same `#walks` line, which names no reference
+  ([Header](walks-format.md#header)). A hash of the paths could come later
+  as a tag
 
 ## Two pggb costs no addition removes
 
