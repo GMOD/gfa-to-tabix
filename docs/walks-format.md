@@ -355,7 +355,9 @@ member <!-- C29 -->, so a reader fetches it by its byte range and gunzips
 it alone, and `zcat` reads the whole file as text.
 
 - **The header unit,** first, from byte 0: the [header](#header) lines,
-  with no `#unit` line <!-- C30 -->
+  with no `#unit` line <!-- C30 -->; `#walks` is its first line, the one a
+  reader matches against the directory's line 1, so a header line added
+  later follows it
 - **Per reference sequence,** in byte order of the names <!-- C31 -->: its
   `tile` and `departures` units in order of position, a tile at its
   `name` and a departure bin at its `start`; then its `detail` units, a tile's
@@ -406,7 +408,9 @@ it alone, and `zcat` reads the whole file as text.
   multiple of its size. <!-- C43 --> A record's cover runs from `floor(start / tile) ×
   tile` to `ceil(end / tile) × tile` over its line's `start end`, taking
   at each point the largest bin aligned there that fits. <!-- C43 --> Its line is in every bin of its
-  cover and no other, the same text in each. <!-- C88 --> Within a bin
+  cover and no other, the same text in each, tags included: a reader
+  de-duplicates a record by its whole line, so a tag that differed by bin
+  would return it twice. <!-- C88 --> Within a bin
   lines are in order of `start`, `end`, then text <!-- C44 -->
 - **A table** lists each unit of its sequence before it, in file order, as
   `#entry seq start end kind name offset length`: the unit's `#unit`
@@ -481,8 +485,13 @@ The header unit's lines start with `#`:
   `blocks` rows <!-- C155 -->
 - A reader refuses a table that doesn't start with its own
   `#unit seq 0 |S| table .` line, or holds a line that isn't an `#entry`.
-  A table that leaves out a unit's entry altogether reads as a sequence
-  without that unit, which a reader can't tell <!-- C156 -->
+  A table that leaves out a unit's entry breaks the tiling the file
+  guarantees: a table's entries, in file order, tile the bytes from the
+  end of the table before it (the header unit for the first) to the
+  table's own offset, with no gap and no overlap, so a reader can tell a
+  missing entry by the gap it leaves. graph-walks 7.0.0 does not check
+  it yet and reads such a table as a sequence without that unit
+  <!-- C156 -->
 - `tile` is the tile size in bp
 - `revisited` is how many nodes the reference's paths pass more than once,
   all its sequences counted. <!-- C50 --> 0 means every position in the
@@ -501,7 +510,7 @@ The header unit's lines start with `#`:
   order its S lines come in. <!-- C190 --> It names the set of segments:
   two GFAs with the same segments and other links or paths share it
 - `leftout` is how many of the GFA's W and P lines with a step visit no
-  node of the reference and so have no rows in the file, the count the
+  node of the reference and so have no piece in the file, the count the
   writer also prints. A line whose every step is on a segment of 0 bp has
   no step, and is not counted <!-- C191 -->
 - `graph` and `leftout` are additions to format 8, written from
@@ -520,8 +529,12 @@ The header unit's lines start with `#`:
     value with no tab. Tags follow a row's fixed columns, in any order.
     A reader ignores the ones it doesn't know, on a row of any kind and
     on the `#walks` line. `SQ:Z:` on a `ref` or `nodes` row is one
-  - a header line whose first word a reader doesn't know is ignored
-  - a unit of a kind it doesn't know is skipped, whatever rows it holds
+  - a header line whose first word a reader doesn't know is ignored; it
+    follows the `#walks` line
+  - a unit of a kind it doesn't know is skipped, whatever rows it holds;
+    its `#entry` carries its sequence and integer `start end offset
+    length` like any other, so a unit about no sequence is a file of its
+    own
   - `#unit` lines, `#entry` lines and the directory's lines for the
     header and the sequences take no tags; a directory line that starts
     with `#` and a word a reader doesn't know is ignored
@@ -536,7 +549,9 @@ The header unit's lines start with `#`:
 - `#hole` gives each stretch of a reference sequence that no line of the
   reference covers, between its lines and before its first: sequence,
   start, end, `start` below `end`, in order of sequence name in bytes and
-  then start, no two of a sequence overlapping. <!-- C52 --> A reference
+  then start, no two of a sequence overlapping. <!-- C52 --> A reader
+  ignores tags after the stated fields of a `#reference`, `#haplotype` or
+  `#hole` line. A reference
   whose lines leave holes, such as a clipped haplotype, has them; a window
   inside one has no reference sequence there. A hole is not a departure of
   any haplotype
@@ -1086,6 +1101,9 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   with lengths above 0, and its `#unit` line states `|S|`; the directory
   lists every reference sequence (build for the order, lengths and
   directory; tests and files for `|S|`) <!-- C94 -->
+- So a table's entries tile the bytes from the end of the table before
+  it, or of the header unit, to the table's own offset, with no gap and
+  no overlap (files: the hosted GRCh38 file's every sequence) <!-- C194 -->
 - No two units of a kind and sequence share a name other than `.` (build,
   tests, files) <!-- C136 -->
 - A tile's extent runs from the first base of its `ref` rows' steps to
@@ -1309,7 +1327,8 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
   the GRCh38-referenced graph and
   `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-chm13-f8.CHM13.walks.gz` from
   the CHM13-referenced one, each with its `.idx` beside it. The same names
-  without `-f8` stay in format 7 for sessions that read it
+  without `-f8` take the same format 8 files once the readers that need
+  them are released, so nothing hosted serves format 7 after that
 
 In a JBrowse graph track, `walksUri` takes the prefix up to the reference
 sample, so a track on hg38 reads the GRCh38 file of the GRCh38-referenced

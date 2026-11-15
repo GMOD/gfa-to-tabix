@@ -782,3 +782,46 @@ W  B  1  c     0  32  >1>2>6>3
   ([measured](walks-container/reshape/report.md)), and declined it
 - Known and accepted: nothing to do unless a consumer's open time on a
   genome file says otherwise
+
+## Every link of a loaded node, and a bubble layer
+
+- A walk-file cut lists the links its kept walks take and no other, so it
+  cannot give a loaded node's complete adjacency, and no reader rule
+  recovers it: in a four-link test graph cut with every haplotype loaded,
+  a node reads as a clean insertion bubble while the GFA holds four more
+  links at loaded nodes, one no path walks, one only a left-out line walks,
+  two a shown haplotype walks from a piece filed in another tile, with no
+  trace in the window
+- The node and link index holds every link of a path-visited node but is
+  not built for whole-genome graphs
+- So a bubble or chain layer that verifies superbubbles on the loaded
+  subgraph needs a writer-built addition first: a tag on `nodes` rows, a
+  `links` unit kind, or a side file. Each is legal under the additions
+  rule and none changes a row. A site table built from the walks alone is
+  exact today
+- A unit kind in a table carries its sequence and integer `start end`, so a
+  later unit about no sequence has to be a separate file
+
+## A dropped 0 bp segment states a link the GFA lacks
+
+- The writer drops steps on 0 bp segments, so a cut of a GFA with `1>2`
+  and `2>3`, 2 of 0 bp, lists the link `1+>3+`, which the GFA lacks, and
+  nothing in the file marks that steps were dropped
+- A header count of dropped steps is a legal later addition. Neither
+  hosted chromosome set has such a segment
+
+## Pairing a side file with a walk file
+
+- `graph:Z:` names the GFA's segments, not the walk file: two `--refs` of
+  one GFA share it, and a side file naming pieces depends on `tile`,
+  `stay` and the abridging budgets as well
+- A side file can copy the whole `#walks` line it was built against; a
+  hash of the paths could come later as a tag
+
+## Two pggb costs no addition removes
+
+- A satellite record's detail unit is fetched whole or not at all, and a
+  departure record is filed in every bin of its cover, so a window inside
+  a long record pays for it at every zoom. A paged detail kind or a coarser
+  layer can bypass either; neither removes it
+
