@@ -1304,12 +1304,12 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
   the tube map read through @jbrowse/graph-walks
-- jbrowse.org hosts HPRC v2.1's files, in format 7 until graph-walks 7
-  and its consumers are released:
-  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38.GRCh38.walks.gz` from
+- jbrowse.org hosts HPRC v2.1's files in format 8:
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f8.GRCh38.walks.gz` from
   the GRCh38-referenced graph and
-  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-chm13.CHM13.walks.gz` from
-  the CHM13-referenced one, each with its `.idx` beside it
+  `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-chm13-f8.CHM13.walks.gz` from
+  the CHM13-referenced one, each with its `.idx` beside it. The same names
+  without `-f8` stay in format 7 for sessions that read it
 
 In a JBrowse graph track, `walksUri` takes the prefix up to the reference
 sample, so a track on hg38 reads the GRCh38 file of the GRCh38-referenced
