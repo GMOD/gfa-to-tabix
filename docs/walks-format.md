@@ -532,9 +532,11 @@ The header unit's lines start with `#`:
   doesn't <!-- C124 -->:
   - a tag is `NAME:T:value`, as SAM writes one: a name of letters and
     digits that starts with a letter, one letter for its type, and a
-    value with no tab. Tags follow a row's fixed columns, in any order.
-    A reader ignores the ones it doesn't know, on a row of any kind and
-    on the `#walks` line. `SQ:Z:` on a `ref` or `nodes` row is one
+    value with no tab. Tags follow a row's fixed columns, or the stated
+    fields of a `#reference`, `#haplotype` or `#hole` line, in any order.
+    A reader ignores the ones it doesn't know, on a row of any kind, on
+    those three lines and on the `#walks` line <!-- C195 -->. `SQ:Z:` on a
+    `ref` or `nodes` row is one
   - a header line whose first word a reader doesn't know is ignored; it
     follows the `#walks` line
   - a unit of a kind it doesn't know is skipped, whatever rows it holds;
@@ -555,9 +557,7 @@ The header unit's lines start with `#`:
 - `#hole` gives each stretch of a reference sequence that no line of the
   reference covers, between its lines and before its first: sequence,
   start, end, `start` below `end`, in order of sequence name in bytes and
-  then start, no two of a sequence overlapping. <!-- C52 --> A reader
-  ignores tags after the stated fields of a `#reference`, `#haplotype` or
-  `#hole` line. A reference
+  then start, no two of a sequence overlapping. <!-- C52 --> A reference
   whose lines leave holes, such as a clipped haplotype, has them; a window
   inside one has no reference sequence there. A hole is not a departure of
   any haplotype

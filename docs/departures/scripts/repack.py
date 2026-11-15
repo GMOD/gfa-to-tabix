@@ -242,7 +242,7 @@ def _(w):
 
 
 for _key in ('#reference', '#haplotype', '#hole'):
-    variant(f'tag-{_key[1:]}', 'unstated', f'a tag on {_key} lines: tags are given to rows and the #walks line')(
+    variant(f'tag-{_key[1:]}', 'legal', f'a tag after the stated fields of each {_key} line')(
         tag_header(_key))
 
 

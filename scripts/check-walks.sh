@@ -10,7 +10,7 @@
 # of every line against the GFA; runs them too on files that use the
 # format's room for additions, a tag on every row and on the #walks line, a
 # unit of an unknown kind, an unknown header line and each legal variant of
-# repack.py, and on one without the #walks line's graph:Z: and leftout:i:,
+# repack.py, tag-hole on a file with #hole lines too, and on one without the #walks line's graph:Z: and leftout:i:,
 # which walks-truth.py's rebuild alone must fail, on a file whose path names hold bytes that are not UTF-8, and
 # on a file where a gzip member cut inside a row begins `#unit<TAB>`, all
 # of which must pass; then fuzz7.sh's batch of seeds 1 to $SEEDS (6 by
@@ -97,6 +97,15 @@ if "$B" "$S/broken/follow.gfa" --walks --refs R --tile 100 --sequences --abridge
   fi
 else
   echo "broken/follow.gfa: BUILD $(tail -1 "$dir/log")"; failed=1
+fi
+# repack.py's tag-hole on a file with #hole lines, which follow.gfa's lacks
+holed=$REPO/tests/data/walks-sequences.gfa
+if "$B" "$holed" --walks --refs R --tile 10 -o "$dir/holed" > "$dir/log" 2>&1 &&
+   python3 -I "$S/repack.py" "$dir/holed.R.walks.gz" "$dir/repack-holed" tag-hole > "$dir/log" 2>&1 &&
+   [ -e "$dir/repack-holed/tag-hole/f.walks.gz" ]; then
+  checks "addition tag-hole" "$dir/repack-holed/tag-hole/f.walks.gz" "$holed"
+else
+  echo "tag-hole on walks-sequences.gfa: $(tail -1 "$dir/log")"; failed=1
 fi
 # a reference contig named `unit` and rows enough that a gzip member, cut every 0xff00 bytes, begins `#unit<TAB>`
 {
