@@ -421,10 +421,11 @@ it alone, and `zcat` reads the whole file as text.
 
 ### The directory
 
-`<prefix>.<sample>.walks.gz.idx` is plain text:
+`<prefix>.<sample>.walks.gz.idx` is plain text, here with the `#walks`
+line of HPRC v2.1's GRCh38-referenced file:
 
 ```
-#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	graph:Z:6f8a0816aa66e2d6	leftout:i:0	bytes:i:<data file length>
+#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	graph:Z:c9aa0d5f6907f27c	leftout:i:1698	bytes:i:<data file length>
 #header	0	<length>
 GRCh38#0#chr22	<offset>	<length>
 ```
@@ -453,10 +454,11 @@ zcat f.walks.gz | awk -F'\t' '$1=="GRCh38#0#chr22" && $2<20001000 && $3>20000000
 
 ## Header
 
-The header unit's lines start with `#`:
+The header unit's lines start with `#`, here the first of HPRC v2.1's
+GRCh38-referenced file:
 
 ```
-#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	graph:Z:6f8a0816aa66e2d6	leftout:i:0
+#walks	format:i:8	tile:i:65536	revisited:i:0	stay:i:311	abridge:i:1000000	abridgebytes:i:3000000	graph:Z:c9aa0d5f6907f27c	leftout:i:1698
 #reference	GRCh38
 #haplotype	CHM13#0
 #haplotype	HG00097#1
@@ -1179,7 +1181,8 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
 <!-- background -->
 
 - Version the file names, so a data file and a directory from different
-  builds can't meet
+  builds can't meet. HPRC v2.1's plain names, overwritten once at the
+  format 8 cutover, are the one exception ([Readers](#readers))
 - Serve single-range requests: CloudFront answers a multi-range request
   with the whole object
 
@@ -1338,7 +1341,14 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
   `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-chm13-f8.CHM13.walks.gz` from
   the CHM13-referenced one, each with its `.idx` beside it. The same names
   without `-f8` take the same format 8 files once the readers that need
-  them are released, so nothing hosted serves format 7 after that
+  them are released, so nothing hosted serves format 7 after that. Those
+  plain names are the one exception to versioning the file names
+  ([Hosting](#hosting)), decided for the format 8 cutover: a URL still
+  naming them then reads format 8, which the released readers open,
+  rather than format 7, which none does. The data file goes up before its
+  directory, and a reader that meets a directory of the other build
+  refuses the pair, its line 1 differing from the data's `#walks` line
+  ([The directory](#the-directory)). The `-f8` names stay the ones to cite
 
 In a JBrowse graph track, `walksUri` takes the prefix up to the reference
 sample, so a track on hg38 reads the GRCh38 file of the GRCh38-referenced
