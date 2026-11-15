@@ -71,6 +71,7 @@ interior-lengths-traded-abridged	broken/follow.gfa	audit7 rebuild	the same in B'
 last-piece-dropped	walks-two-refs.gfa	claims7 audit7 spec8 rebuild	D's piece 3 in tile 10 left out
 leftout-other	walks-two-refs.gfa	rebuild	leftout:i: 1, U#1#u's line, made 0
 leftout-twice	walks-two-refs.gfa	verify7 rebuild	leftout:i:1 stated twice
+line-before-walks	walks-two-refs.gfa	verify7 spec8	a header line of an unknown first word before #walks, which the directory's line 1 still repeats
 line-end-longer	broken/follow.gfa	audit7 rebuild	node 11, the 10 bp B ends on off the reference, stated as 17 bp: B's line runs 7 bp past its end
 line-end-longer-abridged	broken/follow.gfa	audit7 rebuild	the same in B's detail record, its blocks row's trailing run 10 made 17 with it
 missing-overstated	broken/ends-off.gfa	claims7 audit7 spec8	G's record, 39 bp of its 72 own bp between its two W lines, stating missingBp 60

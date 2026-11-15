@@ -11,8 +11,9 @@
 # - --append UNIT: a unit's text after the last table, in no table
 # - --tag TAG: TAG as a last column on every row and on the #walks line
 # - --drop-entry PREFIX: the one rebuilt table line starting with PREFIX left out, its unit kept
+# - --prepend-header LINE: LINE before the header's #walks line, which the directory's line 1 still repeats
 # With no edit, a text is packed as it is.
-# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT | --tag TAG | --drop-entry PREFIX]...
+# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT | --tag TAG | --drop-entry PREFIX | --prepend-header LINE]...
 import gzip
 import struct
 import sys
@@ -20,13 +21,16 @@ import zlib
 
 src, dst, *args = sys.argv[1:]
 edits = dict(once=[], all=[], table=[], idx=[])
-appended, tags, dropped, header_stated = [], [], [], None
+appended, tags, dropped, prepended, header_stated = [], [], [], [], None
 while args:
-    kind = args.pop(0)[2:] if args[0] in ('--all', '--table', '--idx', '--header', '--append', '--tag', '--drop-entry') else 'once'
+    kind = args.pop(0)[2:] if args[0] in ('--all', '--table', '--idx', '--header', '--append', '--tag', '--drop-entry',
+                                         '--prepend-header') else 'once'
     if kind == 'append':
         appended.append(args.pop(0))
     elif kind == 'drop-entry':
         dropped.append(args.pop(0))
+    elif kind == 'prepend-header':
+        prepended.append(args.pop(0) + '\n')
     elif kind == 'tag':
         tags.append(args.pop(0))
     elif kind == 'header':
@@ -68,7 +72,7 @@ for line in text.splitlines(keepends=True):
         units[-1] += line
 header, units = units[0], [u for u in units[1:] if u.split('\t')[4] != 'table']
 walks = header.split('\n')[0]
-data, tables, entries, at = bgzf(header.encode()), [], [], 0
+data, tables, entries, at = bgzf((''.join(prepended) + header).encode()), [], [], 0
 header_length = len(data)
 table_edits = {pair: 0 for pair in edits['table']}
 drops = {prefix: 0 for prefix in dropped}
