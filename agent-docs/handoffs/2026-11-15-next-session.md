@@ -38,16 +38,21 @@ gallery repair and the paper patch; its index is
 
 ## Heads now (all local, unpushed)
 
-- gfa-to-tabix main: this file's commit. graph-walks main 4b14ee3 (frozen,
-  to be moved by `pre-tag`). bandage-core `release-fixes` 43696f3 in
+- gfa-to-tabix main: this file's commit. graph-walks main b7b9349, FINAL:
+  `pre-tag` landed (revisited listed as breaking, tables() tolerant of
+  hand-built fragments, abridgedText now `<walk>: <bp> off the reference not
+  loaded` with no step count because the format states a run only as bp,
+  `AbridgedWalk` is `{ name, bp }`, header keys left out when unstated,
+  presets frozen, the review's three tests; suite 761). bandage-core `release-fixes` 43696f3 in
   ~/src/bandage-core-rel. Plugin `release-fixes` 95f291a in
   ~/src/jb2plugins/jbrowse-plugin-graphgenomeviewer-rel (hand-linked
   node_modules; never run `pnpm <script>` there). ggbandage `format8` 2b92eed.
   BandageJS `format8` 6564a9db. sequenceTubeMap `format8` fe32331. ggtubemap
   `format8` 83dcce6. jb2hubs `format8` 9fe89efb2220 (second session's).
 - Vendored tarballs in ~/src/vendor/walks8-pack/: graph-walks 7.0.0 from
-  4b14ee3 (sha256 fd9629dd...), bandage-core 14.0.0 from 43696f3 (86187563...).
-  Both go stale with the landings below; the final pass repacks them.
+  b7b9349 (sha256 65917c45..., final unless a review forces a change),
+  bandage-core 14.0.0 from 43696f3 (86187563..., goes stale with the
+  landings below; the final pass repacks it).
 
 ## Agents that were still running when this session stopped
 
@@ -57,12 +62,6 @@ task output under
 `/tmp/claude-1001/-home-cdiesh-src-gfa-to-tabix/7a96682c-92be-45ca-9e3d-55bf7fb5184d/tasks/`
 (the agent's JSONL transcript; its last assistant message is the report).
 
-- graph-walks `pre-tag` (~/src/graph-walks-pretag, 8df8f81 and later): the
-  reader review's three medium items (revisited listed as breaking, comment
-  "unless it is 0"; tables() copies refStarts to ids.length and fills NaN;
-  abridgedWalks counts the steps the cut does not draw, README example from
-  real output) plus the three mutant tests, frozen presets, header keys left
-  out when unstated, docs. Task a57f6aaacf1b370ea.
 - bandage-core `clearance-force` (~/src/bandage-core-clearforce, 9da7c22):
   the clearance only on the stress engine, which lays the reference straight;
   force pictures were still rendering. Task a5b0379ca4f063d0c.
@@ -101,10 +100,11 @@ task output under
 
 ## Do, in order
 
-- Finish graph-walks: read `pre-tag`'s report, fast-forward main to it, pack
-  to walks8-pack, send the head and hash to the second session (pin re-point
-  and rebuild job rerun), update the switch-over branches' wording to the new
-  abridgedText.
+- graph-walks is done (b7b9349, tarball 65917c45...); the second session
+  re-points the pin and reruns the rebuild job at it. The readers'
+  switch-over branches must take the new abridgedText (`{ name, bp }`, no
+  step count): BandageJS derived.ts, the tube map's AbridgedWalksPanel, the
+  plugin's abridged list and jb2hubs still read `steps`.
 - One Fable review of the six bandage-core branches (nested-arcs, graph-key,
   compress-rank, link-ends, clearance-force, host-fit) as the earlier batch
   reviews were run: criteria first, a mutant per branch, composition in a
