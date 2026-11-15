@@ -42,6 +42,15 @@ GRCh38.
   `--refs R --tile 100`, whose cut lists a link `1+>3+` the GFA lacks
   where a 0 bp segment is dropped. The walk files were built before the
   `#walks` line named its graph; neither cut depends on that
+- `header-tags/`: the evidence of ADR 0015. `same-bytes.txt` compares
+  walk files built with and without `graph:Z:` and `leftout:i:`.
+  `leftout.c` counts, from GFA text alone with no writer code, the W and P
+  lines with a step that visit no node of the reference, the count
+  `leftout:i:` states; `fixture-compare.tsv` holds its count beside the
+  writer's for each fixture and reference. Built with `gcc -O2 -o leftout
+  leftout.c`, on the whole-genome graphs it
+  was run as `vg convert -f <graph>.gbz | leftout <reference> pending.tmp
+  names.txt`, each GBZ streamed in once, giving `ada-result.txt`
 - `genome/`: the genome-wide check of the prototype on GRCh38 and CHM13
   by the session deploying the walk files: `report.md`, `summary.md`, its
   scripts and `res/` (copied from ada `~/work/s7-genome/res/`; the report's

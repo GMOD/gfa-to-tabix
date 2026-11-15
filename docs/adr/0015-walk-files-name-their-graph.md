@@ -112,8 +112,12 @@ changed and why.
   files replaced the hosted `-f8` copies, sha256 read back from each URL.
   `leftout` was counted again on the whole graphs by a second session's
   program that reads the GFA text once with no writer code
-  (walks8-evidence fab8f323/leftout/leftout.c, streamed from `vg convert`
-  of each GBZ): 1698 of 53,150 path lines for GRCh38 and 3312 of 60,807
+  ([leftout.c](../walks-container/header-tags/leftout.c), streamed from
+  `vg convert` of each GBZ,
+  [its output](../walks-container/header-tags/ada-result.txt); equal to
+  the writer's tag on every fixture,
+  [fixture-compare.tsv](../walks-container/header-tags/fixture-compare.tsv)):
+  1698 of 53,150 path lines for GRCh38 and 3312 of 60,807
   for CHM13, equal to the headers; neither graph has a 0 bp segment.
   The walk writer also takes the last of two `LN:i:` tags on one segment,
   as the index does, so `graph:Z:` hashes the lengths the index hashed;

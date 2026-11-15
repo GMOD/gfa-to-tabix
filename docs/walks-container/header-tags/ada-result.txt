@@ -1,0 +1,55 @@
+259 remote.sh
+ssh exit 0
+ada free mem G: 120
+ 694G
+-rw-rw-r-- 1 cdiesh cdiesh 6160361544 Jul 28 17:38 /home/cdiesh/work/arb-format-opus/in/chm13.gbz
+-rw-rw-r-- 1 cdiesh cdiesh 5492627216 Jul 28 21:43 /home/cdiesh/work/arb-format-opus/in/grch38.gbz
+started pid 704249
+2026-11-15 09:57:03 grch38 starts
+2026-11-15 10:04:32 grch38 done, pipe status 0 0
+2026-11-15 10:04:32 chm13 starts
+2026-11-15 10:11:23 chm13 done, pipe status 0 0
+== grch38
+reference	GRCh38
+segments	139520381
+segments_of_0bp	0
+segments_after_first_path	0
+path_lines	53150
+reference_lines	195
+reference_lines_after_another_line	195
+lines_with_no_step	0
+lines_touching_reference_when_read	50455
+lines_held_then_found_touching	802
+leftout	1698
+1698
+23 HG00408
+22 HG00621
+21 HG00639
+20 HG02735
+19 HG00290
+18 NA18976
+18 NA18940
+18 HG04228
+== chm13
+reference	CHM13
+segments	165835204
+segments_of_0bp	0
+segments_after_first_path	0
+path_lines	60807
+reference_lines	25
+reference_lines_after_another_line	25
+lines_with_no_step	0
+lines_touching_reference_when_read	56296
+lines_held_then_found_touching	1174
+leftout	3312
+3312
+38 HG01106
+32 HG00126
+31 HG01071
+29 NA20870
+28 HG00544
+28 HG00323
+27 NA19682
+26 NA20809
+
+[exited with code 0]
