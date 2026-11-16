@@ -258,7 +258,16 @@ a reboot: read these first.
     (~/src/gfa-to-tabix-additions, b3d9d1c: `walks-additions` measures
     candidate additions tile by tile; walked-only sites, tile and detail
     splits, site row variants), and its copy on ada at `~/work/format-additions`.
-    Nothing of it was running on ada when checked.
+  - **One run of it is still going on ada and was left running on purpose:**
+    `odgi layout` of the whole chr22 Minigraph-Cactus graph
+    (`ada:~/work/format-additions/lay/`, pid 577993 when written: 8 threads,
+    nice 15, 18 GB, almost 3 hours in; writes `mc22.lay` and `mc22.lay.tsv`;
+    `post-mc22.sh` there is what the study meant to run on the result). It is
+    the one experiment that answers the hard question for a stored layout:
+    whether a whole-chromosome layout is readable when cropped to a 30 kb
+    window (KIV-2, amylase, GSTM1). Check whether it finished; if it is still
+    running and the answer is no longer wanted, it is this project's to stop.
+    About 19 GB of inputs sit beside it (`mc22.og`, `mc22.O.og`, `mc22.r.gfa`).
   - Its transcript (the file named above) holds its reasoning up to the stop;
     the last few assistant messages are the nearest thing to findings.
   - Not done: the write-up per candidate (inside the walk file and as a side
