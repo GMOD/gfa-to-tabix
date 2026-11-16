@@ -561,16 +561,19 @@ GRCh38-referenced file:
   - an addition doesn't change what a row this page gives means, so a
     reader that ignores it draws nothing false. A change that can't
     keep to that is another format
-  - this page alone gives format 8's unit kinds, row kinds, header line
-    words and tag names, so an addition is an addition to this page. A
-    later kind, of unit or of row, takes a word that is no kind of unit
-    or row here
+  - only this page gives a unit kind, a row kind, a header line word or
+    a tag name a meaning in format 8, so an addition is an addition to
+    this page. <!-- C124 --> A file that holds a unit kind, a header line
+    word or a tag name the page doesn't give, or a row kind it doesn't
+    give in a unit of such a kind, is format 8 still and is read by the
+    rules above; what it means there is not the format's. A later kind,
+    of unit or of row, takes a word that is no kind of unit or row here
   - a file with no unit of a later kind says nothing by lacking it: it
     can predate the addition, so a reader doesn't take the lack to mean
     there is nothing of that kind to state. An addition whose units claim
-    to be complete says so for the whole file in the header, by a tag or
-    a line, and a reader takes completeness from that statement and from
-    no unit's absence
+    to be complete says in the header, by a tag or a line, what they are
+    complete over, the whole file or the sequences it names, and a reader
+    takes completeness from that statement and from no unit's absence
   - a file added beside a walk file is about that walk file's bytes: the
     same walk file is the same bytes, and the same rows compressed again
     are another file to it ([Hosting](#hosting))
@@ -861,9 +864,10 @@ seq start end blocks path fragStart piece list
   unexpanded places it on R where its steps are, with the bp off R
   between them and at its ends, and expands it to learn which nodes
   those are <!-- C164 -->
-- A run off R is off the tile's R. Where the reference passes a node
-  more than once, a run can hold a node of another tile's reference, so
-  a run isn't proof of sequence the reference lacks
+- A run off R is off the tile's R. In a file with revisited nodes a run
+  can hold a node of another tile's reference, so a run isn't proof of
+  sequence the reference lacks; in a file that states `revisited:i:0` it
+  holds none
 - Two rows with the same list can differ in the nodes of their runs, so
   the same list doesn't make two pieces the same sequence
 
@@ -1062,9 +1066,13 @@ which the file checks read off a file
 ([claims7.md](departures/claims7.md)). A reader may build on them, and
 on nothing else about how a file was made. The rules of
 [Files and units](#files-and-units), [Header](#header) and [Rows](#rows)
-are among them, with the orders and names they give: a decoder needs the
-order of the units, of a unit's rows by kind and of a tile's walk rows,
-a tile's name and where its `ref` steps start, as it needs a column.
+are among them, with the orders and names they give, and so is what
+[Abridged tiles](#abridged-tiles) says a detail record holds and decodes
+against. What the list after this one calls this writer's choice is not
+among them, wherever the page states it, and the order a tile numbers
+its detail records in is such a choice. A decoder needs the order of a
+unit's rows by kind and of a tile's walk rows, a tile's name and where
+its `ref` steps start, as it needs a column.
 
 - **Positions are stated.** A walk row decodes by
   [Decoding a walk row](#decoding-a-walk-row) to its piece's steps, each
@@ -1078,19 +1086,25 @@ a tile's name and where its `ref` steps start, as it needs a column.
   on R.** No route interior, of a tile or of a detail unit, on any
   sequence of the file, holds a node the reference passes once, which in
   such a file is every node a `ref` row steps. <!-- C27 --> So a line
-  that steps a reference node has a row, `walk` or `abridged`, in the
-  tile whose `ref` rows hold that node, and the tiles a window's read
-  selects hold a row of every line of the file that steps a reference
-  node over the window: a line with no row there steps none, and from
-  those tiles' rows and their `blocks` rows a reader can say how many of
-  the file's haplotypes step such a node <!-- C27 -->
-- **A file with revisited nodes makes no such promise.** Where
+  of the file that steps a reference node has a row, `ref`, `walk` or
+  `abridged`, in the tile whose `ref` rows hold that node, and the tiles
+  a window's read selects hold a row of every line of the file that
+  steps a reference node over the window: a line with no row there steps
+  none, and from those tiles' rows and their `blocks` rows a reader can
+  say how many of the file's haplotypes have a line in the file that
+  steps such a node. <!-- C27 --> That counts the lines the file holds:
+  whether it holds every line of its graph that steps the reference is
+  checked against the GFA and is not read off the file <!-- C4 -->
+- **Any other file makes no such promise.** Where
   `revisited` is above 0, or the header states none, the format leaves
   to the writer where a step on a node the reference passes once is
   filed, as it leaves placement there: a route interior can hold such a
   node, and the tiles over a window can then lack a line that steps it
   ([open problem](open-problems.md#a-once-passed-node-in-a-file-with-revisited-nodes)).
-  `passes` still says which nodes the reference passes once
+  `passes` still says which nodes the reference passes once. A departure
+  there, a record's or one a reader computes, can pass over a once-passed
+  node its line steps, so two ends passed once do not make its own
+  sequence free of reference nodes
 - **A piece has a step on R,** so every piece has a span, which lies
   inside its tile's extent <!-- C69 C41 -->
 - **A line's pieces tile it.** They are numbered from 0, piece 0 starts

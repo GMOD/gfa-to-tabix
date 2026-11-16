@@ -67,7 +67,7 @@ and on pggb chrY.
 | Baseline: change nothing | | | The format as it ships: a 1 kb window of chr22 reads a median 29,426 bytes in one request |
 | Complete adjacency, a `links` unit | Demonstrated for links that only left-out lines walk, 32,347 of chr22's 4,737,114 and none of chr6's; cost-only for the rest | later; nothing; later | No reader's view was shown to change, and 150 random 1 kb windows of chr22 hold no such link. It is a unit kind or a side file, so waiting closes nothing. Its text leaves absence undefined and its example's bytes are on disk nowhere |
 | Site decomposition, a `sites` unit | Cost-only | later; reader only; never in the walk file | The rows already give it: chr22's 430,246 site intervals are the same from walked links alone. It is one definition among several, flat where the model it follows is nested, and 11.03% of chr22's file and 40.04% of chr6's |
-| Haplotype counts, a `counts` unit or tag | Cost-only | later; reader only; later | On reference nodes the reader's count is exact at no byte, given C27: 0 wrong in 211 windows. Off the reference the prototype leaves out the left-out lines, which visit 50,890 chr22 nodes, so its number is not the graph's either, and M is not derivable from the header |
+| Haplotype counts, a `counts` unit or tag | Cost-only | later; reader only; later | On reference nodes the reader counts at no byte, given C27: 0 wrong on reference nodes in 211 probed windows, with a reader from before its counting call. Off the reference the prototype leaves out the left-out lines, which visit 50,890 chr22 nodes, so its number is not the graph's either, and M is not derivable from the header |
 | Stored layout coordinates | Not demonstrated | never; nothing; never | A coordinate is a tool's output, not a fact of the graph: two runs with the same options share 0 of 51,126 points, and chr22 took 10 h 03 min and 49.0 GB against the writer's 45.7 s |
 | Pairing rule for a side file | Not demonstrated on a hosted file | later, with the first side file, from all three | No side file exists, and the walk file needs nothing for one. The rule as prototyped pairs by `bytes:i:`, which the compressor sets |
 | C27 as a guarantee | Not demonstrated on a hosted file; shown on the hand-built file | add now, scoped to `revisited:i:0`; add now, for every file; add now, for every file | Taken, as wording, in the scoped form: [the ruling](#the-ruling-on-c27) |
@@ -129,10 +129,24 @@ All of it is in [walks-format.md](../walks-format.md), and
 
 - **What a reader relies on** gains three bullets: `passes` counts the
   file's `ref` rows (C62); in a file that states `revisited:i:0` a step
-  on a reference node is on R (C27); a file with revisited nodes makes no
-  such promise. Its opening says the rules of Files and units, Header and
+  on a reference node is on R (C27); any other file makes no such
+  promise
+- **The C27 bullet counts lines the file holds.** A line that steps a
+  reference node has a row, `ref`, `walk` or `abridged`, in that node's
+  tile, the reference's own lines having `ref` rows; and what a reader
+  can say from a window is how many of the file's haplotypes have a line
+  in the file that steps the node. Whether the file holds every line of
+  its graph that steps the reference is C4, checked against the GFA
+- **The bullet for any other file** says what follows for a departure:
+  it can pass over a once-passed node its line steps, so two ends passed
+  once do not make its own sequence free of reference nodes
+- **The section's opening** says the rules of Files and units, Header and
   Rows are among what a reader relies on, with the orders and names they
-  give
+  give, and so is what Abridged tiles says a detail record holds and
+  decodes against; that what the page calls this writer's choice is not,
+  wherever it is stated, the order a tile numbers its detail records in
+  being one; and what a decoder needs of the orders, the units' own
+  order not among it
 - **What the writer guarantees** gains the rule as this writer keeps it,
   on every file (C197), and `passes` over the whole file
 - **Two sentences that said a route can hold another tile's reference
@@ -140,12 +154,17 @@ All of it is in [walks-format.md](../walks-format.md), and
   none in a file with `revisited:i:0`
 - **Header:** a format 8 file's `#walks` line carries `format:i:8` and
   `tile:i:` (C198); a file that states no `revisited` states no count; a
-  line carries a tag name at most once (C199); the page alone gives the
-  format's kinds, header words and tag names, and a later kind takes no
-  word of an existing one; a reader takes nothing from the lack of a
-  later unit, and an addition that claims completeness says so for the
-  whole file in the header; a file added beside a walk file is about its
-  bytes
+  line carries a tag name at most once (C199); only the page gives a
+  kind, a header word or a tag name a meaning in format 8, a file that
+  holds one it doesn't give is format 8 still, except a row kind it
+  doesn't give in a unit it does (C49), and a later kind takes no word of
+  an existing one; a reader takes nothing from the lack of a later unit,
+  and an addition that claims completeness says in the header what it is
+  complete over, the whole file or the sequences it names; a file added
+  beside a walk file is about its bytes
+- **blocks:** a run off R can hold a node of another tile's reference in
+  a file with revisited nodes, and holds none in a file that states
+  `revisited:i:0`
 - **Rows:** the shape `seq start end kind` binds the unit kinds the page
   gives (C54)
 - **Hosting:** a cited name keeps its bytes
