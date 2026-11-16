@@ -156,26 +156,53 @@ a reboot: read these first.
 - `adb54a7daa63376d8.output`: blind count of the engine session's lift grids
   (`lift-blind/`); its result is owed to that session.
 
-## The engine session (graph-fmmm-layout-5f, pane %211, another account)
+## The engine session (graph-fmmm-layout-5f, another account): finished
 
-It studies why the force layout lands different drawings from one graph, and
-messages arrive pasted by the owner; replies go back the same way. State:
+It studied why the force layout lands different drawings from one graph, and
+has wrapped up. Its handoff, kept outside /tmp:
+`~/src/graph-fmmm-layout/agent-docs/handoffs/2026-11-16-fmmm-drawing-stability.md`,
+with `code/` (`lifted.ts` and its test, `gentleSeeds.mjs`, `starts.ts`),
+`tables/` and `sheets/` beside it. Read it before any layout work. Its numbers
+are its own counts by eye unless a blind count here is named.
 
-- No node ordering makes the picture a function of the graph (32-seed census);
-  the numeric node sort was taken only so the layout does not depend on file
-  order. A different random seed, quality 3 or 4, a different seed stretch,
-  and best-of-K were measured and dropped.
-- Candidate under blind count: `lifted.ts` (its scratch
-  `.../graph-fmmm-layout/2fc9745e-.../scratchpad/sweep/lift/`), which starts a
-  reversed stretch on an arch and removes the false figure-of-eight at the
-  chr1 inversion under every link order. It does not reduce stars and does not
-  fix amylase. Not integrated here.
-- Still running there: the engine option `galaxyChoice` uniform (no longer
-  held, after the blind count showed a mirror image had been scored as bad),
-  selective ring seeds with per-point seeds (an engine change and wasm
-  rebuild, acceptable if its grids show it), and a deterministic prototype.
-  Its blind grids land in `.../sweep/final/blind/` and `.../sweep/lift/blind/`;
-  each needs a blind Fable reader on this side.
+- **Closed with no change:** node ordering as a way to stabilise the picture
+  (no order makes the picture a function of the graph; the numeric node sort
+  was taken only so the layout does not depend on file order), a different
+  random seed, quality 3 or 4, a different seed stretch, best-of-K, limiting
+  how far the coarse levels relax, a two-phase layout, OGDF's swappable
+  coarsening, and two deterministic prototypes (point forces; curve energy).
+- **`lifted.ts`** (no engine change): a stretch that walks take reversed is
+  started on an arch, on the side away from the off-reference seeds. At the
+  chr1 inversion it removes the false figure-of-eight under every link order;
+  it does not reduce stars, gives no gain on a clean inversion with no bubbles
+  inside (that is one merged node), and does not fix amylase. An earlier form
+  (`liftOnly`) had a strand bug and is not to be used. The side rule is
+  confirmed by a control: the sharp corner at amylase follows whether the arch
+  is on the seeds' side, not the absolute side. Blind count of the first lift
+  grids by this session: running (`adb54a7daa63376d8.output`).
+- **Its candidate, "Q":** `lifted.ts` plus the engine option `galaxyChoice:
+  'uniform'` plus selective ring seeds (the reference seeded bowed where a
+  skip spans at least 0.15 of it; needs per-point seeds) plus fan placement of
+  off-reference pieces. Its counts at 32 seeds, three link orders: inversion
+  32 of 32 (baseline 13 to 19), C4 syng 32 (29), C4 32 (30), the 571 bp gap 32,
+  AMY2A 32, KIV-2 27 to 29 (27). Not rerun for those rows: CFH, GSTM1, sv49,
+  KIV-2 loaded, amylase loaded. `uniform` without ring seeds and fan ships a
+  worse KIV-2 at the default seed, so it must not be taken alone.
+- **What Q needs:** the engine branch `point-seeds-galaxy-choice`
+  (~/src/graph-fmmm-layout-point-seeds, uncommitted, on main 29c8011; adds
+  `points` on a node and `galaxyChoice`; all 117 digest lines on main identical
+  with the rebuilt wasm, 24 added), a port of the ring builder and fan
+  placement into bandage-core's seeding, and a wasm rebuild. Landing the engine
+  branch is the owner's call.
+- **Owed here before any of it is taken:** a blind Fable read of
+  `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/2fc9745e-b28b-40c9-9774-909b2c23edca/scratchpad/sweep/final2/blind/`
+  and of the new rows in `.../sweep/lift/blind/` (each has READ-FIRST.md; the
+  key stays away from the reader; tables at `.../final2/table.md` and
+  `.../lift/table.md`); the rows not rerun; the wider inversion cases the
+  first blind reader listed; and BEFORE/AFTER pairs in JBrowse for the owner.
+  Those grids are under /tmp and may be cleared by a reboot.
+- If Q lands, the "direct join" rule and the strand-flip mark should be judged
+  again against it; neither it nor `lifted.ts` fixes the amylase star.
 
 ## Gates, where they stand
 
