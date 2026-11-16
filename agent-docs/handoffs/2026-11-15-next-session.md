@@ -112,6 +112,54 @@ Nothing is pushed, tagged, published or uploaded.
   rebases; gallery redraw; final reshoot and the owner's page; then the
   release order.
 
+## From session ggbandage-7a (2026-11-15 evening, working in ggbandage only)
+
+The owner asked this session to review ggbandage and work off the format 8
+stack. Nothing is pushed; bandage-core, graph-walks and the plugin were not
+touched.
+
+- **ggbandage is merged**: branch `integrated` (~/src/ggbandage-integrated,
+  36c2c23) is `graph-key`, then `host-fit`, `switch` and `gallery-format8`
+  cherry-picked as a linear history, bundled from the walks8-pack tarballs
+  (core packed at release-fixes c09819a). Suite, R CMD check (0/0/0), oxlint
+  and `gallery.R --check` pass. Use it in place of redoing the merge; rebuild
+  with `pnpm install --no-frozen-lockfile && pnpm build` after a repack.
+- **bandage-core c09819a does not load in R's V8**: `graphLabels.ts:163` calls
+  `new Intl.Collator` at module scope (from 72e4f35), and R's V8 has no ICU, so
+  every ggbandage call threw "Intl is not defined". `scripts/v8-host.mjs` on
+  `integrated` now defines `Intl.Collator`, and with it `localeCompare` and
+  `toLocaleString`, which in R's V8 sorted by code unit and printed "1234567"
+  for the key's "1,234,567". ggtubemap keeps a copy of that file and needs it
+  again once ggbandage is pushed. No core change was made.
+- **Fixed on `integrated`**, each with a test that fails without it: a walk
+  row's readout no longer runs off the plot (it wraps or is cut with an
+  ellipsis as drawn); walk rows draw a run not loaded hollow, keyed "nodes not
+  shown", its row's readout ending "not compared"; `g$genes` again decides
+  which genes are named; a faceted panel's colour bar no longer overlaps the
+  drawing; the key keeps a thickness group's name with its first entry and
+  spans the plot when faceted; the rows' axis counts in bp, kb or Mb. The
+  host-fit test holds the final rule (stress reads width and height, compress
+  width, FMMM neither).
+- **Gallery is redrawn on that bundle** and each alt text read against its
+  picture. UGT2B17's sentence is a caption. `gallery.R --check` now resolves a
+  snippet against the libraries its own header loads (the UGT2B17 snippet
+  called `annotate()` with no `library(ggplot2)` and passed).
+- **Threading by pass in ggbandage**: branch `pass-threading`
+  (~/src/ggbandage-threading, fe973b8, on `integrated`), bundled from
+  bandage-core `threading` c326d9f. `walks` takes
+  `color = list(field = "pass")`, `passNames` and stated `passes`;
+  `geom_bandage_labels()` draws the `pass` labels in their colours; the key
+  draws the `heads` swatch; `bandage_pass_bar()` draws `passes`/`passRuns`.
+  The RHD and C4 two-graphs gallery figures use it in place of hand colouring
+  (C4's Minigraph-Cactus graph takes the syng graph's passes through
+  `passes`), and the other twelve figures redraw pixel-identical on c326d9f.
+  Rebundle when `threading` lands on release-fixes.
+- **Seen, not changed**: `nodeLengths = TRUE` labels nothing at KIV-2 from the
+  walk file, where no node is over 512 bp and every label fails the drawn
+  length gate; ggbandage's walk rows still hold their own key wording, block
+  fills and 1.2% letter filter, and its readout fitting copies core's private
+  `fitReadout`/`wrapReadout` (both on the deviations list as moves to core).
+
 ## Settled
 
 - Format 8 is frozen as it is: two independent designs, a pangyplot-informed
