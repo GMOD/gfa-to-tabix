@@ -31,9 +31,14 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
   and its directory, those of arbiter A's
   [`verify7.mjs`](../walks-container/arbA/scripts/verify7.mjs) and more
   (each table exactly its sequence's units, unique tile and detail names,
-  each departure record in every block of its cover). It reads the file a
-  gzip member at a time, so it checks files past the 2 GiB that
-  `verify7.mjs`, which reads whole files, can't
+  each departure record in every block of its cover; and over the whole
+  file, across tiles and sequences, no route interior holding a node the
+  ref rows step once, and each ref row's `passes` as the file's ref rows
+  step its nodes, which `claims7.py` and `audit7.py` hold to one sequence
+  when they run with `--seq`). It reads the file a gzip member at a time,
+  and its tile and detail units a second time, holding a byte per node id,
+  so it checks files past the 2 GiB that `verify7.mjs`, which reads whole
+  files, can't
 - `fuzz7.sh [from] [to]` with `fuzz7-gen.py`: random graphs built in walk
   format 7 with two references, R and Q, under eight option sets; each file
   gets `verify7.py`, `claims7.py --own` and `audit7.py`, and the script

@@ -1,0 +1,9 @@
+H	VN:Z:1.1
+S	1	ACGTA
+S	2	CGTAC
+S	3	GTACG
+L	1	+	2	+	0M
+L	2	+	3	+	0M
+W	R	0	c1	0	10	>1>2
+W	R	0	c2	0	10	>2>3
+W	A	1	c	0	15	>1>2>3

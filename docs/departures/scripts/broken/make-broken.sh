@@ -242,7 +242,9 @@ build repeat100 "$BROKEN/repeat.gfa" R --tile 100
 build refgap100 "$BROKEN/ref-gap.gfa" R --tile 100
 build endsoff10 "$BROKEN/ends-off.gfa" R --tile 10
 build jumps100 "$BROKEN/jumps.gfa" R --tile 100
-for base in tie100 tie100a tie10 follow100 follow100a follow100s follow100sa repeat100 refgap100 endsoff10 jumps100; do
+build far10 "$BROKEN/far.gfa" R --tile 10
+build shared10 "$BROKEN/shared.gfa" R --tile 10
+for base in tie100 tie100a tie10 follow100 follow100a follow100s follow100sa repeat100 refgap100 endsoff10 jumps100 far10 shared10; do
   declare "${base^^}=$W/$base.R.walks.gz"
 done
 corrupt placement-other-copy "$TIE100" --all $'R#0#c\t0\t18\twalk\tB#1#c\t0\t0\t0\t2\t3\t6@0' $'R#0#c\t12\t30\twalk\tB#1#c\t0\t0\t0\t2\t3\t6'
@@ -257,6 +259,10 @@ corrupt nodes-bases "$FOLLOW100S" --all $'10,20,30\tSQ:Z:ACGTACGTAC' $'10,20,30\
 corrupt nodes-bases-abridged "$FOLLOW100SA" --all $'10,20,30\tSQ:Z:ACGTACGTAC' $'10,20,30\tSQ:Z:TCGTACGTAC'
 corrupt passes-understated "$REPEAT100" --all $'1,3,3,1,3,3,1,3,3,1' $'1,2,2,1,2,2,1,2,2,1'
 corrupt passes-once-as-twice "$REPEAT100" --all $'1,3,3,1,3,3,1,3,3,1' $'1,3,3,2,3,3,1,3,3,1' $'revisited:i:2' $'revisited:i:3'
+corrupt passes-twice-as-once "$RP" $'\t2,2\t6,6\t1,2' $'\t2,2\t6,6\t.' $'\t6,-2\t6,6\t2,2' $'\t6,-2\t6,6\t2,1' $'revisited:i:2' $'revisited:i:1'
+corrupt passes-once-per-sequence "$SHARED10" $'\t2,2\t5,5\t1,2' $'\t2,2\t5,5\t.' $'\t4,2\t5,5\t2,1' $'\t4,2\t5,5\t.' $'revisited:i:1' $'revisited:i:0'
+corrupt other-tile-as-interior "$FAR10" $'\t6,2\t5,5\t.\n' $'\t6,2\t5,5\t.\nR#0#c2\t0\t10\tnodes\t5,1\t5,5\nR#0#c2\t0\t10\troute\t.\t13,-1\t-1\n' $'R#0#c2\t0\t10\twalk\tA#1#c\t0\t10\t1\t2\t6\t.' $'R#0#c2\t0\t10\twalk\tA#1#c\t0\t10\t1\t4\t6\t1' $'R#0#c2\t10\t20\twalk\tA#1#c\t0\t20\t2\t2\t10\t.\n' ''
+corrupt other-sequence-as-interior "$FAR10" $'\t10,2\t5,5\t.\n' $'\t10,2\t5,5\t.\nR#0#c2\t10\t20\tnodes\t1,1\t5,5\nR#0#c2\t10\t20\troute\t.\t5,-1\t11\n' $'R#0#c2\t10\t20\twalk\tB#1#c\t0\t10\t1\t2\t10\t.' $'R#0#c2\t10\t20\twalk\tB#1#c\t0\t10\t1\t4\t10\t1' $'R#0#c1\t0\t10\twalk\tB#1#c\t0\t20\t2\t2\t2\t.\n' ''
 corrupt revisited-zero "$TIE100" $'revisited:i:1' $'revisited:i:0'
 corrupt record-passes "$TIE10" --all $'R#0#c\t12\t30\tdeparture\tA#1#c\t6\t0\t0\t18\t+\t1\t24\t+\t2\t.' $'R#0#c\t12\t30\tdeparture\tA#1#c\t6\t0\t0\t18\t+\t2\t24\t+\t2\t.'
 corrupt record-stretch-short "$TIE10" --all $'R#0#c\t0\t18\tdeparture\tB#1#c\t6\t0\t0\t12\t-\t1\t6\t-\t2\t.' $'R#0#c\t6\t18\tdeparture\tB#1#c\t6\t0\t0\t12\t-\t1\t6\t-\t2\t.'

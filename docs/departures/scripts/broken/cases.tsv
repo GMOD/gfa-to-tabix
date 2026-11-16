@@ -83,13 +83,17 @@ nodes-bases	broken/follow.gfa	audit7	the first base of node 11 in the tile's nod
 nodes-bases-abridged	broken/follow.gfa	audit7	the same in B's detail record
 nodes-bases-missing	broken/follow.gfa	claims7	the SQ:Z: tag dropped from B's detail record's nodes row, in a file whose ref rows carry bases
 nodes-extra	walks-two-refs.gfa	claims7 spec8	tile 0's nodes row lists a node no route visits
-on-reference-as-interior	broken/follow.gfa	claims7	A follows the reference; its step on node 3 written as a route's interior, off R, at the same steps, span and bp
-on-reference-as-interior-abridged	broken/follow.gfa	claims7	the same in an abridged tile: A's detail record given the route, its blocks row 0+36 made 0+12,6,6+18
+on-reference-as-interior	broken/follow.gfa	verify7 claims7	A follows the reference; its step on node 3 written as a route's interior, off R, at the same steps, span and bp
+on-reference-as-interior-abridged	broken/follow.gfa	verify7 claims7	the same in an abridged tile: A's detail record given the route, its blocks row 0+36 made 0+12,6,6+18
+other-sequence-as-interior	broken/far.gfa	verify7	B's last piece, its steps on nodes 1 and 2, which c1 passes once, written as the interior of a route with no exit in c2's tile 10, its row in c1 left out, at the same steps and bp; claims7 fails it whole and passes it a sequence at a time
+other-tile-as-interior	broken/far.gfa	verify7 claims7	A's last piece, its steps on nodes 5 and 6, which c2 passes once in tile 10, written as the interior of a route with no exit in c2's tile 0, its row in tile 10 left out, at the same steps and bp
 ownbp-overstated-G	walks-records.gfa	claims7 audit7 spec8	G's record with ownBp 18 made 30
 owntiles-wrong	walks-two-refs.gfa	claims7 audit7 spec8	Q's record naming tile 10 for tile 0
-passes-once-as-twice	broken/repeat.gfa	audit7	node 4, passed once, stated as passed twice, and revisited 2 made 3
-passes-second-row	walks-repeat.gfa	audit7	node 2's second ref row stating 3 passes where the first states 2
-passes-understated	broken/repeat.gfa	audit7	nodes 2 and 3, which the reference passes 3 times, stated as passed twice on every step
+passes-once-as-twice	broken/repeat.gfa	verify7 audit7	node 4, passed once, stated as passed twice, and revisited 2 made 3
+passes-once-per-sequence	broken/shared.gfa	verify7 audit7	node 2, which c1 and c2 each pass once, stated as passed once on both, and revisited 1 made 0; audit7 passes it a sequence at a time
+passes-second-row	walks-repeat.gfa	verify7 audit7	node 2's second ref row stating 3 passes where the first states 2
+passes-twice-as-once	walks-repeat.gfa	verify7 audit7	node 2, passed twice, stated as passed once in both ref rows that step it, and revisited 2 made 1
+passes-understated	broken/repeat.gfa	verify7 audit7	nodes 2 and 3, which the reference passes 3 times, stated as passed twice on every step
 piece-split-at-jump	broken/jumps.gfa	audit7 spec8	C's piece >1>6>1>6 written as two pieces, >1 and >6>1>6, in the one tile, with no departure record for the jump from 1 to 6 between them
 piece-walk-and-abridged	broken/follow.gfa	claims7 audit7 spec8 rebuild	A's piece given a walk row in the tile beside its abridged row
 placement-other-copy	broken/tie.gfa	none	B's <2, which the placement rule puts on the copy at 0-6, read at the copy at 24-30: its @0 dropped, its span 0 18 made 12 30
