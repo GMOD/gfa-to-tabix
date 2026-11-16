@@ -64,11 +64,44 @@ and `SQ:Z:` take ([scripts](../../departures/README.md#scripts)).
   broken file `claims7.py` fails whole, three of them broken across
   sequences, and [a chr22 file with one wrong `hapBp`](claims7/broken-hapbp.txt)
   fails here
-- **Not checked this way:** a node's length and passes across two
-  sequences (N2, N3), which each run holds to its own sequences' rows, and
-  the `--own` checks of each record's own steps
+- **A 0 here is a 0 within a run's sequences, not across the file,** for
+  the two claims about a node, N2 and N3: each run holds a node's passes
+  and its length to its own sequences' rows. So N2 at 0 in both
+  `claims.txt` says that no route interior of a run's sequences holds a
+  node those sequences pass once, and nothing of an interior that holds a
+  once-passed node of another run's sequence. `claims7.py` now prints
+  that under `--seq`
+- **Not checked this way:** a node's length across two sequences (N3),
+  and the `--own` checks of each record's own steps
 
-## Not covered by any genome-wide run
+## The whole file, on the hosted bytes
+
+[ADR 0016](../../adr/0016-format-8-is-frozen.md) rests on two properties
+of a whole file that the runs above could not see: no route interior, on
+any sequence, holds a node the reference passes once, and each `ref`
+row's `passes` is the number of `ref`-row steps on its node in the file.
+`verify7.py` checks both as it streams a file, and `spec8.py`, written
+from the page alone, on a file that fits in memory.
+
+- [whole-file/](whole-file/README.md), written by
+  [table.py](whole-file/table.py) from the runs' own output
+  ([results.jsonl](whole-file/results.jsonl)): the hosted GRCh38 and
+  CHM13 files and the hosted chr6 file with sequences pass both, and pggb
+  chrY on GRCh38, which is not hosted and has revisited nodes, passes
+  them too
+- **The files checked are the hosted bytes,** the builds with ADR 0015's
+  header, not the builds the runs above read, which differ from them in
+  the `#walks` line and the offsets after it: each local file's length,
+  its S3 multipart ETag and its `.idx` are held to the hosted URL's
+  ([identity.tsv](whole-file/identity.tsv), by [run.sh](whole-file/run.sh))
+- **What it would catch:** [broken-matrix.txt](whole-file/broken-matrix.txt)
+  lists the checkers that fail each planted file, the one a review built
+  by hand among them ([craft/](whole-file/craft/)), and that pass the
+  unbroken files
+- `spec8.py` did not read the genome files: it holds a file's every
+  piece in memory
+
+## Not covered by any run on the genome files
 
 - graph-walks' release-check cuts 28 windows, all on chr22
 - The read scan against `bytesFor` samples the start, middle and end of

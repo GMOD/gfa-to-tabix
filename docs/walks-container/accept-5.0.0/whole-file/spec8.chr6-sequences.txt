@@ -1,0 +1,37 @@
+file /home/cdiesh/work/blocks/genome-5.0.0-hdr/hprc-v2.1-mc-grch38-chr6-sequences-f8.GRCh38.walks.gz: {'format': 8, 'tile': 65536, 'revisited': 0, 'stay': 311, 'abridge': 1000000, 'abridgebytes': 3000000, 'graph': 'b15ad036d482005c', 'leftout': 0, 'bytes': 145319431}
+          1207  W lines
+          2149  abridged rows
+            18  abridged tiles
+       4995412  blocks items
+           615  blocks lists with a trailing run
+        212158  departure lines
+        105024  departure records
+      20244395  detail steps
+          2149  detail units
+          2149  detail walk rows
+       2832198  nodes in a route interior
+       4799024  nodes the ref rows step once
+       1088286  piece boundaries that are adjacent on S (no record)
+       1196638  pieces
+          2607  tiles
+       1191882  walk rows
+== agreed ==
+         463  #haplotype lines equal the haplotypes with rows
+        1207  W lines whose pieces tile their contig from fragStart
+        2149  abridged hapBp equal to the bp of all its detail walk row's steps
+        2149  abridged pieces whose hapOffset plus hapBp is the next piece's hapOffset
+        2149  abridged rows equal to their detail walk row (key, hapOffset, nsteps, span, record)
+        2149  blocks expanded against R equal the detail walk's steps on R (positions)
+        2149  blocks lists equal to the detail walk row collapsed (text)
+        2149  blocks lists whose items add up to their abridged row's hapBp
+     4799024  counts a ref row states for a node that are the file's ref rows' steps on it
+      105024  departure records equal to a piece boundary computed from the rows
+      105024  departure records in exactly the blocks of their cover
+         615  record stretches that cut to an abridged piece's are its list's whole leading or trailing run
+     2832198  route interior nodes that the reference does not pass once, in a file that states revisited:i:0
+     5365709  route rows checked (orientation, order, ends on R, used)
+        7362  table entries
+     1191882  walk rows decoded with matching nsteps and span
+== disagreed ==
+  none
+(420.0 s)

@@ -1,0 +1,40 @@
+file /home/cdiesh/work/blocks/accept-5.0.0/4b14ee3/pggbY/pggbY.GRCh38.walks.gz: {'format': 8, 'tile': 65536, 'revisited': 107467, 'stay': 311, 'abridge': 1000000, 'abridgebytes': 3000000, 'graph': '2fad6ac56fe993d0', 'leftout': 527, 'bytes': 193641445}
+           526  W lines
+         72181  abridged pieces whose span is wider than their first and last steps on R
+        112800  abridged rows
+            11  abridged tiles
+       7239070  blocks items
+         11178  blocks lists with a block against R
+           166  blocks lists with a leading run
+         18761  blocks lists with a trailing run
+       1558946  departure lines
+        425040  departure records
+     394633538  detail steps
+           684  detail units
+        112800  detail walk rows
+       3013584  nodes in a route interior
+        155947  nodes the ref rows step once
+             0  once-passed nodes in a route interior, of which the page promises nothing in a file with revisited nodes
+         45414  piece boundaries that are adjacent on S (no record)
+        471497  pieces
+           399  tiles
+        358298  walk rows
+== agreed ==
+         136  #haplotype lines equal the haplotypes with rows
+         526  W lines whose pieces tile their contig from fragStart
+      112800  abridged hapBp equal to the bp of all its detail walk row's steps
+      112677  abridged pieces whose hapOffset plus hapBp is the next piece's hapOffset
+      112800  abridged rows equal to their detail walk row (key, hapOffset, nsteps, span, record)
+      112800  blocks expanded against R equal the detail walk's steps on R (positions)
+      112800  blocks lists equal to the detail walk row collapsed (text)
+      112800  blocks lists whose items add up to their abridged row's hapBp
+      263414  counts a ref row states for a node that are the file's ref rows' steps on it
+      425040  departure records equal to a piece boundary computed from the rows
+      425040  departure records in exactly the blocks of their cover
+       18638  record stretches that cut to an abridged piece's are its list's whole leading or trailing run
+      988585  route rows checked (orientation, order, ends on R, used)
+        1518  table entries
+      358298  walk rows decoded with matching nsteps and span
+== disagreed ==
+  none
+(605.0 s)

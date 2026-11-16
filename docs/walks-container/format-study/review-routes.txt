@@ -1,0 +1,180 @@
+# Review: routes for the six format-8 candidates, from the reader and drawing side
+
+## Criteria
+
+I wrote these before opening the write-up; they are in `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-review-routes/criteria.txt`.
+
+- **In the file now** only if all of these hold:
+  - a drawing reader needs it for a result it shows today or in a finished branch
+  - the reader cannot derive it from today's rows, or cannot tell when its derivation is wrong
+  - it is a property of the graph and walks, not of a view, an algorithm or its parameters
+  - it cannot be added after the freeze as a unit kind, tag or side file
+  - its measured cost is small
+- **In the file later:** the first three hold, but the addition is skippable, so the freeze does not close it.
+- **Side file:** derived, large, optional, or dependent on a tool, a definition or one consumer; it needs a way to detect staleness.
+- **Reader only:** derivable from today's file in bounded work, and exact or self-reporting where it is not.
+- **Nothing:** no consumer shows the need, or the evidence is mixed.
+- **Tie-breakers:**
+  - a shown number must rest on something the file states, not on who wrote it
+  - a prose promise is weaker than a tag the file carries, which is weaker than something the reader verifies from rows
+
+## Per candidate
+
+### Complete adjacency: nothing now; the node and link index if a consumer appears
+
+- **Routes:**
+  - **In the file:** a `links` unit costs 2.29% on chr22, 2.76% on chr6 and 15.96% on pggb chrY.
+  - **Side file:** the same units outside the walk file.
+  - **Reader widening:** 368,161 bytes and 13.7 requests per 1 kb window, and it never reaches links that only left-out lines walk.
+  - **Different tool:** the node and link index already holds every link of a path-visited node and is paired by `graph:Z:` (ADR 0015).
+  - **Unserved:** leave it.
+- **Is "cannot" true?**
+  - For links only left-out lines walk, yes: those lines have no rows (`walks-format.md:176-178`).
+  - For links walked from pieces filed elsewhere, the reader can fetch them but cannot know when it is finished. The unit table holds only `seq start end kind name`, so nothing maps a node to the other tiles listing it.
+- **Why nothing:**
+  - No drawing was shown to change.
+  - The one decomposition tried gave the same 430,246 site intervals from walked links alone.
+  - The continuity study's own drawing rule is "nothing drawn that no shown walk carries".
+- **Before the freeze:** nothing.
+- **Would change my mind:** a consumer view on a hosted file that differs with the 0.68% of chr22 links only left-out lines walk.
+
+### Site decomposition: reader only; a side file if a definition settles
+
+- **Routes:**
+  - **In the file:** a `sites` unit costs 11.03% on chr22 and 40.04% on chr6, or 0.34% and 0.87% for sites of 50 bp or more.
+  - **Side file:** 6,585,438 bytes on chr22.
+  - **Reader:** compute sites from the walks it reads.
+  - **Different tool:** a snarl caller, as PangyPlot uses.
+- **The write-up lists the reader route as "unmeasured", but the code exists.**
+  - `formsCut` and `structuralForms` (`/home/cdiesh/src/graph-walks-counts/README.md:823-873`, `docs/structural-forms.md`) already derive walk-based sites over every haplotype.
+  - They use a 50 bp floor and a nesting rule, under `FORMS_STEP_BUDGET` of 16,000,000 steps.
+  - Their definition differs from the prototype's topological one; nobody compared the two.
+- **Why not the file:**
+  - The definition is one of several, and it is flat where the admired model is nested.
+  - Ten sites hold 54.1% of chr22's interior nodes.
+  - It yields 6 sites on pggb chrY.
+  - Filing of the 852 multi-tile sites is unresolved.
+- **The one real gain** is a 5 Mb overview: 21,908 bytes against 2,265,717. That is a reader cost, and the eight-haplotype cut loads 10 of 10 at 5 Mb today.
+- **Before the freeze:** nothing.
+- **Would change my mind:** a 5 Mb view that `formsCut` with a raised budget cannot serve, plus a definition that handles the ten large sites.
+
+### Haplotype counts: reader only
+
+- **Routes:**
+  - **Unit kind:** 3.12% on chr22 and 6.18% on chr6, with about 7% more fetch at 30 kb (3,166 on 45,510).
+  - **`hc:Z:` tag:** rewrites every tile, every reader fetches it, and it costs +34.28% on chr22 if detail units carry it too.
+  - **Side file:** 1,888,011 bytes on chr22.
+  - **Reader:** `reader.counts()` as built.
+- **Is "at least N and nothing more" true?** Yes.
+  - `/home/cdiesh/src/graph-walks-counts/src/walkCounts.ts:692-702` gives mask 0 only where `passes === 1` and the pass is on the drawn stretch.
+  - Lines 719-720 add one case the write-up omits: a count equal to the file's haplotype total is also exact.
+  - The budgets behind `RegionTooLargeError` are defaults (`walkReader.ts:74-77`), not format limits.
+- **Why not stored counts yet:**
+  - On the reference the reader is already exact at zero bytes, subject to C27.
+  - Off the reference the prototype's number leaves out left-out lines, which visit 50,890 chr22 nodes, so it would not be "N of M" of the graph there either.
+  - No count including those lines was computed, and no checker exists.
+- **Rejected outright:** the `hc:Z:` tag.
+- **Before the freeze:** nothing for stored counts; the C27 decision below is what the built call needs.
+- **Would change my mind:** a consumer that must say "N of M haplotypes step this node" off the reference, with the left-out question settled.
+
+### Stored layout: nothing
+
+See the second special case. If it is ever tried it is a side file: it is one tool's output, differs run to run, and costs 11.47% of the walk file.
+
+### Pairing rule: side file's own header, when a side file first ships
+
+- **Routes:**
+  - **Side-file header:** copy directory line 1 and `#reference`; 0 walk-file bytes, about 170 per side file.
+  - **Content hash on `#walks`:** a later tag, but it changes every walk file's header.
+  - **Versioned file names:** the spec's hosting advice (spec:1184).
+  - **Nothing:** in-file forms need no pairing.
+- **Weakness of the proposed rule:** it leans on `bytes:i:`. The `a.gfa`/`b.gfa` pair shares every `#walks` tag and differs only in length, 676 against 643.
+- **An unlisted, stronger option at zero walk-file bytes:** the side file states a hash of the walk file's directory or of the sequence's unit table. A reader already fetches both at open. Nobody has measured it.
+- **Before the freeze:** nothing in the format.
+- **One owner decision:** if hosted files must never be rebuilt after the freeze, a hash of the paths would have to go into the build hosted at the freeze. No evidence supports that yet.
+
+### C27: state it as a guarantee, before the freeze
+
+See the first special case.
+
+## Special case: C27
+
+Read by code, `counts()` shows a wrong number flagged exact on a file that breaks C27: nothing in `walkCounts.ts` or `walkReader.ts:1170-1260` guards it. The hand-built `far.R` file would give 2 where 3 haplotypes step the node.
+
+| Route | What the reader can honestly show | Cost |
+|---|---|---|
+| Guarantee in format 8 | "N of M" on any format-8 file | 0 bytes, no rebuild, no reader change |
+| Tag on `#walks` | "N of M" only on tagged files, "at least N" on the rest | hosted files rebuilt; two classes of format-8 file; a header tag that is not a fact of the input |
+| Stored counts | "N of M" whatever the placement | 3.12-6.18% of the file; writer work; no checker; definitions unsettled |
+| Leave as writer behaviour | "at least N" everywhere, or exact on the caller's word | 0 bytes; the counting call loses its only exact case, or stays able to be wrong |
+
+I rule for the guarantee, for these reasons:
+
+- **It covers the cut, not only the counts.** Without it, a valid format-8 file can omit from a window a haplotype that steps a once-passed reference node there. The write-up's T123 is that case. Stored counts would leave a correct count beside an incomplete drawing.
+- **It removes no freedom the spec grants.** The write-up says another writer's freedom shrinks, but `walks-format.md:1073-1087` lists placement and `stay` freedom only for nodes the reference passes more than once.
+- **The rule holds where I looked.**
+  - I re-ran `c27.py` on ada: 0 of 155,947 once-passed nodes on pggb chrY and 0 of 1,389,745 on chr22 are in a `nodes` row.
+  - N2 has two recorded failures (`docs/departures/scripts/broken/cases.tsv:86-87`), and only `claims7` fails them.
+- **Stored counts are dominated for this purpose.** They cost megabytes to replace a rule the writer already keeps, and a stored number is equally unverifiable by a window reader.
+
+Three things count against it:
+
+- **Tension with my own tie-breaker.** It ranks a carried tag above a prose promise, and a tag is safe by default against a careless writer. I still prefer the guarantee: the file carries `format:i:8`, N2 can check a file against it, and every other invariant in the list is trusted the same way.
+- **The hosted evidence is narrower than "genome-wide".** `claims7-seqs.sh` ran 25 runs over 195 sequences, and under `--seq` N2 "hold[s] their nodes to their own rows" (`claims7.py:1268`). A route interior in one run's sequences holding a once-passed node of another run's was never tested.
+- **ADR 0011's trigger is unmet in the letter.** No issues-log entry exists. Its "clarify the wording to match what writer and reader already do" case is the closest fit.
+
+Before the freeze:
+- Add the bullet to "What a reader relies on".
+- Run N2 across sequences on both hosted files.
+
+If that check cannot run or finds anything, the format stays, the tag is the fallback, and the reader must show "at least N".
+
+## Special case: stored layout as "the only complete cure"
+
+The evidence does not support it.
+
+- **"Complete" is an argument, not a measurement.**
+  - Pan continuity with stored coordinates was not measured, and no reader or drawing used them.
+  - A stored coordinate does not move, so re-layout jumps vanish by construction; that is all that is shown.
+- **The crops show what would be stable.** I viewed all four pictures and matched the table to `layout-records.jsonl` L3-L6.
+  - **Quiet window:** a straight line.
+  - **18.66 Mb:** a broken zigzag crossed by long lines from elsewhere. At least 1,499 of 1,989 off-reference nodes in the box are not the window's.
+  - **22.03 Mb:** a teardrop, 5.15 times its chord. Two 1 bp nodes are drawn 12,163 and 11,634 units long.
+  - **11.82 Mb:** at least 115,688 of the window's 162,110 off-reference nodes fall outside the box.
+  - **All four:** 55-99% of nodes are under 1 px, and the reference runs at −160°, −79°, −142° and +3°.
+- **The windows are chosen, not sampled.** One is quiet and three are hard, so this is no rate.
+- **"Only" does not follow.** The continuity study's tables (read, not re-derived) show partial reader-side remedies:
+  - Holding a layout re-lays out 1-2 of 20 pan steps instead of 20.
+  - Stress layout has 0 jumps on the pan at three of five loci.
+  - None is complete at KIV-2 or amylase.
+- **The comparison that matters was not made.** No locus has both a crop and a continuity score.
+- **Cost:** 10 h 03 min and 49.0 GB for chr22, and two runs with the same options share 0 of 51,126 points.
+
+Would change my mind: the track drawn from stored coordinates on the continuity study's five loci, scored by its own criteria with readable filmstrips, at a layout cost that fits a whole genome.
+
+## Need, and omissions
+
+- **Needed now:** only C27, and its need is certainty, not bytes.
+- **Not needed now:** adjacency, sites, stored counts and layout. Pairing becomes needed the day a side file ships.
+- **Not listed by anyone:**
+  - **The cross-sequence N2 run** above.
+  - **M for the graph.** `#haplotype` lists only haplotypes with rows: pggb chrY lists 136 where the GFA holds 151. The reader must say "of the M haplotypes the file holds". A count tag is a legal later addition.
+  - **Which haplotypes the left-out lines belong to.** `leftout:i:` gives only a count.
+  - **One table per sequence.** Every in-file unit kind adds 14-50 KB to every reader's open, and the table cannot be split after the freeze. That is why I send optional data to side files; I ask for no change.
+
+## Not verified
+
+- I ran no reader. The `counts()` behaviour on a broken file and the KIV-2 claim that whole-piece counting fixes the 128 short counts are from code and README only.
+- I did not trace `walkChunk.ts` to confirm a cut's links come only from kept walks; I relied on `walkReader.ts:715-722`, the README and open-problems:801.
+- I did not re-run R22, R23, R27, R29 or the chr6 C27 count.
+- I did not open `far.R.walks.gz` or the bandage-core layout API.
+- No old reader was run on a file with a new row tag.
+
+## Rulings
+
+- **Complete adjacency:** nothing (the node and link index if a consumer appears).
+- **Site decomposition:** reader only (side file if a definition settles).
+- **Haplotype counts:** reader only.
+- **Stored layout:** nothing.
+- **Pairing rule:** side file.
+- **C27:** in the file now, as one spec sentence and no byte, conditional on the cross-sequence check.

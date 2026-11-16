@@ -795,6 +795,14 @@ W  B  1  c     0  32  >1>2>6>3
   ([measured](walks-container/reshape/report.md)), and declined it
 - Known and accepted: nothing to do unless a consumer's open time on a
   genome file says otherwise
+- **A unit kind with a unit per tile grows the table every reader
+  fetches at open,** whether or not the reader knows the kind. With three
+  such kinds added to a chr22 build, a links, a counts and a sites unit
+  per tile, the table grew from 46,338 to 84,628 bytes
+  ([the format study](walks-container/format-study/writeup.txt), its
+  complete adjacency section). The additions rule allows a kind one unit
+  to a sequence with an index of its own, and a file beside the walk
+  file; nothing measures either
 
 ## Every link of a loaded node, and a bubble layer
 
@@ -836,6 +844,19 @@ W  B  1  c     0  32  >1>2>6>3
   options can state the same `#walks` line, which names no reference
   ([Header](walks-format.md#header)). A hash of the paths could come later
   as a tag
+- **What a side file would pair by is not settled.** The page says the
+  same walk file is the same bytes
+  ([Header](walks-format.md#header)), and no rule says how a second file
+  names those bytes. The rule a prototype wrote copies the directory's
+  line 1, whose `bytes:i:` is the one field that told two files of the
+  same segments and options apart, 676 against 643, and `bytes:i:`
+  follows the compressor: the same rows compressed again would not pair,
+  and other rows of the same length would
+  ([the format study](walks-container/format-study/writeup.txt), its
+  pairing section, and
+  [the review of its text](walks-container/format-study/review-spec.txt)).
+  A hash of the directory, which holds every table's offset and length,
+  was proposed by two reviews and measured by none
 
 ## Two pggb costs no addition removes
 
@@ -856,3 +877,122 @@ W  B  1  c     0  32  >1>2>6>3
   file ([entry-dropped](departures/scripts/broken/cases.tsv))
 - Suggested next step: a graph-walks release whose table read refuses a
   gap or an overlap, with a test on entry-dropped's bytes
+
+## A once-passed node in a file with revisited nodes
+
+- The format promises that no route interior holds a node the reference
+  passes once only of a file that states `revisited:i:0`
+  ([What a reader relies on](walks-format.md#what-a-reader-relies-on),
+  [ADR 0016](adr/0016-format-8-is-frozen.md)). Of a file with revisited
+  nodes it promises nothing: a window's rows can lack a line that steps a
+  once-passed reference node in it, and a reader cannot tell from the
+  file whether they do
+- gfa-to-tabix keeps the rule on every file it writes, pggb chrY among
+  them
+  ([whole-file runs](walks-container/accept-5.0.0/whole-file/README.md)),
+  but the header names no writer, so a reader of a file with revisited
+  nodes that says "N of M haplotypes step this node" of a once-passed
+  node says it on the writer's word
+- The rule is not plainly right there. pggb chrY's 1 bp node at
+  9,394,014, which the reference passes once, is walked by seven of
+  eight haplotypes inside the TSPY copy near 9,482,842
+  ([Collapsed repeats in pggb graphs](#collapsed-repeats-in-pggb-graphs)).
+  Kept on R, as this writer keeps it, each of those walks reads as an
+  88.8 kb skip; filed off R with its neighbours, the node's own tile
+  would lack the seven lines. No file states which the writer did for a
+  given node, and no pggb file is hosted
+
+## Links only left-out lines walk
+
+- A line with no step on a node of the reference has no rows in that
+  reference's file, so a link that only such lines walk is in no row, and
+  no reading of the file recovers it. A wider or expanded cut finds the
+  links that the file's own lines walk from pieces filed elsewhere, at a
+  cost; it never finds these
+- On a chr22 build of the hosted Minigraph-Cactus graph they are 32,347
+  of 4,737,114 links, and at chr22:11,816,742-11,846,742 a cut with every
+  piece expanded lacks 4,122 of them at nodes it loaded; a chr6 build has
+  none; pggb chrY has 1,700,646
+  ([the format study](walks-container/format-study/writeup.txt), its
+  complete adjacency section, and
+  [its records](walks-container/format-study/records.jsonl))
+- No reader's view was shown to differ for them: 150 random 1 kb windows
+  of chr22 hold none, and the one decomposition tried gives the same site
+  intervals without them
+  ([Every link of a loaded node, and a bubble layer](#every-link-of-a-loaded-node-and-a-bubble-layer))
+
+## Counts off the reference, and whether left-out lines count
+
+- From a window's rows a reader can say "N of M haplotypes step this
+  node" of a reference node, in a file that states `revisited:i:0`. Of a
+  node off the reference it can say "at least N" and no more: the node
+  can be listed by a tile it did not read, megabases away, and no row
+  names the tiles that list a node. On a chr22 build 2,972 nodes off the
+  reference are listed by tiles over 1 Mb apart
+  ([the format study](walks-container/format-study/writeup.txt))
+- A stored count has no settled meaning yet. The prototype counted the
+  haplotypes with a line in the file, so it left out the left-out lines,
+  which visit 50,890 nodes of that build; whether any count differs with
+  them counted was not computed, and a count without them is not the
+  graph's
+
+## M is the haplotypes the file holds
+
+- `#haplotype` lists the haplotypes with rows in the file, not the
+  graph's. pggb chrY's graph holds lines of 151 haplotypes, the
+  reference's among them, and its GRCh38 file lists 136 beside the
+  reference
+  ([the list of its path lines](walks-container/format-study/pggbY.paths.tsv),
+  from [the routes review](walks-container/format-study/review-routes.txt)).
+  So the M a reader can state is the haplotypes the file holds, and "N of
+  M haplotypes step this node" is of those
+- Where the reference sample has several haplotypes, `#reference` names
+  the sample and no header line lists its haplotypes, so M is not
+  derivable from the header at all
+  ([the review of the study's text](walks-container/format-study/review-spec.txt))
+
+## Which haplotypes the left-out lines belong to
+
+- `leftout:i:` counts the lines a file leaves out and names none of
+  them. A reader cannot say which haplotypes have lines outside the file,
+  nor whether a haplotype it lists is whole there
+
+## The tags a file may leave out
+
+- The page says a format 8 file's `#walks` line carries `format:i:8` and
+  `tile:i:`, that `graph` and `leftout` may be absent, and what a reader
+  takes from a file with no `revisited`: nothing that 0 promises
+  ([Header](walks-format.md#header)). It does not say whether a file
+  without `revisited`, `stay`, `abridge` or `abridgebytes` is format 8
+- The code disagrees on such a file. graph-walks reads it, with
+  `revisited` unknown, and `verify7.py`, `spec8.py` and `expand7.py` pass
+  it. `audit7.py` fails a file with no `revisited`, as a header that
+  differs from the `ref` rows, and `claims7.py`'s B3 fails an abridged
+  file with no budgets, since it holds the tile to the header's
+  (`repack.py`'s `bound-no-writer-tags` and a file with `revisited`
+  alone removed, run on 2026-11-16)
+
+## Checkers that hold a file to more, or less, than the format
+
+- No checker holds a file to the page and nothing else. `claims7.py`
+  and `spec8.py` fail files that break this writer's policy and no
+  invariant (`costliest-not-first`, and for `claims7.py`
+  `revisited-as-interior`), and `verify7.py` holds a file with revisited
+  nodes to the once-passed rule this writer keeps and the format does
+  not promise there, where `spec8.py` passes it
+  ([cases.tsv](departures/scripts/broken/cases.tsv),
+  `other-sequence-as-interior-revisited`)
+- Under `--seq`, `claims7.py` reads the fourth column of every row of
+  the sequences it was not given, whatever kind of unit holds the row
+  (`row_elsewhere`), so a later unit kind's row there whose fourth
+  column were `ref` or `nodes` would count toward its `SQ:Z:` claim. The
+  page now says a later kind takes no row kind word of its own, which
+  keeps the two apart; the script still does not skip such a unit as the
+  page says a reader does. Read from the code, not run
+- On a file with no `tile:i:`, `claims7.py`, `audit7.py` and
+  `walks-truth.py rebuild` end in a traceback, which `broken.sh` counts
+  as passing the file; `verify7.py` and `spec8.py` fail it
+  (`tile-missing`)
+- `walks-truth.py rebuild` passes a file whose route interior holds a
+  once-passed node, since the steps it rebuilds are the line's whatever
+  their filing

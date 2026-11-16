@@ -206,7 +206,11 @@ from the rows, and relies on the invariants of
   A step the placement leaves off the reference is route interior, which
   it does only where the step's tile has no pass of its node: no route
   interior holds a node of its own tile's reference path <!-- C26 -->
-- A route can hold another tile's reference nodes. A reader places a node
+- A route can hold another tile's reference nodes, each of them a node
+  the reference passes more than once: the tool leaves no step on a node
+  the reference passes once off the reference, in any file it writes
+  ([What the writer guarantees](#what-the-writer-guarantees)).
+  <!-- C197 --> A reader places a node
   at a reference position from a `ref` row of a tile it read whenever one
   exists: a pass over `D` before any other, then the row whose path sorts
   first in bytes, at its earliest start. Other nodes take haplotype offsets
@@ -476,7 +480,9 @@ GRCh38-referenced file:
 - The `#walks` line is `#walks` and then tags alone, in any order, as
   the tags after a row's fixed columns are: a reader finds `format`,
   `tile` and the rest by name, not by place. The writer writes them in
-  the order above, and the directory's line 1 adds `bytes:i:` after them
+  the order above, and the directory's line 1 adds `bytes:i:` after them.
+  A format 8 file's line carries `format:i:8` and `tile:i:`, and a reader
+  refuses a file whose line lacks either <!-- C198 -->
 - A reader refuses a unit whose `#unit` line doesn't state its table
   entry's `seq start end kind name`, or whose text doesn't end in a
   newline, as a unit cut short does <!-- C154 -->
@@ -496,7 +502,9 @@ GRCh38-referenced file:
 - `tile` is the tile size in bp
 - `revisited` is how many nodes the reference's paths pass more than once,
   all its sequences counted. <!-- C50 --> 0 means every position in the
-  file is a fact of the graph ([Exact and chosen](#exact-and-chosen))
+  file is a fact of the graph ([Exact and chosen](#exact-and-chosen)). A
+  file whose line states no `revisited` states no count, and a reader
+  takes from it nothing that 0 promises
 - `stay` is the `--stay` value in bp the file was written with; 0 means no
   stay. A reader ignores it
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
@@ -538,7 +546,8 @@ GRCh38-referenced file:
     fields of a `#reference`, `#haplotype` or `#hole` line, in any order.
     A reader ignores the ones it doesn't know, on a row of any kind, on
     those three lines and on the `#walks` line <!-- C195 -->. `SQ:Z:` on a
-    `ref` or `nodes` row is one
+    `ref` or `nodes` row is one. A line carries a tag name at most once
+    <!-- C199 -->
   - a header line whose first word a reader doesn't know is ignored; it
     follows the `#walks` line
   - a unit of a kind it doesn't know is skipped, whatever rows it holds;
@@ -552,6 +561,19 @@ GRCh38-referenced file:
   - an addition doesn't change what a row this page gives means, so a
     reader that ignores it draws nothing false. A change that can't
     keep to that is another format
+  - this page alone gives format 8's unit kinds, row kinds, header line
+    words and tag names, so an addition is an addition to this page. A
+    later kind, of unit or of row, takes a word that is no kind of unit
+    or row here
+  - a file with no unit of a later kind says nothing by lacking it: it
+    can predate the addition, so a reader doesn't take the lack to mean
+    there is nothing of that kind to state. An addition whose units claim
+    to be complete says so for the whole file in the header, by a tag or
+    a line, and a reader takes completeness from that statement and from
+    no unit's absence
+  - a file added beside a walk file is about that walk file's bytes: the
+    same walk file is the same bytes, and the same rows compressed again
+    are another file to it ([Hosting](#hosting))
 - `#reference` names the reference sample <!-- C157 -->
 - `#haplotype` lists what each other path with rows in the file is listed
   under, once each in byte order: its PanSN `sample#haplotype` where its
@@ -569,8 +591,11 @@ GRCh38-referenced file:
 
 ## Rows
 
-Every line not starting with `#` begins `seq start end kind`: the reference
+Every line not starting with `#`, in a unit of a kind this page gives,
+begins `seq start end kind`: the reference
 sequence, the stretch of it the line is about, and its kind. <!-- C54 -->
+A unit of a later kind holds the rows its own addition gives
+([Header](#header)).
 Columns are separated by one tab, a list within a column by commas, and
 a line ends in a newline; the examples here align columns with spaces
 for reading. `start end` are 0-based and half-open, as in BED.
@@ -580,7 +605,7 @@ not an index key, so `zcat | grep` places any line.
 
 | kind | `start end` |
 |---|---|
-| `walk` | the piece's span: the first base its steps placed on R cover to the last, over all of them. Route interiors that hold another tile's reference nodes lie outside it |
+| `walk` | the piece's span: the first base its steps placed on R cover to the last, over all of them. Route interiors that hold another tile's reference nodes, which a file with `revisited:i:0` has none of, lie outside it |
 | `abridged` | the piece's span, as a `walk` row's and as its `blocks` row's |
 | `blocks` | the piece's span: from the first base its blocks cover to the last |
 | `ref`, `nodes`, `route` | the unit's extent: these rows describe the tile, not a piece, and have no span of their own |
@@ -1035,12 +1060,37 @@ The format is what holds of any file that says `format:i:8`, whoever
 wrote it: the units, rows and columns above, and the invariants below,
 which the file checks read off a file
 ([claims7.md](departures/claims7.md)). A reader may build on them, and
-on nothing else about how a file was made.
+on nothing else about how a file was made. The rules of
+[Files and units](#files-and-units), [Header](#header) and [Rows](#rows)
+are among them, with the orders and names they give: a decoder needs the
+order of the units, of a unit's rows by kind and of a tile's walk rows,
+a tile's name and where its `ref` steps start, as it needs a column.
 
 - **Positions are stated.** A walk row decodes by
   [Decoding a walk row](#decoding-a-walk-row) to its piece's steps, each
   on R at a stated position or off R, so a reader never chooses a pass
   <!-- C25 -->
+- **`passes` counts the file's `ref` rows.** A `ref` row's `passes`
+  states for each step the number of steps on its node in the `ref` rows
+  of the whole file, every tile of every sequence counted, so a 1 says
+  that no other `ref` row step of the file is on the node <!-- C62 -->
+- **In a file that states `revisited:i:0`, a step on a reference node is
+  on R.** No route interior, of a tile or of a detail unit, on any
+  sequence of the file, holds a node the reference passes once, which in
+  such a file is every node a `ref` row steps. <!-- C27 --> So a line
+  that steps a reference node has a row, `walk` or `abridged`, in the
+  tile whose `ref` rows hold that node, and the tiles a window's read
+  selects hold a row of every line of the file that steps a reference
+  node over the window: a line with no row there steps none, and from
+  those tiles' rows and their `blocks` rows a reader can say how many of
+  the file's haplotypes step such a node <!-- C27 -->
+- **A file with revisited nodes makes no such promise.** Where
+  `revisited` is above 0, or the header states none, the format leaves
+  to the writer where a step on a node the reference passes once is
+  filed, as it leaves placement there: a route interior can hold such a
+  node, and the tiles over a window can then lack a line that steps it
+  ([open problem](open-problems.md#a-once-passed-node-in-a-file-with-revisited-nodes)).
+  `passes` still says which nodes the reference passes once
 - **A piece has a step on R,** so every piece has a span, which lies
   inside its tile's extent <!-- C69 C41 -->
 - **A line's pieces tile it.** They are numbered from 0, piece 0 starts
@@ -1147,6 +1197,17 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   piece's own steps for that record, and the whole leading or trailing
   run of its list (tests; files, against the list on any file and
   against the decoded steps on the paths of a shard) <!-- C169 -->
+- No route interior, of a tile or of a detail unit, holds a node the
+  reference passes once, in every file the tool writes, whatever its
+  `revisited`: the placement gives a step on such a node its one pass,
+  and `stay` keeps no run that holds one (files: `verify7.py` over the
+  whole file, `claims7.py` within the sequences it is given).
+  <!-- C197 --> A reader can't lean on this past what
+  [the format promises](#what-a-reader-relies-on): the header names no
+  writer, so nothing in a file with revisited nodes says this tool wrote
+  it
+- Each `ref` row's `passes` counts the `ref` rows' steps on its nodes
+  over the whole file (tests; files, `verify7.py`) <!-- C62 -->
 - No line starts or ends past 2^53, and no reference sequence's last
   tile does (build, tests) <!-- C172 -->
 - Each record's `ownTiles` are the tiles of S holding its own steps, in
@@ -1184,6 +1245,9 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
 - Version the file names, so a data file and a directory from different
   builds can't meet. HPRC v2.1's plain names, overwritten once at the
   format 8 cutover, are the one exception ([Readers](#readers))
+- A name that is cited, as the `-f8` names are ([Readers](#readers)),
+  keeps its bytes: a rebuild goes up under a new name, so the walk file a
+  citation names, and a file built beside it, stay the same bytes
 - Serve single-range requests: CloudFront answers a multi-range request
   with the whole object
 

@@ -1,0 +1,35 @@
+ACCEPTANCE CRITERIA (written before opening the write-up or the spec; fixed)
+
+A. Spec text for an addition is complete when
+ A1 every field has a type, a range, a unit, a coordinate base, and a stated meaning when empty/absent/zero
+ A2 the encoding is one grammar: delimiters, escaping, numeric base, sign, delta or absolute, order of items; no "e.g."
+ A3 the scope of each row is stated: what population it is counted over (which haplotypes, which reference, which bin), and whether it is whole-file, per-chromosome, or per-query-window
+ A4 it says how the addition composes with a tabix region query: can a reader that fetched one window use the value, or must it read more
+ A5 it says what a reader that does not know the addition does with it (skip rule) and what a reader that knows it does when it is absent
+ A6 a worked example decodes, by hand from the text alone, to the stated value, and the example bytes exist in a fixture on disk
+ A7 a second writer following only the text produces either identical bytes or bytes whose every permitted difference is named (order, ties, optional rows)
+ A8 the text states what it derives from; if derivable from existing rows, the derivation is given so a validator can recompute it
+
+B. An invariant is checkable when
+ B1 it is a predicate over file bytes alone (plus named side inputs), not over the writer's source GFA or its intent
+ B2 a validator in the repo implements it, and names it in its output
+ B3 a planted break exists (fixture or generator) that the validator refuses, and a control that it accepts
+ B4 the cost of the check is stated (whole-file scan vs per-row) and is affordable on the hosted files
+ B5 the consequence to a reader of a broken file is stated (wrong number vs crash vs degraded)
+ B6 every validator the project ships agrees on it, or the spec says which one is normative
+
+C. A freeze must not leave ambiguous
+ C1 the version identity: what marks a file as format 8 and where
+ C2 the complete list of what readers may rely on; anything a reader relies on that is not in the list is either added or the reader is wrong
+ C3 the extension rule: exactly which syntactic positions may hold unknown things (unit kinds, tags, header lines, columns), and what old readers AND old validators do with them
+ C4 whether validators are strict (refuse unknown) or lenient (skip unknown) and that this matches C3
+ C5 file identity for side files: what "the same walk file" means (bytes hash? header id?), where it is stored
+ C6 any writer behaviour that existing readers lean on but the spec calls a writer choice
+ C7 what a file valid today becomes under each proposed change (still valid, invalid, valid-but-unmarked)
+ C8 namespace reservations so later additions cannot collide with existing or third-party use
+
+D. Ruling discipline
+ D1 need is shown by a reader that returns a wrong or missing answer today, not by convenience
+ D2 if derivable at acceptable cost by the reader, it is not format
+ D3 mixed evidence => format stays
+ D4 "freeze as is" is a full option and must be costed

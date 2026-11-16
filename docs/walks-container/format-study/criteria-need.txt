@@ -1,0 +1,19 @@
+Criteria, written 2026-11-16 after reading ADR 0011 and the spec's "later additions" rule, before opening the study's write-up, candidates or records.
+
+NEEDED BEFORE THE FREEZE: all four must hold.
+N1 Trigger (ADR 0011). A user, or a consumer working against a hosted file, hit a concrete problem: an issues-log entry or a named consumer, not a review finding or a "would be nice".
+N2 No way round it. The consumer cannot get the fact from what the file already states, at acceptable cost: either the fact is not derivable from format 8 rows at all, or deriving it costs a measured amount (bytes fetched, requests, time) that breaks the consumer on a hosted MC graph. "Derivable in the reader" means not needed in the format.
+N3 Beats unchanged, on a hosted graph (ADR 0011 scope and burden). A measured gain on a hosted MC file against shipping unchanged, by criteria fixed before the measurement. Mixed evidence = the format stays.
+N4 Tied to the freeze. It cannot be added later by the spec's additions rule without loss. Concretely one of:
+  a) it changes the bytes or the meaning of a row/column/header field the frozen files already hold;
+  b) it is a promise about existing bytes (a guarantee) that readers would build on, where the files cited by the paper would then be the files the promise is about, so the promise must be true of those bytes and decided before they are fixed;
+  c) it needs an extension point (a tag slot, header rule, unit-kind skip rule) that format 8 does not have, so old readers would refuse or misread files carrying it;
+  d) a released reader would break or draw something false on a file that carries it.
+
+NEEDED, BUT NOT NOW (can wait with no loss): N1-N3 hold or plausibly will, N4 fails: it is a pure addition (new tag, header line, unit kind or side file) that format 8 readers skip, no existing row changes meaning, hosted files can be rebuilt or supplemented with a side file, and the paper's cited bytes stay valid. Also here: N4 fails and N1-N3 are unproven but there is a live consumer question; it goes to open-problems.md per ADR 0011.
+
+NOT NEEDED: N1 fails (no user or consumer trigger on a hosted file), or N2 fails (reader can derive it cheaply from existing rows), or N3 fails/mixed (does not beat unchanged on a hosted graph), or the fact does not belong to the walk file (it is a property of a drawing tool, of another file, or of a graph nobody hosts).
+
+"Change nothing" is the default ruling; an addition has the burden. A candidate with missing or unverifiable evidence is ruled on what I can verify; unverifiable numbers cannot carry a "needed" ruling.
+
+Separate test for the freeze claim: for every candidate ruled "later" or "never", check against the spec and the reader's code that (i) the addition's shape is one the additions rule covers, (ii) the released reader really skips it (code, not spec prose), (iii) no existing row's meaning would in practice shift once the addition exists, (iv) nothing about it needs a header fact that only a rebuild of the cited files could supply.

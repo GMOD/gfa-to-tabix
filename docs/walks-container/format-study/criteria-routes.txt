@@ -1,0 +1,17 @@
+Criteria, written before opening writeup.txt (2026-11-16)
+
+IN THE FILE NOW (before freeze) only if all hold:
+- a reader that draws needs it for a result it shows today or in a finished branch
+- it cannot be derived from today's rows within the work a reader already does for the cut it draws, or deriving it gives a result the reader cannot tell is wrong
+- it is a property of the graph and walks alone, not of a view, an algorithm or its parameters
+- it cannot be added after the freeze as a new unit kind, tag or side file without changing what existing rows mean
+- measured cost (bytes, write time, read time) is small against the measured benefit
+IN THE FILE LATER (new unit kind / tag): the first three hold, but the addition is additive and skippable, so the freeze does not close it. Only pre-freeze duty: make sure the skip rule and any reserved name are in place.
+SIDE FILE: derived, large, optional, or depends on parameters/algorithm/one consumer; different lifetime from the walk file. Needs a way to detect that it is stale against its walk file.
+READER ONLY: derivable from today's file in bounded time and memory at the cut sizes readers take; exact, or the reader can detect and report when it is not.
+NOTHING: no consumer shows the need, or evidence is mixed. Mixed evidence => format stays.
+Tie-breakers:
+- a reader must not show a wrong number: any property a shown number rests on must be checkable from the file itself by the reader, not assumed from who wrote it
+- a promise in prose that a file cannot be checked against is weaker than a tag the file carries, which is weaker than a property the reader can verify from rows
+- "reader cannot" claims are checked against reader source before being believed
+- cost claims I lean on are checked against records

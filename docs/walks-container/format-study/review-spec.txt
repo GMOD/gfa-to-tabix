@@ -1,0 +1,155 @@
+## Acceptance criteria (written before opening the write-up or spec, kept fixed)
+
+Saved first at `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-review-spec/criteria.txt`.
+
+- **A. Spec text for an addition is complete when:**
+  - A1: every field has a type, range, unit, coordinate base and a meaning when empty or absent.
+  - A2: the encoding is one grammar, with no "e.g.".
+  - A3: each row's scope is stated: counted over which lines, and whole-file or per-tile.
+  - A4: it says how the row composes with a window read.
+  - A5: it says what a reader does when the addition is unknown, and when it is absent.
+  - A6: the worked example decodes by hand to its stated value, and its bytes exist in a fixture.
+  - A7: a second writer produces the same bytes, or every permitted difference is named.
+  - A8: if the content is derivable, the derivation is given so a validator can recompute it.
+- **B. An invariant is checkable when:**
+  - B1: it is a predicate over file bytes, plus named side inputs.
+  - B2: a validator in the repo implements it by name.
+  - B3: a planted break fails it and a control passes.
+  - B4: the check is affordable on hosted files.
+  - B5: the consequence of a break to a reader is stated.
+  - B6: every shipped validator agrees, or one is named normative.
+- **C. A freeze must not leave ambiguous:**
+  - C1: the version identity.
+  - C2: the complete list of what readers may rely on.
+  - C3: exactly where unknown things may appear, and what old readers and old validators do with them.
+  - C4: whether validators are strict or lenient, matching C3.
+  - C5: file identity for side files.
+  - C6: writer behaviour that readers lean on but the spec calls a choice.
+  - C7: what a file valid today becomes under each change.
+  - C8: namespace reservations.
+- **D. Ruling discipline:**
+  - D1: need means a reader returns a wrong or missing answer today.
+  - D2: if the reader can derive it at acceptable cost, it is not format.
+  - D3: mixed evidence means the format stays.
+  - D4: "freeze as is" is costed as a full option.
+
+## Per candidate: defects and ruling
+
+**Complete adjacency (`links` unit): later.** The example decodes correctly; I decoded all three g4 tiles by hand and each lists the right 8, 4 and 8 links.
+- **A6:** the two-list row in the proposed text is on disk nowhere. `g4/out/add.links.txt`, `g4plus.R.walks.gz` and the side file all carry a third list of per-link counts.
+- **A1:** "every L line … once each" does not say what duplicate L lines, or an L line and its reverse, become.
+- **A1:** it does not say whether a walked adjacency with no L line is listed (the prototype tracks `walked_links_no_L_line`).
+- **A1:** it is silent on a link onto a dropped 0 bp segment, and on overlap fields.
+- **A3:** links between two detail-only nodes are excluded by the text but costed separately, so the unit is not complete for an expanded cut.
+- **A5:** absence is undefined. "One row" with `.` or no unit at all cannot be told from "not written" without a file-wide statement; ADR 0012:251–253 rejected inferring a missing unit from a table once.
+- **B2/B3:** no checker and no planted break exist, as the write-up says.
+- **Shape:** one unit per tile grows the table every reader scans at open.
+
+**Sites: not at all in the walk file.** The row matches disk, but the text fails most of A.
+- **A2:** `>1 >6` is a handle syntax the format uses nowhere else.
+- **Extent:** the row is `0 60` inside a unit of extent `0 20`. Validators pass it only because they skip unknown kinds.
+- **A1:** `nodes` is 7 only by counting node 9, which no line in the file steps.
+- **A1:** the tie order of routes is unstated (40, 50, 60 all taken by one line), and so is whether the span includes the anchors.
+- **A1:** the "route identity by hash" it would freeze is not in the row.
+- **A4:** filing of multi-tile sites is unresolved.
+- **Counting:** routes are counted in lines, not haplotypes.
+- **Why never:** it is one definition among several, derivable from rows, and says nothing on pggb. A side file is free to exist without the format.
+
+**Haplotype counts: later.** The fixture bytes match and the counts are right by the prototype's definition.
+- **A3, M:** M is not derivable where the reference sample has several haplotypes, since `#reference` names a sample.
+- **A3, scope:** the text does not say the count is whole-file. Node 7 is listed in tiles 0 and 40 with the same count, so it is.
+- **Left-out lines:** they are excluded. The example's "2 of 3 haplotypes step node 7" is 3 of 4 in the GFA, and the per-link list gives `9+>7+` as 0 where one GFA line walks it. The text must name M as the file's haplotypes and say so.
+- **Tag form:** `hc:Z:` changes tile bytes and was never written to a file.
+
+**Stored layout: never.** No spec text exists. Two runs with the same options share 0 of 51,126 points, so no predicate over file bytes can check it (B1 fails by construction). It freezes a tool, its options and one run.
+
+**Pairing rule: later, with the first side file; nothing in the walk file now.** The header matches disk, and `pair/a` and `pair/b` differ only in `bytes:i:` (676 against 643).
+- **Identity:** `bytes:i:` depends on the compressor (C193), so identical rows recompressed fail to pair and different rows of equal length pair.
+- **Comparison:** the text does not say whether `#of` is compared byte for byte or as a tag set; `#walks` tags may come in any order.
+- **Coverage:** the side file's own directory is undescribed, and `format:i:1` does not say whether it versions the container or the kind.
+- **Better identity, needing no reservation:** hash the whole `.idx` (it holds `bytes`, the header length and every table's offset and length), plus optionally the sequence's table unit. A reader fetches both at open.
+
+## C27: state it as an invariant of format 8 now
+
+**What I confirmed on `counts-review/craft/far.R.walks.gz`:**
+- verify7, spec8 (with and without `--gfa`), audit7, expand7 and `walks-truth.py rebuild` all exit 0.
+- claims7 exits 1 with N2: 2 (nodes 3 and 4). `honest.R.walks.gz` passes.
+- The repo already holds the same break: `broken/on-reference-as-interior` and its `-abridged` twin, which `cases.tsv` assigns to claims7 alone.
+
+**Why an invariant:**
+- **It is window completeness, not only counts.** In `far`, a read of 12–18 fetches tile 10 alone and A has no row there, so the cut omits a haplotype that steps nodes 3 and 4.
+- **The spec already presupposes it** at lines 839–841 ("Where the reference passes a node more than once, a run can hold a node of another tile's reference").
+- **The writer-freedom bullet never claimed this freedom.** Line 1076 scopes placement choice to nodes passed more than once. Even the rejected format 8 proposal placed steps where the reference passes once (0011:13–14).
+- **A tag costs more.** It needs the same check, plus a header change to the hosted files before the freeze, or the cited files promise nothing for good.
+- **Leaving it a writer property is unsound.** The file names no writer (C193), so a reader cannot know when "exact" holds.
+- **ADR 0011 allows it.** No byte changes, so it falls under 0011:115–119 and 206–208 (wording and checker fixes that match what writer and reader already do). An issues-log entry naming graph-walks' counts as the consumer should still be written.
+
+**Before the freeze:**
+- **Spec, relies-on section:** add the bullet with scope made explicit: "on any sequence of the file" and "of a tile or a detail unit". Pair it with: a `ref` row's `passes` is the number of `ref`-row steps on that node in the whole file.
+- **Spec, existing sentences:** qualify "A route can hold another tile's reference nodes" (line 209) and the `walk` row in the Rows table (line 583) with "passed more than once".
+- **claims7.md:** reword C27's row from "Under nearest-pass placement…" to the invariant and list the new checks.
+- **verify7.py:** add the whole-file check. It is the only validator that streams a genome file. Two id bitsets (once-passed, interior) are about 512 MB constant. Add once-against-more pass truth from `ref` rows too.
+- **spec8.py:** add the same, written from the sentence.
+- **claims7.py:** make N2 whole-file under `--seq`, or drop it there and say verify7 holds it. Today each run "holds their nodes to their own rows".
+- **walks-truth.py rebuild:** demand a position for every step on a once-passed node.
+- **`broken/`:**
+  - add `far` (another tile's once-passed node);
+  - add a cross-sequence variant;
+  - add a "passed twice, stated once" case;
+  - add verify7 and spec8 to `cases.tsv` lines 86–87.
+- **Hosted files:** run the whole-file check on GRCh38 and CHM13. The accept README says N2 and N3 were "not checked this way" across sequences, so the write-up's "0 genome-wide" is 0 within each of 25 runs.
+- **Reader:** change the counts README sentence "a guarantee of gfa-to-tabix, not of walk format 8".
+
+**What a file valid today becomes:**
+- Every gfa-to-tabix 5.0 file keeps its bytes and stays format 8, pending the hosted run above.
+- `far` and the two `on-reference-as-interior` files stop being format 8.
+- Files with revisited nodes keep all placement freedom.
+
+## Other unstated behaviours readers lean on
+
+- **Truth of `passes` (C62).** The counts rule is `passes === 1` (`walkCounts.ts:691–694`) and the exact-or-chosen labels rest on it. `passes-once-as-twice`, `passes-understated` and `passes-second-row` exit 0 under verify7, claims7, spec8 and expand7; only audit7 fails them. No planted case states 1 for a node passed twice.
+- **Record completeness (C77).** The "a line with neither has no later step" inference (lines 1008–1011) needs every between-piece departure to have a record. The relies-on bullet says where records lie, not that all exist. spec8 and audit7 fail `record-dropped`; the gap is wording.
+- **Line completeness and `#haplotype` (C4, C116, C51).** M in "N of M haplotypes" rests on these. C4 is checkable only with the GFA, and none of the three is in the relies-on list.
+- **Orders and shapes the decoder needs.** These are walk-row order (C125), `ref` steps in `[name, name + tile)` (C127), row-kind order (C59), one W line per detail unit (C76), decimal tile names and `#hole` order. `repack.py` classes their violations "forbidden", but the relies-on section's "and on nothing else" does not say the Rows, Units and Header sentences are included. One sentence fixes it. I checked only part of claims7.md's "Unstated guarantees" table against current reader source.
+- **Required `#walks` tags.** `repack.py` marks `bound-no-writer-tags` "unstated", and the reader treats `revisited` as optional. Say which tags a format 8 file must carry and what absence means.
+- **No pure format validator exists.** claims7 and spec8 both fail policy cases (`costliest-not-first`, `revisited-as-interior`). Say so, or mark each claim format or policy.
+
+## Reserve or state now (wording only, no bytes)
+
+- **Later-additions rule and old validators: it holds.**
+  - All six validators exit 0 on the prototype's `g4plus.R.walks.gz` (links, counts and sites units, including the out-of-extent site row).
+  - CI runs them on `repack.py`'s legal `unit-new-kind-*` variants.
+  - `g4plus` has no detail, blocks or departures units, and nothing was run at chromosome size.
+- **C54 against "skipped, whatever rows it holds".** C54 says every non-`#` line begins `seq start end kind`; CI passes free rows. Limit C54 to units this page gives.
+- **Namespace.** Say this page alone defines unit kinds, header words and tag names, and reserve a prefix it will never use. Say a later kind does not reuse an existing row-kind word.
+- **One checker corner.** `claims7.py:411` counts any other-sequence row whose fourth column is `ref` or `nodes`, whatever its unit kind. Read from code, not run.
+- **Absence.** A reader never infers "none" from a missing later unit; an addition that claims completeness states file-wide presence in the header.
+- **Table cost.** The write-up measured the chr22 table growing from 46,338 to 84,628 bytes with three per-tile kinds, paid by every reader at open. Note that a later per-tile kind is one unit per sequence with its own index, or a side file. Today's rule already permits that.
+- **Tags.** State that a tag name occurs at most once per line.
+- **Side files.** Nothing to reserve. State that "the same walk file" means the same bytes, and that a cited hosted name is never overwritten.
+
+## Freeze exactly as it is
+
+This is my ruling for five of the six. It costs nothing, and every addition stays reachable later as a unit kind or side file. For C27 it is sound only while gfa-to-tabix is the sole writer. After the freeze the repair is a tag the cited files will never carry. The evidence against stating it is a hypothetical writer freedom that no design on record uses, so I do not count the evidence as mixed.
+
+## Need and alternatives
+
+- **Need:** only left-out-only links are demonstrated (32,347 of 4,737,114 on chr22, 0 on chr6), with no consumer view shown to change. The rest are cost-only or not demonstrated.
+- **Alternatives:** stored counts and C27 are alternatives for exact reference counts only; window completeness needs C27 either way.
+
+## Not verified
+
+- No reader was run. Old-reader behaviour rests on R22 and the CI test for C123.
+- T124 and anything on ada: I did not connect.
+- The whole-file N2 result on hosted files, which does not exist yet.
+- I did not build the cross-sequence break; the `--seq` hole rests on claims7's own comment and the accept README.
+- ADRs 0010, 0012 and 0015 were read in part; 0011 in full.
+
+## Final
+
+- Complete adjacency: later, confidence high.
+- Sites: never in the walk file, confidence high.
+- Haplotype counts: later, confidence high.
+- Stored layout: never, confidence very high.
+- Pairing rule: later, with nothing reserved in the walk file, confidence medium-high.
+- C27 as an invariant: now, confidence about 80%, conditional on the whole-file check passing on both hosted files.

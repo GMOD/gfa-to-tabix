@@ -2230,3 +2230,33 @@ Where the findings have come from so far, and the rule each gives:
   `scripts/check-dialect.sh` on every dialect fixture, W and P twins byte
   for byte; `mutants.sh`, whose five broken writers each fail them
   ([run](walks-container/dialect/results/mutants.txt))
+- **2026-11-16, graph-walks' counting call and window reads (a rule the
+  readers leaned on and the page never stated).** graph-walks'
+  `reader.counts()`, on its `cohort-counts` branch, marks a count exact
+  where a `ref` row states `passes` 1, and every window read is taken to
+  return the lines that step the window's reference nodes. Both need
+  that no route interior holds a node the reference passes once, and
+  that `passes` counts the `ref` rows of the whole file. The first stood
+  in ADR 0009 and claims7.md as a consequence of this writer's placement
+  and nowhere in the page, and the second was worded as "all its
+  sequences counted" with one check, `audit7.py`, comparing it. A file
+  built by hand that files a line's steps on another tile's once-passed
+  nodes as a route interior passed `verify7.py`, `audit7.py`, `spec8.py`,
+  `expand7.py` and `walks-truth.py rebuild`; `claims7.py`'s N2 failed it,
+  and on the genome files N2 had run a sequence at a time, where it holds
+  a run's nodes to its own rows. Source: the consumer is graph-walks'
+  counting call and its window reads, which read the hosted files; the
+  gap was found by a review of that call on the hand-built file, not by
+  a wrong answer on a hosted file, and three reviews of
+  [the format study](walks-container/format-study/writeup.txt) then made
+  stating the rule conditional on a whole-file check. Fix:
+  [ADR 0016](adr/0016-format-8-is-frozen.md): the page states the rule as
+  an invariant of a file with `revisited:i:0` and the meaning of
+  `passes`, and says a file with revisited nodes is promised neither; no
+  byte changed, and no hosted file breaks either
+  ([whole-file runs](walks-container/accept-5.0.0/whole-file/README.md)).
+  Guard: `verify7.py`'s and `spec8.py`'s whole-file checks, on every
+  fixture and fuzz file; broken/'s `other-tile-as-interior`,
+  `other-sequence-as-interior`, `other-sequence-as-interior-revisited`,
+  `passes-twice-as-once` and `passes-once-per-sequence`, each held to the
+  checkers [cases.tsv](departures/scripts/broken/cases.tsv) names

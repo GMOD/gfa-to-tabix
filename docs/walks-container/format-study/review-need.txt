@@ -1,0 +1,110 @@
+## Criteria (written before opening the write-up, unchanged)
+
+Saved at 11:23 in `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-review-need/criteria.txt`, after reading only ADR 0011 and the spec's additions rule.
+
+- **Needed before the freeze:** all four hold.
+  - **N1 trigger:** a user, or a consumer working against a hosted file, hit a concrete problem (an issues-log entry or a named consumer), not a review finding.
+  - **N2 no way round:** the fact is not derivable from format 8 rows, or deriving it costs a measured amount that breaks the consumer on a hosted MC graph.
+  - **N3 beats unchanged** on a hosted graph; mixed evidence means the format stays.
+  - **N4 tied to the freeze**, by one of:
+    - it changes bytes or meaning of existing rows
+    - it is a promise about existing bytes that readers would build on
+    - it needs an extension point format 8 does not have
+    - a released reader would break or draw something false
+- **Needed, but not now:** N4 fails, so it is a pure addition old readers skip, and N1–N3 hold or there is a live consumer question.
+- **Not needed:** N1, N2 or N3 fails, or the fact does not belong to the walk file.
+- "Change nothing" is the default, and unverifiable numbers cannot carry a "needed" ruling.
+- **Freeze test** for every "later" or "never":
+  - the addition's shape is covered by the additions rule
+  - the reader's code, not the spec's prose, skips it
+  - no existing row's meaning shifts in practice
+  - no header fact is needed that only a rebuild of the cited files could supply
+
+## Rulings
+
+**C27 as a guarantee: add now, in a narrower form than the write-up's.**
+- **A format-8-legal file can hide a haplotype from a window (checked).** In `far.R.walks.gz`, under `/tmp/claude-1001/-home-cdiesh-src-gfa-to-tabix/b7daa067-b398-4a98-ad1e-976984ecca2b/scratchpad/counts-review/craft/`, line A walks `>1>2>3>4` exactly as the reference does. Tile 10 holds only B's walk row, so a cut over 12–18 returns the reference and B.
+- **Only one check catches it.** I ran `claims7.py` on it: N2 is 2, exit 1, and exit 0 on `honest.R.walks.gz`. The recorded verify7, audit7, spec8, expand7 and rebuild outputs beside it all pass it (read, not rerun).
+- **The consumer is wider than `reader.counts()`.** The graph-walks README on main (line 11) promises "every haplotype's walk through it", which presupposes the rule. `counts()` itself is unmerged (cohort-counts 8f6d491).
+- **The spec states C27 nowhere (checked by grep).** It is only in ADR 0009:140 and claims7.md:65, and it is missing from "What the writer guarantees" too.
+- **The hosted evidence was narrower than the write-up says.** `claims.txt:22` does read N2 = 0 for both genomes (checked), but those are `--seq` runs: `claims7.py` and `claims-genome.sh` check N2 only within each run's sequences. open-problems.md:392 records 49 hosted GRCh38 lines with pieces on more than one sequence.
+- **I closed that gap with a file-wide run on ada (read-only, script fed on stdin).** No node of any `nodes` row, in a tile or a detail unit, is a reference node:
+
+  | File | Once-passed reference nodes | Distinct route-interior nodes | In both |
+  |---|---|---|---|
+  | GRCh38 genome | 83,303,684 | 56,154,620 | 0 |
+  | CHM13 genome | 90,761,410 | 74,821,687 | 0 |
+  | pggb chrY (study file) | 155,947 | 3,013,584 | 0 |
+
+  The pggb chrY row reproduces the write-up's T124 figure. The same script reports 2 on `far.R`.
+- **Against my criteria:** N2, N3 and N4 hold. N1 holds only through the named-consumer limb: no consumer hit this on a hosted file, and the issues log has no entry (grep, checked). The gap was found by a review on a hand-built file. Read strictly, ADR 0011's trigger is not met. I rule "add" because ADR 0011 allows "spec wording that leaves the rows' meaning unchanged" and the cost is 0 bytes.
+- **Scope it to `revisited:i:0` files.** open-problems.md:339 records a once-passed pggb chrY node at 9,394,014 walked inside another copy, drawn as an 88.8 kb skip. The write-up's unscoped sentence would forbid ever filing such a step off R, which settles a pggb question with no pggb user. The scoped form reads as a clarification of C53 ("a file with `revisited:i:0` states every position … as a fact of the graph") and covers every hosted file.
+- **Flips to "never as an invariant"** if any fixture or fuzz file shows N2 above 0 (CI results taken from the docs, not run), or if the owner applies the trigger to spec wording too. In that case put the sentence under "What the writer guarantees".
+
+**Complete adjacency: later.**
+- N1 fails. The write-up itself says no consumer view was shown to change, and 150 random 1 kb chr22 windows have 0 affected links (taken).
+- The "demonstrated" class is real but narrow: 32,347 of 4,737,114 chr22 links are walked only by left-out lines (0.68%, arithmetic checked), and 0 on chr6.
+- It is a unit kind or a side file, so nothing is lost by waiting.
+- Flips to needed when the bubble layer planned after the freeze shows a decomposition that walked links cannot give.
+
+**Sites or bubbles: later.**
+- It is derivable from existing rows: the chr22 site intervals are the same from walked links alone (R30, taken).
+- The definition is unsettled: 10 sites hold 54% of interior nodes, and multi-tile filing is unresolved.
+- It costs 11% of the file on chr22 and 40% on chr6 (shares recomputed).
+
+**Stored counts: later.**
+- The file already serves counts on reference nodes: 0 wrong in 211 windows (taken).
+- What stored counts would add is "N of M haplotypes step this node" for off-reference nodes, where the reader can only say "at least N".
+- The prototype does not count left-out lines, so it would not yet deliver that for the 50,890 chr22 nodes such a line visits (taken).
+- The feature is listed "not done in this release" in the 11-14 handoff.
+
+**Stored layout: never.**
+- A coordinate is a tool's output, not a fact of the graph.
+- It took 10 h and 49 GB against the writer's 45.7 s (ratios checked), two runs share no point, and crops are not readable drawings (all taken).
+
+**Pairing rule: later, with the first side file.**
+- No side file exists.
+- Nothing is needed in the walk file. A side file can state a digest of the walk file's directory, which a reader already holds at open; that is stronger than the prototype's copied line.
+
+## The freeze claim
+
+- **Right in direction:** the other five are additions the released reader skips. I checked this in the code at b7b9349:
+  - units are selected by kind (`walkReader.ts:219–221`)
+  - unknown directory `#` lines are ignored (`walkFile.ts:210`)
+  - row tags are matched by pattern (`walkFile.ts:106–125`)
+  - header lines are read by key (`walkRows.ts:146–150`)
+- **The 60-of-60 old-reader result holds, on 1 kb windows only.** I compared the two recorded runs on ada: identical apart from timing and the 38,290-byte table growth. The write-up does not say all 60 windows were 1 kb.
+- **"Not at all" is overstated.** A later clarification would invalidate no existing file, since the cited files comply and cannot change. What waiting costs is narrowing a published definition.
+- **The tag form is also tied to the freeze, which the write-up missed.** A `#walks` tag changes the header, every `#entry` offset, the `.idx` and the sha256, as ADR 0015's re-upload on 11-15 shows. The cited files either get it now or never state it. The same holds for the "policy name" tag that open-problems.md:721 defers.
+- **In-file additions later are not free.** They change the cited files' checksums and grow the table every reader fetches at open (about 14 KB per unit kind on chr22, recomputed in R2, taken). Side files avoid both.
+- **No row's meaning shifts with any addition.** The one practical shift is C27 itself: once promised, absence from a tile means no line of the file steps that node.
+
+## Alternatives, and what else is needed
+
+- **For C27:**
+  - the scoped invariant (my pick)
+  - the unscoped invariant
+  - a writer-guarantee sentence only (no narrowing, any time)
+  - a `#walks` tag (needs a rebuild this week)
+  - stored counts (3–6% of the file, and they do not fix cut completeness)
+- **Not in the study:**
+  - Record the file-wide N2 run. The acceptance README calls the per-sequence runs genome-wide.
+  - State C27 in the spec in some section whatever is ruled.
+  - Decide whether the paper cites checksums; if it does, only side files can ever add to the cited files.
+
+## Not verified
+
+- Anything sourced to T-numbers, except T121/T122 (reproduced), T124 for pggb chrY and T78's byte figure.
+- The reader probes R24–R29 and all layout figures.
+- That jbrowse.org serves the bytes ada holds. ada's genome files are the pre-tag builds, and ADR 0015 says the rows are identical.
+- CI and fuzz N2 results, and the reader's behaviour on a tagged file (code read only, nothing run).
+- Whether graph-walks 7 is published.
+
+## Final lines
+
+- Complete adjacency: later; fairly sure.
+- Sites or bubbles: later; sure.
+- Haplotype counts: later; fairly sure.
+- Stored layout: never; sure.
+- Pairing rule: later, with the first side file; sure.
+- C27: add now, scoped to `revisited:i:0`; moderately sure (about 70%), resting on a generous reading of the trigger.

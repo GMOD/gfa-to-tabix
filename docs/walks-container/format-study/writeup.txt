@@ -1,0 +1,438 @@
+# Format-additions study: write-up for the reviewers
+
+Record tags used throughout:
+- **R*n*** is line *n* of `records.jsonl` (34 lines, all re-read; R2–R18 and R28, R30 re-derived from the tables on disk).
+- **T*n*** is tool call *n* in `agent-tool-calls.txt`; its result exists only in the transcript.
+- **L*n*** is an id in `layout-records.jsonl`, the layout run I finished on ada after the coordinator lifted the no-ssh rule for that one experiment.
+- Numbers are **measured** unless marked **bound**. "Computed" means measured from the unit tables over 300 windows per size (`analyse.py`), not by a reader run; triples are median / p90 / max.
+
+## Method and evidence standard (preregistered, verbatim, not loosened)
+
+```
+Evidence standard for a "need"
+- A need is DEMONSTRATED only if all four hold:
+  a. a named view or number a user would ask for, on a named hosted file, at named coordinates;
+  b. today's reader output for it, obtained by running the reader (or reading its code with file:line when a run is impossible);
+  c. the missing fact shown from the source graph (GFA) for that same window: a link, count, bubble or coordinate that
+     exists in the input and is not derivable from any set of rows of the walk file (not just the rows one cut fetches);
+     "not derivable from what a cut fetches but derivable from more fetches" is a READER COST finding, not a format gap,
+     and is reported as such with its measured cost;
+  d. if an approximation exists, its error measured against the truth from the GFA, with where it is wrong.
+- A need supported only by an argument, a different tool's feature list, or another agent's sentence is NOT DEMONSTRATED.
+- Another agent's claim counts only after I re-derive it from a file or a run; otherwise it is labelled "relayed, unverified".
+- Three grades: demonstrated (file cannot serve it), cost-only (file can serve it, at a measured price), not demonstrated.
+
+Standard for a proposal
+- Smallest change first; baseline is "change nothing", costed with the same windows.
+- Spec text + worked example in the spec's style; classify as later-addition (old rows unchanged, old readers ignore) or row-changing.
+- Invariant stated as a sentence a checker can prove from GFA + file, with the planted break that must make it fail.
+- Cost is measured on a prototype where possible (bytes, share, build time, peak RSS, reader bytes/requests at 1 kb, 30 kb,
+  240 kb, 5 Mb). Anything not measured is labelled BOUND with its derivation.
+- Each candidate judged against ADR 0011's trigger/scope/burden as written, quoted with line numbers.
+```
+
+How the standard bites on what was actually measured:
+- **No hosted file was measured.** Everything ran on single-chromosome builds on ada: MC chr22 (59,120,815 bytes), MC chr6 (82,027,668) and pggb chrY (193,641,445), from `mc22.gfa`, `chr6.gfa` and `pggbY.gfa` (R1, R7, R13). Criterion (a) is met only in that weaker sense.
+- **The prototype is a post-pass, not a writer mode.** `walks-additions` reads the GFA and the finished walk file and sizes every candidate at once. Its sizer reproduces the tile and detail bytes of all three files exactly (`analysis.json`, re-checked), so unit sizes are what the writer's compressor would give.
+- **Reader probes used graph-walks b7b9349**, before `reader.counts()` existed. A "wrong count" in R24–R26 is a count taken from a cut's trimmed fragments, not the output of the finished call.
+- **ADR 0011, for every candidate:**
+  - Trigger (0011:165–168): the issues log holds no entry for any candidate (grep of its 2,232 lines).
+  - Scope (0011:173–174): chr22 and chr6 are chromosomes of the hosted graph; pggb is not hosted (0011:143).
+  - Burden (0011:181–183): "When the evidence is mixed, the format stays."
+  - Briefs (0011:184–186): the first agent both built and measured the prototype.
+  - Checker evidence (0011:187–188): only C27's check has a recorded failure.
+
+## Baseline: change nothing
+
+- **Fetch per window, computed** (bytes of the window's tile and departure units; R3–R6, R9–R12, R15–R18):
+
+| Window | MC chr22 | MC chr6 | pggb chrY |
+|---|---|---|---|
+| 1 kb | 29,426 / 55,863 / 304,746 | 24,290 / 32,497 / 117,968 | 2,027 / 165,215 / 1,040,602 |
+| 30 kb | 45,510 / 87,891 / 359,653 | 38,208 / 55,989 / 118,031 | 2,028 / 194,230 / 3,267,928 |
+| 240 kb | 137,984 / 206,508 / 536,516 | 116,599 / 149,973 / 396,298 | 3,956 / 433,784 / 3,303,253 |
+| 5 Mb | 2,265,717 / 3,315,494 / 3,611,505 | 1,903,659 / 2,262,074 / 2,888,458 | 10,222 / 8,136,499 / 12,527,658 |
+
+- **Requests:** 1 / 2 / 2 on chr22 at 1 kb; at most 3 at any size on MC.
+- **Default budgets, reader run on chr22, 10 windows per size (R29):**
+  - Every-haplotype cut succeeds 6 of 10 at 240 kb, 1 of 10 at 1 Mb, 0 of 10 at 5 Mb (`RegionTooLargeError`).
+  - Eight-haplotype cut succeeds 10 of 10 at each size; at 5 Mb the median is 2,176,771 bytes, 633 ms, 1,188,889 steps kept. Drawing that many steps was not measured.
+- **Writer:** 45.7 s / 1,096,920 KB (chr22), 210.8 s / 1,580,932 KB (chr6), 102.9 s / 7,144,928 KB (pggb chrY) (R19–R21).
+- **What stays unserved:** the gaps graded below. Nothing is rebuilt or re-hosted.
+
+## 1. Complete adjacency
+
+**Need: `demonstrated` for one class of link, `cost-only` for the rest.**
+- **Demonstrated: links that only left-out lines walk.** A left-out line has no rows (spec:176–178), so no set of rows holds these.
+  - chr22: 32,347 of 4,737,114 links (0.68%, derived); links no line walks: 0 (R1).
+  - At chr22:11,816,742–11,846,742 the cut with every piece expanded lacks 4,122 such links at loaded nodes (R25).
+  - chr6: 0 of both kinds (R7), so not demonstrated there.
+  - 150 random 1 kb chr22 windows: 0 (totals line of `reader/join.mc22.1kb.jsonl`).
+  - pggb chrY: 1,700,646 left-out-only and 23 unwalked (R13).
+- **Cost-only: links walked from pieces filed elsewhere.**
+  - In 150 × 1 kb windows, 11 windows and 13 of 7,828 off-reference nodes lack a link. A cut widened by 150 kb each side finds every one, at 55,224,096 bytes and 2,049 requests over the 150 windows (R24). That is 368,161 bytes and 13.7 requests per window against 29,901 and 1.2 (derived).
+  - The cost is not bounded by widening. At the 11.8 Mb window the widened cut still lacks 83,465 links that file lines walk (T72; R25 notes the cut's trimming is part of this). Off-reference nodes are listed by tiles over 1 Mb apart: 2,972 on chr22, 0 on chr6 (R27).
+  - Certifying completeness by reading means reading the sequence (bound: no row names the far tiles).
+- **Against the need:**
+  - The one decomposition prototyped gives the same 430,246 site intervals on chr22 from walked links alone as from all links. Two sites differ in content, by 14,642 nodes and 32,347 links, which are exactly what only left-out lines hold (R30, T46).
+  - No consumer view was shown to change.
+
+**Smallest change, inside the file** (unit kind, legal under spec:544–548):
+
+```
+#unit  R#0#chr  0  20  links  0
+R#0#chr  0  20  links  2,0,0,2,6,4,0,4  2,4,12,2,4,-10,2,-4
+```
+
+> A `links` unit is named by its tile's start and has the tile's extent. Its one row, `seq start end links from to`, lists every L line of the GFA with an end on a node of the tile's `ref` rows or `nodes` row, once each, the way round with more `+` ends (the smaller first handle on a tie), in order of `from` then `to`. `from` is handle delta tokens, the first from 0; each `to` token is `2 × (id − its from id) + r`. `.` for none.
+
+- **Worked example** (g4 fixture, tile 0, nodes 1, 2, 7; `g4/out/add.links.txt`, decoded by hand): `1+>2+ 1+>3+ 1+>7+ 2+>3+ 5+>7+ 7+>2+ 7+>8+ 9+>7+`. The cut of the whole g4 file lists 10 links and lacks `1+>3+` (no line walks it) and `9+>7+` (only left-out line U walks it) (`g4/g4.probe.txt`).
+- **Invariant and break:** the unit holds every L line with an end at a listed node and no other; a checker with the GFA recomputes it; dropping `1+>3+` must fail it. No such checker exists.
+
+**As a side file:** the same units and table in `<prefix>.<sample>.walks.links.gz` plus `.idx`, with the header of candidate 5. Prototyped as `g4/g4.R.walks.links.gz`.
+
+**Old and new readers:**
+- **Old reader, new file (in-file form):** 60 of 60 chr22 cuts identical with links, counts and sites units all added; existing units byte-identical (R22, T77). The table read at open grew from 46,338 to 84,628 bytes, seen as +38,290 bytes on one cut (T78).
+- **New reader, old file:** finds no `links` entry in the table and must not claim completeness. ADR 0012:252 rejected inferring a missing unit from a table once.
+- **Old checkers on the repacked file:** not run.
+
+**Cost:**
+
+| | chr22 | chr6 | pggb chrY | Record |
+|---|---|---|---|---|
+| Links at tile nodes, bytes (share) | 1,351,444 (2.29%) | 2,260,123 (2.76%) | 30,913,060 (15.96%) | R2, R8, R14 |
+| Plus links at detail-only nodes | 1,047,027 (1.77%) | 11,590 (0.01%) | 1,369,931 (0.71%) | same |
+| Table growth, recomputed | 14,114 | 50,060 | 7,922 | same |
+| Fetch at 1 kb, computed | 947 / 2,734 / 149,596 | 744 / 1,174 / 13,902 | 95 / 7,142 / 36,325 | R3, R9, R15 |
+| Fetch at 30 kb | 1,436 / 4,717 / 253,000 | 1,237 / 1,866 / 11,391 | 95 / 10,017 / 14,688,164 | R4, R10, R16 |
+| Fetch at 240 kb | 4,438 / 9,136 / 366,530 | 3,685 / 5,420 / 19,249 | 188 / 31,675 / 132,913 | R5, R11, R17 |
+| Fetch at 5 Mb | 89,780 / 241,809 / 577,048 | 61,073 / 86,100 / 114,914 | 564 / 671,945 / 15,317,613 | R6, R12, R18 |
+
+- **Requests (bound):** one more per run of adjacent tiles, since a kind's units lie together. Runs are 1 in every MC window.
+- **Side file size (bound):** units plus a 13,954-byte table plus a 170-byte header. The side file actually written also carried per-link counts: 3,661,704 bytes (R23).
+- **Build (bound):** at most the whole post-pass: 117.7 s / 1,307,568 KB on chr22, 358.0 s / 2,968,328 KB on chr6, 148.7 s / 4,132,876 KB on pggb chrY (R19–R21). No candidate was built alone.
+
+**Freezes:** the row's encoding and which nodes list links. Nothing depends on a tool: L lines are facts of the input.
+
+**Does not solve:**
+- It names no bubble.
+- It gives no counts.
+- A link to one of the 14,642 chr22 nodes in no tile (R1) points at nothing drawable.
+- On pggb it is 16% of the file.
+
+**Routes that avoid the file:**
+- A wider reader cut (cost above; never reaches left-out links).
+- The node and link index, which holds every link of a path-visited node but is not built for whole-genome graphs (open-problems:809–810).
+
+## 2. Bubble or site decomposition
+
+**Need: `cost-only`.** The view is collapsing at zoom-out and a 5 Mb locus (reader behaviour in R29). The decomposition is derivable from rows the file holds: same intervals from walked links alone (R30). Whether a reader can derive it from one cut's rows was not measured; open-problems:814 says so (relayed, unverified).
+
+**What was prototyped is flat, not PangyPlot's nested bubbles and chains.** An anchor is a node the reference passes once. A cut anchor is one that no link and no off-reference component passes over. A site is the stretch between consecutive cut anchors with anything inside.
+- **chr22:** 430,246 sites, median 2 interior nodes; 396,032 have exactly two routes (derived from `mc22/sites.tsv`).
+  - 10 sites hold 54.1% of all interior nodes.
+  - The widest runs 18,171,343–24,637,872 (504,777 nodes).
+  - The one with most nodes is 11,814,094–11,916,928 (544,224 nodes). R30's "largest" is the widest, not this one.
+  - 852 sites span more than one tile (R30, T39).
+- **pggb chrY:** 6 sites, one covering chrY:2,780,000–56,888,000 with 3,961,192 off-reference nodes. The definition says nothing there (R31).
+
+**Smallest change, inside the file:**
+
+```
+#unit  R#0#chr  0  20  sites  0
+R#0#chr  0  60  site  >1  >6  7  70  12  40,50,60  1,1,1
+```
+
+> A `sites` unit is named by the tile its sites start in. A row, `seq start end site left right nodes bp links routeBp routeLines`, is one site: its two cut anchors, the nodes, bp and links between them, and for each distinct route between the anchors its bp and how many lines take it, most-taken first.
+
+- **Worked example** (g4): all of g4 is one site, because node 7 sits in both small bubbles. Three routes of 40, 50 and 60 bp, one line each.
+- **Unresolved in the prototype:** a site is filed once, under its start tile, so a window inside a multi-tile site does not find it. It would need the departure pyramid's filing.
+- **Naming:** route counts are lines, not haplotypes; one site has 466 traversals for 464 haplotypes (T39). The prototype's summary calls routes "allele_classes".
+
+**As a side file:** same units; 6,585,438 bytes on chr22 (R23).
+
+**Cost:**
+
+| | chr22 | chr6 | Record |
+|---|---|---|---|
+| All sites with route lists, bytes (share) | 6,518,673 (11.03%) | 32,845,615 (40.04%) | R2, R8 |
+| Only sites of 50 bp or more | 200,136 (0.34%) | 715,735 (0.87%) | same |
+| Fetch at 5 Mb, all sites, computed | 967,333 / 1,198,429 / 1,319,570 | 975,092 / 1,062,623 / 1,349,195 | R6, R12 |
+| Fetch at 5 Mb, 50 bp or more | 21,908 / 39,760 / 53,598 | 19,255 / 26,266 / 46,001 | same |
+| Fetch at 30 kb, all sites | 15,013 / 32,774 / 67,563 | 16,169 / 28,327 / 49,912 | R4, R10 |
+
+- **Build:** same bound as candidate 1.
+- **Later addition:** yes, a unit kind. Old reader as in R22.
+
+**Freezes:** one definition among several, the 50 bp cut if the small variant ships, and route identity by a hash of steps.
+
+**Does not solve:** nesting; anything inside the ten sites that hold half the nodes; pggb.
+
+**Routes that avoid the file:**
+- The drawing prototype's screen-space rule.
+- A reader computing sites from the rows (unmeasured).
+- A side file.
+- A snarl or bubble caller as PangyPlot uses (not run).
+
+## 3. Per-node and per-link haplotype counts
+
+**Need: `cost-only`.**
+- **At KIV-2, chr6:160,616,004–160,646,753 (R26, R28):**
+  - Unexpanded cut: 311,711 bytes, 4 requests; 13,709 of 14,929 off-reference counts short.
+  - Expanded cut: 2,315,808 bytes, 292 requests, 4,784 ms; 128 of 18,955 short.
+  - All 128 are one line, `NA18983#1#JBHDWU010000104.1`, whose rows are in a tile the window reads. The cut trims its leading 63,976 bp (T105–T107). So the file serves it; the old cut does not.
+- **On reference nodes:** 0 wrong in all 211 probed windows (join totals, T104).
+- **Off the reference, chr22:**
+  - 14 of 7,828 short in 1 kb windows; 0 after widening by 150 kb (R24).
+  - Three of ten affected 30 kb windows stay short after widening (R25).
+
+**What stored counts would give beyond `reader.counts()`** (graph-walks-counts README:724–788, read, not run):
+- The reader says "N of M haplotypes step this node" only for a node the reference passes once on the drawn stretch, and a link between two such.
+- For every other node it says "at least N" and nothing more.
+- A stored count would let "N of M" be said for every listed node, without expanding detail.
+- Certifying that by reading is unbounded (R27, as in candidate 1).
+
+**What the prototype's count is:**
+- Haplotypes with a line in the file that step the node. Left-out lines are not counted (prototype source lines 589–594).
+- M is 464 on chr22 and chr6, the reference plus 463 `#haplotype` lines.
+- chr22 has 50,890 nodes a left-out line visits (R1). Whether any count would differ with those lines counted was not computed.
+
+**Smallest change, inside the file. Three forms were sized.**
+
+```
+#unit  R#0#chr  0  20  counts  0
+R#0#chr  0  20  counts  1,1,5  3,3,2
+```
+
+> A `counts` unit is named by its tile's start. Its row, `seq start end counts ids n`, gives for each node of the tile's `ref` rows and `nodes` row, in ascending id as deltas from 0, how many of the file's haplotypes step it.
+
+- **Unit form example:** nodes 1, 2, 7: 3 of 3, 3 of 3, and 2 of 3 haplotypes step them.
+- **Tag form:** `hc:Z:` on `ref` and `nodes` rows. This rewrites every tile's bytes, and every reader fetches it.
+- **Per-link form:** a third list on a `links` row, e.g. `2,0,1,3,1,1,1,0` on g4 tile 0.
+
+**As a side file:** 1,888,011 bytes on chr22 (R23).
+
+**Cost:**
+
+| | chr22 | chr6 | pggb chrY | Record |
+|---|---|---|---|---|
+| Counts unit, tile nodes | 1,845,396 (3.12%) | 5,066,618 (6.18%) | 871,652 (0.45%) | R2, R8, R14 |
+| Counts of detail-only nodes | 633,858 (1.07%) | 40,591 (0.05%) | 1,062,480 (0.55%) | same |
+| `hc:Z:` tag in tiles | 1,816,687 (3.07%) | 5,397,487 (6.58%) | 302,438 (0.16%) | same |
+| Same tag in detail units too | +20,267,329 (34.28%) | +7,814,167 (9.53%) | +16,104,631 (8.32%) | same |
+| Count list on links rows (derived) | 2,258,293 | 6,053,921 | 2,791,885 | same |
+| Fetch at 1 kb, unit form, computed | 2,179 / 5,772 / 79,954 | 1,775 / 2,648 / 19,214 | 83 / 3,031 / 19,698 | R3, R9, R15 |
+| Fetch at 5 Mb | 178,325 / 404,793 / 430,141 | 139,953 / 186,793 / 251,769 | 496 / 255,484 / 306,437 | R6, R12, R18 |
+
+- **KIV-2's two tiles:** 22,328 bytes of counts units plus 6,928 for detail-only nodes (R28, derived sums).
+- **Build:** same bound as candidate 1. The pass holds a haplotype bitset per node and link.
+- **Later addition:** yes in every form.
+  - Old reader with unit form: R22.
+  - Old reader with tag form: not run. The tagged file was sized, never written. Spec:535–541 says tags are ignored.
+
+**Freezes:**
+- What a haplotype is (the header's listing).
+- Which lines count (left-out or not).
+- Haplotypes and not passes: 523,021 chr22 nodes have more steps than haplotypes (R1).
+
+**Does not solve:**
+- Copy number. In the KIV-2 slice no line passes any node twice (T59).
+- Counts over a chosen subset of haplotypes.
+
+**Routes that avoid the file:** `reader.counts()` as built; expanding detail (cost above); a side file.
+
+## 4. Stored layout coordinates
+
+**Need: `not demonstrated`.** Criterion (c) cannot hold: a coordinate is a layout tool's output, not a fact of the GFA. The instability figures are another study's (`continuity/out/tables.md`, T57) and were not re-derived: relayed, unverified.
+
+**The whole-chr22 run, finished this session.** On ada I ran the first agent's `crop.py` and `layoutsize.py` unchanged, plus a renderer of mine in pure Python, since ada has neither numpy nor matplotlib (T99).
+
+**Layout cost (L1):**
+- `odgi layout -t 8`: 10:02:39 wall, 284,037 s user, 785% CPU, peak 49,045,944 KB, exit 0.
+- Before it: GFA conversion 228.5 s; `odgi build` 184.1 s at 15,054,268 KB; `odgi sort -O` 12.8 s.
+- Against the writer's 45.7 s and 1,096,920 KB for the same chromosome, that is about 790 times the time and 45 times the memory (derived).
+- Result: `mc22.lay` 109,054,482 bytes (34.9 per node), TSV 284,771,387 (91.2 per node), for 3,122,495 nodes.
+
+**Bytes as rows (L8):** one row of four delta lists per tile over the tile's 2,579,409 node listings.
+- 6,782,095 bytes at 1 layout unit: 2.63 per node, 11.47% of the walk file.
+- 10,978,501 bytes at 0.1 unit: 4.26 per node, 18.57%.
+- Detail-only nodes are not included.
+- For comparison: the KIV-2 slice took 2.04 and 3.62 per node, PangyPlot's chrY 3.87 and 5.64 (R33, R34).
+
+**Fetch, computed (L9, 1 unit):** 8,172 / 17,330 / 140,265 at 1 kb; 13,266 / 38,951 / 171,930 at 30 kb; 39,157 / 79,322 / 302,696 at 240 kb; 685,382 / 1,467,425 / 1,600,324 at 5 Mb. That is about 28–30% on top of the baseline median (derived).
+
+**Not reproducible (R33, KIV-2 slice):** two runs with the same options share 0 of 51,126 points. Two 8-thread... two 4-thread runs differ by a 2.2° turn; two 1-thread runs are mirror images.
+
+**Is a 30 kb crop of the whole-chromosome layout a readable drawing of the window?** Four windows, cropped to the box of the window's reference nodes (L3–L6, PNGs viewed):
+
+| Window (chr22) | Reference drawn / chord | Drawn against the window's direction | Drawn units per bp on window reference (p5 / median / p95) | Nodes under 1 px at 1400 px | By eye |
+|---|---|---|---|---|---|
+| 30,494,979 quiet | 30,600 / 30,313 = 1.01 | 0.3% | 0.89 / 1.01 / 1.43 | 1,156 of 1,521 | A straight line; the 519 off-reference nodes are invisible |
+| 18,656,352 | 107,622 / 52,525 = 2.05 | 22.6% | 1.06 / 1.27 / 4.69 | 2,060 of 2,705 | A zigzag with a 2,092-unit break, crossed by long lines from elsewhere; box is taller than wide |
+| 22,030,000 | 110,549 / 21,453 = 5.15 | 39.4% | 0.94 / 1.23 / 47.9 | 1,395 of 2,541 | The reference doubles back as a teardrop |
+| 11,816,742 repeat-dense | 43,655 / 32,820 = 1.33 | 10.8% | 1.01 / 1.15 / 2.07 | 64,540 of 65,504 | A smooth curve with three small loops and a tangle at one end |
+
+- **Drawn length is not bp.**
+  - At 22.03 Mb two adjacent 1 bp reference nodes are drawn 12,163 and 11,634 units long and form the straight side of the teardrop.
+  - There, 169 of 955 window reference nodes are drawn above 5 units per bp and hold 65% of the reference's drawn length.
+  - At 18.66 Mb ten 1,024 bp nodes hold 47%.
+  - Whole chromosome, sampled: 0.705 / 1.119 / 15.874 units per bp (L2).
+- **Nodes from elsewhere in the box.**
+  - Reference from far away never lands in a box: every other reference node in a box lies within 28,512 bp of its window. Such neighbours take 1.4–11.5% of drawn length.
+  - Off-reference nodes do. At 18.66 Mb the box holds 1,989 off-reference nodes and the reader's fully expanded cut of that window loads 490. So at least 1,499 (75%) are not the window's.
+  - Nodes whose rank lies outside the window's reference ranks hold 71.7% of drawn length there, 42.1% at 22.03 Mb, 39.4% at 11.82 Mb and 0.9% at the quiet window. Rank is a heuristic: id order does not follow chromosome order globally.
+- **The box also loses the window's own nodes.** At 11.82 Mb the reader loads 162,110 off-reference nodes and the box holds 46,422, so at least 115,688 (71%) are drawn outside it.
+- **Direction.** The reference runs at −160°, −79°, −142° and +3° in the four boxes. The whole chromosome is a bent diagonal 1.21 times its chord, 18% off it at the farthest (L10).
+- **Compared with a layout of the window alone.**
+  - The only one on disk is the chr6 KIV-2 slice, a 90 kb slice laid out alone (L7): reference 2.34 times its chord, 25.9% against, 8,687 of 9,885 nodes under 1 px, everything local by construction.
+  - It loops too.
+  - No window of chr22 was laid out alone, so this is not a like-for-like comparison.
+
+**Smallest change:** a unit kind `xy` per tile, one row `seq start end xy dx1 dy1 dx dy` (the lists `layoutsize.py` sized), or the same in a side file. The evidence does not support writing spec text beyond that: no reader or drawing used stored coordinates.
+
+**Later addition:** yes.
+
+**Freezes:**
+- odgi's version and options.
+- Thread count and run: every point moves between runs.
+- The path set: the layout is path-guided.
+- Precision, and one global frame.
+
+**Does not solve:** sub-pixel content at 30 kb; a horizontal reference; pan continuity (unmeasured with stored coordinates).
+
+**Routes that avoid the file:** the reader-side layouts of the continuity study (relayed); a side file; PangyPlot itself.
+
+## 5. Pairing rule for a side file
+
+**Need: `not demonstrated` on a hosted file; shown on a fixture.** No side file is hosted, so criterion (a) cannot hold. It becomes necessary the moment any side-file form above ships.
+- `pair/a.gfa` and `pair/b.gfa` have the same segments and different links and walks. Their `#walks` lines are identical, `graph:Z:f2051b87a7f82fcf leftout:i:1`; only `bytes:i:` differs, 676 against 643 (R32, re-read from `pair/*.idx`).
+- Two `--refs` of one GFA differ here only in `leftout` (1 against 0, T63). Nothing forces even that, and `#walks` names no reference.
+
+**Smallest change, as the prototype wrote it** (`g4/g4.R.walks.links.gz`, T62):
+
+```
+#side  format:i:1  kind:Z:links
+#of  format:i:8  tile:i:20  …  graph:Z:f2051b87a7f82fcf  leftout:i:1  bytes:i:676
+#reference  R
+```
+
+> A side file's header copies line 1 of the walk file's directory whole, `bytes:i:` included, as `#of`, and the walk file's `#reference` line. A reader uses the side file only when both equal the walk file's.
+
+**Inside the walk file:** nothing is needed. A stronger identity, such as a hash of the rows as a `#walks` tag, is a legal later addition but changes every walk file's header. Not prototyped.
+
+**Limit (bound):** two walk files with the same segments, options, left-out count, reference and length but different rows would pair. Not measured how likely.
+
+**Cost:**
+- 0 bytes in the walk file.
+- 169–171 compressed bytes of side header (R23, T77).
+- Fetch (bound): the side file's own directory, header and table at open. Tables are 13,754 / 13,731 / 9,012 bytes on chr22 for links, counts and sites (R23).
+
+**Freezes:** the three header lines and what counts as the same file.
+
+**Does not solve:** a stale side file of equal length; pairing with the node and link index.
+
+**Routes that avoid it:** in-file forms need no pairing; a versioned file name (spec:1184).
+
+## 6. C27 as a guarantee readers may rely on
+
+**Need: `not demonstrated` on a hosted file. The rule holds on every file checked. It is shown on a hand-built file.**
+- **Where it stands:**
+  - Claim C27, checked by N2 of `claims7.py` (claims7.md:65).
+  - It is absent from "What a reader relies on" (spec:1032–1071).
+  - `reader.counts()` rests its exact counts on it (README:735–746).
+- **Holds:**
+  - N2 is 0 genome-wide on the hosted GRCh38 and CHM13 files (`docs/walks-container/accept-5.0.0/claims7/{grch38,chm13}/claims.txt:22`).
+  - No once-passed reference node is in any `nodes` row of the three study files, of 1,389,745, 4,799,024 and 155,947 such nodes (T124; its script and output are on ada and in the transcript only).
+- **Broken by hand:** `counts-review/craft/far.R.walks.gz` files A's steps on once-passed nodes 3 and 4 as a route interior.
+  - `claims7.py` fails it (N2: 2, exit 1; T121, T122).
+  - `walks-truth.py rebuild` passes it (T121).
+  - The counts review's own outputs show verify7, audit7, spec8 and expand7 passing it (`craft/{v,a,s,e}.out`, relayed).
+  - The reader's cut over 12–18 gives 2 haplotypes at nodes 3 and 4 where the GFA's three lines all step them (T123, old reader).
+- **Discard two artefacts:** `c27.out` is a path error. T120's four "exit 0" lines are not results: zsh passed script and file as one argument, and `$?` was the status of `cut`.
+
+**Smallest change, inside the file:** one bullet added to "What a reader relies on", no byte changed:
+
+> **A step on a node the reference passes once is on R.** No route interior, of a tile or a detail unit, holds a node the reference passes once.
+
+**No side-file form.** A guarantee about existing rows cannot live outside them.
+
+**Later addition or not:**
+- As an invariant, no. It changes no row. It narrows what format 8 is (spec:467–472), so a file valid today, such as the hand-built one, would not be format 8, and another writer's placement freedom shrinks (spec:1073–1080).
+- As a tag a file states on `#walks`, yes. A file without the tag promises nothing (bound: a few bytes, as ADR 0015's two tags cost 24–29).
+
+**Cost:** 0 bytes, no writer change, no fetch. The check N2 exists and has a recorded failure.
+
+**Freezes:** every future writer's filing of steps on once-passed nodes.
+
+**Does not solve:** counts off the reference; counts on revisited nodes.
+
+**Routes that avoid it:**
+- Leave it a gfa-to-tabix guarantee, as the README words it now.
+- Stored counts (candidate 3) are exact whatever the placement, so they would not need it.
+
+## Cross-candidate table
+
+| Candidate | Need by the standard | Later addition with no loss, or must act before the freeze | Bytes, chr22 / chr6 | Build | Reader fetch at 30 kb, chr22 | Freezes |
+|---|---|---|---|---|---|---|
+| Baseline | n/a | n/a | 0 | 45.7 s / 210.8 s | 45,510 / 87,891 / 359,653 | nothing |
+| Complete adjacency | demonstrated for links only left-out lines walk (0.68% of chr22's, 0 on chr6); cost-only otherwise | later addition; waiting costs one rebuild and re-upload (in-file) or nothing (side) | 2.29% / 2.76% | bound: at most 117.7 s / 358.0 s | +1,436 / 4,717 / 253,000 | row encoding only |
+| Sites | cost-only | later addition | 11.03% / 40.04%; 0.34% / 0.87% for 50 bp or more | same bound | +15,013 / 32,774 / 67,563 | one definition, a threshold |
+| Haplotype counts | cost-only | later addition | 3.12% / 6.18% (nodes) | same bound | +3,166 / 8,893 / 121,051 | the haplotype set and what counts |
+| Stored layout | not demonstrated | later addition | 11.47% (chr22 only) | 10 h 03 min, 49.0 GB, 8 threads | +13,266 / 38,951 / 171,930 | a tool, its options, one run |
+| Pairing rule | not demonstrated; needed by any side file | later addition, no walk-file byte | 0; about 170 per side file | none (bound) | side file's open (bound) | three header lines |
+| C27 as guarantee | not demonstrated on a hosted file | **as an invariant: before the freeze or not at all**; as a stated tag: later addition | 0 | none | 0 | other writers' placement |
+
+- **No candidate changes what an existing row means.**
+- **Only C27, as an invariant, is tied to the freeze.** Every other candidate is a unit kind, tag or file that spec:532–554 already lets a reader skip.
+- **The `hc:Z:` tag** is the one addition that rewrites existing units' bytes.
+- **Dependencies:**
+  - Per-link counts ride on a `links` row.
+  - Every side-file form needs the pairing rule.
+  - Sites did not need complete adjacency on chr22 (R30).
+  - Stored counts and C27 are alternative supports for an exact count on a reference node.
+
+## Not done, or not verifiable from disk
+
+- **Writer and readers:**
+  - No candidate is in the writer; per-candidate build time and memory were never separated.
+  - No reader of any added unit or side file exists. All added fetch costs are computed, and added request counts are bounds.
+- **Hosted files:** never measured. Whether ada's chromosome GFAs are the hosted graph's components byte for byte cannot be checked from here.
+- **`reader.counts()`** (cohort-counts 8f6d491) was never run in this study. Its behaviour is taken from its README.
+- **Counts:** no count including left-out lines was computed.
+- **Sites:**
+  - Nested bubbles and chains were not prototyped.
+  - Filing of multi-tile sites is unresolved.
+  - The walked-links comparison ran on chr22 and g4 only.
+- **Old readers and checkers:**
+  - Old reader on a new file was run on chr22 (60 windows) and g4 only.
+  - It was never run on a tagged file.
+  - No file checker was run on a repacked file.
+- **Records whose sources are on ada or in the transcript only:** R22, R23, R27, R29, and the C27 count T124.
+- **Ambiguous or partial records:**
+  - R24's bytes and requests are totals over 150 windows.
+  - R30's "largest" is the widest site.
+  - R33 holds one of the two single-thread timings.
+  - R27's pggb total (3,013,723) exceeds R13's (3,013,584) by 139; the cause was not checked.
+- **Layout:**
+  - No chr22 window was laid out alone.
+  - No chr6 or pggb chromosome layout was run.
+  - Determinism was measured on a slice only.
+  - odgi versions were not recorded (the slice ran on the laptop's odgi, chr22 on ada's cactus-bin 2.9.9).
+  - Which window the off-reference nodes in a box belong to is known only as the two reader-load bounds above.
+  - `layoutsize.py`'s own units-per-bp line is wrong by a kept newline; I used `crop.py`'s.
+- **Pairing:** no collision rate measured; no content-hash variant prototyped.
+- **Recorded open items outside the six:**
+  - 0 bp segments: none in the three graphs (R1, R7, R13).
+  - Copy number: no candidate addresses it.
+- **ADR 0011's trigger:** no issues-log entry exists for any candidate.
+
+## Files
+
+- Reviewer check file: `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-study/candidates.jsonl`
+- Layout records from this session: `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-study/layout-records.jsonl`
+- Crop pictures and tables: `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-study/crops/chr22/` (four `chr22-*.png`, `render.jsonl`, `crop.log`, `layoutsize.log`, `mc22.xy.tsv`, `xy-windows.json`, `spine.tsv`)
+- Slice-alone picture: `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-study/crops/kiv2-slice-alone.png`
+- Scripts I wrote: `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-study/tools/render_crop.py` and `/tmp/claude-1001/-home-cdiesh-src-graph-fmmm-layout/8a9f8bbd-f772-4cab-a23b-1f116183e9ca/scratchpad/format-study/tools/tx.py`
+- First agent's records: `/tmp/claude-1001/-home-cdiesh-src-gfa-to-tabix/b7daa067-b398-4a98-ad1e-976984ecca2b/scratchpad/format-additions/records.jsonl`
+- Writer prototype, read only: `/home/cdiesh/src/gfa-to-tabix-additions/src/bin/walks-additions.rs`, branch `format-additions` at b3d9d1c
+- On ada: I wrote only under `~/work/format-additions/lay/crops/` (the same files as the crops folder above, plus `render_crop.py`). Nothing of mine is running there. No repository was changed.

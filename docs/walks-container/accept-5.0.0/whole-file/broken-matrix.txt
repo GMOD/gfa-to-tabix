@@ -1,0 +1,27 @@
+file	verify7	claims7	claims7-seqs	audit7	expand7	spec8	rebuild
+# planted
+craft/far	FAILS	FAILS	FAILS	passes	passes	FAILS	passes
+on-reference-as-interior	FAILS	FAILS	FAILS	passes	passes	FAILS	passes
+on-reference-as-interior-abridged	FAILS	FAILS	FAILS	passes	passes	FAILS	passes
+other-tile-as-interior	FAILS	FAILS	FAILS	passes	passes	FAILS	passes
+other-sequence-as-interior	FAILS	FAILS	passes	passes	passes	FAILS	passes
+other-sequence-as-interior-revisited	FAILS	FAILS	passes	passes	passes	passes	passes
+passes-once-as-twice	FAILS	passes	passes	FAILS	passes	FAILS	passes
+passes-understated	FAILS	passes	passes	FAILS	passes	FAILS	passes
+passes-second-row	FAILS	passes	passes	FAILS	passes	FAILS	passes
+passes-twice-as-once	FAILS	passes	passes	FAILS	passes	FAILS	passes
+passes-once-per-sequence	FAILS	passes	passes	FAILS	passes	FAILS	passes
+revisited-zero	FAILS	FAILS	FAILS	FAILS	passes	FAILS	passes
+revisited-count	FAILS	passes	passes	FAILS	passes	FAILS	passes
+tag-twice	passes	passes	passes	passes	passes	FAILS	passes
+tile-missing	FAILS	traceback	traceback	traceback	passes	FAILS	traceback
+# unbroken
+craft/honest	passes	passes	passes	passes	passes	passes	passes
+far10	passes	passes	passes	passes	passes	passes	passes
+shared10	passes	passes	passes	passes	passes	passes	passes
+rp	passes	passes	passes	passes	passes	passes	passes
+repeat100	passes	passes	passes	passes	passes	passes	passes
+follow100	passes	passes	passes	passes	passes	passes	passes
+follow100a	passes	passes	passes	passes	passes	passes	passes
+tie100	passes	passes	passes	passes	passes	passes	passes
+sq	passes	passes	passes	passes	passes	passes	passes

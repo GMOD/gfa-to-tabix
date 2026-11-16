@@ -33,8 +33,9 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
   (each table exactly its sequence's units, unique tile and detail names,
   each departure record in every block of its cover; and over the whole
   file, across tiles and sequences, no route interior holding a node the
-  ref rows step once, and each ref row's `passes` as the file's ref rows
-  step its nodes, which `claims7.py` and `audit7.py` hold to one sequence
+  ref rows step once, each ref row's `passes` as the file's ref rows
+  step its nodes, and the header's `revisited` as the nodes they step
+  more than once, which `claims7.py` and `audit7.py` hold to one sequence
   when they run with `--seq`). It reads the file a gzip member at a time,
   and its tile and detail units a second time, holding a byte per node id,
   so it checks files past the 2 GiB that `verify7.mjs`, which reads whole
@@ -55,7 +56,9 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
   other sequences a `--seq` run reads each piece's line, number and
   `hapOffset` and whether a row has bases, so the claims about a whole
   line, the `#haplotype` list and `SQ:Z:` still take the whole file. N2
-  and N3, about a node, are then checked within one sequence
+  and N3, about a node, are then checked within one sequence, so a 0 from
+  such a run is not the file's: `verify7.py` holds N2 across tiles and
+  sequences, and the run prints so
 - `audit6.py walks.bed.gz [--truth dep.tsv] [--shard I/N] [--seq NAME]`:
   reads a format 6 file, from gfa-to-tabix 3.x, as a reader would and
   checks it, as the rebuild's README describes. `--shard` splits the paths so a large graph fits in

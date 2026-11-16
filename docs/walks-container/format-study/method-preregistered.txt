@@ -1,0 +1,30 @@
+Method and evidence standard, written before reading any candidate's prior write-up
+(only the task brief has been read at this point). $(date -u)
+
+Evidence standard for a "need"
+- A need is DEMONSTRATED only if all four hold:
+  a. a named view or number a user would ask for, on a named hosted file, at named coordinates;
+  b. today's reader output for it, obtained by running the reader (or reading its code with file:line when a run is impossible);
+  c. the missing fact shown from the source graph (GFA) for that same window: a link, count, bubble or coordinate that
+     exists in the input and is not derivable from any set of rows of the walk file (not just the rows one cut fetches);
+     "not derivable from what a cut fetches but derivable from more fetches" is a READER COST finding, not a format gap,
+     and is reported as such with its measured cost;
+  d. if an approximation exists, its error measured against the truth from the GFA, with where it is wrong.
+- A need supported only by an argument, a different tool's feature list, or another agent's sentence is NOT DEMONSTRATED.
+- Another agent's claim counts only after I re-derive it from a file or a run; otherwise it is labelled "relayed, unverified".
+- Three grades: demonstrated (file cannot serve it), cost-only (file can serve it, at a measured price), not demonstrated.
+
+Standard for a proposal
+- Smallest change first; baseline is "change nothing", costed with the same windows.
+- Spec text + worked example in the spec's style; classify as later-addition (old rows unchanged, old readers ignore) or row-changing.
+- Invariant stated as a sentence a checker can prove from GFA + file, with the planted break that must make it fail.
+- Cost is measured on a prototype where possible (bytes, share, build time, peak RSS, reader bytes/requests at 1 kb, 30 kb,
+  240 kb, 5 Mb). Anything not measured is labelled BOUND with its derivation.
+- Each candidate judged against ADR 0011's trigger/scope/burden as written, quoted with line numbers.
+
+Order of work
+- 1. Read spec, ADR 0010/0011/0012/0015, open-problems, reader README/src (format facts, not candidates' advocacy).
+- 2. Only then read the prior write-ups (blind design, freeze review, plugin ADR-044, continuity, counts).
+- 3. Verify the relied-on claims on real windows; build prototypes on branch format-additions; measure on ada.
+- 4. Report; no recommendation.
+Mon Nov 16 03:41:32 AM UTC 2026
