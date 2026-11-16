@@ -228,12 +228,9 @@ a reboot: read these first.
   measured cost, and recommends nothing. **When it reports, run the three
   fresh Fable reviews** (is it needed, which alternatives, what else), neutral
   briefs, different lenses.
-- `a0236db9317db564a.output`: checker repair (`checker-heads/`): teach both
-  checkers the lane heads (they crash today, so windows with backward lifted
-  lanes are not drawn and silently dropped), fail a gate when a window does
-  not draw, check head direction, and restate the visibility gate for folded
-  sites. It asked to be resumed when the reworked level-of-detail branch is
-  ready.
+- `a0236db9317db564a.output`: checker repair (`checker-heads/`): FINISHED for
+  the lane heads and the restated gates, see "Gates" below; it is waiting to
+  be resumed to run the restated gate on `level-of-detail` eb09935.
 - `a35373ca96c0fb974.output`: review of `node-order` and both `perf-fix`
   branches: FINISHED, see those branches above (scratch
   `review-order-perf/`).
@@ -328,16 +325,57 @@ are its own counts by eye unless a blind count here is named.
   commit> <baseline under runs/>` (`JOBS="suite"` for the suite alone). It
   needs the shared SSH connection (`ssh -O check ada` says "Master running");
   one invocation at a time across all agents. `ada/README.txt` beside it.
-- At a72f5dd: ink-bound passes; visibility fails by one variant in each file
-  (a 4 bp skip under other skips, a 1 bp node under reference nodes), which
-  the level-of-detail rework should turn into folded sites; the link gate
-  finds 20 links hidden on the force layout (14 inside larger off-reference
-  pieces made of many tiny nodes: a following step, the gate keeps failing
-  them) and far more on the straight layout; lifted lanes 0.02 px wide at
-  Y-9.3M (the lane floor in level-of-detail fixes it). Run directories under
-  `drawcheck-merged/runs/`.
-- The gates at a72f5dd are partly blind until the checker repair lands (lane
-  heads). Do not quote "nothing newly hidden" from that run.
+- **`ada-gates.sh` has no lock:** two invocations seconds apart overwrite each
+  other's bundle in `incoming/` on ada (it happened on 2026-11-16; one run
+  died with "Needed a single revision"). Give it a lock before more than one
+  agent uses it, or have agents run suites by hand in their own
+  `agents/<name>/` directory.
+- **The checker is repaired and sees every window again** (Fable; diffs under
+  `drawcheck-merged/diffs/` and `link-ends/diffs/`, originals under
+  `stages/before-lane-heads/`). Lane heads and their halos are now ink kinds
+  of their own: they never count as a link's or node's own ink, and they do
+  count as cover. A window or drawing that throws is a `not-drawn` violation
+  and FAILS every gate over it (planted crashes caught 10 of 10). New gates,
+  the checker's own rulings: every head must own half its pixels; a head or
+  halo may not take the last pixel of another node 1 px or longer; in
+  link-ends, every head must stand on its lane and point the way its walk
+  steps the node (0 of 14,806 judged heads point against their walk; planted
+  reversed heads caught).
+- **Gates at a72f5dd with every window drawn** (runs suffixed
+  `a72f5dd...-ada-20261116-014947`):
+  - Passing: every window drawn, ink bound, link ends (215,951), lane
+    placement, head direction and completeness, GFA truth, the library suite.
+  - Visibility: 1 MC and 1 pggb variant failing on the force layout (a 4 bp
+    skip under skips, a 1 bp node; both older than this head); 10 pggb on the
+    straight layout.
+  - Link ownership, force layout: 20 plain and 10 lifted held links hidden on
+    MC, 0 on pggb. Straight layout: 162 and 1,112 plain, 130 and 1,312 lifted,
+    now including both junction links of the chr1 inversion (8 px of 237
+    asked each) and three skips hidden under lane heads and halos.
+  - Lane heads: 9 short nodes (1 to 3.6 px, mostly 1 bp) erased by heads and
+    halos on the force layout; 11 nodes and one head on the straight layout.
+  - Arrows: 14 arrowheads against the reference in four pggb windows,
+    unchanged since 4c8451e (the earlier "1" was blindness).
+- **The gates are restated for sites deliberately not drawn, and that part is
+  waiting on the reworked branch.** Visibility now reads: a carried node, link
+  or variant goes undrawn only in a small site: listed in the drawing's
+  `sites`, in a piece under 3 px by the gate's own measure (`src/sites.ts`,
+  which imports nothing from the library), and shown again when the same
+  layout is redrawn at the smallest scale that puts the piece at 3 px; nothing
+  on the reference and no strand-turning link goes undrawn; the key's line
+  counts what is undrawn. Proven so far on a stand-in library and 44 unit
+  tests (five planted faults caught 10 of 10 each). Not yet done: compile
+  `src/api/sitesFolded.ts` against the real branch (`level-of-detail` eb09935
+  is ready now), plant the five faults in a scratch copy of the real library,
+  run `rerun-sites.sh` (about 18 minutes). Its agent (`a0236db9317db564a`)
+  asked to be resumed for this. **A warning from its stand-in:** with
+  a72f5dd's renderer, 116 MC and 149 pggb foldable pieces do not show again at
+  the scale that puts them at 3 px (stroked but owning no pixel, or a held
+  link hidden under nodes), so a correct fold will fail the restated gate on
+  those unless the zoomed drawing shows them.
+- The lane floor and the folded sites in `level-of-detail` should clear the
+  0.02 px lanes at Y-9.3M and the two visibility failures; that is a
+  prediction until the gates run at its head.
 - bandage-core's fold-parity test needs gfa-to-tabix 5.0.0; CI pins v0.12.0, so
   its CI fails until 5.0.0 is published (release-order item).
 - bandage-core c09819a and later do not load in R's V8 without a shim:
