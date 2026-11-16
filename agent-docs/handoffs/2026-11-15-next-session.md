@@ -11,6 +11,69 @@ gallery repair and the paper patch; its index is
 `~/src/walks8-evidence/fab8f323/INDEX.txt`. Evidence of this session is in
 `~/src/walks8-evidence/22a29087/`.
 
+## Update from session b7daa067 (gfa-to-tabix-97), which took over both lanes
+
+Read this section first; it supersedes the lists below where they differ. The
+second session (fab8f323) has closed; its last results are the final entries of
+`~/src/walks8-evidence/fab8f323/FOR-NEXT-SESSION.txt`. Its gate inputs and the
+reshoot tooling are hard-linked at `~/src/walks8-evidence/gate-inputs/`.
+Nothing is pushed, tagged, published or uploaded.
+
+- **The release is held on three serious readability findings** from a blind
+  read of 50 pictures (Fable; notes in this session's scratch `blind-read/`).
+  The owner's rule, now in memory as `surface-serious-issues`: a picture that
+  is correct but not informative is a release-level fault, gets a Fable review
+  and goes to the owner. Their page:
+  https://claude.ai/artifact/SPghLBjivYpssJWxn3wSd4 (source in scratch
+  `findings/`).
+  - The plugin track at KIV-2, amylase and sv49 is buried under stacked "1 bp"
+    placeholder labels. Decided rule: leader labels spend the existing label
+    budget, largest bp first, and the key states the rest. Being implemented on
+    `release-fixes`.
+  - An inversion every shown haplotype carries is a flat line on the stress
+    layout: the two strand-flipping links are plain links drawn under the
+    nodes. Candidate fix on bandage-core branch `strand-links`
+    (~/src/bandage-core-strandlinks, on dea6def, 82887f8 and 2cdcafa), not
+    landed, not yet read blind. No gate drew the stress layout or tested
+    whether a link is covered; the checker is being extended.
+  - "Compress lengths" drew HG00133's 99.8 kb stretch as the smallest loop in
+    the plugin's force_kiv2_overlay figure. `compress-rank` is landed; the
+    plugin figure has not been retaken.
+- **bandage-core `release-fixes` is 4c8451e**: the six side branches landed in
+  the reviewed order (clearance-force, link-ends, compress-rank, nested-arcs,
+  graph-key, host-fit) as a linear history, 42 commits on 43696f3, with the
+  code review's named changes and tests. Suite 1159 passed, typecheck, lint,
+  format clean (the integrator's run). Decided by a separate design review and
+  landed: zero-length fallback strokes go over the nodes in the skip's ink and
+  are keyed as a short skip; nested arcs kept; lifted lanes beside pushed
+  alleles left as they are; no rule for the lost lens shape under FMMM; no
+  re-layout on resize. The walks8-pack bandage-core tarball is stale until the
+  label work lands and it is repacked.
+- **Reader branches moved** (all unpushed): BandageJS `switch-f8` 0819934d,
+  plugin `switch` 52c61c0, tube map `switch-f8` 61fbd24, all on graph-walks'
+  own not-loaded text; their `node_modules` now resolve the final graph-walks
+  tarball. Plugin `hover-fix` 1b4286b in
+  ~/src/jb2plugins/jbrowse-plugin-graphgenomeviewer-hoverfix (on 95f291a):
+  folded tube-map hover box and counts restored, the figure shooter on the
+  `-f8` file, and a real fault fixed: hovering row "HG00133 HP1" lifted
+  HG00133#2, because JBrowse now counts HP from 1.
+- **BandageJS's 8 red gene tests** are not cleared by the gene rule: core
+  reserves the key column against labels while BandageJS fits to the whole
+  pane. Core fix under way with the label work; hosts then call one core fit
+  helper.
+- **Running when this was written:** the label work on `release-fixes`; the
+  gates at 4c8451e plus stress windows and a link-ownership gate
+  (`~/src/walks8-evidence/fab8f323/drawcheck-merged/`); a layout investigation
+  (~/src/bandage-core-layouts, branch `layout-investigation`); frequency and
+  level-of-detail prototypes (~/src/bandage-core-freq, branch
+  `freq-encodings`). The last two were asked for by the owner and decide
+  nothing until their contact sheets have been read blind.
+- **Still owed, in order:** repack bandage-core; blind read of the new
+  pictures; land plugin `hover-fix`, `graph-key`, `host-fit`, `switch`;
+  BandageJS, ggbandage, tube map and ggtubemap merges; jb2hubs; core-next
+  rebases; gallery redraw; final reshoot and the owner's page; then the
+  release order.
+
 ## Settled
 
 - Format 8 is frozen as it is: two independent designs, a pangyplot-informed
