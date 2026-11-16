@@ -154,7 +154,7 @@ a reboot: read these first.
 - `a04fa2dfe999af7d3.output`: the counts review's named changes
   (`counts-fix/`).
 - `adb54a7daa63376d8.output`: blind count of the engine session's lift grids
-  (`lift-blind/`); its result is owed to that session.
+  (`lift-blind/`): FINISHED, summarised under the engine session below.
 
 ## The engine session (graph-fmmm-layout-5f, another account): finished
 
@@ -178,8 +178,38 @@ are its own counts by eye unless a blind count here is named.
   inside (that is one merged node), and does not fix amylase. An earlier form
   (`liftOnly`) had a strand bug and is not to be used. The side rule is
   confirmed by a control: the sharp corner at amylase follows whether the arch
-  is on the seeds' side, not the absolute side. Blind count of the first lift
-  grids by this session: running (`adb54a7daa63376d8.output`).
+  is on the seeds' side, not the absolute side.
+- **Blind count of the lift grids by this session (done; 6,240 cells sealed
+  before the key was opened; files in scratch `lift-blind/`,
+  `phase1-counts.md`):**
+  - Confirms the engine session's eye-scored cases: at the chr1 inversion the
+    arch removes the figure-of-eight under every link order (baseline 6, 5, 6
+    clear; arched 0 of 32 in all nine rows). Stars are not reduced and rise
+    slightly (8/12/15 to 10/13/17); link order moves the star count more than
+    the arch does.
+  - Does NOT confirm its metric-scored counts on the synthetic cases, nor its
+    note that the metric runs "about one low per row": the metric flags clean
+    cells at the junction, duplication and nested cases and misses some clear
+    crossings; its 35 degree star threshold passes visibly bent drawings as
+    good. Any count of its from a metric needs a count by eye before use.
+  - **The arch makes nested inversions clearly worse:** strict good falls from
+    16 to 20 of 32 to 0 to 2, full stars rise from 0 to 1 to 5 to 14 (its
+    "ruleStack" variant 24 to 27). At a duplication it turns good cells into
+    mild stars under one link order.
+  - The side of the arch matters a great deal at amylase (same side as the
+    off-reference loops: sharp corners in 24 to 29 of 32; opposite side: 2 to
+    5); the rewritten rule takes the opposite side, which is its only real gain
+    over the first arch.
+  - No setup draws a clean inversion (nothing inside it) well: a straight
+    reference in 0 to 2 of 32 cells in every row, baseline included.
+  - Not reviewed: the side-control and clean-inversion grids (codes in the key,
+    no grids in `blind/`), anything drawn with the fixed `lifted.ts`, the final
+    candidate's grids.
+  - What the reader says must be drawn before the rule is a default: several
+    real inversions of different sizes including one with nothing inside,
+    real nested, adjacent and inverted-duplication loci, quiet loci and a ring
+    with the fixed rule, a pggb window where it fires, and a nested variant
+    that keeps the reference straight.
 - **Its candidate, "Q":** `lifted.ts` plus the engine option `galaxyChoice:
   'uniform'` plus selective ring seeds (the reference seeded bowed where a
   skip spans at least 0.15 of it; needs per-point seeds) plus fan placement of
