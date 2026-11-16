@@ -130,11 +130,35 @@ bandage-core, each in its own worktree:
   - The engine session's suspicion that ids ending in `-` are misread is not
     the mechanism: both readers append the orientation to the name, so a
     segment literally named `a-` is handled correctly.
-- `gene-labels` (core bc0e2f0 when written, plugin 5b9f8c2; both moving), built
-  on the two perf-fix branches: a gene is named once, on the reference; a
-  haplotype's own copy only when lifted; genes without a symbol not labelled;
-  labels laid out once per settled view. **Agent running.** CFH today is a
-  wall of forty chips.
+- `gene-labels`: core **bc0e2f0** (~/src/bandage-core-genelabels, two commits
+  on `perf-fix` db44ade) and plugin **0663728**
+  (~/src/jb2plugins/...-genelabels, three commits on plugin `perf-fix`
+  e628be0). A gene is named once, on the reference where the reference carries
+  it; a haplotype's own copy is named only when that walk is lifted, with the
+  haplotype; a gene only haplotypes carry is named once, on the copy the most
+  shown walks step; a gene with no symbol is outlined and hoverable but not
+  named (one function, `hasGeneSymbol`: Ensembl ids, `LOC...`, RefSeq
+  accessions and `chr:start-end` names count as no symbol). The rule lives in
+  core (`src/genes/geneNames.ts`); the plugin passes facts. The node tooltip
+  now lists the genes over a node. The "X of Y kb" suffix on a haplotype copy
+  is now measured against the walk's own stretch (it read "0.1 of 100.7 kb"
+  for a copy wholly in the drawing). And labels are laid out once per settled
+  view: the key keeps a line for the unlabelled count so its size never
+  depends on the labels, and labels wait for the layout, pending reads, the
+  key's measure and the track's height. In the real page (single runs):
+  label layouts per view 6 to 8 down to 1 at CFH, amylase, GSTM1 and KIV-2;
+  CFH's label time 4.2 s to 22 ms; CFH's chips 40 to 4 (seen by me: `CFH`,
+  `CFHR3`, `CFHR1`, `CFHR4 · 13 of 30.6 kb`, the loop and its dashed skip
+  clear). Suites on ada: core 1241, plugin 1018 (typecheck: only the known
+  errors). Pictures: scratch `genelabels/out/{cfh,amy,gstm1,kiv2,cfhlift}-
+  {before,after}.png`. **Not reviewed.** For the owner or a review to settle:
+  treating `LOC...` as no symbol drops `LOC124904594` and `LOC105378878` at
+  amylase; where every placeholder has its length the key shows a blank line;
+  labels now also wait for repeat and bubble-index reads, so a slow read
+  delays all labels; `genePins` re-reads every walk step when pins are
+  recomputed, including during a node drag (not measured). Hosts: BandageJS
+  reads `item.pin` / `item.name` and passes `liftedWalks`; ggbandage keeps
+  only pins rows with a `label` and draws it.
 - `level-of-detail` **eb09935** (~/src/bandage-core-lod, twelve commits on
   a72f5dd, tree clean): reworked as decided. `smallSites: 'hidden' | 'nodes'`,
   default hidden; ticks removed entirely; a piece is small when its bp plus
@@ -225,9 +249,11 @@ graph-walks:
   anything else only "at least N", drawn as a different kind of mark, never a
   ratio. Every node off the reference is in the "at least" class.
 
-## Agents still running when this was written
+## Agents of this session: all finished or stopped; none is running
 
-Each reports as the last assistant message of its transcript under
+Seven finished and are summarised in this file; the format additions study
+failed on server errors and never reported. Each one's full report is the last
+assistant message of its transcript under
 `/tmp/claude-1001/-home-cdiesh-src-gfa-to-tabix/b7daa067-b398-4a98-ad1e-976984ecca2b/tasks/`
 (JSONL: extract the final message with a script, do not read whole). Their
 scratch is under `.../b7daa067-.../scratchpad/<name>/`. /tmp may be cleared by
@@ -235,7 +261,8 @@ a reboot: read these first.
 
 - `a4e49cdaf98555e98.output`: level-of-detail rework (scratch `lod2/`):
   FINISHED, see `level-of-detail` above.
-- `a8854096a9d4aafc3.output`: gene labels and one label pass (`genelabels/`).
+- `a8854096a9d4aafc3.output`: gene labels and one label pass (`genelabels/`):
+  FINISHED, see `gene-labels` above.
 - `adefd38ac1f47b213.output`: the format additions study. **NOT RUNNING and
   never reported.** The owner stopped it once and resumed it; it then failed
   twice on a server error (HTTP 529, overloaded), the second time after being
@@ -437,13 +464,24 @@ are its own counts by eye unless a blind count here is named.
 
 ## Do, in order
 
-- Read the running agents' reports. For each branch: apply its review's named
-  changes, then land on `release-fixes` as a linear history. Proposed order
-  (the node-order/perf review may correct it): `perf-fix`, `node-order`,
-  `gene-labels`, `level-of-detail`, `follow-placement`; plugin: `perf-fix`,
-  `gene-labels`, `snap-cut`, then the `heads` swatch and threading wiring
-  (pass labels through `layoutLabels`, the pass bar, the hit-test argument).
-  Remove the module-scope `Intl.Collator` in core.
+- Fix the orientation fault in the readers (a reference node's `stable`
+  carries no strand; see "Two orientation faults" above) with its failing
+  tests, and show the owner a before/after on a pggb window: it is serious and
+  they have not seen it on a page.
+- Land on bandage-core `release-fixes` as a linear history, each after its
+  named changes or a short Fable review where it has had none:
+  `perf-fix` (reviewed; add its tests), `node-order` (reviewed; the tie fix
+  and tests), `gene-labels` (not reviewed; sits on `perf-fix`),
+  `level-of-detail` (reworked, not re-reviewed; conflicts with `perf-fix` in
+  `labelLayout.ts` at the `clear` callback: the resolution is
+  `!otherNodeUnder(grown(box, ink), under => under === id)` with folded nodes
+  not counting as another node), `follow-placement` (not reviewed). Plugin:
+  `perf-fix`, `gene-labels`, `snap-cut`, then the `heads` swatch (the only
+  unhandled key swatch kind: a case in `legendSwatch()` and a kind in
+  `LegendSwatch.tsx`), the `too-small` key section, `collapsed` and `folded`
+  on the hit tests and label layout, and threading (pass labels through
+  `layoutLabels`, the pass bar). Remove the module-scope `Intl.Collator` in
+  core. Every agent on ada from its first line.
 - Land `cohort-counts` on graph-walks after its fixes; repack graph-walks;
   re-point the CI pin (`ci-pin-graph-walks-7`), retake consumer checksums.
 - Resume the checker agent (or its successor) on the reworked level-of-detail
