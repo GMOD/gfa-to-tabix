@@ -116,13 +116,28 @@ bandage-core, each in its own worktree:
 
 graph-walks:
 
-- `cohort-counts`: `reader.counts` gives, for a window, how many of all the
-  file's haplotypes step each node and link, each count exact or a flagged
-  lower bound; same bytes as a cut, about 0.4 s. Reviewed: land with named
-  changes (a truth sweep test, two fixtures, README wording without
-  "frequency", two small code fixes). **Agent running** on those. Landing it
-  changes the graph-walks tarball, so the CI pin, every consumer checksum and
-  the hosted release-check follow.
+- `cohort-counts` **8f6d491** (~/src/graph-walks-counts, nine commits on
+  b7b9349, tree clean): `reader.counts(refName, region, opts)` gives, for a
+  window, how many of all the file's haplotypes step each node and link, each
+  count exact or a flagged lower bound; same bytes as a cut, about 0.4 s.
+  Reviewed (land with named changes) and the named changes are made: a truth
+  sweep over all 57 fixtures that fails on all 12 mutants the review saw
+  survive, two fixtures, the `holdsOwn` fix, its own refusal wording, and a
+  README that never says "frequency" (mask 0: "N haplotypes of the graph step
+  it and no other does"; any other mask: "at least that many, and no share
+  follows"). Suite on ada: 844 passed, typecheck, lint, format clean. Hosted
+  comparison rerun at KIV-2 and amylase: no count above the truth, no exact
+  count that differs. A tarball of it is in scratch
+  `counts-fix/pack/jbrowse-graph-walks-7.0.0.tgz` (sha256 02e67bb9...); the
+  vendored one is untouched. **Ready to land on main** by fast-forward;
+  nothing has re-reviewed the fixes. Landing replaces the vendored tarball, so
+  the CI pin (`ci-pin-graph-walks-7`), every consumer's checksum and the
+  hosted release-check follow. Left as found: the byte-budget refusals of
+  `counts` still reuse the cut's wording ("Zoom in ... to see the graph").
+  What a drawing may do with the numbers is in its README section "What the
+  numbers support": exact counts as "N of M haplotypes step this node";
+  anything else only "at least N", drawn as a different kind of mark, never a
+  ratio. Every node off the reference is in the "at least" class.
 
 ## Agents still running when this was written
 
@@ -152,7 +167,7 @@ a reboot: read these first.
   branches, with the landing order.
 - `ac617ef27d6e0c377.output`: snapped cut, zoom refinement (`snap-cut/`).
 - `a04fa2dfe999af7d3.output`: the counts review's named changes
-  (`counts-fix/`).
+  (`counts-fix/`): FINISHED, see `cohort-counts` above.
 - `adb54a7daa63376d8.output`: blind count of the engine session's lift grids
   (`lift-blind/`): FINISHED, summarised under the engine session below.
 
