@@ -88,12 +88,35 @@ bandage-core, each in its own worktree:
   haplotype's own copy only when lifted; genes without a symbol not labelled;
   labels laid out once per settled view. **Agent running.** CFH today is a
   wall of forty chips.
-- `level-of-detail` 0deab74 plus uncommitted rework
-  (~/src/bandage-core-lod): being reworked to `smallSites: 'hidden' | 'nodes'`,
-  default hidden, ticks removed, threshold in bp at the reference's scale,
-  small placeholders folded, one key line `N nodes too small to draw`, a
-  `sites` table in figure data. **Agent running**; then it needs a short
-  review and the checker's restated gate.
+- `level-of-detail` **eb09935** (~/src/bandage-core-lod, twelve commits on
+  a72f5dd, tree clean): reworked as decided. `smallSites: 'hidden' | 'nodes'`,
+  default hidden; ticks removed entirely; a piece is small when its bp plus
+  the reference bp between its attachments come to under `SMALL_SITE_PX` (3)
+  at the reference's px per bp (one number per scale: all reference nodes'
+  drawn length over their bp); small placeholders fold with their labels; one
+  key line, no swatch, last: `N nodes and M skips too small to draw`; a
+  `sites` table and `meta.smallSites` in figure data; `collapsed` required on
+  both hit tests and `folded` required on `layoutLabels`; lane stroke floor
+  1 px in both states. `'nodes'` is byte-identical to a72f5dd for `figureSvg`
+  and `figureData` on 42 specs. All the review's surviving mutants and 22 new
+  ones are caught. Suite on ada: 1260 passed, typecheck, lint, format clean.
+  Pictures at true size: scratch `lod2/sheets/` (seen by me: the inversion on
+  fmmm goes from a line beaded with 49 one-bp rings to the loop alone).
+  **Not yet reviewed after the rework**, and the checker's restated gate has
+  not run on it (its agent asked to be resumed for that). Open points from
+  its own pictures: on fmmm a run of SNPs leaves the reference looking dashed
+  (the 1 bp reference alleles with thin links between); small loops of 10 bp
+  or less are folded (HBB then shows nothing off the reference); under a lift,
+  walks stepping folded alleles look like the reference, recorded only by the
+  key line; chr16 still shows 26 to 81 bp pieces and 63 unlabelled
+  placeholders; the two layouts fold slightly different sets on chr16 because
+  their fits give different px per bp. Of the gate's 20 hidden links, 2 are
+  now folded and 18 are drawn as before (inside larger pieces: the following
+  step). Hosts must change (listed in its report): the plugin and BandageJS
+  pass `collapsed` and `folded` and show the key line (the plugin's section
+  list is curated; BandageJS's legend is hand-built); **ggbandage would lose
+  small sites with no trace** until it captions the key line or passes
+  `smallSites: 'nodes'`.
 - `follow-placement` 542d2b9 plus rework (~/src/bandage-core-follow) and plugin
   `snap-cut` 5938ac5 plus rework (~/src/jb2plugins/...-snap): the track holds
   a cut snapped to a grid and slides the drawing between snaps (2 re-layouts
@@ -147,7 +170,8 @@ Each reports as the last assistant message of its transcript under
 scratch is under `.../b7daa067-.../scratchpad/<name>/`. /tmp may be cleared by
 a reboot: read these first.
 
-- `a4e49cdaf98555e98.output`: level-of-detail rework (scratch `lod2/`).
+- `a4e49cdaf98555e98.output`: level-of-detail rework (scratch `lod2/`):
+  FINISHED, see `level-of-detail` above.
 - `a8854096a9d4aafc3.output`: gene labels and one label pass (`genelabels/`).
 - `adefd38ac1f47b213.output`: the format additions study (`format-additions/`;
   heavy runs on ada). It states each candidate (complete adjacency, a bubble
