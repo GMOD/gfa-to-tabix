@@ -68,6 +68,44 @@ Nothing is pushed, tagged, published or uploaded.
   level-of-detail prototypes (~/src/bandage-core-freq, branch
   `freq-encodings`). The last two were asked for by the owner and decide
   nothing until their contact sheets have been read blind.
+- **Later the same session (state when this line was written):**
+  - The owner's standing position, restated twice on 2026-11-15: the default
+    layout is the force layout (fmmm) in every host, the plugin track
+    included; no forced-straight or ruler-locked reference; haplotype
+    threading as in ggbandage's gallery is the way to show complex walks and
+    every reader must have it. Memory: `graph-not-linearized`,
+    `threading-for-clarity`. A layout study in this session recommended a
+    ruler-locked straight reference for the track; that recommendation is
+    set aside.
+  - bandage-core `release-fixes` c09819a: label rule landed (leader labels
+    rationed to the label budget, key line "N unlabelled, X or less each"),
+    gene names search past a reserved box, `fitBesideKey`, and the lockfile on
+    the final graph-walks tarball. The checkout had held a stale graph-walks
+    build under the same file name; it is reinstalled and the suite passes
+    against the final reader (1166 passed). Tarball repacked:
+    `walks8-pack/jbrowse-bandage-core-14.0.0.tgz` sha256 57199761..., the old
+    one kept beside it as `.43696f3`.
+  - Plugin `release-fixes` 923612c: hover-fix, graph-key, host-fit and switch
+    landed, the key's unlabelled line and the fit through `fitBesideKey`
+    wired, and as its last commit the track's default layout is fmmm (089e5b8
+    is the same tree with the old default). A config or session naming no
+    engine now draws force-directed.
+  - Prototypes, uncommitted or on scratch branches, none landed:
+    `strand-links` (~/src/bandage-core-strandlinks), `freq-encodings`
+    (~/src/bandage-core-freq: level of detail and flow widths worked, fork
+    dots and paler tones rejected, loading steps by default undecided),
+    `layout-investigation` (~/src/bandage-core-layouts), `stiff-reference`
+    (~/src/bandage-core-stiff, running), `threading`
+    (~/src/bandage-core-threading: threading by pass being built properly on
+    c09819a, plus a commit removing spread-into-call sites from core).
+  - Running: the gates at 4c8451e with stress windows and a link-ownership
+    gate; the stiffened force layout batch; the threading build; a JBrowse
+    before/after reshoot (scratch `reshoot/`, with `manifest.jsonl`).
+  - Owner's pages from this session: findings
+    https://claude.ai/artifact/SPghLBjivYpssJWxn3wSd4, encodings
+    https://claude.ai/artifact/XjdAZktXVFDVmWb8EG42DM, layouts
+    https://claude.ai/artifact/SNUfpP9Tph9tP8DVE9mpoA, threading
+    https://claude.ai/artifact/MDoCmdjRvPowmimn4L999x.
 - **Still owed, in order:** repack bandage-core; blind read of the new
   pictures; land plugin `hover-fix`, `graph-key`, `host-fit`, `switch`;
   BandageJS, ggbandage, tube map and ggtubemap merges; jb2hubs; core-next
