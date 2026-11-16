@@ -236,14 +236,36 @@ a reboot: read these first.
 - `a4e49cdaf98555e98.output`: level-of-detail rework (scratch `lod2/`):
   FINISHED, see `level-of-detail` above.
 - `a8854096a9d4aafc3.output`: gene labels and one label pass (`genelabels/`).
-- `adefd38ac1f47b213.output`: the format additions study (`format-additions/`;
-  heavy runs on ada). It states each candidate (complete adjacency, a bubble
-  decomposition, per-node counts, stored layout coordinates, and promoting the
-  writer rule "no route interior holds a node the reference passes once" to a
-  stated guarantee) both inside the walk file and as a side file, with
-  measured cost, and recommends nothing. **When it reports, run the three
-  fresh Fable reviews** (is it needed, which alternatives, what else), neutral
-  briefs, different lenses.
+- `adefd38ac1f47b213.output`: the format additions study. **STOPPED by the
+  owner before it reported; it wrote no conclusions.** What it left:
+  - Its method and evidence standard, written first:
+    scratch `format-additions/method-preregistered.txt` (a need is
+    "demonstrated" only with a named view on a named hosted file, today's
+    reader output, the missing fact shown from the GFA and not derivable from
+    ANY rows of the walk file, and an approximation's error measured; "more
+    fetches would do it" is a reader cost, not a format gap).
+  - Measurements so far: `format-additions/records.jsonl` (per-window fetch
+    cost with and without additions at several window sizes; bytes added and
+    build cost for the HPRC chr22 and chr6 Minigraph-Cactus graphs and pggb
+    chrY; an old reader on a new file; side files; a pairing demonstration;
+    tiles listing an off-reference node; odgi layout of a KIV-2 slice and a
+    PangyPlot chrY layout under `layout/`), with build logs beside it.
+  - A writer prototype on gfa-to-tabix branch `format-additions`
+    (~/src/gfa-to-tabix-additions, b3d9d1c: `walks-additions` measures
+    candidate additions tile by tile; walked-only sites, tile and detail
+    splits, site row variants), and its copy on ada at `~/work/format-additions`.
+    Nothing of it was running on ada when checked.
+  - Its transcript (the file named above) holds its reasoning up to the stop;
+    the last few assistant messages are the nearest thing to findings.
+  - Not done: the write-up per candidate (inside the walk file and as a side
+    file), the cross-candidate table of which fit "later additions" and which
+    change rows, the pairing rule, the layout side file questions, and the
+    item on promoting the writer rule C27 to a stated guarantee (it had begun
+    checking the hand-built file: `format-additions/c27.out` is only a path
+    error). **The three Fable reviews have nothing to judge yet.** Either
+    resume this agent or brief a new one from these files; the candidates and
+    the questions put to it are in this session's messages to it and are
+    summarised under "Do, in order".
 - `a0236db9317db564a.output`: checker repair (`checker-heads/`): FINISHED for
   the lane heads and the restated gates, see "Gates" below; it is waiting to
   be resumed to run the restated gate on `level-of-detail` eb09935.
@@ -414,9 +436,24 @@ are its own counts by eye unless a blind count here is named.
 - Resume the checker agent (or its successor) on the reworked level-of-detail
   branch; then run `ada-gates.sh` at the final bandage-core head. The gates
   must pass, or each failure must be a named, accepted item.
-- Format: run the three reviews on the study's output; build what they accept
-  (as side files where the study shows that suffices), with the hosted files
-  left as they are unless a review requires otherwise.
+- Format: the study was stopped before reporting, so finish it first (resume
+  it or brief a new Fable agent from its files): each candidate stated both
+  inside the walk file and as a side file, with measured bytes, build cost
+  and reader fetch cost, what it freezes, what it does not solve, and no
+  recommendation. Candidates: complete adjacency; a bubble or site
+  decomposition (collapse by topology at zoom-out, loci too large to load);
+  per-node and per-link haplotype counts (what stored counts give that
+  `reader.counts` cannot: exactness off the reference without loading detail,
+  a certificate that covers lines filed far away or left out, counts at
+  windows too wide to cut); stored layout coordinates as a side file (the
+  only full fix found for the track jumping on pan and zoom; the hard
+  question is whether a whole-chromosome layout is readable when cropped to
+  30 kb); the pairing rule for any side file (`graph:Z:` alone does not pair
+  one); and stating C27 ("no route interior holds a node the reference passes
+  once") as a guarantee readers may rely on, with validators refusing a file
+  that breaks it. Then the three fresh Fable reviews, then build what they
+  accept, with the hosted files left as they are unless a review requires
+  otherwise.
 - Readers, once the library head is final: BandageJS (adopt core's `graphKey`
   for its legend, `fitBesideKey`, the hit-test arguments, threading, the
   `sites` key line), the plugin (above), ggbandage (rebundle `integrated` and
