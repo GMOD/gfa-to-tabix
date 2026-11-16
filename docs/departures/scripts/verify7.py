@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # The release checks of a walk format 8 file and its directory, read as a
-# stream: one gzip member at a time, holding one unit and one sequence's
-# departure records, so a file of any size checks in bounded memory. It
-# checks what arbiter A's verify7.mjs does, which reads files whole and so
-# none past 2 GiB, and more:
+# stream: one gzip member at a time, holding one unit, one sequence's
+# departure records and a byte for each node id up to the largest a ref row
+# steps, so a file of any size checks in memory its node ids bound, at most
+# 2 GiB. It checks what arbiter A's verify7.mjs does, which reads files
+# whole and so none past 2 GiB, and more:
 # - the directory's line 1 is the header's `#walks` line with the data
 #   file's length as a `bytes:i:` tag, its tags in any order;
 #   `#header 0 <length>` is the header unit, which ends where a gzip member
@@ -40,9 +41,17 @@
 #   each at a multiple of its size, that tile the record's stretch widened
 #   to whole tiles, and to at least the tile holding its start, with no
 #   larger block aligned at a block's start that would fit
+# - over the whole file, whatever tile or sequence a row is in: no route
+#   interior, of a tile or a detail unit, holds a node the file's ref rows
+#   step once, and each ref row's `passes` states for each step how many
+#   steps the file's ref rows make on its node. The script counts every ref
+#   row's steps as it streams, then reads the tile and detail units a second
+#   time against the counts, and names every failure of the two at once
 # Usage: verify7.py walks.gz [tile]; prints a JSON summary, exits 1 on the
 # first failure.
+import collections
 import hashlib
+import itertools
 import json
 import os
 import re
@@ -100,9 +109,8 @@ def not_cover(lo, hi, blocks):
     return None if at == end else f'blocks end at {at}, not {end}'
 
 
-def members(f):
-    at = 0
-    while at < size:
+def members(f, at, end):
+    while at < end:
         head = f.read(18)
         if head[:4] != b'\x1f\x8b\x08\x04' or head[10:16] != b'\x06\x00BC\x02\x00':
             fail(f'no BGZF member at {at}')
@@ -112,11 +120,36 @@ def members(f):
         at += n
 
 
-stats = dict(units=0, tables=0, lines=0, departure_lines=0, members_cut_before_unit_text=0)
+stats = dict(units=0, tables=0, lines=0, departure_lines=0, members_cut_before_unit_text=0, ref_steps=0,
+             route_interior_steps=0, once_passed_nodes=0, once_passed_nodes_in_a_route_interior=0,
+             ref_rows_stating_fewer_passes=0, ref_rows_stating_more_passes=0)
 ROWS = dict(tile=('ref', 'nodes', 'route', 'walk', 'abridged'), departures=('departure',),
             detail=('nodes', 'route', 'walk'), blocks=('blocks',))
 COVERED_BY = dict(tile='ref rows', blocks='blocks rows')
 state = dict(units=[], names=set(), records={}, table=0, ref_end=0, points=[])
+held = bytearray()
+beyond = collections.Counter()
+routed = []
+
+
+def node_ids(field, before=0):
+    return list(itertools.accumulate((int(t) >> 1 for t in field.split(',') if t != '.'), initial=before))[1:]
+
+
+def hold(nodes, line):
+    top = max(nodes)
+    if min(nodes) < 0 or top >> 31:
+        fail(f'a ref row steps a node id outside 0 to 2^31: {line[:80]}')
+    held.extend(bytes(max(top + 1 - len(held), 0)))
+    for node in nodes:
+        if held[node] < 255:
+            held[node] += 1
+        else:
+            beyond[node] += 1
+
+
+def passes_held(nodes):
+    return [held[n] if held[n] < 255 else 255 + beyond[n] for n in nodes]
 
 
 def check_unit(at, length, text):
@@ -131,6 +164,8 @@ def check_unit(at, length, text):
         check_table(at, length, seq, lo, hi, lines[1:-1])
         return
     stats['units'] += 1
+    if kind in ('tile', 'detail'):
+        routed.append((at, length, seq, kind, name))
     state['units'].append('\t'.join([seq, head[2], head[3], kind, name, str(at), str(length)]))
     if name != '.' and (kind, name) in state['names']:
         fail(f'two {kind} units of {seq} named {name}')
@@ -162,6 +197,7 @@ def check_unit(at, length, text):
             start = int(c[6])
             stretch = (start, start + sum(int(x) for x in c[10].split(',')))
             state['ref_end'] = max(state['ref_end'], stretch[1])
+            hold(node_ids(c[9]), line)
         elif (c[3] in ('walk', 'abridged') and kind == 'detail') or (c[3] == 'blocks' and kind == 'blocks'):
             stretch = (a, b)
         if c[3] in ('ref', 'nodes', 'route') and (a, b) != (lo, hi):
@@ -205,12 +241,62 @@ def check_table(at, length, seq, head_lo, head_hi, lines):
     state.update(units=[], names=set(), records={}, ref_end=0, points=[])
 
 
+def check_passes(f):
+    examples = collections.defaultdict(list)
+    inside = set()
+
+    def found(what, example):
+        stats[what] += 1
+        if stats[what] <= 3:
+            examples[what].append(example)
+
+    for at, length, seq, kind, name in routed:
+        f.seek(at)
+        lines = decoded(b''.join(text for _, _, text in members(f, at, at + length))).split('\n')
+        last = 0
+        for line in lines[1:-1]:
+            c = line.split('\t')
+            if c[3] == 'ref':
+                nodes = node_ids(c[9])
+                stated = [1] * len(nodes) if c[11] == '.' else [int(p) for p in c[11].split(',')]
+                counted = passes_held(nodes)
+                stats['ref_steps'] += len(nodes)
+                if len(stated) != len(nodes):
+                    fail(f'a ref row whose passes are not one per step: {line[:80]}')
+                if stated != counted:
+                    steps = list(zip(nodes, stated, counted))
+                    for what, off in (('ref_rows_stating_fewer_passes', [s for s in steps if s[1] < s[2]]),
+                                      ('ref_rows_stating_more_passes', [s for s in steps if s[1] > s[2]])):
+                        if off:
+                            node, p, n = off[0]
+                            found(what, f'{p} for node {node}, which they step {n} times, in {seq} {kind} {name}: '
+                                        f'{line[:80]}')
+            elif c[3] == 'route':
+                ids = node_ids(','.join(c[4:7]), last)
+                last = ids[-1] if ids else last
+                interior = ids[c[4] != '.':len(ids) - (c[6] != '.')]
+                stats['route_interior_steps'] += len(interior)
+                for node in interior:
+                    if 0 <= node < len(held) and held[node] == 1 and node not in inside:
+                        inside.add(node)
+                        found('once_passed_nodes_in_a_route_interior',
+                              f'node {node} in {seq} {kind} {name}: {line[:80]}')
+    stats['once_passed_nodes'] = held.count(1)
+    failed = [f'{stats[what]} {text}, as {"; ".join(examples[what])}' for what, text in (
+        ('once_passed_nodes_in_a_route_interior', 'nodes the file\'s ref rows step once are in a route interior'),
+        ('ref_rows_stating_fewer_passes', 'ref rows state fewer passes than the file\'s ref rows step the node'),
+        ('ref_rows_stating_more_passes', 'ref rows state more passes than the file\'s ref rows step the node'),
+    ) if stats[what]]
+    if failed:
+        fail('; '.join(failed))
+
+
 with open(path, 'rb') as f:
     header = b''
     unit = None
     eof = None
     header_read = False
-    for at, n, text in members(f):
+    for at, n, text in members(f, 0, size):
         if eof is not None:
             fail(f'a member after the EOF block at {eof}')
         if at < header_end:
@@ -248,4 +334,5 @@ with open(path, 'rb') as f:
         fail('the directory names tables the file does not hold')
     if state['units']:
         fail('units after the last table')
+    check_passes(f)
 print(json.dumps(dict(file=path, ok=True, **stats)))
