@@ -9,9 +9,21 @@
 # walk row, its blocks row and the next piece's hapOffset, the departure
 # records against the piece boundaries computed from the rows, and each
 # record's stretch against the abridged pieces of its path by the attach
-# rule. It shares no code with verify7.py,
+# rule; and, over the whole file, each ref row's passes against the steps
+# the file's ref rows make on its nodes, the header's revisited against the
+# nodes they step more than once, and, in a file that states revisited:i:0,
+# every route interior of a tile or a detail unit against the nodes the
+# reference passes once, as What a reader relies on words the three. In a
+# file with revisited nodes, or one that states no revisited, the page
+# promises nothing of a once-passed node in a route interior: the script
+# prints how many it found among its counts and reports no disagreement.
+# It shares no code with verify7.py,
 # claims7.py, audit7.py, expand7.py or walks-truth.py, which is its value;
 # keep it so. GUESS-n marks each place the page left the reader a choice.
+# It holds every piece of the file, and a number for every node a ref row
+# steps or a route interior holds, in memory, so it reads a chromosome's
+# file and not a genome's: --tiles, --save and --merge spread the reading
+# over runs, and the merge still holds them all.
 # A column after a row's fixed ones must be a tag, NAME:T:value, and is not
 # read; a unit of a kind the page doesn't give is skipped; a header line of
 # an unknown first word is ignored.
@@ -484,11 +496,15 @@ class Walks:
             if not TAG.fullmatch(t):
                 raise Refuse(f"directory line 1 holds {t!r}, which is no tag")
             k, ty, v = t.split(":", 2)
+            if k in self.tags:
+                raise Refuse(f"directory line 1 carries the tag name {k} twice")
             self.tags[k] = int(v) if ty == "i" else v
         if self.tags.get("format") != 8:
             raise Refuse(f"format {self.tags.get('format')}")
         if self.tags.get("bytes") != self.size:
             raise Refuse("directory bytes differs from the data file's length")
+        if "tile" not in self.tags:
+            raise Refuse("the #walks line states no tile:i:")
         self.tile = self.tags["tile"]
         h = lines[1].split("\t")
         if h[:2] != ["#header", "0"] or len(h) != 3:
@@ -577,6 +593,9 @@ class Walks:
             fixed = COLUMNS.get(c[3], len(c))
             if len(c) < fixed or any(not TAG.fullmatch(x) for x in c[fixed:]):
                 raise Refuse(f"{c[3]} row without its {fixed} columns, or with a column after them that is no tag")
+            names = [x.split(":")[0] for x in c[fixed:]]
+            if len(set(names)) != len(names):
+                raise Refuse(f"{c[3]} row carrying a tag name twice")
             rows.append(c[:fixed])
         return rows
 
@@ -756,6 +775,10 @@ def main():
     departures = set()
     abridge, abytes = w.tags.get("abridge", 0), w.tags.get("abridgebytes", 0)
     stats = collections.Counter()
+    ref_steps = collections.Counter()  # node -> the steps the file's ref rows make on it
+    stated = {}  # node -> the passes the first ref row step on it states
+    restated = []  # (node, passes, where) of a ref row step stating another count than that
+    interior = {}  # node -> the first tile or detail unit with a route interior holding it
 
     hl = w.header_lines
     if any(not l.startswith("#") for l in hl):
@@ -826,6 +849,13 @@ def main():
                 rep.bad(f"refused: {x}", where)
                 continue
             stats["tiles"] += 1
+            for h, p in zip(t.R, t.passes):
+                ref_steps[h >> 1] += 1
+                if stated.setdefault(h >> 1, p) != p:
+                    restated.append((h >> 1, p, where))
+            for _, inside, _ in t.rs.routes:
+                for h in inside:
+                    interior.setdefault(h >> 1, where)
             order = {"ref": 0, "nodes": 1, "route": 2, "walk": 3, "abridged": 4}
             ks = [order[k] for k in t.row_kinds]
             if ks != sorted(ks) or t.row_kinds.count("nodes") > 1:
@@ -939,6 +969,9 @@ def main():
                     rep.bad(f"detail unit refused: {x}", dw)
                     continue
                 stats["detail units"] += 1
+                for _, inside, _ in rs.routes:
+                    for h in inside:
+                        interior.setdefault(h >> 1, dw)
                 ko = [{"nodes": 1, "route": 2, "walk": 3}[k] for k in kinds]
                 if ko != sorted(ko) or kinds.count("nodes") > 1:
                     rep.bad("detail rows out of kind order", dw)
@@ -1136,12 +1169,17 @@ def main():
     whole = lo_t == 0 and hi_t == 1 << 62
     if "--save" in args:
         import pickle
-        pickle.dump((pieces, departures, dict(stats)), open(args[args.index("--save") + 1], "wb"))
+        pickle.dump((pieces, departures, dict(stats), (ref_steps, stated, restated, interior)),
+                    open(args[args.index("--save") + 1], "wb"))
     if "--merge" in args:
         import pickle
         whole = True
         for fn in args[args.index("--merge") + 1:]:
-            p2, d2, s2 = pickle.load(open(fn, "rb"))
+            p2, d2, s2, (steps2, stated2, restated2, interior2) = pickle.load(open(fn, "rb"))
+            ref_steps.update(steps2)
+            restated += restated2 + [(node, p, fn) for node, p in stated2.items() if stated.setdefault(node, p) != p]
+            for node, where in interior2.items():
+                interior.setdefault(node, where)
             for k, v in p2.items():
                 tgt = pieces.setdefault(k, {})
                 for pc, val in v.items():
@@ -1193,6 +1231,7 @@ def main():
 
         # ---- departure records against the pieces ---------------------------
         check_departures(rep, w, by_path, departures, tile_bp, stats)
+        check_reference_passes(rep, w, ref_steps, stated, restated, interior, stats)
         if gfa:
             check_gfa(rep, w, gfa, pieces, truth_steps)
 
@@ -1202,6 +1241,33 @@ def main():
     rep.show()
     print(f"({time.time() - t0:.1f} s)")
     return 1 if rep.counts else 0
+
+
+def check_reference_passes(rep, w, ref_steps, stated, restated, interior, stats):
+    """What a reader relies on: `passes` counts the file's ref rows, and in a file
+    that states revisited:i:0 no route interior holds a node the reference passes once."""
+    for node, p, where in [(node, p, "the first ref row that steps it") for node, p in stated.items()] + restated:
+        steps = ref_steps[node]
+        if p == steps:
+            rep.good("counts a ref row states for a node that are the file's ref rows' steps on it")
+        else:
+            rep.bad(f"a ref row's passes states {'fewer' if p < steps else 'more'} steps than the file's ref rows make on the node",
+                    f"node {node}: {p} stated in {where}, {steps} steps")
+    revisited = sum(1 for n in ref_steps.values() if n > 1)
+    if w.tags.get("revisited", revisited) != revisited:
+        rep.bad("revisited is not the number of nodes the file's ref rows step more than once",
+                f"{w.tags['revisited']} stated, {revisited} nodes")
+    once = [(node, where) for node, where in interior.items() if ref_steps.get(node) == 1]
+    stats["nodes the ref rows step once"] = sum(1 for n in ref_steps.values() if n == 1)
+    stats["nodes in a route interior"] = len(interior)
+    if w.tags.get("revisited") == 0:
+        for node, where in once:
+            rep.bad("a route interior holds a node the reference passes once, in a file that states revisited:i:0",
+                    f"node {node} in {where}")
+        rep.good("route interior nodes that the reference does not pass once, in a file that states revisited:i:0",
+                 len(interior) - len(once))
+    else:
+        stats["once-passed nodes in a route interior, of which the page promises nothing in a file with revisited nodes"] = len(once)
 
 
 def holes_before(w, seq, pos):

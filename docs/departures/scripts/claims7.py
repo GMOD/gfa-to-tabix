@@ -15,7 +15,10 @@
 # rows it reads each piece's line, number and hapOffset and whether a row
 # has bases, which is all the claims about a whole line, the #haplotype
 # list and SQ:Z: take; N2 and N3, about a node, are then checked within the
-# sequences named, and every other claim is about one sequence.
+# sequences named, and every other claim is about one sequence. So N2 at 0
+# in every run says nothing of a route interior in one run's sequences that
+# holds a once-passed node of another's: verify7.py checks that over the
+# whole file, and the run prints so.
 # claims7-seqs.sh runs it on every sequence of a file.
 #
 # Usage: claims7.py walks.gz [--own] [--shard I/N] [--seq S]... [--examples 3]
@@ -1265,7 +1268,9 @@ if args.own:
 print(f'# {args.file}: {sum(len(v) for v in units_of.values())} units, {len(recs)} departure records, '
       f'{len(abridged)} abridged rows, {copies_seen} walk rows with copies')
 if SEQS is not None:
-    print(f'# --seq: the units of {len(SEQS)} of {len(sequences)} sequences; N2 and N3 hold their nodes to their own rows')
+    print(f'# --seq: the units of {len(SEQS)} of {len(sequences)} sequences; N2 and N3 hold their nodes to their own rows, so '
+          'a 0 here is not a 0 for the file: verify7.py holds N2 across tiles and sequences, and the ref rows\' passes to '
+          'the whole file')
 for key in CLAIMS:
     if key in counts:
         print(f'{counts[key]}\t{key} {CLAIMS[key]}')

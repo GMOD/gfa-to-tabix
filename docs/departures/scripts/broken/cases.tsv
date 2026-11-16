@@ -71,7 +71,7 @@ interior-lengths-traded	broken/follow.gfa	audit7 rebuild	nodes 13 and 14, 20 and
 interior-lengths-traded-abridged	broken/follow.gfa	audit7 rebuild	the same in B's detail record
 last-piece-dropped	walks-two-refs.gfa	claims7 audit7 spec8 rebuild	D's piece 3 in tile 10 left out
 leftout-other	walks-two-refs.gfa	rebuild	leftout:i: 1, U#1#u's line, made 0
-leftout-twice	walks-two-refs.gfa	verify7 rebuild	leftout:i:1 stated twice
+leftout-twice	walks-two-refs.gfa	verify7 spec8 rebuild	leftout:i:1 stated twice
 line-before-walks	walks-two-refs.gfa	verify7 spec8	a header line of an unknown first word before #walks, which the directory's line 1 still repeats
 line-end-longer	broken/follow.gfa	audit7 rebuild	node 11, the 10 bp B ends on off the reference, stated as 17 bp: B's line runs 7 bp past its end
 line-end-longer-abridged	broken/follow.gfa	audit7 rebuild	the same in B's detail record, its blocks row's trailing run 10 made 17 with it
@@ -83,17 +83,18 @@ nodes-bases	broken/follow.gfa	audit7	the first base of node 11 in the tile's nod
 nodes-bases-abridged	broken/follow.gfa	audit7	the same in B's detail record
 nodes-bases-missing	broken/follow.gfa	claims7	the SQ:Z: tag dropped from B's detail record's nodes row, in a file whose ref rows carry bases
 nodes-extra	walks-two-refs.gfa	claims7 spec8	tile 0's nodes row lists a node no route visits
-on-reference-as-interior	broken/follow.gfa	verify7 claims7	A follows the reference; its step on node 3 written as a route's interior, off R, at the same steps, span and bp
-on-reference-as-interior-abridged	broken/follow.gfa	verify7 claims7	the same in an abridged tile: A's detail record given the route, its blocks row 0+36 made 0+12,6,6+18
-other-sequence-as-interior	broken/far.gfa	verify7	B's last piece, its steps on nodes 1 and 2, which c1 passes once, written as the interior of a route with no exit in c2's tile 10, its row in c1 left out, at the same steps and bp; claims7 fails it whole and passes it a sequence at a time
-other-tile-as-interior	broken/far.gfa	verify7 claims7	A's last piece, its steps on nodes 5 and 6, which c2 passes once in tile 10, written as the interior of a route with no exit in c2's tile 0, its row in tile 10 left out, at the same steps and bp
+on-reference-as-interior	broken/follow.gfa	verify7 claims7 spec8	A follows the reference; its step on node 3 written as a route's interior, off R, at the same steps, span and bp
+on-reference-as-interior-abridged	broken/follow.gfa	verify7 claims7 spec8	the same in an abridged tile: A's detail record given the route, its blocks row 0+36 made 0+12,6,6+18
+other-sequence-as-interior	broken/far.gfa	verify7 spec8	B's last piece, its steps on nodes 1 and 2, which c1 passes once, written as the interior of a route with no exit in c2's tile 10, its row in c1 left out, at the same steps and bp; claims7 fails it whole and passes it a sequence at a time
+other-sequence-as-interior-revisited	broken/shared.gfa	verify7	A's last piece, its step on node 3, which c2 passes once, written as the interior of a route with no exit in c1's tile 0, its row in c2 left out, in a file with revisited:i:1; spec8 passes it and counts the node, since the format promises this only of a file that states revisited:i:0, and claims7 fails it whole and passes it a sequence at a time
+other-tile-as-interior	broken/far.gfa	verify7 claims7 spec8	A's last piece, its steps on nodes 5 and 6, which c2 passes once in tile 10, written as the interior of a route with no exit in c2's tile 0, its row in tile 10 left out, at the same steps and bp
 ownbp-overstated-G	walks-records.gfa	claims7 audit7 spec8	G's record with ownBp 18 made 30
 owntiles-wrong	walks-two-refs.gfa	claims7 audit7 spec8	Q's record naming tile 10 for tile 0
-passes-once-as-twice	broken/repeat.gfa	verify7 audit7	node 4, passed once, stated as passed twice, and revisited 2 made 3
-passes-once-per-sequence	broken/shared.gfa	verify7 audit7	node 2, which c1 and c2 each pass once, stated as passed once on both, and revisited 1 made 0; audit7 passes it a sequence at a time
-passes-second-row	walks-repeat.gfa	verify7 audit7	node 2's second ref row stating 3 passes where the first states 2
-passes-twice-as-once	walks-repeat.gfa	verify7 audit7	node 2, passed twice, stated as passed once in both ref rows that step it, and revisited 2 made 1
-passes-understated	broken/repeat.gfa	verify7 audit7	nodes 2 and 3, which the reference passes 3 times, stated as passed twice on every step
+passes-once-as-twice	broken/repeat.gfa	verify7 audit7 spec8	node 4, passed once, stated as passed twice, and revisited 2 made 3
+passes-once-per-sequence	broken/shared.gfa	verify7 audit7 spec8	node 2, which c1 and c2 each pass once, stated as passed once on both, and revisited 1 made 0; audit7 passes it a sequence at a time
+passes-second-row	walks-repeat.gfa	verify7 audit7 spec8	node 2's second ref row stating 3 passes where the first states 2
+passes-twice-as-once	walks-repeat.gfa	verify7 audit7 spec8	node 2, passed twice, stated as passed once in both ref rows that step it, and revisited 2 made 1
+passes-understated	broken/repeat.gfa	verify7 audit7 spec8	nodes 2 and 3, which the reference passes 3 times, stated as passed twice on every step
 piece-split-at-jump	broken/jumps.gfa	audit7 spec8	C's piece >1>6>1>6 written as two pieces, >1 and >6>1>6, in the one tile, with no departure record for the jump from 1 to 6 between them
 piece-walk-and-abridged	broken/follow.gfa	claims7 audit7 spec8 rebuild	A's piece given a walk row in the tile beside its abridged row
 placement-other-copy	broken/tie.gfa	none	B's <2, which the placement rule puts on the copy at 0-6, read at the copy at 24-30: its @0 dropped, its span 0 18 made 12 30
@@ -110,8 +111,8 @@ ref-rows-swapped	broken/ref-gap.gfa	claims7 audit7 spec8	the tile's two ref rows
 ref-strand-flipped	walks-two-refs.gfa	rebuild	tile 20's ref step >5 made <5, and every walk row's start there with it
 reference-wrong	walks-two-refs.gfa	claims7 rebuild spec8	#reference CHM13 over GRCh38's rows
 revisited-as-interior	broken/tie.gfa	claims7	A's step on node 2, which the placement puts on R at 24-30, written as a route's interior with no exit: A ends off the reference
-revisited-count	broken/repeat.gfa	audit7	the header and directory stating revisited:i:7 where 2 nodes are passed more than once
-revisited-zero	broken/tie.gfa	claims7 audit7	the header and directory stating revisited:i:0 over a ref row whose passes say node 2 is passed twice
+revisited-count	broken/repeat.gfa	verify7 audit7 spec8	the header and directory stating revisited:i:7 where 2 nodes are passed more than once
+revisited-zero	broken/tie.gfa	verify7 claims7 audit7 spec8	the header and directory stating revisited:i:0 over a ref row whose passes say node 2 is passed twice
 row-new-kind-in-blocks	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row, a kind no unit of format 8 holds, in every blocks unit
 row-new-kind-in-departures	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row in every departure block
 row-new-kind-in-detail	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row in every detail unit
@@ -125,8 +126,10 @@ table-named	walks-two-refs.gfa	claims7 spec8	the table named x
 tag-entry	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a tag on every #entry line
 tag-malformed	walks-two-refs.gfa	claims7 spec8	a last column zz, which is no tag, on tile 0's ref row
 tag-row-walk-underscore	walks-two-refs.gfa	claims7 spec8	a tag my_note:Z:later, its name not letters and digits, on every walk row
+tag-twice	broken/far.gfa	spec8	two tags named zz on every row and on the #walks line
 tag-unit-table	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a tag on the table's #unit line
 tag-unit-tile	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a tag on every tile's #unit line
+tile-missing	broken/far.gfa	verify7 spec8	the header and directory with no tile:i:; the other checkers end in a traceback on it
 u2-leading-zero	walks-two-refs.gfa	claims7 spec8	tile 10 named 010
 unit-new-kind-no-seq	walks-two-refs.gfa	verify7	a unit in no table, after the last one, which a #meta line of the directory names
 unit-new-kind-other-seq	walks-two-refs.gfa	verify7 spec8	a unit of an unknown kind about no sequence, its #entry saying so, listed in GRCh38#0#chr's table

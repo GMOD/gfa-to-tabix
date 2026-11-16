@@ -263,6 +263,9 @@ corrupt passes-twice-as-once "$RP" $'\t2,2\t6,6\t1,2' $'\t2,2\t6,6\t.' $'\t6,-2\
 corrupt passes-once-per-sequence "$SHARED10" $'\t2,2\t5,5\t1,2' $'\t2,2\t5,5\t.' $'\t4,2\t5,5\t2,1' $'\t4,2\t5,5\t.' $'revisited:i:1' $'revisited:i:0'
 corrupt other-tile-as-interior "$FAR10" $'\t6,2\t5,5\t.\n' $'\t6,2\t5,5\t.\nR#0#c2\t0\t10\tnodes\t5,1\t5,5\nR#0#c2\t0\t10\troute\t.\t13,-1\t-1\n' $'R#0#c2\t0\t10\twalk\tA#1#c\t0\t10\t1\t2\t6\t.' $'R#0#c2\t0\t10\twalk\tA#1#c\t0\t10\t1\t4\t6\t1' $'R#0#c2\t10\t20\twalk\tA#1#c\t0\t20\t2\t2\t10\t.\n' ''
 corrupt other-sequence-as-interior "$FAR10" $'\t10,2\t5,5\t.\n' $'\t10,2\t5,5\t.\nR#0#c2\t10\t20\tnodes\t1,1\t5,5\nR#0#c2\t10\t20\troute\t.\t5,-1\t11\n' $'R#0#c2\t10\t20\twalk\tB#1#c\t0\t10\t1\t2\t10\t.' $'R#0#c2\t10\t20\twalk\tB#1#c\t0\t10\t1\t4\t10\t1' $'R#0#c1\t0\t10\twalk\tB#1#c\t0\t20\t2\t2\t2\t.\n' ''
+corrupt other-sequence-as-interior-revisited "$SHARED10" $'\t2,2\t5,5\t1,2\n' $'\t2,2\t5,5\t1,2\nR#0#c1\t0\t10\tnodes\t3\t5\nR#0#c1\t0\t10\troute\t.\t7\t-1\n' $'R#0#c1\t0\t10\twalk\tA#1#c\t0\t0\t0\t2\t2\t.' $'R#0#c1\t0\t10\twalk\tA#1#c\t0\t0\t0\t3\t2\t1' $'R#0#c2\t5\t10\twalk\tA#1#c\t0\t10\t1\t1\t6\t.\n' ''
+corrupt tag-twice "$FAR10" --tag zz:i:1 --tag zz:i:2
+corrupt tile-missing "$FAR10" $'tile:i:10\t' ''
 corrupt revisited-zero "$TIE100" $'revisited:i:1' $'revisited:i:0'
 corrupt record-passes "$TIE10" --all $'R#0#c\t12\t30\tdeparture\tA#1#c\t6\t0\t0\t18\t+\t1\t24\t+\t2\t.' $'R#0#c\t12\t30\tdeparture\tA#1#c\t6\t0\t0\t18\t+\t2\t24\t+\t2\t.'
 corrupt record-stretch-short "$TIE10" --all $'R#0#c\t0\t18\tdeparture\tB#1#c\t6\t0\t0\t12\t-\t1\t6\t-\t2\t.' $'R#0#c\t6\t18\tdeparture\tB#1#c\t6\t0\t0\t12\t-\t1\t6\t-\t2\t.'

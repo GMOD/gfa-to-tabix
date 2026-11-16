@@ -805,6 +805,8 @@ must_be_0(sum(1 for ns in stated_counts.values() if len(ns) > 1), 'nodes whose r
 must_be_0(under, 'nodes with a ref row stating fewer passes than the file\'s ref rows hold')
 if args.seq:
     print(f'{over}\tnodes with a ref row stating more passes than the sequence\'s ref rows hold')
+    print('# --seq: the pass counts above are held to this sequence\'s ref rows, so a 0 here is not a 0 for the file: '
+          'verify7.py holds each ref row\'s passes, and the header\'s revisited, to the ref rows of the whole file')
 else:
     must_be_0(over, 'nodes with a ref row stating more passes than the file\'s ref rows hold')
 revisited = sum(1 for n in stated_passes.values() if n > 1)

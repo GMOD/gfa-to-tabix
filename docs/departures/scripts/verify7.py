@@ -12,9 +12,9 @@
 #   line that starts with `#` past line 2 is a later addition, skipped; the
 #   `#header` and sequence lines, `#unit` lines and `#entry` lines hold no
 #   tag
-# - the `#walks` line states `graph:Z:` as 16 lowercase hex digits and
-#   `leftout:i:` as a decimal integer, each at most once; a file without
-#   them is checked as one with them
+# - the `#walks` line states `tile:i:`, and `graph:Z:` as 16 lowercase hex
+#   digits and `leftout:i:` as a decimal integer, each at most once; a file
+#   without those two is checked as one with them
 # - every unit is BGZF members, and every row of a tile, departure block,
 #   detail unit or blocks unit is of a kind that unit holds
 # - the header, the units, the tables and the EOF block partition the file;
@@ -43,10 +43,16 @@
 #   larger block aligned at a block's start that would fit
 # - over the whole file, whatever tile or sequence a row is in: no route
 #   interior, of a tile or a detail unit, holds a node the file's ref rows
-#   step once, and each ref row's `passes` states for each step how many
-#   steps the file's ref rows make on its node. The script counts every ref
-#   row's steps as it streams, then reads the tile and detail units a second
-#   time against the counts, and names every failure of the two at once
+#   step once, each ref row's `passes` states for each step how many
+#   steps the file's ref rows make on its node, and the `#walks` line's
+#   `revisited:i:`, where it states one, is how many nodes they step more
+#   than once. The script counts every ref row's steps as it streams, then
+#   reads the tile and detail units a second time against the counts, and
+#   names every failure of the three at once. The page promises the first
+#   of a file that states `revisited:i:0`, and this writer keeps it on
+#   every file it writes, which is what the script holds a file to: on a
+#   file with revisited nodes from another writer it fails what the format
+#   leaves open, and spec8.py holds a file to the page alone
 # Usage: verify7.py walks.gz [tile]; prints a JSON summary, exits 1 on the
 # first failure.
 import collections
@@ -81,6 +87,8 @@ for name, form in (('graph:Z:', '[0-9a-f]{16}'), ('leftout:i:', '0|[1-9][0-9]*')
     values = [t[len(name):] for t in walks if t.startswith(name)]
     if len(values) > 1 or not all(re.fullmatch(form, v) for v in values):
         fail(f'the #walks line states {" ".join(name + v for v in values)}, not one {name} of {form}')
+if not any(t.startswith('tile:i:') for t in walks):
+    fail('the #walks line states no tile:i:')
 if int(stated[0][8:]) != size:
     fail(f'bytes:i: is {stated[0][8:]}, the file {size}')
 if len(directory) < 2 or directory[1][:2] != ['#header', '0'] or len(directory[1]) != 3:
@@ -121,7 +129,7 @@ def members(f, at, end):
 
 
 stats = dict(units=0, tables=0, lines=0, departure_lines=0, members_cut_before_unit_text=0, ref_steps=0,
-             route_interior_steps=0, once_passed_nodes=0, once_passed_nodes_in_a_route_interior=0,
+             route_interior_steps=0, once_passed_nodes=0, revisited_nodes=0, once_passed_nodes_in_a_route_interior=0,
              ref_rows_stating_fewer_passes=0, ref_rows_stating_more_passes=0)
 ROWS = dict(tile=('ref', 'nodes', 'route', 'walk', 'abridged'), departures=('departure',),
             detail=('nodes', 'route', 'walk'), blocks=('blocks',))
@@ -282,11 +290,14 @@ def check_passes(f):
                         found('once_passed_nodes_in_a_route_interior',
                               f'node {node} in {seq} {kind} {name}: {line[:80]}')
     stats['once_passed_nodes'] = held.count(1)
+    stats['revisited_nodes'] = len(held) - held.count(0) - held.count(1)
     failed = [f'{stats[what]} {text}, as {"; ".join(examples[what])}' for what, text in (
         ('once_passed_nodes_in_a_route_interior', 'nodes the file\'s ref rows step once are in a route interior'),
         ('ref_rows_stating_fewer_passes', 'ref rows state fewer passes than the file\'s ref rows step the node'),
         ('ref_rows_stating_more_passes', 'ref rows state more passes than the file\'s ref rows step the node'),
-    ) if stats[what]]
+    ) if stats[what]] + [
+        f'the #walks line states {t}, and the file\'s ref rows step {stats["revisited_nodes"]} nodes more than once'
+        for t in walks if t.startswith('revisited:i:') and t != f'revisited:i:{stats["revisited_nodes"]}']
     if failed:
         fail('; '.join(failed))
 
