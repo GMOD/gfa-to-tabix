@@ -246,8 +246,16 @@ config directory cannot update them and must publish anew.
 
 ## Machine
 
-- The laptop's disk is nearly full (about 5 GB free) and memory is tight; full
-  suites and gates go to ada. The engine session's scratch holds 12 GB. Old
+- **Every agent runs its tests, suites, typechecks and renders on ada, not the
+  laptop** (the owner said so three times; this session briefed most agents to
+  run locally under a cap and had to redirect them mid-task). Put it in the
+  first lines of every brief. `ada:~/work/walks8-gates/` holds a bandage-core
+  clone with `node_modules` installed and the vendored graph-walks tarball in
+  the same relative layout; agents work under
+  `~/work/walks8-gates/agents/<name>/`. Rules: `ssh -O check ada` before every
+  command, one command at a time, niced, check `free -g` and `uptime` first,
+  no retry loops. Only headless-browser shots stay on the laptop.
+- The laptop's disk is nearly full (about 5 GB free) and memory is tight. The engine session's scratch holds 12 GB. Old
   session folders under `/tmp/claude-1001/-home-cdiesh-src-gfa-to-tabix/`:
   7a96682c (6.9 GB) and fab8f323 (3.7 GB) are closed sessions whose gate
   inputs and reshoot tooling are hard-linked at
