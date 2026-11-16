@@ -164,12 +164,28 @@ bandage-core, each in its own worktree:
   list is curated; BandageJS's legend is hand-built); **ggbandage would lose
   small sites with no trace** until it captions the key line or passes
   `smallSites: 'nodes'`.
-- `follow-placement` 542d2b9 plus rework (~/src/bandage-core-follow) and plugin
-  `snap-cut` 5938ac5 plus rework (~/src/jb2plugins/...-snap): the track holds
-  a cut snapped to a grid and slides the drawing between snaps (2 re-layouts
-  per 20-step pan, was 20; every held pan step a pure slide). **Agent running**
-  on making a zoom inside a level magnify continuously (scale from the view's
-  width, never its position). Needs review after.
+- `follow-placement` **68433c7** (~/src/bandage-core-follow, on a72f5dd) and
+  plugin `snap-cut` **d06a60a** (~/src/jb2plugins/...-snap, on 46f92cf): the
+  force-laid track holds a cut snapped to a grid (levels a factor of root two
+  apart, the cut 1.5 levels wide) and places the drawing from the window
+  alone. Measured with the continuity study's method at five loci: 2
+  re-layouts per 20-step pan (was 20); every held pan step a pure translation
+  (scale ratio exactly 1); a zoom inside a level magnifies like a camera
+  (`scale(w) = min(U / X(w), H / h)`, w the view's width in bp, never its
+  position); the same view gives the same picture however reached; nothing in
+  the window is clipped. Also built: fallback to the exact window when the
+  snapped cut is over the node limit, the fold threshold from the snap level,
+  a cache of the last 4 cuts, the drawing clipped at the key column, pane
+  gestures left to the view. Suites on ada: core 1,236, plugin 1,033 (its
+  typecheck shows only the 4 known errors). Filmstrips from a real JBrowse:
+  scratch `snap-cut/strips/real.gstm1.pan.width.png` and
+  `real.gstm1.zoom6.width.png`. **Not reviewed.** Known limits: the jump at a
+  snap boundary is as large as today's and zoom across levels still re-lays
+  out (the full fix is a stored layout, see the format study); at amylase and
+  KIV-2 the pane's height sets the scale, so a zoom inside a level does not
+  magnify there and the drawing spans 15 to 58% of the width; the scale has
+  small steps where a window edge crosses a link's gap; nobody has watched the
+  motion live; no amylase filmstrip.
 - `strand-flip-links` cd3da03 (~/src/bandage-core-strandflip, on a72f5dd): a
   mark and course for a same-end link. On the force layout the two marks
   overlap at one junction, and the gate found the marks hide neighbouring
@@ -234,7 +250,8 @@ a reboot: read these first.
 - `a35373ca96c0fb974.output`: review of `node-order` and both `perf-fix`
   branches: FINISHED, see those branches above (scratch
   `review-order-perf/`).
-- `ac617ef27d6e0c377.output`: snapped cut, zoom refinement (`snap-cut/`).
+- `ac617ef27d6e0c377.output`: snapped cut with its zoom refinement
+  (`snap-cut/`): FINISHED, see `follow-placement` above.
 - `a04fa2dfe999af7d3.output`: the counts review's named changes
   (`counts-fix/`): FINISHED, see `cohort-counts` above.
 - `adb54a7daa63376d8.output`: blind count of the engine session's lift grids
