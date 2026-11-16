@@ -236,8 +236,10 @@ a reboot: read these first.
 - `a4e49cdaf98555e98.output`: level-of-detail rework (scratch `lod2/`):
   FINISHED, see `level-of-detail` above.
 - `a8854096a9d4aafc3.output`: gene labels and one label pass (`genelabels/`).
-- `adefd38ac1f47b213.output`: the format additions study. **STOPPED by the
-  owner before it reported; it wrote no conclusions.** What it left:
+- `adefd38ac1f47b213.output`: the format additions study. The owner stopped
+  it and then resumed it from its transcript view, so it was **RUNNING AGAIN
+  when this was written and had not reported**. Read its final message first;
+  if there is none, this is what it had on disk at the stop:
   - Its method and evidence standard, written first:
     scratch `format-additions/method-preregistered.txt` (a need is
     "demonstrated" only with a named view on a named hosted file, today's
@@ -262,8 +264,8 @@ a reboot: read these first.
     change rows, the pairing rule, the layout side file questions, and the
     item on promoting the writer rule C27 to a stated guarantee (it had begun
     checking the hand-built file: `format-additions/c27.out` is only a path
-    error). **The three Fable reviews have nothing to judge yet.** Either
-    resume this agent or brief a new one from these files; the candidates and
+    error). Until it reports, the three Fable reviews have nothing to judge.
+    If it never reports, brief a new one from these files; the candidates and
     the questions put to it are in this session's messages to it and are
     summarised under "Do, in order".
 - `a0236db9317db564a.output`: checker repair (`checker-heads/`): FINISHED for
@@ -436,8 +438,9 @@ are its own counts by eye unless a blind count here is named.
 - Resume the checker agent (or its successor) on the reworked level-of-detail
   branch; then run `ada-gates.sh` at the final bandage-core head. The gates
   must pass, or each failure must be a named, accepted item.
-- Format: the study was stopped before reporting, so finish it first (resume
-  it or brief a new Fable agent from its files): each candidate stated both
+- Format: the study had not reported when this was written. If it has, go
+  straight to the three reviews; if it has not, finish it first (resume it or
+  brief a new Fable agent from its files): each candidate stated both
   inside the walk file and as a side file, with measured bytes, build cost
   and reader fetch cost, what it freezes, what it does not solve, and no
   recommendation. Candidates: complete adjacency; a bubble or site
