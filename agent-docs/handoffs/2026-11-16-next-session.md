@@ -73,16 +73,63 @@ running and reports into a transcript on disk.
 
 bandage-core, each in its own worktree:
 
-- `node-order` 45c0e43 (~/src/bandage-core-nodeorder, on a72f5dd): the layout
-  no longer depends on the order of segments and links (numeric-aware node
-  sort, seven other leaks). Suite green on ada (1280). **Under review** with
-  the next item.
 - `perf-fix` db44ade (scratch `perf/core-fix`, on a72f5dd) and plugin
-  `perf-fix` e628be0: the label search that hung CFH and took 89 s at amylase
-  (a grid walked cell by cell at 0.05 px cells). Measured in the real page:
-  amylase 90 s to 11 s, CFH hang to 20 s. Suite green on ada (1234). **Under
-  review**; the reviewer was also asked whether `orientToReference` misreads
-  ids ending in `-`.
+  `perf-fix` e628be0: the label search that hung CFH and took 89 s at amylase.
+  **Reviewed: land with named changes, tests only; land this first.** The
+  reviewer proved the same labels itself (486 specs byte-identical in
+  `figureSvg`, figure data and hover; 185,902 questions against a full search,
+  no mismatch) and measured 656 M map lookups down to 48 k at amylase's fit.
+  Before landing: add its three tests (`scratch review-order-perf/ship/zz/
+  killPf.test.ts`: label index rebuilt on zoom and after a drag; the y radius),
+  a test that a size label keeps half the contig thickness clear of another
+  node (not written), and replace the wall-clock test with a lookup count
+  (bound 1,000,000; the fix makes 35,401, the base 276 million). Plugin
+  commit: add a width-only change to its test. Note the hover functions are
+  untouched but the grid query they call is the rewritten one.
+- `node-order` 45c0e43 (~/src/bandage-core-nodeorder, on a72f5dd).
+  **Reviewed: land with named changes, after `perf-fix`.** Layout positions
+  are order-independent in 270 of 270 cases across 46 inputs, but "draws
+  identically" is false: `figureSvg` bytes and figure data still follow file
+  order. Before landing: break a tie in the link sort key
+  (`canonicalOrder.ts:12`: append `\t${e.fromStrand ?? ''}`; two links
+  joining one node pair end-to-end and start-to-start tie today), add the
+  three tests in `review-order-perf/ship/zz/killNo.test.ts`, drop "ties in
+  reference clearance" and "loop sums" from the claim (no graph makes them
+  observable), reword the claim to "lays out identically", and set
+  `departures: undefined` on the sorted copy at `pipeline.ts:241`. Combined
+  tree of both branches (scratch branch `review-order-perf/comb-pn`, d3ed369)
+  passes on ada: 1288 tests.
+- **Order leaks left for a following change** (found by that review): paint
+  order follows `graph.edges` order; an off-reference node's colour takes the
+  first placed neighbour in file order (`referenceSpan.ts:130-146`); figure
+  data rows carry the file's edge index and S order; the anchored and
+  sample-row layouts change with order (a tie in `projectAlleles.ts:132`); the
+  tube map's drawing lists differ. The proper fix is to put nodes and links in
+  canonical order once in the reader, remapping `departures.steps`; it changes
+  paint order for existing drawings, so it needs before/after pictures. Also
+  owed, as its own change: the rGFA reference is taken from the first rank-0
+  segment in three places (`pathAnchoring.ts:222`, `sampleRowLayout.ts:124`,
+  `tubeMap/coarsen.ts:293`).
+- **Two orientation faults, on the release head and every branch, each needing
+  its own fix** (same review; failing cases in
+  `review-order-perf/harness/orient.test.ts`). SERIOUS, not yet shown to the
+  owner on a page:
+  - On every table cut (walk files) and any rGFA with a reference walk, the
+    reader sets a reference node's `stable` without a strand
+    (`graphTables.ts:397-399`), so a node the reference steps backwards is
+    read as forward: a force drawing can come out mirrored, and
+    `deletionEdges` finds no skip where the reference reads the nodes
+    backwards (`pathAnchoring.ts:297`, `deletionEdges.ts:184-185`). Setting
+    the strand in the table reader fixed both on a scratch tree; the GFA-text
+    reader needs the same change (two reader-parity tests fail otherwise).
+    This bites pggb graphs, where the reference reads runs backwards.
+  - On path-anchored graphs under the stress engine, with the reference
+    reading a run backwards, the reference comes out non-monotone and two
+    links join far ends. FMMM is correct. The fix is in the engine package or
+    in passing `stable.strand` to it.
+  - The engine session's suspicion that ids ending in `-` are misread is not
+    the mechanism: both readers append the orientation to the name, so a
+    segment literally named `a-` is handled correctly.
 - `gene-labels` (core bc0e2f0 when written, plugin 5b9f8c2; both moving), built
   on the two perf-fix branches: a gene is named once, on the reference; a
   haplotype's own copy only when lifted; genes without a symbol not labelled;
@@ -188,7 +235,8 @@ a reboot: read these first.
   sites. It asked to be resumed when the reworked level-of-detail branch is
   ready.
 - `a35373ca96c0fb974.output`: review of `node-order` and both `perf-fix`
-  branches, with the landing order.
+  branches: FINISHED, see those branches above (scratch
+  `review-order-perf/`).
 - `ac617ef27d6e0c377.output`: snapped cut, zoom refinement (`snap-cut/`).
 - `a04fa2dfe999af7d3.output`: the counts review's named changes
   (`counts-fix/`): FINISHED, see `cohort-counts` above.
