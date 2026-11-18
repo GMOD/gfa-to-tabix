@@ -3,7 +3,7 @@
 The table below is kept with [walks-format.md](../walks-format.md): every
 normative sentence there carries a claim ID, `<!-- C76 -->`, and has a row
 here naming the check that tests it. ADR 0010 reuses the spec's IDs on its
-matching sentences, and the README and ADR 0009 carry C114 and C91.
+matching sentences, and ADR 0009 carries C91.
 [check-claims.py](../../scripts/check-claims.py) fails CI when an ID has no
 row, a row names no check or a check that doesn't exist, or a universal
 sentence of the spec or ADR 0010 has no ID. After the table, the audit of
@@ -141,7 +141,7 @@ in, and the root cause.
 | C105 | The tool reads the GFA more than once, so it takes a file path and refuses stdin; gzip input works | `test:walks_reads_a_file_not_stdin` `test:gzipped_input_gives_the_same_rows` `test:the_order_of_the_paths_changes_no_row` | `first_pass`, `run` | holds as reworded in ae7dada: a6fce8e said twice or three times, a count no test can see |
 | C106 | Sorts wait in up to 512 MB and 128 MB of memory, then in compressed runs in a temporary directory beside the output | `unit:the_sorts_wait_in_512_and_128_mb` `test:a_failed_write_leaves_no_temporary_file` | `SORT_BUDGET`, `DEPARTURE_SORT_BUDGET`, `TempDir` | holds |
 | C112 | The build decodes every walk row and compares, and gives an abridged row the span of its piece's blocks; no other row's `start end` is checked at build | `build:encode_all` `build:summary_row` `verify7:not stating its unit` `claims7:D6` `test:verify` | `encode_all`, `summary_row` | holds since d4af535 and ae7dada: ADR 0010's #112 said every row |
-| C114 | A file is a series of gzip units: the header, then per sequence its tiles, departure bins, detail units and table (README, as the coordinator rewords it) | `claims7:U1` `claims7:U9` `verify7:does not list its units` | `Outputs` | holds as reworded: the audit's #114 said a unit per tile and per block only |
+| C114 | A file is a series of gzip units: the header, then per sequence its tiles, departure bins, detail units and table (walks-format.md, Files and units, beside C32; was the README's) | `claims7:U1` `claims7:U9` `verify7:does not list its units` | `Outputs` | holds as reworded: the audit's #114 said a unit per tile and per block only |
 | C116 | Together the files hold every W or P line with a step on a node of that reference, cut into pieces filed under its tiles | `test:assert_rebuilds` `claims7:W5` `script:scripts/walks-truth.py` | `assign_chunks`, `cut_pieces` | holds |
 | C117 | An attach fetch reads the tiles `ownTiles` names, for a record whose leave or rejoin piece the read lacks, and takes its own steps and nothing else | `graph-walks:walkReader.test.ts: a tile fetched to attach gives its record the own steps and nothing else: $opts` `graph-walks:walkReader.test.ts: a leave piece the read lacks is fetched for the own steps, once per tile, within the byte budget` | the reader | holds |
 | C118 | A W or P line with no steps is skipped once its end is checked: no rows, record or `#hole`, it names no sequence, is not counted on stderr, and the overlap refusal doesn't apply | `test:a_w_line_with_no_steps_is_skipped` | `first_pass` | holds since 16d8e0b |

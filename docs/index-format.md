@@ -20,7 +20,7 @@ gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
 | `-o`, `--out <prefix>` | Output prefix. Default the input name without `.gfa[.gz]`.                              |
 | `--layout <layout>`    | `anchored` (default) or `contig`; see [layouts](#layouts).                              |
 | `--format <1\|2>`      | `2` (default) writes the [one file](#what-the-file-holds); `1` writes [two](#format-1), for readers before graph-walks 4.4 and the JBrowse plugin 8.2. |
-| `--max-component <n>`  | Anchored: a component of more than n nodes keeps its own coordinates, and a graph track draws it as stubs; `none` files every component under the reference. Default 10000; see the [README](../README.md#why-does-the-graph-track-draw-some-bubbles-as-stubs---max-component). |
+| `--max-component <n>`  | Anchored: a component of more than n nodes keeps its own coordinates, and a graph track draws it as stubs; `none` files every component under the reference. Default 10000; see [giant components](#giant-components---max-component). |
 
 ## Inputs
 
@@ -29,6 +29,15 @@ first two bytes, whatever the name. `-` reads stdin, given `-o`. The tool takes
 coordinates from rGFA tags or from a reference path, depending on which lines
 the file has; see
 [how the tool tells them apart](#how-the-tool-tells-them-apart).
+
+|                           | rGFA                                                          | Plain GFA                                      |
+| ------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| Written by                | minigraph, Minigraph-Cactus `*.sv.gfa.gz`                     | pggb, odgi, `vg convert -f`                    |
+| Node coordinates from     | the `SN`, `SO` and `SR` tags                                  | the reference's P or W lines                   |
+| Assemblies with each node | not in the index                                              | an `SB:H:` bitmask on every row                |
+| `build`'s bubbles         | `gfatools bubble`, when on PATH                               | a `vg deconstruct -a` VCF, given as `--snarls` |
+| `build --tier` default    | 10000 bp                                                      | 50 bp                                          |
+| Walk files (`--walks`)    | minigraph writes no paths and names nodes `s1`, `s2`, so none | from a base-level graph with integer node ids  |
 
 ### rGFA
 
@@ -161,6 +170,43 @@ Use it to browse the graph from a non-reference assembly's coordinates. A
 zero-length node keeps its empty interval, as the JBrowse scripts wrote it, so
 a window that starts at the node misses it.
 
+## Giant components (`--max-component`)
+
+pggb grows components of millions of nodes across reference gaps and repeat
+arrays. Filed under the reference, such a component lands in every window over
+it, and a browser can't load what those windows return.
+
+- The tool files a component of more than `--max-component` nodes, default
+  10,000, under its own coordinates instead. Each of its nodes sits at its
+  position on the first haplotype path that reaches it
+- At a locus under a moved component, the graph track draws the reference and
+  a faded dead-end node at each place the component joins it, whose hover says
+  the component is too large to draw there
+- The tool lists each moved component on stderr with the reference interval
+  it would have filed under:
+
+```
+3 of the graph's components are over --max-component 10000, so a graph track draws them as stubs; --max-component none files them under the reference:
+  3506022 nodes under GRCh38#0#chrY:26640509-56821961
+  202687 nodes under GRCh38#0#chrY:12508026-56887902
+  31798 nodes under GRCh38#0#chrY:11531191-11650765
+```
+
+- Walk files (`--walks`) and `--layout contig` have no limit, so a haplotype
+  view still draws every path through the region
+- **Raise it** to draw a moved bubble whole, at the cost of every window under
+  it reading all its nodes. `--max-component 50000` draws the third component
+  above whole and leaves the two giants moved
+- **`--max-component none`** files every component under the reference, as
+  earlier versions did
+- **Lower it** when windows still load slowly: a window reads about N node
+  rows at most, plus their links
+- `build` and `fold` take the same option and apply it to the coarse tier too
+- A moved component's nodes spread over the contigs of the assemblies whose
+  paths reach them first, and a link between two contigs gets a row on each
+- No reader yet expands a stub into the moved component.
+  [ADR 0005](adr/0005-giant-components.md) has the measurements
+
 ## What the file holds
 
 The first rows of `<prefix>.graph.bed.gz` for `tests/data/paths.gfa`:
@@ -241,7 +287,8 @@ assemblies in `SM:Z:assembly,...` in place of `SB:H:`, and there is no header.
   2026-10-28. For a larger graph use [`--walks`](walks-format.md)
 - A Tabix index holds coordinates up to 512 Mb. A file with a row past that
   gets a `.csi` index instead, which holds up to 34 Gb, and every other file
-  keeps its `.tbi`
+  keeps its `.tbi`. htslib and JBrowse read both; JBrowse needs `"csi": true`
+  in the track's adapter
 
 ## Wide intervals
 

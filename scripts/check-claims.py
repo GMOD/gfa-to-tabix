@@ -36,7 +36,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TRIPPED = ['docs/walks-format.md', 'docs/adr/0010-walks-unit-table.md']
-CLAIMED = TRIPPED + ['docs/adr/0009-departure-records.md', 'README.md']
+CLAIMED = TRIPPED + ['docs/adr/0009-departure-records.md']
 TABLE = ROOT / 'docs/departures/claims7.md'
 TESTS = ROOT / 'docs/walks-container/reader/graph-walks-tests.txt'
 UNIVERSAL = re.compile(r'\b(every|each|never|always|only|unique|exactly)\b', re.I)

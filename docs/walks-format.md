@@ -366,7 +366,7 @@ it alone, and `zcat` reads the whole file as text.
   `tile` and `departures` units in order of position, a tile at its
   `name` and a departure bin at its `start`; then its `detail` units, a tile's
   followed by its `blocks` unit; then its `table` unit, which lists them.
-  <!-- C32 --> At one start a tile comes
+  <!-- C32 C114 --> At one start a tile comes
   before the departure bins that start there, and smaller bins before
   larger <!-- C33 -->
 - **Every unit but the header** starts with a line
