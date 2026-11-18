@@ -173,8 +173,8 @@ a window that starts at the node misses it.
 ## Giant components (`--max-component`)
 
 pggb grows components of millions of nodes across reference gaps and repeat
-arrays. Filed under the reference, such a component lands in every window over
-it, and a browser can't load what those windows return.
+arrays. Filed under the reference, such a component would come back whole with
+every window over it, more rows than a browser can load.
 
 - The tool files a component of more than `--max-component` nodes, default
   10,000, under its own coordinates instead. Each of its nodes sits at its
@@ -194,8 +194,8 @@ it, and a browser can't load what those windows return.
 
 - Walk files (`--walks`) and `--layout contig` have no limit, so a haplotype
   view still draws every path through the region
-- **Raise it** to draw a moved bubble whole, at the cost of every window under
-  it reading all its nodes. `--max-component 50000` draws the third component
+- **Raise it** to draw a moved bubble whole; every window under the bubble
+  then reads all its nodes. `--max-component 50000` draws the third component
   above whole and leaves the two giants moved
 - **`--max-component none`** files every component under the reference, as
   earlier versions did

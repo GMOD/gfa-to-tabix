@@ -12,11 +12,14 @@ CI runs these on every push:
   to redraw them
 - `scripts/check-links.py`: every relative link and anchor in the Markdown
 - `scripts/check-claims.py`: every normative sentence of
-  [walks-format.md](walks-format.md) carries a claim ID with a check in
+  [walks-format.md](walks-format.md) has a claim ID with a check in
   [claims7.md](departures/claims7.md)
-- `scripts/check-walks.sh`: walk files built from the test graphs, read back
-- `scripts/parity.sh` and `scripts/parity-fold.sh`: the `contig` layout
-  against the JBrowse scripts it replaced, byte for byte
+- `scripts/check-walks.sh`: builds every walk fixture and runs the release
+  checks on each file, after showing that those checks fail on broken files
+- `scripts/parity-fixtures.sh`: the `contig` layout against the JBrowse
+  scripts it replaced, byte for byte
+- `scripts/parity-fold.sh`: `fold` against the fold bandage-core runs in the
+  graph track, byte for byte
 
 ## Design decisions
 
@@ -33,7 +36,7 @@ CI runs these on every push:
 - [ADR 0006](adr/0006-walks-skip-rows.md): marking a haplotype that jumps
   over a window
 - [ADR 0007](adr/0007-node-link-format-2.md): node and link format 2, one file
-  with carriers as bits
+  with each node's assemblies as bits
 - [ADR 0008](adr/0008-index-keeps-its-placement.md): the index keeps its
   placement, and walk files take placement work
 - [ADR 0009](adr/0009-departure-records.md): one record per departure, and

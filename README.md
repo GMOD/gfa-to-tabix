@@ -26,10 +26,11 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ./gfa-to-tabix build ecoli.gfa.gz --reference K12 -o ecoli
 ```
 
-- `build` writes the index, its bubbles and a
-  [JBrowse track config](docs/subcommands.md#the-jbrowse-config)
+- `build` writes the index and everything else a JBrowse graph track reads,
+  including a [track config](docs/subcommands.md#the-jbrowse-config)
 - [Releases](https://github.com/GMOD/gfa-to-tabix/releases) also has a macOS
-  binary for Apple silicon, and `cargo install gfa-to-tabix` builds one
+  binary for Apple silicon, and `cargo install gfa-to-tabix` builds one with
+  Rust 1.91 or later
 
 ## Haplotype paths
 
@@ -38,12 +39,14 @@ vg convert -f chr22.gbz > chr22.gfa
 ./gfa-to-tabix chr22.gfa --walks --refs GRCh38 -o chr22
 ```
 
-This writes `chr22.GRCh38.walks.gz` and its directory `chr22.GRCh38.walks.gz.idx`
-in walk format 8. The file is cut into tiles along GRCh38. A viewer fetches the
-tiles over a region by range request and rebuilds every haplotype's path
-through it with [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks).
+`--walks` reads a base-level GFA with integer node ids and W or P lines, as
+`vg convert -f` writes from a GBZ. The command writes `chr22.GRCh38.walks.gz`
+in walk format 8, cut into tiles along GRCh38, and its directory
+`chr22.GRCh38.walks.gz.idx`. A viewer fetches the tiles over a region by range
+request, and [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks)
+rebuilds every haplotype's path through the region from them.
 
-![A 90 bp chr1 graph with GRCh38#0, HG002#1 and CHM13#0 as lines through its nodes, CHM13#0 dipping to a node of its own between 30 and 60; under it hprc.GRCh38.walks.gz as a bar of header, tile 0-30, tile 30-60, tile 60-90 and table, each tile under its stretch of chr1; tile 30-60 is shaded with the graph above it, and the table points to its bytes 278-417](docs/figures/walks-tile.svg)
+![A 90 bp chr1 graph with GRCh38#0, HG002#1 and CHM13#0 as lines through its nodes, CHM13#0 dipping to a node of its own between 30 and 60; under it hprc.GRCh38.walks.gz as a bar of header, tile 0-30, tile 30-60, tile 60-90 and table, each tile under its stretch of chr1; tile 30-60 is shaded with the graph above it, and an arrow runs from table to the tile's bytes 278-417](docs/figures/walks-tile.svg)
 
 ## Gallery
 
@@ -59,7 +62,7 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
 </tr>
 <tr>
 <td width="33%"><a href="https://github.com/GMOD/ggbandage/blob/main/docs/gallery.md#cyp2d6-deletion-as-an-arch-over-the-gene"><img src="https://raw.githubusercontent.com/GMOD/ggbandage/main/gallery/cyp2d6_stress.png" width="100%" alt="The CYP2D6 graph with GRCh38 drawn straight and a dashed link arching over CYP2D6"></a><br>CYP2D6 and the link that skips it</td>
-<td width="33%"><a href="https://github.com/GMOD/ggbandage/blob/main/docs/gallery.md#core-shell-and-cloud-at-gstm1"><img src="https://raw.githubusercontent.com/GMOD/ggbandage/main/gallery/gstm1_core.png" width="100%" alt="The GSTM1 graph, each node coloured by the share of HPRC haplotypes through it"></a><br>GSTM1 by share of haplotypes</td>
+<td width="33%"><a href="https://github.com/GMOD/ggbandage/blob/main/docs/gallery.md#core-shell-and-cloud-at-gstm1"><img src="https://raw.githubusercontent.com/GMOD/ggbandage/main/gallery/gstm1_core.png" width="100%" alt="The GSTM1 graph, each node coloured by the share of HPRC haplotypes through it"></a><br>GSTM1's nodes by share of haplotypes</td>
 <td width="33%"><a href="https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer/blob/main/docs/haplotypes.md#facets"><img src="https://raw.githubusercontent.com/GMOD/jbrowse-plugin-graphgenomeviewer/main/img/force_kiv2_facet.png" width="100%" alt="KIV-2 in a JBrowse graph track, one panel per haplotype showing its own loops"></a><br>KIV-2, a panel per haplotype</td>
 </tr>
 </table>
@@ -72,8 +75,8 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
   readers
 - [Subcommands](docs/subcommands.md): `build` and its JBrowse config,
   `bubbles`, `fold` and `paths`
-- [Comparison with gbz-base](docs/gbz-comparison.md): the other way to serve
-  a graph by region
+- [Comparison with gbz-base](docs/gbz-comparison.md), which serves a GBZ by
+  region from SQLite
 - [Developing](docs/developing.md): design decisions, open problems and the
   checks CI runs
 
