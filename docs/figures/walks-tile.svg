@@ -1,63 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="424" viewBox="0 0 800 424" font-family="Helvetica, Arial, sans-serif"><rect width="800" height="424" fill="white"/>
-<rect x="338.7" y="40.0" width="218.7" height="174.0" rx="0" fill="#fff3b0"/>
-<rect x="283.0" y="240.0" width="330.0" height="170.0" rx="4" fill="#fff3b0"/>
-<path d="M338.7,214 L557.3,214 L613.0,240 L283.0,240 z" fill="#fff3b0" opacity="0.5"/>
-<text x="24.0" y="26.0" font-size="13" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">gfa-to-tabix chr1.gfa --walks --refs GRCh38 --tile 30 -o hprc</text>
-<text x="24.0" y="62.0" font-size="12" fill="#57606a" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">chr1</text>
-<rect x="121.0" y="48.0" width="216.7" height="20.0" rx="3" fill="white" stroke="#d0d7de" stroke-width="1"/>
-<text x="229.3" y="62.0" font-size="11.5" fill="#57606a" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 0-30</text>
-<rect x="339.7" y="48.0" width="216.7" height="20.0" rx="3" fill="#ffe98a" stroke="#d4b106" stroke-width="1"/>
-<text x="448.0" y="62.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 30-60</text>
-<rect x="558.3" y="48.0" width="216.7" height="20.0" rx="3" fill="white" stroke="#d0d7de" stroke-width="1"/>
-<text x="666.7" y="62.0" font-size="11.5" fill="#57606a" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 60-90</text>
-<rect x="121.5" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="156.4" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">1</text>
-<rect x="194.4" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="229.3" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">2</text>
-<rect x="267.3" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="302.2" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">3</text>
-<rect x="340.2" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="375.1" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">4</text>
-<rect x="413.1" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="448.0" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">5</text>
-<rect x="485.9" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="520.9" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">6</text>
-<rect x="558.8" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="593.8" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">7</text>
-<rect x="631.7" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="666.7" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">8</text>
-<rect x="704.6" y="86.0" width="69.9" height="68.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="739.6" y="102.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">9</text>
-<path d="M129.0,116 L767.0,116" fill="none" stroke="#575757" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="24.0" y="120.0" font-size="12" fill="#575757" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">GRCh38#0</text>
-<path d="M129.0,130 L767.0,130" fill="none" stroke="#c77a2b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="24.0" y="134.0" font-size="12" fill="#c77a2b" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">HG002#1</text>
-<rect x="426.1" y="164.0" width="43.7" height="36.0" rx="4" fill="#e8eef7" stroke="#4a6fa5" stroke-width="1.2"/>
-<text x="448.0" y="177.0" font-size="11.5" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">10</text>
-<path d="M129.0,144 L403.6,144 C411.6,144 411.6,188.0 419.6,188.0 L476.4,188.0 C484.4,188.0 484.4,144 492.4,144 L767.0,144" fill="none" stroke="#4a6fa5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="24.0" y="148.0" font-size="12" fill="#4a6fa5" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">CHM13#0</text>
-<text x="299.0" y="266.0" font-size="12" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">hprc.GRCh38.walks.gz  tile 30-60</text>
-<text x="299.0" y="300.0" font-size="13" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">ref</text>
-<text x="359.0" y="300.0" font-size="13" fill="#575757" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">GRCh38#0</text>
-<rect x="459.0" y="285.0" width="34.0" height="22.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="476.0" y="300.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">4</text>
-<rect x="497.0" y="285.0" width="34.0" height="22.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="514.0" y="300.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">5</text>
-<rect x="535.0" y="285.0" width="34.0" height="22.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="552.0" y="300.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">6</text>
-<text x="299.0" y="330.0" font-size="13" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">route</text>
-<text x="359.0" y="330.0" font-size="13" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">0</text>
-<rect x="459.0" y="315.0" width="34.0" height="22.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="476.0" y="330.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">4</text>
-<rect x="497.0" y="315.0" width="34.0" height="22.0" rx="4" fill="#e8eef7" stroke="#4a6fa5" stroke-width="1.2"/>
-<text x="514.0" y="330.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">10</text>
-<rect x="535.0" y="315.0" width="34.0" height="22.0" rx="4" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
-<text x="552.0" y="330.0" font-size="11" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">6</text>
-<text x="299.0" y="360.0" font-size="13" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">walk</text>
-<text x="359.0" y="360.0" font-size="13" fill="#4a6fa5" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">CHM13#0</text>
-<rect x="459.0" y="345.0" width="68.0" height="22.0" rx="11" fill="white" stroke="#1f2328" stroke-width="1.2"/>
-<text x="493.0" y="360.0" font-size="12" fill="#1f2328" font-weight="bold" font-family="Helvetica, Arial, sans-serif" text-anchor="middle" xml:space="preserve">route 0</text>
-<text x="299.0" y="390.0" font-size="13" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">walk</text>
-<text x="359.0" y="390.0" font-size="13" fill="#c77a2b" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">HG002#1</text>
-<text x="459.0" y="390.0" font-size="12" fill="#57606a" font-weight="normal" font-family="Helvetica, Arial, sans-serif" xml:space="preserve">follows GRCh38</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="270" viewBox="0 0 800 270" font-family="Helvetica, Arial, sans-serif"><rect width="800" height="270" fill="white"/>
+<rect x="316.7" y="14.0" width="186.7" height="244.0" rx="4" fill="#fff3b0"/>
+<text x="24.0" y="44.0" font-size="12" fill="#57606a" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">chr1</text>
+<line x1="130.0" y1="40.0" x2="690.0" y2="40.0" stroke="#d0d7de" stroke-width="1" stroke-linecap="round"/>
+<line x1="130.0" y1="35.0" x2="130.0" y2="40.0" stroke="#57606a" stroke-width="1" stroke-linecap="round"/>
+<text x="130.0" y="30.0" font-size="11" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">0</text>
+<line x1="316.7" y1="35.0" x2="316.7" y2="40.0" stroke="#57606a" stroke-width="1" stroke-linecap="round"/>
+<text x="316.7" y="30.0" font-size="11" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">30</text>
+<line x1="503.3" y1="35.0" x2="503.3" y2="40.0" stroke="#57606a" stroke-width="1" stroke-linecap="round"/>
+<text x="503.3" y="30.0" font-size="11" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">60</text>
+<line x1="690.0" y1="35.0" x2="690.0" y2="40.0" stroke="#57606a" stroke-width="1" stroke-linecap="round"/>
+<text x="690.0" y="30.0" font-size="11" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">90</text>
+<rect x="132.0" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<rect x="194.2" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<rect x="256.4" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<rect x="318.7" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<rect x="380.9" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<rect x="443.1" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<rect x="505.3" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<rect x="567.6" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<rect x="629.8" y="54.0" width="58.2" height="64.0" rx="5" fill="#eceff2" stroke="#575757" stroke-width="1.2"/>
+<path d="M138.0,72 L682.0,72" fill="none" stroke="#575757" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="24.0" y="76.0" font-size="12" fill="#575757" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">GRCh38#0</text>
+<path d="M138.0,86 L682.0,86" fill="none" stroke="#c77a2b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="24.0" y="90.0" font-size="12" fill="#c77a2b" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">HG002#1</text>
+<rect x="391.3" y="126.0" width="37.3" height="22.0" rx="5" fill="#e8eef7" stroke="#4a6fa5" stroke-width="1.2"/>
+<path d="M138.0,100 L370.9,100 C378.9,100 378.9,137.0 386.9,137.0 L433.1,137.0 C441.1,137.0 441.1,100 449.1,100 L682.0,100" fill="none" stroke="#4a6fa5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="24.0" y="104.0" font-size="12" fill="#4a6fa5" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">CHM13#0</text>
+<text x="24.0" y="182.0" font-size="12.5" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" xml:space="preserve">hprc.GRCh38.walks.gz</text>
+<rect x="26.0" y="194.0" width="102.0" height="30.0" rx="5" fill="white" stroke="#d0d7de" stroke-width="1.2"/>
+<text x="77.0" y="214.0" font-size="12" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">header</text>
+<rect x="132.0" y="194.0" width="182.7" height="30.0" rx="5" fill="white" stroke="#d0d7de" stroke-width="1.2"/>
+<text x="223.3" y="214.0" font-size="12" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 0-30</text>
+<rect x="318.7" y="194.0" width="182.7" height="30.0" rx="5" fill="#ffe066" stroke="#d4a72c" stroke-width="1.2"/>
+<text x="410.0" y="214.0" font-size="12" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 30-60</text>
+<rect x="505.3" y="194.0" width="182.7" height="30.0" rx="5" fill="white" stroke="#d0d7de" stroke-width="1.2"/>
+<text x="596.7" y="214.0" font-size="12" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">tile 60-90</text>
+<rect x="692.0" y="194.0" width="82.0" height="30.0" rx="5" fill="white" stroke="#d0d7de" stroke-width="1.2"/>
+<text x="733.0" y="214.0" font-size="12" fill="#57606a" font-weight="normal" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">table</text>
+<text x="410.0" y="246.0" font-size="12" fill="#1f2328" font-weight="bold" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" text-anchor="middle" xml:space="preserve">bytes 278-417</text>
+<path d="M733.0,226 V236 Q733.0,242 725.0,242 H482.6" fill="none" stroke="#57606a" stroke-width="1.4"/><path d="M483.6,237 l-9,5 l9,5 z" fill="#57606a"/>
 </svg>

@@ -765,13 +765,16 @@ TILE = "walks-tile"
 
 def tile_parts(lines, gfa):
     """What the tile figure draws: the reference's nodes, each haplotype's
-    detours, and the rows of the window's tile."""
+    detours, and the file's units in order with the window's byte range."""
     lengths, _, paths, contigs = read_gfa(gfa)
     ref = next(name for name in paths if name.startswith(f"{REF}#"))
     reference = [str(n) for n in paths[ref]]
     spans = node_spans(reference, lengths)
-    units = units_of(lines)
-    unit, rows = next((u, rs) for u, rs in units if u[4] == "tile" and int(u[2]) == WINDOW[0])
+    units = [u[4] for u, _ in units_of(lines)]
+    if units != ["tile"] * (len(units) - 1) + ["table"]:
+        sys.exit(f"figures.py: the tile figure expects tiles and a table, got {units}")
+    entries = [f for f in lines if f[0] == "#entry"]
+    window = next(f for f in entries if int(f[2]) == WINDOW[0])
     return {
         "contig": contigs[ref][0],
         "tile": next(int(f.split(":")[-1]) for f in lines[0] if f.startswith("tile:")),
@@ -779,83 +782,66 @@ def tile_parts(lines, gfa):
         "spans": spans,
         "lengths": lengths,
         "haplotypes": [(name, detours(spans, [str(n) for n in paths[name]])) for name in paths if name != ref],
-        "rows": rows,
+        "tiles": [(int(f[2]), int(f[3])) for f in entries],
+        "bytes": byte_range(int(window[6]), int(window[7])),
     }
 
 
 def tile_svg(parts):
-    """The tiles, the reference's nodes with each haplotype as a lane
-    through the nodes it visits, and what the window's tile holds: the
-    reference's nodes, each route's, and the routes each haplotype takes."""
+    """The graph along the reference with each haplotype as a lane, over
+    the file as a bar of its units, each tile under its stretch of the
+    reference; the window's tile is shaded down to its byte range."""
     c, shade = Canvas(), Canvas()
-    width, left, x0 = 800, 24, 120
-    x_of = lambda bp: x0 + (width - 24 - x0) * bp / parts["length"]
-    spans, rows, tile = parts["spans"], parts["rows"], parts["tile"]
-    c.say(left, 26, " ".join(["gfa-to-tabix", "chr1.gfa", *SCHEMATIC_OPTIONS, "-o", PREFIX]), 13, weight="bold")
-    c.say(left, 62, parts["contig"], 12, MUTED, "bold")
-    for start in range(0, parts["length"], tile):
-        a, b = x_of(start), x_of(start + tile)
-        inside = start == WINDOW[0]
-        c.rect(a + 1, 48, b - a - 2, 20, "#ffe98a" if inside else "white", 3, "#d4b106" if inside else LINE)
-        c.say((a + b) / 2, 62, f"tile {start}-{start + tile}", 11.5, INK if inside else MUTED, "bold", anchor="middle")
-    y, box_h, own_h = 86, 68, 36
-    for n, (start, end) in spans.items():
-        c.rect(x_of(start) + 1.5, y, x_of(end) - x_of(start) - 3, box_h, REF_FILL, 4, REF_STROKE, 1.2)
-        c.say((x_of(start) + x_of(end)) / 2, y + 16, n, 11.5, INK, "bold", SANS, "middle")
-    c.path(f"M{x_of(0) + 9:.1f},{y + 30} L{x_of(parts['length']) - 9:.1f},{y + 30}", REF_STROKE)
-    c.say(left, y + 34, f"{REF}#0", 12, REF_STROKE, "bold")
-    colours, own = {}, {}
+    width, left, x0 = 800, 24, 130
+    x_of = lambda bp: x0 + (width - 110 - x0) * bp / parts["length"]
+    spans, tile = parts["spans"], parts["tile"]
+    axis = 40
+    c.say(left, axis + 4, parts["contig"], 12, MUTED, "bold")
+    c.line(x_of(0), axis, x_of(parts["length"]), axis, LINE)
+    for bp in range(0, parts["length"] + 1, tile):
+        c.line(x_of(bp), axis - 5, x_of(bp), axis, MUTED)
+        c.say(x_of(bp), axis - 10, str(bp), 11, MUTED, anchor="middle")
+    y, box_h, own_h = axis + 14, 64, 22
+    for start, end in spans.values():
+        c.rect(x_of(start) + 2, y, x_of(end) - x_of(start) - 4, box_h, REF_FILL, 5, REF_STROKE, 1.2)
+    lane = lambda k: y + 18 + 14 * k
+    c.path(f"M{x_of(0) + 8:.1f},{lane(0)} L{x_of(parts['length']) - 8:.1f},{lane(0)}", REF_STROKE)
+    c.say(left, lane(0) + 4, f"{REF}#0", 12, REF_STROKE, "bold")
     lanes = sorted(enumerate(parts["haplotypes"]), key=lambda h: bool(h[1][1]))
-    own_y = y + box_h + 10
-    for lane, (i, (name, dips)) in enumerate(lanes):
+    own_y = y + box_h + 8
+    for k, (i, (name, dips)) in enumerate(lanes, 1):
         fill, _, stroke = HAPLOTYPE_COLOURS[i]
-        ly = y + 44 + 14 * lane
-        d = f"M{x_of(0) + 9:.1f},{ly}"
+        ly = lane(k)
+        d = f"M{x_of(0) + 8:.1f},{ly}"
         for leave, rejoin, nodes in dips:
             xl, xr, low = x_of(leave), x_of(rejoin), own_y + own_h / 2
             w = min(x_of(sum(parts["lengths"][n] for n in nodes)) - x_of(0), xr - xl - 22)
-            c.rect((xl + xr - w) / 2, own_y, w, own_h, fill, 4, stroke, 1.2)
-            c.say((xl + xr) / 2, own_y + 13, " ".join(nodes), 11.5, INK, "bold", SANS, "middle")
-            d += (f" L{xl - 8:.1f},{ly} C{xl:.1f},{ly} {xl:.1f},{low + 6:.1f} {xl + 8:.1f},{low + 6:.1f}"
-                  f" L{xr - 8:.1f},{low + 6:.1f} C{xr:.1f},{low + 6:.1f} {xr:.1f},{ly} {xr + 8:.1f},{ly}")
-            own |= {int(n): HAPLOTYPE_COLOURS[i] for n in nodes if int(n) not in own}
-        c.path(f"{d} L{x_of(parts['length']) - 9:.1f},{ly}", stroke)
+            c.rect((xl + xr - w) / 2, own_y, w, own_h, fill, 5, stroke, 1.2)
+            d += (f" L{xl - 8:.1f},{ly} C{xl:.1f},{ly} {xl:.1f},{low:.1f} {xl + 8:.1f},{low:.1f}"
+                  f" L{xr - 8:.1f},{low:.1f} C{xr:.1f},{low:.1f} {xr:.1f},{ly} {xr + 8:.1f},{ly}")
+        c.path(f"{d} L{x_of(parts['length']) - 8:.1f},{ly}", stroke)
         c.say(left, ly + 4, name, 12, stroke, "bold")
-        colours[name] = stroke
-    band = own_y + own_h + 14
-    shade.rect(x_of(WINDOW[0]), 40, x_of(WINDOW[1]) - x_of(WINDOW[0]), band - 40, HIGHLIGHT)
-
-    routes = decode_walks(rows)[1]
-    held = [("ref", f"{REF}#0", REF_STROKE, [h[0] for r in rows if r[3] == "ref" for h in deltas(r[9])[0]], None)]
-    held += [("route", str(i), INK, [h[0] for h in (entry, *interior, exit_)], None)
-             for i, (entry, interior, exit_) in enumerate(routes)]
-    held += [("walk", r[4].rsplit("#", 1)[0], colours[r[4].rsplit("#", 1)[0]], [], [i for i, _ in deltas(r[10])[0]])
-             for r in rows if r[3] == "walk"]
-
-    top, chip, block_w = band + 26, 34, 330
-    block_x = (x_of(WINDOW[0]) + x_of(WINDOW[1]) - block_w) / 2
-    name = f"{PREFIX}.{REF}.walks.gz"
-    c.say(block_x + 16, top + 26, f"{name}  tile {WINDOW[0]}-{WINDOW[1]}", 12, weight="bold")
-    y = top + 30
-    for kind, who, ink, ids, taken in held:
-        y += 30
-        c.say(block_x + 16, y, kind, 13, INK, "bold")
-        c.say(block_x + 76, y, who, 13, ink, "bold")
-        x = block_x + 176
-        for k, n in enumerate(ids):
-            fill, _, stroke = own.get(n, (REF_FILL, None, REF_STROKE))
-            node_box(c, x + k * (chip + 4) - 1.5, x + k * (chip + 4) + chip + 1.5, y - 15, 22, str(n), fill, stroke)
-        for k, i in enumerate(taken or []):
-            c.rect(x + k * 76, y - 15, 68, 22, "white", 11, INK, 1.2)
-            c.say(x + k * 76 + 34, y, f"route {i}", 12, INK, "bold", SANS, "middle")
-        if taken == []:
-            c.say(x, y, f"follows {REF}", 12, MUTED, font=SANS)
-    bottom = y + 20
-    shade.rect(block_x, top, block_w, bottom - top, HIGHLIGHT, 4)
-    shade.out.append(f'<path d="M{x_of(WINDOW[0]):.1f},{band} L{x_of(WINDOW[1]):.1f},{band} L{block_x + block_w:.1f},{top} '
-                     f'L{block_x:.1f},{top} z" fill="{HIGHLIGHT}" opacity="0.5"/>')
+    top = own_y + own_h + 34
+    c.say(left, top, f"{PREFIX}.{REF}.walks.gz", 12.5, INK, "bold")
+    bar, bar_h = top + 12, 30
+    blocks = [(left, x_of(0), "header", False)]
+    blocks += [(x_of(a), x_of(b), f"tile {a}-{b}", a == WINDOW[0]) for a, b in parts["tiles"]]
+    blocks += [(x_of(parts["length"]), width - left, "table", False)]
+    for a, b, label, lit in blocks:
+        c.rect(a + 2, bar, b - a - 4, bar_h, "#ffe066" if lit else "white", 5, "#d4a72c" if lit else LINE, 1.2)
+        c.say((a + b) / 2, bar + 20, label, 12, INK if lit else MUTED, "bold" if lit else "normal", anchor="middle")
+    label_y = bar + bar_h + 22
+    mid = (x_of(WINDOW[0]) + x_of(WINDOW[1])) / 2
+    c.say(mid, label_y, parts["bytes"], 12, INK, "bold", anchor="middle")
+    table_x = (x_of(parts["length"]) + width - left) / 2
+    tip = mid + 4.2 * len(parts["bytes"]) + 10
+    c.out.append(f'<path d="M{table_x:.1f},{bar + bar_h + 2} V{label_y - 10} Q{table_x:.1f},{label_y - 4} {table_x - 8:.1f},{label_y - 4} '
+                 f'H{tip + 8:.1f}" fill="none" stroke="{MUTED}" stroke-width="1.4"/>'
+                 f'<path d="M{tip + 9:.1f},{label_y - 9} l-9,5 l9,5 z" fill="{MUTED}"/>')
+    bottom = label_y + 12
+    shade.rect(x_of(WINDOW[0]), axis - 26, x_of(WINDOW[1]) - x_of(WINDOW[0]), bottom - axis + 26, HIGHLIGHT, 4)
     c.out.insert(0, "\n".join(shade.out))
-    return c.svg(width, bottom + 14)
+    return c.svg(width, bottom + 12)
 
 
 def bytes_svg(parts):

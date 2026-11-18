@@ -43,7 +43,7 @@ in walk format 8. The file is cut into tiles along GRCh38. A viewer fetches the
 tiles over a region by range request and rebuilds every haplotype's path
 through it with [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks).
 
-![GRCh38 along nodes 1 to 9 of a 90 bp chr1 cut into three tiles, HG002#1 passing through the same nodes and CHM13#0 through its node 10 in place of node 5; tile 30 of hprc.GRCh38.walks.gz holds GRCh38's nodes 4 5 6, route 0 through nodes 4 10 6, a walk for CHM13#0 that takes route 0 and a walk for HG002#1 that takes no route](docs/figures/walks-tile.svg)
+![A 90 bp chr1 graph with GRCh38#0, HG002#1 and CHM13#0 as lines through its nodes, CHM13#0 dipping to a node of its own between 30 and 60; under it hprc.GRCh38.walks.gz as a bar of header, tile 0-30, tile 30-60, tile 60-90 and table, each tile under its stretch of chr1; tile 30-60 is shaded with the graph above it, and the table points to its bytes 278-417](docs/figures/walks-tile.svg)
 
 ## Gallery
 
