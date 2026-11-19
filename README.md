@@ -75,8 +75,8 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
   readers
 - [Subcommands](docs/subcommands.md): `build` and its JBrowse config,
   `bubbles`, `fold` and `paths`
-- [Comparison with gbz-base](docs/gbz-comparison.md), which serves a GBZ by
-  region from SQLite
+- [Comparison with gbz-base and gfaidx](docs/comparison.md): how the three
+  differ, which to pick, and measurements on the same graphs
 - [Developing](docs/developing.md): design decisions, open problems and the
   checks CI runs
 

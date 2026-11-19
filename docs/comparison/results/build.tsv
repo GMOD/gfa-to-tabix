@@ -1,0 +1,11 @@
+graph	tool	step	seconds	peak_kb	status
+mc22	gfaidx	index_gfa	172.43	822392	0
+mc22	gfaidx	index_coordinates	2.10	140748	0
+mc22	gfa-to-tabix	walks	52.54	1093840	0
+mc22	gfa-to-tabix	walks-sequences	54.00	1521420	0
+mc22	gfa-to-tabix	index	145.28	8159392	0
+pggbY	gfaidx	index_gfa	215.14	928096	0
+pggbY	gfaidx	index_coordinates	5.10	140164	0
+pggbY	gfa-to-tabix	walks	130.32	6983840	0
+pggbY	gfa-to-tabix	walks-sequences	246.74	14229116	0
+pggbY	gfa-to-tabix	index	111.94	7343676	0

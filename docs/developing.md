@@ -14,6 +14,10 @@ CI runs these on every push:
 - `scripts/check-claims.py`: every normative sentence of
   [walks-format.md](walks-format.md) has a claim ID with a check in
   [claims7.md](departures/claims7.md)
+- `docs/comparison/scripts/tables.py --check`: the measured tables of
+  [comparison.md](comparison.md) match the results in
+  [comparison/results](comparison/results). Run it without `--check` to
+  rewrite them
 - `scripts/check-walks.sh`: builds every walk fixture and runs the release
   checks on each file, after showing that those checks fail on broken files
 - `scripts/parity-fixtures.sh`: the `contig` layout against the JBrowse

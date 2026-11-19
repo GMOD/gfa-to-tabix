@@ -1,0 +1,14 @@
+plain GFA: coordinates from paths, reference GRCh38.0 (1 of 1131 paths)
+3122495 nodes, 4737114 links -> out/mc22.graph.bed.gz (+ .tbi)
+14 of the graph's components are over --max-component 10000, so a graph track draws them as stubs; --max-component none files them under the reference:
+  208833 nodes under GRCh38#0#chr22:11817250-11883336
+  110248 nodes under GRCh38#0#chr22:11977545-12028081
+  108549 nodes under GRCh38#0#chr22:11814094-11817358
+  60430 nodes under GRCh38#0#chr22:18185008-18863194
+  25152 nodes under GRCh38#0#chr22:11916927-11924307
+  21821 nodes under GRCh38#0#chr22:18185934-24637866
+  19727 nodes under GRCh38#0#chr22:11898353-11906361
+  17719 nodes under GRCh38#0#chr22:15941426-15956781
+  15631 nodes under GRCh38#0#chr22:38109813-38114494
+  14341 nodes under GRCh38#0#chr22:11938499-11941369
+  and 4 more

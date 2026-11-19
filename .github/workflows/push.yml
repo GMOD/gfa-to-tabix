@@ -31,6 +31,7 @@ jobs:
       - run: python3 scripts/figures.py target/release/gfa-to-tabix --check
       - run: python3 scripts/check-links.py
       - run: python3 scripts/check-claims.py
+      - run: python3 docs/comparison/scripts/tables.py --check
       - run: scripts/check-walks.sh target/release/gfa-to-tabix
 
   parity:

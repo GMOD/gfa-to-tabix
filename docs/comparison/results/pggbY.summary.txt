@@ -1,0 +1,21 @@
+40 windows of 65536 bp on GRCh38#0#chrY, 0 failed in gfaidx
+walk file (pggbY.GRCh38.walks.gz): 21,902 bytes at open
+  bytes per window                   median         78,179  p90        310,226  max      1,633,699
+  byte ranges per window             median              3  p90              4  max              4
+  blocks unit of the tile, bytes     median              0  p90              0  max        625,661
+walk file with bases (pggbY.seq.GRCh38.walks.gz): 25,867 bytes at open
+  bytes per window                   median        126,928  p90        445,847  max      1,642,833
+  byte ranges per window             median              3  p90              4  max              4
+gfaidx get_region --mode all --with_coords: 1,725,653 bytes in 24 ranges read by every window
+  bytes per window                   median      1,162,147  p90     88,753,091  max    135,729,591
+    of them in memory-mapped files   median        458,488  p90        843,776  max      1,056,768
+  byte ranges per window             median            894  p90        163,533  max        189,697
+  bytes, gaps to 64 KB joined        median      3,666,720  p90    100,322,911  max    139,783,334
+  byte ranges, gaps to 64 KB joined  median            218  p90            387  max            411
+  files per window                   median              5  p90              5  max              5
+  wall ms, first run                 median            115  p90          2,378  max          3,844
+  wall ms, median of runs            median            117  p90          2,578  max          3,843
+  peak memory, KB                    median          4,448  p90         68,392  max         78,480
+  GFA written, bytes                 median        818,448  p90    265,364,612  max    530,258,882
+  segments in the GFA                median          1,288  p90        343,244  max        379,765
+  path lines in the GFA              median            118  p90            203  max            263

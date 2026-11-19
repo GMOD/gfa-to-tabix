@@ -1,0 +1,46 @@
+{
+  "gfaidx_version": "2.3.2",
+  "created": "2026-11-18T23:48:27Z",
+  "input": {
+    "path": "/home/cdiesh/work/arb-format-opus/in/pggbY.gfa",
+    "bytes": 7695644148
+  },
+  "output": "out/pggbY.gfaidx.gfa.gz",
+  "parameters": {
+    "threads": 8,
+    "tmp_dir": "tmp",
+    "keep_tmp": false,
+    "progress_every": 0,
+    "gzip_level": 6,
+    "gzip_mem_level": 8,
+    "no_paths": false,
+    "checkpoint_steps": 4096,
+    "max_chunk_nodes": 0,
+    "min_chunk_nodes": 0,
+    "node_order": "auto",
+    "step_encoding": "delta",
+    "posting_encoding": "slots",
+    "posting_block_nodes": 32
+  },
+  "graph": {
+    "segments": 4122486,
+    "links": 7685990,
+    "total_sequence_bp": 2838619428,
+    "paths": 1053,
+    "walks": 0,
+    "path_steps": 544640313
+  },
+  "index": {
+    "communities": 556,
+    "node_order": "integer_name",
+    "elapsed_seconds": 214.8,
+    "file_bytes": {
+      "gz": 152844123,
+      "idx": 10516,
+      "ndx": 65962072,
+      "lnx": 16489968,
+      "pdx": 2172722609,
+      "pcx": 1094056
+    }
+  }
+}

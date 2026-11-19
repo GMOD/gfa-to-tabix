@@ -1,0 +1,10 @@
+out/mc22.GRCh38.walks.gz: tile 65536; 776 windows of one tile
+  walk rows  median          926  p90          927  p99          931  max          1,217
+  gz bytes   median       51,936  p90       79,946  p99      209,350  max        348,032
+  steps      median    1,670,269  p90    2,589,452  p99    4,293,495  max      7,532,465
+  windows over 8 MB: 0; over 32 M steps: 0
+    GRCh38#0#chr22:11993088  348,032 gz bytes  5,462,586 steps  240 walk rows
+    GRCh38#0#chr22:12058624  340,920 gz bytes  1,602,622 steps  128 walk rows
+    GRCh38#0#chr22:18481152  255,606 gz bytes  1,893,134 steps  410 walk rows
+    GRCh38#0#chr22:18415616  245,138 gz bytes  2,338,322 steps  501 walk rows
+    GRCh38#0#chr22:18219008  244,446 gz bytes  3,063,496 steps  589 walk rows

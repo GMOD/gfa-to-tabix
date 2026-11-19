@@ -14,7 +14,7 @@
 - A walk file files each piece of a path under the chunk of its reference
   steps. A haplotype that leaves the reference before a window and rejoins it
   after has no row in the window's chunks, as
-  [gbz-comparison.md](../gbz-comparison.md#differences) lists under misses
+  [comparison.md](../comparison.md#differences) lists under misses
 - A viewer then draws the haplotype as absent, the same as one with no
   assembly there, though the haplotype carries a deletion
 - Tested on two synthetic graphs:

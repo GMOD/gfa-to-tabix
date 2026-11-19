@@ -1,0 +1,6 @@
+plain GFA: coordinates from paths, reference GRCh38.0 (2 of 1053 paths)
+4122486 nodes, 7685990 links -> out/pggbY.graph.bed.gz (+ .tbi)
+3 of the graph's components are over --max-component 10000, so a graph track draws them as stubs; --max-component none files them under the reference:
+  3506022 nodes under GRCh38#0#chrY:26640509-56821961
+  202687 nodes under GRCh38#0#chrY:12508026-56887902
+  31798 nodes under GRCh38#0#chrY:11531191-11650765

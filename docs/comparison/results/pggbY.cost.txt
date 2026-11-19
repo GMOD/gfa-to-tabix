@@ -1,0 +1,10 @@
+out/pggbY.GRCh38.walks.gz: tile 65536; 399 windows of one tile
+  walk rows  median          236  p90        3,585  p99       27,015  max         36,565
+  gz bytes   median       69,263  p90      285,539  p99    1,633,699  max      1,865,550
+  steps      median      104,625  p90      979,616  p99    6,126,025  max      7,219,584
+  windows over 8 MB: 0; over 32 M steps: 0
+    GRCh38#0#chrY:20185088  1,865,550 gz bytes  7,098,707 steps  36,565 walk rows
+    GRCh38#0#chrY:11534336  1,740,747 gz bytes  2,980,977 steps  4,144 walk rows
+    GRCh38#0#chrY:20119552  1,646,796 gz bytes  3,891,188 steps  18,117 walk rows
+    GRCh38#0#chrY:20250624  1,633,699 gz bytes  7,142,623 steps  27,414 walk rows
+    GRCh38#0#chrY:11468800  1,585,513 gz bytes  2,417,919 steps  27,015 walk rows

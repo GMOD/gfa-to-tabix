@@ -1,0 +1,10 @@
+/home/cdiesh/work/blocks/genome-5.0.0/hprc-v2.1-mc-chm13.CHM13.walks.gz: tile 65536; 47579 windows of one tile
+  walk rows  median          926  p90          928  p99          931  max          1,959
+  gz bytes   median       47,246  p90       62,594  p99      167,481  max        586,971
+  steps      median    1,629,949  p90    2,165,222  p99    4,105,005  max      7,836,367
+  windows over 8 MB: 0; over 32 M steps: 0
+    CHM13#0#chr15:1245184  586,971 gz bytes  1,910,414 steps  214 walk rows
+    CHM13#0#chr20:32505856  527,686 gz bytes  2,065,439 steps  311 walk rows
+    CHM13#0#chr3:91029504  513,680 gz bytes  1,597,857 steps  341 walk rows
+    CHM13#0#chr3:91357184  501,123 gz bytes  1,739,022 steps  357 walk rows
+    CHM13#0#chr3:91291648  498,250 gz bytes  2,455,826 steps  345 walk rows

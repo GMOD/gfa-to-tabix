@@ -1,0 +1,3 @@
+gfaidx 2.3.2, the release's Linux x86-64 binary (sha256 60df8bc2efbb41fb), with index_gfa --threads 8
+gfa-to-tabix 5.0.0 at commit 427efd8
+24 cores and 125 GB of memory
