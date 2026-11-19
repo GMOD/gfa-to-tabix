@@ -93,7 +93,10 @@ its sequence and the stretch of it the line is about. <!-- C54 -->
   <!-- C43 --> A record's line is in every block of its cover and no
   other, the largest aligned blocks inside its tile-rounded extent, the
   same text in each. <!-- C88 --> The pyramid is the writer's choice;
-  readers fetch only the units overlapping their window <!-- C134 -->
+  readers fetch only the units overlapping their window <!-- C134 -->.
+  [ADR 0017](0017-format-8-tags-numbers-lines-and-names.md) later settled
+  the four bin sizes as format: a file with a bin of another size is not
+  format 8
 - **`detail`:** one W line's moved pieces in one tile, ADR 0009's detail
   record, one record per W line. <!-- C76 --> `name` is `cs:d`, the tile's
   nominal start and the `abridged` row's detail number; `start end` runs
