@@ -934,7 +934,7 @@ seq start end blocks path fragStart piece list
   sign   = "+" / "-"
   len    = number
   run    = number
-  number = %x31-39 *DIGIT   ; a number of [Rows](#rows) that is not 0
+  number = %x31-39 *DIGIT   ; a number as Rows writes one, above 0
   ```
 
   So `d` is a number, with `-` before it where it is below 0, and never
@@ -1396,6 +1396,13 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   <!-- C139 -->
 - A line left out of a reference's file is one W or P line; its contig's
   other lines keep their rows (tests) <!-- C140 -->
+- The reference is whole haplotypes: the tool makes every path of a
+  `--refs` sample with steps a reference sequence, so no path on a
+  haplotype of the reference has walk rows (build; files, `verify7.py`,
+  `claims7.py` and `spec8.py`) <!-- C9 -->
+- A walk row names no default and takes a route that is its own flip
+  with flip 0, and a sequence's detail units are in order of tile and
+  number (build; files, `claims7.py` and `spec8.py`) <!-- C70 C32 -->
 - Every name is as [Rows](#rows) says: the build refuses a GFA whose W
   or P line gives a name that is empty, starts with `#` or holds a byte
   outside 0x21 to 0x7E, a space, carriage return, NUL or byte above 0x7E
