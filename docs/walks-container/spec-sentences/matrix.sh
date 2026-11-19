@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Prints which checkers fail each file ADR 0017's rulings are about: the
+# legal files, a writer's file with tags left off its #walks line or both
+# budgets stated as 0, which every checker must pass; and the planted
+# files, each breaking one sentence the page gained, or a stated budget.
+# One line a file, one column a checker, FAILS or passes, a traceback
+# named; then, for each FAILS, what the checker said first.
+# The files and fixtures are this checkout's, built by its
+# target/release/gfa-to-tabix and its make-broken.sh. The checkers are
+# those of the checkout given, so the same files are read by the checkers
+# from before the rulings and after.
+# Usage: matrix.sh <checkout whose checkers run> <scratch dir>
+set -u
+R=$(readlink -f "$1")
+W=$2
+HERE=$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)
+S=$R/docs/departures/scripts
+B=$HERE/docs/departures/scripts/broken
+D=$HERE/tests/data
+CHECKERS="verify7 claims7 claims7-seqs audit7 expand7 spec8 rebuild"
+mkdir -p "$W"
+why=$W/why.txt
+: > "$why"
+row() {
+  local label=$1 f=$2 g=$3 line=$1 c out rc said
+  for c in $CHECKERS; do
+    case $c in
+      verify7) out=$(python3 -I "$S/verify7.py" "$f" 2>&1); rc=$?; said=$out ;;
+      claims7) out=$(python3 -I "$S/claims7.py" "$f" --own 2>&1); rc=$?
+        said=$(grep -E '^[1-9][0-9]*'$'\t' <<< "$out" | cut -f2 | cut -d' ' -f1 | sort -u | paste -sd' ' -) ;;
+      claims7-seqs) out=$(bash "$S/claims7-seqs.sh" "$f" --own 2>&1); rc=$?
+        said=$(grep -E '^[1-9][0-9]*'$'\t' <<< "$out" | cut -f2 | cut -d' ' -f1 | sort -u | paste -sd' ' -) ;;
+      audit7) out=$(python3 -I "$S/audit7.py" "$f" --gfa "$g" --window 64 --point 16 2>&1); rc=$?
+        said=$(sed -n '/^audit7: /,$p' <<< "$out" | head -2 | paste -sd' ' -) ;;
+      expand7) out=$(python3 -I "$S/expand7.py" "$f" 2>&1); rc=$?; said=$(tail -1 <<< "$out") ;;
+      spec8) out=$(python3 -I "$S/spec8.py" "$f" 2>&1); rc=$?
+        said=$(grep -E '^spec8' <<< "$out"; sed -n '/^== disagreed ==/,$p' <<< "$out" | sed -n 2p) ;;
+      rebuild) out=$(python3 -I "$HERE/scripts/walks-truth.py" rebuild "$f" "$g" 2>&1); rc=$?; said=$(head -1 <<< "$out") ;;
+    esac
+    if grep -q Traceback <<< "$out"; then
+      line+=$'\t'traceback
+    elif [ $rc = 0 ]; then
+      line+=$'\t'passes
+    else
+      line+=$'\t'FAILS
+      echo "$label	$c	$(tr -s ' \t\r\n' ' ' <<< "$said" | LC_ALL=C tr -c '\n -~' '?' | cut -c1-220)" >> "$why"
+    fi
+  done
+  echo "$line"
+}
+gfa_of() {
+  local g
+  g=$(awk -F'\t' -v n="$1" '$1==n{print $2}' "$B/cases.tsv")
+  [ "${g%%/*}" = broken ] && echo "$HERE/docs/departures/scripts/$g" || echo "$D/$g"
+}
+BIN=$HERE/target/release/gfa-to-tabix
+"$BIN" "$B/follow.gfa" --walks --refs R --tile 100 --sequences --abridge-bytes 1 -o "$W/follow" > /dev/null 2>&1
+"$BIN" "$D/walks-repeat.gfa" --walks --refs R --tile 10 -o "$W/repeat" > /dev/null 2>&1
+LEGAL="bound-no-writer-tags bound-no-revisited bound-no-stay bound-no-abridge bound-no-abridgebytes bound-budgets-zero"
+python3 -I "$HERE/docs/departures/scripts/repack.py" "$W/follow.R.walks.gz" "$W/follow-repack" $LEGAL > /dev/null
+python3 -I "$HERE/docs/departures/scripts/repack.py" "$W/repeat.R.walks.gz" "$W/repeat-repack" bound-no-revisited > /dev/null
+echo "file	${CHECKERS// /	}"
+echo "# legal: broken/follow.gfa built with --tile 100 --sequences --abridge-bytes 1, which states revisited:i:0, then repack.py's variants of it"
+row follow "$W/follow.R.walks.gz" "$B/follow.gfa"
+for v in $LEGAL; do
+  row "$v" "$W/follow-repack/$v/f.walks.gz" "$B/follow.gfa"
+done
+echo "# legal: walks-repeat.gfa built with --tile 10, which states revisited:i:2, then without that tag"
+row repeat "$W/repeat.R.walks.gz" "$D/walks-repeat.gfa"
+row "bound-no-revisited" "$W/repeat-repack/bound-no-revisited/f.walks.gz" "$D/walks-repeat.gfa"
+echo "# planted"
+for name in revisited-count revisited-zero budget-bytes-over budget-steps-over budget-put-back \
+            walks-bytes-tag tag-type-letter tile-zero tile-past-2-40 \
+            number-leading-zero number-plus-sign token-minus-zero \
+            header-empty-line directory-empty-line field-empty unit-line-inside-unit \
+            departures-unit-empty reference-twice length-zero ref-rows-overlap \
+            past-2-53-line-end past-2-53-stated name-space name-cr name-e9 name-del; do
+  row "$name" "$B/$name.walks.gz" "$(gfa_of "$name")"
+done
+echo "# what each FAILS said first"
+cat "$why"
