@@ -294,3 +294,33 @@ for v in $FORBIDDEN; do
   cp "$W/repack/$v/f.walks.gz" "$BROKEN/$v.walks.gz"
   cp "$W/repack/$v/f.walks.gz.idx" "$BROKEN/$v.walks.gz.idx"
 done
+
+# what the page's sentences on tags, numbers, lines and names keep out of
+# format 8 (ADR 0017), and budgets a header states over rows that break them
+build edge100 "$BROKEN/edge.gfa" R --tile 100
+EDGE100=$W/edge100.R.walks.gz
+E=9007199254740
+corrupt budget-bytes-over "$T0" 'abridgebytes:i:3000000' 'abridgebytes:i:10'
+corrupt budget-steps-over "$T0" 'abridge:i:1000000' 'abridge:i:1'
+corrupt budget-put-back "$T10" 'abridgebytes:i:1' 'abridgebytes:i:3000000'
+corrupt walks-bytes-tag "$T0" 'leftout:i:1' $'leftout:i:1\tbytes:i:7'
+corrupt reference-twice "$T0" $'#reference\tGRCh38\n' $'#reference\tGRCh38\n#reference\tGRCh38\n'
+corrupt header-empty-line "$T0" $'#reference\tGRCh38\n' $'#reference\tGRCh38\n\n'
+corrupt field-empty "$T0" $'#haplotype\tD#1\n' $'#haplotype\tD#1\t\n'
+corrupt directory-empty-line "$T0" --idx $'#header\t0\t' $'\n#header\t0\t'
+corrupt unit-line-inside-unit "$T0" $'#unit\t'$G$'\t0\t12\ttile\t0\n' $'#unit\t'$G$'\t0\t30\tfuture\tx\n#units of a later kind\n#unit\t'$G$'\t0\t12\ttile\t0\n'
+corrupt departures-unit-empty "$T0" $'#unit\t'$G$'\t12\t24\ttile\t10\n' $'#unit\t'$G$'\t0\t80\tdepartures\t.\n#unit\t'$G$'\t12\t24\ttile\t10\n'
+corrupt number-leading-zero "$T0" "$WH" $G$'\t0\t12\twalk\tH#1#h\t100\t0100\t0\t2\t2\t.\n'
+corrupt number-plus-sign "$T0" --all $'Q#0#chr\t6\t6\t0\t6\t+' $'Q#0#chr\t6\t+6\t0\t6\t+'
+corrupt token-minus-zero "$TIE100" --all $'R#0#c\t12\t30\twalk\tA#1#c\t0\t0\t0\t2\t2\t0' $'R#0#c\t12\t30\twalk\tA#1#c\t0\t0\t0\t2\t2\t-0'
+corrupt tag-type-letter "$T0" 'revisited:i:0' 'revisited:Z:0'
+corrupt tile-zero "$T0" 'tile:i:10' 'tile:i:0'
+corrupt tile-past-2-40 "$T0" 'tile:i:10' 'tile:i:1099511627777'
+corrupt length-zero "$T0" $'\t0\t12\tnodes\t6\t6' $'\t0\t12\tnodes\t6\t0'
+corrupt ref-rows-overlap "$REFGAP100" --all $'ref\tR#0#c\t30\t30\t0\t3\t' $'ref\tR#0#c\t12\t12\t0\t3\t'
+corrupt past-2-53-line-end "$EDGE100" "${E}974"$'\t'"${E}974" "${E}975"$'\t'"${E}975"
+corrupt past-2-53-stated "$EDGE100" "${E}974"$'\t'"${E}974" "${E}993"$'\t'"${E}993"
+corrupt name-space "$T0" --all 'H#1' 'H #1'
+corrupt name-cr "$T0" --all 'H#1' $'H\r#1'
+corrupt name-e9 "$T0" --all 'H#1' $'H\xe9#1'
+corrupt name-del "$T0" --all "$G" "$G"$'\x7f'

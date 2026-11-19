@@ -47,7 +47,7 @@ def replaced(text, pairs, every=False):
     return text
 
 
-text = replaced(replaced(gzip.open(src, 'rt').read(), edits['once']), edits['all'], True)
+text = replaced(replaced(gzip.open(src, 'rt', errors='surrogateescape').read(), edits['once']), edits['all'], True)
 for tag in tags:
     text = ''.join(line + '\t' + tag + '\n' if line[0] != '#' or line.startswith('#walks\t') else line + '\n'
                    for line in text.splitlines())
@@ -72,13 +72,13 @@ for line in text.splitlines(keepends=True):
         units[-1] += line
 header, units = units[0], [u for u in units[1:] if u.split('\t')[4] != 'table']
 walks = header.split('\n')[0]
-data, tables, entries, at = bgzf((''.join(prepended) + header).encode()), [], [], 0
+data, tables, entries, at = bgzf((''.join(prepended) + header).encode(errors='surrogateescape')), [], [], 0
 header_length = len(data)
 table_edits = {pair: 0 for pair in edits['table']}
 drops = {prefix: 0 for prefix in dropped}
 for n, unit in enumerate(units):
     seq, lo, hi, kind, name = unit.split('\n')[0].split('\t')[1:6]
-    packed = bgzf(unit.encode())
+    packed = bgzf(unit.encode(errors='surrogateescape'))
     entries.append(f'#entry\t{seq}\t{lo}\t{hi}\t{kind}\t{name}\t{len(data)}\t{len(packed)}\n')
     data += packed
     last = n + 1 == len(units) or units[n + 1].split('\t')[1] != seq
@@ -93,7 +93,7 @@ for n, unit in enumerate(units):
             kept = [l for l in listing.splitlines(keepends=True) if not l.startswith(prefix)]
             drops[prefix] += listing.count('\n') - ''.join(kept).count('\n')
             listing = ''.join(kept)
-        table = bgzf(listing.encode())
+        table = bgzf(listing.encode(errors='surrogateescape'))
         tables.append(f'{seq}\t{len(data)}\t{len(table)}\n')
         data += table
         entries = []
@@ -104,9 +104,9 @@ for prefix, n in drops.items():
     if n != 1:
         sys.exit(f'corrupt.py: {prefix!r} starts {n} table lines, not one')
 for unit in appended:
-    data += bgzf(unit.encode())
+    data += bgzf(unit.encode(errors='surrogateescape'))
 data += EOF
 stated = header_length if header_stated is None else header_stated
 directory = replaced(f'{walks}\tbytes:i:{len(data)}\n#header\t0\t{stated}\n' + ''.join(tables), edits['idx'])
 open(dst, 'wb').write(data)
-open(dst + '.idx', 'w').write(directory)
+open(dst + '.idx', 'w', errors='surrogateescape').write(directory)
