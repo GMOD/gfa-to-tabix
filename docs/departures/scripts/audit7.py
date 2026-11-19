@@ -7,7 +7,8 @@
 # departure that needs a record has one with the same fields, and no record
 # lacks a departure, each end's pass count included; that each `ref` row's
 # pass counts are how often the file's `ref` rows hold the node, and the
-# header's `revisited` how many nodes they hold more than once; and that
+# header's `revisited`, where it states one, how many nodes they hold more
+# than once; and that
 # each `abridged` row states its own piece of its detail unit: where it
 # starts on its contig as hapOffset, its steps as nsteps, the bp of all of
 # them as hapBp, which ends it where its line's next piece starts, and the
@@ -810,9 +811,10 @@ if args.seq:
 else:
     must_be_0(over, 'nodes with a ref row stating more passes than the file\'s ref rows hold')
 revisited = sum(1 for n in stated_passes.values() if n > 1)
-print(f'{revisited}\tnodes stated as passed more than once; the header says {header.get("revisited")}')
-if args.seq is None and str(revisited) != header.get('revisited'):
-    must_be_0(1, 'header revisited differs from the ref rows')
+print(f'{revisited}\tnodes stated as passed more than once; the header '
+      + (f'says {header["revisited"]}' if 'revisited' in header else 'states no revisited'))
+if args.seq is None and 'revisited' in header:
+    must_be_0(int(str(revisited) != header['revisited']), 'header revisited differs from the ref rows')
 # each piece's offset, its steps and the span of its steps on R; and by
 # sequence and path each piece's stretch from its first step on R to its
 # last, and the records' own bp

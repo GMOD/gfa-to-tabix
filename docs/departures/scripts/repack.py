@@ -8,7 +8,6 @@
 #   or files" allows, which every reader and checker reads as the file
 #   without it; `identity` re-packs with no edit
 # - forbidden: a file the page refuses or calls another format
-# - unstated: the page doesn't say
 # - control: a legal file of another graph, for the variant after it
 # check-walks.sh runs every checker on each legal variant of a writer's
 # file, and broken.sh on the forbidden ones that broken/ holds.
@@ -442,11 +441,27 @@ def _(w):
     return 1
 
 
-@variant('bound-no-writer-tags', 'unstated', '#walks without revisited, stay, abridge and abridgebytes, which a reader ignores')
+def without_tags(*names):
+    def edit(w):
+        kept = [c for c in w.header[0] if not c.startswith(tuple(f'{name}:' for name in names))]
+        edited = len(w.header[0]) - len(kept)
+        w.header[0] = kept
+        return edited
+    return edit
+
+
+variant('bound-no-writer-tags', 'legal', '#walks without revisited, stay, abridge and abridgebytes: a line needs '
+        'format and tile alone, and a tag left out states nothing (C201)')(
+    without_tags('revisited', 'stay', 'abridge', 'abridgebytes'))
+for _name in ('revisited', 'stay', 'abridge', 'abridgebytes'):
+    variant(f'bound-no-{_name}', 'legal', f'#walks without {_name} (C201)')(without_tags(_name))
+
+
+@variant('bound-budgets-zero', 'legal', 'abridge:i:0 and abridgebytes:i:0 stated over abridged rows: the budgets '
+         'bind no row (C202)')
 def _(w):
-    w.header[0] = [c for c in w.header[0]
-                   if not c.startswith(('revisited:', 'stay:', 'abridge:', 'abridgebytes:'))]
-    return 1
+    w.header[0] = [f'{c.split(":")[0]}:i:0' if c.startswith(('abridge:', 'abridgebytes:')) else c for c in w.header[0]]
+    return len(w.rows('abridged'))
 
 
 @variant('bound-tile-names-shifted', 'forbidden', 'every tile named 3 more than its start, with the names that point at it (C12, C127)')
