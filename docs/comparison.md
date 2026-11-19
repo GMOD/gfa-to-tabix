@@ -65,6 +65,9 @@ plugin.
 
 ## What we measured
 
+We indexed two HPRC chromosomes with gfa-to-tabix and gfaidx: chr22 from
+the Minigraph-Cactus graph and chrY from the pggb graph. We compared
+gfa-to-tabix with gbz-base on the whole HPRC v2.1 Minigraph-Cactus graph.
 The tables, methods and scripts behind these results are in
 [Comparison details](comparison-details.md).
 
@@ -75,8 +78,7 @@ The tables, methods and scripts behind these results are in
 - **Reading a window:** a browser reads a 64 kb window from a walk file in a
   few byte ranges of one file. gfaidx reads hundreds of ranges from five
   files, and gbz-base takes tens of round trips
-- **Size:** we indexed two HPRC chromosomes, chr22 from Minigraph-Cactus and
-  chrY from pggb. A walk file is about an order of magnitude smaller than
+- **Size:** a walk file is about an order of magnitude smaller than
   gfaidx's index, because gfaidx stores every step of every path and the
   walk file stores each distinct route once. The walk file also leaves out
   the paths that never touch its reference genome. On the whole HPRC v2.1
