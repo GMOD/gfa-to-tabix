@@ -1,0 +1,8 @@
+file	size	open_bytes	open_ranges	window_bytes_median	window_bytes_max	window_ranges_median	window_ranges_max	memory_mapped
+mc22.gfaidx.gfa.gz.cdx	22236083	2129	3	48198	534975	19	25	no
+mc22.gfaidx.gfa.gz	41480020	32558	2	77176	1045083	2	29	no
+mc22.gfaidx.gfa.gz.idx	29384	29384	1	0	0	0	0	no
+mc22.gfaidx.gfa.gz.lnx	12490004	4096	1	57344	819200	5	42	yes
+mc22.gfaidx.gfa.gz.ndx	49966168	11352	2	0	0	0	0	yes
+mc22.gfaidx.gfa.gz.pcx	1262168	32768	2	1212716	1224704	3	77	yes
+mc22.gfaidx.gfa.gz.pdx	1098229558	216221	2	2230123	34057706	933	4002	no

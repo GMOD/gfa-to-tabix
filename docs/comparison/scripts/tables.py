@@ -103,48 +103,70 @@ def spread(values, fmt):
 
 
 def window(graph):
-    w = [r for r in rows(f"{graph}.windows.tsv")]
-    good = [r for r in w if r["gfaidx_status"] == "0"]
+    w = rows(f"{graph}.windows.tsv")
     opened = {r["reader"]: r for r in rows(f"{graph}.open.tsv")}
     plain = lambda n: f"{n:,.0f}"
     ms = lambda n: f"{n:.0f} ms" if n < 1000 else f"{n / 1000:.1f} s"
     cut = rows(f"{graph}.walk-time.tsv")
     cut_bases = rows(f"{graph}.walk-time-bases.tsv")
     http = RESULTS / f"{graph}.walk-time-http.tsv"
+    runs = [("gfaidx", "")] + ([("gfaidx, `--haplotype_gap 10kb`", ".gap")]
+                               if (RESULTS / f"{graph}.gap.windows.tsv").exists() else [])
 
-    def col(name, rs=w):
+    def col(name, rs):
         return [r[name] for r in rs]
 
-    body = [
-        ["read at open", size(opened["walks"]["bytes"]), size(opened["walks_bases"]["bytes"]), size(opened["gfaidx"]["bytes"])],
-        ["bytes read", spread(col("walks_bytes"), size), spread(col("walks_bases_bytes"), size), spread(col("gfaidx_bytes", good), size)],
-        ["byte ranges", spread(col("walks_ranges"), plain), spread(col("walks_bases_ranges"), plain),
-         spread(col("gfaidx_ranges", good), plain)],
-        ["the tile's blocks unit, read to draw abridged pieces", spread(col("walks_blocks_bytes"), size),
-         spread(col("walks_bases_blocks_bytes"), size), ""],
-        ["byte ranges, gaps of up to 64 KB joined", "", "", spread(col("gfaidx_ranges_gaps_joined", good), plain)],
-        ["bytes read, gaps of up to 64 KB joined", "", "", spread(col("gfaidx_bytes_gaps_joined", good), size)],
-        ["files read", "1", "1", spread(col("gfaidx_files", good), plain)],
-        ["time on local disk, reader already open", spread(col("cut_ms", cut), ms), spread(col("cut_ms", cut_bases), ms), ""],
+    def gfaidx(suffix):
+        g = rows(f"{graph}{suffix}.windows.tsv")
+        good = [r for r in g if r["gfaidx_status"] == "0"]
+        at_open = {r["reader"]: r for r in rows(f"{graph}{suffix}.open.tsv")}["gfaidx"]["bytes"]
+        cells = {
+            "read at open": size(at_open),
+            "bytes read": spread(col("gfaidx_bytes", good), size),
+            "byte ranges": spread(col("gfaidx_ranges", good), plain),
+            "byte ranges, gaps of up to 64 KB joined": spread(col("gfaidx_ranges_gaps_joined", good), plain),
+            "bytes read, gaps of up to 64 KB joined": spread(col("gfaidx_bytes_gaps_joined", good), size),
+            "files read": spread(col("gfaidx_files", good), plain),
+            "time on local disk, from a new reader or process": spread(col("gfaidx_ms_median", good), ms),
+            "distinct nodes returned": spread(col("gfaidx_gfa_S", good), plain),
+            "GFA written": spread(col("gfaidx_gfa_bytes", good), size),
+        }
+        return g, good, cells
+
+    measured = [(label, *gfaidx(suffix)) for label, suffix in runs]
+    walk_rows = [
+        ["read at open", size(opened["walks"]["bytes"]), size(opened["walks_bases"]["bytes"])],
+        ["bytes read", spread(col("walks_bytes", w), size), spread(col("walks_bases_bytes", w), size)],
+        ["byte ranges", spread(col("walks_ranges", w), plain), spread(col("walks_bases_ranges", w), plain)],
+        ["the tile's blocks unit, read to draw abridged pieces", spread(col("walks_blocks_bytes", w), size),
+         spread(col("walks_bases_blocks_bytes", w), size)],
+        ["byte ranges, gaps of up to 64 KB joined", "", ""],
+        ["bytes read, gaps of up to 64 KB joined", "", ""],
+        ["files read", "1", "1"],
+        ["time on local disk, reader already open", spread(col("cut_ms", cut), ms), spread(col("cut_ms", cut_bases), ms)],
         ["time on local disk, from a new reader or process", spread(col("open_cut_ms", cut), ms),
-         spread(col("open_cut_ms", cut_bases), ms), spread(col("gfaidx_ms_median", good), ms)],
+         spread(col("open_cut_ms", cut_bases), ms)],
     ] + ([["time over HTTP from jbrowse.org's whole-genome file, from a new reader",
-           spread(col("open_cut_ms", rows(http.name)), ms), "", ""]] if http.exists() else []) + [
-        ["time to build the tables a viewer draws from", spread(col("tables_ms", cut), ms), spread(col("tables_ms", cut_bases), ms), ""],
-        ["distinct nodes returned", spread(col("nodes", cut), plain), spread(col("nodes", cut_bases), plain), spread(col("gfaidx_gfa_S", good), plain)],
-        ["steps returned", spread(col("steps", cut), count), spread(col("steps", cut_bases), count), ""],
-        ["GFA written", "", "", spread(col("gfaidx_gfa_bytes", good), size)],
+           spread(col("open_cut_ms", rows(http.name)), ms), ""]] if http.exists() else []) + [
+        ["time to build the tables a viewer draws from", spread(col("tables_ms", cut), ms), spread(col("tables_ms", cut_bases), ms)],
+        ["distinct nodes returned", spread(col("nodes", cut), plain), spread(col("nodes", cut_bases), plain)],
+        ["steps returned", spread(col("steps", cut), count), spread(col("steps", cut_bases), count)],
+        ["GFA written", "", ""],
     ]
-    failed = len(w) - len(good)
+    body = [r + [cells.get(r[0], "") for _, _, _, cells in measured] for r in walk_rows]
     sha = {r["start"]: r["nodes_sha1"] for r in cut}
-    same = sum(1 for r in good if r["gfaidx_gfa_S_sha1"] == sha[r["start"]])
     fresh = {r["start"]: float(r["open_cut_ms"]) for r in cut}
-    faster = sum(1 for r in good if fresh[r["start"]] < float(r["gfaidx_ms_median"]))
-    note = (f"\n\n- From a new reader, the walk cut takes less time than gfaidx in {faster} of the {len(good)} windows"
-            f"\n- The nodes the walk cut's fragments step on are the segments of gfaidx's GFA, id for id, in {same} of the "
-            f"{len(good)} windows. In the others gfaidx's GFA has more" + (f" {failed} of the {len(w)} windows failed in gfaidx and are left out of its column."
-                                       if failed else ""))
-    return table([f"{GRAPHS[graph]}, {len(w)} windows: median (largest)", "walk file", "walk file with bases", "gfaidx"], body) + note
+    note = ""
+    for label, g, good, _ in measured:
+        same = sum(1 for r in good if r["gfaidx_gfa_S_sha1"] == sha[r["start"]])
+        faster = sum(1 for r in good if fresh[r["start"]] < float(r["gfaidx_ms_median"]))
+        failed = len(g) - len(good)
+        note += (f"\n- Against {label}: from a new reader, the walk cut takes less time in {faster} of the {len(good)} windows,"
+                 f" and the nodes its fragments step on are the segments of the GFA, id for id, in {same}."
+                 f" In the others the GFA has more" + (f". {failed} of the {len(g)} windows failed in gfaidx and are left out"
+                                                       if failed else ""))
+    header = [f"{GRAPHS[graph]}, {len(w)} windows: median (largest)", "walk file", "walk file with bases"] + [m[0] for m in measured]
+    return table(header, body) + "\n" + note
 
 
 def files(graph):

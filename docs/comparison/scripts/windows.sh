@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# After build.sh, on ada: what a 64 kb window reads from each tool's files of MC chr22 and pggb chrY (windows.py), how long graph-walks takes to cut the same windows from local disk and, for chr22, from jbrowse.org's whole-genome file (walk-time.mjs), and walks-truth.py cost over every window of the walk files and of the whole-genome format 8 files
+# After build.sh, on ada: what a 64 kb window reads from each tool's files of MC chr22 and pggb chrY (windows.py), with gfaidx's default --mode all and again with --haplotype_gap 10kb, how long graph-walks takes to cut the same windows from local disk and, for chr22, from jbrowse.org's whole-genome file (walk-time.mjs), and walks-truth.py cost over every window of the walk files and of the whole-genome format 8 files
 set -uo pipefail
 cd ~/work/gfaidx-compare
 G=$PWD/dl/gfaidx-v2.3.2-linux-x86_64/gfaidx
@@ -11,11 +11,14 @@ venv/bin/python pagelog.py $PWD/out $PWD/mnt $PWD/tmp/pagelog.txt > pagelog.out 
 sleep 2
 cap() { systemd-run --user --scope -q -p MemoryMax=$1 -p MemorySwapMax=0 nice -n 10 "${@:2}"; }
 window() {
-  cap 24G python3 windows.py $G out/$1.gfaidx.gfa.gz "$2" out/$1.GRCh38.walks.gz out/$1.seq.GRCh38.walks.gz "$3" $R/$1 \
-    --windows 40 --tmp tmp --mount mnt/$1.gfaidx.gfa.gz --pagelog tmp/pagelog.txt "${@:4}" > $R/$1.windows.log 2>&1
+  cap 24G python3 windows.py $G out/$1.gfaidx.gfa.gz "$2" out/$1.GRCh38.walks.gz out/$1.seq.GRCh38.walks.gz "$3" $R/$1$4 \
+    --windows 40 --tmp tmp --mount mnt/$1.gfaidx.gfa.gz --pagelog tmp/pagelog.txt "${@:5}" > $R/$1$4.windows.log 2>&1
 }
-window mc22 chr22 'GRCh38#0#chr22' --reference GRCh38
-window pggbY 'GRCh38#0#chrY' 'GRCh38#0#chrY'
+GAP=(--gfaidx-arg=--haplotype_gap --gfaidx-arg=10kb)
+window mc22 chr22 'GRCh38#0#chr22' '' --reference GRCh38
+window pggbY 'GRCh38#0#chrY' 'GRCh38#0#chrY' ''
+window mc22 chr22 'GRCh38#0#chr22' .gap --reference GRCh38 "${GAP[@]}"
+window pggbY 'GRCh38#0#chrY' 'GRCh38#0#chrY' .gap "${GAP[@]}"
 fusermount -u mnt
 export PATH=~/.local/node/bin:$PATH
 cat graph-walks.commit > $R/graph-walks.commit.txt

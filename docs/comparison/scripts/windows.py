@@ -4,6 +4,7 @@ a gfaidx index of the same graph.
 
   windows.py GFAIDX_BIN INDEXED.gfa.gz REGION_NAME WALKS WALKS_WITH_BASES SEQUENCE OUT_PREFIX
              [--reference SAMPLE] [--windows N] [--tmp DIR] [--mount INDEXED.gfa.gz --pagelog LOG]
+             [--gfaidx-arg=ARG ...]
 
 SEQUENCE is the reference sequence as the walk file's directory names it
 (GRCh38#0#chr22) and REGION_NAME the same sequence as gfaidx names it (chr22
@@ -16,7 +17,8 @@ the tile's blocks unit, which a reader fetches to draw an abridged piece
 without expanding it. Per file: what a reader fetches at open (the directory, the header unit and
 SEQUENCE's table).
 
-gfaidx, per window: `get_region --mode all --with_coords` under strace, which
+gfaidx, per window: `get_region --mode all --with_coords`, followed by each
+--gfaidx-arg (such as --haplotype_gap 10kb), under strace, which
 gives every byte range the process reads from the indexed graph and its
 sidecars. gfaidx memory-maps some sidecars, and the trace shows a mapping but
 not the pages a query touches, so the traced run reads the index through
@@ -204,6 +206,7 @@ def main():
     p.add_argument("--timeout", type=int, default=900)
     p.add_argument("--mount")
     p.add_argument("--pagelog")
+    p.add_argument("--gfaidx-arg", action="append", default=[])
     args = p.parse_args()
 
     tile, opened, starts, window = walk_file(args.walks, args.sequence)
@@ -221,7 +224,7 @@ def main():
 
     def query(cs, prefix, index, timeout=None):
         command = prefix + [args.gfaidx, "get_region", index, f"{args.region_name}:{cs}-{cs + tile}", gfa,
-                            "--mode", "all", "--with_coords"] + (["--reference", args.reference] if args.reference else [])
+                            "--mode", "all", "--with_coords"] + (["--reference", args.reference] if args.reference else []) + args.gfaidx_arg
         os.path.exists(gfa) and os.remove(gfa)
         began = time.perf_counter()
         done = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
@@ -302,7 +305,7 @@ def main():
         print(f"walk file with bases ({os.path.basename(args.walks_bases)}): {opened_bases:,} bytes at open", file=out)
         line("bytes per window", [window_bases(r["cs"])[0] for r in rows])
         line("byte ranges per window", [window_bases(r["cs"])[1] for r in rows])
-        print(f"gfaidx get_region --mode all --with_coords: {sum(total(v) for v in common.values()):,} bytes in "
+        print(f"gfaidx get_region --mode all --with_coords {' '.join(args.gfaidx_arg)}: {sum(total(v) for v in common.values()):,} bytes in "
               f"{sum(len(v) for v in common.values())} ranges read by every window", file=out)
         if good:
             line("bytes per window", [sum(total(v) for v in r["own"].values()) for r in good])

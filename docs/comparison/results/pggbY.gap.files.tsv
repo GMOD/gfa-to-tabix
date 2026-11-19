@@ -1,0 +1,8 @@
+file	size	open_bytes	open_ranges	window_bytes_median	window_bytes_max	window_ranges_median	window_ranges_max	memory_mapped
+pggbY.gfaidx.gfa.gz.cdx	13245492	2162	3	28412	896274	19	21	no
+pggbY.gfaidx.gfa.gz	152844123	1458464	2	150426	1380466	1	7	no
+pggbY.gfaidx.gfa.gz.idx	10516	10516	1	0	0	0	0	no
+pggbY.gfaidx.gfa.gz.lnx	16489968	4096	1	71680	380928	5	31	yes
+pggbY.gfaidx.gfa.gz.ndx	65962072	8280	2	0	0	0	0	yes
+pggbY.gfaidx.gfa.gz.pcx	1094056	77824	13	397312	745472	77	84	yes
+pggbY.gfaidx.gfa.gz.pdx	2172722609	164311	2	395030	134183279	554	9346	no
