@@ -68,6 +68,13 @@ plugin.
 The tables, methods and scripts behind these results are in
 [Comparison details](comparison-details.md).
 
+- **Time per window:** gfaidx answers the median Minigraph-Cactus chr22
+  window in under half the time a walk file reader takes. The walk file
+  reader is faster in most pggb chrY windows, where repeats make gfaidx
+  return far more of the graph
+- **Reading a window:** a browser reads a 64 kb window from a walk file in a
+  few byte ranges of one file. gfaidx reads hundreds of ranges from five
+  files, and gbz-base takes tens of round trips
 - **Size:** we indexed two HPRC chromosomes, chr22 from Minigraph-Cactus and
   chrY from pggb. A walk file is about an order of magnitude smaller than
   gfaidx's index, because gfaidx stores every step of every path and the
@@ -78,13 +85,6 @@ The tables, methods and scripts behind these results are in
 - **Building:** without bases, gfa-to-tabix writes the walk file faster than
   gfaidx builds its index on both chromosomes, but takes several times
   gfaidx's memory on pggb chrY
-- **Reading a window:** a browser reads a 64 kb window from a walk file in a
-  few byte ranges of one file. gfaidx reads hundreds of ranges from five
-  files, and gbz-base takes tens of round trips
-- **Time per window:** gfaidx answers the median Minigraph-Cactus chr22
-  window in under half the time a walk file reader takes. The walk file
-  reader is faster in most pggb chrY windows, where repeats make gfaidx
-  return far more of the graph
 
 ## Differences
 
