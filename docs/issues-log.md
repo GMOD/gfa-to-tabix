@@ -2260,3 +2260,22 @@ Where the findings have come from so far, and the rule each gives:
   `other-sequence-as-interior`, `other-sequence-as-interior-revisited`,
   `passes-twice-as-once` and `passes-once-per-sequence`, each held to the
   checkers [cases.tsv](departures/scripts/broken/cases.tsv) names
+- **2026-11-18, graph-walks' reading of names (a rule the reader
+  leaned on and the page never stated).** graph-walks decodes a unit's
+  text through a UTF-8 decoder that replaces what it can't decode, and
+  orders names with `<`. So it reads the names `H\xe9` and `H\xea` both
+  as `H�`, takes two reference sequences that differ only in such a byte
+  for one, lists that haplotype twice, and sorts in UTF-16 code units
+  where the page sorts in bytes. The writer wrote any byte of a W or P
+  line's name but a leading `#` and a NUL, a carriage return among them,
+  at which every tool that reads text splits the line. Source: the
+  consumer is graph-walks, which reads the hosted files; the gap was
+  found by three reviews of the page before the freeze, not by a wrong
+  answer on a hosted file, none of which holds such a name. Fix:
+  [ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md): a name
+  is bytes 0x21 to 0x7E, the writer refuses a W or P line that gives
+  another byte, and no hosted file changes. Guard:
+  `a_name_with_a_byte_outside_0x21_to_0x7e_is_refused`, the dialect
+  fixtures `cr-only-in-name`, `names-not-utf8` and `nonascii-name`, now
+  refused, and `verify7.py` and `spec8.py` on every file, shown on
+  broken/'s `name-space`, `name-cr`, `name-e9` and `name-del`

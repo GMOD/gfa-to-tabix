@@ -764,23 +764,13 @@ W  B  1  c     0  32  >1>2>6>3
 - Segment names `01` and `002` are read as nodes 1 and 2, so a line
   stepping on `1` steps on `01`
   ([s-leading-zero.gfa](walks-container/dialect/s-leading-zero.gfa))
-- A carriage return inside a name, or a byte that isn't UTF-8, is written
-  raw ([cr-only-in-name.gfa](walks-container/dialect/cr-only-in-name.gfa),
-  [nonascii-name.gfa](walks-container/dialect/nonascii-name.gfa)). The file checkers read
-  a name whose bytes aren't UTF-8 and split a line at a carriage return,
-  so [check-dialect.sh](../scripts/check-dialect.sh) builds that fixture
-  and runs none of them on it; graph-walks reads names through a UTF-8
-  decoder, so two names that differ only in such a byte read as one, and
-  its header lists that haplotype twice
-  ([names-not-utf8.gfa](walks-container/dialect/names-not-utf8.gfa))
 - A GFA with no paths is refused as `--refs R matches no path's sample;
   have: ` with nothing after it ([no-paths.gfa](walks-container/dialect/no-paths.gfa))
 - The node and link index doesn't read a W line's end column, so it
   builds a graph `--walks` refuses for one
   ([w-end-wrong.gfa](walks-container/dialect/w-end-wrong.gfa))
-- Suggested next step: refuse segment names with a leading zero and
-  names with a carriage return or bytes that aren't UTF-8, naming the
-  line; say that the GFA has no paths; check a W line's end in the
+- Suggested next step: refuse segment names with a leading zero, naming
+  the line; say that the GFA has no paths; check a W line's end in the
   index. Each refuses a GFA accepted today and changes no file it still
   accepts
 
@@ -986,27 +976,15 @@ W  B  1  c     0  32  >1>2>6>3
   them. A reader cannot say which haplotypes have lines outside the file,
   nor whether a haplotype it lists is whole there
 
-## The tags a file may leave out
-
-- The page says a format 8 file's `#walks` line carries `format:i:8` and
-  `tile:i:`, that `graph` and `leftout` may be absent, and what a reader
-  takes from a file with no `revisited`: nothing that 0 promises
-  ([Header](walks-format.md#header)). It does not say whether a file
-  without `revisited`, `stay`, `abridge` or `abridgebytes` is format 8
-- The code disagrees on such a file. graph-walks reads it, with
-  `revisited` unknown, and `verify7.py`, `spec8.py` and `expand7.py` pass
-  it. `audit7.py` fails a file with no `revisited`, as a header that
-  differs from the `ref` rows, and `claims7.py`'s B3 fails an abridged
-  file with no budgets, since it holds the tile to the header's
-  (`repack.py`'s `bound-no-writer-tags` and a file with `revisited`
-  alone removed, run on 2026-11-16)
-
 ## Checkers that hold a file to more, or less, than the format
 
 - No checker holds a file to the page and nothing else. `claims7.py`
   and `spec8.py` fail files that break this writer's policy and no
   invariant (`costliest-not-first`, and for `claims7.py`
-  `revisited-as-interior`), and `verify7.py` holds a file with revisited
+  `revisited-as-interior` and, where the `#walks` line states a budget
+  above 0, `budget-bytes-over`, `budget-steps-over` and
+  `budget-put-back`, though the budgets bind no row), and `verify7.py`
+  holds a file with revisited
   nodes to the once-passed rule this writer keeps and the format does
   not promise there, where `spec8.py` passes it
   ([cases.tsv](departures/scripts/broken/cases.tsv),
@@ -1021,7 +999,17 @@ W  B  1  c     0  32  >1>2>6>3
 - On a file with no `tile:i:`, `claims7.py`, `audit7.py` and
   `walks-truth.py rebuild` end in a traceback, which `broken.sh` counts
   as passing the file; `verify7.py` and `spec8.py` fail it
-  (`tile-missing`)
+  (`tile-missing`). On `tile:i:0` `claims7.py` and `spec8.py` end in one
+  and `verify7.py` fails it (`tile-zero`), and on a name holding a
+  carriage return `audit7.py` and `walks-truth.py rebuild` do, reading
+  the line as two, where `verify7.py` and `spec8.py` fail it (`name-cr`)
+- Of the sentences [ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md)
+  added, `spec8.py` checks the names, the one `#reference` line and the
+  `bytes` tag. It does not check how a number is written, an empty
+  field, the lines of a unit of a later kind, an empty departure bin or
+  a coordinate above 2^53, and passes the planted files for each
+  ([matrix.txt](walks-container/spec-sentences/matrix.txt)); `verify7.py`
+  holds a file to them, and `claims7.py` to a piece's end
 - `walks-truth.py rebuild` passes a file whose route interior holds a
   once-passed node, since the steps it rebuilds are the line's whatever
   their filing

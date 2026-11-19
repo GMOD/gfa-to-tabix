@@ -171,7 +171,7 @@ All of it is in [walks-format.md](../walks-format.md), and
 - **Left unsaid:** whether a file may leave out `revisited`, `stay`,
   `abridge` and `abridgebytes`. The checkers disagree on such a file, so
   saying it is more than wording
-  ([open problem](../open-problems.md#the-tags-a-file-may-leave-out))
+  ([ADR 0017](0017-format-8-tags-numbers-lines-and-names.md) says it)
 
 ## What ADR 0011's rules say
 
