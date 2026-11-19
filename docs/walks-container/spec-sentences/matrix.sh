@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Prints which checkers fail each file ADR 0017's rulings are about: the
 # legal files, a writer's file with tags left off its #walks line or both
-# budgets stated as 0, which every checker must pass; and the planted
+# budgets stated as 0, and one whose reference is one haplotype of its
+# #reference sample, which every checker must pass; and the planted
 # files, each breaking one sentence the page gained, or a stated budget.
 # One line a file, one column a checker, FAILS or passes, a traceback
 # named; then, for each FAILS, what the checker said first.
@@ -68,12 +69,17 @@ done
 echo "# legal: walks-repeat.gfa built with --tile 10, which states revisited:i:2, then without that tag"
 row repeat "$W/repeat.R.walks.gz" "$D/walks-repeat.gfa"
 row "bound-no-revisited" "$W/repeat-repack/bound-no-revisited/f.walks.gz" "$D/walks-repeat.gfa"
+echo "# legal: broken/hapref.gfa with HG002#1 alone for its reference: HG002's haplotype 2 built under a stand-in sample, then named HG002#2 again"
+sed $'s/^W\tHG002\t2\t/W\tHG002z\t2\t/' "$B/hapref.gfa" > "$W/hapref-standin.gfa"
+"$BIN" "$W/hapref-standin.gfa" --walks --refs HG002 --tile 10 -o "$W/hapref" > /dev/null 2>&1
+python3 -I "$B/corrupt.py" "$W/hapref.HG002.walks.gz" "$W/hapref-one.walks.gz" --all 'HG002z#2' 'HG002#2' > /dev/null
+row "one-haplotype-reference" "$W/hapref-one.walks.gz" "$B/hapref.gfa"
 echo "# planted"
 for name in revisited-count revisited-zero budget-bytes-over budget-steps-over budget-put-back \
             walks-bytes-tag tag-type-letter tile-zero tile-past-2-40 \
             number-leading-zero number-plus-sign token-minus-zero \
             header-empty-line directory-empty-line field-empty unit-line-inside-unit \
-            departures-unit-empty reference-twice length-zero ref-rows-overlap \
+            departures-unit-empty reference-twice reference-haplotype length-zero ref-rows-overlap \
             past-2-53-line-end past-2-53-stated name-space name-cr name-e9 name-del; do
   row "$name" "$B/$name.walks.gz" "$(gfa_of "$name")"
 done

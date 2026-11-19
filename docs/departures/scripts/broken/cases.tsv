@@ -126,6 +126,7 @@ ref-lengths	walks-two-refs.gfa	claims7 audit7 spec8 rebuild	tile 10's ref length
 ref-rows-overlap	broken/ref-gap.gfa	claims7	the tile's second ref row, at 30, stated at 12, over bases 12 to 18 of the first
 ref-rows-swapped	broken/ref-gap.gfa	claims7 audit7 spec8	the tile's two ref rows, at 0 and 30, written in the other order
 ref-strand-flipped	walks-two-refs.gfa	rebuild	tile 20's ref step >5 made <5, and every walk row's start there with it
+reference-haplotype	walks-two-refs.gfa	claims7 spec8 rebuild	#reference naming GRCh38#0, a haplotype, where it names the sample of the ref rows' paths
 reference-twice	walks-two-refs.gfa	verify7 claims7 spec8	#reference GRCh38 written twice
 reference-wrong	walks-two-refs.gfa	claims7 rebuild spec8	#reference CHM13 over GRCh38's rows
 revisited-as-interior	broken/tie.gfa	claims7	A's step on node 2, which the placement puts on R at 24-30, written as a route's interior with no exit: A ends off the reference

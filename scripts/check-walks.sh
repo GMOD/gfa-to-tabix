@@ -11,7 +11,8 @@
 # format's room for additions, a tag on every row and on the #walks line, a
 # unit of an unknown kind, an unknown header line and each legal variant of
 # repack.py, tag-hole on a file with #hole lines too, and on one without the #walks line's graph:Z: and leftout:i:,
-# which walks-truth.py's rebuild alone must fail, and
+# which walks-truth.py's rebuild alone must fail, on a file whose reference is one haplotype of its #reference
+# sample, the sample's other haplotype in walk rows, and
 # on a file where a gzip member cut inside a row begins `#unit<TAB>`, all
 # of which must pass; then fuzz7.sh's batch of seeds 1 to $SEEDS (6 by
 # default). Each check fails by its exit status. Exits 1 on any failure,
@@ -107,6 +108,18 @@ if "$B" "$holed" --walks --refs R --tile 10 -o "$dir/holed" > "$dir/log" 2>&1 &&
 else
   echo "tag-hole on walks-sequences.gfa: $(tail -1 "$dir/log")"; failed=1
 fi
+# a file whose reference is one haplotype of its #reference sample: broken/hapref.gfa with HG002's haplotype 2
+# built under a stand-in sample, so that HG002#1 alone has ref rows, then named HG002#2 again in every row
+sed $'s/^W\tHG002\t2\t/W\tHG002z\t2\t/' "$S/broken/hapref.gfa" > "$dir/hapref-standin.gfa"
+for opts in "--tile 10" "--tile 10 --abridge-bytes 1"; do
+  read -r -a args <<< "$opts"
+  if "$B" "$dir/hapref-standin.gfa" --walks --refs HG002 "${args[@]}" -o "$dir/hapref" > "$dir/log" 2>&1 &&
+     python3 -I "$S/broken/corrupt.py" "$dir/hapref.HG002.walks.gz" "$dir/hapref-one.walks.gz" --all 'HG002z#2' 'HG002#2' > "$dir/log" 2>&1; then
+    checks "one haplotype of the #reference sample $opts" "$dir/hapref-one.walks.gz" "$S/broken/hapref.gfa"
+  else
+    echo "one haplotype of the #reference sample $opts: $(tail -1 "$dir/log")"; failed=1
+  fi
+done
 # a reference contig named `unit` and rows enough that a gzip member, cut every 0xff00 bytes, begins `#unit<TAB>`
 {
   printf 'H\tVN:Z:1.1\nS\t1\tACGT\nS\t2\tACGT\nL\t1\t+\t2\t+\t0M\nW\tR\t0\tunit\t0\t8\t>1>2\n'
