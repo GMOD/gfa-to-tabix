@@ -1063,8 +1063,8 @@ W  B  1  c     0  32  >1>2>6>3
   of input, `build` and its track config, and `--walks` before learning
   what problem the tool solves. Its one schematic,
   [walks-tile.svg](figures/walks-tile.svg), shows how a walk file is laid
-  out in tiles, which is packaging, not purpose. The owner finds the
-  schematics too complex (2026-11-18)
+  out in tiles, which is packaging, not purpose, in more detail than a
+  newcomer needs
 - Suggested next step: say first, in a few sentences and one figure with
   concrete labels, that a pangenome graph is too big for a browser to load,
   and that gfa-to-tabix writes files a browser can fetch one region of from
