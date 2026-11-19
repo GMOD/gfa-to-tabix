@@ -12,9 +12,25 @@
 #   line that starts with `#` past line 2 is a later addition, skipped; the
 #   `#header` and sequence lines, `#unit` lines and `#entry` lines hold no
 #   tag
-# - the `#walks` line states `tile:i:`, and `graph:Z:` as 16 lowercase hex
-#   digits and `leftout:i:` as a decimal integer, each at most once; a file
-#   without those two is checked as one with them
+# - the `#walks` line states `tile:i:`, from 1 to 2^40, and each tag name
+#   the page gives at most once, with its type letter: `format`, `tile`,
+#   `revisited`, `stay`, `abridge`, `abridgebytes`, `leftout` and the
+#   directory's `bytes` as `i` and a number, `graph` as `Z` and 16 lowercase
+#   hex digits; a file without any of them but `format` and `tile` is
+#   checked as one with them, and the data file's line states no `bytes`
+# - every line of the directory and of the data file ends in a newline and
+#   none is empty or holds an empty field; one `#reference` line; no line
+#   of a unit after its first begins `#unit`, whatever the unit's kind
+# - every number of a `#unit`, `#entry`, `#hole` or directory line and of a
+#   row's fixed columns is decimal digits with no sign, no leading zero and
+#   no space, `0` for zero, a delta token, a choice token and a block's `d`
+#   alone beginning `-` and none of them `-0`; and no coordinate is above
+#   2^53: a line's `start end`, a `fragStart`, a `hapOffset`, the end of a
+#   ref row's stretch, `hapOffset + hapBp`, `hapStart + ownBp` and a
+#   record's breakpoints (claims7.py holds a walk row's piece to it, whose
+#   end on its contig takes decoding)
+# - a tile, departure block, detail unit or blocks unit holds a row, and a
+#   table an entry
 # - every unit is BGZF members, and every row of a tile, departure block,
 #   detail unit or blocks unit is of a kind that unit holds
 # - the header, the units, the tables and the EOF block partition the file;
@@ -77,28 +93,66 @@ def decoded(raw):
     return raw.decode('utf-8', 'surrogateescape')
 
 
-directory = [l.split('\t') for l in decoded(open(path + '.idx', 'rb').read()).rstrip('\n').split('\n')]
+NUMBER = '(?:0|[1-9][0-9]*)'
+TOKEN = '(?:0|-?[1-9][0-9]*)'
+NAME = '[!"$-~][!-~]*'
+MAX = 1 << 53
+
+
+def several(item, sep=','):
+    return f'{item}(?:{sep}{item})*'
+
+
+def or_none(form):
+    return f'(?:\\.|{form})'
+
+
+def not_plain(raw):
+    return (not raw.endswith(b'\n') or raw.startswith((b'\n', b'\t')) or b'\n\n' in raw or b'\t\t' in raw
+            or b'\n\t' in raw or b'\t\n' in raw)
+
+
+def numbers(*fields):
+    return all(re.fullmatch(NUMBER, x) for x in fields)
+
+
+def names(*fields):
+    return all(re.fullmatch(NAME, x) for x in fields)
+
+
+raw_directory = open(path + '.idx', 'rb').read()
+if not_plain(raw_directory):
+    fail('the directory holds an empty line or field, or does not end in a newline')
+directory = [l.split('\t') for l in decoded(raw_directory)[:-1].split('\n')]
 first = directory[0]
 stated = [t for t in first if t.startswith('bytes:i:')]
 walks = [t for t in first if not t.startswith('bytes:i:')]
 if walks[0] != '#walks' or [t for t in walks if t.startswith('format:i:')] != ['format:i:8'] or len(stated) != 1:
     fail('directory line 1 is not a format 8 #walks line with one bytes:i:')
-for name, form in (('graph:Z:', '[0-9a-f]{16}'), ('leftout:i:', '0|[1-9][0-9]*')):
-    values = [t[len(name):] for t in walks if t.startswith(name)]
-    if len(values) > 1 or not all(re.fullmatch(form, v) for v in values):
-        fail(f'the #walks line states {" ".join(name + v for v in values)}, not one {name} of {form}')
+for name, form in [(f'{n}:i:', NUMBER) for n in ('format', 'tile', 'revisited', 'stay', 'abridge', 'abridgebytes',
+                                                 'leftout', 'bytes')] + [('graph:Z:', '[0-9a-f]{16}')]:
+    values = [t for t in first if t.startswith(name[:-2])]
+    if len(values) > 1 or not all(t.startswith(name) and re.fullmatch(form, t[len(name):]) for t in values):
+        fail(f'the #walks line states {" ".join(values)}, not one {name} of {form}')
 if not any(t.startswith('tile:i:') for t in walks):
     fail('the #walks line states no tile:i:')
 if int(stated[0][8:]) != size:
     fail(f'bytes:i: is {stated[0][8:]}, the file {size}')
 if len(directory) < 2 or directory[1][:2] != ['#header', '0'] or len(directory[1]) != 3:
     fail('directory line 2 is not #header 0 <length>, with no tag')
-header_end = int(directory[1][2])
 listed = [c for c in directory[2:] if not c[0].startswith('#')]
 if any(len(c) != 3 for c in listed):
     fail('a directory line of a sequence is not its name, offset and length alone')
+if not numbers(directory[1][2], *(x for c in listed for x in c[1:])):
+    fail('a directory line states an offset or length that is not a number as the page writes one')
+if not names(*(c[0] for c in listed)):
+    fail('a directory line names a sequence in bytes outside 0x21 to 0x7E')
+header_end = int(directory[1][2])
 tables = [(c[0], int(c[1]), int(c[2])) for c in listed]
-tile = int(sys.argv[2]) if len(sys.argv) > 2 else int(next(t for t in walks if t.startswith('tile:i:'))[7:])
+stated_tile = int(next(t for t in walks if t.startswith('tile:i:'))[7:])
+if not 1 <= stated_tile <= 1 << 40:
+    fail(f'tile:i: is {stated_tile}, not 1 to 2^40')
+tile = int(sys.argv[2]) if len(sys.argv) > 2 else stated_tile
 sizes = [tile * n for n in (512, 64, 8, 1)]
 
 
@@ -133,6 +187,19 @@ stats = dict(units=0, tables=0, lines=0, departure_lines=0, members_cut_before_u
              ref_rows_stating_fewer_passes=0, ref_rows_stating_more_passes=0)
 ROWS = dict(tile=('ref', 'nodes', 'route', 'walk', 'abridged'), departures=('departure',),
             detail=('nodes', 'route', 'walk'), blocks=('blocks',))
+CHOICE = f'{TOKEN}(?::{NUMBER})?(?:@{NUMBER})?'
+FIXED = dict(
+    ref=[NAME] + [NUMBER] * 4 + [several(TOKEN), several(NUMBER), or_none(several(NUMBER))],
+    nodes=[several(NUMBER)] * 2,
+    route=[or_none(several(TOKEN))] * 3,
+    walk=[NAME] + [NUMBER] * 4 + [f'{NUMBER}(?:@{NUMBER})?', or_none(several(CHOICE))],
+    abridged=[NAME] + [NUMBER] * 6,
+    blocks=[NAME] + [NUMBER] * 2 + [several(f'(?:{TOKEN}[+-])?[1-9][0-9]*')],
+    departure=[NAME] + [NUMBER] * 4 + ['[+-]', NUMBER, NUMBER, '[+-]', NUMBER, or_none(several(NUMBER))],
+)
+ROW = {row: re.compile('\t'.join([NUMBER, NUMBER, row] + forms)) for row, forms in FIXED.items()}
+COORDINATES = dict(ref=(5, 6), nodes=(), route=(), walk=(5, 6), abridged=(5, 6), blocks=(5,), departure=(5, 8, 11))
+SUMS = dict(abridged=(6, 9), departure=(5, 6))
 COVERED_BY = dict(tile='ref rows', blocks='blocks rows')
 state = dict(units=[], names=set(), records={}, table=0, ref_end=0, points=[])
 held = bytearray()
@@ -161,13 +228,24 @@ def passes_held(nodes):
 
 
 def check_unit(at, length, text):
-    lines = decoded(text).split('\n')
-    if lines[-1] != '':
+    if not text.endswith(b'\n'):
         fail(f'the unit at {at} does not end in a newline')
+    if not_plain(text):
+        fail(f'the unit at {at} holds an empty line or an empty field')
+    if b'\n#unit' in text:
+        fail(f'a line of the unit at {at} after its first begins #unit')
+    lines = decoded(text).split('\n')
     head = lines[0].split('\t')
     if len(head) != 6:
         fail(f'the #unit line at {at} is not its sequence, start, end, kind and name alone: {lines[0][:80]}')
+    if not names(head[1]):
+        fail(f'the #unit line at {at} names a sequence in bytes outside 0x21 to 0x7E: {lines[0][:80]}')
+    if not numbers(head[2], head[3]):
+        fail(f'the #unit line at {at} states a start or end that is not a number as the page writes one: '
+             f'{lines[0][:80]}')
     seq, lo, hi, kind, name = head[1], int(head[2]), int(head[3]), head[4], head[5]
+    if hi > MAX:
+        fail(f'a coordinate above 2^53 in the #unit line at {at}: {lines[0][:80]}')
     if kind == 'table':
         check_table(at, length, seq, lo, hi, lines[1:-1])
         return
@@ -186,7 +264,13 @@ def check_unit(at, length, text):
             fail(f'a line of another sequence in the unit at {at}: {line[:80]}')
         if len(c) < 4 or c[3] not in ROWS[kind]:
             fail(f'a row of a kind a {kind} unit doesn\'t hold, at {at}: {line[:80]}')
+        if not ROW[c[3]].fullmatch('\t'.join(c[1:4 + len(FIXED[c[3]])])):
+            fail(f'a {c[3]} row with a column short, a number not written as the page writes one or a path in '
+                 f'bytes outside 0x21 to 0x7E, at {at}: {line[:80]}')
         a, b = int(c[1]), int(c[2])
+        stated = [a, b, sum(int(c[k]) for k in SUMS.get(c[3], ()))] + [int(c[k]) for k in COORDINATES[c[3]]]
+        if max(stated) > MAX:
+            fail(f'a coordinate above 2^53 at {at}: {line[:80]}')
         if kind == 'departures':
             stats['departure_lines'] += 1
             if name != '.':
@@ -204,6 +288,8 @@ def check_unit(at, length, text):
         if c[3] == 'ref':
             start = int(c[6])
             stretch = (start, start + sum(int(x) for x in c[10].split(',')))
+            if stretch[1] > MAX:
+                fail(f'a ref row whose stretch ends above 2^53 at {at}: {line[:80]}')
             state['ref_end'] = max(state['ref_end'], stretch[1])
             hold(node_ids(c[9]), line)
         elif (c[3] in ('walk', 'abridged') and kind == 'detail') or (c[3] == 'blocks' and kind == 'blocks'):
@@ -212,6 +298,8 @@ def check_unit(at, length, text):
             fail(f'a {c[3]} row not stating its unit\'s extent: {line[:80]}')
         if stretch:
             union = stretch if union is None else (min(union[0], stretch[0]), max(union[1], stretch[1]))
+    if kind == 'departures' and len(lines) < 3:
+        fail(f'the departures unit at {at} has no record')
     if kind in ROWS and kind != 'departures':
         if union is None:
             fail(f'the {kind} unit at {at} has no ref row, piece or blocks row')
@@ -229,6 +317,8 @@ def check_table(at, length, seq, head_lo, head_hi, lines):
     state['table'] += 1
     stats['tables'] += 1
     listed = ['\t'.join(l.split('\t')[1:]) for l in lines]
+    if not lines:
+        fail(f'the table of {seq} lists no unit')
     if any(not l.startswith('#entry\t') or l.count('\t') != 7 for l in lines) or listed != state['units']:
         fail(f'the table of {seq} does not list its units as they are, in file order')
     if any(int(l.split('\t')[7]) <= 0 for l in lines):
@@ -317,11 +407,21 @@ with open(path, 'rb') as f:
             if at != header_end:
                 fail(f'#header 0 {header_end} ends inside the member at {at}')
             header_read = True
-            lines = decoded(header).split('\n')
+            if not_plain(header):
+                fail('the header unit holds an empty line or field, or does not end in a newline')
+            lines = decoded(header)[:-1].split('\n')
             if lines[0] != '\t'.join(walks):
                 fail('the directory\'s line 1 differs from the header\'s #walks line')
-            if any(l and (not l.startswith('#') or l.startswith('#unit')) for l in lines):
+            if any(not l.startswith('#') or l.startswith('#unit') for l in lines):
                 fail('a header line that is not a header line')
+            stated_lines = [l.split('\t') for l in lines]
+            if sum(c[0] == '#reference' for c in stated_lines) != 1:
+                fail('the header does not hold one #reference line')
+            holes = [c for c in stated_lines if c[0] == '#hole']
+            if any(len(c) < 4 or not numbers(c[2], c[3]) or int(c[3]) > MAX for c in holes):
+                fail('a #hole line without a start and end written as the page writes a number, at most 2^53')
+            if not all(len(c) > 1 and names(c[1]) for c in stated_lines if c[0] in ('#reference', '#haplotype', '#hole')):
+                fail('a #reference, #haplotype or #hole line states a name in bytes outside 0x21 to 0x7E')
         if n == 28 and not text:
             if unit:
                 check_unit(*unit)
