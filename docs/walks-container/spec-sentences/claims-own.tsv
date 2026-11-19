@@ -1,0 +1,162 @@
+# claims7.py 8cb11cb50537b80b77dca4ab10a37c5a8a4c83bf with --own --shard 0/64, by claims-own.sh, on ada 2026-11-19; each run under a kernel memory cap (40 GB, 60 GB)
+# grch38-chr21-own-0of64	seconds and peak KiB	6213.77	8875468
+grch38-chr21-own-0of64	# /home/cdiesh/work/blocks/genome-5.0.0-hdr/hprc-v2.1-mc-grch38.GRCh38.walks.gz: 3363 units, 23651 departure records, 2047 abridged rows, 0 walk rows with copies
+grch38-chr21-own-0of64	# --seq: the units of 1 of 195 sequences; N2 and N3 hold their nodes to their own rows, so a 0 here is not a 0 for the file: verify7.py holds N2 across tiles and sequences, and the ref rows' passes to the whole file
+grch38-chr21-own-0of64	0	U1 units in file order: header; sequences in byte order; per sequence its tile and departures units by start, a tile before the blocks starting there, smaller blocks first; then detail units in order of their tile's start and then their number, a tile's blocks unit directly after its last detail unit; then its table
+grch38-chr21-own-0of64	0	U2 a tile's name is its start, a multiple of tile written in decimal with no leading zero, and every ref step's offset lies in [name, name + tile)
+grch38-chr21-own-0of64	0	U3 a tile's extent runs from the first base its ref rows' stretches cover to the last
+grch38-chr21-own-0of64	0	U4 a tile or detail unit whose rows cover no base, at p, takes [p, p+1), [p-1, p) where p is |S|, or [0, 0) where |S| is 0; every other unit has an extent of at least 1 bp
+grch38-chr21-own-0of64	0	U5 a tile lists ref rows, then at most one nodes row, then route rows, then walk rows, then abridged rows; a detail unit holds at most one nodes row, route rows and walk rows
+grch38-chr21-own-0of64	0	U6 within a departure block lines are in order of start, end, then text
+grch38-chr21-own-0of64	0	U7 every departure line overlaps each block it is in, or, a point, lies at the block's start
+grch38-chr21-own-0of64	0	U8 a table's #unit line runs from 0 to |S|, where its sequence's last ref row ends, and is named .
+grch38-chr21-own-0of64	0	U9 a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks departure, detail units nodes/route/walk, blocks units blocks; a unit of another kind is skipped with its rows
+grch38-chr21-own-0of64	0	U10 every sequence in the file has at least one tile, so no table is empty
+grch38-chr21-own-0of64	0	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+grch38-chr21-own-0of64	0	H2 revisited:i:0 means no ref row or departure record has a pass count above 1 and no walk row has @k or :k
+grch38-chr21-own-0of64	0	H3 one #reference line names the reference sample, the sample of every ref row's path
+grch38-chr21-own-0of64	0	H4 the reference is whole haplotypes: no path with walk or abridged rows, and no #haplotype line, is what a reference sequence is listed under or begins with that and #
+grch38-chr21-own-0of64	0	R1 a ref row's lengths and passes have one entry per step, passes . exactly when every count is 1
+grch38-chr21-own-0of64	0	R3 a tile of S holds at least one ref row, and ref rows of S only
+grch38-chr21-own-0of64	0	R2 a tile's ref rows are written in hapOffset order
+grch38-chr21-own-0of64	0	R4 no two ref rows of a sequence cover a base twice, so the offsets of R ascend
+grch38-chr21-own-0of64	0	R5 every length a ref or nodes row states is at least 1
+grch38-chr21-own-0of64	0	G1 a tile's walk rows are in order of path name in bytes, then fragStart, hapOffset and piece
+grch38-chr21-own-0of64	0	G4 every node id is below 2^31
+grch38-chr21-own-0of64	0	G6 a row has its kind's fixed columns, and any column after them is a tag NAME:T:value, its name letters and digits from a letter, its type one letter; the #walks line holds tags alone; a #unit line has its six columns and an #entry line its eight, with no tag
+grch38-chr21-own-0of64	0	G5 #hole lines are the stretches of each sequence before |S| that no ref row's stretch covers, in order of sequence name in bytes, then start
+grch38-chr21-own-0of64	0	N1 a nodes row lists the nodes the tile's route interiors visit, ids strictly ascending, and no other
+grch38-chr21-own-0of64	0	N2 no route interior holds a node the reference passes once (ADR 0009, nearest-pass placement)
+grch38-chr21-own-0of64	0	N3 a node has one length in every ref and nodes row of the file that holds it
+grch38-chr21-own-0of64	0	N5 no route interior of a tile or of its detail units holds a node of the tile's own R
+grch38-chr21-own-0of64	0	S1 SQ:Z: is on every ref and nodes row of a file or on none, and holds as many bases as the row's lengths add up to
+grch38-chr21-own-0of64	0	T1 a route is stored the way round that sorts first: by entry (none first), then interior, handle by handle as integers and the shorter first where one begins the other, then exit (none first)
+grch38-chr21-own-0of64	0	T2 each distinct route is written once per tile or detail unit, a route and its flip counting as one
+grch38-chr21-own-0of64	0	T3 a route with no entry or no exit has a non-empty interior
+grch38-chr21-own-0of64	0	T4 a route's entry and exit lie on R
+grch38-chr21-own-0of64	0	T5 every route row of a tile or detail unit is taken by one of its walk rows
+grch38-chr21-own-0of64	0	T6 route rows are in order of the first position in R of their entry's or exit's node, whichever is first, then by entry (none first), interior and exit
+grch38-chr21-own-0of64	0	W1 every walk row decodes by the spec's rules to nsteps steps
+grch38-chr21-own-0of64	0	W2 a walk row has one encoding: @k and :k only where they differ from the defaults, and flip 0 on a route that is its own flip
+grch38-chr21-own-0of64	0	W3 a walk continues along R where R's next position is the step's, and takes a route with an empty interior only where it is not
+grch38-chr21-own-0of64	0	W4 a walk row's start end is the span of all its placed steps
+grch38-chr21-own-0of64	0	B1 where the #walks line states an abridgebytes above 0, a tile that keeps a walk row has rows, other than its abridged rows and from kind on, of at most that many bytes uncompressed
+grch38-chr21-own-0of64	0	B2 where the #walks line states an abridge above 0, a tile that keeps a walk row has pieces costing at most that many interior steps: each piece's routes' interior steps once per use, plus a quarter of all its steps
+grch38-chr21-own-0of64	0	B3 a tile moves the fewest W lines it can, costliest first: every moved line costs at least as much as every kept one, and, where the #walks line states both budgets and one of them above 0, with its last-numbered detail record put back the tile would cost more than abridge or its rows would be more than abridgebytes bytes
+grch38-chr21-own-0of64	0	W5 each (path, fragStart, piece) has one walk or abridged row in the file, pieces numbered from 0 with none missing along one W line
+grch38-chr21-own-0of64	0	A1 an abridged row's start end is its blocks row's start end
+grch38-chr21-own-0of64	0	A2 every abridged row names a detail unit cs:d of its tile that exists, and every detail unit is named by one
+grch38-chr21-own-0of64	0	A3 a W line's moved pieces in one tile share one detail record
+grch38-chr21-own-0of64	0	A4 a detail unit holds the moved pieces of one W line
+grch38-chr21-own-0of64	0	A5 a tile's detail numbers run from 0 with none missing
+grch38-chr21-own-0of64	0	A6 a tile or detail unit holds a nodes row exactly when its routes have an interior step, and at most one
+grch38-chr21-own-0of64	0	A7 a tile's detail records are numbered from 0 in order of cost, the costliest W line first
+grch38-chr21-own-0of64	0	A8 an abridged row states its piece's walk row in its detail unit: the same start end, path, fragStart, hapOffset, piece and nsteps
+grch38-chr21-own-0of64	0	A9 an abridged row has eleven columns: seq start end abridged path fragStart hapOffset piece nsteps hapBp detail
+grch38-chr21-own-0of64	0	A10 an abridged row's hapBp is at least 1 and is what its blocks row's items add up to
+grch38-chr21-own-0of64	0	A11 an abridged row's hapBp is the bp of the steps its piece's walk row in its detail unit decodes to
+grch38-chr21-own-0of64	0	A12 an abridged piece 0 starts at fragStart, and an abridged piece's hapOffset plus hapBp is the hapOffset of its W line's next piece, in that piece's walk or abridged row
+grch38-chr21-own-0of64	0	A13 the bp of an abridged piece's stretch of its contig, hapOffset over hapBp, within a record's of its sequence and path, hapStart over ownBp, is its blocks list's trailing run where hapStart is where its last block ends on the contig, its leading run where hapStart plus ownBp is where its first block begins there, and 0 otherwise; it is never the whole piece
+grch38-chr21-own-0of64	0	K1 every tile with abridged rows has exactly one blocks unit, named by its start, and no other tile has one
+grch38-chr21-own-0of64	0	K2 a blocks unit's rows are its tile's abridged rows one for one, in their order, by path, fragStart and piece
+grch38-chr21-own-0of64	0	K3 a blocks row's items add up to the bp of the steps its piece's walk row in its detail unit decodes to
+grch38-chr21-own-0of64	0	K4 a blocks row's start end is the hull of its blocks, and a blocks unit's the hull of its rows
+grch38-chr21-own-0of64	0	K6 a block is maximal: none begins where the block right before it ended, running the same way
+grch38-chr21-own-0of64	0	K7 a block item is <d><+|-><len>: d a decimal that may be 0 or negative, with no leading zero and no -0, len a decimal of at least 1 with no leading zero
+grch38-chr21-own-0of64	0	K8 a blocks row has eight columns, and its list's items are each a block or, all digits, a run off R of at least 1 bp with no leading zero; no two runs stand side by side, and there is at least one block
+grch38-chr21-own-0of64	0	K9 a W line's pieces tile its contig: a piece ends where the line's next piece starts, a walk row's piece running from hapOffset over its steps' bp and an abridged one from hapOffset over every item of its blocks row's list
+grch38-chr21-own-0of64	0	K10 a W line's piece 0 starts at fragStart, its walk or abridged row's hapOffset
+grch38-chr21-own-0of64	0	K11 a departure record of an abridged piece's sequence and path whose hapStart is where the piece's last block ends on its contig, hapOffset plus its list's items up to there, has an ownBp of at least the list's trailing run
+grch38-chr21-own-0of64	0	K12 a blocks row's list starts with a run off R only on a W line's piece 0
+grch38-chr21-own-0of64	0	K13 no piece ends above 2^53 on its contig: a walk row's hapOffset plus its steps' bp, an abridged row's hapOffset plus hapBp
+grch38-chr21-own-0of64	0	D1 a departure record's ownTiles are tile names of its sequence that exist, in no repeat
+grch38-chr21-own-0of64	0	D2 a record has at most two ownTiles
+grch38-chr21-own-0of64	0	D3 a departure record's extent holds both breakpoints and is at least the breakpoint stretch
+grch38-chr21-own-0of64	0	D4 the ref rows of S hold a node ending at a + leave's or - rejoin's breakpoint and one starting at the other kind's
+grch38-chr21-own-0of64	0	D5 a departure line's ownBp >= missingBp; strands are + or -; passes >= 1
+grch38-chr21-own-0of64	0	O1 ownTiles are the tiles of S holding the record's own steps, the steps strictly between its leave step and its rejoin step, in the path's order
+grch38-chr21-own-0of64	0	O2 an own step not placed on the reference takes the tile of the last step placed on the reference before it in its W line, or, leading its W line, of the first after it
+grch38-chr21-own-0of64	0	O4 the own steps in the file lie in the tiles ownTiles names or in another sequence's tiles, and their bp plus missingBp is at most ownBp
+grch38-chr21-own-0of64	0	L1 a record's leave step is the last step on R of its piece, and its rejoin step the first on R of its piece
+grch38-chr21-own-0of64	0	O5 a record's own steps in an abridged piece of its sequence are the piece's steps within hapStart over ownBp cut to hapOffset over hapBp, and no other
+grch38-chr21-own-0of64	0	D6 a departure line's start end runs from the first base of its end nodes to the last, widened to the breakpoint stretch where that is wider
+# pggbY-own-0of64	seconds and peak KiB	4782.69	20263564
+pggbY-own-0of64	# /home/cdiesh/work/blocks/accept-5.0.0/4b14ee3/pggbY/pggbY.GRCh38.walks.gz: 1520 units, 425040 departure records, 112800 abridged rows, 161368 walk rows with copies
+pggbY-own-0of64	0	U1 units in file order: header; sequences in byte order; per sequence its tile and departures units by start, a tile before the blocks starting there, smaller blocks first; then detail units in order of their tile's start and then their number, a tile's blocks unit directly after its last detail unit; then its table
+pggbY-own-0of64	0	U2 a tile's name is its start, a multiple of tile written in decimal with no leading zero, and every ref step's offset lies in [name, name + tile)
+pggbY-own-0of64	0	U3 a tile's extent runs from the first base its ref rows' stretches cover to the last
+pggbY-own-0of64	0	U4 a tile or detail unit whose rows cover no base, at p, takes [p, p+1), [p-1, p) where p is |S|, or [0, 0) where |S| is 0; every other unit has an extent of at least 1 bp
+pggbY-own-0of64	0	U5 a tile lists ref rows, then at most one nodes row, then route rows, then walk rows, then abridged rows; a detail unit holds at most one nodes row, route rows and walk rows
+pggbY-own-0of64	0	U6 within a departure block lines are in order of start, end, then text
+pggbY-own-0of64	0	U7 every departure line overlaps each block it is in, or, a point, lies at the block's start
+pggbY-own-0of64	0	U8 a table's #unit line runs from 0 to |S|, where its sequence's last ref row ends, and is named .
+pggbY-own-0of64	0	U9 a unit holds only lines of its own kinds: tiles ref/nodes/route/walk/abridged, departure blocks departure, detail units nodes/route/walk, blocks units blocks; a unit of another kind is skipped with its rows
+pggbY-own-0of64	0	U10 every sequence in the file has at least one tile, so no table is empty
+pggbY-own-0of64	0	H1 #haplotype lists what each path with walk or abridged rows is listed under, sample#haplotype of three fields or more and the sample of fewer, once each in byte order, and no other
+pggbY-own-0of64	0	H2 revisited:i:0 means no ref row or departure record has a pass count above 1 and no walk row has @k or :k
+pggbY-own-0of64	0	H3 one #reference line names the reference sample, the sample of every ref row's path
+pggbY-own-0of64	0	H4 the reference is whole haplotypes: no path with walk or abridged rows, and no #haplotype line, is what a reference sequence is listed under or begins with that and #
+pggbY-own-0of64	0	R1 a ref row's lengths and passes have one entry per step, passes . exactly when every count is 1
+pggbY-own-0of64	0	R3 a tile of S holds at least one ref row, and ref rows of S only
+pggbY-own-0of64	0	R2 a tile's ref rows are written in hapOffset order
+pggbY-own-0of64	0	R4 no two ref rows of a sequence cover a base twice, so the offsets of R ascend
+pggbY-own-0of64	0	R5 every length a ref or nodes row states is at least 1
+pggbY-own-0of64	0	G1 a tile's walk rows are in order of path name in bytes, then fragStart, hapOffset and piece
+pggbY-own-0of64	0	G4 every node id is below 2^31
+pggbY-own-0of64	0	G6 a row has its kind's fixed columns, and any column after them is a tag NAME:T:value, its name letters and digits from a letter, its type one letter; the #walks line holds tags alone; a #unit line has its six columns and an #entry line its eight, with no tag
+pggbY-own-0of64	0	G5 #hole lines are the stretches of each sequence before |S| that no ref row's stretch covers, in order of sequence name in bytes, then start
+pggbY-own-0of64	0	N1 a nodes row lists the nodes the tile's route interiors visit, ids strictly ascending, and no other
+pggbY-own-0of64	0	N2 no route interior holds a node the reference passes once (ADR 0009, nearest-pass placement)
+pggbY-own-0of64	0	N3 a node has one length in every ref and nodes row of the file that holds it
+pggbY-own-0of64	0	N5 no route interior of a tile or of its detail units holds a node of the tile's own R
+pggbY-own-0of64	0	S1 SQ:Z: is on every ref and nodes row of a file or on none, and holds as many bases as the row's lengths add up to
+pggbY-own-0of64	0	T1 a route is stored the way round that sorts first: by entry (none first), then interior, handle by handle as integers and the shorter first where one begins the other, then exit (none first)
+pggbY-own-0of64	0	T2 each distinct route is written once per tile or detail unit, a route and its flip counting as one
+pggbY-own-0of64	0	T3 a route with no entry or no exit has a non-empty interior
+pggbY-own-0of64	0	T4 a route's entry and exit lie on R
+pggbY-own-0of64	0	T5 every route row of a tile or detail unit is taken by one of its walk rows
+pggbY-own-0of64	0	T6 route rows are in order of the first position in R of their entry's or exit's node, whichever is first, then by entry (none first), interior and exit
+pggbY-own-0of64	0	W1 every walk row decodes by the spec's rules to nsteps steps
+pggbY-own-0of64	0	W2 a walk row has one encoding: @k and :k only where they differ from the defaults, and flip 0 on a route that is its own flip
+pggbY-own-0of64	0	W3 a walk continues along R where R's next position is the step's, and takes a route with an empty interior only where it is not
+pggbY-own-0of64	0	W4 a walk row's start end is the span of all its placed steps
+pggbY-own-0of64	0	B1 where the #walks line states an abridgebytes above 0, a tile that keeps a walk row has rows, other than its abridged rows and from kind on, of at most that many bytes uncompressed
+pggbY-own-0of64	0	B2 where the #walks line states an abridge above 0, a tile that keeps a walk row has pieces costing at most that many interior steps: each piece's routes' interior steps once per use, plus a quarter of all its steps
+pggbY-own-0of64	0	B3 a tile moves the fewest W lines it can, costliest first: every moved line costs at least as much as every kept one, and, where the #walks line states both budgets and one of them above 0, with its last-numbered detail record put back the tile would cost more than abridge or its rows would be more than abridgebytes bytes
+pggbY-own-0of64	0	W5 each (path, fragStart, piece) has one walk or abridged row in the file, pieces numbered from 0 with none missing along one W line
+pggbY-own-0of64	0	A1 an abridged row's start end is its blocks row's start end
+pggbY-own-0of64	0	A2 every abridged row names a detail unit cs:d of its tile that exists, and every detail unit is named by one
+pggbY-own-0of64	0	A3 a W line's moved pieces in one tile share one detail record
+pggbY-own-0of64	0	A4 a detail unit holds the moved pieces of one W line
+pggbY-own-0of64	0	A5 a tile's detail numbers run from 0 with none missing
+pggbY-own-0of64	0	A6 a tile or detail unit holds a nodes row exactly when its routes have an interior step, and at most one
+pggbY-own-0of64	0	A7 a tile's detail records are numbered from 0 in order of cost, the costliest W line first
+pggbY-own-0of64	0	A8 an abridged row states its piece's walk row in its detail unit: the same start end, path, fragStart, hapOffset, piece and nsteps
+pggbY-own-0of64	0	A9 an abridged row has eleven columns: seq start end abridged path fragStart hapOffset piece nsteps hapBp detail
+pggbY-own-0of64	0	A10 an abridged row's hapBp is at least 1 and is what its blocks row's items add up to
+pggbY-own-0of64	0	A11 an abridged row's hapBp is the bp of the steps its piece's walk row in its detail unit decodes to
+pggbY-own-0of64	0	A12 an abridged piece 0 starts at fragStart, and an abridged piece's hapOffset plus hapBp is the hapOffset of its W line's next piece, in that piece's walk or abridged row
+pggbY-own-0of64	0	A13 the bp of an abridged piece's stretch of its contig, hapOffset over hapBp, within a record's of its sequence and path, hapStart over ownBp, is its blocks list's trailing run where hapStart is where its last block ends on the contig, its leading run where hapStart plus ownBp is where its first block begins there, and 0 otherwise; it is never the whole piece
+pggbY-own-0of64	0	K1 every tile with abridged rows has exactly one blocks unit, named by its start, and no other tile has one
+pggbY-own-0of64	0	K2 a blocks unit's rows are its tile's abridged rows one for one, in their order, by path, fragStart and piece
+pggbY-own-0of64	0	K3 a blocks row's items add up to the bp of the steps its piece's walk row in its detail unit decodes to
+pggbY-own-0of64	0	K4 a blocks row's start end is the hull of its blocks, and a blocks unit's the hull of its rows
+pggbY-own-0of64	0	K6 a block is maximal: none begins where the block right before it ended, running the same way
+pggbY-own-0of64	0	K7 a block item is <d><+|-><len>: d a decimal that may be 0 or negative, with no leading zero and no -0, len a decimal of at least 1 with no leading zero
+pggbY-own-0of64	0	K8 a blocks row has eight columns, and its list's items are each a block or, all digits, a run off R of at least 1 bp with no leading zero; no two runs stand side by side, and there is at least one block
+pggbY-own-0of64	0	K9 a W line's pieces tile its contig: a piece ends where the line's next piece starts, a walk row's piece running from hapOffset over its steps' bp and an abridged one from hapOffset over every item of its blocks row's list
+pggbY-own-0of64	0	K10 a W line's piece 0 starts at fragStart, its walk or abridged row's hapOffset
+pggbY-own-0of64	0	K11 a departure record of an abridged piece's sequence and path whose hapStart is where the piece's last block ends on its contig, hapOffset plus its list's items up to there, has an ownBp of at least the list's trailing run
+pggbY-own-0of64	0	K12 a blocks row's list starts with a run off R only on a W line's piece 0
+pggbY-own-0of64	0	K13 no piece ends above 2^53 on its contig: a walk row's hapOffset plus its steps' bp, an abridged row's hapOffset plus hapBp
+pggbY-own-0of64	0	D1 a departure record's ownTiles are tile names of its sequence that exist, in no repeat
+pggbY-own-0of64	0	D2 a record has at most two ownTiles
+pggbY-own-0of64	0	D3 a departure record's extent holds both breakpoints and is at least the breakpoint stretch
+pggbY-own-0of64	0	D4 the ref rows of S hold a node ending at a + leave's or - rejoin's breakpoint and one starting at the other kind's
+pggbY-own-0of64	0	D5 a departure line's ownBp >= missingBp; strands are + or -; passes >= 1
+pggbY-own-0of64	0	O1 ownTiles are the tiles of S holding the record's own steps, the steps strictly between its leave step and its rejoin step, in the path's order
+pggbY-own-0of64	0	O2 an own step not placed on the reference takes the tile of the last step placed on the reference before it in its W line, or, leading its W line, of the first after it
+pggbY-own-0of64	0	O4 the own steps in the file lie in the tiles ownTiles names or in another sequence's tiles, and their bp plus missingBp is at most ownBp
+pggbY-own-0of64	0	L1 a record's leave step is the last step on R of its piece, and its rejoin step the first on R of its piece
+pggbY-own-0of64	0	O5 a record's own steps in an abridged piece of its sequence are the piece's steps within hapStart over ownBp cut to hapOffset over hapBp, and no other
+pggbY-own-0of64	0	D6 a departure line's start end runs from the first base of its end nodes to the last, widened to the breakpoint stretch where that is wider

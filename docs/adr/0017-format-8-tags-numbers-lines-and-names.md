@@ -329,6 +329,16 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   after 37 minutes, so the claims about a record's own steps have no
   whole run on that file here; no `spec8.py` run of it is recorded
   either
+- **A record's own steps on real files.** With `--own` on 1/64 of the
+  paths, as the format 7 audit ran it, `claims7.py` counts 0 on every
+  claim, O1, O2, O4 and O5 among them, over GRCh38's chr21 in the hosted
+  GRCh38 file (23,651 departure records, 8.9 GB) and over pggb chrY
+  whole (425,040 departure records, 161,368 walk rows naming an
+  occurrence, 20.3 GB)
+  ([claims-own.tsv](../walks-container/spec-sentences/claims-own.tsv),
+  [claims-own.sh](../walks-container/spec-sentences/claims-own.sh)).
+  The other 63 shards of each, and the other sequences of the hosted
+  files, have no `--own` run
 - **A reference of one haplotype.** Every checker passes
   `one-haplotype-reference` in the matrix, a file with
   `#reference HG002`, `ref` rows of `HG002#1` alone and `HG002#2` in walk
