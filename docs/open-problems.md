@@ -1025,3 +1025,49 @@ W  B  1  c     0  32  >1>2>6>3
 - `walks-truth.py rebuild` passes a file whose route interior holds a
   once-passed node, since the steps it rebuilds are the line's whatever
   their filing
+
+## Concepts beyond GFA
+
+- Walk format 8 asks its readers, and through them its users, to learn
+  concepts a GFA doesn't have, and adding formats and concepts has a cost
+  of its own: to users, to other implementers and to a paper that must
+  explain them. Each concept falls in one of four classes:
+  - **Restated GFA:** node ids, lengths, bases, each line's steps.
+    `walks-truth.py rebuild` shows the lines come back step for step
+  - **Derived from GFA and one reference, with no choice involved:**
+    reference positions, `passes`, `revisited`, departures, `#hole`,
+    `leftout`. Anyone can recompute them, but readers must learn what they
+    mean
+  - **Writer policy, bytes that follow a choice or budget of the
+    writer:** where a step lies on a node the reference passes more than
+    once (`stay`, the nearest pass), abridging and its budgets, the tile
+    size, departure bins
+  - **Packaging:** units, the directory, `#entry` tables, routes as runs
+    shared by haplotypes. This is what lets a window take a few byte
+    ranges where gfaidx takes hundreds ([comparison](comparison.md))
+- The spec separates exact from chosen
+  ([Exact and chosen](walks-format.md#exact-and-chosen)). No review has yet
+  asked, of each policy and packaging concept, whether it earns its place
+  against the simplest alternative, and whether readers should show it to
+  users at all. gfaidx-viz, for one, shows paths, links and the reference,
+  and none of departures, abridged blocks or placement choices
+- Suggested next step: an inventory of every concept, each with its class,
+  the measurement it rests on, the simplest alternative and whether users
+  meet it, against a minimal design derived from the requirements alone.
+  What it would drop or merge is a format change, decided under ADR 0011
+  before the freeze
+
+## The README doesn't say what gfa-to-tabix is
+
+- A newcomer reading [README.md](../README.md) meets two outputs, two kinds
+  of input, `build` and its track config, and `--walks` before learning
+  what problem the tool solves. Its one schematic,
+  [walks-tile.svg](figures/walks-tile.svg), shows how a walk file is laid
+  out in tiles, which is packaging, not purpose. The owner finds the
+  schematics too complex (2026-11-18)
+- Suggested next step: say first, in a few sentences and one figure with
+  concrete labels, that a pangenome graph is too big for a browser to load,
+  and that gfa-to-tabix writes files a browser can fetch one region of from
+  any web host. Use the fewest concepts that do it, taken from the
+  inventory above, and move the tile schematic to
+  [walks-format.md](walks-format.md)
