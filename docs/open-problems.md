@@ -980,8 +980,8 @@ W  B  1  c     0  32  >1>2>6>3
 
 ## A reference of one haplotype of a sample can't be written
 
-- Format 8 admits a file whose reference is one haplotype of its
-  `#reference` sample, the sample's other paths in walk rows
+- Format 8 admits a file whose reference is one whole haplotype of its
+  `#reference` sample, the sample's other haplotypes in walk rows
   ([Terms](walks-format.md#terms),
   [ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md)), and
   graph-walks reads one. gfa-to-tabix can't write it: `--refs` takes
@@ -1014,20 +1014,27 @@ W  B  1  c     0  32  >1>2>6>3
   page now says a later kind takes no row kind word of its own, which
   keeps the two apart; the script still does not skip such a unit as the
   page says a reader does. Read from the code, not run
-- On a file with no `tile:i:`, `claims7.py`, `audit7.py` and
-  `walks-truth.py rebuild` end in a traceback, which `broken.sh` counts
-  as passing the file; `verify7.py` and `spec8.py` fail it
-  (`tile-missing`). On `tile:i:0` `claims7.py` and `spec8.py` end in one
-  and `verify7.py` fails it (`tile-zero`), and on a name holding a
-  carriage return `audit7.py` and `walks-truth.py rebuild` do, reading
-  the line as two, where `verify7.py` and `spec8.py` fail it (`name-cr`)
+- On a file with no `tile:i:`, `audit7.py` and `walks-truth.py rebuild`
+  end in a traceback, which `broken.sh` counts as passing the file;
+  `verify7.py`, `claims7.py` and `spec8.py` fail it by name
+  (`tile-missing`), as they do `tile:i:0` (`tile-zero`). On a name
+  holding a carriage return `audit7.py` and `walks-truth.py rebuild` end
+  in one, reading the line as two, where `verify7.py` and `spec8.py`
+  fail it (`name-cr`)
 - Of the sentences [ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md)
-  added, `spec8.py` checks the names, the one `#reference` line and the
-  `bytes` tag. It does not check how a number is written, an empty
-  field, the lines of a unit of a later kind, an empty departure bin or
-  a coordinate above 2^53, and passes the planted files for each
+  added, `spec8.py` checks the names, the one `#reference` line, the
+  `bytes` tag, the whole haplotypes of the reference, `tile:i:`'s range
+  and the numbers of the `#walks` line's `i` tags. It does not check how
+  any other number is written, an empty field in a row, the lines of a
+  unit of a later kind, an empty departure bin or a coordinate above
+  2^53, and passes the planted files for each
   ([matrix.txt](walks-container/spec-sentences/matrix.txt)); `verify7.py`
   holds a file to them, and `claims7.py` to a piece's end
+- `verify7.py` does not hold a file to R ascending (C209) or to one
+  encoding of a walk row (C70), which take a sequence's rows or
+  decoding: `claims7.py` and `spec8.py` do, and `claims7.py` has read
+  each hosted file whole for them, a batch of sequences at a time
+  ([claims-hosted.tsv](walks-container/spec-sentences/claims-hosted.tsv))
 - `walks-truth.py rebuild` passes a file whose route interior holds a
   once-passed node, since the steps it rebuilds are the line's whatever
   their filing

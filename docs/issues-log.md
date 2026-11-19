@@ -2279,3 +2279,26 @@ Where the findings have come from so far, and the rule each gives:
   fixtures `cr-only-in-name`, `names-not-utf8` and `nonascii-name`, now
   refused, and `verify7.py` and `spec8.py` on every file, shown on
   broken/'s `name-space`, `name-cr`, `name-e9` and `name-del`
+- **2026-11-19, graph-walks' reading of a path on a reference haplotype
+  (a rule the reader leaned on and the page had just written away).**
+  graph-walks b0d8378 tells the reference's lines from the others by
+  what they are listed under: `formsCut` skips every path on the
+  reference's `sample#haplotype` (src/walkDepartures.ts), and `counts`
+  folds what the reference sequences are listed under into one column
+  with the `#haplotype` lines (src/walkReader.ts). The page, as first
+  reworded for ADR 0017, let any path of the `#reference` sample with no
+  `ref` rows be a line like any other. A file with reference sequences
+  `HG002#1#chr1` and `HG002#1#chr2` and `HG002#1#alt1` in walk rows then
+  passed every checker, and the reader gave that line nothing covered
+  and no departures and counted it with the reference. Source: the
+  consumer is graph-walks; an independent review of the reworded page
+  built the file, and no hosted file holds such a path. Fix:
+  [ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md): the
+  reference is whole haplotypes, so no path with `walk` or `abridged`
+  rows is listed under what a reference sequence is listed under. No
+  byte of the writer changed, which makes every path of a `--refs`
+  sample a reference sequence. Guard: `verify7.py`, `claims7.py`'s H4
+  and `spec8.py` on every file, shown on broken/'s
+  `reference-haplotype-walk`; the one-haplotype file of
+  `check-walks.sh`, `HG002#1` for reference and `HG002#2` in walk rows,
+  still passes each
