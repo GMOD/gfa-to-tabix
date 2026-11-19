@@ -834,6 +834,35 @@ W  B  1  c     0  32  >1>2>6>3
 - A header count of dropped steps is a legal later addition. Neither
   hosted chromosome set has such a segment
 
+## GFA tags neither file keeps
+
+- The writer reads `SN`, `SO`, `SR` and `LN` from S lines
+  ([gfa.rs](../src/gfa.rs)) and keeps no other tag. It drops an S line's
+  depth (`DP`, `RC`, `KC`, `FC`), colours and annotations, an L line's tags
+  and overlap, a P or W line's tags, and the H lines. A walk file keeps a
+  node's id, length and reference passes, and its bases with `--sequences`.
+  The node and link index keeps a node's interval, rank and `SB` bits
+- Paths are kept exactly: `walks-truth.py rebuild` rebuilds each kept line
+  step for step. What is lost is metadata
+- Neither hosted set loses anything: Minigraph-Cactus and pggb S lines
+  carry no tags beyond rGFA's. Tags matter on assembly graphs (depth), on
+  graphs coloured by their assembler, and on graphs annotated after
+  building
+- gfaidx returns S, L and P lines with their tags as written (gfaidx 2.3.2
+  on a three-node GFA with `DP`, `CL`, `RC`, an L tag and a P tag, run on
+  2026-11-18), and gfaidx-viz colours nodes by `DP`, `RC`, `FC` or `KC`. A
+  viewer of gfaidx's output can draw these and a viewer of ours cannot
+- Suggested fix, a later addition under the additions rule that changes no
+  row: a unit kind of per-node tag rows in each tile, keyed by node id and
+  carrying the S line's tags as written; or a side file keyed by node id
+  ([pairing](#pairing-a-side-file-with-a-walk-file) is unsettled). Link
+  tags could go in the `links` unit kind that
+  [complete adjacency](#every-link-of-a-loaded-node-and-a-bubble-layer)
+  suggests. A tag on a `nodes` row would need a list aligned with the row's
+  nodes. The index has a row per node, where a tag would sit naturally, but
+  whether its readers ignore an unknown tag is not checked. Nothing has
+  been measured on a graph that has such tags
+
 ## Pairing a side file with a walk file
 
 - `graph:Z:` names the GFA's segments, not the walk file: two `--refs` of
