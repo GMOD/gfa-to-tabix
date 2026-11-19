@@ -41,6 +41,35 @@ name-cr	passes	FAILS	FAILS	traceback	passes	passes	traceback
 grep: (standard input): binary file matches
 name-e9	passes	passes	passes	passes	passes	passes	FAILS
 name-del	passes	passes	passes	passes	passes	passes	FAILS
+reference-haplotype-walk	passes	passes	passes	passes	passes	FAILS	FAILS
+reference-none	passes	FAILS	FAILS	passes	passes	FAILS	FAILS
+default-copy-named	passes	FAILS	FAILS	passes	passes	FAILS	passes
+default-start-named	passes	FAILS	FAILS	passes	passes	FAILS	passes
+default-leave-named	passes	FAILS	FAILS	passes	passes	FAILS	passes
+flip-of-own-flip	passes	passes	passes	passes	passes	passes	passes
+detail-units-swapped	passes	passes	passes	passes	passes	FAILS	passes
+name-hash-rows	passes	FAILS	FAILS	passes	passes	FAILS	FAILS
+name-del-rows	passes	FAILS	FAILS	passes	passes	FAILS	FAILS
+name-hash-haplotype	passes	FAILS	FAILS	passes	passes	FAILS	passes
+tile-missing	FAILS	traceback	traceback	traceback	passes	FAILS	traceback
+tile-empty	FAILS	FAILS	FAILS	passes	passes	FAILS	passes
+detail-unit-empty	FAILS	FAILS	FAILS	FAILS	FAILS	FAILS	FAILS
+blocks-unit-empty	FAILS	FAILS	FAILS	FAILS	FAILS	FAILS	FAILS
+table-empty	passes	FAILS	FAILS	passes	passes	FAILS	passes
+number-tag-leading-zero	passes	passes	passes	passes	passes	passes	passes
+number-tag-minus	FAILS	passes	passes	passes	passes	passes	FAILS
+number-start-leading-zero	passes	passes	passes	passes	passes	passes	passes
+number-nsteps-space	passes	passes	passes	passes	passes	passes	passes
+number-length-leading-zero	passes	passes	passes	passes	passes	passes	passes
+number-unit-leading-zero	passes	passes	passes	passes	passes	FAILS	passes
+number-entry-length-leading-zero	FAILS	passes	passes	passes	passes	passes	passes
+field-empty-row	passes	FAILS	FAILS	passes	passes	FAILS	passes
+directory-field-empty	FAILS	passes	passes	passes	passes	FAILS	passes
+tag-graph-i	passes	passes	passes	passes	passes	passes	FAILS
+past-2-53-own-end	passes	FAILS	FAILS	FAILS	passes	FAILS	passes
+past-2-53-breakpoint	passes	FAILS	FAILS	FAILS	passes	FAILS	passes
+unit-line-in-header	FAILS	passes	passes	passes	passes	passes	passes
+ref-rows-overlap-tiles	passes	passes	passes	FAILS	passes	FAILS	FAILS
 # what each FAILS said first
 bound-no-writer-tags	claims7	B3 
 bound-no-writer-tags	claims7-seqs	B3 
@@ -52,7 +81,7 @@ bound-budgets-zero	claims7	B3
 bound-budgets-zero	claims7-seqs	B3 
 bound-no-revisited	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
 one-haplotype-reference	spec8	 1 #haplotype lines are not the other haplotypes with rows ['HG002#2'] 5 departure record matching no piece boundary 
-one-haplotype-reference	rebuild	 HG002#2#chrU line at 0: on the reference, with no rows base-matrix/hapref-one.walks.gz: shard 0/1: 10 lines with rows, 11 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 1 wrong 
+one-haplotype-reference	rebuild	 HG002#2#chrU line at 0: on the reference, with no rows matrix-base/hapref-one.walks.gz: shard 0/1: 10 lines with rows, 11 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 1 wrong 
 revisited-count	verify7	verify7.py: revisited-count.walks.gz: the #walks line states revisited:i:7, and the file's ref rows step 2 nodes more than once 
 revisited-count	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
 revisited-count	spec8	 1 revisited is not the number of nodes the file's ref rows step more than once 7 stated, 2 nodes (0.0 s) 
@@ -102,3 +131,75 @@ name-cr	claims7	G6 H1 T5
 name-cr	claims7-seqs	G6 H1 T5 
 name-e9	rebuild	 H#1#h line at 100: on the reference, with no rows name-e9.walks.gz: shard 0/1: 5 lines with rows, 5 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong 
 name-del	rebuild	 GRCh38#0#chr line at 0: on the reference, with no rows GRCh38#0#chr? line at 0: rows for a line not on the reference, or not in the GFA 
+reference-haplotype-walk	spec8	 1 #haplotype lines are not the other haplotypes with rows ['HG002#1', 'HG002#2'] 7 departure record matching no piece boundary 
+reference-haplotype-walk	rebuild	 HG002#2#chrU line at 0: on the reference, with no rows reference-haplotype-walk.walks.gz: shard 0/1: 10 lines with rows, 11 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 1 wrong 
+reference-none	claims7	H3 
+reference-none	claims7-seqs	H3 
+reference-none	spec8	 1 #haplotype lines are not the other haplotypes with rows ['GRCh38#0'] 2 a piece of a line not of the #reference sample with no step on R 
+reference-none	rebuild	 D#1#d line at 0: rows for a line not on the reference, or not in the GFA GRCh38#0#chr line at 0: rows for a line not on the reference, or not in the GFA 
+default-copy-named	claims7	W2 
+default-copy-named	claims7-seqs	W2 
+default-copy-named	spec8	 1 walk row not in its one encoding: @k states the default R#0#c tile 0 walk A#1#c 0 0 (0.0 s) 
+default-start-named	claims7	W2 
+default-start-named	claims7-seqs	W2 
+default-start-named	spec8	 1 walk row not in its one encoding: start@0 states the default R#0#c tile 0 walk E#1#c 0 0 (0.0 s) 
+default-leave-named	claims7	W2 
+default-leave-named	claims7-seqs	W2 
+default-leave-named	spec8	 1 walk row not in its one encoding: :k states the default R#0#c tile 0 walk E#1#c 0 0 (0.0 s) 
+detail-units-swapped	spec8	 1 detail and blocks units out of order (a tile's details, then its blocks) GRCh38#0#chr (0.0 s) 
+name-hash-rows	claims7	G1 H1 
+name-hash-rows	claims7-seqs	G1 H1 
+name-hash-rows	spec8	 1 #haplotype lines are not the other haplotypes with rows ['#H', 'H#1'] 3 walk rows out of order (path, fragStart, hapOffset, piece) 
+name-hash-rows	rebuild	 H#1#h line at 100: on the reference, with no rows #H#1#h line at 100: rows for a line not on the reference, or not in the GFA 
+name-del-rows	claims7	H1 
+name-del-rows	claims7-seqs	H1 
+name-del-rows	spec8	 1 #haplotype lines are not the other haplotypes with rows ['H#1', 'H\x7f#1'] (0.0 s) 
+name-del-rows	rebuild	 H#1#h line at 100: on the reference, with no rows H?#1#h line at 100: rows for a line not on the reference, or not in the GFA 
+name-hash-haplotype	claims7	H1 
+name-hash-haplotype	claims7-seqs	H1 
+name-hash-haplotype	spec8	 1 #haplotype lines are not the other haplotypes with rows ['#H#1', 'H#1'] 1 #haplotype lines not once each in byte order 
+tile-missing	verify7	verify7.py: tile-missing.walks.gz: the #walks line states no tile:i: 
+tile-missing	spec8	spec8.py: tile-missing.walks.gz: refused: the #walks line states no tile:i: 
+tile-empty	verify7	verify7.py: tile-empty.walks.gz: the tile unit at 1042 has no ref row, piece or blocks row 
+tile-empty	claims7	R3 U4 
+tile-empty	claims7-seqs	R3 U4 
+tile-empty	spec8	 1 tile without a ref row GRCh38#0#chr tile 30 (0.0 s) 
+detail-unit-empty	verify7	verify7.py: detail-unit-empty.walks.gz: the detail unit at 1222 has no ref row, piece or blocks row 
+detail-unit-empty	claims7	A2 A7 
+detail-unit-empty	claims7-seqs	A2 A7 
+detail-unit-empty	audit7	audit7: 2 failed checks abridged rows unlike the hapOffset, the steps and the span on R of the piece their detail record holds 
+detail-unit-empty	expand7	expand7: detail-unit-empty.walks.gz: 16 blocks rows, 15 pieces in detail units, 1 failures 
+detail-unit-empty	spec8	 1 #haplotype lines are not the other haplotypes with rows ['H#1'] 1 a line's pieces are not numbered from 0 without a gap 
+detail-unit-empty	rebuild	 H#1#h line at 100: pieces numbered [1, 2]; piece 1 in tile GRCh38#0#chr:10 starts at 112, the piece before ends at 100; piece 1 in tile GRCh38#0#chr:10 runs >3 to >4, the GFA's steps 0 to 3 run >1 to >3 H#1#h line at 100: abridged row of piece 0 in tile GRCh3
+blocks-unit-empty	verify7	verify7.py: blocks-unit-empty.walks.gz: the blocks unit at 1093 has no ref row, piece or blocks row 
+blocks-unit-empty	claims7	K2 
+blocks-unit-empty	claims7-seqs	K2 
+blocks-unit-empty	audit7	audit7: 1 failed checks abridged rows without one blocks row, in their tile's blocks unit, stating the blocks and runs off R their piece's detail record decodes to 
+blocks-unit-empty	expand7	expand7: blocks-unit-empty.walks.gz: 4 blocks rows, 5 pieces in detail units, 1 failures 
+blocks-unit-empty	spec8	 1 blocks rows and abridged rows differ in count R#0#c tile 20 (0.0 s) 
+blocks-unit-empty	rebuild	 L#1#c line at 0: abridged row of piece 1 in tile R#0#c:20 has 0 blocks rows blocks-unit-empty.walks.gz: shard 0/1: 3 lines with rows, 3 on the reference in the GFA, 5 abridged rows, 4 blocks rows, 1 wrong 
+table-empty	claims7	U10 
+table-empty	claims7-seqs	U10 
+table-empty	spec8	 1 sequence without a tile GRCh38#0#chs (0.0 s) 
+number-tag-minus	verify7	verify7.py: number-tag-minus.walks.gz: the #walks line states leftout:i:-1, not one leftout:i: of 0|[1-9][0-9]* 
+number-tag-minus	rebuild	number-tag-minus.walks.gz: shard 0/1: 5 lines with rows, 5 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 0 wrong number-tag-minus.walks.gz: the #walks line states leftout:i: -1, 1 lines of the GFA with a step visit no node of the reference 
+number-unit-leading-zero	spec8	 1 refused: unit's #unit line '#unit\tGRCh38#0#chr\t024\t30\ttile\t20' differs from its entry '#unit\tGRCh38#0#chr\t24\t30\ttile\t20' GRCh38#0#chr tile 20 (0.0 s) 
+number-entry-length-leading-zero	verify7	verify7.py: number-entry-length-leading-zero.walks.gz: the table of GRCh38#0#chr does not list its units as they are, in file order 
+field-empty-row	claims7	G6 
+field-empty-row	claims7-seqs	G6 
+field-empty-row	spec8	 1 #haplotype lines are not the other haplotypes with rows ['D#1', 'H#1', 'I#1', 'Q#0'] 5 a line's pieces are not numbered from 0 without a gap 
+directory-field-empty	verify7	verify7.py: directory-field-empty.walks.gz: directory line 2 is not #header 0 <length>, with no tag 
+directory-field-empty	spec8	spec8.py: directory-field-empty.walks.gz: refused: directory line 2 is not #header 0 <length>, with no tag 
+tag-graph-i	rebuild	tag-graph-i.walks.gz: the #walks line states graph:Z: 0 times, the GFA's S lines hash to 7619ff637c3b074b tag-graph-i.walks.gz: shard 0/1: 5 lines with rows, 5 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 0 wrong 
+past-2-53-own-end	claims7	O1 
+past-2-53-own-end	claims7-seqs	O1 
+past-2-53-own-end	audit7	audit7: 3 failed checks records with no recomputed departure 
+past-2-53-own-end	spec8	 1 departure record matching no piece boundary ('GRCh38#0#chr', 0, 24, 'D#1#d', 9007199254740992, 1, 24, '+', 1, 0, '+', 1) 1 piece boundary that departs from S has no departure record matching it 
+past-2-53-breakpoint	claims7	D3 D4 O1 
+past-2-53-breakpoint	claims7-seqs	D3 D4 O1 
+past-2-53-breakpoint	audit7	audit7: 4 failed checks records with no recomputed departure 
+past-2-53-breakpoint	spec8	 1 departure record matching no piece boundary ('GRCh38#0#chr', 0, 24, 'D#1#d', 24, 0, 24, '+', 1, 9007199254740993, '+', 1) 1 piece boundary that departs from S has no departure record matching it 
+unit-line-in-header	verify7	verify7.py: unit-line-in-header.walks.gz: a header line that is not a header line 
+ref-rows-overlap-tiles	audit7	audit7: 2 failed checks within a record: MISSING RECORD 
+ref-rows-overlap-tiles	spec8	 1 a piece doesn't end where the line's next piece begins GRCh38#0#chr 0 piece 1: 12+12 != 23 4 piece boundary that departs from S has no departure record matching it 
+ref-rows-overlap-tiles	rebuild	 GRCh38#0#chr line at 0: piece 2 in tile GRCh38#0#chr:20 starts at 23, the piece before ends at 24; piece 2 in tile GRCh38#0#chr:20 runs >5 to >5, the GFA's steps 4 to 5 run >5 to >5 ref-rows-overlap-tiles.walks.gz: shard 0/1: 5 lines with rows, 5 on the refer
