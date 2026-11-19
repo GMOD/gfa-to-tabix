@@ -37,11 +37,14 @@ lie outside their tiles' extents fails spec8.py, not this check.
                    [--windows N] [--contexts 0,1000] [--attach-bp B] [--seed K]
 
 A sequence of L bp or fewer is cut at every [s, e); a longer one at the
-windows either side of and over every tile edge, the whole sequence, and N
-more of random starts and widths. Exits 1 on any difference."""
+windows either side of and over every tile edge, the whole sequence if it
+is --widest bp or shorter, and N more of random starts and widths up to
+--widest. --digest compares each list of steps by a hash of its text, for
+files whose windows hold millions of steps. Exits 1 on any difference."""
 import argparse
 import bisect
 import collections
+import hashlib
 import importlib.util
 import json
 import os
@@ -108,7 +111,7 @@ class Sequence:
             pieces.append(Piece(c[4], int(c[5]), int(c[7]), int(c[6]), moved[(c[4], int(c[5]), int(c[7]))], cs))
         positions = list(zip(t.off, t.end))
         self.cache[e.offset] = (pieces, positions)
-        if len(self.cache) > 64:
+        if len(self.cache) > 24:
             self.cache.popitem(last=False)
         return self.cache[e.offset]
 
@@ -118,6 +121,10 @@ class Sequence:
 
     def squeeze(self, pos):
         return pos - sum(min(b, pos) - a for a, b in self.holes if a < pos)
+
+
+def shown(text, digest):
+    return hashlib.sha1(text.encode()).hexdigest()[:16] if digest else text
 
 
 def steps_text(steps, expand, on_r=True):
@@ -142,7 +149,7 @@ def rejoin_base(pos, reversed_):
     return pos - 1 if reversed_ else pos
 
 
-def cut(sq, s, e, context, expand, attach_bp):
+def cut(sq, s, e, context, expand, attach_bp, digest=False):
     d0, d1 = max(0, s - context), e + context
     chosen = [t for t in sq.tiles if t.start < d1 and t.end > d0]
     pieces, lo, hi = [], d0, d1
@@ -178,7 +185,7 @@ def cut(sq, s, e, context, expand, attach_bp):
                 after = sum(x.bp for x in steps[last + 1:])
                 hap = run[0].hap + before
                 fragments.append([path, frag, hap, hap + held, before, after,
-                                  steps_text(steps[first:last + 1], expand)])
+                                  shown(steps_text(steps[first:last + 1], expand), digest)])
 
     def attaches(own_bp, leave, rejoin):
         return own_bp <= attach_bp and any(d0 <= b < d1 for b in (leave, rejoin))
@@ -200,7 +207,8 @@ def cut(sq, s, e, context, expand, attach_bp):
                                 if hap_start <= at and at + x.bp <= hap_start + own_bp:
                                     own.append((at, x))
                                 at += x.bp
-                steps = steps_text([x for _, x in sorted(own, key=lambda y: y[0])], expand, on_r=False) or None
+                steps = steps_text([x for _, x in sorted(own, key=lambda y: y[0])], expand, on_r=False)
+                steps = shown(steps, digest) if steps else None
             departures.append([path, hap_start, own_bp, int(c[7]), lpos, lrev, int(c[10]), rpos, rrev,
                                int(c[13]), False, steps])
     for p in pieces:
@@ -218,7 +226,8 @@ def cut(sq, s, e, context, expand, attach_bp):
                     adjacent = own_bp == 0 and lrev == rrev and sq.squeeze(lpos) == sq.squeeze(rpos)
                     lb, rb = leave_base(lpos, lrev), rejoin_base(rpos, rrev)
                     if not adjacent and min(lb, rb) < hi and max(lb, rb) + 1 > lo:
-                        steps = (steps_text(between, expand, on_r=False) or None) if attaches(own_bp, lb, rb) else None
+                        steps = steps_text(between, expand, on_r=False) if attaches(own_bp, lb, rb) else ""
+                        steps = shown(steps, digest) if steps else None
                         departures.append([p.path, a_end, own_bp, 0, lpos, lrev, a.passes, rpos, rrev, x.passes,
                                            True, steps])
                 last, between = (x, at + x.bp), []
@@ -228,13 +237,14 @@ def cut(sq, s, e, context, expand, attach_bp):
     return {"fragments": fragments, "departures": departures}
 
 
-def windows(sq, length, tile, every, n, rng):
+def windows(sq, length, tile, every, n, widest, rng):
     if every:
         for s in range(length):
             for e in range(s + 1, length + 1):
                 yield s, e
         return
-    yield 0, length
+    if length <= widest:
+        yield 0, length
     for t in sq.tiles:
         for b in (t.start, t.end):
             for s, e in ((b - 1, b), (b, b + 1), (b - 1, b + 1), (b - tile // 2, b + tile // 2)):
@@ -242,7 +252,7 @@ def windows(sq, length, tile, every, n, rng):
                 if s < e:
                     yield s, e
     for _ in range(n):
-        width = max(1, int(10 ** rng.uniform(0, 6.5)))
+        width = max(1, min(widest, int(10 ** rng.uniform(0, 6.5))))
         s = rng.randrange(max(1, length))
         yield s, min(length, s + width) if s < length else length
 
@@ -259,6 +269,8 @@ def main():
     ap.add_argument("--seq", action="append")
     ap.add_argument("--every-window-up-to", type=int, default=0)
     ap.add_argument("--windows", type=int, default=200)
+    ap.add_argument("--widest", type=int, default=2_000_000)
+    ap.add_argument("--digest", action="store_true")
     ap.add_argument("--contexts", default="0,1000")
     ap.add_argument("--attach-bp", type=int, default=65536)
     ap.add_argument("--expand", default="yes,no")
@@ -270,25 +282,25 @@ def main():
     contexts = [int(x) for x in args.contexts.split(",")]
     expands = [x == "yes" for x in args.expand.split(",")]
     node = subprocess.Popen(
-        ["node", os.path.join(HERE, "window-cuts.mjs"), args.graph_walks, args.walks, str(args.attach_bp)],
+        ["node", os.path.join(HERE, "window-cuts.mjs"), args.graph_walks, args.walks, str(args.attach_bp),
+         "1" if args.digest else "0"],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     counts = collections.Counter()
     shown = 0
     for seq in args.seq or w.seq_order:
         sq = Sequence(w, seq)
         length = w.length(seq)
-        for s, e in windows(sq, length, w.tile, length <= args.every_window_up_to, args.windows, rng):
+        for s, e in windows(sq, length, w.tile, length <= args.every_window_up_to, args.windows, args.widest, rng):
             for context in contexts:
                 for expand in expands:
                     query = {"seq": seq, "start": s, "end": e, "context": context, "expand": expand}
                     node.stdin.write(json.dumps(query) + "\n")
                     node.stdin.flush()
                     got = json.loads(node.stdout.readline())
-                    want = cut(sq, s, e, context, expand, args.attach_bp)
+                    want = cut(sq, s, e, context, expand, args.attach_bp, args.digest)
                     counts["windows"] += 1
                     counts["fragments"] += len(want["fragments"])
                     counts["departures"] += len(want["departures"])
-                    counts["steps"] += sum(f[6].count(" ") + 1 for f in want["fragments"])
                     if "error" in got:
                         counts["differ"] += 1
                         if shown < args.most:
@@ -309,7 +321,7 @@ def main():
                                     print(f"  {label} returned, not expected: {k[:400]}")
     node.stdin.close()
     node.wait()
-    print(f"{args.walks}: {counts['windows']} windows, {counts['fragments']} fragments, {counts['steps']} steps, "
+    print(f"{args.walks}: {counts['windows']} windows, {counts['fragments']} fragments, "
           f"{counts['departures']} departures expected; {counts['differ']} windows differ")
     return 1 if counts["differ"] else 0
 

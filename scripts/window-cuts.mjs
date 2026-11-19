@@ -8,7 +8,11 @@
 // reference is `refStart±` then `>id` or `<id`, a step off it `>id` or
 // `<id`, and a placeholder `~bp`.
 //
-// Usage: window-cuts.mjs <graph-walks checkout> <walks.gz> [attachBp] < windows.jsonl
+// With digest 1, each list of steps is the first 16 hex digits of its text's
+// SHA-1.
+//
+// Usage: window-cuts.mjs <graph-walks checkout> <walks.gz> [attachBp] [digest] < windows.jsonl
+import { createHash } from 'node:crypto'
 import { open, readFile } from 'node:fs/promises'
 import { createInterface } from 'node:readline'
 import { join, resolve } from 'node:path'
@@ -37,7 +41,8 @@ class LocalFile {
   }
 }
 
-const [checkout, walksPath, attachBp = '65536'] = process.argv.slice(2)
+const [checkout, walksPath, attachBp = '65536', digest = '0'] =
+  process.argv.slice(2)
 const { WalkReader, isPlaceholder } = await import(
   pathToFileURL(join(resolve(checkout), 'src/index.ts')).href
 )
@@ -46,16 +51,23 @@ const reader = WalkReader.fromFilehandles({
   directory: new LocalFile(`${walksPath}.idx`),
 })
 
+const shown = text =>
+  digest === '1'
+    ? createHash('sha1').update(text).digest('hex').slice(0, 16)
+    : text
+
 const stepsText = (graph, ids, rev, refStarts, against) =>
-  Array.from(ids, (id, i) => {
-    const handle = `${rev[i] === 1 ? '<' : '>'}${id}`
-    const node = graph.nodes.get(id)
-    return isPlaceholder(id)
-      ? `~${node.end - node.start}`
-      : refStarts === undefined || Number.isNaN(refStarts[i])
-        ? handle
-        : `${refStarts[i]}${against[i] === 1 ? '-' : '+'}${handle}`
-  }).join(' ')
+  shown(
+    Array.from(ids, (id, i) => {
+      const handle = `${rev[i] === 1 ? '<' : '>'}${id}`
+      const node = graph.nodes.get(id)
+      return isPlaceholder(id)
+        ? `~${node.end - node.start}`
+        : refStarts === undefined || Number.isNaN(refStarts[i])
+          ? handle
+          : `${refStarts[i]}${against[i] === 1 ? '-' : '+'}${handle}`
+    }).join(' '),
+  )
 
 const lines = createInterface({ input: process.stdin, crlfDelay: Infinity })
 for await (const line of lines) {
