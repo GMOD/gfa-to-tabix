@@ -3,7 +3,8 @@
 // reader of walk format 8, rebuilds from the walk files the tool writes every path exactly
 // as the GFA states it. Each fixture is built under the option sets of
 // check-walks.sh; each reference sample's file is opened with WalkReader,
-// and every reference sequence S is cut whole, [0, |S|), with context 0,
+// and every reference sequence S, a sequence the file lists, is cut whole,
+// [0, |S|), with context 0,
 // every haplotype kept, every budget lifted, every attach fetch allowed,
 // node bases asked for, once with every abridged walk expanded from its
 // detail unit and once with none. The check demands:
@@ -31,12 +32,17 @@
 //   (C132), which this check does not count.
 // - Departures: for a revisited:i:0 file the cut's departures, records and
 //   computed alike, equal as a multiset those recomputed from the GFA for
-//   every line not of the reference sample: between each two consecutive
+//   every line of no reference sequence: between each two consecutive
 //   steps on S that are not adjacent there, holes removed (C77, C79 to
 //   C81), each end with its node's pass count. For a file passing nodes
 //   more than once only the departures between two once-passed ends with no
 //   reference node between them are demanded, since any other end is a
 //   placement choice. A record's own steps are not compared.
+// - Every sequence the file lists is a path of the header's reference
+//   sample with a line in the GFA, and in a file this script builds every
+//   path of that sample is listed; a file given with --file, or a broken
+//   one, can take one haplotype of the sample for its reference, the
+//   sample's other paths then being lines like any other.
 // - The header's holes on S are the stretches no line of S covers, and its
 //   haplotypes are those of the lines with a step on the reference, once
 //   each in byte order (C51, C52); every reference node of S the cut places
@@ -320,9 +326,10 @@ function parseGfa(text) {
   return { lengths, bases, lines: kept }
 }
 
-function referenceOf(gfa, sample) {
+function referenceOf(gfa, listed) {
+  const names = new Set(listed)
   const sequences = new Map()
-  for (const line of gfa.lines.filter(l => sampleOf(l.name) === sample)) {
+  for (const line of gfa.lines.filter(l => names.has(l.name))) {
     sequences.set(line.name, [...(sequences.get(line.name) ?? []), line])
   }
   const passes = new Map()
@@ -353,13 +360,13 @@ function referenceOf(gfa, sample) {
       gfa.lines
         .filter(
           l =>
-            sampleOf(l.name) !== sample &&
+            !names.has(l.name) &&
             l.steps.some(step => passesOf(step.id).length > 0),
         )
         .map(l => haplotypeOf(l.name)),
     ),
   ].sort()
-  return { sample, sequences, passesOf, holes, lengths, haplotypes }
+  return { names, sequences, passesOf, holes, lengths, haplotypes }
 }
 
 const squeezer = holes => bp => {
@@ -378,13 +385,13 @@ const departureKey = d =>
   `${d.name} own ${d.hapStart}+${d.ownBp} (${d.missingBp} missing) leaves ${d.leavePos}${strand(d.leaveReversed)} (${d.leavePasses} passes) rejoins ${d.rejoinPos}${strand(d.rejoinReversed)} (${d.rejoinPasses} passes)`
 
 // The departures from S the GFA states, as departureKey strings, for every
-// contig not of the reference sample; with `exact`, between every two
+// contig that is no reference sequence; with `exact`, between every two
 // consecutive steps on S, else only between once-passed ends with no
 // reference node between
 function departuresOf(gfa, ref, seq, exact) {
   const squeeze = squeezer(ref.holes.get(seq))
   const contigs = new Map()
-  for (const line of gfa.lines.filter(l => sampleOf(l.name) !== ref.sample)) {
+  for (const line of gfa.lines.filter(l => !ref.names.has(l.name))) {
     contigs.set(line.name, [...(contigs.get(line.name) ?? []), line])
   }
   const out = []
@@ -514,7 +521,12 @@ const CUT_OPTIONS = {
   sequences: true,
 }
 
-async function checkFile({ WalkReader, isPlaceholder }, walksPath, gfaPath) {
+async function checkFile(
+  { WalkReader, isPlaceholder },
+  walksPath,
+  gfaPath,
+  wholeSample = false,
+) {
   const failures = []
   const fail = text => {
     failures.push(text)
@@ -545,25 +557,32 @@ async function checkFile({ WalkReader, isPlaceholder }, walksPath, gfaPath) {
   try {
     const header = await reader.header()
     const sample = header.references[0]
-    const ref = referenceOf(gfa, sample)
+    const listed = await reader.referenceSequences()
+    const ref = referenceOf(gfa, listed)
     const exact = header.revisited === 0
     if (ref.sequences.size === 0) {
-      fail(`the GFA has no line of the header's reference ${sample}`)
+      fail('the GFA has no line of a sequence the file lists')
     }
     if (header.haplotypes.join(' ') !== ref.haplotypes.join(' ')) {
       fail(
-        `the header lists haplotypes ${header.haplotypes.join(' ')}, the GFA's lines with a step on ${sample} are of ${ref.haplotypes.join(' ')}`,
+        `the header lists haplotypes ${header.haplotypes.join(' ')}, the GFA's lines with a step on the file's reference sequences are of ${ref.haplotypes.join(' ')}`,
       )
     }
-    const listed = await reader.referenceSequences()
-    for (const seq of ref.sequences.keys()) {
-      if (!listed.includes(seq)) {
-        fail(`the file lists no sequence ${seq}, which ${sample} has lines on`)
+    for (const seq of listed) {
+      if (sampleOf(seq) !== sample) {
+        fail(`the file lists ${seq}, which is not of its reference ${sample}`)
+      }
+      if (!ref.sequences.has(seq)) {
+        fail(`the file lists ${seq}, which the GFA has no line of`)
       }
     }
-    for (const seq of listed) {
-      if (!ref.sequences.has(seq)) {
-        fail(`the file lists ${seq}, which ${sample} has no line on`)
+    if (wholeSample) {
+      for (const { name } of gfa.lines) {
+        if (sampleOf(name) === sample && !ref.names.has(name)) {
+          fail(
+            `the file lists no sequence ${name}, which ${sample} has lines on`,
+          )
+        }
       }
     }
     const linesByKey = new Map(
@@ -811,6 +830,7 @@ async function checkBuilds(graphWalks, binary, builds) {
             graphWalks,
             join(dir, `o.${ref}.walks.gz`),
             gfaPath,
+            true,
           )
           ok = report(`${label} ${ref}`, result) && ok
         }

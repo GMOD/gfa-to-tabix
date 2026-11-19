@@ -28,7 +28,9 @@
 # read; a unit of a kind the page doesn't give is skipped; a header line of
 # an unknown first word is ignored. A sequence name, a path and a name a
 # header line states are bytes 0x21 to 0x7E that don't start with #. The
-# header's abridge budgets bind no row, so none is held to them.
+# header's abridge budgets bind no row, so none is held to them. The
+# reference is the paths with ref rows, each of the #reference sample, and
+# a path of that sample with walk rows is a line like any other.
 # Prints what agreed and what disagreed, and exits 1 on any disagreement.
 #
 # Usage: spec8.py FILE.walks.gz [--gfa G.gfa] [--tiles A:B] [--dump]
@@ -1220,13 +1222,13 @@ def main():
             by_path[pth].append((int(frag), frag, ps))
             stats["pieces"] += len(ns)
         stats["W lines"] = len(pieces)
-        refs = set(w.reference)
         haps = set()
-        for pth in by_path:
-            if pth.split("#")[0] not in refs:
+        for pth, lines in by_path.items():
+            if any(p[4] != "ref" for _, _, ps in lines for p in ps.values()):
                 haps.add(listed_under(pth))
         if sorted(haps) != sorted(w.haplotypes):
-            rep.bad("#haplotype lines are not the other haplotypes with rows", f"{sorted(haps ^ set(w.haplotypes))[:6]}")
+            rep.bad("#haplotype lines are not what the paths with walk or abridged rows are listed under",
+                    f"{sorted(haps ^ set(w.haplotypes))[:6]}")
         else:
             rep.good("#haplotype lines equal the haplotypes with rows", len(haps))
 
@@ -1284,11 +1286,10 @@ def check_departures(rep, w, by_path, departures, tile_bp, stats):
             for k in sorted(ps):
                 flat.append((fragn, frag, k) + ps[k])
         order.append((pth, flat))
-    refs = set(w.reference)
     bounds = []
     need = collections.defaultdict(set)
     for pth, flat in order:
-        if pth.split("#")[0] in refs:
+        if all(p[7] == "ref" for p in flat):
             # the reference's own lines: every piece is a ref row, with no ends kept here
             continue
         for S in sorted(set(p[5] for p in flat)):
@@ -1297,7 +1298,7 @@ def check_departures(rep, w, by_path, departures, tile_bp, stats):
                 p, q = flat[a], flat[b]
                 between = sum(flat[i + 1][3] - (flat[i][3] + flat[i][4]) for i in range(a, b) if flat[i + 1][1] != flat[i][1])
                 if p[9] is None or q[8] is None:
-                    rep.bad("a piece of a line not of the #reference sample with no step on R", f"{pth} {S}")
+                    rep.bad("a piece of a line with walk or abridged rows with no step on R", f"{pth} {S}")
                 else:
                     bounds.append((pth, S, p, q, between))
                     need[(S, p[6])].add(p[9][0])
@@ -1423,6 +1424,9 @@ def check_gfa(rep, w, gfa, pieces, truth_steps):
             lines.append((c[1], None, steps))
     for name, frag, steps in lines:
         steps = [h for h in steps if seglen[h >> 1] > 0]
+        if not steps:
+            rep.good("GFA lines with no steps, which have no rows")
+            continue
         if frag is None:
             name, frag = p_line_name(name, sum(seglen[h >> 1] for h in steps))
             frag = str(frag)

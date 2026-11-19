@@ -48,7 +48,9 @@ to its reference, and measure what a window costs to read.
       states is its segment's in the GFA. The #walks line's graph:Z: is the
       hash of the GFA's S lines that the node and link index states, and its
       leftout:i: the number of W or P lines with a step that visit no node
-      of the reference's own lines. Prints each line, abridged row or blocks
+      of the reference's own lines. The reference's own lines are those of
+      the paths the file's ref rows are cut from, each of which the
+      #reference line's sample must name. Prints each line, abridged row or blocks
       row that differs, and each of those tags, and exits 1 if any does. The GFA can be gzip. One read
       of it takes each segment's length and the reference's nodes; --shards
       splits the paths by their names' hash, and each further read feeds
@@ -748,14 +750,26 @@ def segment_hash(name, length):
     return h
 
 
+def reference_paths(path):
+    """The paths a walk file's ref rows are cut from, its reference."""
+    paths = set()
+    with gzip.open(path, "rb") as f:
+        for line in f:
+            if line[:1] != b"#":
+                c = line.split(b"\t", 5)
+                if len(c) > 4 and c[3] == b"ref":
+                    paths.add(c[4].decode("utf-8", "surrogateescape"))
+    return paths
+
+
 def gfa_nodes(path, reference):
-    """Each segment's length plus 1, which nodes the reference sample's
-    lines step on, and the graph:Z: of its S lines, from one read of the
-    GFA: S lines and path lines may interleave, so these are complete only
-    at its end."""
+    """Each segment's length plus 1, which nodes the lines of the paths in
+    `reference` step on, and the graph:Z: of its S lines, from one read of
+    the GFA: S lines and path lines may interleave, so these are complete
+    only at its end."""
     lengths, on_reference, graph = ByNode("Q"), ByNode("B"), 0
-    # P lines of one field that begin with the reference's name: whether
-    # the name reads as the reference waits on their steps' bp
+    # P lines named with a range that begin with a reference path: whether
+    # the name reads as that path waits on their steps' bp
     held = []
     for line in gfa_bytes(path):
         if line.startswith(b"S\t"):
@@ -765,13 +779,14 @@ def gfa_nodes(path, reference):
             graph = (graph + segment_hash(c[1], length)) & MASK
         elif is_path(line):
             name = written(line)
-            if "#" not in name and name != reference and name.startswith(reference):
-                held.append(line)
-            elif name.split("#")[0] == reference:
+            if line[:1] == b"P" and (COLON.fullmatch(name) or BRACKET.fullmatch(name)):
+                if any(name.startswith(p) for p in reference):
+                    held.append(line)
+            elif name_of(line, lengths)[0] in reference:
                 for h in steps_of(line):
                     on_reference[h >> 1] = 1
     for line in held:
-        if name_of(line, lengths)[0] == reference:
+        if name_of(line, lengths)[0] in reference:
             for h in steps_of(line):
                 on_reference[h >> 1] = 1
     return lengths, on_reference, f"{graph:016x}"
@@ -856,7 +871,7 @@ def check_shard(walks, shard, shards, lines, lengths, on_reference):
             if n != len(want) and not faults:
                 faults.append(f"{n} steps rebuilt, the GFA's line has {len(want)}")
         if faults:
-            (wrong_of_reference if name.split("#")[0] == reference else wrong).append(f"{name} line at {start}: " + "; ".join(faults[:3]))
+            (wrong_of_reference if name in refs else wrong).append(f"{name} line at {start}: " + "; ".join(faults[:3]))
     wrong = wrong_of_reference + wrong
     for name, start in sorted(set(held) - seen):
         wrong.append(f"{name} line at {start}: rows for a line not on the reference, or not in the GFA")
@@ -934,8 +949,13 @@ def stated_once(tags, name):
 
 def rebuild(args):
     tags, _ = walk_header(args.walks)
-    lengths, on_reference, graph = gfa_nodes(args.gfa, reference_of(args.walks))
+    sample, reference = reference_of(args.walks), reference_paths(args.walks)
+    lengths, on_reference, graph = gfa_nodes(args.gfa, reference)
     failed = 0
+    other = sorted(p for p in reference if p.split("#")[0] != sample)
+    if other:
+        print(f"{args.walks}: #reference names {sample}, and ref rows are cut from {' '.join(other[:3])}")
+        failed += 1
     if stated_once(tags, "graph:Z:") != graph:
         print(f"{args.walks}: the #walks line states graph:Z: {stated_once(tags, 'graph:Z:')}, the GFA's S lines hash to {graph}")
         failed += 1
