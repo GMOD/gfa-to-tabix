@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """tables.py [--check]
 
-Writes the measured tables of docs/comparison.md from docs/comparison/results,
+Writes the measured tables of docs/comparison-details.md from docs/comparison/results,
 each between `<!-- generated:NAME -->` and `<!-- /generated -->`. With
 --check it writes nothing and exits 1 when the doc's tables differ from the
 results.
@@ -15,7 +15,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent.parent
 RESULTS = HERE / "results"
-DOC = HERE.parent / "comparison.md"
+DOC = HERE.parent / "comparison-details.md"
 GRAPHS = {"mc22": "MC chr22", "pggbY": "pggb chrY"}
 
 
@@ -188,7 +188,7 @@ def main():
                  lambda m: m.group(1) + BLOCKS[m.group(2)]() + "\n" + m.group(3), text)
     if "--check" in sys.argv:
         if new != text:
-            sys.exit("docs/comparison.md's tables differ from docs/comparison/results; run docs/comparison/scripts/tables.py")
+            sys.exit("docs/comparison-details.md's tables differ from docs/comparison/results; run docs/comparison/scripts/tables.py")
     else:
         DOC.write_text(new)
 

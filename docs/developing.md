@@ -15,7 +15,7 @@ CI runs these on every push:
   [walks-format.md](walks-format.md) has a claim ID with a check in
   [claims7.md](departures/claims7.md)
 - `docs/comparison/scripts/tables.py --check`: the measured tables of
-  [comparison.md](comparison.md) match the results in
+  [comparison-details.md](comparison-details.md) match the results in
   [comparison/results](comparison/results). Run it without `--check` to
   rewrite them
 - `scripts/check-walks.sh`: builds every walk fixture and runs the release

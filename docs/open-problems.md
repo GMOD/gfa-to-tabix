@@ -1057,7 +1057,7 @@ W  B  1  c     0  32  >1>2>6>3
     size, departure bins
   - **Packaging:** units, the directory, `#entry` tables, routes as runs
     shared by haplotypes. This is what lets a window take a few byte
-    ranges where gfaidx takes hundreds ([comparison](comparison.md))
+    ranges where gfaidx takes hundreds ([comparison](comparison-details.md#reading-a-64-kb-window))
 - The spec separates exact from chosen
   ([Exact and chosen](walks-format.md#exact-and-chosen)). No review has yet
   asked, of each policy and packaging concept, whether it earns its place

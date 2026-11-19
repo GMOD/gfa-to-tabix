@@ -76,7 +76,8 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
 - [Subcommands](docs/subcommands.md): `build` and its JBrowse config,
   `bubbles`, `fold` and `paths`
 - [Comparison with gbz-base and gfaidx](docs/comparison.md): how the three
-  differ, which to pick, and measurements on the same graphs
+  differ and which to pick, with the measurements in
+  [comparison-details.md](docs/comparison-details.md)
 - [Developing](docs/developing.md): design decisions, open problems and the
   checks CI runs
 
