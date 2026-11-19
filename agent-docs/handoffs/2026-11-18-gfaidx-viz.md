@@ -89,7 +89,12 @@ commit; the worktree branch `compare-gap` holds the same commits.
     `--haplotype_gap` version. The draft is in the session transcript
 - **Build both views in bandage-core,** credited to gfaidx-viz.
   Copy-number is proven; the link list waits on the proof above
-- **Concept inventory, running.** The owner, worried about our own format
+- **Concept inventory, done:** see `2026-11-18-concept-inventory.md`. It
+  found no byte-level change to the walk file that beats shipping
+  unchanged. Spec-text candidates (C43's bin sizes, vocabulary, policy off
+  the format page, one abridge budget) and the index's doubled `SB:H:` tag
+  went to gfa-to-tabix-bb. Reader-string changes are for bandage-core.
+  The README material is below. How it was run: The owner, worried about our own format
   proliferation, asked for it before the freeze. A Fable 5.2 agent derives
   the minimal design from the requirements, then classes every format 8
   concept, including the `spec-sentences` branch's, as restated GFA,
