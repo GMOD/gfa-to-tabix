@@ -48,8 +48,17 @@ commit; the worktree branch `compare-gap` holds the same commits.
   - Fixtures are in ada:~/work/visits/hapref/
 - **Bare contig names on a file with two reference haplotypes:**
   graph-walks' `refNameLookup` (src/refNames.ts:16-21) silently picks the
-  last one. No hosted file hits it. bb's Fable check decides whether it's
-  fixed before the v7.0.0 tag. Don't change graph-walks meanwhile
+  last one. No hosted file hits it, but bb's Fable check found that the
+  candidate plugin 6196d00 does, through Add Track's default `#reference`
+  mapping, and can draw the wrong haplotype.
+  - It's fixed before the graph-walks 7.0.0 tag: `resolveRefName` throws
+    an exported `AmbiguousSequenceError` naming the sequences and the
+    haplotypes to pick from
+  - The tube map's own first-match resolver goes through graph-walks too
+  - Then the consumer loop, the drawing gate and the owner's
+    re-approval of the manifest
+  - bb's lane owns all of it. Leave graph-walks and the candidate branches
+    alone until it's done
 - **The `spec8.py --gfa` failure on fuzz seed 8 is a checker bug:** it
   doesn't skip a W line with empty steps (spec8.py:1423-1441). The writer is
   right (walks.rs:1034-1036). It's in bb's branch
