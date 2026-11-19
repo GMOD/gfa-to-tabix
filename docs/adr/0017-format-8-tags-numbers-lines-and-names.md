@@ -159,13 +159,15 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   | `revisited` stating another count than the `ref` rows hold | `verify7.py`, `audit7.py`, `spec8.py` | the same |
   | A stated budget its rows break, or need not have been abridged for | `claims7.py`, as this writer's policy | `claims7.py`, and `spec8.py` on `abridge` |
   | A number written `0100`, `+6` or `-0` | `verify7.py` | nothing |
-  | `revisited:Z:0`, `tile:i:0`, `tile:i:` above 2^40 | `verify7.py` | `spec8.py` on the first; a traceback from `verify7.py` on the second |
-  | An empty header line, directory line or field | `verify7.py`, and `spec8.py` on the lines | `spec8.py` on the header line, `verify7.py` on the directory's |
+  | `revisited:Z:0`, `tile:i:0`, `tile:i:` above 2^40 | `verify7.py` | `spec8.py` on the first; a traceback from `verify7.py` on the second; the third by other checks |
+  | An empty header line, directory line or field | `verify7.py`, and `spec8.py` on the lines | `spec8.py` on the header line; `verify7.py`, `audit7.py` and `spec8.py` on the directory's; nothing on the field |
   | A later unit's line beginning `#unit`; an empty departure bin | `verify7.py` | nothing |
-  | `#reference` twice; `bytes:i:` on the data file's `#walks` line | `verify7.py`, `spec8.py`, and `claims7.py` on the first | `spec8.py`; `verify7.py` on the second |
-  | A length of 0; two `ref` rows over one base | `claims7.py` by R5 and R4, with others | others, by other checks |
+  | `#reference` twice; `bytes:i:` on the data file's `#walks` line | `verify7.py`, `spec8.py`, and `claims7.py` on the first | `spec8.py` on both; `verify7.py` on the second |
+  | A length of 0; two `ref` rows over one base | `claims7.py` by R5 and R4, `verify7.py` on the length, with others | others, by other checks |
   | A line ending at 2^53 + 1 with no number above 2^53; a `hapOffset` above it | `claims7.py`; `verify7.py` and `claims7.py` | nothing but the rebuild against the GFA |
-  | A name with a space, a carriage return, 0xE9 or 0x7F | `verify7.py`, `spec8.py` | nothing but the rebuild against the GFA |
+  | A name with a space, a carriage return, 0xE9 or 0x7F | `verify7.py`, `spec8.py` | nothing but the rebuild against the GFA, and `claims7.py` on the carriage return, which it reads as a line's end |
+  | A file whose reference is one haplotype of its `#reference` sample | nothing | `spec8.py`, `walks-truth.py rebuild` |
+  | `#reference` naming a haplotype | `claims7.py`, `spec8.py`, `walks-truth.py rebuild` | the same |
 
 - **A reference of one haplotype.** Every checker passes
   `one-haplotype-reference` in the matrix, a file with
@@ -194,7 +196,14 @@ and [claims7.md](../departures/claims7.md) lists its checks.
     than once are reported only, a visit's place there being the
     writer's choice
   - a visit credited to another haplotype at an equal count, and a visit
-    dropped, each planted on a once-passed node, were both caught
+    dropped, each planted on a once-passed node, were both caught, the
+    dropped visit at exit 1
+  - a cut trimmed inside a tile is exact too: 40 stretches of 1 kb in
+    each graph, each compared on once-passed nodes with the cut of its
+    whole tile, 376,489 pairs of haplotype and node on MC chr22 and
+    12,367 on pggb chrY, 0 differing; with each stretch cut 200 bp short,
+    74,059 pairs differ and the comparison exits 1 (`mc22/sub*.log`,
+    `pggbY/sub.log`)
 - **`spec8.py --gfa` skips a line with no steps,** as the page and the
   writer do (C118). It had looked such a line up by its name and start
   and compared the next line's pieces with no steps. The dialect fixture

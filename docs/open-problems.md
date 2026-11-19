@@ -768,7 +768,9 @@ W  B  1  c     0  32  >1>2>6>3
   have: ` with nothing after it ([no-paths.gfa](walks-container/dialect/no-paths.gfa))
 - The node and link index doesn't read a W line's end column, so it
   builds a graph `--walks` refuses for one
-  ([w-end-wrong.gfa](walks-container/dialect/w-end-wrong.gfa))
+  ([w-end-wrong.gfa](walks-container/dialect/w-end-wrong.gfa)), and it
+  refuses a W line with no steps, which `--walks` skips
+  ([w-empty-line-first.gfa](walks-container/dialect/w-empty-line-first.gfa))
 - Suggested next step: refuse segment names with a leading zero, naming
   the line; say that the GFA has no paths; check a W line's end in the
   index. Each refuses a GFA accepted today and changes no file it still
