@@ -23,9 +23,10 @@
 #   of a unit after its first begins `#unit`, whatever the unit's kind
 # - every number of a `#unit`, `#entry`, `#hole` or directory line and of a
 #   row's fixed columns is decimal digits with no sign, no leading zero and
-#   no space, `0` for zero, a delta token, a choice token and a block's `d`
-#   alone beginning `-` and none of them `-0`; every length a ref or nodes
-#   row states is at least 1; and no coordinate is above
+#   no space, `0` for zero, a delta token and a choice token alone
+#   beginning `-` and neither of them `-0` (claims7.py's K7 and K8 hold a
+#   blocks row's list to its grammar); every length a ref or nodes row
+#   states is at least 1; and no coordinate is above
 #   2^53: a line's `start end`, a `fragStart`, a `hapOffset`, the end of a
 #   ref row's stretch, `hapOffset + hapBp`, `hapStart + ownBp` and a
 #   record's breakpoints (claims7.py holds a walk row's piece to it, whose
@@ -95,18 +96,8 @@ def decoded(raw):
 
 
 NUMBER = '(?:0|[1-9][0-9]*)'
-TOKEN = '(?:0|-?[1-9][0-9]*)'
-LENGTH = '[1-9][0-9]*'
 NAME = '[!"$-~][!-~]*'
 MAX = 1 << 53
-
-
-def several(item, sep=','):
-    return f'{item}(?:{sep}{item})*'
-
-
-def or_none(form):
-    return f'(?:\\.|{form})'
 
 
 def not_plain(raw):
@@ -189,17 +180,38 @@ stats = dict(units=0, tables=0, lines=0, departure_lines=0, members_cut_before_u
              ref_rows_stating_fewer_passes=0, ref_rows_stating_more_passes=0)
 ROWS = dict(tile=('ref', 'nodes', 'route', 'walk', 'abridged'), departures=('departure',),
             detail=('nodes', 'route', 'walk'), blocks=('blocks',))
-CHOICE = f'{TOKEN}(?::{NUMBER})?(?:@{NUMBER})?'
+# a row's columns after its start and end: the forms of the short ones, then its lists, each with whether it can be `.`
 FIXED = dict(
-    ref=[NAME] + [NUMBER] * 4 + [several(TOKEN), several(LENGTH), or_none(several(NUMBER))],
-    nodes=[several(NUMBER), several(LENGTH)],
-    route=[or_none(several(TOKEN))] * 3,
-    walk=[NAME] + [NUMBER] * 4 + [f'{NUMBER}(?:@{NUMBER})?', or_none(several(CHOICE))],
-    abridged=[NAME] + [NUMBER] * 6,
-    blocks=[NAME] + [NUMBER] * 2 + [several(f'(?:{TOKEN}[+-])?{LENGTH}')],
-    departure=[NAME] + [NUMBER] * 4 + ['[+-]', NUMBER, NUMBER, '[+-]', NUMBER, or_none(several(NUMBER))],
+    ref=([NAME] + [NUMBER] * 4, [('tokens', False), ('lengths', False), ('numbers', True)]),
+    nodes=([], [('numbers', False), ('lengths', False)]),
+    route=([], [('tokens', True)] * 3),
+    walk=([NAME] + [NUMBER] * 4 + [f'{NUMBER}(?:@{NUMBER})?'], [('choices', True)]),
+    abridged=([NAME] + [NUMBER] * 6, []),
+    blocks=([NAME] + [NUMBER] * 2 + ['[^\t]+'], []),
+    departure=([NAME] + [NUMBER] * 4 + ['[+-]', NUMBER, NUMBER, '[+-]', NUMBER], [('numbers', True)]),
 )
-ROW = {row: re.compile('\t'.join([NUMBER, NUMBER, row] + forms)) for row, forms in FIXED.items()}
+ROW = {row: re.compile('\t'.join([NUMBER, NUMBER, row] + short)) for row, (short, _) in FIXED.items()}
+# a list's characters, and what no list of its kind holds: an empty item, a leading zero, `-0`, a `-` inside an
+# item, a length of 0, and in a choice a `:k` or `@k` that is empty, twice or out of order. Each is a search over
+# single characters, so a list of any length is checked in the memory its text takes
+LISTS = dict(
+    numbers=('[0-9,]+', '(?:^|,)(?:0[0-9]|,|$)'),
+    lengths=('[0-9,]+', '(?:^|,)(?:0|,|$)'),
+    tokens=('[0-9,-]+', '(?:^|,)-?(?:0[0-9]|,|$)|(?:^|,)-0|[0-9-]-'),
+    choices=('[0-9,:@-]+', '(?:^|,)-?(?:0[0-9]|[,:@]|$)|(?:^|,)-0|[0-9:@-]-|[:@](?:0[0-9]|[,:@]|$)'
+                           '|@[0-9]*:|:[0-9]*:|@[0-9]*@'),
+)
+LISTS = {kind: (re.compile(held), re.compile(wrong)) for kind, (held, wrong) in LISTS.items()}
+
+
+def written(row, c):
+    short, lists = FIXED[row]
+    at = 4 + len(short)
+    return (len(c) >= at + len(lists) and ROW[row].fullmatch('\t'.join(c[1:at])) is not None
+            and all((none and field == '.') or (LISTS[kind][0].fullmatch(field) and not LISTS[kind][1].search(field))
+                    for field, (kind, none) in zip(c[at:], lists)))
+
+
 COORDINATES = dict(ref=(5, 6), nodes=(), route=(), walk=(5, 6), abridged=(5, 6), blocks=(5,), departure=(5, 8, 11))
 SUMS = dict(abridged=(6, 9), departure=(5, 6))
 COVERED_BY = dict(tile='ref rows', blocks='blocks rows')
@@ -266,7 +278,7 @@ def check_unit(at, length, text):
             fail(f'a line of another sequence in the unit at {at}: {line[:80]}')
         if len(c) < 4 or c[3] not in ROWS[kind]:
             fail(f'a row of a kind a {kind} unit doesn\'t hold, at {at}: {line[:80]}')
-        if not ROW[c[3]].fullmatch('\t'.join(c[1:4 + len(FIXED[c[3]])])):
+        if not written(c[3], c):
             fail(f'a {c[3]} row with a column short, a number not written as the page writes one, a length of 0 '
                  f'or a path in bytes outside 0x21 to 0x7E, at {at}: {line[:80]}')
         a, b = int(c[1]), int(c[2])

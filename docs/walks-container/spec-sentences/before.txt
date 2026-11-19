@@ -1,0 +1,104 @@
+file	verify7	claims7	claims7-seqs	audit7	expand7	spec8	rebuild
+# legal: broken/follow.gfa built with --tile 100 --sequences --abridge-bytes 1, which states revisited:i:0, then repack.py's variants of it
+follow	passes	passes	passes	passes	passes	passes	passes
+bound-no-writer-tags	passes	FAILS	FAILS	FAILS	passes	passes	passes
+bound-no-revisited	passes	passes	passes	FAILS	passes	passes	passes
+bound-no-stay	passes	passes	passes	passes	passes	passes	passes
+bound-no-abridge	passes	passes	passes	passes	passes	passes	passes
+bound-no-abridgebytes	passes	FAILS	FAILS	passes	passes	passes	passes
+bound-budgets-zero	passes	FAILS	FAILS	passes	passes	passes	passes
+# legal: walks-repeat.gfa built with --tile 10, which states revisited:i:2, then without that tag
+repeat	passes	passes	passes	passes	passes	passes	passes
+bound-no-revisited	passes	passes	passes	FAILS	passes	passes	passes
+# legal: broken/hapref.gfa with HG002#1 alone for its reference: HG002's haplotype 2 built under a stand-in sample, then named HG002#2 again
+one-haplotype-reference	passes	passes	passes	passes	passes	FAILS	FAILS
+# planted
+revisited-count	FAILS	passes	passes	FAILS	passes	FAILS	passes
+revisited-zero	FAILS	FAILS	FAILS	FAILS	passes	FAILS	passes
+budget-bytes-over	passes	FAILS	FAILS	passes	passes	passes	passes
+budget-steps-over	passes	FAILS	FAILS	passes	passes	FAILS	passes
+budget-put-back	passes	FAILS	FAILS	passes	passes	passes	passes
+walks-bytes-tag	FAILS	passes	passes	passes	passes	FAILS	passes
+tag-type-letter	passes	passes	passes	passes	passes	FAILS	passes
+tile-zero	traceback	traceback	traceback	passes	passes	traceback	passes
+tile-past-2-40	FAILS	FAILS	FAILS	passes	passes	FAILS	passes
+number-leading-zero	passes	passes	passes	passes	passes	passes	passes
+number-plus-sign	passes	passes	passes	passes	passes	passes	passes
+token-minus-zero	passes	passes	passes	passes	passes	passes	passes
+header-empty-line	passes	passes	passes	passes	passes	FAILS	passes
+directory-empty-line	FAILS	passes	passes	FAILS	passes	FAILS	passes
+field-empty	passes	passes	passes	passes	passes	passes	passes
+unit-line-inside-unit	passes	passes	passes	passes	passes	passes	passes
+departures-unit-empty	passes	passes	passes	passes	passes	passes	passes
+reference-twice	passes	passes	passes	passes	passes	FAILS	passes
+reference-haplotype	passes	FAILS	FAILS	passes	passes	FAILS	FAILS
+length-zero	passes	FAILS	FAILS	FAILS	passes	FAILS	FAILS
+ref-rows-overlap	FAILS	FAILS	FAILS	FAILS	passes	FAILS	FAILS
+past-2-53-line-end	passes	passes	passes	passes	passes	passes	FAILS
+past-2-53-stated	passes	passes	passes	passes	passes	passes	FAILS
+name-space	passes	passes	passes	passes	passes	passes	FAILS
+name-cr	passes	FAILS	FAILS	traceback	passes	passes	traceback
+grep: (standard input): binary file matches
+name-e9	passes	passes	passes	passes	passes	passes	FAILS
+name-del	passes	passes	passes	passes	passes	passes	FAILS
+# what each FAILS said first
+bound-no-writer-tags	claims7	B3 
+bound-no-writer-tags	claims7-seqs	B3 
+bound-no-writer-tags	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
+bound-no-revisited	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
+bound-no-abridgebytes	claims7	B3 
+bound-no-abridgebytes	claims7-seqs	B3 
+bound-budgets-zero	claims7	B3 
+bound-budgets-zero	claims7-seqs	B3 
+bound-no-revisited	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
+one-haplotype-reference	spec8	 1 #haplotype lines are not the other haplotypes with rows ['HG002#2'] 5 departure record matching no piece boundary 
+one-haplotype-reference	rebuild	 HG002#2#chrU line at 0: on the reference, with no rows base-matrix/hapref-one.walks.gz: shard 0/1: 10 lines with rows, 11 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 1 wrong 
+revisited-count	verify7	verify7.py: revisited-count.walks.gz: the #walks line states revisited:i:7, and the file's ref rows step 2 nodes more than once 
+revisited-count	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
+revisited-count	spec8	 1 revisited is not the number of nodes the file's ref rows step more than once 7 stated, 2 nodes (0.0 s) 
+revisited-zero	verify7	verify7.py: revisited-zero.walks.gz: the #walks line states revisited:i:0, and the file's ref rows step 1 nodes more than once 
+revisited-zero	claims7	H2 
+revisited-zero	claims7-seqs	H2 
+revisited-zero	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
+revisited-zero	spec8	 1 revisited is not the number of nodes the file's ref rows step more than once 0 stated, 1 nodes (0.0 s) 
+budget-bytes-over	claims7	B1 
+budget-bytes-over	claims7-seqs	B1 
+budget-steps-over	claims7	B2 
+budget-steps-over	claims7-seqs	B2 
+budget-steps-over	spec8	 2 unabridged tile costs more than abridge GRCh38#0#chr tile 0 3.5 GRCh38#0#chr tile 10 3.75 
+budget-put-back	claims7	B3 
+budget-put-back	claims7-seqs	B3 
+walks-bytes-tag	verify7	verify7.py: walks-bytes-tag.walks.gz: directory line 1 is not a format 8 #walks line with one bytes:i: 
+walks-bytes-tag	spec8	spec8.py: walks-bytes-tag.walks.gz: refused: directory line 1 carries the tag name bytes twice 
+tag-type-letter	spec8	 1 revisited is not the number of nodes the file's ref rows step more than once 0 stated, 0 nodes (0.0 s) 
+tile-past-2-40	verify7	verify7.py: tile-past-2-40.walks.gz: a departure record of GRCh38#0#chr over 0 18 is in blocks [(0, 10), (10, 10)], not its cover: block 0 of 10 bp is no aligned pyramid block 
+tile-past-2-40	claims7	U2 
+tile-past-2-40	claims7-seqs	U2 
+tile-past-2-40	spec8	 3 departure block not a pyramid block GRCh38#0#chr 0-10 GRCh38#0#chr 10-20 
+header-empty-line	spec8	 1 header line not starting with # (0.0 s) 
+directory-empty-line	verify7	verify7.py: directory-empty-line.walks.gz: directory line 2 is not #header 0 <length>, with no tag 
+directory-empty-line	audit7	audit7: 1 failed checks directory line of not its name, offset and length alone 
+directory-empty-line	spec8	spec8.py: directory-empty-line.walks.gz: refused: directory line 2 is not #header 0 <length>, with no tag 
+reference-twice	spec8	 1 not one #reference line naming the sample of the file's sequences ['GRCh38', 'GRCh38'] (0.0 s) 
+reference-haplotype	claims7	H3 
+reference-haplotype	claims7-seqs	H3 
+reference-haplotype	spec8	 1 #haplotype lines are not the other haplotypes with rows ['GRCh38#0'] 2 a piece of a line not of the #reference sample with no step on R 
+reference-haplotype	rebuild	 D#1#d line at 0: rows for a line not on the reference, or not in the GFA GRCh38#0#chr line at 0: rows for a line not on the reference, or not in the GFA 
+length-zero	claims7	K9 
+length-zero	claims7-seqs	K9 
+length-zero	audit7	audit7: 1 failed checks nodes row: a length differs from its segment's in the GFA 
+length-zero	spec8	 1 a piece doesn't end where the line's next piece begins Q#0#chr 0 piece 0: 0+6 != 12 1 ownTiles differs from the tiles holding the own steps 
+length-zero	rebuild	 GRCh38#0#chr tile 0: its nodes row gives node 6 0 bp, the GFA 6 Q#0#chr line at 0: piece 1 in tile GRCh38#0#chr:10 starts at 12, the piece before ends at 6 
+ref-rows-overlap	verify7	verify7.py: ref-rows-overlap.walks.gz: the tile unit at 178 has extent 0 48, where its ref rows cover (0, 30) 
+ref-rows-overlap	claims7	D4 G5 O1 U3 U8 W4 
+ref-rows-overlap	claims7-seqs	D4 G5 O1 U3 U8 W4 
+ref-rows-overlap	audit7	audit7: 3 failed checks across a record gap: MISSING RECORD 
+ref-rows-overlap	spec8	 1 departure record matching no piece boundary ('R#0#c', 12, 36, 'F#1#c', 18, 22, 18, '+', 1, 30, '+', 1) 1 piece boundary that departs from S has no departure record matching it 
+ref-rows-overlap	rebuild	 R#0#c line at 30: on the reference, with no rows R#0#c line at 12: rows for a line not on the reference, or not in the GFA 
+past-2-53-line-end	rebuild	 H#1#c line at 9007199254740974: on the reference, with no rows H#1#c line at 9007199254740975: rows for a line not on the reference, or not in the GFA 
+past-2-53-stated	rebuild	 H#1#c line at 9007199254740974: on the reference, with no rows H#1#c line at 9007199254740993: rows for a line not on the reference, or not in the GFA 
+name-space	rebuild	 H#1#h line at 100: on the reference, with no rows H #1#h line at 100: rows for a line not on the reference, or not in the GFA 
+name-cr	claims7	G6 H1 T5 
+name-cr	claims7-seqs	G6 H1 T5 
+name-e9	rebuild	 H#1#h line at 100: on the reference, with no rows name-e9.walks.gz: shard 0/1: 5 lines with rows, 5 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong 
+name-del	rebuild	 GRCh38#0#chr line at 0: on the reference, with no rows GRCh38#0#chr? line at 0: rows for a line not on the reference, or not in the GFA 

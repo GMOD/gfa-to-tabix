@@ -1,0 +1,118 @@
+file	verify7	claims7	claims7-seqs	audit7	expand7	spec8	rebuild
+# legal: broken/follow.gfa built with --tile 100 --sequences --abridge-bytes 1, which states revisited:i:0, then repack.py's variants of it
+follow	passes	passes	passes	passes	passes	passes	passes
+bound-no-writer-tags	passes	passes	passes	passes	passes	passes	passes
+bound-no-revisited	passes	passes	passes	passes	passes	passes	passes
+bound-no-stay	passes	passes	passes	passes	passes	passes	passes
+bound-no-abridge	passes	passes	passes	passes	passes	passes	passes
+bound-no-abridgebytes	passes	passes	passes	passes	passes	passes	passes
+bound-budgets-zero	passes	passes	passes	passes	passes	passes	passes
+# legal: walks-repeat.gfa built with --tile 10, which states revisited:i:2, then without that tag
+repeat	passes	passes	passes	passes	passes	passes	passes
+bound-no-revisited	passes	passes	passes	passes	passes	passes	passes
+# legal: broken/hapref.gfa with HG002#1 alone for its reference: HG002's haplotype 2 built under a stand-in sample, then named HG002#2 again
+one-haplotype-reference	passes	passes	passes	passes	passes	passes	passes
+# planted
+revisited-count	FAILS	passes	passes	FAILS	passes	FAILS	passes
+revisited-zero	FAILS	FAILS	FAILS	FAILS	passes	FAILS	passes
+budget-bytes-over	passes	FAILS	FAILS	passes	passes	passes	passes
+budget-steps-over	passes	FAILS	FAILS	passes	passes	passes	passes
+budget-put-back	passes	FAILS	FAILS	passes	passes	passes	passes
+walks-bytes-tag	FAILS	passes	passes	passes	passes	FAILS	passes
+tag-type-letter	FAILS	passes	passes	passes	passes	FAILS	passes
+tile-zero	FAILS	traceback	traceback	passes	passes	traceback	passes
+tile-past-2-40	FAILS	FAILS	FAILS	passes	passes	FAILS	passes
+number-leading-zero	FAILS	passes	passes	passes	passes	passes	passes
+number-plus-sign	FAILS	passes	passes	passes	passes	passes	passes
+token-minus-zero	FAILS	passes	passes	passes	passes	passes	passes
+header-empty-line	FAILS	passes	passes	passes	passes	FAILS	passes
+directory-empty-line	FAILS	passes	passes	FAILS	passes	FAILS	passes
+field-empty	FAILS	passes	passes	passes	passes	passes	passes
+unit-line-inside-unit	FAILS	passes	passes	passes	passes	passes	passes
+departures-unit-empty	FAILS	passes	passes	passes	passes	passes	passes
+reference-twice	FAILS	FAILS	FAILS	passes	passes	FAILS	passes
+reference-haplotype	passes	FAILS	FAILS	passes	passes	FAILS	FAILS
+length-zero	FAILS	FAILS	FAILS	FAILS	passes	FAILS	FAILS
+ref-rows-overlap	FAILS	FAILS	FAILS	FAILS	passes	FAILS	FAILS
+past-2-53-line-end	passes	FAILS	FAILS	passes	passes	passes	FAILS
+past-2-53-stated	FAILS	FAILS	FAILS	passes	passes	passes	FAILS
+name-space	FAILS	passes	passes	passes	passes	FAILS	FAILS
+name-cr	FAILS	FAILS	FAILS	traceback	passes	FAILS	traceback
+grep: (standard input): binary file matches
+name-e9	FAILS	passes	passes	passes	passes	FAILS	FAILS
+name-del	FAILS	passes	passes	passes	passes	FAILS	FAILS
+# what each FAILS said first
+revisited-count	verify7	verify7.py: revisited-count.walks.gz: the #walks line states revisited:i:7, and the file's ref rows step 2 nodes more than once 
+revisited-count	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
+revisited-count	spec8	 1 revisited is not the number of nodes the file's ref rows step more than once 7 stated, 2 nodes (0.0 s) 
+revisited-zero	verify7	verify7.py: revisited-zero.walks.gz: the #walks line states revisited:i:0, and the file's ref rows step 1 nodes more than once 
+revisited-zero	claims7	H2 
+revisited-zero	claims7-seqs	H2 
+revisited-zero	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
+revisited-zero	spec8	 1 revisited is not the number of nodes the file's ref rows step more than once 0 stated, 1 nodes (0.0 s) 
+budget-bytes-over	claims7	B1 
+budget-bytes-over	claims7-seqs	B1 
+budget-steps-over	claims7	B2 
+budget-steps-over	claims7-seqs	B2 
+budget-put-back	claims7	B3 
+budget-put-back	claims7-seqs	B3 
+walks-bytes-tag	verify7	verify7.py: walks-bytes-tag.walks.gz: directory line 1 is not a format 8 #walks line with one bytes:i: 
+walks-bytes-tag	spec8	spec8.py: walks-bytes-tag.walks.gz: refused: directory line 1 carries the tag name bytes twice 
+tag-type-letter	verify7	verify7.py: tag-type-letter.walks.gz: the #walks line states revisited:Z:0, not one revisited:i: of (?:0|[1-9][0-9]*) 
+tag-type-letter	spec8	 1 revisited is not the number of nodes the file's ref rows step more than once 0 stated, 0 nodes (0.0 s) 
+tile-zero	verify7	verify7.py: tile-zero.walks.gz: tile:i: is 0, not 1 to 2^40 
+tile-past-2-40	verify7	verify7.py: tile-past-2-40.walks.gz: tile:i: is 1099511627777, not 1 to 2^40 
+tile-past-2-40	claims7	U2 
+tile-past-2-40	claims7-seqs	U2 
+tile-past-2-40	spec8	 3 departure block not a pyramid block GRCh38#0#chr 0-10 GRCh38#0#chr 10-20 
+number-leading-zero	verify7	verify7.py: number-leading-zero.walks.gz: a walk row with a column short, a number not written as the page writes one, a length of 0 or a path in bytes outside 0x21 to 0x7E, at 165: GRCh38#0#chr 0 12 walk H#1#h 100 0100 0 2 2 . 
+number-plus-sign	verify7	verify7.py: number-plus-sign.walks.gz: a departure row with a column short, a number not written as the page writes one, a length of 0 or a path in bytes outside 0x21 to 0x7E, at 335: GRCh38#0#chr 0 18 departure Q#0#chr 6 +6 0 6 + 1 12 + 1 0 
+token-minus-zero	verify7	verify7.py: token-minus-zero.walks.gz: a walk row with a column short, a number not written as the page writes one, a length of 0 or a path in bytes outside 0x21 to 0x7E, at 169: R#0#c 12 30 walk A#1#c 0 0 0 2 2 -0 
+header-empty-line	verify7	verify7.py: header-empty-line.walks.gz: the header unit holds an empty line or field, or does not end in a newline 
+header-empty-line	spec8	 1 header line not starting with # (0.0 s) 
+directory-empty-line	verify7	verify7.py: directory-empty-line.walks.gz: the directory holds an empty line or field, or does not end in a newline 
+directory-empty-line	audit7	audit7: 1 failed checks directory line of not its name, offset and length alone 
+directory-empty-line	spec8	spec8.py: directory-empty-line.walks.gz: refused: directory line 2 is not #header 0 <length>, with no tag 
+field-empty	verify7	verify7.py: field-empty.walks.gz: the header unit holds an empty line or field, or does not end in a newline 
+unit-line-inside-unit	verify7	verify7.py: unit-line-inside-unit.walks.gz: a line of the unit at 165 after its first begins #unit 
+departures-unit-empty	verify7	verify7.py: departures-unit-empty.walks.gz: the departures unit at 474 has no record 
+reference-twice	verify7	verify7.py: reference-twice.walks.gz: the header does not hold one #reference line 
+reference-twice	claims7	H3 
+reference-twice	claims7-seqs	H3 
+reference-twice	spec8	 1 not one #reference line naming the sample of the file's sequences ['GRCh38', 'GRCh38'] (0.0 s) 
+reference-haplotype	claims7	H3 
+reference-haplotype	claims7-seqs	H3 
+reference-haplotype	spec8	 1 not one #reference line naming the sample of the file's sequences ['GRCh38#0'] (0.0 s) 
+reference-haplotype	rebuild	reference-haplotype.walks.gz: #reference names GRCh38#0, and ref rows are cut from GRCh38#0#chr reference-haplotype.walks.gz: shard 0/1: 5 lines with rows, 5 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 0 wrong 
+length-zero	verify7	verify7.py: length-zero.walks.gz: a nodes row with a column short, a number not written as the page writes one, a length of 0 or a path in bytes outside 0x21 to 0x7E, at 165: GRCh38#0#chr 0 12 nodes 6 0 
+length-zero	claims7	K9 R5 
+length-zero	claims7-seqs	K9 R5 
+length-zero	audit7	audit7: 1 failed checks nodes row: a length differs from its segment's in the GFA 
+length-zero	spec8	 1 a piece doesn't end where the line's next piece begins Q#0#chr 0 piece 0: 0+6 != 12 1 ownTiles differs from the tiles holding the own steps 
+length-zero	rebuild	 GRCh38#0#chr tile 0: its nodes row gives node 6 0 bp, the GFA 6 Q#0#chr line at 0: piece 1 in tile GRCh38#0#chr:10 starts at 12, the piece before ends at 6 
+ref-rows-overlap	verify7	verify7.py: ref-rows-overlap.walks.gz: the tile unit at 178 has extent 0 48, where its ref rows cover (0, 30) 
+ref-rows-overlap	claims7	D4 G5 O1 R4 U3 U8 W4 
+ref-rows-overlap	claims7-seqs	D4 G5 O1 R4 U3 U8 W4 
+ref-rows-overlap	audit7	audit7: 3 failed checks across a record gap: MISSING RECORD 
+ref-rows-overlap	spec8	 1 departure record matching no piece boundary ('R#0#c', 12, 36, 'F#1#c', 18, 22, 18, '+', 1, 30, '+', 1) 1 piece boundary that departs from S has no departure record matching it 
+ref-rows-overlap	rebuild	 R#0#c line at 30: on the reference, with no rows R#0#c line at 12: rows for a line not on the reference, or not in the GFA 
+past-2-53-line-end	claims7	K13 
+past-2-53-line-end	claims7-seqs	K13 
+past-2-53-line-end	rebuild	 H#1#c line at 9007199254740974: on the reference, with no rows H#1#c line at 9007199254740975: rows for a line not on the reference, or not in the GFA 
+past-2-53-stated	verify7	verify7.py: past-2-53-stated.walks.gz: a coordinate above 2^53 at 151: R#0#c 0 18 walk H#1#c 9007199254740993 9007199254740993 0 3 2 . 
+past-2-53-stated	claims7	K13 
+past-2-53-stated	claims7-seqs	K13 
+past-2-53-stated	rebuild	 H#1#c line at 9007199254740974: on the reference, with no rows H#1#c line at 9007199254740993: rows for a line not on the reference, or not in the GFA 
+name-space	verify7	verify7.py: name-space.walks.gz: a #reference, #haplotype or #hole line states a name in bytes outside 0x21 to 0x7E 
+name-space	spec8	 1 #haplotype lines are not what the paths with walk or abridged rows are listed under ['D#1', 'H #1', 'I#1', 'Q#0'] 1 a name the header or the directory states is not bytes 0x21 to 0x7E, or starts with # 
+name-space	rebuild	 H#1#h line at 100: on the reference, with no rows H #1#h line at 100: rows for a line not on the reference, or not in the GFA 
+name-cr	verify7	verify7.py: name-cr.walks.gz: a #reference, #haplotype or #hole line states a name in bytes outside 0x21 to 0x7E 
+name-cr	claims7	G6 H1 T5 
+name-cr	claims7-seqs	G6 H1 T5 
+name-cr	spec8	 1 #haplotype lines are not what the paths with walk or abridged rows are listed under ['D#1', 'H\r#1', 'I#1', 'Q#0'] 1 a name the header or the directory states is not bytes 0x21 to 0x7E, or starts with # 
+name-e9	verify7	verify7.py: name-e9.walks.gz: a #reference, #haplotype or #hole line states a name in bytes outside 0x21 to 0x7E 
+name-e9	spec8	 1 #haplotype lines are not what the paths with walk or abridged rows are listed under ['D#1', 'H\udce9#1', 'I#1', 'Q#0'] 1 a name the header or the directory states is not bytes 0x21 to 0x7E, or starts with # 
+name-e9	rebuild	 H#1#h line at 100: on the reference, with no rows name-e9.walks.gz: shard 0/1: 5 lines with rows, 5 on the reference in the GFA, 0 abridged rows, 0 blocks rows, 2 wrong 
+name-del	verify7	verify7.py: name-del.walks.gz: a directory line names a sequence in bytes outside 0x21 to 0x7E 
+name-del	spec8	 1 #haplotype lines are not what the paths with walk or abridged rows are listed under ['D#1', 'H#1', 'I#1', 'Q#0'] 1 a name the header or the directory states is not bytes 0x21 to 0x7E, or starts with # 
+name-del	rebuild	 D#1#d line at 0: rows for a line not on the reference, or not in the GFA GRCh38#0#chr? line at 0: rows for a line not on the reference, or not in the GFA 
