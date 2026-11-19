@@ -5,12 +5,12 @@ fetch any region of it from a static web host without downloading the whole
 graph.
 
 - **In:** a GFA file (`.gfa` or `.gfa.gz`): an rGFA from minigraph or
-  Minigraph-Cactus (`*.sv.gfa.gz`), or a plain GFA with P or W lines from
-  pggb, odgi or `vg convert -f`
+  Minigraph-Cactus (`*.sv.gfa.gz`), or a plain GFA with P or W lines from pggb,
+  odgi or `vg convert -f`
 - **Out:** a node and link index, `<prefix>.graph.bed.gz`, that a graph track
   reads at any locus
-- **Out, with `--walks`:** walk files, `<prefix>.GRCh38.walks.gz`, holding
-  every haplotype's path through the graph
+- **Out, with `--walks`:** walk files, `<prefix>.GRCh38.walks.gz`, holding every
+  haplotype's path through the graph
 - The tool is one static binary and needs no bgzip or tabix
 
 ## Quick start
@@ -40,8 +40,8 @@ vg convert -f chr22.gbz > chr22.gfa
 ```
 
 `--walks` reads a base-level GFA with integer node ids and W or P lines, as
-`vg convert -f` writes from a GBZ. The command writes `chr22.GRCh38.walks.gz`
-in walk format 8, cut into tiles along GRCh38, and its directory
+`vg convert -f` writes from a GBZ. The command writes `chr22.GRCh38.walks.gz` in
+walk format 8, cut into tiles along GRCh38, and its directory
 `chr22.GRCh38.walks.gz.idx`. A viewer fetches the tiles over a region by range
 request, and [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks)
 rebuilds every haplotype's path through the region from them.
@@ -73,22 +73,19 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
   layouts, giant components, columns and scale
 - [Walk files](docs/walks-format.md): walk format 8, its options, rows and
   readers
-- [Subcommands](docs/subcommands.md): `build` and its JBrowse config,
-  `bubbles`, `fold` and `paths`
+- [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `bubbles`,
+  `fold` and `paths`
 - [Comparison with gbz-base and gfaidx](docs/comparison.md): how the three
-  differ and which to pick, with the measurements in
-  [comparison-details.md](docs/comparison-details.md)
-- [Developing](docs/developing.md): design decisions, open problems and the
-  checks CI runs
+  formats differ and which to pick
 
 ## See also
 
 - [jbrowse-plugin-graphgenomeviewer](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer):
   draws these graphs as a JBrowse 2 track
-- [BandageJS](https://github.com/GMOD/BandageJS): draws a region of a walk
-  file in a web browser
-- [ggbandage](https://github.com/GMOD/ggbandage) (R): Bandage-style figures
-  as ggplot2 layers
+- [BandageJS](https://github.com/GMOD/BandageJS): draws a region of a walk file
+  in a web browser
+- [ggbandage](https://github.com/GMOD/ggbandage) (R): Bandage-style figures as
+  ggplot2 layers
 - [JBrowse's guide to hosting your own graph](https://jbrowse.org/jb2/docs/tutorials/pangenome_prepare_graph/)
 
 ## License
