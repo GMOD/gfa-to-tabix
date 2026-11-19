@@ -80,13 +80,21 @@ taken flipped, and its departure records.
 
 - **The reference:** the paths a file's `ref` rows are cut from: one or
   more whole haplotypes of the `#reference` sample. <!-- C157 --> Whole
-  means that no path with `walk` or `abridged` rows is listed under what
-  a reference sequence is listed under, its `sample#haplotype` or, for a
-  `path` of fewer than three fields, its sample
-  ([Path names](#path-names)). <!-- C157 --> A file with reference
-  sequences `HG002#1#chr1` and `HG002#1#chr2` and walk rows of
-  `HG002#1#alt1` is not format 8: a reader tells the reference's lines
-  from the others by what they are listed under
+  means this: take what a reference sequence is listed under, its
+  `sample#haplotype` or, for a `path` of fewer than three fields, its
+  sample ([Path names](#path-names)). No path with `walk` or `abridged`
+  rows is that text, or begins with that text and a `#`, and no
+  `#haplotype` line is or begins so. <!-- C157 --> A reader tells the
+  reference's lines from the others by that prefix, so:
+  - a file with reference sequences `HG002#1#chr1` and `HG002#1#chr2`
+    and walk rows of `HG002#1#alt1` is not format 8
+  - where a reference sequence has no haplotype field, as `chm13#chr1`,
+    which is listed under `chm13`, no path of its sample has `walk` or
+    `abridged` rows: `chm13#2#chrX` begins `chm13#`, and such a file is
+    not format 8
+  - beside a reference sequence `HG002#1#chr1`, a path named `HG002#1`
+    whole, of sample `HG002`, has no `walk` or `abridged` rows, and any
+    other path of two fields, as `HG002#alt`, can
 - The reference need not be every haplotype of its sample.
   <!-- C9 --> It can be
   `HG002#1` alone, and a path of `HG002#2` is then a line like any other,
@@ -648,8 +656,9 @@ GRCh38-referenced file:
   file is listed under, once each in byte order: its PanSN
   `sample#haplotype` where its `path` has three fields or more, its
   sample where it has fewer ([Path names](#path-names)). <!-- C51 --> No
-  line lists what a reference sequence is listed under, since the
-  reference is whole haplotypes ([Terms](#terms)). <!-- C51 --> A path
+  line is what a reference sequence is listed under, or begins with that
+  and a `#`, since the reference is whole haplotypes ([Terms](#terms)).
+  <!-- C51 --> A path
   of another haplotype of the `#reference` sample is listed like any
   other, so a file whose reference is `HG002#1` alone lists `HG002#2`
 - `#hole` gives each stretch of a reference sequence that no line of the
@@ -1237,14 +1246,10 @@ run on the file by whoever writes or hosts it.
   node its line steps, so two ends passed once do not make its own
   sequence free of reference nodes
 - **The reference is whole haplotypes.** No path with `walk` or
-  `abridged` rows is listed under what a reference sequence is listed
-  under, so a reader that tells the reference's lines from the others by
-  their `sample#haplotype` takes no line for the wrong kind
+  `abridged` rows is what a reference sequence is listed under, or
+  begins with that and a `#`, so a reader that takes the paths with that
+  prefix for the reference's lines takes no other line for one
   ([Terms](#terms)) <!-- C157 -->
-- **A walk row names no default.** A `@k` or `:k` is there only where
-  it differs from its default, a route is stored the way round that
-  comes first in route order, and a route that is its own flip is taken
-  with flip 0 <!-- C68 C70 -->
 - **A step is 1 bp or more.** Every length a `ref` or `nodes` row states
   is at least 1, so no two positions of R start at one offset and no
   piece covers 0 bp of its contig <!-- C208 -->
@@ -1397,12 +1402,16 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
 - A line left out of a reference's file is one W or P line; its contig's
   other lines keep their rows (tests) <!-- C140 -->
 - The reference is whole haplotypes: the tool makes every path of a
-  `--refs` sample with steps a reference sequence, so no path on a
-  haplotype of the reference has walk rows (build; files, `verify7.py`,
+  `--refs` sample with steps a reference sequence, so no path of the
+  reference's sample has walk rows (build; files, `verify7.py`,
   `claims7.py` and `spec8.py`) <!-- C9 -->
-- A walk row names no default and takes a route that is its own flip
-  with flip 0, and a sequence's detail units are in order of tile and
-  number (build; files, `claims7.py` and `spec8.py`) <!-- C70 C32 -->
+- A walk row names no default: a `@k` or `:k` is there only where it
+  differs from its default, a route is stored the way round that comes
+  first in route order, and a route that is its own flip is taken with
+  flip 0. <!-- C68 C70 --> No reader leans on this; it keeps a file to
+  one encoding (build; files, `claims7.py` and `spec8.py`)
+- A sequence's detail units are in order of tile and number (build;
+  files, `claims7.py` and `spec8.py`) <!-- C32 -->
 - Every name is as [Rows](#rows) says: the build refuses a GFA whose W
   or P line gives a name that is empty, starts with `#` or holds a byte
   outside 0x21 to 0x7E, a space, carriage return, NUL or byte above 0x7E
