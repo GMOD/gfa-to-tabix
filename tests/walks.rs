@@ -3028,20 +3028,37 @@ fn a_path_name_starting_with_a_hash_is_refused() {
     assert!(built.walks.is_empty());
 }
 
-// The writer's sort ends a name at its first NUL byte, so one inside a name
-// read every later field from the wrong place and panicked
+// A name in a walk file is bytes 0x21 to 0x7E. The writer's sort ends a name
+// at its first NUL byte, so one inside a name read every later field from
+// the wrong place and panicked; `_` below stands for the byte tried
 #[test]
-fn a_nul_byte_in_a_path_name_is_refused() {
-    for line in ["W H\0X 1 c 0 6 >1", "P H\0X 1+ *"] {
-        let built = build_text(
-            "nul",
-            &["S 1 AAAAAA", "W R 0 chr 0 6 >1", line],
-            &["--refs", "R"],
-        );
-        let stderr = String::from_utf8_lossy(&built.output.stderr);
-        assert_eq!(built.output.status.code(), Some(1), "{stderr}");
-        assert!(stderr.contains("holds a NUL byte"), "{stderr}");
-        assert!(built.walks.is_empty());
+fn a_name_with_a_byte_outside_0x21_to_0x7e_is_refused() {
+    for byte in [0u8, b' ', b'\r', 0x7f, 0xe9] {
+        for line in [
+            "W\tH_X\t1\tc\t0\t6\t>1",
+            "W\tH\t1_\tc\t0\t6\t>1",
+            "W\tH\t1\tc_\t0\t6\t>1",
+            "P\tH_X\t1+\t*",
+        ] {
+            let gfa: Vec<u8> = format!("S\t1\tAAAAAA\nW\tR\t0\tchr\t0\t6\t>1\n{line}\n")
+                .bytes()
+                .map(|b| if b == b'_' { byte } else { b })
+                .collect();
+            let path = std::env::temp_dir().join(format!(
+                "walks-name-byte-{byte}-{}.gfa",
+                std::process::id()
+            ));
+            fs::write(&path, gfa).unwrap();
+            let built = build(path.to_str().unwrap(), &["--refs", "R"]);
+            fs::remove_file(&path).unwrap();
+            let stderr = String::from_utf8_lossy(&built.output.stderr);
+            assert_eq!(built.output.status.code(), Some(1), "{stderr}");
+            assert!(
+                stderr.contains(&format!("line 3: path ")) && stderr.contains(&format!("holds the byte 0x{byte:02X}")),
+                "{line}: {stderr}"
+            );
+            assert!(built.walks.is_empty());
+        }
     }
 }
 

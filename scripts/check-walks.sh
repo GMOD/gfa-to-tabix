@@ -11,7 +11,7 @@
 # format's room for additions, a tag on every row and on the #walks line, a
 # unit of an unknown kind, an unknown header line and each legal variant of
 # repack.py, tag-hole on a file with #hole lines too, and on one without the #walks line's graph:Z: and leftout:i:,
-# which walks-truth.py's rebuild alone must fail, on a file whose path names hold bytes that are not UTF-8, and
+# which walks-truth.py's rebuild alone must fail, and
 # on a file where a gzip member cut inside a row begins `#unit<TAB>`, all
 # of which must pass; then fuzz7.sh's batch of seeds 1 to $SEEDS (6 by
 # default). Each check fails by its exit status. Exits 1 on any failure,
@@ -120,20 +120,5 @@ if "$B" "$dir/unitname.gfa" --walks --refs R --tile 100000 -o "$dir/unitname" > 
 else
   echo "a contig named unit: BUILD $(tail -1 "$dir/log")"; failed=1
 fi
-# path names whose bytes are not UTF-8, beside one that is, all in byte order
-{
-  printf 'H\tVN:Z:1.1\nS\t1\tAAAAAA\nS\t2\tCCCCCC\nS\t3\tGGGGGG\nS\t4\tTTTT\n'
-  printf 'L\t1\t+\t2\t+\t0M\nL\t2\t+\t3\t+\t0M\nL\t1\t+\t4\t+\t0M\nL\t4\t+\t3\t+\t0M\n'
-  printf 'W\tR\t0\tchr\376\t0\t18\t>1>2>3\nW\tH\351\t1\tc\377\t0\t16\t>1>4>3\n'
-  printf 'W\tH\303\251\t1\tc\t0\t16\t>1>4>3\nW\tHz\t1\tc\t0\t18\t>1>2>3\n'
-} > "$dir/bytes.gfa"
-for opts in "--tile 10" "--tile 10 --abridge-bytes 1"; do
-  read -r -a args <<< "$opts"
-  if "$B" "$dir/bytes.gfa" --walks --refs R "${args[@]}" -o "$dir/bytes" > "$dir/log" 2>&1; then
-    checks "path names not UTF-8 $opts" "$dir/bytes.R.walks.gz" "$dir/bytes.gfa"
-  else
-    echo "path names not UTF-8 $opts: BUILD $(tail -1 "$dir/log")"; failed=1
-  fi
-done
 FUZZ_DIR=$dir/fuzz GFA_TO_TABIX=$B bash "$S/fuzz7.sh" 1 "${SEEDS:-6}" || failed=1
 exit $failed

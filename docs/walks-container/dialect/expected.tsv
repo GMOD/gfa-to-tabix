@@ -1,11 +1,11 @@
 fixture	refs	walks	rows	haplotypes	index	twin
 big-refstart-2e46.gfa	R	skip	its tiles from 0 take more memory than a test may	.	.	.
-cr-only-in-name.gfa	R	built	the file checkers split a line at its carriage return	.	ok	.
+cr-only-in-name.gfa	R	refused	holds the byte 0x0D: a name in a walk file is bytes 0x21 to 0x7E, printable ASCII with no space	.	ok	.
 line-end-2e53.gfa	R	refused	reference sequence R#0#chr ends at 9007199254740992, and its last tile of 10 bp ends past 2^53	.	cannot index R#0#chr:9007199254740980-9007199254740986: end exceeds max position	.
 line-end-past-2e53.gfa	R	refused	line 9: path H#1#c ends at 9007199254740993, past 2^53	.	ok	.
-names-not-utf8.gfa	R	ok	.	.	ok	.
+names-not-utf8.gfa	R	refused	holds the byte 0xE9: a name in a walk file is bytes 0x21 to 0x7E, printable ASCII with no space	.	ok	.
 no-paths.gfa	R	refused	--refs R matches no path's sample	.	no P or W lines	.
-nonascii-name.gfa	R	ok	.	.	ok	.
+nonascii-name.gfa	R	refused	holds the byte 0xE9: a name in a walk file is bytes 0x21 to 0x7E, printable ASCII with no space	.	ok	.
 odgi-of-vg-gbz-p.gfa	R	ok	H#1#c@106 K#2#d@23 R#0#chr1@18	H#1,K#2	ok	odgi-of-vg-w.gfa
 odgi-of-vg-gfw-p.gfa	R	ok	H#1#c@106 K#2#d@23 R#0#chr1@18	H#1,K#2	ok	odgi-of-vg-w.gfa
 odgi-of-vg-w.gfa	R	ok	H#1#c@106 K#2#d@23 R#0#chr1@18	H#1,K#2	ok	.

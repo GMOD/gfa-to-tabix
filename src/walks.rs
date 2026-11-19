@@ -86,8 +86,9 @@ fn past_max(path: &[u8], what: &str, at: u64) -> String {
 }
 
 // Refuses a name a walk file's line would read as a header or `#unit` line,
-// one holding a NUL byte, which ends a name in the writer's sort, and a W
-// line that starts past the highest coordinate, as `settle` does a P line
+// one holding a byte walk format 8 keeps out of a name, a NUL among them,
+// which ends a name in the writer's sort, and a W line that starts past the
+// highest coordinate, as `settle` does a P line
 fn named(path: PathLine) -> Result<Option<PathLine>, String> {
     if path.start > MAX_COORDINATE {
         Err(past_max(&path.name, "starts", path.start))
@@ -96,8 +97,12 @@ fn named(path: PathLine) -> Result<Option<PathLine>, String> {
             "path {} starts with #, which marks a walk file's header and unit lines",
             text(&path.name)
         ))
-    } else if path.name.contains(&0) {
-        Err(format!("path {} holds a NUL byte", text(&path.name)))
+    } else if let Some(byte) = path.name.iter().find(|b| !(0x21..=0x7e).contains(*b)) {
+        Err(format!(
+            "path {} holds the byte 0x{byte:02X}: a name in a walk file is bytes 0x21 to 0x7E, \
+             printable ASCII with no space",
+            text(&path.name)
+        ))
     } else {
         Ok(Some(path))
     }
