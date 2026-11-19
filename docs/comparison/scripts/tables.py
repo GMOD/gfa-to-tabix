@@ -121,7 +121,7 @@ def window(graph):
         good = [r for r in g if r["gfaidx_status"] == "0"]
         at_open = {r["reader"]: r for r in rows(f"{graph}{suffix}.open.tsv")}["gfaidx"]["bytes"]
         cells = {
-            "read at open": size(at_open),
+            "bytes read on opening the files": size(at_open),
             "bytes read": spread(col("gfaidx_bytes", good), size),
             "byte ranges": spread(col("gfaidx_ranges", good), plain),
             "byte ranges, gaps of up to 64 KB joined": spread(col("gfaidx_ranges_gaps_joined", good), plain),
@@ -135,10 +135,10 @@ def window(graph):
 
     measured = [(label, *gfaidx(suffix)) for label, suffix in runs]
     walk_rows = [
-        ["read at open", size(opened["walks"]["bytes"]), size(opened["walks_bases"]["bytes"])],
+        ["bytes read on opening the files", size(opened["walks"]["bytes"]), size(opened["walks_bases"]["bytes"])],
         ["bytes read", spread(col("walks_bytes", w), size), spread(col("walks_bases_bytes", w), size)],
         ["byte ranges", spread(col("walks_ranges", w), plain), spread(col("walks_bases_ranges", w), plain)],
-        ["the tile's blocks unit, read to draw abridged pieces", spread(col("walks_blocks_bytes", w), size),
+        ["bytes read to expand haplotypes moved out of a crowded tile", spread(col("walks_blocks_bytes", w), size),
          spread(col("walks_bases_blocks_bytes", w), size)],
         ["byte ranges, gaps of up to 64 KB joined", "", ""],
         ["bytes read, gaps of up to 64 KB joined", "", ""],
@@ -161,8 +161,8 @@ def window(graph):
         same = sum(1 for r in good if r["gfaidx_gfa_S_sha1"] == sha[r["start"]])
         faster = sum(1 for r in good if fresh[r["start"]] < float(r["gfaidx_ms_median"]))
         failed = len(g) - len(good)
-        note += (f"\n- Against {label}: from a new reader, the walk cut is faster in {faster} of the {len(good)} windows."
-                 f" The nodes its fragments step on match the GFA's segments id for id in {same},"
+        note += (f"\n- Against {label}: from a new reader, the walk file reader is faster in {faster} of the {len(good)} windows."
+                 f" The nodes on the paths it returns match the GFA's segments id for id in {same},"
                  f" and the GFA has more nodes in the other {len(good) - same}" + (f". {failed} of the {len(g)} windows failed in gfaidx and are left out"
                                                                                   if failed else ""))
     header = [f"{GRAPHS[graph]}, {len(w)} windows: median (largest)", "walk file", "walk file with bases"] + [m[0] for m in measured]
