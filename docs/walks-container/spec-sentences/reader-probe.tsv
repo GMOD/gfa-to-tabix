@@ -1,0 +1,200 @@
+# graph-walks b0d83788a2990ba72393affcd1741aeb05a64dcc, reader-probe.mjs on each planted file of cases.tsv
+file	fails, by cases.tsv	reader	what it read or said
+abridged-detail	claims7 audit7 spec8 rebuild	refuses	WalkFormatError: R#0#c's detail unit 10:1 holds walk rows for 0 of the 2 pieces of L#1#c that the cut reads from it
+abridged-hapoffset	claims7 audit7 spec8 rebuild	refuses	WalkFormatError: R#0#c's abridged row of L#1#c, piece 0 in tile 10, ends at 43 on its contig, and the line's next piece starts at 42
+abridged-hapoffset-later	claims7 audit7 spec8 rebuild	reads	tile 10, 2 haplotypes; "R#0#c": 3 and 3 fragments, 0 departures
+abridged-nsteps	claims7 audit7 spec8 rebuild	reads	tile 10, 2 haplotypes; "R#0#c": 3 and 3 fragments, 0 departures
+abridged-span	claims7 audit7 spec8 rebuild	refuses	Error: L#1#c's blocks row, piece 0, spans [12, 24) and its abridged row [12, 18)
+abridged-ten-columns	claims7 audit7 expand7 spec8 rebuild	refuses	Error: The unit at byte 240 of the walk file, R#0#c's tile 10 over [12, 24) as its table lists it, holds a row of fewer columns than the 11 its kind holds: "R#0#c\t12\t24\tabridged\tL#1#c\t0\t0\t0\t5\t0"
+abridged-thirteen-columns	claims7 audit7 spec8 rebuild	refuses	WalkFormatError: The unit at byte 240 of the walk file, R#0#c's tile 10 over [12, 24) as its table lists it, holds a row with a column after its fixed ones that is no tag, "8": "R#0#c\t12\t24\tabridged\tL#1#c\t0\t30\t
+attach-overlap-mid-run	claims7 audit7 spec8	refuses	Error: the departure record of H#1#h with own steps over [118, 121) of its contig lies inside piece 0, which covers [100, 133), where a record's own steps are a run at one end of a piece
+attach-overlap-short	claims7 audit7 spec8	refuses	WalkFormatError: R#0#chr1's blocks row of H#1#c, piece 0 in tile 0, ends with 10 bp off the reference, and a departure record's own steps there are 9 bp by its abridged row
+bin-other-size	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+block-misaligned	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+blocks-ends-swapped	audit7 expand7 spec8 rebuild	reads	tile 36, 1 haplotypes; "R#0#c": 2 and 2 fragments, 3 departures
+blocks-first	audit7 expand7 spec8 rebuild	reads	tile 36, 1 haplotypes; "R#0#c": 2 and 2 fragments, 3 departures
+blocks-foreign-row	claims7 spec8	refuses	WalkFormatError: The unit at byte 627 of the walk file, R#0#c's blocks 0 over [0, 12) as its table lists it, holds a row that is not one of R#0#c's blocks rows: "R#0#c\t0\t12\twalk\tM#1#c\t0\t0\t0\t2\t2\t."
+blocks-last	audit7 expand7 spec8 rebuild	reads	tile 36, 1 haplotypes; "R#0#c": 2 and 2 fragments, 3 departures
+blocks-leading-later	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's blocks row of L#1#c, piece 1 in tile 20, adds up to 7 bp, and its abridged row states a hapBp of 6
+blocks-leading-off	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's blocks row of H#1#c, piece 0 in tile 0, adds up to 110 bp, and its abridged row states a hapBp of 109
+blocks-merged	audit7 expand7 spec8 rebuild	reads	tile 1000, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+blocks-minus-zero	claims7 audit7 expand7 spec8 rebuild	reads	tile 36, 1 haplotypes; "R#0#c": 2 and 2 fragments, 3 departures
+blocks-moved	audit7 expand7 spec8 rebuild	reads	tile 36, 1 haplotypes; "R#0#c": 2 and 2 fragments, 3 departures
+blocks-own	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's blocks row of H#1#c, piece 0 in tile 0, adds up to 110 bp, and its abridged row states a hapBp of 109
+blocks-row-dropped	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: GRCh38#0#chr's blocks unit 0 holds no row for piece 0 of D#1#d, which its tile abridges
+blocks-row-misfiled	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's blocks unit 10 holds no row for piece 1 of M#1#c, which its tile abridges
+blocks-row-span	claims7 audit7 expand7 spec8 rebuild	reads	tile 1000, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+blocks-row-twice	claims7 audit7 expand7 spec8 rebuild	reads	tile 1000, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+blocks-rows-swapped	claims7 spec8	reads	tile 1000, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+blocks-run-leading-zero	claims7 audit7 expand7 spec8 rebuild	reads	tile 36, 1 haplotypes; "R#0#c": 2 and 2 fragments, 3 departures
+blocks-run-zero	claims7 audit7 expand7 spec8 rebuild	refuses	Error: not a blocks row's list: 7,0+12,0,0-12,10,24+12,-24+6,50
+blocks-runs-adjacent	claims7 audit7 expand7 spec8 rebuild	refuses	Error: not a blocks row's list: 7,0+12,0-12,4,6,24+12,-24+6,50
+blocks-strand	audit7 expand7 spec8 rebuild	reads	tile 36, 1 haplotypes; "R#0#c": 2 and 2 fragments, 3 departures
+blocks-ten-columns	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: The unit at byte 391 of the walk file, R#0#c's blocks 0 over [0, 36) as its table lists it, holds a row with a column after its fixed ones that is no tag, "50": "R#0#c\t0\t36\tblocks\tH#1#c\t0\t0\t7\t
+blocks-trailing-dropped	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's blocks row of H#1#c, piece 0 in tile 0, adds up to 59 bp, and its abridged row states a hapBp of 109
+blocks-trailing-dropped-mid	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: GRCh38#0#chr's blocks row of Q#0#chr, piece 0 in tile 0, adds up to 6 bp, and its abridged row states a hapBp of 12
+blocks-trailing-off	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's blocks row of H#1#c, piece 0 in tile 0, adds up to 110 bp, and its abridged row states a hapBp of 109
+blocks-trailing-over-record	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#chr's blocks row of G#1#g, piece 0 in tile 0, adds up to 31 bp, and its abridged row states a hapBp of 12
+blocks-unit-dropped	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's unit table lists no blocks unit 10, which the abridged rows of that tile need
+blocks-unit-early	claims7 spec8	reads	tile 10, 2 haplotypes; "R#0#c": 3 and 3 fragments, 0 departures
+blocks-unit-empty	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's blocks unit 20 holds no row for piece 1 of L#1#c, which its tile abridges
+blocks-unit-stray	claims7 audit7 expand7 spec8 rebuild	reads	tile 10, 2 haplotypes; "R#0#c": 3 and 3 fragments, 0 departures
+blocks-unit-wide	verify7 claims7 spec8	reads	tile 10, 2 haplotypes; "R#0#c": 3 and 3 fragments, 0 departures
+blocks-unmerged	claims7 audit7 expand7 spec8 rebuild	reads	tile 36, 1 haplotypes; "R#0#c": 2 and 2 fragments, 3 departures
+budget-bytes-over	claims7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+budget-put-back	claims7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+budget-steps-over	claims7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+costliest-not-first	claims7 spec8	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 1 departures
+default-copy-named	claims7 spec8	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+default-leave-named	claims7 spec8	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+default-start-named	claims7 spec8	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+departures-unit-empty	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+detail-interior-flipped	rebuild	reads	tile 10, 2 haplotypes; "R#0#c": 3 and 3 fragments, 0 departures
+detail-unit-empty	verify7 claims7 expand7 spec8	refuses	WalkFormatError: GRCh38#0#chr's detail unit 0:2 holds walk rows for 0 of the 1 pieces of H#1#h that the cut reads from it
+detail-units-swapped	claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+dir-tag-header-line	verify7 spec8	refuses	WalkFormatError: A walk file directory line holds no byte range, or more than one: #header	0	166	XX:Z:later
+dir-tag-seq-line	verify7 audit7 spec8	refuses	WalkFormatError: A walk file directory line holds no byte range, or more than one: GRCh38#0#chr	2535	304	XX:Z:later
+directory-empty-line	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+directory-field-empty	verify7 spec8	refuses	WalkFormatError: A walk file directory line holds no byte range, or more than one: #header		0	165
+empty-block	verify7 claims7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+entry-dropped	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+entry-start-not-integer	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+field-empty	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+field-empty-row	verify7 claims7	refuses	WalkFormatError: The unit at byte 165 of the walk file, GRCh38#0#chr's tile 0 over [0, 12) as its table lists it, holds a row with a column after its fixed ones that is no tag, "": "GRCh38#0#chr\t0\t6\twalk\tI#1#i\t0\
+flip-of-own-flip	claims7 spec8	reads	tile 100, 1 haplotypes; "R#0#c": 2 and 2 fragments, 1 departures
+format-7	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: This walk file is format 7; @jbrowse/graph-walks reads format 8, so rebuild it with gfa-to-tabix 5.0 or later
+g1-walk-order	claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+graph-other	rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+graph-uppercase	verify7 rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+gzip-not-bgzf	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+hap-dup	claims7 spec8	reads	tile 10, 5 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+hap-missing	claims7 spec8	reads	tile 10, 3 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+hapbp-format7	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's detail unit 0:0 holds 109 bp of steps for piece 0 of H#1#c, and its abridged row states a hapBp of 52
+hapbp-next-piece	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's detail unit 10:0 holds 42 bp of steps for piece 0 of L#1#c, and its abridged row states a hapBp of 6
+hapbp-off-by-one	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's detail unit 0:0 holds 109 bp of steps for piece 0 of H#1#c, and its abridged row states a hapBp of 110
+hapbp-span	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#c's detail unit 0:0 holds 109 bp of steps for piece 0 of H#1#c, and its abridged row states a hapBp of 36
+hapbp-to-last-on-r	claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: R#0#chr1's detail unit 0:0 holds 16 bp of steps for piece 0 of H#1#c, and its abridged row states a hapBp of 6
+hapbp-zero	claims7 audit7 expand7 spec8 rebuild	refuses	Error: not an abridged row: R#0#c	0	36	abridged	H#1#c	0	0	0	11	0	0
+hapstart-wrong-G	claims7 audit7 spec8	reads	tile 10, 2 haplotypes; "R#0#chr": 5 and 5 fragments, 2 departures
+hdr-len-idx-only	verify7 spec8	refuses	WalkFormatError: The header unit is not whole gzip members
+header-empty-line	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+header-len-100	verify7 spec8	refuses	WalkFormatError: The header unit is not whole gzip members
+header-len-right-ctl	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+hole-bogus	claims7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+hole-inside	audit7 spec8 rebuild	reads	tile 4, 1 haplotypes; "R#0#chr": 4 and 4 fragments, 2 departures
+hole-trailing	claims7 spec8 rebuild	reads	tile 4, 1 haplotypes; "R#0#chr": 2 and 2 fragments, 1 departures
+interior-flipped	rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+interior-lengths-traded	audit7 rebuild	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 1 departures
+interior-lengths-traded-abridged	audit7 rebuild	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 1 departures
+last-piece-dropped	claims7 audit7 spec8 rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 6 and 6 fragments, 5 departures
+leftout-other	rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+leftout-twice	verify7 spec8 rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+length-zero	claims7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+line-before-walks	verify7 spec8	refuses	WalkFormatError: The walk file's directory does not match its data: the directory states #walks format:i:8 tile:i:10 revisited:i:0 stay:i:0 abridge:i:1000000 abridgebytes:i:3000000 graph:Z:7619ff637c3b074b leftout:i:1
+line-end-longer	audit7 rebuild	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 1 departures
+line-end-longer-abridged	audit7 rebuild	refuses	WalkFormatError: R#0#c's detail unit 0:0 holds 91 bp of steps for piece 0 of B#1#c, and its abridged row states a hapBp of 84
+missing-overstated	claims7 audit7 spec8	reads	tile 10, 6 haplotypes; "R#0#c": 8 and 8 fragments, 2 departures
+missing-understated	audit7	reads	tile 10, 2 haplotypes; "R#0#chr": 5 and 5 fragments, 2 departures
+missing-understated-G	audit7	reads	tile 10, 2 haplotypes; "R#0#chr": 5 and 5 fragments, 2 departures
+name-cr	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+name-del	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr?": 5 and 5 fragments, 5 departures
+name-del-rows	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+name-e9	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+name-hash-haplotype	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+name-hash-rows	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+name-space	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+node-two-lengths	claims7 audit7 rebuild	reads	tile 10, 6 haplotypes; "R#0#c": 8 and 8 fragments, 2 departures
+nodes-bases	audit7	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 1 departures
+nodes-bases-abridged	audit7	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 1 departures
+nodes-bases-missing	claims7	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 1 departures
+nodes-extra	claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-entry-length-leading-zero	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-leading-zero	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-length-leading-zero	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-nsteps-space	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-plus-sign	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-start-leading-zero	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-tag-leading-zero	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-tag-minus	verify7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+number-unit-leading-zero	verify7 spec8	refuses	WalkFormatError: The unit at byte 795 of the walk file, GRCh38#0#chr's tile 20 over [24, 30) as its table lists it, starts "#unit\tGRCh38#0#chr\t024\t30\ttile\t20"
+on-reference-as-interior	verify7 claims7 spec8	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 2 departures
+on-reference-as-interior-abridged	verify7 claims7 spec8	reads	tile 100, 2 haplotypes; "R#0#c": 3 and 3 fragments, 2 departures
+other-sequence-as-interior	verify7 spec8	reads	tile 10, 2 haplotypes; "R#0#c1": 2 and 2 fragments, 0 departures; "R#0#c2": 3 and 3 fragments, 0 departures
+other-sequence-as-interior-revisited	verify7	reads	tile 10, 1 haplotypes; "R#0#c1": 2 and 2 fragments, 0 departures; "R#0#c2": 1 and 1 fragments, 0 departures
+other-tile-as-interior	verify7 claims7 spec8	reads	tile 10, 2 haplotypes; "R#0#c1": 3 and 3 fragments, 0 departures; "R#0#c2": 3 and 3 fragments, 0 departures
+ownbp-overstated-G	claims7 audit7 spec8	reads	tile 10, 2 haplotypes; "R#0#chr": 5 and 5 fragments, 2 departures
+owntiles-twice	claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+owntiles-wrong	claims7 audit7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+passes-once-as-twice	verify7 audit7 spec8	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+passes-once-per-sequence	verify7 audit7 spec8	reads	tile 10, 1 haplotypes; "R#0#c1": 2 and 2 fragments, 0 departures; "R#0#c2": 2 and 2 fragments, 0 departures
+passes-second-row	verify7 audit7 spec8	reads	tile 10, 1 haplotypes; "R#0#chr": 2 and 2 fragments, 0 departures
+passes-twice-as-once	verify7 audit7 spec8	reads	tile 10, 1 haplotypes; "R#0#chr": 2 and 2 fragments, 0 departures
+passes-understated	verify7 audit7 spec8	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+past-2-53-breakpoint	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+past-2-53-line-end	claims7	reads	tile 100, 1 haplotypes; "R#0#c": 2 and 2 fragments, 0 departures
+past-2-53-own-end	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+past-2-53-stated	verify7 claims7	reads	tile 100, 1 haplotypes; "R#0#c": 2 and 2 fragments, 0 departures
+piece-split-at-jump	audit7 spec8	reads	tile 100, 6 haplotypes; "R#0#c": 7 and 7 fragments, 14 departures
+piece-walk-and-abridged	claims7 audit7 spec8 rebuild	reads	tile 100, 2 haplotypes; "R#0#c": 4 and 4 fragments, 1 departures
+placement-other-copy	none	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+placement-other-copy-abridged	none	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+point	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 6 departures
+record-bogus-path	audit7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 6 departures
+record-dropped	audit7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 4 departures
+record-leavepasses	claims7 audit7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+record-passes	audit7 spec8	reads	tile 10, 7 haplotypes; "R#0#c": 8 and 8 fragments, 9 departures
+record-stretch-short	claims7 spec8	reads	tile 10, 7 haplotypes; "R#0#c": 8 and 8 fragments, 9 departures
+record-within-piece	claims7 audit7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 6 departures
+ref-lengths	claims7 audit7 spec8 rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+ref-rows-overlap	claims7	reads	tile 100, 6 haplotypes; "R#0#c": 9 and 9 fragments, 8 departures
+ref-rows-overlap-tiles	claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+ref-rows-swapped	claims7 audit7 spec8	reads	tile 100, 6 haplotypes; "R#0#c": 9 and 9 fragments, 4 departures
+ref-strand-flipped	rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+reference-haplotype	claims7 spec8 rebuild	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+reference-haplotype-name-walk	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+reference-haplotype-walk	verify7 claims7 spec8	reads	tile 10, 5 haplotypes; "HG002#1#chr1": 5 and 5 fragments, 12 departures; "HG002#1#chr2": 5 and 5 fragments, 5 departures
+reference-none	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+reference-short-name-walk	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#chr": 5 and 5 fragments, 5 departures
+reference-twice	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+reference-wrong	claims7 rebuild spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+revisited-as-interior	claims7	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 9 departures
+revisited-count	verify7 audit7 spec8	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+revisited-zero	verify7 claims7 audit7 spec8	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+route-rows-swapped	claims7 spec8	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+route-twice	claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+route-wrong-way	claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+row-new-kind-in-blocks	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: The unit at byte 1409 of the walk file, GRCh38#0#chr's blocks 0 over [0, 12) as its table lists it, holds a row that is not one of GRCh38#0#chr's blocks rows: "GRCh38#0#chr\t0\t12\tnote\ta later addit
+row-new-kind-in-departures	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: The unit at byte 322 of the walk file, GRCh38#0#chr's departures . over [0, 10) as its table lists it, holds a row that is not one of GRCh38#0#chr's departure rows: "GRCh38#0#chr\t0\t10\tnote\ta later
+row-new-kind-in-detail	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: The unit at byte 1030 of the walk file, GRCh38#0#chr's detail 0:0 over [0, 6) as its table lists it, holds a row that is not one of GRCh38#0#chr's nodes, route, walk rows: "GRCh38#0#chr\t0\t6\tnote\ta
+row-new-kind-in-tile	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: The unit at byte 166 of the walk file, GRCh38#0#chr's tile 0 over [0, 12) as its table lists it, holds a row that is not one of GRCh38#0#chr's ref, nodes, route, walk, abridged rows: "GRCh38#0#chr\t0\
+seq-bases-missing	claims7	reads	tile 10, 2 haplotypes; "R#0#chr1": 4 and 4 fragments, 1 departures; "R#0#chr10": 4 and 4 fragments, 1 departures; "R#0#chr11": 4 and 4 fragments, 1 departures; "R#0#chr2": 4 and 4 fragments, 1 departures; "R#0#chr22": 4 and 4 fragments, 1 departures; "R#0#chr3": 4 and 4 fragments, 1 departures; "R#0#chr9": 4 and 4 fragments, 1 departures; "R#0#chrM": 4 and 4 fragments, 1 departures; "R#0#chr
+seq-piece-number	claims7 spec8 rebuild	reads	tile 10, 2 haplotypes; "R#0#chr1": 4 and 4 fragments, 1 departures; "R#0#chr10": 5 and 5 fragments, 1 departures; "R#0#chr11": 4 and 4 fragments, 1 departures; "R#0#chr2": 4 and 4 fragments, 1 departures; "R#0#chr22": 4 and 4 fragments, 1 departures; "R#0#chr3": 4 and 4 fragments, 1 departures; "R#0#chr9": 4 and 4 fragments, 1 departures; "R#0#chrM": 4 and 4 fragments, 1 departures; "R#0#chr
+seq-piece-offset	claims7 audit7 spec8 rebuild	reads	tile 10, 2 haplotypes; "R#0#chr1": 4 and 4 fragments, 1 departures; "R#0#chr10": 4 and 4 fragments, 1 departures; "R#0#chr11": 4 and 4 fragments, 1 departures; "R#0#chr2": 4 and 4 fragments, 1 departures; "R#0#chr22": 4 and 4 fragments, 1 departures; "R#0#chr3": 4 and 4 fragments, 1 departures; "R#0#chr9": 4 and 4 fragments, 1 departures; "R#0#chrM": 4 and 4 fragments, 1 departures; "R#0#chr
+sqbad	audit7	reads	tile 10, 2 haplotypes; "R#0#chr1": 4 and 4 fragments, 1 departures; "R#0#chr10": 4 and 4 fragments, 1 departures; "R#0#chr11": 4 and 4 fragments, 1 departures; "R#0#chr2": 4 and 4 fragments, 1 departures; "R#0#chr22": 4 and 4 fragments, 1 departures; "R#0#chr3": 4 and 4 fragments, 1 departures; "R#0#chr9": 4 and 4 fragments, 1 departures; "R#0#chrM": 4 and 4 fragments, 1 departures; "R#0#chr
+table-S-wrong	verify7 claims7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+table-empty	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures; "GRCh38#0#chs": 0 and 0 fragments, 0 departures
+table-named	claims7 spec8	refuses	WalkFormatError: GRCh38#0#chr's table, at byte 1042 of the walk file, starts "#unit\tGRCh38#0#chr\t0\t30\ttable\tx"
+tag-entry	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: GRCh38#0#chr's unit table holds #entry	GRCh38#0#chr	0	12	tile	0	166	156	XX:Z:later
+tag-graph-i	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+tag-malformed	claims7 spec8	refuses	WalkFormatError: The unit at byte 165 of the walk file, GRCh38#0#chr's tile 0 over [0, 12) as its table lists it, holds a row with a column after its fixed ones that is no tag, "zz": "GRCh38#0#chr\t0\t12\tref\tGRCh38#
+tag-row-walk-underscore	claims7 spec8	refuses	WalkFormatError: The unit at byte 1030 of the walk file, GRCh38#0#chr's detail 0:0 over [0, 6) as its table lists it, holds a row with a column after its fixed ones that is no tag, "my_note:Z:later": "GRCh38#0#chr\t0\
+tag-twice	spec8	reads	tile 10, 2 haplotypes; "R#0#c1": 3 and 3 fragments, 0 departures; "R#0#c2": 3 and 3 fragments, 0 departures
+tag-type-letter	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+tag-unit-table	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: GRCh38#0#chr's table, at byte 2535 of the walk file, starts "#unit\tGRCh38#0#chr\t0\t30\ttable\t.\tXX:Z:later"
+tag-unit-tile	verify7 claims7 audit7 expand7 spec8 rebuild	refuses	WalkFormatError: The unit at byte 166 of the walk file, GRCh38#0#chr's tile 0 over [0, 12) as its table lists it, starts "#unit\tGRCh38#0#chr\t0\t12\ttile\t0\tXX:Z:later"
+tile-empty	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+tile-missing	verify7 claims7 spec8	refuses	WalkFormatError: The walk file's #walks line states no tile:i:
+tile-past-2-40	verify7	reads	tile 1099511627777, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+tile-zero	verify7 claims7 spec8	reads	tile 0, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+token-minus-zero	verify7	reads	tile 100, 7 haplotypes; "R#0#c": 8 and 8 fragments, 10 departures
+u2-leading-zero	claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+unit-line-in-header	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+unit-line-inside-unit	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+unit-new-kind-no-seq	verify7	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+unit-new-kind-other-seq	verify7 spec8	refuses	WalkFormatError: GRCh38#0#chr's unit table holds #entry	.	0	0	meta	.	2535	64
+walk-span-wrong	claims7 audit7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+walks-bytes-tag	verify7 spec8	refuses	WalkFormatError: The walk file's directory does not match its data: the directory states #walks format:i:8 tile:i:10 revisited:i:0 stay:i:0 abridge:i:1000000 abridgebytes:i:3000000 graph:Z:7619ff637c3b074b leftout:i:1
+walks-differ-ctl	verify7 spec8	refuses	WalkFormatError: The walk file's directory does not match its data: the directory states #walks format:i:8 tile:i:10 revisited:i:0 stay:i:0 abridge:i:1000000 abridgebytes:i:3000000 graph:Z:7619ff637c3b074b leftout:i:1
+walks-differ-len100	verify7 spec8	refuses	WalkFormatError: The header unit is not whole gzip members
+wide	verify7 claims7 spec8	reads	tile 10, 4 haplotypes; "GRCh38#0#chr": 5 and 5 fragments, 5 departures
+# reads 143, refuses 54, of 197
