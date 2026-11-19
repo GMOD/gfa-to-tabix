@@ -89,6 +89,19 @@ commit; the worktree branch `compare-gap` holds the same commits.
     `--haplotype_gap` version. The draft is in the session transcript
 - **Build both views in bandage-core,** credited to gfaidx-viz.
   Copy-number is proven; the link list waits on the proof above
+- **Concept inventory, running.** The owner, worried about our own format
+  proliferation, asked for it before the freeze. A Fable 5.2 agent derives
+  the minimal design from the requirements, then classes every format 8
+  concept, including the `spec-sentences` branch's, as restated GFA,
+  derived, writer policy or packaging, with a verdict for each. It also
+  drafts what the README should say. Its report goes to gfa-to-tabix-bb.
+  Anything it would drop goes under the three-Fable format-change rule.
+  See `docs/open-problems.md`, "Concepts beyond GFA"
+- **README:** it doesn't say what gfa-to-tabix is, and the owner finds its
+  schematics too complex (`docs/open-problems.md`, "The README doesn't
+  say what gfa-to-tabix is"). Rewrite its opening from the inventory's
+  minimal concept set, with one figure that has concrete labels. Show the
+  owner before landing
 - **Later additions, not before the freeze:**
   - a lookup side file from a haplotype's own coordinates to tiles, built
     from walk rows' `path` and `hapOffset`
