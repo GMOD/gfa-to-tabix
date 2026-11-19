@@ -43,15 +43,22 @@ budget-put-back	walks-two-refs.gfa	claims7	the header and directory stating abri
 budget-steps-over	walks-two-refs.gfa	claims7	the header and directory stating abridge:i:1 over tiles whose kept pieces cost more; format 8, and not this writer's policy
 costliest-not-first	broken/follow.gfa	claims7 spec8	detail records 0 and 1 renumbered, the cheaper line first
 default-copy-named	broken/tie.gfa	claims7 spec8	A's exit given @1, the copy the default takes anyway: a second encoding of one walk
+default-leave-named	broken/tie.gfa	claims7 spec8	E's first choice given :0, the occurrence stepping along R stops at anyway
+default-start-named	broken/tie.gfa	claims7 spec8	E's startHandle 4 given @0, the first occurrence, which it starts on with no @k
 departures-unit-empty	walks-two-refs.gfa	verify7	a departures unit 0 80 with no record, listed in its table
 detail-interior-flipped	walks-contig-ends.gfa	rebuild	detail 10:0's route interior >12 made <12, so L's abridged piece decodes to >11<12>13 at the same bp
+detail-unit-empty	walks-two-refs.gfa	verify7 claims7 expand7 spec8	the detail unit 0:2 with no row
+detail-units-swapped	walks-two-refs.gfa	claims7 spec8	tile 0's detail units 0:1 and 0:2 written in the other order
 dir-tag-header-line	walks-two-refs.gfa	verify7 spec8	a tag on the directory's #header line
 dir-tag-seq-line	walks-two-refs.gfa	verify7 audit7 spec8	a tag on the directory's line of GRCh38#0#chr
 directory-empty-line	walks-two-refs.gfa	verify7 spec8	an empty line before the directory's #header line
+directory-field-empty	walks-two-refs.gfa	verify7 spec8	two tabs side by side in the directory's #header line
 empty-block	walks-two-refs.gfa	verify7 claims7	an empty departure block after the table
 entry-dropped	walks-two-refs.gfa	verify7	the table entry of the departures unit at 10 left out, the unit's bytes kept, so the entries no longer tile the bytes
 entry-start-not-integer	walks-two-refs.gfa	verify7 spec8	the table entry of the departures unit at 10 stating its start as 1e1, its unit's #unit line kept at 10
 field-empty	walks-two-refs.gfa	verify7	a tab at the end of the #haplotype D#1 line, an empty field
+field-empty-row	walks-two-refs.gfa	verify7 claims7	two tabs side by side after the choices of I's walk row in tile 0, before a tag
+flip-of-own-flip	broken/turn.gfa	claims7 spec8	A turns round on node 2 by the route >2 . <2, which is its own flip; its choice token 0 made 1, flip 1
 format-7	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	the header and directory stating format:i:7
 g1-walk-order	walks-two-refs.gfa	claims7 spec8	H's and D's walk rows swapped in tile 0
 graph-other	walks-two-refs.gfa	rebuild	graph:Z: 7619ff637c3b074b, the hash of the GFA's S lines, made 7619ff637c3b074c
@@ -88,15 +95,25 @@ missing-understated	walks-records.gfa	audit7	a record's missingBp understated
 missing-understated-G	walks-records.gfa	audit7	G's record with missingBp 18 made 5
 name-cr	walks-two-refs.gfa	verify7 spec8	H#1#h named with a carriage return after its H
 name-del	walks-two-refs.gfa	verify7 spec8	GRCh38#0#chr named with the byte 0x7F at its end, in every line and in the directory
+name-del-rows	walks-two-refs.gfa	verify7 spec8	H#1#h named with the byte 0x7F after its H in its walk rows and its record, and nowhere in the header or the directory
 name-e9	walks-two-refs.gfa	verify7 spec8	H#1#h named with the byte 0xE9 after its H
+name-hash-haplotype	walks-two-refs.gfa	verify7 spec8	the #haplotype line of H#1 stating #H#1
+name-hash-rows	walks-two-refs.gfa	verify7 spec8	H#1#h named #H#1#h in its walk rows and its record, and nowhere in the header or the directory
 name-space	walks-two-refs.gfa	verify7 spec8	H#1#h named with a space after its H, in every row and in its #haplotype line
 node-two-lengths	broken/ends-off.gfa	claims7 audit7 rebuild	node 12, 7 bp in the nodes rows of tiles 10 and 20, stated as 9 bp in tile 0's, where A and F each walk it once
 nodes-bases	broken/follow.gfa	audit7	the first base of node 11 in the tile's nodes row made T
 nodes-bases-abridged	broken/follow.gfa	audit7	the same in B's detail record
 nodes-bases-missing	broken/follow.gfa	claims7	the SQ:Z: tag dropped from B's detail record's nodes row, in a file whose ref rows carry bases
 nodes-extra	walks-two-refs.gfa	claims7 spec8	tile 0's nodes row lists a node no route visits
+number-entry-length-leading-zero	walks-two-refs.gfa	verify7	the table entry of tile 20 stating its offset with a leading zero
 number-leading-zero	walks-two-refs.gfa	verify7	H's walk row in tile 0 stating its hapOffset 100 as 0100
+number-length-leading-zero	walks-two-refs.gfa	verify7	tile 20's ref row stating its step's length 6 as 06
+number-nsteps-space	walks-two-refs.gfa	verify7	I's walk row in tile 0 stating its nsteps 1 with a space before it
 number-plus-sign	walks-two-refs.gfa	verify7	Q's record stating its ownBp 6 as +6
+number-start-leading-zero	walks-two-refs.gfa	verify7	I's walk row in tile 0 stating its start 0 as 00
+number-tag-leading-zero	walks-two-refs.gfa	verify7 claims7 spec8	the header and directory stating tile:i:010
+number-tag-minus	walks-two-refs.gfa	verify7 spec8	the header and directory stating leftout:i:-1
+number-unit-leading-zero	walks-two-refs.gfa	verify7 spec8	tile 20's #unit line stating its start 24 as 024, its table entry kept at 24
 on-reference-as-interior	broken/follow.gfa	verify7 claims7 spec8	A follows the reference; its step on node 3 written as a route's interior, off R, at the same steps, span and bp
 on-reference-as-interior-abridged	broken/follow.gfa	verify7 claims7 spec8	the same in an abridged tile: A's detail record given the route, its blocks row 0+36 made 0+12,6,6+18
 other-sequence-as-interior	broken/far.gfa	verify7 spec8	B's last piece, its steps on nodes 1 and 2, which c1 passes once, written as the interior of a route with no exit in c2's tile 10, its row in c1 left out, at the same steps and bp; claims7 fails it whole and passes it a sequence at a time
@@ -109,7 +126,9 @@ passes-once-per-sequence	broken/shared.gfa	verify7 audit7 spec8	node 2, which c1
 passes-second-row	walks-repeat.gfa	verify7 audit7 spec8	node 2's second ref row stating 3 passes where the first states 2
 passes-twice-as-once	walks-repeat.gfa	verify7 audit7 spec8	node 2, passed twice, stated as passed once in both ref rows that step it, and revisited 2 made 1
 passes-understated	broken/repeat.gfa	verify7 audit7 spec8	nodes 2 and 3, which the reference passes 3 times, stated as passed twice on every step
+past-2-53-breakpoint	walks-two-refs.gfa	verify7	D's record stating its rejoin breakpoint as 2^53 + 1
 past-2-53-line-end	broken/edge.gfa	claims7	H's line, which ends at 2^53, started 1 bp later, so its one piece ends at 2^53 + 1 and no column states a number above 2^53
+past-2-53-own-end	walks-two-refs.gfa	verify7	D's record stating hapStart 2^53 and ownBp 1, each at most 2^53 and their sum above it
 past-2-53-stated	broken/edge.gfa	verify7 claims7	H's line started 19 bp later, at 2^53 + 1
 piece-split-at-jump	broken/jumps.gfa	audit7 spec8	C's piece >1>6>1>6 written as two pieces, >1 and >6>1>6, in the one tile, with no departure record for the jump from 1 to 6 between them
 piece-walk-and-abridged	broken/follow.gfa	claims7 audit7 spec8 rebuild	A's piece given a walk row in the tile beside its abridged row
@@ -124,9 +143,12 @@ record-stretch-short	broken/tie.gfa	claims7 spec8	B's record, whose end nodes sp
 record-within-piece	walks-two-refs.gfa	claims7 audit7 spec8	a record for H's departure inside one piece
 ref-lengths	walks-two-refs.gfa	claims7 audit7 spec8 rebuild	tile 10's ref lengths 6,6 made 5,7
 ref-rows-overlap	broken/ref-gap.gfa	claims7	the tile's second ref row, at 30, stated at 12, over bases 12 to 18 of the first
+ref-rows-overlap-tiles	walks-two-refs.gfa	claims7 spec8	tile 20's ref row, at 24, stated at 23 with 7 bp, over the last base of tile 10's, and the tile's extent and rows moved with it
 ref-rows-swapped	broken/ref-gap.gfa	claims7 audit7 spec8	the tile's two ref rows, at 0 and 30, written in the other order
 ref-strand-flipped	walks-two-refs.gfa	rebuild	tile 20's ref step >5 made <5, and every walk row's start there with it
 reference-haplotype	walks-two-refs.gfa	claims7 spec8 rebuild	#reference naming GRCh38#0, a haplotype, where it names the sample of the ref rows' paths
+reference-haplotype-walk	broken/hapref-alt.gfa	verify7 claims7 spec8	HG002#1#alt1 in walk rows and HG002#1 in a #haplotype line, in a file whose reference sequences are HG002#1#chr1 and HG002#1#chr2: a path on a haplotype of the reference that is no reference sequence
+reference-none	walks-two-refs.gfa	verify7 claims7 spec8	the header with no #reference line
 reference-twice	walks-two-refs.gfa	verify7 claims7 spec8	#reference GRCh38 written twice
 reference-wrong	walks-two-refs.gfa	claims7 rebuild spec8	#reference CHM13 over GRCh38's rows
 revisited-as-interior	broken/tie.gfa	claims7	A's step on node 2, which the placement puts on R at 24-30, written as a route's interior with no exit: A ends off the reference
@@ -141,19 +163,23 @@ seq-piece-number	walks-sequences.gfa	claims7 spec8 rebuild	H#1's piece 2, on chr
 seq-piece-offset	walks-sequences.gfa	claims7 audit7 spec8 rebuild	the hapOffset 16 of H#1's piece 2, on chr10, made 17, where its piece 1, on chr9, ends at 16
 sqbad	walks-sequences.gfa	audit7	a base of a ref row's SQ:Z: changed
 table-S-wrong	walks-two-refs.gfa	verify7 claims7	the table stating 0 40 for 0 36
+table-empty	walks-two-refs.gfa	verify7 claims7 spec8	a table of a sequence GRCh38#0#chs with no entry, which the directory lists
 table-named	walks-two-refs.gfa	claims7 spec8	the table named x
 tag-entry	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a tag on every #entry line
+tag-graph-i	walks-two-refs.gfa	verify7	the header and directory stating graph:i:5
 tag-malformed	walks-two-refs.gfa	claims7 spec8	a last column zz, which is no tag, on tile 0's ref row
 tag-row-walk-underscore	walks-two-refs.gfa	claims7 spec8	a tag my_note:Z:later, its name not letters and digits, on every walk row
 tag-twice	broken/far.gfa	spec8	two tags named zz on every row and on the #walks line
 tag-type-letter	walks-two-refs.gfa	verify7	the header and directory stating revisited:Z:0
 tag-unit-table	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a tag on the table's #unit line
 tag-unit-tile	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a tag on every tile's #unit line
-tile-missing	broken/far.gfa	verify7 spec8	the header and directory with no tile:i:; the other checkers end in a traceback on it
+tile-empty	walks-two-refs.gfa	verify7 claims7 spec8	a tile unit named 30 with no row, after the last departures unit, listed in its table
+tile-missing	broken/far.gfa	verify7 claims7 spec8	the header and directory with no tile:i:
 tile-past-2-40	walks-two-refs.gfa	verify7	the header and directory stating tile:i:1099511627777, 2^40 + 1
-tile-zero	walks-two-refs.gfa	verify7	the header and directory stating tile:i:0; the other checkers end in a traceback on it
+tile-zero	walks-two-refs.gfa	verify7 claims7 spec8	the header and directory stating tile:i:0
 token-minus-zero	broken/tie.gfa	verify7	A's choice token 0 written -0
 u2-leading-zero	walks-two-refs.gfa	claims7 spec8	tile 10 named 010
+unit-line-in-header	walks-two-refs.gfa	verify7	a header line #unitx, which begins #unit
 unit-line-inside-unit	walks-two-refs.gfa	verify7	a unit of a later kind whose second line begins #unit
 unit-new-kind-no-seq	walks-two-refs.gfa	verify7	a unit in no table, after the last one, which a #meta line of the directory names
 unit-new-kind-other-seq	walks-two-refs.gfa	verify7 spec8	a unit of an unknown kind about no sequence, its #entry saying so, listed in GRCh38#0#chr's table

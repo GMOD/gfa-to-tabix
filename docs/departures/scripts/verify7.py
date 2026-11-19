@@ -21,6 +21,9 @@
 # - every line of the directory and of the data file ends in a newline and
 #   none is empty or holds an empty field; one `#reference` line; no line
 #   of a unit after its first begins `#unit`, whatever the unit's kind
+# - the reference is whole haplotypes: no `walk`, `abridged` or `blocks`
+#   row's path, and no `#haplotype` line, is listed under what a sequence
+#   of the directory is listed under, its `sample#haplotype` or its sample
 # - every number of a `#unit`, `#entry`, `#hole` or directory line and of a
 #   row's fixed columns is decimal digits with no sign, no leading zero and
 #   no space, `0` for zero, a delta token and a choice token alone
@@ -113,6 +116,11 @@ def names(*fields):
     return all(re.fullmatch(NAME, x) for x in fields)
 
 
+def listed_under(path):
+    fields = path.split('#')
+    return '#'.join(fields[:2]) if len(fields) > 2 else fields[0]
+
+
 raw_directory = open(path + '.idx', 'rb').read()
 if not_plain(raw_directory):
     fail('the directory holds an empty line or field, or does not end in a newline')
@@ -139,9 +147,10 @@ if any(len(c) != 3 for c in listed):
 if not numbers(directory[1][2], *(x for c in listed for x in c[1:])):
     fail('a directory line states an offset or length that is not a number as the page writes one')
 if not names(*(c[0] for c in listed)):
-    fail('a directory line names a sequence in bytes outside 0x21 to 0x7E')
+    fail('a directory line names a sequence in bytes outside 0x21 to 0x7E, or one that starts with #')
 header_end = int(directory[1][2])
 tables = [(c[0], int(c[1]), int(c[2])) for c in listed]
+reference_haplotypes = {listed_under(c[0]) for c in listed}
 stated_tile = int(next(t for t in walks if t.startswith('tile:i:'))[7:])
 if not 1 <= stated_tile <= 1 << 40:
     fail(f'tile:i: is {stated_tile}, not 1 to 2^40')
@@ -204,12 +213,17 @@ LISTS = dict(
 LISTS = {kind: (re.compile(held), re.compile(wrong)) for kind, (held, wrong) in LISTS.items()}
 
 
-def written(row, c):
+def miswritten(row, c):
     short, lists = FIXED[row]
     at = 4 + len(short)
-    return (len(c) >= at + len(lists) and ROW[row].fullmatch('\t'.join(c[1:at])) is not None
-            and all((none and field == '.') or (LISTS[kind][0].fullmatch(field) and not LISTS[kind][1].search(field))
-                    for field, (kind, none) in zip(c[at:], lists)))
+    return ('a column short' if len(c) < at + len(lists)
+            else 'a path that starts with # or holds a byte outside 0x21 to 0x7E' if short and not names(c[4])
+            else 'a column not written as the page writes it, a number with a sign, a leading zero or a space among '
+                 'them' if not ROW[row].fullmatch('\t'.join(c[1:at]))
+            else next((f'a list not written as the page writes one{", or a length of 0" * (kind == "lengths")}'
+                       for field, (kind, none) in zip(c[at:], lists)
+                       if not ((none and field == '.')
+                               or (LISTS[kind][0].fullmatch(field) and not LISTS[kind][1].search(field)))), None))
 
 
 COORDINATES = dict(ref=(5, 6), nodes=(), route=(), walk=(5, 6), abridged=(5, 6), blocks=(5,), departure=(5, 8, 11))
@@ -253,7 +267,8 @@ def check_unit(at, length, text):
     if len(head) != 6:
         fail(f'the #unit line at {at} is not its sequence, start, end, kind and name alone: {lines[0][:80]}')
     if not names(head[1]):
-        fail(f'the #unit line at {at} names a sequence in bytes outside 0x21 to 0x7E: {lines[0][:80]}')
+        fail(f'the #unit line at {at} names a sequence in bytes outside 0x21 to 0x7E, or one that starts with #: '
+             f'{lines[0][:80]}')
     if not numbers(head[2], head[3]):
         fail(f'the #unit line at {at} states a start or end that is not a number as the page writes one: '
              f'{lines[0][:80]}')
@@ -278,9 +293,12 @@ def check_unit(at, length, text):
             fail(f'a line of another sequence in the unit at {at}: {line[:80]}')
         if len(c) < 4 or c[3] not in ROWS[kind]:
             fail(f'a row of a kind a {kind} unit doesn\'t hold, at {at}: {line[:80]}')
-        if not written(c[3], c):
-            fail(f'a {c[3]} row with a column short, a number not written as the page writes one, a length of 0 '
-                 f'or a path in bytes outside 0x21 to 0x7E, at {at}: {line[:80]}')
+        wrong = miswritten(c[3], c)
+        if wrong:
+            fail(f'a {c[3]} row with {wrong}, at {at}: {line[:80]}')
+        if c[3] in ('walk', 'abridged', 'blocks') and listed_under(c[4]) in reference_haplotypes:
+            fail(f'a {c[3]} row of a path on {listed_under(c[4])}, which a reference sequence is on too, where the '
+                 f'reference is whole haplotypes, at {at}: {line[:80]}')
         a, b = int(c[1]), int(c[2])
         stated = [a, b, sum(int(c[k]) for k in SUMS.get(c[3], ()))] + [int(c[k]) for k in COORDINATES[c[3]]]
         if max(stated) > MAX:
@@ -333,7 +351,11 @@ def check_table(at, length, seq, head_lo, head_hi, lines):
     listed = ['\t'.join(l.split('\t')[1:]) for l in lines]
     if not lines:
         fail(f'the table of {seq} lists no unit')
-    if any(not l.startswith('#entry\t') or l.count('\t') != 7 for l in lines) or listed != state['units']:
+    if any(not l.startswith('#entry\t') or l.count('\t') != 7 for l in lines):
+        fail(f'the table of {seq} holds a line that is not an #entry of seven columns')
+    if not numbers(*(x for l in lines for k, x in enumerate(l.split('\t')) if k in (2, 3, 6, 7))):
+        fail(f'the table of {seq} states a start, end, offset or length that is not a number as the page writes one')
+    if listed != state['units']:
         fail(f'the table of {seq} does not list its units as they are, in file order')
     if any(int(l.split('\t')[7]) <= 0 for l in lines):
         fail(f'the table of {seq} lists a unit of 0 bytes')
@@ -427,7 +449,7 @@ with open(path, 'rb') as f:
             if lines[0] != '\t'.join(walks):
                 fail('the directory\'s line 1 differs from the header\'s #walks line')
             if any(not l.startswith('#') or l.startswith('#unit') for l in lines):
-                fail('a header line that is not a header line')
+                fail('a header line that does not start with #, or begins #unit')
             stated_lines = [l.split('\t') for l in lines]
             if sum(c[0] == '#reference' for c in stated_lines) != 1:
                 fail('the header does not hold one #reference line')
@@ -435,7 +457,12 @@ with open(path, 'rb') as f:
             if any(len(c) < 4 or not numbers(c[2], c[3]) or int(c[3]) > MAX for c in holes):
                 fail('a #hole line without a start and end written as the page writes a number, at most 2^53')
             if not all(len(c) > 1 and names(c[1]) for c in stated_lines if c[0] in ('#reference', '#haplotype', '#hole')):
-                fail('a #reference, #haplotype or #hole line states a name in bytes outside 0x21 to 0x7E')
+                fail('a #reference, #haplotype or #hole line states a name in bytes outside 0x21 to 0x7E, or one '
+                     'that starts with #')
+            shared = sorted(c[1] for c in stated_lines if c[0] == '#haplotype' and c[1] in reference_haplotypes)
+            if shared:
+                fail(f'a #haplotype line lists {shared[0]}, which a reference sequence is on, where the reference '
+                     f'is whole haplotypes')
         if n == 28 and not text:
             if unit:
                 check_unit(*unit)

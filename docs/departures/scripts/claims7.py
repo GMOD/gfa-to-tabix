@@ -169,6 +169,7 @@ def decode(t, cols):
     start, sk = with_k(cols[9], '@')
     start = int(start)
     choices = []
+    redundant = []
     prev = 0
     if cols[10] != '.':
         for tok in cols[10].split(','):
@@ -177,7 +178,8 @@ def decode(t, cols):
             v = int(tok)
             prev += v >> 1
             choices.append((prev, v & 1, ek, xk))
-    redundant = []
+            if v & 1 and t.oriented(prev, 1) == t.oriented(prev, 0):
+                redundant.append('flip 1 on a route that is its own flip')
     empty_routes_along_r = 0
     steps = []
     q = 0
@@ -259,8 +261,9 @@ def span(t, positions):
 
 
 claim('U1', 'units in file order: header; sequences in byte order; per sequence its tile and departures '
-      'units by start, a tile before the blocks starting there, smaller blocks first; then detail units, a tile\'s '
-      'blocks unit directly after its last detail unit; then its table')
+      'units by start, a tile before the blocks starting there, smaller blocks first; then detail units in order '
+      'of their tile\'s start and then their number, a tile\'s blocks unit directly after its last detail unit; '
+      'then its table')
 claim('U2', 'a tile\'s name is its start, a multiple of tile written in decimal with no leading zero, and every ref '
       'step\'s offset lies in [name, name + tile)')
 claim('U3', 'a tile\'s extent runs from the first base its ref rows\' stretches cover to the last')
@@ -279,6 +282,8 @@ claim('H1', '#haplotype lists what each path with walk or abridged rows is liste
 claim('H2', 'revisited:i:0 means no ref row or departure record has a pass count above 1 and no walk row has @k '
       'or :k')
 claim('H3', 'one #reference line names the reference sample, the sample of every ref row\'s path')
+claim('H4', 'the reference is whole haplotypes: no path with walk or abridged rows, and no #haplotype line, is '
+      'listed under what a reference sequence is listed under')
 claim('R1', 'a ref row\'s lengths and passes have one entry per step, passes . exactly when every count is 1')
 claim('R3', 'a tile of S holds at least one ref row, and ref rows of S only')
 claim('R2', 'a tile\'s ref rows are written in hapOffset order')
@@ -297,15 +302,17 @@ claim('N3', 'a node has one length in every ref and nodes row of the file that h
 claim('N5', 'no route interior of a tile or of its detail units holds a node of the tile\'s own R')
 claim('S1', 'SQ:Z: is on every ref and nodes row of a file or on none, and holds as many bases as the row\'s lengths '
       'add up to')
-claim('T1', 'a route is stored the way round whose handles sort first: entry (none first), interior, exit')
+claim('T1', 'a route is stored the way round that sorts first: by entry (none first), then interior, handle by '
+      'handle as integers and the shorter first where one begins the other, then exit (none first)')
 claim('T2', 'each distinct route is written once per tile or detail unit, a route and its flip counting as one')
 claim('T3', 'a route with no entry or no exit has a non-empty interior')
 claim('T4', 'a route\'s entry and exit lie on R')
 claim('T5', 'every route row of a tile or detail unit is taken by one of its walk rows')
 claim('T6', 'route rows are in order of the first position in R of their entry\'s or exit\'s node, whichever is '
-      'first, a route with neither last, then by entry (none first), interior and exit')
+      'first, then by entry (none first), interior and exit')
 claim('W1', 'every walk row decodes by the spec\'s rules to nsteps steps')
-claim('W2', 'the tool writes @k and :k only where they differ from the defaults, so a file has one encoding')
+claim('W2', 'a walk row has one encoding: @k and :k only where they differ from the defaults, and flip 0 on a '
+      'route that is its own flip')
 claim('W3', 'a walk continues along R where R\'s next position is the step\'s, and takes a route with an empty '
       'interior only where it is not')
 claim('W4', 'a walk row\'s start end is the span of all its placed steps')
@@ -604,6 +611,8 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
                         bad('G6', ('#walks', tag))
                 if header.get('format') != '8':
                     sys.exit(f'claims7.py: {args.file}: format {header.get("format")}, not walk format 8')
+                if not re.fullmatch('[1-9][0-9]*', header.get('tile', '')) or int(header['tile']) > 1 << 40:
+                    sys.exit(f'claims7.py: {args.file}: tile:i: is {header.get("tile")}, not a number from 1 to 2^40')
                 tile_size = int(header['tile'])
             elif c[0] == '#haplotype':
                 haplotypes_listed.append(c[1])
@@ -910,6 +919,9 @@ for seq, us in units_of.items():
     for k, u in enumerate(moved):
         if u[0] == 'blocks' and last_detail.get(u[1]) != k - 1:
             bad('U1', (seq, 'blocks unit', u[1], 'not directly after its tile\'s last detail unit'))
+    numbered = [tuple(map(int, u[1].split(':'))) for u in moved if u[0] == 'detail']
+    if numbered != sorted(numbered):
+        bad('U1', (seq, 'detail units not in order of tile and number', numbered[:6]))
     tb = body[:first_detail]
 
     def order_key(u):
@@ -972,6 +984,10 @@ if len(references) != 1:
     bad('H3', ('#reference lines', references[:4]))
 
 # H1
+on_reference = (haplotypes_with_rows | set(haplotypes_listed)) & {listed_under(seq) for seq in sequences}
+if on_reference:
+    bad('H4', ('with rows or listed, and a reference sequence\'s too', sorted(on_reference)[:5]))
+seen('H4')
 if haplotypes_listed != sorted(set(haplotypes_listed), key=lambda s: s.encode('utf-8', 'surrogateescape')):
     bad('H1', ('not unique or not in byte order', haplotypes_listed[:5]))
 if set(haplotypes_listed) != haplotypes_with_rows:

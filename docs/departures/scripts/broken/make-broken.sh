@@ -325,3 +325,38 @@ corrupt name-cr "$T0" --all 'H#1' $'H\r#1'
 corrupt name-e9 "$T0" --all 'H#1' $'H\xe9#1'
 corrupt name-del "$T0" --all "$G" "$G"$'\x7f'
 corrupt reference-haplotype "$T0" $'#reference\tGRCh38\n' $'#reference\tGRCh38#0\n'
+
+# the reference as whole haplotypes, the default occurrences left unnamed, and the places an independent
+# reviewer found no planted file for: a name in rows alone, each kind of empty unit, a number in each place
+# the page names one, a field, a tag's type, 2^53 at a record's own sequence and breakpoint, and #reference
+sed -e $'s/^W\tHG002\t2\t/W\tHG002z\t2\t/' -e $'s/^W\tHG002\t1\talt1\t/W\tHG002y\t1\talt1\t/' "$BROKEN/hapref-alt.gfa" > "$W/hapref-alt-standin.gfa"
+build hapalt "$W/hapref-alt-standin.gfa" HG002 --tile 10
+corrupt reference-haplotype-walk "$W/hapalt.HG002.walks.gz" --all 'HG002z#2' 'HG002#2' --all 'HG002y#1' 'HG002#1'
+corrupt default-start-named "$TIE100" --all $'walk\tE#1#c\t0\t0\t0\t5\t4\t7,' $'walk\tE#1#c\t0\t0\t0\t5\t4@0\t7,'
+corrupt default-leave-named "$TIE100" --all $'walk\tE#1#c\t0\t0\t0\t5\t4\t7,' $'walk\tE#1#c\t0\t0\t0\t5\t4\t7:0,'
+corrupt name-hash-rows "$T0" --all $'\tH#1#h\t' $'\t#H#1#h\t'
+corrupt name-del-rows "$T0" --all $'\tH#1#h\t' $'\tH\x7f#1#h\t'
+corrupt name-hash-haplotype "$T0" $'#haplotype\tH#1\n' $'#haplotype\t#H#1\n'
+corrupt tile-empty "$T0" $'#unit\t'$G$'\t20\t30\tdepartures\t.\n'"$D24$I18" $'#unit\t'$G$'\t20\t30\tdepartures\t.\n'"$D24$I18"$'#unit\t'$G$'\t30\t30\ttile\t30\n'
+corrupt detail-unit-empty "$T10" $'#unit\t'$G$'\t0\t12\tdetail\t0:2\n'$G$'\t0\t12\twalk\tH#1#h\t100\t100\t0\t2\t2\t.\n' $'#unit\t'$G$'\t0\t12\tdetail\t0:2\n'
+corrupt table-empty "$T0" --empty-table 'GRCh38#0#chs'
+corrupt number-tag-leading-zero "$T0" 'tile:i:10' 'tile:i:010'
+corrupt number-tag-minus "$T0" 'leftout:i:1' 'leftout:i:-1'
+corrupt number-start-leading-zero "$T0" $G$'\t0\t6\twalk\tI#1#i' $G$'\t00\t6\twalk\tI#1#i'
+corrupt number-nsteps-space "$T0" $'walk\tI#1#i\t0\t0\t0\t1\t2\t.' $'walk\tI#1#i\t0\t0\t0\t 1\t2\t.'
+corrupt number-length-leading-zero "$T0" $'ref\t'$G$'\t0\t24\t2\t1\t10\t6\t.' $'ref\t'$G$'\t0\t24\t2\t1\t10\t06\t.'
+corrupt number-unit-leading-zero "$T0" $'#unit\t'$G$'\t24\t30\ttile\t20\n' $'#unit\t'$G$'\t024\t30\ttile\t20\n'
+corrupt number-entry-length-leading-zero "$T0" --table $'tile\t20\t' $'tile\t20\t0'
+corrupt field-empty-row "$T0" $'walk\tI#1#i\t0\t0\t0\t1\t2\t.\n' $'walk\tI#1#i\t0\t0\t0\t1\t2\t.\t\tzz:i:1\n'
+corrupt directory-field-empty "$T0" --idx $'#header\t0\t' $'#header\t\t0\t'
+corrupt tag-graph-i "$T0" 'graph:Z:7619ff637c3b074b' 'graph:i:5'
+corrupt past-2-53-own-end "$T0" --all $'departure\tD#1#d\t24\t0\t0\t24' $'departure\tD#1#d\t9007199254740992\t1\t0\t24'
+corrupt past-2-53-breakpoint "$T0" --all $'departure\tD#1#d\t24\t0\t0\t24\t+\t1\t0\t' $'departure\tD#1#d\t24\t0\t0\t24\t+\t1\t9007199254740993\t'
+corrupt reference-none "$T0" $'#reference\tGRCh38\n' ''
+corrupt unit-line-in-header "$T0" $'#haplotype\tD#1\n' $'#unitx\tD#1\n#haplotype\tD#1\n'
+corrupt ref-rows-overlap-tiles "$T0" $'ref\t'$G$'\t0\t24\t2\t1\t10\t6\t.' $'ref\t'$G$'\t0\t23\t2\t1\t10\t7\t.' --all $G$'\t24\t30\t' $G$'\t23\t30\t'
+build turn100 "$BROKEN/turn.gfa" R --tile 100
+corrupt flip-of-own-flip "$W/turn100.R.walks.gz" --all $'walk\tA#1#c\t0\t0\t0\t4\t2\t0' $'walk\tA#1#c\t0\t0\t0\t4\t2\t1'
+D01=$'#unit\t'$G$'\t0\t12\tdetail\t0:1\n'$G$'\t0\t12\twalk\tD#1#d\t0\t0\t0\t2\t2\t.\n'$G$'\t0\t12\twalk\tD#1#d\t0\t24\t2\t2\t2\t.\n'
+D02=$'#unit\t'$G$'\t0\t12\tdetail\t0:2\n'$G$'\t0\t12\twalk\tH#1#h\t100\t100\t0\t2\t2\t.\n'
+corrupt detail-units-swapped "$T10" "$D01$D02" "$D02$D01"

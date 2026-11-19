@@ -12,8 +12,9 @@
 # - --tag TAG: TAG as a last column on every row and on the #walks line
 # - --drop-entry PREFIX: the one rebuilt table line starting with PREFIX left out, its unit kept
 # - --prepend-header LINE: LINE before the header's #walks line, which the directory's line 1 still repeats
+# - --empty-table SEQ: a table of SEQ with no entry after the last table, which the directory lists
 # With no edit, a text is packed as it is.
-# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT | --tag TAG | --drop-entry PREFIX | --prepend-header LINE]...
+# Usage: corrupt.py in.walks.gz out.walks.gz [[--all|--table|--idx] OLD NEW | --header N | --append UNIT | --tag TAG | --drop-entry PREFIX | --prepend-header LINE | --empty-table SEQ]...
 import gzip
 import struct
 import sys
@@ -21,14 +22,16 @@ import zlib
 
 src, dst, *args = sys.argv[1:]
 edits = dict(once=[], all=[], table=[], idx=[])
-appended, tags, dropped, prepended, header_stated = [], [], [], [], None
+appended, tags, dropped, prepended, emptied, header_stated = [], [], [], [], [], None
 while args:
     kind = args.pop(0)[2:] if args[0] in ('--all', '--table', '--idx', '--header', '--append', '--tag', '--drop-entry',
-                                         '--prepend-header') else 'once'
+                                         '--prepend-header', '--empty-table') else 'once'
     if kind == 'append':
         appended.append(args.pop(0))
     elif kind == 'drop-entry':
         dropped.append(args.pop(0))
+    elif kind == 'empty-table':
+        emptied.append(args.pop(0))
     elif kind == 'prepend-header':
         prepended.append(args.pop(0) + '\n')
     elif kind == 'tag':
@@ -103,6 +106,10 @@ for (old, new), n in table_edits.items():
 for prefix, n in drops.items():
     if n != 1:
         sys.exit(f'corrupt.py: {prefix!r} starts {n} table lines, not one')
+for seq in emptied:
+    table = bgzf(f'#unit\t{seq}\t0\t0\ttable\t.\n'.encode(errors='surrogateescape'))
+    tables.append(f'{seq}\t{len(data)}\t{len(table)}\n')
+    data += table
 for unit in appended:
     data += bgzf(unit.encode(errors='surrogateescape'))
 data += EOF

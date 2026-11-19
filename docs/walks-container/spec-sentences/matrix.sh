@@ -28,9 +28,11 @@ row() {
     case $c in
       verify7) out=$(python3 -I "$S/verify7.py" "$f" 2>&1); rc=$?; said=$out ;;
       claims7) out=$(python3 -I "$S/claims7.py" "$f" --own 2>&1); rc=$?
-        said=$(grep -E '^[1-9][0-9]*'$'\t' <<< "$out" | cut -f2 | cut -d' ' -f1 | sort -u | paste -sd' ' -) ;;
+        said=$(grep -E '^[1-9][0-9]*'$'\t' <<< "$out" | cut -f2 | cut -d' ' -f1 | sort -u | paste -sd' ' -
+          grep -m1 '^claims7.py: ' <<< "$out" | sed 's/^claims7.py: [^ ]*: //') ;;
       claims7-seqs) out=$(bash "$S/claims7-seqs.sh" "$f" --own 2>&1); rc=$?
-        said=$(grep -E '^[1-9][0-9]*'$'\t' <<< "$out" | cut -f2 | cut -d' ' -f1 | sort -u | paste -sd' ' -) ;;
+        said=$(grep -E '^[1-9][0-9]*'$'\t' <<< "$out" | cut -f2 | cut -d' ' -f1 | sort -u | paste -sd' ' -
+          grep -m1 '^claims7.py: ' <<< "$out" | sed 's/^claims7.py: [^ ]*: //') ;;
       audit7) out=$(python3 -I "$S/audit7.py" "$f" --gfa "$g" --window 64 --point 16 2>&1); rc=$?
         said=$(sed -n '/^audit7: /,$p' <<< "$out" | head -2 | paste -sd' ' -) ;;
       expand7) out=$(python3 -I "$S/expand7.py" "$f" 2>&1); rc=$?; said=$(tail -1 <<< "$out") ;;
@@ -81,7 +83,14 @@ for name in revisited-count revisited-zero budget-bytes-over budget-steps-over b
             number-leading-zero number-plus-sign token-minus-zero \
             header-empty-line directory-empty-line field-empty unit-line-inside-unit \
             departures-unit-empty reference-twice reference-haplotype length-zero ref-rows-overlap \
-            past-2-53-line-end past-2-53-stated name-space name-cr name-e9 name-del; do
+            past-2-53-line-end past-2-53-stated name-space name-cr name-e9 name-del \
+            reference-haplotype-walk reference-none default-copy-named default-start-named default-leave-named \
+            flip-of-own-flip detail-units-swapped name-hash-rows name-del-rows name-hash-haplotype \
+            tile-missing tile-empty detail-unit-empty blocks-unit-empty table-empty \
+            number-tag-leading-zero number-tag-minus number-start-leading-zero number-nsteps-space \
+            number-length-leading-zero number-unit-leading-zero number-entry-length-leading-zero \
+            field-empty-row directory-field-empty tag-graph-i past-2-53-own-end past-2-53-breakpoint \
+            unit-line-in-header ref-rows-overlap-tiles; do
   row "$name" "$B/$name.walks.gz" "$(gfa_of "$name")"
 done
 echo "# what each FAILS said first"

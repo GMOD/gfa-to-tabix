@@ -29,8 +29,10 @@
 # an unknown first word is ignored. A sequence name, a path and a name a
 # header line states are bytes 0x21 to 0x7E that don't start with #. The
 # header's abridge budgets bind no row, so none is held to them. The
-# reference is the paths with ref rows, each of the #reference sample, and
-# a path of that sample with walk rows is a line like any other.
+# reference is the paths with ref rows, whole haplotypes of the #reference
+# sample: a path with walk or abridged rows is listed under nothing a
+# reference sequence is listed under, and a path of another haplotype of
+# that sample is a line like any other. tile:i: is from 1 to 2^40.
 # Prints what agreed and what disagreed, and exits 1 on any disagreement.
 #
 # Usage: spec8.py FILE.walks.gz [--gfa G.gfa] [--tiles A:B] [--dump]
@@ -256,6 +258,8 @@ class Tile:
                 rid += t >> 1
                 if not 0 <= rid < len(rs.routes):
                     raise Refuse(f"route id {rid} out of range")
+                if t & 1 and notes is not None and rs.taken(rid, 1) == rs.taken(rid, 0):
+                    notes.append("flip 1 on a route that is its own flip")
                 choices.append((rid, t & 1,
                                 None if m.group(2) is None else int(m.group(2)),
                                 None if m.group(3) is None else int(m.group(3))))
@@ -504,6 +508,8 @@ class Walks:
             k, ty, v = t.split(":", 2)
             if k in self.tags:
                 raise Refuse(f"directory line 1 carries the tag name {k} twice")
+            if ty == "i" and not re.fullmatch("0|[1-9][0-9]*", v):
+                raise Refuse(f"directory line 1 states {t}, whose value is no number")
             self.tags[k] = int(v) if ty == "i" else v
         if self.tags.get("format") != 8:
             raise Refuse(f"format {self.tags.get('format')}")
@@ -512,6 +518,8 @@ class Walks:
         if "tile" not in self.tags:
             raise Refuse("the #walks line states no tile:i:")
         self.tile = self.tags["tile"]
+        if not isinstance(self.tile, int) or not 1 <= self.tile <= 1 << 40:
+            raise Refuse(f"tile:i: is {self.tile}, not 1 to 2^40")
         h = lines[1].split("\t")
         if h[:2] != ["#header", "0"] or len(h) != 3:
             raise Refuse("directory line 2 is not #header 0 <length>, with no tag")
@@ -1231,6 +1239,12 @@ def main():
                     f"{sorted(haps ^ set(w.haplotypes))[:6]}")
         else:
             rep.good("#haplotype lines equal the haplotypes with rows", len(haps))
+        on_reference = sorted((haps | set(w.haplotypes)) & {listed_under(seq) for seq in w.seq_order})
+        if on_reference:
+            rep.bad("a path with walk or abridged rows, or a #haplotype line, is on a haplotype a reference "
+                    "sequence is on, where the reference is whole haplotypes", f"{on_reference[:6]}")
+        else:
+            rep.good("haplotypes with walk or abridged rows that no reference sequence is on", len(haps))
 
         # ---- departure records against the pieces ---------------------------
         check_departures(rep, w, by_path, departures, tile_bp, stats)
