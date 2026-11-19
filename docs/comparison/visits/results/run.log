@@ -1,0 +1,46 @@
+== pggbY truth, passes over every GRCh38 line
+pass 1: 1 lines of GRCh38#0#chrY, 1 other lines of GRCh38#0#, max id 4122486
+reference nodes 263414, multi-pass 107467, node-window pairs 454924, windows 874
+haplotypes 151
+88.26 s 1275768 kB
+== pggbY cut
+windows 874, fragments of unknown haplotypes 0
+162.77 s 8142056 kB
+single: windows 874, differing 0, visits truth 19901967 cut 19901967
+multi: windows 174, differing 150, visits truth 445915774 cut 160493443
+  window 81 (5308416): truth n 474, cut n 238
+  window 82 (5373952): truth n 474, cut n 238
+  window 93 (6094848): truth n 721404, cut n 99178
+  window 95 (6225920): truth n 15857786, cut n 431815
+  window 96 (6291456): truth n 2098548, cut n 610231
+  window 101 (6619136): truth n 9074, cut n 6847
+  window 102 (6684672): truth n 16191, cut n 10192
+  window 115 (7536640): truth n 1613398, cut n 523952
+  window 116 (7602176): truth n 1830576, cut n 477090
+  window 117 (7667712): truth n 1200271, cut n 252345
+compare exit 0
+single: differing (window, haplotype, node) 0, visits truth 0 cut 0
+multi: differing (window, haplotype, node) 559513, visits truth 132805210 cut 27037936
+== mc22 truth, passes over every GRCh38 line
+pass 1: 1 lines of GRCh38#0#chr22, 0 other lines of GRCh38#0#, max id 127929432
+reference nodes 1389745, multi-pass 0, node-window pairs 1390342, windows 776
+haplotypes 464
+116.23 s 3568736 kB
+== mc22 clean
+windows 776, fragments of unknown haplotypes 0
+156.04 s 2817356 kB
+single: windows 776, differing 0, visits truth 554488368 cut 554488368
+multi: windows 0, differing 0, visits truth 0 cut 0
+compare exit 0
+== mc22 planted: one visit credited to another haplotype in window 300
+152.63 s 2799080 kB
+single: windows 776, differing 1, visits truth 554488368 cut 554488368
+  window 300 (19660800): truth n 900784, cut n 900784
+multi: windows 0, differing 0, visits truth 0 cut 0
+compare exit 1
+== mc22 planted: one visit dropped in window 300
+160.51 s 2756956 kB
+single: windows 776, differing 1, visits truth 554488368 cut 554488367
+  window 300 (19660800): truth n 900784, cut n 900783
+multi: windows 0, differing 0, visits truth 0 cut 0
+compare exit 1

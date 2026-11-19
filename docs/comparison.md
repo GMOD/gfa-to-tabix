@@ -284,6 +284,37 @@ Where gfaidx's bytes come from:
   [walks-truth.py](../scripts/walks-truth.py) `rebuild` checks a walk file
   against its GFA step for step
 
+## gfaidx-viz's views from a walk file
+
+[gfaidx-viz](https://github.com/fawaz-dabbaghieh/gfaidx-viz) began as a fork
+of BandageJS's earlier wasm engine and draws the GFA a gfaidx server returns
+for a region. What a reader of a walk file needs for each of its views:
+
+- **Copy-number track:** for each chosen path, how many times it visits each
+  reference node, averaged into bins along the reference. A walk-file cut
+  holds every visit a haplotype makes to the window's reference nodes,
+  checked against the GFA's lines on every tile of MC chr22 and pggb chrY,
+  with every haplotype, and on stretches cut inside tiles
+  ([visits](comparison/visits), [results](comparison/visits/results)). On a
+  node the reference passes more than once, which copy holds a visit is
+  the writer's choice and the file's `passes` say so; gfaidx-viz gives
+  each pass of such a node the node's whole count
+- **Paths across a link, by direction:** a cut's fragments give each
+  haplotype's consecutive steps with their strands, so this is reader work.
+  Where both ends are reference nodes of the window and the file passes no
+  node twice, the list is complete; with an end off the reference it is a
+  lower bound ([open problems](open-problems.md#every-link-of-a-loaded-node-and-a-bubble-layer)).
+  Not yet checked against the GFA
+- **A straightened reference with a ruler:** `ref` rows give the
+  reference's nodes, lengths and offsets, so a ruler can be exact in bp.
+  gfaidx-viz spaces reference nodes by their drawn length and reads bp
+  between node centres, so its ticks are not evenly spaced in bp
+- **Any path as the coordinates:** a walk file per `--refs` sample today;
+  a lookup from a haplotype's own coordinates to tiles could be built from
+  walk rows' `path` and `hapOffset` as a side file
+- **GFA tags, such as depth for colouring:** not kept
+  ([open problems](open-problems.md#gfa-tags-neither-file-keeps))
+
 ## gbz-base and gfa-to-tabix on HPRC v2.1
 
 The Minigraph-Cactus GRCh38 graph: 139.5 M nodes, 464 haplotypes.
