@@ -34,8 +34,8 @@ row() {
         said=$(sed -n '/^audit7: /,$p' <<< "$out" | head -2 | paste -sd' ' -) ;;
       expand7) out=$(python3 -I "$S/expand7.py" "$f" 2>&1); rc=$?; said=$(tail -1 <<< "$out") ;;
       spec8) out=$(python3 -I "$S/spec8.py" "$f" 2>&1); rc=$?
-        said=$(grep -E '^spec8' <<< "$out"; sed -n '/^== disagreed ==/,$p' <<< "$out" | sed -n 2p) ;;
-      rebuild) out=$(python3 -I "$HERE/scripts/walks-truth.py" rebuild "$f" "$g" 2>&1); rc=$?; said=$(head -1 <<< "$out") ;;
+        said=$(grep -E '^spec8' <<< "$out"; sed -n '/^== disagreed ==/,$p' <<< "$out" | sed -n 2,4p) ;;
+      rebuild) out=$(python3 -I "$HERE/scripts/walks-truth.py" rebuild "$f" "$g" 2>&1); rc=$?; said=$(tail -2 <<< "$out") ;;
     esac
     if grep -q Traceback <<< "$out"; then
       line+=$'\t'traceback
@@ -43,7 +43,7 @@ row() {
       line+=$'\t'passes
     else
       line+=$'\t'FAILS
-      echo "$label	$c	$(tr -s ' \t\r\n' ' ' <<< "$said" | LC_ALL=C tr -c '\n -~' '?' | cut -c1-220)" >> "$why"
+      echo "$label	$c	$(sed "s|$B/||g" <<< "$said" | tr -s ' \t\r\n' ' ' | LC_ALL=C tr -c '\n -~' '?' | cut -c1-260)" >> "$why"
     fi
   done
   echo "$line"

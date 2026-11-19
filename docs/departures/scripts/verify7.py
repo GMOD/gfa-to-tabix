@@ -24,7 +24,8 @@
 # - every number of a `#unit`, `#entry`, `#hole` or directory line and of a
 #   row's fixed columns is decimal digits with no sign, no leading zero and
 #   no space, `0` for zero, a delta token, a choice token and a block's `d`
-#   alone beginning `-` and none of them `-0`; and no coordinate is above
+#   alone beginning `-` and none of them `-0`; every length a ref or nodes
+#   row states is at least 1; and no coordinate is above
 #   2^53: a line's `start end`, a `fragStart`, a `hapOffset`, the end of a
 #   ref row's stretch, `hapOffset + hapBp`, `hapStart + ownBp` and a
 #   record's breakpoints (claims7.py holds a walk row's piece to it, whose
@@ -95,6 +96,7 @@ def decoded(raw):
 
 NUMBER = '(?:0|[1-9][0-9]*)'
 TOKEN = '(?:0|-?[1-9][0-9]*)'
+LENGTH = '[1-9][0-9]*'
 NAME = '[!"$-~][!-~]*'
 MAX = 1 << 53
 
@@ -189,12 +191,12 @@ ROWS = dict(tile=('ref', 'nodes', 'route', 'walk', 'abridged'), departures=('dep
             detail=('nodes', 'route', 'walk'), blocks=('blocks',))
 CHOICE = f'{TOKEN}(?::{NUMBER})?(?:@{NUMBER})?'
 FIXED = dict(
-    ref=[NAME] + [NUMBER] * 4 + [several(TOKEN), several(NUMBER), or_none(several(NUMBER))],
-    nodes=[several(NUMBER)] * 2,
+    ref=[NAME] + [NUMBER] * 4 + [several(TOKEN), several(LENGTH), or_none(several(NUMBER))],
+    nodes=[several(NUMBER), several(LENGTH)],
     route=[or_none(several(TOKEN))] * 3,
     walk=[NAME] + [NUMBER] * 4 + [f'{NUMBER}(?:@{NUMBER})?', or_none(several(CHOICE))],
     abridged=[NAME] + [NUMBER] * 6,
-    blocks=[NAME] + [NUMBER] * 2 + [several(f'(?:{TOKEN}[+-])?[1-9][0-9]*')],
+    blocks=[NAME] + [NUMBER] * 2 + [several(f'(?:{TOKEN}[+-])?{LENGTH}')],
     departure=[NAME] + [NUMBER] * 4 + ['[+-]', NUMBER, NUMBER, '[+-]', NUMBER, or_none(several(NUMBER))],
 )
 ROW = {row: re.compile('\t'.join([NUMBER, NUMBER, row] + forms)) for row, forms in FIXED.items()}
@@ -231,7 +233,7 @@ def check_unit(at, length, text):
     if not text.endswith(b'\n'):
         fail(f'the unit at {at} does not end in a newline')
     if not_plain(text):
-        fail(f'the unit at {at} holds an empty line or an empty field')
+        fail(f'the unit at {at} holds an empty line or field')
     if b'\n#unit' in text:
         fail(f'a line of the unit at {at} after its first begins #unit')
     lines = decoded(text).split('\n')
@@ -265,8 +267,8 @@ def check_unit(at, length, text):
         if len(c) < 4 or c[3] not in ROWS[kind]:
             fail(f'a row of a kind a {kind} unit doesn\'t hold, at {at}: {line[:80]}')
         if not ROW[c[3]].fullmatch('\t'.join(c[1:4 + len(FIXED[c[3]])])):
-            fail(f'a {c[3]} row with a column short, a number not written as the page writes one or a path in '
-                 f'bytes outside 0x21 to 0x7E, at {at}: {line[:80]}')
+            fail(f'a {c[3]} row with a column short, a number not written as the page writes one, a length of 0 '
+                 f'or a path in bytes outside 0x21 to 0x7E, at {at}: {line[:80]}')
         a, b = int(c[1]), int(c[2])
         stated = [a, b, sum(int(c[k]) for k in SUMS.get(c[3], ()))] + [int(c[k]) for k in COORDINATES[c[3]]]
         if max(stated) > MAX:
