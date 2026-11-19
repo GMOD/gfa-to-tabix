@@ -26,13 +26,16 @@ reads count as the open; the rest count for the window. A client that fetched
 over HTTP would join ranges that lie close, so the window's ranges are also
 counted with every gap of up to 64 KB fetched along with them. Then three untraced
 runs on the index's own path for wall time and peak memory, and the size of
-the GFA it writes.
+the GFA it writes, with a SHA-1 of its segment names, sorted as bytes and
+joined by newlines, to compare with walk-time.mjs's. The timed runs get no timeout: with one, Python waits for
+the process by polling at up to 50 ms, which rounds a short run's time up.
 
 Writes OUT_PREFIX.windows.tsv, OUT_PREFIX.files.tsv, OUT_PREFIX.open.tsv and
 OUT_PREFIX.summary.txt.
 """
 import argparse
 import gzip
+import hashlib
 import os
 import re
 import statistics
@@ -175,14 +178,15 @@ def paged_reads(log, name, mapped, sizes):
 
 def gfa_counts(path):
     counts = {b"S": 0, b"L": 0, b"W": 0, b"P": 0}
-    carry = b"\n"
+    segments = []
     with open(path, "rb") as f:
-        while chunk := f.read(1 << 24):
-            block = carry + chunk
-            for kind in counts:
-                counts[kind] += block.count(b"\n" + kind + b"\t")
-            carry = block[-2:]
-    return counts[b"S"], counts[b"L"], counts[b"W"] + counts[b"P"]
+        for line in f:
+            kind = line[:1]
+            if kind in counts and line[1:2] == b"\t":
+                counts[kind] += 1
+                if kind == b"S":
+                    segments.append(line.split(b"\t", 2)[1])
+    return counts[b"S"], counts[b"L"], counts[b"W"] + counts[b"P"], hashlib.sha1(b"\n".join(sorted(segments))).hexdigest()
 
 
 def quantiles(values):
@@ -215,12 +219,12 @@ def main():
     def size_of(suffix):
         return os.path.getsize(indexed if suffix == ".gz" else indexed + suffix)
 
-    def query(cs, prefix, index):
+    def query(cs, prefix, index, timeout=None):
         command = prefix + [args.gfaidx, "get_region", index, f"{args.region_name}:{cs}-{cs + tile}", gfa,
                             "--mode", "all", "--with_coords"] + (["--reference", args.reference] if args.reference else [])
         os.path.exists(gfa) and os.remove(gfa)
         began = time.perf_counter()
-        done = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=args.timeout)
+        done = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
         return time.perf_counter() - began, done.returncode
 
     rows = []
@@ -228,7 +232,7 @@ def main():
         if args.pagelog:
             open(args.pagelog, "w").close()
         _, status = query(cs, ["strace", "-f", "-y", "-o", trace, "-e",
-                               "trace=open,openat,read,readv,pread64,preadv,lseek,mmap"], traced)
+                               "trace=open,openat,read,readv,pread64,preadv,lseek,mmap"], traced, args.timeout)
         reads, mapped = traced_reads(trace, traced)
         if args.pagelog:
             reads.update(paged_reads(args.pagelog, os.path.basename(indexed), mapped, size_of))
@@ -240,7 +244,7 @@ def main():
             peak = max(peak, int(open(timing).read().split()[-1]))
         size = os.path.getsize(gfa) if os.path.exists(gfa) else 0
         rows.append(dict(cs=cs, status=status, reads=reads, mapped=mapped, runs=runs, peak=peak, size=size,
-                         counts=gfa_counts(gfa) if size else (0, 0, 0)))
+                         counts=gfa_counts(gfa) if size else (0, 0, 0, "")))
 
     good = [r for r in rows if r["status"] == 0]
     suffixes = sorted({s for r in good for s in r["reads"]})
@@ -257,7 +261,7 @@ def main():
               "walks_bases_blocks_bytes", "gfaidx_status",
               "gfaidx_bytes", "gfaidx_ranges", "gfaidx_mapped_bytes", "gfaidx_bytes_gaps_joined",
               "gfaidx_ranges_gaps_joined", "gfaidx_files", "gfaidx_ms_first", "gfaidx_ms_median", "gfaidx_peak_kb",
-              "gfaidx_gfa_bytes", "gfaidx_gfa_S", "gfaidx_gfa_L", "gfaidx_gfa_paths", sep="\t", file=out)
+              "gfaidx_gfa_bytes", "gfaidx_gfa_S", "gfaidx_gfa_L", "gfaidx_gfa_paths", "gfaidx_gfa_S_sha1", sep="\t", file=out)
         for r in rows:
             own = r.get("own", {})
             print(r["cs"], *window(r["cs"]), *window_bases(r["cs"]), r["status"],

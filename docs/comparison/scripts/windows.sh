@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# After build.sh, on ada: what a 64 kb window reads from each tool's files of MC chr22 and pggb chrY (windows.py), and walks-truth.py cost over every window of the walk files and of the whole-genome format 8 files
+# After build.sh, on ada: what a 64 kb window reads from each tool's files of MC chr22 and pggb chrY (windows.py), how long graph-walks takes to cut the same windows from local disk and, for chr22, from jbrowse.org's whole-genome file (walk-time.mjs), and walks-truth.py cost over every window of the walk files and of the whole-genome format 8 files
 set -uo pipefail
 cd ~/work/gfaidx-compare
 G=$PWD/dl/gfaidx-v2.3.2-linux-x86_64/gfaidx
@@ -17,6 +17,17 @@ window() {
 window mc22 chr22 'GRCh38#0#chr22' --reference GRCh38
 window pggbY 'GRCh38#0#chrY' 'GRCh38#0#chrY'
 fusermount -u mnt
+export PATH=~/.local/node/bin:$PATH
+cat graph-walks.commit > $R/graph-walks.commit.txt
+node --version >> $R/graph-walks.commit.txt
+for g in mc22:chr22 pggbY:chrY; do
+  cap 16G node --max-old-space-size=8192 walk-time.mjs graph-walks out/${g%%:*}.GRCh38.walks.gz "GRCh38#0#${g#*:}" \
+    $R/${g%%:*}.windows.tsv $R/${g%%:*}.walk-time.tsv > $R/${g%%:*}.walk-time.log 2>&1
+  cap 16G node --max-old-space-size=8192 walk-time.mjs graph-walks out/${g%%:*}.seq.GRCh38.walks.gz "GRCh38#0#${g#*:}" \
+    $R/${g%%:*}.windows.tsv $R/${g%%:*}.walk-time-bases.tsv --sequences >> $R/${g%%:*}.walk-time.log 2>&1
+done
+nice -n 10 node --max-old-space-size=8192 walk-time.mjs graph-walks https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f8.GRCh38.walks.gz \
+  'GRCh38#0#chr22' $R/mc22.windows.tsv $R/mc22.walk-time-http.tsv > $R/mc22.walk-time-http.log 2>&1
 for g in mc22 pggbY; do
   cap 8G python3 -I src/scripts/walks-truth.py cost out/$g.GRCh38.walks.gz > $R/$g.cost.txt 2>&1
 done

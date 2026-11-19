@@ -50,7 +50,9 @@ def table(header, body):
 
 
 def versions():
-    return "\n".join("- " + line for line in (RESULTS / "versions.txt").read_text().splitlines())
+    reader, node = (RESULTS / "graph-walks.commit.txt").read_text().split()
+    return "\n".join("- " + line for line in (RESULTS / "versions.txt").read_text().splitlines()
+                     + [f"@jbrowse/graph-walks at commit {reader}, on Node {node}"])
 
 
 def graphs():
@@ -106,6 +108,9 @@ def window(graph):
     opened = {r["reader"]: r for r in rows(f"{graph}.open.tsv")}
     plain = lambda n: f"{n:,.0f}"
     ms = lambda n: f"{n:.0f} ms" if n < 1000 else f"{n / 1000:.1f} s"
+    cut = rows(f"{graph}.walk-time.tsv")
+    cut_bases = rows(f"{graph}.walk-time-bases.tsv")
+    http = RESULTS / f"{graph}.walk-time-http.tsv"
 
     def col(name, rs=w):
         return [r[name] for r in rs]
@@ -120,11 +125,25 @@ def window(graph):
         ["byte ranges, gaps of up to 64 KB joined", "", "", spread(col("gfaidx_ranges_gaps_joined", good), plain)],
         ["bytes read, gaps of up to 64 KB joined", "", "", spread(col("gfaidx_bytes_gaps_joined", good), size)],
         ["files read", "1", "1", spread(col("gfaidx_files", good), plain)],
-        ["time on local disk", "", "", spread(col("gfaidx_ms_median", good), ms)],
+        ["time on local disk, reader already open", spread(col("cut_ms", cut), ms), spread(col("cut_ms", cut_bases), ms), ""],
+        ["time on local disk, from a new reader or process", spread(col("open_cut_ms", cut), ms),
+         spread(col("open_cut_ms", cut_bases), ms), spread(col("gfaidx_ms_median", good), ms)],
+    ] + ([["time over HTTP from jbrowse.org's whole-genome file, from a new reader",
+           spread(col("open_cut_ms", rows(http.name)), ms), "", ""]] if http.exists() else []) + [
+        ["time to build the tables a viewer draws from", spread(col("tables_ms", cut), ms), spread(col("tables_ms", cut_bases), ms), ""],
+        ["distinct nodes returned", spread(col("nodes", cut), plain), spread(col("nodes", cut_bases), plain), spread(col("gfaidx_gfa_S", good), plain)],
+        ["steps returned", spread(col("steps", cut), count), spread(col("steps", cut_bases), count), ""],
         ["GFA written", "", "", spread(col("gfaidx_gfa_bytes", good), size)],
     ]
     failed = len(w) - len(good)
-    note = f"\n\n{failed} of the {len(w)} windows failed in gfaidx and are left out of its column." if failed else ""
+    sha = {r["start"]: r["nodes_sha1"] for r in cut}
+    same = sum(1 for r in good if r["gfaidx_gfa_S_sha1"] == sha[r["start"]])
+    fresh = {r["start"]: float(r["open_cut_ms"]) for r in cut}
+    faster = sum(1 for r in good if fresh[r["start"]] < float(r["gfaidx_ms_median"]))
+    note = (f"\n\n- From a new reader, the walk cut takes less time than gfaidx in {faster} of the {len(good)} windows"
+            f"\n- The nodes the walk cut's fragments step on are the segments of gfaidx's GFA, id for id, in {same} of the "
+            f"{len(good)} windows. In the others gfaidx's GFA has more" + (f" {failed} of the {len(w)} windows failed in gfaidx and are left out of its column."
+                                       if failed else ""))
     return table([f"{GRAPHS[graph]}, {len(w)} windows: median (largest)", "walk file", "walk file with bases", "gfaidx"], body) + note
 
 

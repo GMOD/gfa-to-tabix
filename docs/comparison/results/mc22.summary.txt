@@ -13,9 +13,9 @@ gfaidx get_region --mode all --with_coords: 328,508 bytes in 13 ranges read by e
   bytes, gaps to 64 KB joined        median     14,751,460  p90     15,878,391  max     49,705,876
   byte ranges, gaps to 64 KB joined  median            489  p90            497  max            548
   files per window                   median              5  p90              5  max              5
-  wall ms, first run                 median            115  p90            165  max            870
-  wall ms, median of runs            median            115  p90            165  max            870
-  peak memory, KB                    median          4,874  p90          5,388  max         35,200
+  wall ms, first run                 median             69  p90            120  max            791
+  wall ms, median of runs            median             68  p90            120  max            791
+  peak memory, KB                    median          4,840  p90          5,420  max         35,564
   GFA written, bytes                 median      8,193,195  p90     13,632,932  max    110,904,412
   segments in the GFA                median          2,664  p90          5,350  max        150,088
   path lines in the GFA              median            464  p90            464  max            465
