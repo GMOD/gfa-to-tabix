@@ -20,6 +20,18 @@ CI runs these on every push:
   rewrite them
 - `scripts/check-walks.sh`: builds every walk fixture and runs the release
   checks on each file, after showing that those checks fail on broken files
+- `scripts/graph-walks-rebuild.mjs`: @jbrowse/graph-walks cuts each
+  reference sequence of every fixture's walk files whole and must give back
+  every path, placement and departure the GFA states
+- `scripts/check-windows.sh`: graph-walks' cut over windows against
+  `scripts/window-oracle.py`, which works out what a window must return
+  from the rules of [Reading a window](walks-format.md#reading-a-window),
+  over tiles decoded by the spec-only reader `spec8.py`. It cuts every
+  window of each short fixture sequence and the tile edges plus random
+  windows of longer ones, on the fixtures and on random graphs, after
+  showing that planted reader mistakes make it fail. Run
+  `window-oracle.py --digest` on a hosted file to check its windows the
+  same way
 - `scripts/parity-fixtures.sh`: the `contig` layout against the JBrowse
   scripts it replaced, byte for byte
 - `scripts/parity-fold.sh`: `fold` against the fold bandage-core runs in the

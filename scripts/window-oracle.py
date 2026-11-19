@@ -237,7 +237,7 @@ def cut(sq, s, e, context, expand, attach_bp, digest=False):
     return {"fragments": fragments, "departures": departures}
 
 
-def windows(sq, length, tile, every, n, widest, rng):
+def windows(sq, length, tile, every, n, widest, edges, rng):
     if every:
         for s in range(length):
             for e in range(s + 1, length + 1):
@@ -245,12 +245,14 @@ def windows(sq, length, tile, every, n, widest, rng):
         return
     if length <= widest:
         yield 0, length
-    for t in sq.tiles:
-        for b in (t.start, t.end):
-            for s, e in ((b - 1, b), (b, b + 1), (b - 1, b + 1), (b - tile // 2, b + tile // 2)):
-                s, e = max(0, s), min(length, e)
-                if s < e:
-                    yield s, e
+    bounds = sorted({b for t in sq.tiles for b in (t.start, t.end)})
+    if edges is not None and edges < len(bounds):
+        bounds = sorted(rng.sample(bounds, edges))
+    for b in bounds:
+        for s, e in ((b - 1, b), (b, b + 1), (b - 1, b + 1), (b - tile // 2, b + tile // 2)):
+            s, e = max(0, s), min(length, e)
+            if s < e:
+                yield s, e
     for _ in range(n):
         width = max(1, min(widest, int(10 ** rng.uniform(0, 6.5))))
         s = rng.randrange(max(1, length))
@@ -271,6 +273,8 @@ def main():
     ap.add_argument("--windows", type=int, default=200)
     ap.add_argument("--widest", type=int, default=2_000_000)
     ap.add_argument("--digest", action="store_true")
+    ap.add_argument("--edges", type=int, help="tile edges to cut at, at random; all by default")
+    ap.add_argument("--progress", action="store_true", help="a line per sequence and per 100 windows on stderr")
     ap.add_argument("--contexts", default="0,1000")
     ap.add_argument("--attach-bp", type=int, default=65536)
     ap.add_argument("--expand", default="yes,no")
@@ -290,7 +294,8 @@ def main():
     for seq in args.seq or w.seq_order:
         sq = Sequence(w, seq)
         length = w.length(seq)
-        for s, e in windows(sq, length, w.tile, length <= args.every_window_up_to, args.windows, args.widest, rng):
+        for s, e in windows(sq, length, w.tile, length <= args.every_window_up_to, args.windows, args.widest,
+                            args.edges, rng):
             for context in contexts:
                 for expand in expands:
                     query = {"seq": seq, "start": s, "end": e, "context": context, "expand": expand}
@@ -299,6 +304,8 @@ def main():
                     got = json.loads(node.stdout.readline())
                     want = cut(sq, s, e, context, expand, args.attach_bp, args.digest)
                     counts["windows"] += 1
+                    if args.progress and counts["windows"] % 100 == 0:
+                        print(f"{seq} {counts['windows']} windows, {counts['differ']} differ", file=sys.stderr, flush=True)
                     counts["fragments"] += len(want["fragments"])
                     counts["departures"] += len(want["departures"])
                     if "error" in got:
