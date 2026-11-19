@@ -354,9 +354,19 @@ follows one copy can show as hopping between copies.
 ## Files and units
 
 The data file is a series of units, then a BGZF EOF block. <!-- C28 -->
-Each unit is a whole run of gzip (BGZF) members: it starts and ends a
-member <!-- C29 -->, so a reader fetches it by its byte range and gunzips
-it alone, and `zcat` reads the whole file as text.
+Each unit is a whole run of BGZF members, the gzip members the SAM
+specification defines, of at most 64 KiB and stating their own length:
+it starts and ends a member <!-- C29 -->, so a reader fetches it by its
+byte range and gunzips it alone, and `zcat` reads the whole file as text.
+A file whose units are gzip members of another kind is not format 8.
+
+Every line of the data file and of the directory is fields separated by
+one tab, and ends in one newline: a `#walks`, `#reference`, `#haplotype`,
+`#hole`, `#unit`, `#entry` or `#header` line and a sequence's directory
+line as much as a row. <!-- C206 --> No line is empty and no field is
+empty, so no line starts or ends with a tab and no two tabs stand side by
+side. The examples on this page align their columns with spaces for
+reading; a file holds tabs.
 
 - **The header unit,** first, from byte 0: the [header](#header) lines,
   with no `#unit` line <!-- C30 -->; `#walks` is its first line, the one a
@@ -375,8 +385,10 @@ it alone, and `zcat` reads the whole file as text.
   `.fai` can be rebuilt from its FASTA. A member begins a unit where the
   member before it ended in a newline and it begins `#unit`: members are
   cut by size, in the middle of a line, and a path name can hold `#unit`,
-  but no line of a unit after its first starts with `#`. The header needs
-  no such line: it
+  but no line of the file begins `#unit` except the first line of a unit.
+  <!-- C207 --> That holds of a header line, of a row, of a table's
+  `#entry` lines and of the lines of a unit of a later kind, whatever
+  that kind holds. The header needs no such line: it
   is what comes before the first `#unit` line, it is about no sequence and
   no stretch, and any `seq start end` it stated would be made up
   ([ADR 0010](adr/0010-walks-unit-table.md#costs-decided))
@@ -401,6 +413,11 @@ it alone, and `zcat` reads the whole file as text.
   `detail` and its tile's start give. It
   is `.` where nothing points at the unit, a departure bin or a table.
   Every other name is unique within its kind and sequence <!-- C39 -->
+- **No unit of a kind this page gives is empty.** After its `#unit` line
+  a tile holds a `ref` row, a departure bin a record, a detail unit a
+  `walk` row, a blocks unit a row and a table an entry. So a bin of the
+  pyramid with no record is not in the file, and neither is a tile in
+  which no step of the reference starts <!-- C210 -->
 - **A tile's extent** runs from the first base of its `ref` rows' steps
   to the last, over any gap between two lines of the reference.
   <!-- C40 --> Every piece's span lies inside it, since every placed step
@@ -441,7 +458,9 @@ GRCh38#0#chr22	<offset>	<length>
   from the data file's length, as a server's Content-Range gives it; a
   reader that can't learn the length, where a server hides Content-Range
   from cross-origin readers, skips the length check, so a server must
-  expose that header for it to hold <!-- C122 -->
+  expose that header for it to hold <!-- C122 -->. The name `bytes` is
+  the directory's: the data file's `#walks` line carries no `bytes` tag,
+  and a file whose line does is not format 8 <!-- C211 -->
 - `#header 0 <length>`: the header unit
 - one `seq offset length` line per reference sequence, giving its table.
   Every reference sequence is listed, in file order <!-- C48 -->
@@ -482,7 +501,19 @@ GRCh38-referenced file:
   `tile` and the rest by name, not by place. The writer writes them in
   the order above, and the directory's line 1 adds `bytes:i:` after them.
   A format 8 file's line carries `format:i:8` and `tile:i:`, and a reader
-  refuses a file whose line lacks either <!-- C198 -->
+  refuses a file whose line lacks either. <!-- C198 --> It needs no other
+  tag: a file whose line lacks `revisited`, `stay`, `abridge`,
+  `abridgebytes`, `graph` or `leftout` is format 8, and a reader doesn't
+  refuse it. <!-- C201 --> A tag left out states nothing, which is not
+  the same as stating 0: a file with no `revisited` can have revisited
+  nodes or none, and one with no `abridge` doesn't say what budget it was
+  written with
+- A tag this page gives has one type letter. `format`, `tile`,
+  `revisited`, `stay`, `abridge`, `abridgebytes` and `leftout`, and the
+  directory's `bytes`, are `i`, and their value is a number as
+  [Rows](#rows) writes one; `graph` is `Z`. A line that gives one of
+  these names another type, or gives an `i` one a value that is no
+  number, is not format 8 <!-- C204 -->
 - A reader refuses a unit whose `#unit` line doesn't state its table
   entry's `seq start end kind name`, or whose text doesn't end in a
   newline, as a unit cut short does <!-- C154 -->
@@ -499,7 +530,9 @@ GRCh38-referenced file:
   table's own offset, with no gap and no overlap, so a reader can tell a
   missing entry by the gap it leaves and may refuse the table
   ([What a reader relies on](#what-a-reader-relies-on)) <!-- C156 -->
-- `tile` is the tile size in bp
+- `tile` is the tile size in bp, from 1 to 2^40, which keeps a departure
+  bin of 512 tiles past any coordinate below 2^64. A file that states 0,
+  or more than 2^40, is not format 8 <!-- C205 -->
 - `revisited` is how many nodes the reference's paths pass more than once,
   all its sequences counted. <!-- C50 --> 0 means every position in the
   file is a fact of the graph ([Exact and chosen](#exact-and-chosen)). A
@@ -509,7 +542,9 @@ GRCh38-referenced file:
   stay. A reader ignores it
 - `abridge` and `abridgebytes` are the `--abridge-steps` and
   `--abridge-bytes` budgets the file was written with; 0 means none. A reader
-  ignores them
+  ignores them. They bind no row: a file that states `abridge:i:0` and
+  `abridgebytes:i:0` and holds `abridged` rows is format 8, and so is one
+  with a tile that costs more than a budget it states <!-- C202 -->
 - `graph` names the GFA by the hash the full-resolution node and link
   index states in its own `graph:Z:`
   ([index format](index-format.md#what-the-file-holds)): FNV-1a 64 over
@@ -577,7 +612,9 @@ GRCh38-referenced file:
   - a file added beside a walk file is about that walk file's bytes: the
     same walk file is the same bytes, and the same rows compressed again
     are another file to it ([Hosting](#hosting))
-- `#reference` names the reference sample <!-- C157 -->
+- `#reference` names the reference sample. A file has one `#reference`
+  line, however many haplotypes or sequences its reference has
+  <!-- C157 -->
 - `#haplotype` lists what each other path with rows in the file is listed
   under, once each in byte order: its PanSN `sample#haplotype` where its
   `path` has three fields or more, its sample where it has fewer
@@ -602,6 +639,29 @@ A unit of a later kind holds the rows its own addition gives
 Columns are separated by one tab, a list within a column by commas, and
 a line ends in a newline; the examples here align columns with spaces
 for reading. `start end` are 0-based and half-open, as in BED.
+
+A name is one or more bytes from 0x21 to 0x7E, the printable ASCII
+characters without the space, and does not start with `#`.
+<!-- C200 --> Every sequence name, every `path`, and every name a
+`#reference`, `#haplotype` or `#hole` line or a directory line states is
+one. <!-- C200 --> So a name holds no tab, newline, carriage return,
+space or NUL and no byte above 0x7E; two names are the same name exactly
+when they are the same bytes; and the byte order this page sorts names by
+is the order of their characters in any encoding a reader holds them in,
+ASCII, UTF-8, UTF-16 or Latin-1. <!-- C200 --> These are the bytes GFA 1
+allows in a name; its ban on a leading `*` or `=` is not taken, since
+nothing in a walk file reads either. A file that holds any other name is
+not format 8.
+
+A number is decimal digits with no sign, no leading zero and no space,
+and zero is `0`: a tag's `i` value, a `start`, an `nsteps`, a length in a
+list, a byte offset. <!-- C203 --> Only a delta token, a choice token
+and a block's `d` can begin with `-`, for a value below 0, and none is
+`-0`. <!-- C203 --> So a number has one text, and two lines that state
+the same thing are the same bytes, as a reader needs where it drops a
+departure record by its whole line and matches the directory's line 1
+against the `#walks` line.
+
 A `ref`, `nodes`, `route`, `walk` or `departure` row's columns from `kind`
 on are format 6's, unchanged. `start end` are data,
 not an index key, so `zcat | grep` places any line.
@@ -1105,6 +1165,12 @@ its `ref` steps start, as it needs a column.
   there, a record's or one a reader computes, can pass over a once-passed
   node its line steps, so two ends passed once do not make its own
   sequence free of reference nodes
+- **A step is 1 bp or more.** Every length a `ref` or `nodes` row states
+  is at least 1, so no two positions of R start at one offset and no
+  piece covers 0 bp of its contig <!-- C208 -->
+- **R ascends.** No two `ref` rows of a sequence cover a base twice, so
+  the positions of a tile's R, in order, start at ascending offsets, and
+  a reader finds the position at an offset by bisection <!-- C209 -->
 - **A piece has a step on R,** so every piece has a span, which lies
   inside its tile's extent <!-- C69 C41 -->
 - **A line's pieces tile it.** They are numbered from 0, piece 0 starts
@@ -1132,7 +1198,13 @@ its `ref` steps start, as it needs a column.
   the table before it, or of the header unit, to the table's own offset,
   so a reader may refuse a table whose entries leave a gap or overlap
   <!-- C194 -->
-- **No coordinate is above 2^53** <!-- C172 -->
+- **No coordinate is above 2^53:** no `start` or `end`, no `fragStart`
+  or `hapOffset`, no end of a piece on its contig, no
+  `hapStart + ownBp` and no breakpoint, so a reader holding numbers as
+  doubles reads each one exactly <!-- C172 -->
+- **A name is printable ASCII,** bytes 0x21 to 0x7E, so a reader that
+  holds names as text in any encoding tells two names apart, and sorts
+  them, as their bytes do ([Rows](#rows)) <!-- C200 -->
 
 What this writer chooses, and another writer of format 8 could choose
 otherwise with no reader the wiser:
@@ -1223,7 +1295,13 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
 - Each `ref` row's `passes` counts the `ref` rows' steps on its nodes
   over the whole file (tests; files, `verify7.py`) <!-- C62 -->
 - No line starts or ends past 2^53, and no reference sequence's last
-  tile does (build, tests) <!-- C172 -->
+  tile does (build, tests; files, `verify7.py` for the coordinates a
+  line states and `claims7.py` for where a walk row's piece ends)
+  <!-- C172 -->
+- Numbers, lines and fields are written as [Rows](#rows) and
+  [Files and units](#files-and-units) say: one text for a number, one tab
+  between fields, no empty line or field, and no line beginning `#unit`
+  but a unit's first (files) <!-- C203 C206 C207 -->
 - Each record's `ownTiles` are the tiles of S holding its own steps, in
   the path's order (tests; files on the paths of a shard) <!-- C97 -->
 - A record's leave step is the last step on R of its piece and its rejoin
@@ -1238,10 +1316,11 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   <!-- C139 -->
 - A line left out of a reference's file is one W or P line; its contig's
   other lines keep their rows (tests) <!-- C140 -->
-- Path names hold no tab, newline or NUL byte and don't start with `#`;
-  the build refuses a GFA with a path name starting with `#` or holding a
-  NUL byte, and a GFA line has no field with a tab or newline (build)
-  <!-- C95 -->
+- Every name is as [Rows](#rows) says: the build refuses a GFA whose W
+  or P line gives a name that is empty, starts with `#` or holds a byte
+  outside 0x21 to 0x7E, a space, carriage return, NUL or byte above 0x7E
+  among them, and names the line (build; files, `verify7.py` and
+  `spec8.py`) <!-- C95 C200 -->
 - The data file is written under a temporary name and renamed, then the
   directory likewise, so a directory never names a data file still being
   written (build, tests) <!-- C96 -->
