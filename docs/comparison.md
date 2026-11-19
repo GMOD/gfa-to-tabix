@@ -8,9 +8,9 @@ reads their output:
   HTTP range request from any web host. The
   [node and link index](index-format.md), a bgzipped, Tabix-indexed BED
   file, holds the nodes and links of any graph. The
-  [walk files](walks-format.md) add every
-  haplotype's path through a base-level graph, as gzip units with a table of
-  their byte ranges
+  [walk files](walks-format.md) add every haplotype's path through a
+  base-level graph, such as Minigraph-Cactus or pggb writes, as gzip units
+  with a table of their byte ranges
 - **[gbz-base](https://github.com/jltsiren/gbz-base)** builds a SQLite
   database, `graph.gbz.db`, from a GBZ with `gbz-base construct`.
   [@gmod/gbz-base](https://github.com/GMOD/gbz-base-js) reads it in a
@@ -30,9 +30,8 @@ gbz-base's database.
 ## Which to use
 
 - Use **gfa-to-tabix** to view a graph in a browser from files on any
-  static web host. It reads the GFA a pipeline writes, an rGFA from
-  minigraph or a GFA with P or W lines from Minigraph-Cactus or pggb, with
-  no conversion step. For HPRC v2.1, jbrowse.org already hosts the walk
+  static web host. It reads minigraph's rGFA and the GFA with P or W lines
+  that Minigraph-Cactus and pggb write, with no conversion step. For HPRC v2.1, jbrowse.org already hosts the walk
   files, and [readers](walks-format.md#readers) gives their URLs
 - Use **gbz-base** for a graph with thousands of haplotypes, because its
   database grows sublinearly with their number. It reads a GBZ: HPRC
@@ -47,10 +46,10 @@ gbz-base's database.
   - an assembly graph, or any graph with neither paths nor rGFA tags,
     because gfa-to-tabix files every row under a reference coordinate
   - output that keeps the GFA tags of the nodes, links and paths
-- **Coordinates on any path:** gfaidx and gbz-base take a region on any path
-  without a reference chosen when the index is built. gfa-to-tabix writes a
-  walk file for each sample named in `--refs`, so it gives coordinates on a
-  few chosen samples
+- To query by coordinates on any path, with no reference chosen in
+  advance, use gfaidx or gbz-base. gfa-to-tabix gives coordinates on the
+  samples named in `--refs` when the files are written, one walk file per
+  sample
 
 ## Differences
 
@@ -76,14 +75,14 @@ haplotypes. A [proof](https://github.com/GMOD/gbz-haplotype-index/blob/main/docs
 shows that it returns every piece of each chosen haplotype's walk, and a
 fuzzer tests it.
 
-## gfaidx and gfa-to-tabix on two graphs
+## gfa-to-tabix and gfaidx on two graphs
 
 We indexed two graphs with both tools on one machine, with GRCh38 as the
 reference: HPRC v2.1's Minigraph-Cactus chr22, as `vg convert -f` writes it
-with W lines, and HPRC release 2's pggb chrY, with P lines.
-The scripts are in [comparison/scripts](comparison/scripts) and their
-output is in [comparison/results](comparison/results). `tables.py` writes the
-tables below from that output.
+with W lines, and HPRC release 2's pggb chrY, with P lines. The scripts are
+in [comparison/scripts](comparison/scripts) and their output is in
+[comparison/results](comparison/results). `tables.py` writes the tables
+below from that output.
 
 <!-- generated:versions -->
 - gfaidx 2.3.2, the release's Linux x86-64 binary (sha256 60df8bc2efbb41fb), with index_gfa --threads 8
@@ -137,8 +136,8 @@ tables below from that output.
   lines and steps that visit it, so its path index is nearly all of its
   bytes. A walk file stores each distinct route through a tile once and the
   routes each piece of a haplotype takes, for one reference
-- **Lines left out:** a walk file leaves out a line that visits no node of
-  its reference, 36 of MC chr22's lines and about half of pggb chrY's
+- **Lines left out:** a walk file leaves out each line that visits no node
+  of its reference: 36 of MC chr22's lines and about half of pggb chrY's
   ([MC chr22](comparison/results/mc22.gfa-to-tabix.walks.log),
   [pggb chrY](comparison/results/pggbY.gfa-to-tabix.walks.log)). gfaidx
   keeps every line
@@ -152,16 +151,17 @@ tables below from that output.
 A walk reader reads a window in a few byte ranges of one file, and gfaidx
 reads hundreds of ranges from five files. gfaidx answers the median MC
 chr22 window in under half the walk reader's time, and the walk reader is
-faster in most pggb chrY windows, where repeats make gfaidx return
-far more of the graph.
+faster in most pggb chrY windows, where repeats make gfaidx return far more
+of the graph.
 
 Each window is one tile of the walk file, 65,536 bp of GRCh38, and the
 windows are spaced evenly along the chromosome.
 
 - **Walk file:** a reader fetches the units that the format's
-  [read rule](walks-format.md#reading-a-window) selects for the window, a
-  tile and the departure bins over it, at the byte ranges the file's unit
-  table gives
+  [read rule](walks-format.md#reading-a-window) selects for the window, at
+  the byte ranges the file's unit table gives. These are the tile and the
+  bins of departure records over it, which list where haplotypes leave the
+  reference
 - **gfaidx:** `gfaidx get_region --mode all --with_coords` writes the same
   window's nodes and links and every haplotype through them, with
   coordinates. We ran it again with `--haplotype_gap 10kb`, which gfaidx's
@@ -260,10 +260,10 @@ Where gfaidx's bytes come from:
   listed in the table it read at open. gfaidx reads hundreds. A client that
   joins ranges up to 64 KB apart makes half as many requests on MC chr22 and
   fetches four times the bytes
-- **Stages:** gfaidx finds its byte ranges in four lookups. The coordinate
-  index gives the window's reference nodes, their postings give the lines
-  and steps through them, the steps give the other nodes, and the nodes give
-  the gzip members to read
+- **How gfaidx finds its ranges:** gfaidx makes four lookups, each on the
+  result of the last. The coordinate index gives the window's reference
+  nodes, their postings give the lines and steps through them, the steps
+  give the other nodes, and the nodes give the gzip members to read
 - **Repeats in gfaidx:** in pggb chrY's repeats one 64 kb window has gfaidx
   read over 100 MB and write up to half a gigabyte of GFA, because
   `--mode all` returns each haplotype whole from its first to its last visit
@@ -334,7 +334,7 @@ walk-file reader would need and whether the file has it:
 - **GFA tags, such as depth for colouring:** walk files keep none
   ([open problems](open-problems.md#gfa-tags-neither-file-keeps))
 
-## gbz-base and gfa-to-tabix on HPRC v2.1
+## gfa-to-tabix and gbz-base on HPRC v2.1
 
 HPRC v2.1's Minigraph-Cactus GRCh38 graph has 139.5 M nodes and 464
 haplotypes.
