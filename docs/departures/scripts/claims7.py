@@ -278,10 +278,12 @@ claim('H1', '#haplotype lists what each path with walk or abridged rows is liste
       'fields or more and the sample of fewer, once each in byte order, and no other')
 claim('H2', 'revisited:i:0 means no ref row or departure record has a pass count above 1 and no walk row has @k '
       'or :k')
-claim('H3', '#reference names the reference sample, the sample of every ref row\'s path')
+claim('H3', 'one #reference line names the reference sample, the sample of every ref row\'s path')
 claim('R1', 'a ref row\'s lengths and passes have one entry per step, passes . exactly when every count is 1')
 claim('R3', 'a tile of S holds at least one ref row, and ref rows of S only')
 claim('R2', 'a tile\'s ref rows are written in hapOffset order')
+claim('R4', 'no two ref rows of a sequence cover a base twice, so the offsets of R ascend')
+claim('R5', 'every length a ref or nodes row states is at least 1')
 claim('G1', 'a tile\'s walk rows are in order of path name in bytes, then fragStart, hapOffset and piece')
 claim('G4', 'every node id is below 2^31')
 claim('G6', 'a row has its kind\'s fixed columns, and any column after them is a tag NAME:T:value, its name letters '
@@ -307,13 +309,15 @@ claim('W2', 'the tool writes @k and :k only where they differ from the defaults,
 claim('W3', 'a walk continues along R where R\'s next position is the step\'s, and takes a route with an empty '
       'interior only where it is not')
 claim('W4', 'a walk row\'s start end is the span of all its placed steps')
-claim('B1', 'a tile that keeps a walk row has rows, other than its abridged rows and from kind on, of at most '
-      'abridgebytes bytes uncompressed')
-claim('B2', 'a tile that keeps a walk row has pieces costing at most abridge interior steps: each piece\'s routes\' '
-      'interior steps once per use, plus a quarter of all its steps')
+claim('B1', 'where the #walks line states an abridgebytes above 0, a tile that keeps a walk row has rows, other '
+      'than its abridged rows and from kind on, of at most that many bytes uncompressed')
+claim('B2', 'where the #walks line states an abridge above 0, a tile that keeps a walk row has pieces costing at '
+      'most that many interior steps: each piece\'s routes\' interior steps once per use, plus a quarter of all its '
+      'steps')
 claim('B3', 'a tile moves the fewest W lines it can, costliest first: every moved line costs at least as much as '
-      'every kept one, and with its last-numbered detail record put back, the tile would cost more than abridge or '
-      'its rows would be more than abridgebytes bytes')
+      'every kept one, and, where the #walks line states both budgets and one of them above 0, with its '
+      'last-numbered detail record put back the tile would cost more than abridge or its rows would be more than '
+      'abridgebytes bytes')
 claim('W5', 'each (path, fragStart, piece) has one walk or abridged row in the file, pieces numbered from 0 '
       'with none missing along one W line')
 claim('A1', 'an abridged row\'s start end is its blocks row\'s start end')
@@ -353,6 +357,8 @@ claim('K11', 'a departure record of an abridged piece\'s sequence and path whose
       'block ends on its contig, hapOffset plus its list\'s items up to there, has an ownBp of at least the list\'s '
       'trailing run')
 claim('K12', 'a blocks row\'s list starts with a run off R only on a W line\'s piece 0')
+claim('K13', 'no piece ends above 2^53 on its contig: a walk row\'s hapOffset plus its steps\' bp, an abridged '
+      'row\'s hapOffset plus hapBp')
 claim('D1', 'a departure record\'s ownTiles are tile names of its sequence that exist, in no repeat')
 claim('D2', 'a record has at most two ownTiles')
 claim('D3', 'a departure record\'s extent holds both breakpoints and is at least the breakpoint stretch')
@@ -427,6 +433,7 @@ held_tiles = {}   # (seq, tile name) -> Tile, for the tiles with abridged rows
 held_rows = {}    # (seq, tile name) -> the rows and costs of a tile with abridged rows, for B3
 detail_rows = {}  # (seq, cs, d) -> a detail unit's routes, nodes and walk rows, for B3
 ref_stretches = collections.defaultdict(list)  # seq -> the stretches its ref rows cover
+references = []
 reference = None
 detail_cost = {}  # (seq, cs, d) -> the cost of the record's pieces
 
@@ -604,6 +611,7 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
                 holes.append((c[1], int(c[2]), int(c[3])))
             elif c[0] == '#reference':
                 reference = c[1]
+                references.append(c[1])
             elif c[0] == '#unit' and SEQS is not None and c[1] not in SEQS:
                 finish_unit(unit)
                 unit, kind_elsewhere = None, c[4]
@@ -717,6 +725,9 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             if c[4].split('#')[0] != reference:
                 bad('H3', (reference, c[4]))
             seen('H3')
+            if any(n < 1 for n in lens):
+                bad('R5', (t.seq, t.name, 'ref row', line[:80]))
+            seen('R5')
             t.refs.append((int(c[6]), hs, lens, passes))
             at = int(c[6])
             for h, n, p in zip(hs, lens, pc):
@@ -746,6 +757,8 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
                 bad('N1', (t.seq, t.name, 'ids not strictly ascending'))
             for x, n in zip(ids, ints(c[5])):
                 t.nodes[x] = n
+                if n < 1:
+                    bad('R5', (t.seq, u['kind'], u['name'], 'nodes row', x, n))
                 if node_length.setdefault(x, n) != n:
                     bad('N3', (t.seq, u['kind'], u['name'], 'nodes row', x, n, 'elsewhere', node_length[x]))
             u['nodes_ids'] = ids
@@ -831,6 +844,8 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             u.setdefault('line_cost', collections.Counter())[(path, frag)] += piece_cost
             u.setdefault('walks', []).append((c, choices))
             u.setdefault('routes_used', set()).update(r for r, *_ in choices)
+            if int(c[6]) + sum(t.len[i] if i is not None else t.nodes.get(h >> 1, 0) for h, i in steps) > 1 << 53:
+                bad('K13', (t.seq, u['kind'], u['name'], line[:100]))
             if u['kind'] == 'tile':
                 haplotypes_with_rows.add(listed_under(path))
                 if piece in pieces[(path, frag)]:
@@ -866,6 +881,8 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             else:
                 if not RUN.fullmatch(c[9]):
                     bad('A10', (t.seq, t.name, 'hapBp', c[9], line[:100]))
+                if int(c[6]) + int(c[9]) > 1 << 53:
+                    bad('K13', (t.seq, t.name, line[:100]))
                 abridged.append((t.seq, t.name, path, frag, piece, int(c[10]), (a, b), int(c[6]), int(c[8]), int(c[9])))
                 abridged_of[(t.seq, t.name)].append((path, frag, piece, (a, b), int(c[6]), int(c[10]), int(c[9])))
             seen('A9')
@@ -942,6 +959,17 @@ for seq in sorted(s for s in set(units_of) | set(stated_holes) if SEQS is None o
     if sorted(stated_holes.get(seq, [])) != expected:
         bad('G5', (seq, 'stated', sorted(stated_holes.get(seq, []))[:4], 'uncovered by ref rows', expected[:4]))
 seen('G5')
+
+# R4
+for seq, covered in ref_stretches.items():
+    for (a1, b1), (a2, b2) in zip(sorted(covered), sorted(covered)[1:]):
+        if a2 < b1:
+            bad('R4', (seq, (a1, b1), (a2, b2)))
+seen('R4')
+seen('R5')
+seen('K13')
+if len(references) != 1:
+    bad('H3', ('#reference lines', references[:4]))
 
 # H1
 if haplotypes_listed != sorted(set(haplotypes_listed), key=lambda s: s.encode('utf-8', 'surrogateescape')):
@@ -1091,6 +1119,7 @@ def rows_put_back(held, record):
 
 
 cost_budget, bytes_budget = int(header.get('abridge', 0)), int(header.get('abridgebytes', 0))
+budgets_stated = 'abridge' in header and 'abridgebytes' in header and (cost_budget or bytes_budget)
 for (seq, cs), held in held_rows.items():
     ds = sorted(named.get((seq, cs), ()))
     records_of = [detail_rows.get((seq, cs, d)) for d in ds]
@@ -1099,10 +1128,11 @@ for (seq, cs), held in held_rows.items():
     moved = [detail_cost.get((seq, cs, d), 0) for d in ds]
     if held['line_cost'] and min(moved) < max(held['line_cost'].values()):
         bad('B3', (seq, cs, 'a kept line costs', max(held['line_cost'].values()) / 4, 'a moved one', min(moved) / 4))
-    back_cost = held['cost'] + moved[-1]
-    back_bytes = len(rows_put_back(held, records_of[-1])) if bytes_budget else 0
-    if (not cost_budget or back_cost <= 4 * cost_budget) and (not bytes_budget or back_bytes <= bytes_budget):
-        bad('B3', (seq, cs, f'record {ds[-1]} put back costs', back_cost / 4, 'and holds', back_bytes, 'bytes'))
+    if budgets_stated:
+        back_cost = held['cost'] + moved[-1]
+        back_bytes = len(rows_put_back(held, records_of[-1])) if bytes_budget else 0
+        if (not cost_budget or back_cost <= 4 * cost_budget) and (not bytes_budget or back_bytes <= bytes_budget):
+            bad('B3', (seq, cs, f'record {ds[-1]} put back costs', back_cost / 4, 'and holds', back_bytes, 'bytes'))
 seen('B3')
 
 # D1-D5
