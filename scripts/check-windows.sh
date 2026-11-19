@@ -2,12 +2,13 @@
 # Holds graph-walks' cut over windows to window-oracle.py: builds every walk
 # fixture under the option sets graph-walks-rebuild.mjs uses, and
 # fuzz7-gen.py's random graphs, seeds 1 to $3 (10 by default), under
-# fuzz7.sh's variants; first shows that each planted reader mistake in
-# MUTANTS makes some file differ, then runs the oracle over every file with
-# the checkout as it is. A sequence of 300 bp or fewer is cut at every
-# window, a longer one at its tile edges and 300 random windows, each with
-# context 0, 3 and 1000, expanded and not. Exits 1 on a difference or on a
-# mutant no file catches, naming it.
+# fuzz7.sh's variants; runs the oracle over every file with the checkout as
+# it is, then shows that each planted reader mistake in MUTANTS makes a file
+# that passed there differ. A sequence of 300 bp or fewer is cut at every
+# window, a longer one at its tile edges, holes and record ends and 300
+# random windows, each with context 0 and 1000, attachBp 6 and 65536,
+# expanded and not. Exits 1 on a difference or on a mutant no file catches,
+# naming it.
 # Usage: scripts/check-windows.sh <gfa-to-tabix binary> <graph-walks checkout> [seeds]
 set -u
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -18,11 +19,12 @@ dir=$(mktemp -d)
 trap 'rm -rf "$dir"' EXIT
 failed=0
 oracle() {
-  python3 -I "$REPO/scripts/window-oracle.py" "$1" "$2" --every-window-up-to 300 --windows 300 --contexts 0,3,1000 --most 3
+  python3 -I "$REPO/scripts/window-oracle.py" "$1" "$2" --every-window-up-to 300 --windows 300 --contexts 0,1000 \
+    --attach-bp 6,65536 --most 3
 }
 
 build() {
-  local label=$1 gfa=$2 refs=$3 out=$dir/f$(( $(wc -l < "$dir/files" 2>/dev/null || echo 0) ))
+  local label=$1 gfa=$2 refs=$3 out=$dir/f$(wc -l < "$dir/files")
   shift 3
   if "$B" "$gfa" --walks --refs "$refs" "$@" -o "$out" > "$out.log" 2>&1; then
     for r in ${refs//,/ }; do
@@ -61,8 +63,24 @@ for seed in $(seq 1 "$SEEDS"); do
   done
 done
 
-# Each mutant is a file of graph-walks' src, a line of it, and what replaces
-# that line's text, each a mistake a reader of the format could make
+files=0
+: > "$dir/passed"
+while read -r f label r; do
+  files=$((files + 1))
+  if out=$(oracle "$f" "$GW" 2>&1); then
+    echo "$f $label $r" >> "$dir/passed"
+  else
+    echo "$label $r:"
+    echo "$out"
+    failed=1
+  fi
+done < "$dir/files"
+echo "$files files checked, every window agreeing unless named above"
+
+# Each mutant is a file of graph-walks' src, the text it holds once, \n for a
+# line break, and what replaces it, each a mistake a reader of the format
+# could make. A mutant is caught where a file that passed above has windows
+# that differ
 MUTANTS=(
   "tile-touching|walkReader.ts|unit.start < span.end && unit.end > span.start|unit.start <= span.end && unit.end > span.start"
   "tile-edge-dropped|walkReader.ts|unit.start < span.end && unit.end > span.start|unit.start < span.end && unit.end > span.start + 1"
@@ -70,37 +88,41 @@ MUTANTS=(
   "pieces-unjoined|walkRows.ts|pieces[i]!.piece !== pieces[i - 1]!.piece + 1|true"
   "step-touching|walkRows.ts|if (start < windowEnd && start + bp[i + 1]! - bp[i]! > windowStart) {|if (start <= windowEnd && start + bp[i + 1]! - bp[i]! > windowStart) {"
   "attach-touching|walkDeparture.ts|const on = (base: number) => base >= span.start && base < span.end|const on = (base: number) => base >= span.start && base <= span.end"
+  "attach-below|walkDeparture.ts|d.ownBp <= attachBp && leavesOrRejoinsOn(d, drawn)|d.ownBp < attachBp && leavesOrRejoinsOn(d, drawn)"
   "records-twice|walkReader.ts|for (const line of new Set(lines)) {|for (const line of lines) {"
   "record-touching|walkReader.ts|+cols[2]! > span.start|+cols[2]! >= span.start"
   "computed-edge|walkRows.ts|if (lo < windowEnd && hi > windowStart) {|if (lo < windowEnd && hi > windowStart + 1) {"
+  "computed-across-pieces|walkRows.ts|    const bounds = pieceBounds(run)\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      let last = -1|    const bounds = [0, run.ids.length]\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      let last = -1"
+  "drawn-from-nodes|walkRows.ts|  let windowStart = drawn?.start ?? Infinity|  let windowStart = Infinity"
   "holes-kept|walkDeparture.ts|squeeze(d.leavePos) === squeeze(d.rejoinPos)|d.leavePos === d.rejoinPos"
 )
-for m in "${MUTANTS[@]}"; do
-  IFS='|' read -r name file from to <<< "$m"
-  rm -rf "$dir/gw-$name"
-  mkdir -p "$dir/gw-$name"
-  cp -r "$GW/src" "$GW/package.json" "$dir/gw-$name/"
-  ln -s "$GW/node_modules" "$dir/gw-$name/node_modules"
-  if ! python3 -I - "$dir/gw-$name/src/$file" "$from" "$to" <<'EOF'
+plant='
 import sys
 path, old, new = sys.argv[1], sys.argv[2].replace("\\n", "\n"), sys.argv[3].replace("\\n", "\n")
 text = open(path).read()
 if text.count(old) != 1:
     sys.exit(f"{text.count(old)} places hold {old!r}")
 open(path, "w").write(text.replace(old, new))
-EOF
-  then
-    echo "mutant $name: its line is not in $file once"
+'
+for m in "${MUTANTS[@]}"; do
+  IFS='|' read -r name file from to <<< "$m"
+  mkdir -p "$dir/gw-$name"
+  cp -r "$GW/src" "$GW/package.json" "$dir/gw-$name/"
+  ln -s "$GW/node_modules" "$dir/gw-$name/node_modules"
+  if ! python3 -I -c "$plant" "$dir/gw-$name/src/$file" "$from" "$to"; then
+    echo "mutant $name: its text is not in $file once"
     failed=1
     continue
   fi
   caught=""
   while read -r f label r; do
-    if ! oracle "$f" "$dir/gw-$name" > "$dir/m.out" 2>&1; then
+    oracle "$f" "$dir/gw-$name" > "$dir/m.out" 2>&1
+    if grep -qE '; [1-9][0-9]* windows differ$' "$dir/m.out"; then
       caught="$label $r: $(sed -n 1p "$dir/m.out")"
       break
     fi
-  done < "$dir/files"
+  done < "$dir/passed"
+  rm -rf "$dir/gw-$name"
   if [ -n "$caught" ]; then
     echo "mutant $name caught by $caught"
   else
@@ -108,15 +130,4 @@ EOF
     failed=1
   fi
 done
-
-files=0
-while read -r f label r; do
-  files=$((files + 1))
-  if ! out=$(oracle "$f" "$GW" 2>&1); then
-    echo "$label $r:"
-    echo "$out"
-    failed=1
-  fi
-done < "$dir/files"
-echo "$files files checked, every window agreeing unless named above"
 exit $failed

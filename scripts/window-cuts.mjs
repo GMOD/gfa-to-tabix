@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // What @jbrowse/graph-walks' cut returns over each window it is given, in the
 // form window-oracle.py states what it must return: one JSON line per window
-// read from stdin, {seq, start, end, context, expand}, each cut with every
-// walk kept, every budget lifted and attachBp as given. A fragment is its
+// read from stdin, {seq, start, end, context, expand, attachBp}, each cut
+// with every walk kept and every budget lifted. A fragment is its
 // name, fragStart, hapStart, hapEnd, trimmedBefore, trimmedAfter and steps,
 // a departure its record's columns, fromSteps and own steps; a step on the
 // reference is `refStart±` then `>id` or `<id`, a step off it `>id` or
@@ -11,7 +11,7 @@
 // With digest 1, each list of steps is the first 16 hex digits of its text's
 // SHA-1.
 //
-// Usage: window-cuts.mjs <graph-walks checkout> <walks.gz> [attachBp] [digest] < windows.jsonl
+// Usage: window-cuts.mjs <graph-walks checkout> <walks.gz> [digest] < windows.jsonl
 import { createHash } from 'node:crypto'
 import { open, readFile } from 'node:fs/promises'
 import { createInterface } from 'node:readline'
@@ -41,8 +41,7 @@ class LocalFile {
   }
 }
 
-const [checkout, walksPath, attachBp = '65536', digest = '0'] =
-  process.argv.slice(2)
+const [checkout, walksPath, digest = '0'] = process.argv.slice(2)
 const { WalkReader, isPlaceholder } = await import(
   pathToFileURL(join(resolve(checkout), 'src/index.ts')).href
 )
@@ -72,7 +71,7 @@ const stepsText = (graph, ids, rev, refStarts, against) =>
 const lines = createInterface({ input: process.stdin, crlfDelay: Infinity })
 for await (const line of lines) {
   if (line.trim() !== '') {
-    const { seq, start, end, context, expand } = JSON.parse(line)
+    const { seq, start, end, context, expand, attachBp } = JSON.parse(line)
     const out = { seq, start, end, context, expand }
     try {
       const { graph, fragments, departures } = await reader.cut(
@@ -84,7 +83,7 @@ for await (const line of lines) {
           stepBudget: Infinity,
           byteBudget: Infinity,
           departureByteBudget: Infinity,
-          attachBp: Number(attachBp),
+          attachBp,
           nodeLimit: Infinity,
           links: false,
         },

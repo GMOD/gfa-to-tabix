@@ -1152,7 +1152,8 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
   blocks, and every departure record
   whose line overlaps `D`, unfiltered, one in a `#hole` included, each
   once; and every departure it computes between consecutive steps of one
-  piece whose leave → rejoin stretch overlaps the drawn stretch.
+  piece whose extent, from the first base of its end nodes to the last as
+  a record's runs, overlaps `D`, one across a `#hole` included.
   <!-- C135 --> A
   departure between two pieces is a record, even where the read holds
   both, so none comes back twice <!-- C135 -->
