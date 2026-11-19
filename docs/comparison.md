@@ -1,54 +1,56 @@
 # Comparison with gbz-base and gfaidx
 
-gfa-to-tabix writes static files that a web browser reads by region from any
-web host. gbz-base and gfaidx also return a region of a pangenome graph with
-the haplotypes through it, each to a different kind of reader:
+gfa-to-tabix, gbz-base and gfaidx each return a region of a pangenome graph
+with the haplotypes through it. They differ in what they read and in who
+reads their output:
 
-- **gfa-to-tabix:** static files from any GFA. The
+- **gfa-to-tabix** turns a GFA into static files that a browser reads by
+  HTTP range request from any web host. The
   [node and link index](index-format.md), a bgzipped, Tabix-indexed BED
-  file, serves every graph, and the [walk files](walks-format.md), gzip
-  units with a table of their byte ranges, add every haplotype's path for a
-  base-level graph
-- **[gbz-base](https://github.com/jltsiren/gbz-base):** a SQLite database,
-  `graph.gbz.db`, that `gbz-base construct` builds from a GBZ.
-  [@gmod/gbz-base](https://github.com/GMOD/gbz-base-js) reads it by range
-  request
-- **[gbz-haplotype-index](https://github.com/GMOD/gbz-haplotype-index):** a
-  second SQLite file beside `graph.gbz.db` that names each walk and gives its
-  coordinate. Its
-  [haplotype-index.md](https://github.com/GMOD/gbz-haplotype-index/blob/main/docs/haplotype-index.md)
-  describes its tables
-- **[gfaidx](https://github.com/fawaz-dabbaghieh/gfaidx):** an index of a
-  whole GFA, read by programs on the machine that holds it.
-  [gfaidx-viz](https://github.com/fawaz-dabbaghieh/gfaidx-viz) puts it behind
-  a server: a browser asks for a region, the server runs gfaidx and sends
-  back the GFA, and the browser lays it out. `gfaidx index_gfa`
-  groups the nodes into communities of linked nodes, writes each community's
-  segments and links as one gzip member, and writes sidecar files that map
-  node names, paths and coordinates to those members. Its command line, C++
-  library and Python package return a region, the neighbourhood of a node or
-  a path as GFA
+  file, holds the nodes and links of any graph. The
+  [walk files](walks-format.md) add every
+  haplotype's path through a base-level graph, as gzip units with a table of
+  their byte ranges
+- **[gbz-base](https://github.com/jltsiren/gbz-base)** builds a SQLite
+  database, `graph.gbz.db`, from a GBZ with `gbz-base construct`.
+  [@gmod/gbz-base](https://github.com/GMOD/gbz-base-js) reads it in a
+  browser by range request.
+  [gbz-haplotype-index](https://github.com/GMOD/gbz-haplotype-index) adds a
+  second SQLite file beside it that names each walk and gives its coordinates
+  ([its tables](https://github.com/GMOD/gbz-haplotype-index/blob/main/docs/haplotype-index.md))
+- **[gfaidx](https://github.com/fawaz-dabbaghieh/gfaidx)** indexes a GFA for
+  programs on the machine that holds it. Its command line, C++ library and
+  Python package return a region, a node's neighbourhood or a path as GFA.
+  [gfaidx-viz](https://github.com/fawaz-dabbaghieh/gfaidx-viz) runs gfaidx
+  on a server, which sends a browser the GFA of the region it asks for
 
 The JBrowse graph genome viewer plugin reads gfa-to-tabix's files and
 gbz-base's database.
 
-## Choosing
+## Which to use
 
-- A graph drawn in a browser from a static web host, from an rGFA, a pggb
-  graph or any graph without a GBZ: gfa-to-tabix
-- HPRC v2.1: the walk files jbrowse.org hosts;
-  [readers](walks-format.md#readers) gives their URLs
-- A `graph.gbz.db` someone already hosts: gbz-haplotype-index, which works
-  beside it and leaves the database as it is
-- Thousands of haplotypes: gbz-base
-- A script or pipeline on the machine that holds the graph, which needs a
-  region, a node's neighbourhood or a whole path as GFA: gfaidx
-- An assembly graph, or any graph with neither paths nor rGFA tags: gfaidx,
-  since gfa-to-tabix files every row under a reference coordinate
-- A region named on any path, with no reference picked when the index is
-  built: gfaidx or gbz-base. A few chosen samples' coordinates: a walk file
-  for each, named in `--refs`
-- GFA tags kept with the nodes, links and paths returned: gfaidx
+- Use **gfa-to-tabix** to view a graph in a browser from files on any
+  static web host. It reads the GFA a pipeline writes, an rGFA from
+  minigraph or a GFA with P or W lines from Minigraph-Cactus or pggb, with
+  no conversion step. For HPRC v2.1, jbrowse.org already hosts the walk
+  files, and [readers](walks-format.md#readers) gives their URLs
+- Use **gbz-base** for a graph with thousands of haplotypes, because its
+  database grows sublinearly with their number. It reads a GBZ: HPRC
+  publishes its Minigraph-Cactus graphs as GBZ, and
+  `vg gbwt -G graph.gfa --gbz-format -g graph.gbz` builds one from a GFA
+  with P or W lines. Where someone already hosts a `graph.gbz.db`,
+  gbz-haplotype-index adds walk names and coordinates beside it and leaves
+  the database unchanged
+- Use **gfaidx** for:
+  - a script or pipeline on the machine that holds the graph, which needs a
+    region, a node's neighbourhood or a whole path as GFA
+  - an assembly graph, or any graph with neither paths nor rGFA tags,
+    because gfa-to-tabix files every row under a reference coordinate
+  - output that keeps the GFA tags of the nodes, links and paths
+- **Coordinates on any path:** gfaidx and gbz-base take a region on any path
+  without a reference chosen when the index is built. gfa-to-tabix writes a
+  walk file for each sample named in `--refs`, so it gives coordinates on a
+  few chosen samples
 
 ## Differences
 
@@ -57,30 +59,31 @@ gbz-base's database.
 | Read by         | a browser, by HTTP range request | a browser, by HTTP range request, or the `gbz-base` command line | its command line, C++ library and Python package, from local files; gfaidx-viz's server runs it for a browser |
 | Input           | rGFA, or a plain GFA with P or W lines; walks need a base-level graph | a GBZ | any GFA 1 with at least one L line: P or W lines, rGFA, or no paths |
 | Files           | BGZF text any static web host serves: the index with a TBI, which htslib and `tabix` read, and walk files with a unit table, which `zcat` reads whole | SQLite | a gzip file of the S and L lines, which `zcat` reads whole, a text table of its members, and binary sidecars for node names, node lengths, paths and coordinates |
-| Nodes and links | `N` and `L` rows filed by reference coordinate | a row per node orientation, with its edges | S and L lines grouped by community, one gzip member each, and the links between communities in one more member |
+| Nodes and links | `N` and `L` rows filed by reference coordinate | a row per node orientation, with its edges | S and L lines grouped into communities of linked nodes, one gzip member per community, and the links between communities in one more member |
 | Queries         | a reference region | a reference interval or a node, with context in bp | a region on any P or W line or rGFA sequence, a node with its neighbourhood, a whole path, or the paths through a set of nodes |
-| Bases           | in walk files with `--sequences` | always | always |
-| Haplotype paths | per 64 kb tile: the reference's path, distinct routes off it, each piece's choices of route | the GBWT, in the node rows | every step of every P and W line, and for each node the lines and steps that visit it |
-| Walk names      | `sample#haplotype#contig` in every row; the header lists them all | `unknown#N` for every walk but the query path without the index; with it, sample, haplotype, contig and coordinate | each line's sample, haplotype and sequence; `--with_coords` adds the coordinates of each piece returned |
+| Bases           | in walk files written with `--sequences` | always | always |
+| Haplotype paths | per 64 kb tile of the reference: the reference's path, each distinct route a haplotype takes off it, and the routes each piece of a haplotype takes | the GBWT, in the node rows | every step of every P and W line, and for each node the lines and steps that visit it |
+| Walk names      | `sample#haplotype#contig` in every row; the header lists them all | without the index, `unknown#N` for every walk but the query path; with it, sample, haplotype, contig and coordinate | each line's sample, haplotype and sequence; `--with_coords` adds the coordinates of each piece returned |
 | References      | one walk file per `--refs` sample | one database for GRCh38, CHM13 and any generic path | one index for every path, and a `.cdx` sidecar of chosen paths' coordinates, which an rGFA needs and which makes W and P line queries faster |
 | GFA tags        | reads `SN`, `SO`, `SR` and `LN`, and keeps no other tag of an S, L, P or W line | none: a GBZ keeps no GFA tags | returns S, L and P lines with their tags as written |
-| Zoomed out      | `build` writes a coarse tier, alleles and bubbles; walk files have none | the index draws every haplotype over a whole chromosome in about a dozen requests, at several zoom levels | a query returns every node, link and step of its region |
-| N haplotypes    | routes grow as N^0.36 and choices as N^0.86, about 20 GB genome-wide at 10,000 | the GBWT grows sublinearly, because haplotypes share runs | the path index stores each step, so it grows with the total steps of all paths |
+| Zoomed out      | `build` writes a coarse tier of the node and link index, and the alleles and bubbles; walk files have no zoomed-out level | with the index, a viewer draws every haplotype over a whole chromosome from about a dozen requests, at several zoom levels | a query returns every node, link and step of its region |
+| Growth with N haplotypes | distinct routes grow as N^0.36 and the lists of routes each piece takes as N^0.86, about 20 GB genome-wide at 10,000 haplotypes | the GBWT grows sublinearly, because haplotypes share runs | the path index stores each step, so it grows with the total steps of all paths |
 | Paralog jumps   | the steps after a jump take the paralog's tile ([details](walks-format.md#paralogs-and-collapsed-repeats)); on chr22, fewer than 0.1% of steps, in at most 74 of the 1,130 paths besides GRCh38's, nearly all in 22q11 | reaches those nodes by graph distance | the default `--mode all` keeps each path from its first to its last node on the reference interval, and `--haplotype_gap` cuts the path where more bp than the gap lie between two such nodes |
-| Misses          | a path that crosses onto another sequence of the reference reads as ending there ([open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence)); where the reference passes a node more than once, a step's position is the writer's choice ([Exact and chosen](walks-format.md#exact-and-chosen)) | the snarl extension once turned a 100 kbp query into 10 Mbp, 75 s and 9 GiB | every region query reads the member of links between communities whole; a 64 kb window in a repeat can write hundreds of MB of GFA, with `--haplotype_gap 10kb` too ([below](#reading-a-64-kb-window)); `.ndx` holds two hashes of each node name in place of the name, so two names with the same hashes would match one entry; P lines with overlaps get no coordinates |
+| Known limits    | a path that crosses onto another sequence of the reference reads as ending there ([open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence)); where the reference passes a node more than once, a step's position is the writer's choice ([Exact and chosen](walks-format.md#exact-and-chosen)) | the snarl extension once turned a 100 kbp query into 10 Mbp, 75 s and 9 GiB | every region query reads the member of links between communities whole; a 64 kb window in a repeat can write hundreds of MB of GFA, with `--haplotype_gap 10kb` too ([below](#reading-a-64-kb-window)); `.ndx` holds two hashes of each node name in place of the name, so two names with the same hashes would match one entry; P lines with overlaps get no coordinates |
 
-The index's keep route, which names a few chosen haplotypes, has a
-[proof](https://github.com/GMOD/gbz-haplotype-index/blob/main/docs/proof.md)
-and a fuzzer behind it.
+gbz-haplotype-index's `keep` option returns the reference and a few chosen
+haplotypes. A [proof](https://github.com/GMOD/gbz-haplotype-index/blob/main/docs/proof.md)
+shows that it returns every piece of each chosen haplotype's walk, and a
+fuzzer tests it.
 
 ## gfaidx and gfa-to-tabix on two graphs
 
 We indexed two graphs with both tools on one machine, with GRCh38 as the
 reference: HPRC v2.1's Minigraph-Cactus chr22, as `vg convert -f` writes it
 with W lines, and HPRC release 2's pggb chrY, with P lines.
-[comparison/scripts](comparison/scripts) holds the scripts,
-[comparison/results](comparison/results) what they wrote, and `tables.py`
-writes the tables below from those results.
+The scripts are in [comparison/scripts](comparison/scripts) and their
+output is in [comparison/results](comparison/results). `tables.py` writes the
+tables below from that output.
 
 <!-- generated:versions -->
 - gfaidx 2.3.2, the release's Linux x86-64 binary (sha256 60df8bc2efbb41fb), with index_gfa --threads 8
@@ -121,54 +124,64 @@ writes the tables below from those results.
 <!-- /generated -->
 
 - **Memory:** gfaidx sorts on disk and stays under 1 GiB on both graphs.
-  The walk writer takes several times that on pggb chrY, and twice as much
-  again with bases. The node and link index holds the whole graph in memory
-- **Time:** without bases, the walk writer finishes first on both graphs. It
-  ran on 24 cores, and `gfaidx index_gfa` on 8 threads, which it uses for
-  the path index. The machine is shared, so the times are rough
+  The walk writer peaks at several times that on pggb chrY, and at twice as
+  much again with bases. The node and link index writer holds the whole
+  graph in memory
+- **Time:** without bases, the walk writer finishes first on both graphs.
+  It ran on 24 cores, and `gfaidx index_gfa` ran on 8 threads, which it
+  uses to build the path index. Other jobs shared the machine, so the times
+  are rough
 - **Size:** a walk file is about 20 times smaller than gfaidx's files on MC
-  chr22 and about 12 times smaller on pggb chrY, because it holds less
-- **What each stores:** gfaidx stores every step of every P and W line, and
-  for every node the lines and steps that visit it, so its path index is
-  nearly all of its bytes. A walk file stores each distinct route through a
-  tile once and the route each piece of a haplotype takes, for one reference
+  chr22 and about 12 times smaller on pggb chrY, because it holds less.
+  gfaidx stores every step of every P and W line, and for every node the
+  lines and steps that visit it, so its path index is nearly all of its
+  bytes. A walk file stores each distinct route through a tile once and the
+  routes each piece of a haplotype takes, for one reference
 - **Lines left out:** a walk file leaves out a line that visits no node of
   its reference, 36 of MC chr22's lines and about half of pggb chrY's
   ([MC chr22](comparison/results/mc22.gfa-to-tabix.walks.log),
   [pggb chrY](comparison/results/pggbY.gfa-to-tabix.walks.log)). gfaidx
   keeps every line
 - **Nodes and links:** the node and link index is larger than gfaidx's graph
-  file, which has the bases too. Each index row is a line of text with its
-  reference interval, and on a plain GFA with a bitmask of the assemblies
-  through the node
+  file, though gfaidx's file also holds the bases. Each index row is a line
+  of text with its reference interval and, on a plain GFA, a bitmask of the
+  assemblies through the node
 
 ### Reading a 64 kb window
 
-A window is one tile of the walk file, 65,536 bp of GRCh38, and the windows
-are spaced evenly along the chromosome.
+A walk reader reads a window in a few byte ranges of one file, and gfaidx
+reads hundreds of ranges from five files. gfaidx answers the median MC
+chr22 window in under half the walk reader's time, and the walk reader is
+faster in most pggb chrY windows, where repeats make gfaidx return
+far more of the graph.
 
-- **Walk file:** the bytes of the units the format's
+Each window is one tile of the walk file, 65,536 bp of GRCh38, and the
+windows are spaced evenly along the chromosome.
+
+- **Walk file:** a reader fetches the units that the format's
   [read rule](walks-format.md#reading-a-window) selects for the window, a
-  tile and the departure bins over it, taken from the file's unit table
-- **gfaidx:** `gfaidx get_region --mode all --with_coords` on the same
-  window, and again with `--haplotype_gap 10kb`, which gfaidx's README
-  gives for repeats and gfaidx-viz's server adds to every query for all
-  haplotypes. Each writes the window's nodes and links and every haplotype
-  through them, with coordinates. A syscall trace gives each byte range the
+  tile and the departure bins over it, at the byte ranges the file's unit
+  table gives
+- **gfaidx:** `gfaidx get_region --mode all --with_coords` writes the same
+  window's nodes and links and every haplotype through them, with
+  coordinates. We ran it again with `--haplotype_gap 10kb`, which gfaidx's
+  README gives for repeats and gfaidx-viz's server adds to every query for
+  all haplotypes
+- **Counting gfaidx's reads:** a syscall trace gives each byte range the
   command reads, and a logging filesystem gives each 4 KB page it touches
   in the three sidecars it memory-maps. A range that every window reads
   counts as read at open
-- **Time:** each is the median of three runs with the files in the page
-  cache. gfaidx's is the whole command, from process start to the GFA on
-  disk. The walk file's is
-  [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) in Node,
-  cutting the window with every haplotype kept, context 0 and no budget:
-  from a new reader, which first reads the directory, the header and the
-  table, and on a reader already open
-- **Over HTTP:** the MC chr22 windows were also cut from the whole-genome
-  GRCh38 file jbrowse.org hosts, which holds the same chr22
-- **Nodes:** the distinct nodes a cut's fragments step on, against the
-  segments of gfaidx's GFA
+- **Time:** the median of three runs with the files in the page cache. For
+  gfaidx it is the whole command, from process start to the GFA on disk
+- **Walk reader time:**
+  [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) in Node cuts
+  the window with every haplotype kept, context 0 and no step budget. We
+  timed it from a new reader, which first reads the directory, the header
+  and the unit table, and again on a reader already open
+- **Over HTTP:** we also cut the MC chr22 windows from the whole-genome
+  GRCh38 file that jbrowse.org hosts, which holds the same chr22
+- **Nodes:** the distinct nodes the walk cut's fragments step on, compared
+  with the segments in gfaidx's GFA
 
 <!-- generated:window-mc22 -->
 | MC chr22, 40 windows: median (largest) | walk file | walk file with bases | gfaidx | gfaidx, `--haplotype_gap 10kb` |
@@ -188,8 +201,8 @@ are spaced evenly along the chromosome.
 | steps returned | 796,286 (8.7 M) | 796,286 (8.7 M) |  |  |
 | GFA written |  |  | 8.2 MB (111 MB) | 8.2 MB (99 MB) |
 
-- Against gfaidx: from a new reader, the walk cut takes less time in 11 of the 40 windows, and the nodes its fragments step on are the segments of the GFA, id for id, in 38. In the others the GFA has more
-- Against gfaidx, `--haplotype_gap 10kb`: from a new reader, the walk cut takes less time in 11 of the 40 windows, and the nodes its fragments step on are the segments of the GFA, id for id, in 39. In the others the GFA has more
+- Against gfaidx: from a new reader, the walk cut is faster in 11 of the 40 windows. The nodes its fragments step on match the GFA's segments id for id in 38, and the GFA has more nodes in the other 2
+- Against gfaidx, `--haplotype_gap 10kb`: from a new reader, the walk cut is faster in 11 of the 40 windows. The nodes its fragments step on match the GFA's segments id for id in 39, and the GFA has more nodes in the other 1
 <!-- /generated -->
 
 <!-- generated:window-pggbY -->
@@ -209,8 +222,8 @@ are spaced evenly along the chromosome.
 | steps returned | 53,184 (10.5 M) | 53,184 (10.5 M) |  |  |
 | GFA written |  |  | 818 KB (530 MB) | 527 KB (274 MB) |
 
-- Against gfaidx: from a new reader, the walk cut takes less time in 38 of the 40 windows, and the nodes its fragments step on are the segments of the GFA, id for id, in 20. In the others the GFA has more
-- Against gfaidx, `--haplotype_gap 10kb`: from a new reader, the walk cut takes less time in 31 of the 40 windows, and the nodes its fragments step on are the segments of the GFA, id for id, in 22. In the others the GFA has more
+- Against gfaidx: from a new reader, the walk cut is faster in 38 of the 40 windows. The nodes its fragments step on match the GFA's segments id for id in 20, and the GFA has more nodes in the other 20
+- Against gfaidx, `--haplotype_gap 10kb`: from a new reader, the walk cut is faster in 31 of the 40 windows. The nodes its fragments step on match the GFA's segments id for id in 22, and the GFA has more nodes in the other 18
 <!-- /generated -->
 
 Where gfaidx's bytes come from:
@@ -241,16 +254,16 @@ Where gfaidx's bytes come from:
 
 - **Bytes:** for the median window gfaidx reads about 70 times the walk
   file's bytes on MC chr22 and about 15 times on pggb chrY, from five files.
-  The path index is the largest share on both, and on MC chr22 a third are
-  the `.pcx` checkpoints, which a query reads nearly whole
+  The path index is the largest share on both, and on MC chr22 a third of
+  the bytes are the `.pcx` checkpoints, which a query reads nearly whole
 - **Byte ranges:** a walk reader fetches one to four ranges, all of them
   listed in the table it read at open. gfaidx reads hundreds. A client that
   joins ranges up to 64 KB apart makes half as many requests on MC chr22 and
   fetches four times the bytes
-- **Stages:** gfaidx finds its ranges in stages. The coordinate index gives
-  the window's reference nodes, their postings give the lines and steps
-  through them, the steps give the other nodes, and the nodes give the gzip
-  members to read
+- **Stages:** gfaidx finds its byte ranges in four lookups. The coordinate
+  index gives the window's reference nodes, their postings give the lines
+  and steps through them, the steps give the other nodes, and the nodes give
+  the gzip members to read
 - **Repeats in gfaidx:** in pggb chrY's repeats one 64 kb window has gfaidx
   read over 100 MB and write up to half a gigabyte of GFA, because
   `--mode all` returns each haplotype whole from its first to its last visit
@@ -258,10 +271,12 @@ Where gfaidx's bytes come from:
   haplotype where it strays far between those visits: the largest GFA
   halves and the nodes returned fall to a few times the walk cut's, but
   gfaidx reads about as many bytes
-- **Repeats in a walk file:** the largest window on pggb chrY is under 2 MB
+- **Repeats in a walk file:** a walk reader reads under 2 MB for every
+  pggb chrY window
   ([every window](comparison/results/pggbY.cost.txt)). The writer moves the
-  longest pieces out of a tile that passes its budget, into units a reader
-  fetches when a viewer expands that haplotype
+  longest pieces out of a tile over its `--abridge-steps` or
+  `--abridge-bytes` budget, into units a reader fetches when a viewer
+  expands that haplotype
   ([Abridged tiles](walks-format.md#abridged-tiles))
 - **Time on MC chr22:** on local disk gfaidx answers the median window in
   under half the reader's time. The reader decodes about 800,000 steps for
@@ -272,52 +287,57 @@ Where gfaidx's bytes come from:
   far faster where gfaidx returns megabytes of GFA
 - **Time over HTTP:** over the bench machine's fast connection, cutting from
   jbrowse.org takes about as long as cutting from local disk, so the
-  reader's time is its decoding and not its reads
-- **The slowest windows** are in repeats. gfaidx's takes a few seconds and
-  writes hundreds of MB, with or without `--haplotype_gap 10kb`. The reader's takes longer, on a pggb chrY window
-  with over 10 million steps, which its default step budget of 4 million
-  refuses with a notice to zoom in
-- **The content returned:** where the two differ in nodes, gfaidx's GFA has
-  up to a hundred times as many by default, the nodes of each haplotype
-  between two distant visits to the window, and a few times as many with
-  `--haplotype_gap 10kb`. Steps and links were not compared;
-  [walks-truth.py](../scripts/walks-truth.py) `rebuild` checks a walk file
-  against its GFA step for step
+  reader spends its time decoding, not reading
+- **The slowest windows** for both tools are in repeats. gfaidx's slowest
+  takes a few seconds and writes hundreds of MB of GFA, with or without
+  `--haplotype_gap 10kb`. The reader's slowest takes longer: a pggb chrY
+  window with over 10 million steps, timed with no step budget. The
+  reader's default budget of 4 million steps refuses that window with a
+  notice to zoom in
+- **The content returned:** in windows where the node sets differ, gfaidx's
+  GFA has up to a hundred times as many nodes by default, because it
+  includes each haplotype's nodes between two distant visits to the window.
+  With `--haplotype_gap 10kb` it has a few times as many. We did not compare
+  steps or links; [walks-truth.py](../scripts/walks-truth.py) `rebuild`
+  checks a walk file against its GFA step for step
 
-## gfaidx-viz's views from a walk file
+## What gfaidx-viz's views need from a walk file
 
-[gfaidx-viz](https://github.com/fawaz-dabbaghieh/gfaidx-viz) began as a fork
-of BandageJS's earlier wasm engine and draws the GFA a gfaidx server returns
-for a region. What a reader of a walk file needs for each of its views:
+[gfaidx-viz](https://github.com/fawaz-dabbaghieh/gfaidx-viz) draws the GFA a
+gfaidx server returns for a region, and began as a fork of BandageJS's
+earlier wasm engine. The list below gives, for each of its views, what a
+walk-file reader would need and whether the file has it:
 
 - **Copy-number track:** for each chosen path, how many times it visits each
   reference node, averaged into bins along the reference. A walk-file cut
-  holds every visit a haplotype makes to the window's reference nodes,
-  checked against the GFA's lines on every tile of MC chr22 and pggb chrY,
-  with every haplotype, and on stretches cut inside tiles
-  ([visits](comparison/visits), [results](comparison/visits/results)). On a
-  node the reference passes more than once, which copy holds a visit is
-  the writer's choice and the file's `passes` say so; gfaidx-viz gives
-  each pass of such a node the node's whole count
+  holds every visit a haplotype makes to the window's reference nodes. We
+  checked this against the GFA's lines on every tile of MC chr22 and pggb
+  chrY, with every haplotype, and on stretches cut inside tiles
+  ([visits](comparison/visits), [results](comparison/visits/results)).
+  Where the reference passes a node more than once, the writer chooses
+  which pass holds a visit, and the `ref` rows' `passes` mark such nodes.
+  gfaidx-viz gives each pass of such a node the node's whole count
 - **Paths across a link, by direction:** a cut's fragments give each
-  haplotype's consecutive steps with their strands, so this is reader work.
-  Where both ends are reference nodes of the window and the file passes no
-  node twice, the list is complete; with an end off the reference it is a
-  lower bound ([open problems](open-problems.md#every-link-of-a-loaded-node-and-a-bubble-layer)).
-  Not yet checked against the GFA
+  haplotype's consecutive steps with their strands, so a reader can build
+  this list. Where both ends are reference nodes of the window and the
+  file's reference passes no node twice, the list is complete; with an end
+  off the reference it is a lower bound
+  ([open problems](open-problems.md#every-link-of-a-loaded-node-and-a-bubble-layer)).
+  We have not yet checked it against the GFA
 - **A straightened reference with a ruler:** `ref` rows give the
   reference's nodes, lengths and offsets, so a ruler can be exact in bp.
   gfaidx-viz spaces reference nodes by their drawn length and reads bp
   between node centres, so its ticks are not evenly spaced in bp
-- **Any path as the coordinates:** a walk file per `--refs` sample today;
-  a lookup from a haplotype's own coordinates to tiles could be built from
-  walk rows' `path` and `hapOffset` as a side file
-- **GFA tags, such as depth for colouring:** not kept
+- **Any path as the coordinates:** gfa-to-tabix writes a walk file for
+  each `--refs` sample. A side file that maps a haplotype's coordinates to
+  tiles could be built from walk rows' `path` and `hapOffset`
+- **GFA tags, such as depth for colouring:** walk files keep none
   ([open problems](open-problems.md#gfa-tags-neither-file-keeps))
 
 ## gbz-base and gfa-to-tabix on HPRC v2.1
 
-The Minigraph-Cactus GRCh38 graph: 139.5 M nodes, 464 haplotypes.
+HPRC v2.1's Minigraph-Cactus GRCh38 graph has 139.5 M nodes and 464
+haplotypes.
 
 | measure                 | gfa-to-tabix walk files                 | gbz-base             | gbz-haplotype-index |
 | ----------------------- | --------------------------------------- | -------------------- | ------------------- |
@@ -335,18 +355,23 @@ The Minigraph-Cactus GRCh38 graph: 139.5 M nodes, 464 haplotypes.
   `walks-truth.py cost` on the
   [GRCh38](comparison/results/genome8.cost-grch38.txt) and
   [CHM13](comparison/results/genome8.cost-chm13.txt) files
-- Cut by graph-walks over HTTP from the hosted GRCh38 file, a 64 kb chr22
-  window with every haplotype takes about as long as from local disk
+- graph-walks cuts a 64 kb chr22 window with every haplotype from the
+  hosted GRCh38 file over HTTP in about the time it takes from local disk
   ([above](#reading-a-64-kb-window))
 - The GBZ-base paper (Sirén and Paten, bioRxiv 2026.07.10.737775 v2) gives
   10.7 GiB for gbz-base, 5.7 GiB for the GBZ and 3.35 GiB for an experimental
   GBZ v3 on the CHM13 graph, with bases
-- Drawn in JBrowse at the HPRC tutorial's loci on 2026-10-08, format 1 walk
-  files, three per reference, took 5 to 7 requests and 2.4 to 7.9 s per window,
-  and gbz-base with the index 17 to 57 requests and 6.4 to 13.3 s
-- On 60 chr22 windows with eight haplotypes, format 1 walk files and gbz-base
-  returned the same haplotypes and alignments in 56. The other four lie in the
-  22q11 repeats and the immunoglobulin lambda locus
-- At the ABCA7 VNTR, all 462 format 1 walk rows match gbz-base's to the bp
-- From format 2 walk files, the plugin draws the same graph in 49 of 50 chr22
-  windows; the 50th, in 22q11, lacks 3,111 nodes off the reference
+
+We compared format 1 walk files, three per reference, with gbz-base and its
+index directly:
+
+- Drawing the HPRC tutorial's loci in JBrowse on 2026-10-08 took 5 to 7
+  requests and 2.4 to 7.9 s per window from the walk files, and 17 to 57
+  requests and 6.4 to 13.3 s from gbz-base with the index
+- On 60 chr22 windows with eight haplotypes, the walk files and gbz-base
+  returned the same haplotypes and alignments in 56. The other four lie in
+  the 22q11 repeats and the immunoglobulin lambda locus
+- At the ABCA7 VNTR, all 462 walk rows match gbz-base's to the bp
+- The plugin draws the same graph from format 2 walk files as from format 1
+  in 49 of 50 chr22 windows; the 50th, in 22q11, lacks 3,111 nodes off the
+  reference

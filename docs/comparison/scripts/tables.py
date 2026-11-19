@@ -161,10 +161,10 @@ def window(graph):
         same = sum(1 for r in good if r["gfaidx_gfa_S_sha1"] == sha[r["start"]])
         faster = sum(1 for r in good if fresh[r["start"]] < float(r["gfaidx_ms_median"]))
         failed = len(g) - len(good)
-        note += (f"\n- Against {label}: from a new reader, the walk cut takes less time in {faster} of the {len(good)} windows,"
-                 f" and the nodes its fragments step on are the segments of the GFA, id for id, in {same}."
-                 f" In the others the GFA has more" + (f". {failed} of the {len(g)} windows failed in gfaidx and are left out"
-                                                       if failed else ""))
+        note += (f"\n- Against {label}: from a new reader, the walk cut is faster in {faster} of the {len(good)} windows."
+                 f" The nodes its fragments step on match the GFA's segments id for id in {same},"
+                 f" and the GFA has more nodes in the other {len(good) - same}" + (f". {failed} of the {len(g)} windows failed in gfaidx and are left out"
+                                                                                  if failed else ""))
     header = [f"{GRAPHS[graph]}, {len(w)} windows: median (largest)", "walk file", "walk file with bases"] + [m[0] for m in measured]
     return table(header, body) + "\n" + note
 
