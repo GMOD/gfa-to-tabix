@@ -3044,17 +3044,16 @@ fn a_name_with_a_byte_outside_0x21_to_0x7e_is_refused() {
                 .bytes()
                 .map(|b| if b == b'_' { byte } else { b })
                 .collect();
-            let path = std::env::temp_dir().join(format!(
-                "walks-name-byte-{byte}-{}.gfa",
-                std::process::id()
-            ));
+            let path = std::env::temp_dir()
+                .join(format!("walks-name-byte-{byte}-{}.gfa", std::process::id()));
             fs::write(&path, gfa).unwrap();
             let built = build(path.to_str().unwrap(), &["--refs", "R"]);
             fs::remove_file(&path).unwrap();
             let stderr = String::from_utf8_lossy(&built.output.stderr);
             assert_eq!(built.output.status.code(), Some(1), "{stderr}");
             assert!(
-                stderr.contains(&format!("line 3: path ")) && stderr.contains(&format!("holds the byte 0x{byte:02X}")),
+                stderr.contains("line 3: path ")
+                    && stderr.contains(&format!("holds the byte 0x{byte:02X}")),
                 "{line}: {stderr}"
             );
             assert!(built.walks.is_empty());

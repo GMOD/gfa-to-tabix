@@ -844,18 +844,18 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             u.setdefault('line_cost', collections.Counter())[(path, frag)] += piece_cost
             u.setdefault('walks', []).append((c, choices))
             u.setdefault('routes_used', set()).update(r for r, *_ in choices)
-            if int(c[6]) + sum(t.len[i] if i is not None else t.nodes.get(h >> 1, 0) for h, i in steps) > 1 << 53:
+            piece_bp = sum(t.len[i] if i is not None else t.nodes.get(h >> 1, 0) for h, i in steps)
+            if int(c[6]) + piece_bp > 1 << 53:
                 bad('K13', (t.seq, u['kind'], u['name'], line[:100]))
             if u['kind'] == 'tile':
                 haplotypes_with_rows.add(listed_under(path))
                 if piece in pieces[(path, frag)]:
                     bad('W5', ('two rows', path, frag, piece))
                 pieces[(path, frag)].add(piece)
-                stretches[(path, frag)].extend((piece, int(c[6]), int(c[6]) + sum(
-                    t.len[i] if i is not None else t.nodes.get(h >> 1, 0) for h, i in steps)))
+                stretches[(path, frag)].extend((piece, int(c[6]), int(c[6]) + piece_bp))
             else:
                 detail_pieces.setdefault((t.seq, u['cs'], u['d']), {})[(path, frag, piece)] = (
-                    a, b, int(c[6]), int(c[8]), sum(t.len[i] if i is not None else t.nodes.get(h >> 1, 0) for h, i in steps))
+                    a, b, int(c[6]), int(c[8]), piece_bp)
                 detail_paths[(t.seq, u['cs'], u['d'])].add((path, frag))
             if args.own and in_shard(path):
                 at = int(c[6])
