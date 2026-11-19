@@ -10,6 +10,8 @@
     ascends, as invariants a reader relies on
   - one `#reference` line, no empty unit, BGZF, and `bytes` as the
     directory's tag
+  - that a file's reference is the paths its `ref` rows are cut from,
+    which can be one haplotype of the `#reference` sample
   - that a name is bytes 0x21 to 0x7E, which narrows format 8
 - **Rejects:** names as any bytes compared as bytes, with today's writer
   rule stated as reader-relied; GFA's ban on a leading `*` or `=` in a
@@ -40,6 +42,16 @@
   that differ only in such a byte for one, and sorts in UTF-16 code
   units where the page sorts in bytes
   ([issues log](../issues-log.md), 2026-11-18)
+- **The reader takes the reference from the `ref` rows.** graph-walks
+  builds R, places nodes and counts from the rows of kind `ref` alone
+  (`refRows`, src/walkChunk.ts; src/walkCounts.ts), and uses the
+  `#reference` line only to turn a bare contig into a sequence name
+  (`cutRegion`, src/walkReader.ts). The page defined a reference sequence
+  as a path of the reference sample and `#haplotype` as "each other path
+  with rows", which reads as if every path of the sample were reference.
+  Three checks read it so, classed a line by its sample, and failed a
+  file the reader reads correctly: `spec8.py`, `walks-truth.py rebuild`
+  and `graph-walks-rebuild.mjs`
 
 ## The rulings
 
@@ -75,6 +87,13 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   line. No unit of a kind the page gives is empty, so a departure bin
   with no record is not in the file. A unit is BGZF members. The data
   file's `#walks` line carries no `bytes` tag
+- **The reference (C9, C51, C157).** A file's reference is the paths its
+  `ref` rows are cut from, each of the `#reference` sample. It can be one
+  haplotype of that sample, and the sample's other paths then have walk
+  rows, departure records and a `#haplotype` line like any other.
+  `#reference` names a sample, never a haplotype: a file whose line
+  names `HG002#1` is not format 8. This widens nothing a reader does and
+  narrows nothing: it is wording matched to the reader
 - **Names (C200).** A sequence name, a `path` and a name a `#reference`,
   `#haplotype` or `#hole` line or a directory line states is one or more
   bytes from 0x21 to 0x7E and does not start with `#`. Two names are the
@@ -148,6 +167,40 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   | A line ending at 2^53 + 1 with no number above 2^53; a `hapOffset` above it | `claims7.py`; `verify7.py` and `claims7.py` | nothing but the rebuild against the GFA |
   | A name with a space, a carriage return, 0xE9 or 0x7F | `verify7.py`, `spec8.py` | nothing but the rebuild against the GFA |
 
+- **A reference of one haplotype.** Every checker passes
+  `one-haplotype-reference` in the matrix, a file with
+  `#reference HG002`, `ref` rows of `HG002#1` alone and `HG002#2` in walk
+  rows, which `check-walks.sh` now makes from
+  [hapref.gfa](../departures/scripts/broken/hapref.gfa) under two option
+  sets; before, `spec8.py` and `walks-truth.py rebuild` failed it.
+  `graph-walks-rebuild.mjs --file` cuts each of its sequences whole and
+  gets every path, placement and departure back as the GFA states them
+  ([run.txt](../walks-container/spec-sentences/run.txt)). Another session
+  ran graph-walks 730e752's `cut`, `cutRegion`, `counts` and `formsCut`
+  on such a file of a hand graph and of 9 fuzz graphs, and each returned
+  what it returns on the same graph with `HG002#2` under another sample's
+  name, 0 lines differing; its scripts are on ada under
+  `~/work/visits/hapref/` and are not in this repository
+- **A cut returns every visit to the reference nodes it covers.** The
+  same session cut every haplotype with graph-walks 730e752, context 0
+  and no budgets, and compared each haplotype's count on each node with
+  the raw GFA's (`~/work/visits/` on ada: `truth.py`, `cut.mjs`,
+  `compare.py`, `run.log`; not in this repository):
+  - MC chr22, which has no revisited node: 776 tile windows, 464
+    haplotypes, 554,488,368 visits, 0 differing
+  - pggb chrY: 874 windows; on nodes the reference passes once, passes
+    counted over every line of the reference sample as the file's
+    `passes` are, 19,901,967 visits and 0 differing. Nodes passed more
+    than once are reported only, a visit's place there being the
+    writer's choice
+  - a visit credited to another haplotype at an equal count, and a visit
+    dropped, each planted on a once-passed node, were both caught
+- **`spec8.py --gfa` skips a line with no steps,** as the page and the
+  writer do (C118). It had looked such a line up by its name and start
+  and compared the next line's pieces with no steps. The dialect fixture
+  [w-empty-line-first.gfa](../walks-container/dialect/w-empty-line-first.gfa)
+  holds the case, and `spec8.py --gfa` still fails broken/interior-flipped
+  ([run.txt](../walks-container/spec-sentences/run.txt))
 - **The writer.** `named` refuses a W or P line whose name holds a byte
   outside 0x21 to 0x7E, with the line's number, and the three dialect
   fixtures with such names are refused where they built
@@ -184,3 +237,7 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   lines, an empty departure bin or 2^53
   ([open problem](../open-problems.md#checkers-that-hold-a-file-to-more-or-less-than-the-format))
 - **graph-walks needs no change.** Its README can say names are ASCII
+- **gfa-to-tabix writes no file whose reference is one haplotype of a
+  sample:** `--refs` takes samples, and `--refs 'HG002#1'` is refused.
+  That is writer support for later, not a question of the format
+  ([open problem](../open-problems.md#a-reference-of-one-haplotype-of-a-sample-cant-be-written))

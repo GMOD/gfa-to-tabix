@@ -78,10 +78,16 @@ taken flipped, and its departure records.
 
 ## Terms
 
-- **S:** one reference sequence, a path name of the reference sample such
-  as `GRCh38#0#chr22`. A file holds every sequence of its reference with a
-  W or P line that has steps, and `|S|` is where S's last line ends, which
-  its table's `#unit` line states <!-- C9 -->
+- **The reference:** the paths a file's `ref` rows are cut from, each a
+  path of the `#reference` sample. <!-- C157 --> It need not be all of that sample's
+  paths: a file's reference can be one haplotype of the sample, and a
+  path of the sample with no `ref` rows is then a line like any other,
+  with `walk` rows, departure records and a `#haplotype` line
+- **S:** one reference sequence, a path of the reference such as
+  `GRCh38#0#chr22`. The tool makes every path of a `--refs` sample with a
+  W or P line that has steps a reference sequence of that sample's file,
+  and `|S|` is where S's last line ends, which its table's `#unit` line
+  states <!-- C9 -->
 - **Tile:** the `tile` bp of S from a multiple of `tile`, and the unit
   holding the rows of the pieces filed there
 - **R:** a tile's reference path, its `ref` rows' steps joined in offset
@@ -138,7 +144,9 @@ from the rows, and relies on the invariants of
   makes its haplotypes' lines reference sequences of one file, and a
   node two of them pass counts as passed twice. Another path's step there
   can take a pass on either, so a path can lie wholly under one of them
-  and show in no window of the other, with no departure record
+  and show in no window of the other, with no departure record. That is
+  this tool's choice; the format lets a file take one of them for its
+  reference ([Terms](#terms))
 - A piece is a run of a W line's steps in one tile. `piece` numbers the
   pieces along one W line from 0 <!-- C16 -->, so a reader keys a piece by
   `path`, `fragStart` and `piece`, and joins consecutive pieces back into
@@ -613,12 +621,17 @@ GRCh38-referenced file:
     same walk file is the same bytes, and the same rows compressed again
     are another file to it ([Hosting](#hosting))
 - `#reference` names the reference sample. A file has one `#reference`
-  line, however many haplotypes or sequences its reference has
-  <!-- C157 -->
-- `#haplotype` lists what each other path with rows in the file is listed
-  under, once each in byte order: its PanSN `sample#haplotype` where its
-  `path` has three fields or more, its sample where it has fewer
-  ([Path names](#path-names)) <!-- C51 -->
+  line, however many haplotypes or sequences its reference has. It names
+  a sample and not a haplotype: the `path` of each reference sequence up
+  to its first `#` ([Path names](#path-names)), so a file whose line
+  names `HG002#1` is not format 8 <!-- C157 -->
+- `#haplotype` lists what each path with `walk` or `abridged` rows in the
+  file is listed under, once each in byte order: its PanSN
+  `sample#haplotype` where its `path` has three fields or more, its
+  sample where it has fewer ([Path names](#path-names)). <!-- C51 --> A
+  path of the `#reference` sample that is no reference sequence is listed
+  like any other, so a file whose reference is `HG002#1` alone can list
+  `HG002#2`
 - `#hole` gives each stretch of a reference sequence that no line of the
   reference covers, between its lines and before its first: sequence,
   start, end, `start` below `end`, in order of sequence name in bytes and

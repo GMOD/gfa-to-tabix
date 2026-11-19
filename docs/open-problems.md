@@ -976,6 +976,22 @@ W  B  1  c     0  32  >1>2>6>3
   them. A reader cannot say which haplotypes have lines outside the file,
   nor whether a haplotype it lists is whole there
 
+## A reference of one haplotype of a sample can't be written
+
+- Format 8 admits a file whose reference is one haplotype of its
+  `#reference` sample, the sample's other paths in walk rows
+  ([Terms](walks-format.md#terms),
+  [ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md)), and
+  graph-walks reads one. gfa-to-tabix can't write it: `--refs` takes
+  samples and makes every path of each a reference sequence, and
+  `--refs 'HG002#1'` is refused. The checks make their file by building
+  the other haplotype under a stand-in sample and renaming it
+  ([check-walks.sh](../scripts/check-walks.sh))
+- This is writer support, not a format question. Suggested next step,
+  when someone wants a diploid sample drawn against one of its own
+  haplotypes: let `--refs` take `sample#haplotype`, with the file name
+  and the `#reference` line still the sample's
+
 ## Checkers that hold a file to more, or less, than the format
 
 - No checker holds a file to the page and nothing else. `claims7.py`
