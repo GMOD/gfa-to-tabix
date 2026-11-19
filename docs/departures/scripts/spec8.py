@@ -26,7 +26,9 @@
 # over runs, and the merge still holds them all.
 # A column after a row's fixed ones must be a tag, NAME:T:value, and is not
 # read; a unit of a kind the page doesn't give is skipped; a header line of
-# an unknown first word is ignored.
+# an unknown first word is ignored. A sequence name, a path and a name a
+# header line states are bytes 0x21 to 0x7E that don't start with #. The
+# header's abridge budgets bind no row, so none is held to them.
 # Prints what agreed and what disagreed, and exits 1 on any disagreement.
 #
 # Usage: spec8.py FILE.walks.gz [--gfa G.gfa] [--tiles A:B] [--dump]
@@ -131,6 +133,8 @@ class Entry:
 
 
 TAG = re.compile(r"[A-Za-z][A-Za-z0-9]*:[A-Za-z]:[^\t]*")
+NAME = re.compile(r'[!"$-~][!-~]*')
+PATHED = ("ref", "walk", "abridged", "blocks", "departure")
 COLUMNS = {"ref": 12, "nodes": 6, "route": 7, "walk": 11, "abridged": 11, "blocks": 8, "departure": 15}
 ROWS_OF = {
     "tile": ("ref", "nodes", "route", "walk", "abridged"),
@@ -596,6 +600,8 @@ class Walks:
             names = [x.split(":")[0] for x in c[fixed:]]
             if len(set(names)) != len(names):
                 raise Refuse(f"{c[3]} row carrying a tag name twice")
+            if c[3] in PATHED and not NAME.fullmatch(c[4]):
+                raise Refuse(f"{c[3]} row whose path is not bytes 0x21 to 0x7E, or starts with #")
             rows.append(c[:fixed])
         return rows
 
@@ -773,7 +779,6 @@ def main():
     pieces = {}  # (path, frag) -> {piece: (hap, bp, seq, tile, kind, firstR, lastR, lead, trail)}
     truth_steps = {}
     departures = set()
-    abridge, abytes = w.tags.get("abridge", 0), w.tags.get("abridgebytes", 0)
     stats = collections.Counter()
     ref_steps = collections.Counter()  # node -> the steps the file's ref rows make on it
     stated = {}  # node -> the passes the first ref row step on it states
@@ -785,6 +790,8 @@ def main():
         rep.bad("header line not starting with #")
     if len(w.reference) != 1 or any(seq.split("#")[0] != w.reference[0] for seq in w.seq_order):
         rep.bad("not one #reference line naming the sample of the file's sequences", f"{w.reference}")
+    if any(not NAME.fullmatch(n) for n in w.seq_order + w.reference + w.haplotypes + [h[0] for h in w.hole_list]):
+        rep.bad("a name the header or the directory states is not bytes 0x21 to 0x7E, or starts with #")
     if w.haplotypes != sorted(set(w.haplotypes), key=lambda s: s.encode("utf-8", "surrogateescape")):
         rep.bad("#haplotype lines not once each in byte order")
     if w.hole_list != sorted(w.hole_list, key=lambda h: (h[0].encode("utf-8", "surrogateescape"), h[1])):
@@ -891,7 +898,6 @@ def main():
                 print(f"-- {where} R={t.R} off={t.off} len={t.len} routes={t.rs.routes}")
             # walk rows
             used = set()
-            cost = 0
             rowbytes = 0
             okeys = []
             for c in t.walks:
@@ -907,7 +913,6 @@ def main():
                 for nn in notes:
                     rep.bad(f"walk row not in its one encoding: {nn}", wh)
                 used |= used_routes(c[10])
-                cost += piece_cost(t.rs, c[10], ns)
                 if t.span(segs) != (int(c[1]), int(c[2])):
                     rep.bad("walk row's start end is not the span it decodes to", f"{wh} {c[1]}-{c[2]} vs {t.span(segs)}")
                 key = (pth, frag)
@@ -932,15 +937,11 @@ def main():
                     rep.bad("blocks unit for a tile with no abridged row", where)
                 if any(x.name.startswith(e.name + ":") for x in w.entries(seq, "detail")):
                     rep.bad("detail unit for a tile with no abridged row", where)
-                if abridge and cost > abridge:
-                    rep.bad("unabridged tile costs more than abridge", f"{where} {cost}")
                 continue
             stats["abridged tiles"] += 1
             akeys = [(int(c[10]), int(c[6])) for c in t.abridged]
             if akeys != sorted(akeys):
                 rep.bad("abridged rows out of order (detail, hapOffset)", where)
-            if abridge and cost > abridge and t.walks:
-                rep.bad("abridged tile's kept pieces still cost more than abridge", f"{where} {cost}")
             bl = w.find(seq, "blocks", e.name)
             if len(bl) != 1:
                 rep.bad("abridged tile without exactly one blocks unit", where)
