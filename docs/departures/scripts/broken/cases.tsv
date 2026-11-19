@@ -7,6 +7,7 @@ abridged-ten-columns	walks-contig-ends.gfa	claims7 audit7 expand7 spec8 rebuild	
 abridged-thirteen-columns	walks-contig-ends.gfa	claims7 audit7 spec8 rebuild	L's abridged row in thirteen columns, with bp, start and end, as in format 7
 attach-overlap-mid-run	walks-two-refs.gfa	claims7 audit7 spec8	a record for H's departure inside its one abridged piece: its stretch, 118 over 3, is the piece's run of 3 bp between two blocks, not a run at either end of its list
 attach-overlap-short	../../docs/walks-container/hapbp/two-pieces.gfa	claims7 audit7 spec8	H's record's hapStart 6 made 7 and its ownBp 31 made 30, so its stretch holds 9 of the 10 bp of piece 0's trailing run
+bin-other-size	walks-two-refs.gfa	verify7 spec8	the departures unit 20 30 stated as 20 40, a bin of two tiles
 block-misaligned	walks-two-refs.gfa	verify7 spec8	the departure block 10 20 stated as 10 19
 blocks-ends-swapped	broken/blocks.gfa	audit7 expand7 spec8 rebuild	H's leading run 7 and trailing run 50 swapped
 blocks-first	broken/blocks.gfa	audit7 expand7 spec8 rebuild	H's first block 0+12 made 12-12, a + made - over the same bases, the second's d with it, at the same span and bp
@@ -120,6 +121,7 @@ other-sequence-as-interior	broken/far.gfa	verify7 spec8	B's last piece, its step
 other-sequence-as-interior-revisited	broken/shared.gfa	verify7	A's last piece, its step on node 3, which c2 passes once, written as the interior of a route with no exit in c1's tile 0, its row in c2 left out, in a file with revisited:i:1; spec8 passes it and counts the node, since the format promises this only of a file that states revisited:i:0, and claims7 fails it whole and passes it a sequence at a time
 other-tile-as-interior	broken/far.gfa	verify7 claims7 spec8	A's last piece, its steps on nodes 5 and 6, which c2 passes once in tile 10, written as the interior of a route with no exit in c2's tile 0, its row in tile 10 left out, at the same steps and bp
 ownbp-overstated-G	walks-records.gfa	claims7 audit7 spec8	G's record with ownBp 18 made 30
+owntiles-twice	walks-two-refs.gfa	claims7 spec8	Q's record naming tile 0 twice
 owntiles-wrong	walks-two-refs.gfa	claims7 audit7 spec8	Q's record naming tile 10 for tile 0
 passes-once-as-twice	broken/repeat.gfa	verify7 audit7 spec8	node 4, passed once, stated as passed twice, and revisited 2 made 3
 passes-once-per-sequence	broken/shared.gfa	verify7 audit7 spec8	node 2, which c1 and c2 each pass once, stated as passed once on both, and revisited 1 made 0; audit7 passes it a sequence at a time
@@ -147,13 +149,18 @@ ref-rows-overlap-tiles	walks-two-refs.gfa	claims7 spec8	tile 20's ref row, at 24
 ref-rows-swapped	broken/ref-gap.gfa	claims7 audit7 spec8	the tile's two ref rows, at 0 and 30, written in the other order
 ref-strand-flipped	walks-two-refs.gfa	rebuild	tile 20's ref step >5 made <5, and every walk row's start there with it
 reference-haplotype	walks-two-refs.gfa	claims7 spec8 rebuild	#reference naming GRCh38#0, a haplotype, where it names the sample of the ref rows' paths
+reference-haplotype-name-walk	walks-two-refs.gfa	verify7 claims7 spec8	D#1#d named GRCh38#0 in its walk rows and records, a path of two fields whose whole name is what the reference sequence GRCh38#0#chr is listed under, and its #haplotype line GRCh38
 reference-haplotype-walk	broken/hapref-alt.gfa	verify7 claims7 spec8	HG002#1#alt1 in walk rows and HG002#1 in a #haplotype line, in a file whose reference sequences are HG002#1#chr1 and HG002#1#chr2: a path on a haplotype of the reference that is no reference sequence
 reference-none	walks-two-refs.gfa	verify7 claims7 spec8	the header with no #reference line
+reference-short-name-walk	walks-two-refs.gfa	verify7 claims7 spec8	the reference sequence named GRCh38#chr, listed under its sample, and D#1#d named GRCh38#1#d, in walk rows and a #haplotype line: a path of the sample of a reference sequence that has no haplotype field
 reference-twice	walks-two-refs.gfa	verify7 claims7 spec8	#reference GRCh38 written twice
 reference-wrong	walks-two-refs.gfa	claims7 rebuild spec8	#reference CHM13 over GRCh38's rows
 revisited-as-interior	broken/tie.gfa	claims7	A's step on node 2, which the placement puts on R at 24-30, written as a route's interior with no exit: A ends off the reference
 revisited-count	broken/repeat.gfa	verify7 audit7 spec8	the header and directory stating revisited:i:7 where 2 nodes are passed more than once
 revisited-zero	broken/tie.gfa	verify7 claims7 audit7 spec8	the header and directory stating revisited:i:0 over a ref row whose passes say node 2 is passed twice
+route-rows-swapped	broken/tie.gfa	claims7 spec8	the tile's first two route rows, >1 . >2 and >1 . <2, written in the other order, the walk rows' choices renumbered with them
+route-twice	walks-two-refs.gfa	claims7 spec8	tile 0's route . <6 <1 listed a second time
+route-wrong-way	walks-two-refs.gfa	claims7 spec8	tile 0's route . <6 <1 stored as its flip >1 >6 ., which comes second in route order, and Q's choice flipped with it
 row-new-kind-in-blocks	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row, a kind no unit of format 8 holds, in every blocks unit
 row-new-kind-in-departures	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row in every departure block
 row-new-kind-in-detail	walks-two-refs.gfa	verify7 claims7 audit7 expand7 spec8 rebuild	a note row in every detail unit

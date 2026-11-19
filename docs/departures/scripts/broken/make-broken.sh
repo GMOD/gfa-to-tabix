@@ -360,3 +360,15 @@ corrupt flip-of-own-flip "$W/turn100.R.walks.gz" --all $'walk\tA#1#c\t0\t0\t0\t4
 D01=$'#unit\t'$G$'\t0\t12\tdetail\t0:1\n'$G$'\t0\t12\twalk\tD#1#d\t0\t0\t0\t2\t2\t.\n'$G$'\t0\t12\twalk\tD#1#d\t0\t24\t2\t2\t2\t.\n'
 D02=$'#unit\t'$G$'\t0\t12\tdetail\t0:2\n'$G$'\t0\t12\twalk\tH#1#h\t100\t100\t0\t2\t2\t.\n'
 corrupt detail-units-swapped "$T10" "$D01$D02" "$D02$D01"
+
+# the whole-haplotype rule as a reader's prefix match holds it, and the sentences on routes, bins and ownTiles
+# that say what is not format 8
+corrupt reference-short-name-walk "$T0" --all "$G" 'GRCh38#chr' --all 'D#1' 'GRCh38#1'
+corrupt reference-haplotype-name-walk "$T0" --all 'D#1#d' 'GRCh38#0' $'#haplotype\tD#1\n' $'#haplotype\tGRCh38\n'
+corrupt route-wrong-way "$T0" $'\t0\t12\troute\t.\t13\t-9\n' $'\t0\t12\troute\t2\t10\t.\n' $'walk\tQ#0#chr\t0\t0\t0\t2\t2\t1\n' $'walk\tQ#0#chr\t0\t0\t0\t2\t2\t0\n'
+corrupt route-rows-swapped "$TIE100" --all $'route\t2\t.\t2\nR#0#c\t0\t30\troute\t-2\t.\t3\n' $'route\t2\t.\t3\nR#0#c\t0\t30\troute\t-2\t.\t2\n' \
+  --all $'walk\tA#1#c\t0\t0\t0\t2\t2\t0\n' $'walk\tA#1#c\t0\t0\t0\t2\t2\t2\n' --all $'walk\tC#1#c\t0\t0\t0\t2\t2\t2\n' $'walk\tC#1#c\t0\t0\t0\t2\t2\t0\n' \
+  --all $'\t7,-6,7,-6\n' $'\t7,-4,5,-4\n'
+corrupt route-twice "$T0" $'\t0\t12\troute\t.\t13\t-9\n' $'\t0\t12\troute\t.\t13\t-9\n'$G$'\t0\t12\troute\t.\t11\t-9\n'
+corrupt bin-other-size "$T0" $'#unit\t'$G$'\t20\t30\tdepartures\t.\n' $'#unit\t'$G$'\t20\t40\tdepartures\t.\n'
+corrupt owntiles-twice "$T0" --all $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t0\n' $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t0,0\n'

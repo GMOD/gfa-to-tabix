@@ -22,8 +22,10 @@
 #   none is empty or holds an empty field; one `#reference` line; no line
 #   of a unit after its first begins `#unit`, whatever the unit's kind
 # - the reference is whole haplotypes: no `walk`, `abridged` or `blocks`
-#   row's path, and no `#haplotype` line, is listed under what a sequence
-#   of the directory is listed under, its `sample#haplotype` or its sample
+#   row's path, and no `#haplotype` line, is what a sequence of the
+#   directory is listed under, its `sample#haplotype` or its sample, or
+#   begins with that and `#`, so a sequence named `chm13#chr1` leaves no
+#   path of `chm13` in walk rows
 # - every number of a `#unit`, `#entry`, `#hole` or directory line and of a
 #   row's fixed columns is decimal digits with no sign, no leading zero and
 #   no space, `0` for zero, a delta token and a choice token alone
@@ -77,6 +79,7 @@
 # Usage: verify7.py walks.gz [tile]; prints a JSON summary, exits 1 on the
 # first failure.
 import collections
+import functools
 import hashlib
 import itertools
 import json
@@ -119,6 +122,11 @@ def names(*fields):
 def listed_under(path):
     fields = path.split('#')
     return '#'.join(fields[:2]) if len(fields) > 2 else fields[0]
+
+
+@functools.lru_cache(maxsize=None)
+def on_reference(name):
+    return next((h for h in reference_haplotypes if name == h or name.startswith(h + '#')), None)
 
 
 raw_directory = open(path + '.idx', 'rb').read()
@@ -296,9 +304,9 @@ def check_unit(at, length, text):
         wrong = miswritten(c[3], c)
         if wrong:
             fail(f'a {c[3]} row with {wrong}, at {at}: {line[:80]}')
-        if c[3] in ('walk', 'abridged', 'blocks') and listed_under(c[4]) in reference_haplotypes:
-            fail(f'a {c[3]} row of a path on {listed_under(c[4])}, which a reference sequence is on too, where the '
-                 f'reference is whole haplotypes, at {at}: {line[:80]}')
+        if c[3] in ('walk', 'abridged', 'blocks') and on_reference(c[4]):
+            fail(f'a {c[3]} row of a path that is or begins {on_reference(c[4])}, which a reference sequence is on '
+                 f'too, where the reference is whole haplotypes, at {at}: {line[:80]}')
         a, b = int(c[1]), int(c[2])
         stated = [a, b, sum(int(c[k]) for k in SUMS.get(c[3], ()))] + [int(c[k]) for k in COORDINATES[c[3]]]
         if max(stated) > MAX:
@@ -459,10 +467,10 @@ with open(path, 'rb') as f:
             if not all(len(c) > 1 and names(c[1]) for c in stated_lines if c[0] in ('#reference', '#haplotype', '#hole')):
                 fail('a #reference, #haplotype or #hole line states a name in bytes outside 0x21 to 0x7E, or one '
                      'that starts with #')
-            shared = sorted(c[1] for c in stated_lines if c[0] == '#haplotype' and c[1] in reference_haplotypes)
+            shared = sorted(c[1] for c in stated_lines if c[0] == '#haplotype' and on_reference(c[1]))
             if shared:
-                fail(f'a #haplotype line lists {shared[0]}, which a reference sequence is on, where the reference '
-                     f'is whole haplotypes')
+                fail(f'a #haplotype line lists {shared[0]}, which is or begins {on_reference(shared[0])}, what a '
+                     f'reference sequence is listed under, where the reference is whole haplotypes')
         if n == 28 and not text:
             if unit:
                 check_unit(*unit)

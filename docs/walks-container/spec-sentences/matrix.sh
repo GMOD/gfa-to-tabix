@@ -90,7 +90,9 @@ for name in revisited-count revisited-zero budget-bytes-over budget-steps-over b
             number-tag-leading-zero number-tag-minus number-start-leading-zero number-nsteps-space \
             number-length-leading-zero number-unit-leading-zero number-entry-length-leading-zero \
             field-empty-row directory-field-empty tag-graph-i past-2-53-own-end past-2-53-breakpoint \
-            unit-line-in-header ref-rows-overlap-tiles; do
+            unit-line-in-header ref-rows-overlap-tiles \
+            reference-short-name-walk reference-haplotype-name-walk route-wrong-way route-rows-swapped route-twice \
+            bin-other-size owntiles-twice; do
   row "$name" "$B/$name.walks.gz" "$(gfa_of "$name")"
 done
 echo "# what each FAILS said first"

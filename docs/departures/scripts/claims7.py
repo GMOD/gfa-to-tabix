@@ -78,6 +78,11 @@ def listed_under(path):
     return '#'.join(fields[:2]) if len(fields) > 2 else fields[0]
 
 
+def on_reference(name, references):
+    # what a reference sequence is listed under that `name` is, or begins with before a #
+    return next((h for h in references if name == h or name.startswith(h + '#')), None)
+
+
 def check_listed_under():
     # listed_under against the table every reader of P line names shares
     table = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../walks-container/dialect/p-names.tsv')
@@ -283,7 +288,7 @@ claim('H2', 'revisited:i:0 means no ref row or departure record has a pass count
       'or :k')
 claim('H3', 'one #reference line names the reference sample, the sample of every ref row\'s path')
 claim('H4', 'the reference is whole haplotypes: no path with walk or abridged rows, and no #haplotype line, is '
-      'listed under what a reference sequence is listed under')
+      'what a reference sequence is listed under or begins with that and #')
 claim('R1', 'a ref row\'s lengths and passes have one entry per step, passes . exactly when every count is 1')
 claim('R3', 'a tile of S holds at least one ref row, and ref rows of S only')
 claim('R2', 'a tile\'s ref rows are written in hapOffset order')
@@ -402,6 +407,7 @@ rows_with_bases = collections.Counter()  # whether a ref or nodes row has SQ:Z: 
 ref_any = set()
 interior_nodes = set()
 haplotypes_with_rows = set()
+short_paths_with_rows = set()  # the paths of fewer than three fields with walk or abridged rows
 pieces = collections.defaultdict(set)   # (path, frag) -> piece numbers
 abridged = []           # (seq, tile, path, frag, piece, d, (a, b), hapOffset, nsteps, hapBp)
 abridged_of = collections.defaultdict(list)  # (seq, tile) -> [(path, frag, piece, (a, b), hapOffset, d, hapBp)]
@@ -417,12 +423,18 @@ own_steps = collections.defaultdict(list)  # path -> [(frag, hapOffset of step, 
 elsewhere = collections.defaultdict(lambda: array.array('q'))  # (path, frag) -> piece, hapOffset, per piece off --seq
 
 
+def with_rows(path):
+    haplotypes_with_rows.add(listed_under(path))
+    if path.count('#') < 2:
+        short_paths_with_rows.add(path)
+
+
 def row_elsewhere(kind, line):
     # a row of a sequence --seq leaves out: what the claims about a whole line, #haplotype and SQ:Z: take of it
     c = line.split('\t', 8)
     row = c[3] if len(c) > 3 else None
     if kind == 'tile' and row in ('walk', 'abridged') and len(c) > 7:
-        haplotypes_with_rows.add(listed_under(c[4]))
+        with_rows(c[4])
         elsewhere[(c[4], int(c[5]))].extend((int(c[7]), int(c[6])))
     elif row in ('ref', 'nodes'):
         rows_with_bases['\tSQ:Z:' in line] += 1
@@ -857,7 +869,7 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             if int(c[6]) + piece_bp > 1 << 53:
                 bad('K13', (t.seq, u['kind'], u['name'], line[:100]))
             if u['kind'] == 'tile':
-                haplotypes_with_rows.add(listed_under(path))
+                with_rows(path)
                 if piece in pieces[(path, frag)]:
                     bad('W5', ('two rows', path, frag, piece))
                 pieces[(path, frag)].add(piece)
@@ -881,7 +893,7 @@ with gzip.open(args.file, 'rt', encoding='utf-8', errors='surrogateescape') as f
             continue
         if kind == 'abridged':
             path, frag, piece = c[4], int(c[5]), int(c[7])
-            haplotypes_with_rows.add(listed_under(path))
+            with_rows(path)
             if piece in pieces[(path, frag)]:
                 bad('W5', ('two rows', path, frag, piece))
             pieces[(path, frag)].add(piece)
@@ -984,9 +996,11 @@ if len(references) != 1:
     bad('H3', ('#reference lines', references[:4]))
 
 # H1
-on_reference = (haplotypes_with_rows | set(haplotypes_listed)) & {listed_under(seq) for seq in sequences}
-if on_reference:
-    bad('H4', ('with rows or listed, and a reference sequence\'s too', sorted(on_reference)[:5]))
+reference_haplotypes = {listed_under(seq) for seq in sequences}
+for name in sorted(haplotypes_with_rows | short_paths_with_rows | set(haplotypes_listed)):
+    if on_reference(name, reference_haplotypes):
+        bad('H4', (name, 'with rows or listed, is or begins', on_reference(name, reference_haplotypes),
+                   'which a reference sequence is listed under'))
 seen('H4')
 if haplotypes_listed != sorted(set(haplotypes_listed), key=lambda s: s.encode('utf-8', 'surrogateescape')):
     bad('H1', ('not unique or not in byte order', haplotypes_listed[:5]))

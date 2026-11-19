@@ -30,9 +30,10 @@
 # header line states are bytes 0x21 to 0x7E that don't start with #. The
 # header's abridge budgets bind no row, so none is held to them. The
 # reference is the paths with ref rows, whole haplotypes of the #reference
-# sample: a path with walk or abridged rows is listed under nothing a
-# reference sequence is listed under, and a path of another haplotype of
-# that sample is a line like any other. tile:i: is from 1 to 2^40.
+# sample: no path with walk or abridged rows is what a reference sequence
+# is listed under or begins with that and #, and a path of another
+# haplotype of that sample is a line like any other. tile:i: is from 1 to
+# 2^40.
 # Prints what agreed and what disagreed, and exits 1 on any disagreement.
 #
 # Usage: spec8.py FILE.walks.gz [--gfa G.gfa] [--tiles A:B] [--dump]
@@ -1239,10 +1240,13 @@ def main():
                     f"{sorted(haps ^ set(w.haplotypes))[:6]}")
         else:
             rep.good("#haplotype lines equal the haplotypes with rows", len(haps))
-        on_reference = sorted((haps | set(w.haplotypes)) & {listed_under(seq) for seq in w.seq_order})
+        with_rows = {pth for pth, lines in by_path.items() if any(p[4] != "ref" for _, _, ps in lines for p in ps.values())}
+        on_reference = sorted(
+            name for name in with_rows | set(w.haplotypes)
+            if any(name == h or name.startswith(h + "#") for h in {listed_under(seq) for seq in w.seq_order}))
         if on_reference:
-            rep.bad("a path with walk or abridged rows, or a #haplotype line, is on a haplotype a reference "
-                    "sequence is on, where the reference is whole haplotypes", f"{on_reference[:6]}")
+            rep.bad("a path with walk or abridged rows, or a #haplotype line, is or begins what a reference "
+                    "sequence is listed under, where the reference is whole haplotypes", f"{on_reference[:6]}")
         else:
             rep.good("haplotypes with walk or abridged rows that no reference sequence is on", len(haps))
 
