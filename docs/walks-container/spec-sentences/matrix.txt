@@ -70,6 +70,13 @@ past-2-53-own-end	FAILS	FAILS	FAILS	FAILS	passes	FAILS	passes
 past-2-53-breakpoint	FAILS	FAILS	FAILS	FAILS	passes	FAILS	passes
 unit-line-in-header	FAILS	passes	passes	passes	passes	passes	passes
 ref-rows-overlap-tiles	passes	FAILS	FAILS	FAILS	passes	FAILS	FAILS
+reference-short-name-walk	FAILS	FAILS	FAILS	passes	passes	FAILS	FAILS
+reference-haplotype-name-walk	FAILS	FAILS	FAILS	passes	passes	FAILS	FAILS
+route-wrong-way	passes	FAILS	FAILS	passes	passes	FAILS	passes
+route-rows-swapped	passes	FAILS	FAILS	passes	passes	FAILS	passes
+route-twice	passes	FAILS	FAILS	passes	passes	FAILS	passes
+bin-other-size	FAILS	passes	passes	passes	passes	FAILS	passes
+owntiles-twice	passes	FAILS	FAILS	FAILS	passes	FAILS	passes
 # what each FAILS said first
 revisited-count	verify7	verify7.py: revisited-count.walks.gz: the #walks line states revisited:i:7, and the file's ref rows step 2 nodes more than once 
 revisited-count	audit7	audit7: 1 failed checks header revisited differs from the ref rows 
@@ -148,10 +155,10 @@ name-e9	rebuild	 H#1#h line at 100: on the reference, with no rows name-e9.walks
 name-del	verify7	verify7.py: name-del.walks.gz: a directory line names a sequence in bytes outside 0x21 to 0x7E, or one that starts with # 
 name-del	spec8	 1 #haplotype lines are not what the paths with walk or abridged rows are listed under ['D#1', 'H#1', 'I#1', 'Q#0'] 1 a name the header or the directory states is not bytes 0x21 to 0x7E, or starts with # 
 name-del	rebuild	 D#1#d line at 0: rows for a line not on the reference, or not in the GFA GRCh38#0#chr? line at 0: rows for a line not on the reference, or not in the GFA 
-reference-haplotype-walk	verify7	verify7.py: reference-haplotype-walk.walks.gz: a #haplotype line lists HG002#1, which a reference sequence is on, where the reference is whole haplotypes 
+reference-haplotype-walk	verify7	verify7.py: reference-haplotype-walk.walks.gz: a #haplotype line lists HG002#1, which is or begins HG002#1, what a reference sequence is listed under, where the reference is whole haplotypes 
 reference-haplotype-walk	claims7	H4 
 reference-haplotype-walk	claims7-seqs	H4 
-reference-haplotype-walk	spec8	 1 a path with walk or abridged rows, or a #haplotype line, is on a haplotype a reference sequence is on, where the reference is whole haplotypes ['HG002#1'] (0.0 s) 
+reference-haplotype-walk	spec8	 1 a path with walk or abridged rows, or a #haplotype line, is or begins what a reference sequence is listed under, where the reference is whole haplotypes ['HG002#1', 'HG002#1#alt1'] (0.0 s) 
 reference-none	verify7	verify7.py: reference-none.walks.gz: the header does not hold one #reference line 
 reference-none	claims7	H3 
 reference-none	claims7-seqs	H3 
@@ -249,3 +256,28 @@ ref-rows-overlap-tiles	claims7-seqs	R4
 ref-rows-overlap-tiles	audit7	audit7: 2 failed checks within a record: MISSING RECORD 
 ref-rows-overlap-tiles	spec8	 1 a piece doesn't end where the line's next piece begins GRCh38#0#chr 0 piece 1: 12+12 != 23 4 piece boundary that departs from S has no departure record matching it 
 ref-rows-overlap-tiles	rebuild	 GRCh38#0#chr line at 0: piece 2 in tile GRCh38#0#chr:20 starts at 23, the piece before ends at 24; piece 2 in tile GRCh38#0#chr:20 runs >5 to >5, the GFA's steps 4 to 5 run >5 to >5 ref-rows-overlap-tiles.walks.gz: shard 0/1: 5 lines with rows, 5 on the refer
+reference-short-name-walk	verify7	verify7.py: reference-short-name-walk.walks.gz: a #haplotype line lists GRCh38#1, which is or begins GRCh38, what a reference sequence is listed under, where the reference is whole haplotypes 
+reference-short-name-walk	claims7	H4 
+reference-short-name-walk	claims7-seqs	H4 
+reference-short-name-walk	spec8	 1 a path with walk or abridged rows, or a #haplotype line, is or begins what a reference sequence is listed under, where the reference is whole haplotypes ['GRCh38#1', 'GRCh38#1#d'] (0.0 s) 
+reference-short-name-walk	rebuild	 GRCh38#1#d line at 0: rows for a line not on the reference, or not in the GFA GRCh38#chr line at 0: rows for a line not on the reference, or not in the GFA 
+reference-haplotype-name-walk	verify7	verify7.py: reference-haplotype-name-walk.walks.gz: a walk row of a path that is or begins GRCh38#0, which a reference sequence is on too, where the reference is whole haplotypes, at 165: GRCh38#0#chr 0 12 walk GRCh38#0 0 0 0 2 2 . 
+reference-haplotype-name-walk	claims7	H4 
+reference-haplotype-name-walk	claims7-seqs	H4 
+reference-haplotype-name-walk	spec8	 1 a path with walk or abridged rows, or a #haplotype line, is or begins what a reference sequence is listed under, where the reference is whole haplotypes ['GRCh38#0'] (0.0 s) 
+reference-haplotype-name-walk	rebuild	 D#1#d line at 0: on the reference, with no rows GRCh38#0 line at 0: rows for a line not on the reference, or not in the GFA 
+route-wrong-way	claims7	T1 
+route-wrong-way	claims7-seqs	T1 
+route-wrong-way	spec8	 1 route stored the way round that sorts second GRCh38#0#chr tile 0 route 0 (0.0 s) 
+route-rows-swapped	claims7	T6 
+route-rows-swapped	claims7-seqs	T6 
+route-rows-swapped	spec8	 1 route rows out of the order the page gives R#0#c tile 0 (0.0 s) 
+route-twice	claims7	T2 T5 
+route-twice	claims7-seqs	T2 T5 
+route-twice	spec8	 1 route listed twice GRCh38#0#chr tile 0 route 1 1 route no walk takes 
+bin-other-size	verify7	verify7.py: bin-other-size.walks.gz: a departure record of GRCh38#0#chr over 0 24 is in blocks [(0, 10), (10, 10), (20, 20)], not its cover: block 20 of 20 bp is no aligned pyramid block 
+bin-other-size	spec8	 1 departure block not a pyramid block GRCh38#0#chr 20-40 2 departure record not in exactly the blocks of its cover 
+owntiles-twice	claims7	D1 O1 
+owntiles-twice	claims7-seqs	D1 O1 
+owntiles-twice	audit7	audit7: 1 failed checks within a record: field mismatch 
+owntiles-twice	spec8	 1 ownTiles differs from the tiles holding the own steps ('GRCh38#0#chr', 0, 18, 'Q#0#chr', 6, 6, 6, '+', 1, 12, '+', 1) file 0,0 mine 0 (0.0 s) 

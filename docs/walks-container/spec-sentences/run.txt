@@ -1,17 +1,18 @@
-commit 55138b5c7bc8e7f41a61397d31ee9092ed048144, with 0 files changed or untracked, run on ada 2026-11-19
+commit a5d7002f14fa69fed170b20821085dd4175cfb64, with 0 files changed or untracked, run on ada 2026-11-19
 base   942ee661836036aaa67131f75bfea8cd93e89b96, whose checkers before.txt is by
 graph-walks b0d83788a2990ba72393affcd1741aeb05a64dcc, cloned on ada from a bundle of the laptop's ~/src/graph-walks
 cargo fmt --check	exit 0	
-cargo clippy --all-targets --locked -- -D warnings	exit 0	    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.91s 
-cargo test --release --locked	exit 0	test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s test result: ok. 
+cargo clippy --all-targets --locked -- -D warnings	exit 0	    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.44s 
+cargo test --release --locked	exit 0	test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s test result: ok. 
 scripts/figures.py --check	exit 0	
 scripts/check-links.py	exit 0	check-links.py: every relative link resolves 
 GRAPH_WALKS=<the clone above> scripts/check-claims.py	exit 0	check-claims: 193 claim IDs, 193 rows, 0 failures 
-scripts/check-walks.sh, with broken.sh and check-dialect.sh, seeds 1 to 6	exit 0	broken.sh: 190 broken files done 1-6 
+scripts/check-walks.sh, with broken.sh and check-dialect.sh, seeds 1 to 6	exit 0	broken.sh: 197 broken files done 1-6 
 make-broken.sh	exit 0	planted files that differ from the commit: 0
 scripts/graph-walks-rebuild.mjs: its broken files, then every fixture	exit 0	walks-abridge-bytes.gfa --tile 100 --abridge-bytes 600 R: 1 sequences, 61 fragments, 122 steps, 0 departures rebuilt; unexpanded, 0 placeholders walks-sequences.gfa --tile 10 --sequences R: 10 sequences, 40 fragments, 110 steps, 10 departures rebuilt; unexpanded, 0 placeholders 
 	broken files it fails: 75; passes: 0; builds reported: 50
 scripts/graph-walks-rebuild.mjs --file, the one-haplotype reference of the matrix	exit 0	matrix-head/hapref-one.walks.gz: 2 sequences, 10 fragments, 80 steps, 17 departures rebuilt; unexpanded, 0 placeholders 
+docs/walks-container/spec-sentences/reader-probe.sh	exit 0	# reads 143, refuses 54, of 197
 spec8.py --gfa, dialect/w-empty-line-first.gfa (must exit 0)	exit 0	           1  GFA lines back step for step from their pieces            1  GFA lines with no steps, which have no rows 
 spec8.py --gfa, broken/interior-flipped (must exit 1)	exit 1	           1  pieces joined are not the GFA line's steps    file [2, 13, 6, 8, 10]    gfa  [2, 12, 6, 8, 10] 
 the base's spec8.py --gfa on the same w-empty-line-first file (exit 1 before the fix)	exit 1	           1  pieces joined are not the GFA line's steps    file [2]    gfa  [] 
