@@ -94,7 +94,20 @@ commit; the worktree branch `compare-gap` holds the same commits.
   unchanged. Spec-text candidates (C43's bin sizes, vocabulary, policy off
   the format page, one abridge budget) and the index's doubled `SB:H:` tag
   went to gfa-to-tabix-bb. Reader-string changes are for bandage-core.
-  The README material is below. How it was run: The owner, worried about our own format
+  The README material is below.
+  - **How bb routes it:**
+    - A final round of three fresh Fable reviewers judges the whole
+      `spec-sentences` branch. Each also rules (needed? alternatives,
+      shipping unchanged included? what else?) on C43's sizes, policy off
+      the format page, one word per concept, and the index's double
+      `SB:H:`. That last is the one byte-level item; it would rebuild the
+      hosted index files. Nothing lands before that round
+    - The bandage-core strings come in the next release
+    - One abridge budget and dropping `--format 1` come after the freeze
+    - The stay re-scoring and the two outputs' disagreements (repeated
+      node position, strand, header tag names, nothing comparing
+      `graph:Z:`) go to the reviewers as questions
+  - How it was run: The owner, worried about our own format
   proliferation, asked for it before the freeze. A Fable 5.2 agent derives
   the minimal design from the requirements, then classes every format 8
   concept, including the `spec-sentences` branch's, as restated GFA,
