@@ -113,8 +113,9 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   path name, a sample and a sequence id, so no GFA that keeps to its
   specification is turned away. The reader needs no change, since it
   already reads names as if the rule held. And no hosted file changes:
-  a census of the three hosted files and pggb chrY found no line with a
-  byte outside tab and 0x21 to 0x7E
+  none of the three hosted files, nor pggb chrY, has a line with a byte
+  other than a tab and 0x21 to 0x7E
+  ([census.tsv](../walks-container/spec-sentences/census.tsv))
 - **Who decided.** Two deciders ruled apart, and one of the three
   reviews chose the same rule
 - **The dissent.** A referee preferred stating today's writer rule, no
@@ -169,6 +170,13 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   | A file whose reference is one haplotype of its `#reference` sample | nothing | `spec8.py`, `walks-truth.py rebuild` |
   | `#reference` naming a haplotype | `claims7.py`, `spec8.py`, `walks-truth.py rebuild` | the same |
 
+- **The hosted bytes.** `verify7.py` with the checks this ADR adds reads
+  the three hosted files and pggb chrY whole and passes each
+  ([hosted.tsv](../walks-container/spec-sentences/hosted.tsv)): every
+  number, line, field, name, tag and coordinate in them is written as the
+  page now says. Each file's sha256 is the one
+  [identity.tsv](../walks-container/accept-5.0.0/whole-file/identity.tsv)
+  records for the copy whose ETag is the hosted file's
 - **A reference of one haplotype.** Every checker passes
   `one-haplotype-reference` in the matrix, a file with
   `#reference HG002`, `ref` rows of `HG002#1` alone and `HG002#2` in walk
@@ -216,9 +224,12 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   ([expected.tsv](../walks-container/dialect/expected.tsv)). No other
   byte of `src/` changed, and the planted files made before this ADR
   rebuild to the same bytes
-- **The full run.** `cargo test`, `check-walks.sh` on every fixture and
-  fuzz file, `broken.sh` and `check-claims.py` pass at this commit
-  ([run.txt](../walks-container/spec-sentences/run.txt))
+- **The full run.** `cargo fmt`, `clippy` and `test`, `check-walks.sh`
+  on every fixture and fuzz file with `broken.sh` and `check-dialect.sh`,
+  `check-claims.py`, and `graph-walks-rebuild.mjs` against graph-walks
+  730e752 pass on ada at the commit
+  [run.txt](../walks-container/spec-sentences/run.txt) names, which lacks
+  only the files of this record
 
 ## Alternatives rejected
 <!-- record -->
