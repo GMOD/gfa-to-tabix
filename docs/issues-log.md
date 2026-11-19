@@ -2295,10 +2295,13 @@ Where the findings have come from so far, and the rule each gives:
   built the file, and no hosted file holds such a path. Fix:
   [ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md): the
   reference is whole haplotypes, so no path with `walk` or `abridged`
-  rows is listed under what a reference sequence is listed under. No
+  rows is what a reference sequence is listed under or begins with that
+  and a `#`, the prefix `walksKept` matches by, which also keeps a path
+  of a reference with no haplotype field's sample out of walk rows. No
   byte of the writer changed, which makes every path of a `--refs`
   sample a reference sequence. Guard: `verify7.py`, `claims7.py`'s H4
   and `spec8.py` on every file, shown on broken/'s
-  `reference-haplotype-walk`; the one-haplotype file of
+  `reference-haplotype-walk`, `reference-short-name-walk` and
+  `reference-haplotype-name-walk`; the one-haplotype file of
   `check-walks.sh`, `HG002#1` for reference and `HG002#2` in walk rows,
   still passes each

@@ -1,5 +1,5 @@
-file	sha256 as identity.tsv records	verify7.py 39201a572a6623ea3fc18717973857167ebf0ca9	seconds	peak KiB	units	lines
-chr6-sequences	yes	passes	100.57	255788	7362	6783531
-grch38	yes	passes	1636.91	368112	159499	97238772
-chm13	yes	passes	1770.84	339684	155499	111402570
-pggbY	yes	passes	253.15	641764	1518	3245676
+file	sha256 as identity.tsv records	verify7.py df09a7bf5ada6794aea7ca39b61f6d3403ae6402	seconds	peak KiB	units	lines
+chr6-sequences	yes	passes	88.87	256972	7362	6783531
+grch38	yes	passes	860.07	362472	159499	97238772
+chm13	yes	passes	968.14	344020	155499	111402570
+pggbY	yes	passes	126.80	653260	1518	3245676

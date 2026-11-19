@@ -15,7 +15,9 @@
 #   measured for the 42 MB of GRCh38's chr21. A batch that has an exit
 #   status or is marked running is skipped, so a run can be taken up
 #   again. Each batch writes its output, its stderr, its exit status and
-#   `seconds<TAB>peak KiB`
+#   `seconds<TAB>peak KiB`. CAP_GB sets every batch's cap instead, for a
+#   file of another kind than the cap was measured on, and CLAIMS7_ARGS
+#   adds options to claims7.py, `--own` or `--own --shard 0/4`
 # - `sum` prints one line a batch, then each claim's count added up over
 #   the batches
 # Usage: claims-hosted.sh plan <walks.gz> <MB> > plan.txt
@@ -46,7 +48,7 @@ case $1 in
     while IFS=$'\t' read -r -a batch; do
       n=$((n + 1))
       [ -e "$out/$n.rc" ] || [ -e "$out/$n.running" ] && continue
-      cap=$((2 + (batch[0] * 11 + 99) / 100))
+      cap=${CAP_GB:-$((2 + (batch[0] * 11 + 99) / 100))}
       until [ "$(ls "$out" | grep -c '\.running$')" -lt "$workers" ] &&
             [ $(($(cat "$out"/*.running 2> /dev/null | paste -sd+ -) + 0 + cap)) -le "$budget" ]; do
         sleep 10
@@ -56,7 +58,7 @@ case $1 in
       for s in "${batch[@]:1}"; do args+=(--seq "$s"); done
       {
         /usr/bin/time -f '%e\t%M' -o "$out/$n.time" systemd-run --user --scope -q -p MemoryMax="${cap}G" -p MemorySwapMax=0 \
-          python3 -I "$S/claims7.py" "$f" "${args[@]}" > "$out/$n.out" 2> "$out/$n.err"
+          python3 -I "$S/claims7.py" "$f" ${CLAIMS7_ARGS:-} "${args[@]}" > "$out/$n.out" 2> "$out/$n.err"
         echo $? > "$out/$n.rc"
         rm "$out/$n.running"
       } &

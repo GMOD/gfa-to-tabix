@@ -110,10 +110,12 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   file's `#walks` line carries no `bytes` tag
 - **The reference (C9, C51, C157).** A file's reference is the paths its
   `ref` rows are cut from: one or more whole haplotypes of the
-  `#reference` sample. No path with `walk` or `abridged` rows is listed
-  under what a reference sequence is listed under, its
-  `sample#haplotype` or, for a `path` of fewer than three fields, its
-  sample, and no `#haplotype` line lists it. The reference can be one
+  `#reference` sample. No path with `walk` or `abridged` rows is what a
+  reference sequence is listed under, its `sample#haplotype` or, for a
+  `path` of fewer than three fields, its sample, or begins with that
+  and a `#`, and no `#haplotype` line is or begins so. So a reference
+  sequence with no haplotype field, `chm13#chr1`, leaves no path of
+  `chm13` in walk rows. The reference can be one
   haplotype of the sample, `HG002#1`, and the paths of `HG002#2` then
   have walk rows, departure records and a `#haplotype` line like any
   other. `#reference` names a sample, never a haplotype: a file whose
@@ -144,10 +146,9 @@ and [claims7.md](../departures/claims7.md) lists its checks.
 - **What a reader must detect.** Nothing past the refusals the page
   gives it. graph-walks b0d8378 opens a file with `tile:i:0`, a number
   written `0100`, an empty field, two `#reference` lines or a space in a
-  name, and reads plain gzip units: of the 22 planted files of the
-  first rulings a review opened with it, it refused `walks-bytes-tag`
-  alone (ada, `~/work/walks8-gates/agents/green-reader/r2/planted.out`,
-  not in this repository). The file checks hold a file to the page
+  name, and reads plain gzip units
+  ([reader-probe.tsv](../walks-container/spec-sentences/reader-probe.tsv)).
+  The file checks hold a file to the page
 - **Names (C200).** A sequence name, a `path` and a name a `#reference`,
   `#haplotype` or `#hole` line or a directory line states is one or more
   bytes from 0x21 to 0x7E and does not start with `#`. Two names are the
@@ -161,8 +162,20 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   path on a reference haplotype in walk rows passed every checker, and
   no longer does
 - **Why this rule.** It is the rule the reader already keeps
-  ([issues log](../issues-log.md), 2026-11-19), stated in the terms the
-  reader uses, what a path is listed under. The writer keeps it with no
+  ([issues log](../issues-log.md), 2026-11-19), stated as the reader
+  applies it. graph-walks takes what the reference sequence is listed
+  under for a prefix and a path that is that prefix, or begins with it
+  and a `#`, for the reference's (`walksKept`, src/walkRows.ts;
+  `panSNMatchesPrefix`, src/util.ts). An exact match of what two paths
+  are listed under, this ruling's first form, let two files through
+  that the prefix takes: a reference `chm13#chr1`, listed under
+  `chm13`, beside walk rows of `chm13#2#chrX`, listed under `chm13#2`;
+  and, the other way, a path named `S#1` whole, listed under `S`,
+  beside a reference `S#1#chr1`. The second is the only case that way:
+  the reader's prefix for `S#1#chr1` is `S#1`, which no other path of
+  two fields is or begins, so `S#x` stays a line like any other, and
+  `formsCut`, which compares what the two are listed under, `S` and
+  `S#1`, does not skip it. The writer keeps it with no
   change: `--refs` takes a whole sample and makes every path of it with
   steps a reference sequence. No hosted file changes: `claims7.py`'s H4
   and `verify7.py` read each one whole
@@ -229,8 +242,8 @@ and [claims7.md](../departures/claims7.md) lists its checks.
 
 - **Where the runs were made.** All of them on ada.
   [run.txt](../walks-container/spec-sentences/run.txt) names the commit
-  of this branch the checks ran at, which lacks only run.txt, matrix.txt
-  and before.txt, and the reader they ran against: graph-walks b0d8378,
+  of this branch the checks ran at, which lacks only run.txt, matrix.txt,
+  before.txt and the reader-probe.tsv of that run, and the reader they ran against: graph-walks b0d8378,
   cloned there from a bundle of the checkout the reader is developed in.
   [hosted.tsv](../walks-container/spec-sentences/hosted.tsv) and
   [claims-hosted.tsv](../walks-container/spec-sentences/claims-hosted.tsv)
@@ -261,6 +274,10 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   | A name with a space, a carriage return, 0xE9 or 0x7F | `verify7.py`, `spec8.py` | nothing but the rebuild against the GFA, and `claims7.py` on the carriage return, which it reads as a line's end |
   | A file whose reference is one haplotype of its `#reference` sample | nothing | `spec8.py`, `walks-truth.py rebuild` |
   | `#reference` naming a haplotype | `claims7.py`, `spec8.py`, `walks-truth.py rebuild` | the same |
+  | Walk rows of `GRCh38#1#d` beside a reference sequence `GRCh38#chr`; a path named `GRCh38#0` whole beside the reference `GRCh38#0#chr` | `verify7.py`, `claims7.py`, `spec8.py` | `spec8.py` and `walks-truth.py rebuild`, by classing a line by its sample; nothing at 55138b5, whose checkers compared what the two are listed under exactly |
+  | A route stored as its flip; two route rows in the other order; a route listed twice | `claims7.py` by T1, T6 and T2, `spec8.py` | the same |
+  | A departure bin of two tiles | `verify7.py`, `spec8.py` | the same |
+  | `ownTiles` naming a tile twice | `claims7.py` by D1, `spec8.py` | the same |
   | A path on a reference haplotype in walk rows, beside that haplotype's reference sequences | `verify7.py`, `claims7.py`, `spec8.py` | `spec8.py` and `walks-truth.py rebuild`, by classing a line by its sample, which failed the legal file above too; nothing once they classed by `ref` rows |
   | No `#reference` line | `verify7.py`, `claims7.py`, `spec8.py`, `walks-truth.py rebuild` | all but `verify7.py` |
   | A `@k` or `:k` that names its default, on the start, the entry or the exit; flip 1 on a route that is its own flip | `claims7.py`, `spec8.py` | the same on the defaults; nothing on the flip |
@@ -279,7 +296,8 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   page now says, and no walk row is of a path on a reference haplotype.
   Each file's sha256 is the one
   [identity.tsv](../walks-container/accept-5.0.0/whole-file/identity.tsv)
-  records for the copy whose ETag is the hosted file's. None of the four
+  records for the copy whose ETag is the hosted file's, or, for pggb
+  chrY, which is not hosted, for the file. None of the four
   has a line with a byte other than a tab and 0x21 to 0x7E
   ([census.tsv](../walks-container/spec-sentences/census.tsv), counted
   again at this commit)
@@ -288,8 +306,9 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   row's piece ends (K13, C172), to the `#haplotype` list (H1), to the
   reference sample of each `ref` row (H3) or to one encoding of a walk
   row (W2, C70), and a review found no whole-file run of `claims7.py`,
-  which does, on a hosted file. `claims7.py` has now read the GRCh38 and
-  the CHM13 file whole, a batch of sequences at a time with `--seq`
+  which does, on a hosted file. `claims7.py` has now read the GRCh38
+  file, the CHM13 file, the chr6 file with sequences and pggb chrY
+  whole, a batch of sequences at a time with `--seq`
   ([claims-hosted.sh](../walks-container/spec-sentences/claims-hosted.sh)),
   without `--own`, so the claims about a record's own steps are not in
   the run. Every batch exits 0 and every claim counts 0 over each file,
@@ -297,9 +316,19 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   ([claims-hosted.tsv](../walks-container/spec-sentences/claims-hosted.tsv),
   with each batch's seconds and peak memory). N2 and N3 are held within
   a batch's sequences there, and `verify7.py` holds N2 over the file.
-  GRCh38's chr1 ran first and alone, to measure the largest peak, 13.2
-  GB; each other batch ran under a memory cap the kernel held it to, so
-  the run could not take memory from the drawing gate running beside it
+  Each batch ran under a memory cap the kernel held it to, sized from a
+  first run of GRCh38's chr1 alone, which peaked at 13.2 GB
+- **One encoding on the one real file with `@k` and `:k`.** The three
+  Minigraph-Cactus files have no walk row with either, so W2 at 0 on
+  them says little. pggb chrY has 161,368 such rows, and `claims7.py`
+  decodes each and counts 0 by W2: none names a default, and none takes
+  a route that is its own flip with flip 1
+  ([claims-hosted.tsv](../walks-container/spec-sentences/claims-hosted.tsv)).
+  With `--own`, `claims7.py` on pggb chrY whole was killed at a cap of
+  90 GB, and one shard of eight held 38.6 GB and was stopped unfinished
+  after 37 minutes, so the claims about a record's own steps have no
+  whole run on that file here; no `spec8.py` run of it is recorded
+  either
 - **A reference of one haplotype.** Every checker passes
   `one-haplotype-reference` in the matrix, a file with
   `#reference HG002`, `ref` rows of `HG002#1` alone and `HG002#2` in walk
@@ -314,12 +343,17 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   on such a file of a hand graph and of 9 fuzz graphs, and each returned
   what it returns on the same graph with `HG002#2` under another sample's
   name, 0 lines differing; its scripts are on ada under
-  `~/work/visits/hapref/` and are not in this repository
+  `~/work/visits/hapref/` and in no repository, so this run rests on
+  that session's word, and the rebuild above is the one this record
+  holds
 - **A cut returns every visit to the reference nodes it covers.** The
   same session cut every haplotype with graph-walks 730e752, context 0
   and no budgets, and compared each haplotype's count on each node with
-  the raw GFA's (`~/work/visits/` on ada: `truth.py`, `cut.mjs`,
-  `compare.py`, `run.log`; not in this repository):
+  the raw GFA's. Its scripts and logs are not on this branch, which was
+  cut before they were committed: they are on `main` since 42cd0c2,
+  under `docs/comparison/visits/` (`run.sh`, `truth.py`, `cut.mjs`,
+  `compare.py`, `sub.mjs`, `results/run.log`), and the numbers here are
+  that log's:
   - MC chr22, which has no revisited node: 776 tile windows, 464
     haplotypes, 554,488,368 visits, 0 differing
   - pggb chrY: 874 windows; on nodes the reference passes once, passes
@@ -334,8 +368,9 @@ and [claims7.md](../departures/claims7.md) lists its checks.
     each graph, each compared on once-passed nodes with the cut of its
     whole tile, 376,489 pairs of haplotype and node on MC chr22 and
     12,367 on pggb chrY, 0 differing; with each stretch cut 200 bp short,
-    74,059 pairs differ and the comparison exits 1 (`mc22/sub*.log`,
-    `pggbY/sub.log`)
+    74,059 pairs differ and the comparison exits 1
+    (`results/mc22.sub.log`, `results/mc22.sub-planted.log` and
+    `results/pggbY.sub.log` there)
 - **`spec8.py --gfa` skips a line with no steps,** as the page and the
   writer do (C118). It had looked such a line up by its name and start
   and compared the next line's pieces with no steps. The dialect fixture
