@@ -722,6 +722,7 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
   - a piece of S has a step on R, so the own steps a tile of S holds are
     in the leave step's piece or in the rejoin step's piece: `ownTiles` is
     the leave's tile, the rejoin's tile, the two in that order, or `.`
+    <!-- C85 --> <!-- C86 -->
 - The record's line is in every [pyramid](#units) bin of that extent's
   cover, the same text in each, and a reader drops exact duplicates
   <!-- C88 -->
