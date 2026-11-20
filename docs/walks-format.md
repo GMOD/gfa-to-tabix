@@ -153,7 +153,7 @@ reading; a file holds tabs.
   no stretch, and any `seq start end` it stated would be made up
   ([ADR 0010](adr/0010-walks-unit-table.md#costs-decided))
 
-![The walk file of walks-schematic.gfa, built with --tile 30, read for chr1:31-60: the .idx line giving chr1's table at bytes 854-1003, the data file as a bar of its units with their byte offsets, the header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and the table, with tile 30 and departures 30-60 shaded as the one request for bytes 406-632, then the rows those two units hold](figures/walks-bytes.svg)
+![The walk file of walks-schematic.gfa, built with --tile 30, read for chr1:31-60: the .idx line giving chr1's table at bytes 854-1003, the data file as a bar of its units with their byte offsets, the header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and the table, with tile 30 and departures 30-60 shaded as the one request for bytes 406-632, then the ref, route, walk and departure rows of those two units](figures/walks-bytes.svg)
 
 #### Units
 
@@ -365,7 +365,8 @@ GRCh38-referenced file:
 
 #### Whole haplotypes
 
-Whole means this: take what a reference sequence is listed under, its
+The reference is one or more whole haplotypes of the `#reference` sample
+([Terms](#terms)). Whole means this: take what a reference sequence is listed under, its
 `sample#haplotype` or, for a `path` of fewer than three fields, its sample
 ([Path names](#path-names)). No path with `walk` or `abridged` rows is that
 text, or begins with that text and a `#`, and no `#haplotype` line is or
@@ -618,20 +619,22 @@ taken the way round its flip says. <!-- C141 --> Every handle on R is
 emitted with its position in R, and so with its offset and pass.
 <!-- C141 -->
 
-1. If the first route has no entry, emit its interior. Its exit is
-   `startHandle`, which step 2 emits: the handle is emitted once
-2. Emit `startHandle`, at occurrence `k` of its node in R with `@k`, else at the
-   first
-3. For each route with an entry <!-- C141 -->:
-   - step along R, emitting each handle, until the current handle is the
-     route's entry, or with `:k` until the position is occurrence `k` of
-     the entry's node
-   - emit the interior
-   - with no exit, stop: the piece ends off R
-   - emit the exit, at occurrence `k` of its node in R with `@k`, else at the
-     occurrence nearest the current position in R, counted in positions,
-     the one at the higher position on a tie
-4. Step along R until the piece has `nsteps` steps
+In this order:
+
+- If the first route has no entry, emit its interior. Its exit is
+  `startHandle`, which the next step emits: the handle is emitted once
+- Emit `startHandle`, at occurrence `k` of its node in R with `@k`, else at the
+  first
+- For each route with an entry <!-- C141 -->:
+    - step along R, emitting each handle, until the current handle is the
+      route's entry, or with `:k` until the position is occurrence `k` of
+      the entry's node
+    - emit the interior
+    - with no exit, stop: the piece ends off R
+    - emit the exit, at occurrence `k` of its node in R with `@k`, else at the
+      occurrence nearest the current position in R, counted in positions,
+      the one at the higher position on a tie
+- Step along R until the piece has `nsteps` steps
 
 <!-- C141 -->
 
@@ -641,6 +644,87 @@ each step's handle and position, and fails the build on any difference.
 The row's `start end` is the span of the positions it decodes to.
 <!-- C25 --> On HPRC v2.1's Minigraph-Cactus chr22 GRCh38 passes no node
 twice, and no walk row needs `@k` or `:k` <!-- C142 -->
+
+#### departure
+
+```
+seq start end departure path hapStart ownBp missingBp leavePos leaveStrand leavePasses rejoinPos rejoinStrand rejoinPasses ownTiles
+```
+
+A record for each place a path departs from a reference sequence S that its
+walk rows can't show: where two of its steps placed on S, with none
+placed on S between them, are not adjacent there at the passes they took
+and lie in different pieces. <!-- C77 --> A step is placed on S where
+its row gives it a position on S; a step in a route interior is not,
+though its node can be a node of S where the reference passes it more
+than once. A
+departure inside one piece has no record: a reader computes it from the
+piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
+
+![The W lines of a GFA where HG002#1 leaves GRCh38 after node 2 and rejoins at node 6 across the tile edge at 30 bp; the walk file read for chr1:1-60: the .idx line, chr1's table with two tiles and two departure bins, and those four units, the departure line highlighted in both bins; and the graph graph-walks cuts for chr1:1-60 drawn by bandage-core, HG002 running from node 2 through its node 7 below the row to node 6, 25 bp shorter than GRCh38](figures/walks-leave-figure.svg)
+
+- Departures are per reference sequence: for S, the path's steps placed
+  on S, in order, with its steps on the reference's other sequences
+  counted as its own sequence. A contig's W lines count as one path, in start order <!-- C78 -->
+- Each end is a step on S: `Pos` is its breakpoint, where the path's sequence
+  stops following S (the node's end for a step along S, its start for a step
+  against it, and the other way round for the rejoin), and `Strand` `+` or
+  `-` for the step along or against S's orientation at its pass. <!-- C79 --> The leave
+  is the step before the departure and the rejoin the step after, in the
+  path's order. `Passes` is how many times the reference's paths pass the
+  end's node, as on a `ref` row <!-- C79 -->: above 1, the end's pass is
+  the placement's choice, and so is the departure
+- `hapStart` is where the path's own sequence between the ends starts on its
+  contig, right after the leave step, and `ownBp` how far it runs, 0 for a
+  direct jump: every base between the ends, on nodes of its own, on the
+  reference's other sequences, in W lines with no step on S, or in no W line.
+  <!-- C80 --> `missingBp` is the part of `ownBp` between W lines, which the graph lacks
+  <!-- C80 -->
+- Two such steps, one after the other, are adjacent, and depart nowhere,
+  when `ownBp`
+  is 0, the strands are equal and the breakpoints are equal, [holes](#header)
+  removed <!-- C81 -->
+- A contig's sequence before its first step on S or after its last is no
+  departure and has no record <!-- C82 -->: the piece holding that step
+  shows where the path comes from or goes on, as a route with no entry or
+  no exit, and a piece on another sequence holds its steps there, which
+  no row of S points to ([Reading a window](#reading-a-window))
+- No column says what kind of departure it is. `leaveStrand ≠ rejoinStrand`
+  is a strand switch; otherwise, for a `+` leave the path jumps back when
+  `rejoinPos < leavePos`, and for a `-` leave when `rejoinPos > leavePos`,
+  over reference it walks again; equal breakpoints are sequence of its own
+  between adjacent steps; any other case is a jump forward. Positions
+  compare with the holes before them removed. `ownBp` 0 is a direct jump;
+  `missingBp` above 0 is sequence the graph lacks
+- `start end` is the record's extent: from the first base of its end
+  nodes, each the end step's own node at its pass, to the last base of the
+  other <!-- C83 -->
+- The ref rows of S hold one node ending at a `+` leave's or `-` rejoin's
+  breakpoint and one starting at the other kind's <!-- C91 -->
+- `ownTiles` lists the tiles of S that hold the record's own steps, by
+  their starts (the `name` of their `tile` units), comma-separated, in the
+  path's order, each tile once, where the path first has an own step in
+  it; `.` for none. <!-- C84 --> The placement rules decide which
+  they are, not the breakpoints' positions, so a jump back is no
+  different:
+  - an own step on no reference node takes the tile of the last step before
+    it in its W line that has a position: the leave's tile, unless a step
+    on another sequence of the reference comes between, whose tile it then
+    takes <!-- C85 -->
+  - own steps leading the next W line, for a record across W lines, take
+    the tile of the first step after them with a position, the rejoin's
+    unless a step on another sequence comes first; a record can have both,
+    and so two tiles, the leave's first <!-- C86 -->
+  - own steps on the reference's other sequences lie in those sequences'
+    tiles, and own steps in a W line with no step on the reference, and
+    own sequence in no W line, are in no tile; `ownTiles` lists none of
+    them, and an attach fetch doesn't read them <!-- C87 -->
+  - a piece of S has a step on R, so the own steps a tile of S holds are
+    in the leave step's piece or in the rejoin step's piece: `ownTiles` is
+    the leave's tile, the rejoin's tile, the two in that order, or `.`
+- The record's line is in every [pyramid](#units) bin of that extent's
+  cover, the same text in each, and a reader drops exact duplicates
+  <!-- C88 -->
 
 #### abridged
 
@@ -802,87 +886,6 @@ R#0#c  0  36  blocks  H#1#c  0  0  7,0+12,0-12,10,24+12,-24+6,50
   span 0-36, and the `abridged` row is
   `R#0#c 0 36 abridged H#1#c 0 0 0 11 109 0`: 11 steps and 109 bp, in
   detail record 0.
-
-#### departure
-
-```
-seq start end departure path hapStart ownBp missingBp leavePos leaveStrand leavePasses rejoinPos rejoinStrand rejoinPasses ownTiles
-```
-
-A record for each place a path departs from a reference sequence S that its
-walk rows can't show: where two of its steps placed on S, with none
-placed on S between them, are not adjacent there at the passes they took
-and lie in different pieces. <!-- C77 --> A step is placed on S where
-its row gives it a position on S; a step in a route interior is not,
-though its node can be a node of S where the reference passes it more
-than once. A
-departure inside one piece has no record: a reader computes it from the
-piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
-
-![The W lines of a GFA where HG002#1 leaves GRCh38 after node 2 and rejoins at node 6 across the tile edge at 30 bp; the walk file read for chr1:1-60: the .idx line, chr1's table with two tiles and two departure bins, and those four units, the departure line highlighted in both bins; and the graph graph-walks cuts for chr1:1-60 drawn by bandage-core, HG002 running from node 2 through its node 7 below the row to node 6, 25 bp shorter than GRCh38](figures/walks-leave-figure.svg)
-
-- Departures are per reference sequence: for S, the path's steps placed
-  on S, in order, with its steps on the reference's other sequences
-  counted as its own sequence. A contig's W lines count as one path, in start order <!-- C78 -->
-- Each end is a step on S: `Pos` is its breakpoint, where the path's sequence
-  stops following S (the node's end for a step along S, its start for a step
-  against it, and the other way round for the rejoin), and `Strand` `+` or
-  `-` for the step along or against S's orientation at its pass. <!-- C79 --> The leave
-  is the step before the departure and the rejoin the step after, in the
-  path's order. `Passes` is how many times the reference's paths pass the
-  end's node, as on a `ref` row <!-- C79 -->: above 1, the end's pass is
-  the placement's choice, and so is the departure
-- `hapStart` is where the path's own sequence between the ends starts on its
-  contig, right after the leave step, and `ownBp` how far it runs, 0 for a
-  direct jump: every base between the ends, on nodes of its own, on the
-  reference's other sequences, in W lines with no step on S, or in no W line.
-  <!-- C80 --> `missingBp` is the part of `ownBp` between W lines, which the graph lacks
-  <!-- C80 -->
-- Two such steps, one after the other, are adjacent, and depart nowhere,
-  when `ownBp`
-  is 0, the strands are equal and the breakpoints are equal, [holes](#header)
-  removed <!-- C81 -->
-- A contig's sequence before its first step on S or after its last is no
-  departure and has no record <!-- C82 -->: the piece holding that step
-  shows where the path comes from or goes on, as a route with no entry or
-  no exit, and a piece on another sequence holds its steps there, which
-  no row of S points to ([Reading a window](#reading-a-window))
-- No column says what kind of departure it is. `leaveStrand ≠ rejoinStrand`
-  is a strand switch; otherwise, for a `+` leave the path jumps back when
-  `rejoinPos < leavePos`, and for a `-` leave when `rejoinPos > leavePos`,
-  over reference it walks again; equal breakpoints are sequence of its own
-  between adjacent steps; any other case is a jump forward. Positions
-  compare with the holes before them removed. `ownBp` 0 is a direct jump;
-  `missingBp` above 0 is sequence the graph lacks
-- `start end` is the record's extent: from the first base of its end
-  nodes, each the end step's own node at its pass, to the last base of the
-  other <!-- C83 -->
-- The ref rows of S hold one node ending at a `+` leave's or `-` rejoin's
-  breakpoint and one starting at the other kind's <!-- C91 -->
-- `ownTiles` lists the tiles of S that hold the record's own steps, by
-  their starts (the `name` of their `tile` units), comma-separated, in the
-  path's order, each tile once, where the path first has an own step in
-  it; `.` for none. <!-- C84 --> The placement rules decide which
-  they are, not the breakpoints' positions, so a jump back is no
-  different:
-  - an own step on no reference node takes the tile of the last step before
-    it in its W line that has a position: the leave's tile, unless a step
-    on another sequence of the reference comes between, whose tile it then
-    takes <!-- C85 -->
-  - own steps leading the next W line, for a record across W lines, take
-    the tile of the first step after them with a position, the rejoin's
-    unless a step on another sequence comes first; a record can have both,
-    and so two tiles, the leave's first <!-- C86 -->
-  - own steps on the reference's other sequences lie in those sequences'
-    tiles, and own steps in a W line with no step on the reference, and
-    own sequence in no W line, are in no tile; `ownTiles` lists none of
-    them, and an attach fetch doesn't read them <!-- C87 -->
-  - a piece of S has a step on R, so the own steps a tile of S holds are
-    in the leave step's piece or in the rejoin step's piece: `ownTiles` is
-    the leave's tile, the rejoin's tile, the two in that order, or `.`
-- The record's line is in every [pyramid](#units) bin of that extent's
-  cover, the same text in each, and a reader drops exact duplicates
-  <!-- C88 -->
 
 ### Abridged tiles
 
@@ -1488,11 +1491,6 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
   [Decoding a walk row](#decoding-a-walk-row).
   Keep the departure lines overlapping `D` and drop exact duplicates
   <!-- C149 -->
-- An attach fetch, for a record whose own steps the reader wants, reads
-  the tiles its `ownTiles` names and takes the record's own steps from
-  them alone ([departure](#departure)). It
-  reads no `blocks` unit: an abridged piece's own run comes from its
-  `abridged` row and the record
 - Which records get an attach fetch is the reader's choice: a record's
   line gives its two ends and its `ownBp` without one.
   @jbrowse/graph-walks 7 makes one for a record that leaves or rejoins on
