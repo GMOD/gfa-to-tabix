@@ -57,7 +57,7 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
 <table>
 <tr>
 <td width="33%"><a href="https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer/blob/main/docs/haplotypes.md#walk-rows"><img src="https://raw.githubusercontent.com/GMOD/jbrowse-plugin-graphgenomeviewer/main/img/walk_rows_kiv2.png" width="100%" alt="A JBrowse view of LPA's KIV-2 repeat with one bar per haplotype, its length in kb and in repeat units"></a><br>LPA's KIV-2 repeat length, a row per haplotype</td>
-<td width="33%"><a href="https://github.com/GMOD/ggbandage/blob/main/docs/gallery.md#amylase-haplotypes-from-146-to-475-kb"><img src="https://raw.githubusercontent.com/GMOD/ggbandage/main/gallery/amylase_rows.png" width="100%" alt="Walk rows over the amylase genes for GRCh38 and seven haplotypes, from 146 kb to 475 kb long"></a><br>Amylase haplotypes from 146 to 475 kb</td>
+<td width="33%"><a href="https://github.com/GMOD/ggbandage/blob/main/docs/gallery.md#amylase-haplotypes-from-146-to-474-kb"><img src="https://raw.githubusercontent.com/GMOD/ggbandage/main/gallery/amylase_rows.png" width="100%" alt="Walk rows over the amylase genes for GRCh38 and seven haplotypes, from 146 kb to 474 kb long"></a><br>Amylase haplotypes from 146 to 474 kb</td>
 <td width="33%"><a href="https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer/blob/main/docs/tube-maps.md#routes-and-tube-colour"><img src="https://raw.githubusercontent.com/GMOD/jbrowse-plugin-graphgenomeviewer/main/img/tube_map_c4_routes_by_population.png" width="100%" alt="A tube map of C4 in JBrowse, one tube per route, coloured by superpopulation"></a><br>C4 routes by superpopulation</td>
 </tr>
 <tr>
