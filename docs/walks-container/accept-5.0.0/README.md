@@ -33,6 +33,9 @@ cut. pggb chrY: 24 windows.
   the header ([README](4b14ee3/README.md)): neither genome file differs
   anywhere, nor pggb chrY on GRCh38, beside the rest of ADR 0012's
   acceptance runs, all passed
+- **graph-walks 730e752,** the 7.0.0 candidate, on the same bytes
+  ([README](730e752/README.md)): release-check 28 of 28 on both genome
+  files, and the worst windows cut to the same counts as at 4b14ee3
 - **What it would catch:** 8e3d397 is the broken reader here, and the
   harness fails it on the window above. The same difference is a test of
   graph-walks, on `unbuilt.R.gfa`, that fails without the change

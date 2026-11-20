@@ -1,0 +1,20 @@
+gw-730e752 unloaded GRCh38#0#chr2:91409000-91410000 cut 1: 451 ms, 332251 bytes in 3 reads; 522 fragments (420 with unloaded pieces), 15301 departures, 2052 gaps, 12844 nodes kept
+gw-730e752 unloaded GRCh38#0#chr2:91409000-91410000 cut 2: 334 ms, 332251 bytes in 3 reads; 522 fragments (420 with unloaded pieces), 15301 departures, 2052 gaps, 12844 nodes kept
+gw-730e752 unloaded GRCh38#0#chr2:91409000-91410000 cut 3: 338 ms, 332251 bytes in 3 reads; 522 fragments (420 with unloaded pieces), 15301 departures, 2052 gaps, 12844 nodes kept
+gw-730e752 unloaded peak rss 554 MB
+1.27 s, 567488 KB peak, exit 0
+gw-730e752 loaded GRCh38#0#chr2:91409000-91410000 cut 1: 1044 ms, 1306917 bytes in 422 reads; 522 fragments (0 with unloaded pieces), 15301 departures, 2052 gaps, 8935 nodes kept
+gw-730e752 loaded GRCh38#0#chr2:91409000-91410000 cut 2: 872 ms, 1306917 bytes in 422 reads; 522 fragments (0 with unloaded pieces), 15301 departures, 2052 gaps, 8935 nodes kept
+gw-730e752 loaded GRCh38#0#chr2:91409000-91410000 cut 3: 887 ms, 1306917 bytes in 422 reads; 522 fragments (0 with unloaded pieces), 15301 departures, 2052 gaps, 8935 nodes kept
+gw-730e752 loaded peak rss 813 MB
+2.97 s, 832712 KB peak, exit 0
+graph-walks-6.2 unloaded GRCh38#0#chr2:91409000-91410000 cut 1: 439 ms, 75925 bytes in 2 reads; 106 fragments (4 with unloaded pieces), 1456 departures, 1460 gaps, 1121 nodes kept
+graph-walks-6.2 unloaded GRCh38#0#chr2:91409000-91410000 cut 2: 375 ms, 75925 bytes in 2 reads; 106 fragments (4 with unloaded pieces), 1456 departures, 1460 gaps, 1121 nodes kept
+graph-walks-6.2 unloaded GRCh38#0#chr2:91409000-91410000 cut 3: 353 ms, 75925 bytes in 2 reads; 106 fragments (4 with unloaded pieces), 1456 departures, 1460 gaps, 1121 nodes kept
+graph-walks-6.2 unloaded peak rss 419 MB
+1.30 s, 428844 KB peak, exit 0
+graph-walks-6.2 loaded GRCh38#0#chr2:91409000-91410000 cut 1: 3631 ms, 7718212 bytes in 909 reads; 522 fragments (0 with unloaded pieces), 15301 departures, 2052 gaps, 12059 nodes kept
+graph-walks-6.2 loaded GRCh38#0#chr2:91409000-91410000 cut 2: 3379 ms, 7718212 bytes in 909 reads; 522 fragments (0 with unloaded pieces), 15301 departures, 2052 gaps, 12059 nodes kept
+graph-walks-6.2 loaded GRCh38#0#chr2:91409000-91410000 cut 3: 3456 ms, 7718212 bytes in 909 reads; 522 fragments (0 with unloaded pieces), 15301 departures, 2052 gaps, 12059 nodes kept
+graph-walks-6.2 loaded peak rss 2036 MB
+10.68 s, 2084388 KB peak, exit 0

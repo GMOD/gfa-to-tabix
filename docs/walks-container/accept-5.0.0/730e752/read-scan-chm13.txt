@@ -1,0 +1,22 @@
+/home/cdiesh/work/blocks/genome-5.0.0-hdr/hprc-v2.1-mc-chm13.CHM13.walks.gz: 1689 windows; cut read over 4000000 bytes: 0; bytesFor over it: 0
+  CHM13#0#chr2:92077080-92078080  cut read 3127376  bytesFor 3127376
+  CHM13#0#chr2:92078080-92079080  cut read 3127376  bytesFor 3127376
+  CHM13#0#chr2:92142616-92143616  cut read 2969441  bytesFor 2969441
+  CHM13#0#chr2:92143616-92144616  cut read 2969441  bytesFor 2969441
+  CHM13#0#chr2:92011544-92012544  cut read 2332310  bytesFor 2332310
+  CHM13#0#chr2:92012544-92013544  cut read 2332310  bytesFor 2332310
+  CHM13#0#chr2:92044812-92045812  cut read 1566686  bytesFor 1566686
+  CHM13#0#chr2:92110348-92111348  cut read 1561297  bytesFor 1561297
+  CHM13#0#chr2:92208152-92209152  cut read 1509514  bytesFor 1509514
+  CHM13#0#chr2:92209152-92210152  cut read 1509514  bytesFor 1509514
+  CHM13#0#chr2:92175884-92176884  cut read 1408751  bytesFor 1408751
+  CHM13#0#chr3:91094352-91095352  cut read 961031  bytesFor 961031
+  CHM13#0#chr15:851971-852971  cut read 957592  bytesFor 957592
+  CHM13#0#chr6:32439351-32440351  cut read 945805  bytesFor 945805
+  CHM13#0#chr6:32440351-32441351  cut read 945805  bytesFor 945805
+  CHM13#0#chr2:91947073-91948073  cut read 784057  bytesFor 784057
+  CHM13#0#chr22:9174050-9175050  cut read 781242  bytesFor 781242
+  CHM13#0#chr22:9175050-9176050  cut read 781242  bytesFor 781242
+  CHM13#0#chr2:91979308-91980308  cut read 766231  bytesFor 766231
+  CHM13#0#chr22:9108519-9109519  cut read 750880  bytesFor 750880
+775.91 s, 1054820 KB peak, exit 0

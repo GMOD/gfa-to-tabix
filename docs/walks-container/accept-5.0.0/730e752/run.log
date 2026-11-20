@@ -1,0 +1,20 @@
+2026-11-18 11:12:55 start graph-walks 730e752bc0c6ea27e0067d7819ed0b6867c585ec
+2026-11-18 11:13:04 sha256: hprc-v2.1-mc-grch38.GRCh38.walks.gz 59537b965d89; hprc-v2.1-mc-chm13.CHM13.walks.gz 5982069f2a9d; pggbY.GRCh38.walks.gz f4b2e0a3b0a6; 
+2026-11-18 11:14:17 release-check grch38 exit 0
+2026-11-18 11:15:37 release-check chm13 exit 0
+2026-11-18 11:15:39 cost grch38 gw-730e752 unloaded exit 0
+2026-11-18 11:15:42 cost grch38 gw-730e752 loaded exit 0
+2026-11-18 11:15:43 cost grch38 graph-walks-6.2 unloaded exit 0
+2026-11-18 11:15:54 cost grch38 graph-walks-6.2 loaded exit 0
+2026-11-18 11:15:58 cost chm13 gw-730e752 unloaded exit 0
+2026-11-18 11:16:36 cost chm13 gw-730e752 loaded exit 0
+2026-11-18 11:16:45 cost chm13 graph-walks-6.2 unloaded exit 0
+2026-11-18 11:18:43 cost chm13 graph-walks-6.2 loaded exit 0
+2026-11-18 11:28:46 read-scan grch38 exit 0
+2026-11-18 11:31:39 read-scan chm13 exit 0
+2026-11-18 11:44:33 equality pggbY exit 0: 1549.76 s, 6683076 KB peak, exit 0
+2026-11-18 12:34:55 equality grch38.1 exit 0: 4572.25 s, 1590292 KB peak, exit 0
+2026-11-18 12:35:54 equality grch38.0 exit 0: 4630.81 s, 2015960 KB peak, exit 0
+2026-11-18 12:47:08 equality chm13.1 exit 0: 5304.40 s, 1364532 KB peak, exit 0
+2026-11-18 12:49:07 equality chm13.0 exit 0: 5423.75 s, 1258144 KB peak, exit 0
+2026-11-18 12:49:07 done

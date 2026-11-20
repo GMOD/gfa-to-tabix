@@ -1061,16 +1061,18 @@ W  B  1  c     0  32  >1>2>6>3
     shared by haplotypes. This is what lets a window take a few byte
     ranges where gfaidx takes hundreds ([comparison](comparison-details.md#reading-a-64-kb-window))
 - The spec separates exact from chosen
-  ([Exact and chosen](walks-format.md#exact-and-chosen)). No review has yet
-  asked, of each policy and packaging concept, whether it earns its place
-  against the simplest alternative, and whether readers should show it to
-  users at all. gfaidx-viz, for one, shows paths, links and the reference,
-  and none of departures, abridged blocks or placement choices
-- Suggested next step: an inventory of every concept, each with its class,
-  the measurement it rests on, the simplest alternative and whether users
-  meet it, against a minimal design derived from the requirements alone.
-  What it would drop or merge is a format change, decided under ADR 0011
-  before the freeze
+  ([Exact and chosen](walks-format.md#exact-and-chosen)). gfaidx-viz, for
+  one, shows paths, links and the reference, and none of departures,
+  abridged blocks or placement choices
+- An inventory of every concept against a minimal design derived from the
+  requirements alone (2026-11-18) found no byte-level change to the walk
+  file that beats shipping unchanged. Three reviews then kept C43's bin
+  sizes as format, the writer's policy where it is fenced and the vocabulary
+  as it is, and left the index's doubled `SB:H:` to its own change
+  ([Format 2's carrier tags](#format-2s-carrier-tags)). What is left is
+  about what users are shown, not bytes: one abridge budget, `--format 1`
+  out of the docs, readers' strings that use the format's words, and one
+  mark for a haplotype leaving the reference however it is encoded
 - A reader written from [walks-format.md](walks-format.md) alone on
   2026-11-19, before its author had read the writer or another reader,
   rebuilt the W and P lines of the fixtures' files and of 2,101 files of
@@ -1082,18 +1084,3 @@ W  B  1  c     0  32  >1>2>6>3
   draw a moved piece without its detail unit, and `passes`, to mark a
   position as chosen. The scripts and counts are in
   `~/src/walks8-evidence/doc-only-reader-20261119/`
-
-## The README doesn't say what gfa-to-tabix is
-
-- A newcomer reading [README.md](../README.md) meets two outputs, two kinds
-  of input, `build` and its track config, and `--walks` before learning
-  what problem the tool solves. Its one schematic,
-  [walks-tile.svg](figures/walks-tile.svg), shows how a walk file is laid
-  out in tiles, which is packaging, not purpose, in more detail than a
-  newcomer needs
-- Suggested next step: say first, in a few sentences and one figure with
-  concrete labels, that a pangenome graph is too big for a browser to load,
-  and that gfa-to-tabix writes files a browser can fetch one region of from
-  any web host. Use the fewest concepts that do it, taken from the
-  inventory above, and move the tile schematic to
-  [walks-format.md](walks-format.md)
