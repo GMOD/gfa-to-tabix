@@ -1,8 +1,10 @@
 # Walk files
 
-For the ideas of the format on one page, read
-[Walk files in brief](walks-format-in-brief.md) first. This page is the
-full specification.
+For the ideas of the format in one screen, read
+[Walk files in brief](walks-format-in-brief.md) first, and for one small
+file read line by line,
+[Walk files by example](walks-format-by-example.md). This page is the full
+specification.
 
 - **In:** a base-level GFA with integer node ids and W or P lines, such as
   `vg convert -f` writes from a Minigraph-Cactus GBZ

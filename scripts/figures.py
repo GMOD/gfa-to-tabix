@@ -9,8 +9,9 @@ from the tool's lines and the drawing scripts/bandage-figure.mjs left beside
 them, and the walks tile, bytes and example figures from the tool's lines
 alone.
 With --check, exits 1 if a figure differs from what the tool writes now.
-Either way, exits 1 if docs/walks-format-in-brief.md quotes a W line, a
-walk file line or a directory line that the example's files lack.
+Either way, exits 1 if docs/walks-format-in-brief.md or
+docs/walks-format-by-example.md quotes a W line, a walk file line or a
+directory line that the example's files lack.
 """
 
 import difflib
@@ -787,25 +788,27 @@ def graph_over_tiles(c, x_of, left, top, parts):
 
 
 EXAMPLE = "walks-example"
-BRIEF = FIGURES.parent / "walks-format-in-brief.md"
+QUOTING = [FIGURES.parent / "walks-format-in-brief.md", FIGURES.parent / "walks-format-by-example.md"]
 
 
 QUOTED = ("W", "#reference", "#haplotype", "#unit", "#entry", "#header")
 
 
 def misquoted(lines, directory):
-    """The brief's fenced W lines, header, #unit, #entry and directory
-    lines and rows that are not a line of the example's GFA, of its walk
-    file or of its directory."""
+    """The fenced W lines, header, #unit, #entry and directory lines and
+    rows of the pages about the example that are not a line of its GFA, of
+    its walk file or of its directory, each with its page."""
     gfa = (FIGURES / f"{EXAMPLE}.gfa").read_text().splitlines()
     written = {tuple(f) for f in lines + directory} | {tuple(line.split()) for line in gfa}
-    fenced, quoted = False, []
-    for line in BRIEF.read_text().splitlines():
-        fenced = fenced != line.startswith("```")
-        fields = tuple(line.split())
-        if fenced and fields and (fields[0] in QUOTED or fields[0].startswith(f"{REF}#")):
-            quoted.append(fields)
-    return [" ".join(fields) for fields in quoted if fields not in written]
+    quoted = []
+    for page in QUOTING:
+        fenced = False
+        for line in page.read_text().splitlines():
+            fenced = fenced != line.startswith("```")
+            fields = tuple(line.split())
+            if fenced and fields and (fields[0] in QUOTED or fields[0].startswith(f"{REF}#")):
+                quoted.append((page, fields))
+    return [(page, " ".join(fields)) for page, fields in quoted if fields not in written]
 
 
 def example_svg(parts):
@@ -1026,8 +1029,8 @@ def main():
     check = "--check" in sys.argv[1:]
     stale = False
     wrong, figures = generate(Path(args[0]).resolve())
-    for line in wrong:
-        print(f"{BRIEF}: not a line of {EXAMPLE}.gfa, its walk file or its directory: {line}")
+    for page, line in wrong:
+        print(f"{page}: not a line of {EXAMPLE}.gfa, its walk file or its directory: {line}")
     for figure, regions in figures.items():
         dot, svg = FIGURES / f"{figure}.dot", FIGURES / f"{figure}.svg"
         if isinstance(regions, str):
@@ -1051,7 +1054,7 @@ def main():
     if stale:
         sys.exit("figures.py: docs/figures is stale; run scripts/figures.py <binary> to redraw it")
     if wrong:
-        sys.exit(f"figures.py: {BRIEF.name} misquotes its example")
+        sys.exit(f"figures.py: a page misquotes {EXAMPLE}.gfa or its walk file")
 
 
 if __name__ == "__main__":
