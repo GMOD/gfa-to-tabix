@@ -32,7 +32,10 @@ CI runs these on every push:
 holds graph-walks' cut over windows to `scripts/window-oracle.py`, which
 works out what a window must return from the rules of
 [Reading a window](walks-format.md#reading-a-window), over tiles decoded
-by the spec-only reader `spec8.py`. It cuts every window of each short
+by the spec-only reader `spec8.py`: the fragments, the departures and
+their own steps, and the node table a viewer draws from, including which
+pass a node the reference passes more than once is placed at. It cuts
+every window of each short
 sequence, and the tile edges, holes, record ends and random windows of
 longer ones, on the fixtures and on random graphs, then shows that each
 planted reader mistake makes some file fail. Run

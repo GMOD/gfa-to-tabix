@@ -31,9 +31,18 @@ and every budget lifted, the cut must return:
               and rejoin bases that lie within [hapStart, hapStart + ownBp),
               in contig order. No other departure carries steps.
 
-It does not check gaps, links, breakAt, node tables (so not which pass a
-node the reference passes twice is drawn at), contained cuts, keep filters
-or the budgets. The tiles a window reads are the page's rule, so a file whose pieces
+  nodes       The table graph.tables(kept, fragments, departures) gives,
+              placeholders aside. It holds every node of R over D and every
+              node of a fragment or of a departure's own steps. A node of R
+              in a tile the cut decodes, those over D and those fetched to
+              attach own steps, takes its pass over D, the earliest if
+              several are, else its earliest pass in those tiles: rank 0 on
+              S, with that pass's passes and strand. Any other node takes
+              the first place a fragment or own steps hold it, by walk name
+              then contig position: rank 1 on that walk, passes 0, forward.
+
+It does not check gaps, links, breakAt, contained cuts, keep filters or the
+budgets. The tiles a window reads are the page's rule, so a file whose pieces
 lie outside their tiles' extents fails spec8.py, not this check.
 
   window-oracle.py WALKS GRAPH_WALKS [--seq S ...] [--every-window-up-to L]
@@ -115,7 +124,7 @@ class Sequence:
                 moved[key[:3]] = steps_of(rs, t.decode(rs, c[9], c[10], int(c[8])), key)
         for c in t.abridged:
             pieces.append(Piece(c[4], int(c[5]), int(c[7]), int(c[6]), moved[(c[4], int(c[5]), int(c[7]))], cs))
-        positions = list(zip(t.off, t.end))
+        positions = [(h >> 1, a, b, n, h & 1) for h, a, b, n in zip(t.R, t.off, t.end, t.passes)]
         self.cache[e.offset] = (pieces, positions)
         if len(self.cache) > 24:
             self.cache.popitem(last=False)
@@ -162,6 +171,11 @@ def cut(sq, s, e, context, expand, attach_bp, digest=False):
     for t in chosen:
         pieces += sq.decoded(t)[0]
 
+    visits = []
+
+    def unloaded(step):
+        return step.ref is None and step.piece[3] and not expand
+
     def on_d(step):
         return step.ref is not None and step.ref < d1 and step.ref + step.bp > d0
 
@@ -186,6 +200,10 @@ def cut(sq, s, e, context, expand, attach_bp, digest=False):
                 held = sum(x.bp for x in steps[first:last + 1])
                 after = sum(x.bp for x in steps[last + 1:])
                 hap = run[0].hap + before
+                at = hap
+                for x in steps[first:last + 1]:
+                    visits.append((path, at, x))
+                    at += x.bp
                 fragments.append([path, frag, hap, hap + held, before, after,
                                   shown(steps_text(steps[first:last + 1], expand), digest)])
 
@@ -193,6 +211,7 @@ def cut(sq, s, e, context, expand, attach_bp, digest=False):
         return own_bp <= attach_bp and any(d0 <= b < d1 for b in (leave, rejoin))
 
     departures = []
+    attach_tiles = {}
     for c in sq.records:
         if int(c[1]) < d1 and int(c[2]) > d0:
             path, hap_start, own_bp = c[4], int(c[5]), int(c[6])
@@ -208,7 +227,9 @@ def cut(sq, s, e, context, expand, attach_bp, digest=False):
                             for x in p.steps:
                                 if hap_start <= at and at + x.bp <= hap_start + own_bp:
                                     own.append((at, x))
+                                    attach_tiles[t.offset] = t
                                 at += x.bp
+                visits += [(path, at, x) for at, x in own]
                 steps = steps_text([x for _, x in sorted(own, key=lambda y: y[0])], expand, on_r=False)
                 steps = shown(steps, digest) if steps else None
             departures.append([path, hap_start, own_bp, int(c[7]), lpos, lrev, int(c[10]), rpos, rrev,
@@ -224,20 +245,43 @@ def cut(sq, s, e, context, expand, attach_bp, digest=False):
                     lrev, rrev = bool(a.against), bool(x.against)
                     lpos = a.ref if lrev else a.ref + a.bp
                     rpos = x.ref + x.bp if rrev else x.ref
-                    own_bp = sum(y.bp for y in between)
+                    own_bp = sum(y.bp for _, y in between)
                     adjacent = own_bp == 0 and lrev == rrev and sq.squeeze(lpos) == sq.squeeze(rpos)
                     lb, rb = leave_base(lpos, lrev), rejoin_base(rpos, rrev)
                     extent = (min(a.ref, x.ref), max(a.ref + a.bp, x.ref + x.bp))
                     if not adjacent and extent[0] < d1 and extent[1] > d0:
-                        steps = steps_text(between, expand, on_r=False) if attaches(own_bp, lb, rb) else ""
+                        steps = ""
+                        if attaches(own_bp, lb, rb):
+                            steps = steps_text([x for _, x in between], expand, on_r=False)
+                            visits.extend((p.path, y_at, y) for y_at, y in between)
                         steps = shown(steps, digest) if steps else None
                         departures.append([p.path, a_end, own_bp, 0, lpos, lrev, a.passes, rpos, rrev, x.passes,
                                            True, steps])
                 last, between = (x, at + x.bp), []
             elif last is not None:
-                between.append(x)
+                between.append((at, x))
             at += x.bp
-    return {"fragments": fragments, "departures": departures}
+
+    passes_of = collections.defaultdict(list)
+    for t in chosen + [t for t in attach_tiles.values() if t not in chosen]:
+        for node, a, b, n, rev in sq.decoded(t)[1]:
+            passes_of[node].append((a, b, n, rev))
+    kept = {node for node, ps in passes_of.items() if any(a < d1 and b > d0 for a, b, _, _ in ps)}
+    kept |= {x.node for _, _, x in visits if not unloaded(x)}
+    first_visit = {}
+    for name, at, x in sorted(visits, key=lambda v: (v[0].encode(), v[1])):
+        if not unloaded(x):
+            first_visit.setdefault(x.node, (name, at, x.bp))
+    nodes = []
+    for node in kept:
+        ps = passes_of.get(node)
+        if ps:
+            a, b, n, rev = min([p for p in ps if p[0] < d1 and p[1] > d0] or ps)
+            nodes.append([str(node), sq.seq, a, b, 0, n, rev])
+        else:
+            name, at, bp = first_visit[node]
+            nodes.append([str(node), name, at, at + bp, 1, 0, 0])
+    return {"fragments": fragments, "departures": departures, "nodes": nodes}
 
 
 def windows(sq, length, tile, every, n, widest, edges, rng):
@@ -270,7 +314,8 @@ def windows(sq, length, tile, every, n, widest, edges, rng):
 
 def canonical(result):
     return (sorted(json.dumps(f) for f in result["fragments"]),
-            sorted(json.dumps(d) for d in result["departures"]))
+            sorted(json.dumps(d) for d in result["departures"]),
+            sorted(json.dumps(n) for n in result["nodes"]))
 
 
 def main():
@@ -317,6 +362,7 @@ def main():
                     print(f"{seq} {counts['windows']} windows, {counts['differ']} differ", file=sys.stderr, flush=True)
                 counts["fragments"] += len(want["fragments"])
                 counts["departures"] += len(want["departures"])
+                counts["nodes"] += len(want["nodes"])
                 if "error" in got:
                     counts["differ"] += 1
                     if shown < args.most:
@@ -324,13 +370,13 @@ def main():
                         print(f"{seq}:{s}-{e} context {context} expand {expand} attachBp {attach_bp}: "
                               f"graph-walks threw {got['error']}")
                     continue
-                (wf, wd), (gf, gd) = canonical(want), canonical(got)
-                if (wf, wd) != (gf, gd):
+                (wf, wd, wn), (gf, gd, gn) = canonical(want), canonical(got)
+                if (wf, wd, wn) != (gf, gd, gn):
                     counts["differ"] += 1
                     if shown < args.most:
                         shown += 1
                         print(f"{seq}:{s}-{e} context {context} expand {expand} attachBp {attach_bp}:")
-                        for label, a, b in (("fragment", wf, gf), ("departure", wd, gd)):
+                        for label, a, b in (("fragment", wf, gf), ("departure", wd, gd), ("node", wn, gn)):
                             ca, cb = collections.Counter(a), collections.Counter(b)
                             for k in sorted((ca - cb).keys()):
                                 print(f"  {label} expected, not returned: {k[:400]}")
@@ -339,7 +385,7 @@ def main():
     node.stdin.close()
     node.wait()
     print(f"{args.walks}: {counts['windows']} windows, {counts['fragments']} fragments, "
-          f"{counts['departures']} departures expected; {counts['differ']} windows differ")
+          f"{counts['departures']} departures, {counts['nodes']} nodes expected; {counts['differ']} windows differ")
     return 1 if counts["differ"] else 0
 
 

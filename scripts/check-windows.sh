@@ -7,8 +7,8 @@
 # that passed there differ. A sequence of 300 bp or fewer is cut at every
 # window, a longer one at its tile edges, holes and record ends and 300
 # random windows, each with context 0 and 1000, attachBp 6 and 65536,
-# expanded and not. Exits 1 on a difference or on a mutant no file catches,
-# naming it.
+# expanded and not, comparing fragments, departures and the node table.
+# Exits 1 on a difference or on a mutant no file catches, naming it.
 # Usage: scripts/check-windows.sh <gfa-to-tabix binary> <graph-walks checkout> [seeds]
 set -u
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -78,23 +78,26 @@ done < "$dir/files"
 echo "$files files checked, every window agreeing unless named above"
 
 # Each mutant is a file of graph-walks' src, the text it holds once, \n for a
-# line break, and what replaces it, each a mistake a reader of the format
-# could make. A mutant is caught where a file that passed above has windows
-# that differ
+# line break, and what replaces it, joined by %, each a mistake a reader of
+# the format could make. A mutant is caught where a file that passed above
+# has windows that differ
 MUTANTS=(
-  "tile-touching|walkReader.ts|unit.start < span.end && unit.end > span.start|unit.start <= span.end && unit.end > span.start"
-  "tile-edge-dropped|walkReader.ts|unit.start < span.end && unit.end > span.start|unit.start < span.end && unit.end > span.start + 1"
-  "context-short|walkReader.ts|  end: region.end + context,\n})|  end: region.end + Math.max(0, context - 1),\n})"
-  "pieces-unjoined|walkRows.ts|pieces[i]!.piece !== pieces[i - 1]!.piece + 1|true"
-  "step-touching|walkRows.ts|if (start < windowEnd && start + bp[i + 1]! - bp[i]! > windowStart) {|if (start <= windowEnd && start + bp[i + 1]! - bp[i]! > windowStart) {"
-  "attach-touching|walkDeparture.ts|const on = (base: number) => base >= span.start && base < span.end|const on = (base: number) => base >= span.start && base <= span.end"
-  "attach-below|walkDeparture.ts|d.ownBp <= attachBp && leavesOrRejoinsOn(d, drawn)|d.ownBp < attachBp && leavesOrRejoinsOn(d, drawn)"
-  "records-twice|walkReader.ts|for (const line of new Set(lines)) {|for (const line of lines) {"
-  "record-touching|walkReader.ts|+cols[2]! > span.start|+cols[2]! >= span.start"
-  "computed-edge|walkRows.ts|if (lo < windowEnd && hi > windowStart) {|if (lo < windowEnd && hi > windowStart + 1) {"
-  "computed-across-pieces|walkRows.ts|    const bounds = pieceBounds(run)\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      let last = -1|    const bounds = [0, run.ids.length]\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      let last = -1"
-  "drawn-from-nodes|walkRows.ts|  let windowStart = drawn?.start ?? Infinity|  let windowStart = Infinity"
-  "holes-kept|walkDeparture.ts|squeeze(d.leavePos) === squeeze(d.rejoinPos)|d.leavePos === d.rejoinPos"
+  "tile-touching%walkReader.ts%unit.start < span.end && unit.end > span.start%unit.start <= span.end && unit.end > span.start"
+  "tile-edge-dropped%walkReader.ts%unit.start < span.end && unit.end > span.start%unit.start < span.end && unit.end > span.start + 1"
+  "context-short%walkReader.ts%  end: region.end + context,\n})%  end: region.end + Math.max(0, context - 1),\n})"
+  "pieces-unjoined%walkRows.ts%pieces[i]!.piece !== pieces[i - 1]!.piece + 1%true"
+  "step-touching%walkRows.ts%if (start < windowEnd && start + bp[i + 1]! - bp[i]! > windowStart) {%if (start <= windowEnd && start + bp[i + 1]! - bp[i]! > windowStart) {"
+  "attach-touching%walkDeparture.ts%const on = (base: number) => base >= span.start && base < span.end%const on = (base: number) => base >= span.start && base <= span.end"
+  "attach-below%walkDeparture.ts%d.ownBp <= attachBp && leavesOrRejoinsOn(d, drawn)%d.ownBp < attachBp && leavesOrRejoinsOn(d, drawn)"
+  "records-twice%walkReader.ts%for (const line of new Set(lines)) {%for (const line of lines) {"
+  "record-touching%walkReader.ts%+cols[2]! > span.start%+cols[2]! >= span.start"
+  "computed-edge%walkRows.ts%if (lo < windowEnd && hi > windowStart) {%if (lo < windowEnd && hi > windowStart + 1) {"
+  "computed-across-pieces%walkRows.ts%    const bounds = pieceBounds(run)\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      let last = -1%    const bounds = [0, run.ids.length]\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      let last = -1"
+  "drawn-from-nodes%walkRows.ts%  let windowStart = drawn?.start ?? Infinity%  let windowStart = Infinity"
+  "holes-kept%walkDeparture.ts%squeeze(d.leavePos) === squeeze(d.rejoinPos)%d.leavePos === d.rejoinPos"
+  "placement-later-pass%walkRows.ts%(node.refName === held.refName && node.start < held.start))%(node.refName === held.refName && node.start > held.start))"
+  "placement-window-ignored%walkRows.ts%  node.onWindow !== held.onWindow\n    ? node.onWindow\n    : node.rank === 0 &&%  false\n    ? node.onWindow\n    : node.rank === 0 &&"
+  "off-reference-later-walk%walkRows.ts%            name < held.refName ||%            name > held.refName ||"
 )
 plant='
 import sys
@@ -105,7 +108,7 @@ if text.count(old) != 1:
 open(path, "w").write(text.replace(old, new))
 '
 for m in "${MUTANTS[@]}"; do
-  IFS='|' read -r name file from to <<< "$m"
+  IFS='%' read -r name file from to <<< "$m"
   mkdir -p "$dir/gw-$name"
   cp -r "$GW/src" "$GW/package.json" "$dir/gw-$name/"
   ln -s "$GW/node_modules" "$dir/gw-$name/node_modules"

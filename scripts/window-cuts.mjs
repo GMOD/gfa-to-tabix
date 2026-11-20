@@ -4,7 +4,9 @@
 // read from stdin, {seq, start, end, context, expand, attachBp}, each cut
 // with every walk kept and every budget lifted. A fragment is its
 // name, fragStart, hapStart, hapEnd, trimmedBefore, trimmedAfter and steps,
-// a departure its record's columns, fromSteps and own steps; a step on the
+// a departure its record's columns, fromSteps and own steps, a node its row
+// of graph.tables, placeholders aside, as name, refName, start, end, rank,
+// passes and reversed; a step on the
 // reference is `refStart±` then `>id` or `<id`, a step off it `>id` or
 // `<id`, and a placeholder `~bp`.
 //
@@ -74,7 +76,7 @@ for await (const line of lines) {
     const { seq, start, end, context, expand, attachBp } = JSON.parse(line)
     const out = { seq, start, end, context, expand }
     try {
-      const { graph, fragments, departures } = await reader.cut(
+      const { graph, kept, fragments, departures } = await reader.cut(
         seq,
         { start, end },
         {
@@ -97,6 +99,16 @@ for await (const line of lines) {
         f.trimmedAfter,
         stepsText(graph, f.ids, f.rev, f.refStarts, f.against),
       ])
+      const { nodes } = graph.tables(kept, fragments, departures)
+      out.nodes = Array.from(nodes.lengths, (length, i) => [
+        nodes.names[i],
+        nodes.refNames[nodes.refs[i]],
+        nodes.starts[i],
+        nodes.starts[i] + length,
+        nodes.ranks[i],
+        nodes.passes[i],
+        nodes.reversed[i],
+      ]).filter((_, i) => nodes.placeholders[i] !== 1)
       out.departures = departures.map(d => [
         d.name,
         d.hapStart,
