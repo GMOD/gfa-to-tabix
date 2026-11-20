@@ -5,9 +5,10 @@ path that can run the length of a chromosome. A walk file holds the same
 lines cut up along one reference genome, so that a viewer can fetch the
 paths through one region from a static web host in a few range requests.
 
-This page explains the format on one small example and accounts for every
-number in the lines it shows. The [specification](walks-format.md) defines
-the rest, and is the authority where this page simplifies.
+The first two sections give the format in short, on one small example. The
+rest of the page reads the example's walk file line by line and accounts
+for every number shown. The [specification](walks-format.md) is the
+authority where this page simplifies.
 
 ## The example
 
@@ -21,6 +22,8 @@ W  HG002   1  chr1  0  90  >1>2>3>4>5>6>7>8>9
 W  HG002   2  chr1  0  40  >1>2>8>9
 W  HG003   1  chr1  0  80  >1>2>3>4>6>7>8>9
 ```
+
+Each `>4` is a step: node 4, walked forward.
 
 - `CHM13#0` takes node 10, which is 7 bp, in place of node 5
 - `HG002#1` follows the reference
@@ -36,25 +39,48 @@ file beside it, `hprc.GRCh38.walks.gz.idx`.
 
 ![The example graph: nine reference nodes along chr1 under three tiles, tile 0, tile 30 and tile 60; HG002#1 as a straight line, CHM13#0 dipping to node 10 under node 5, HG003#1 dipping under node 5 with no node, and HG002#2 dipping under nodes 3 to 7 with no node; below, hprc.GRCh38.walks.gz as a bar of header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and table; the region chr1:31-60 is shaded over the graph and over tile 30 and departures 30-60, labelled one request](figures/walks-example.svg)
 
+## The format in short
+
+- **Tiles:** gfa-to-tabix cuts the reference into tiles of a fixed length,
+  30 bp here and 65536 bp by default, and compresses each tile separately
+- **A table of byte ranges:** the file has a table of where each tile's
+  bytes are, so a viewer fetches the tiles over its region and no others
+- **The reference, once:** a tile's `ref` row lists the reference's steps
+  through the tile
+- **Each detour, once:** a `route` row is one detour off the reference
+  inside the tile, however many haplotypes take it. Tile 30 has two: from
+  node 4 straight to node 6, and from node 4 through node 10 to node 6
+- **A haplotype as the routes it takes:** a `walk` row is one haplotype's
+  path through the tile, written as the step it starts on and the routes
+  it takes. `HG002#1` takes none, so its row has a start and no routes
+- **Departures:** `HG002#2` has no step at all between 30 and 60, so tile
+  30 has no `walk` row for it. A `departure` row gives where `HG002#2` left
+  the reference and where it rejoins. The file has a copy of that row next
+  to each tile from where it left to where it rejoins, in the units the
+  figure labels `departures`, so a viewer of tile 30 still draws it
+
 ## The file is a series of units
 
 `zcat hprc.GRCh38.walks.gz` prints the whole file as tab-separated text,
-in which `.` in a column means empty. gfa-to-tabix compresses the file
-unit by unit, so a viewer can fetch one unit and gunzip it without the
-others. The bar in the figure shows the units in file order:
+in which `.` in a column means empty. The file has a table of byte ranges
+and no Tabix index, so `tabix` doesn't read it.
+
+gfa-to-tabix compresses the file unit by unit, so a viewer can fetch one
+unit and gunzip it without the others. The bar in the figure shows the
+units in file order:
 
 - **The header** names the reference and lists the other haplotypes
-- **A tile** has the paths through one stretch of the reference. `--tile 30`
-  cuts this reference every 30 bp, and the default is 65536 bp. A node is
-  never split: a tile has the reference steps that start inside it
-- **A `departures` unit** has a row for each path that leaves the
-  reference in one tile and rejoins it in another, as `HG002#2` does.
-  gfa-to-tabix copies the row into a `departures` unit over every tile
-  between the two, so this file has three
+- **A tile** has the paths through one stretch of the reference. A node is
+  never split between two tiles: a tile has the reference steps that start
+  inside it, so its stretch can run past the next cut
+- **A `departures` unit** has the `departure` rows of one stretch of the
+  reference, and is in the file only where there is such a row. `HG002#2`'s
+  row is over all three tiles, so this file has three of these units
 - **The table** lists the byte range of every tile and `departures` unit of
   one chromosome
 
-The header of this file, after a first line that has the format number and
+The header of this file, after a first line of tags that
+[Header](walks-format.md#header) lists, among them the format number and
 the tile length:
 
 ```
@@ -65,7 +91,19 @@ the tile length:
 #haplotype  HG003#1
 ```
 
-The table for chr1:
+## Reading one region
+
+A viewer starts from the `.idx`, which gives the byte range of the header
+and of each chromosome's table, as an offset and a length. Its first line
+repeats the header's first line, and the rest of it is:
+
+```
+#header        0    175
+GRCh38#0#chr1  898  151
+```
+
+The viewer reads the header, for the list of haplotypes, and the table of
+the chromosome it shows. The table lists the units of chr1:
 
 ```
 #unit   GRCh38#0#chr1  0   90  table       .
@@ -78,24 +116,18 @@ The table for chr1:
 ```
 
 An `#entry` line gives one unit: the stretch of chr1 it covers, its kind,
-its name, and then its byte offset and its length in the `.gz` file.
-
-The `.idx` gives the byte range of the header and of each chromosome's
-table, after a first line that repeats the header's first line:
-
-```
-#header        0    175
-GRCh38#0#chr1  898  151
-```
+its name, and then its byte offset and its length in the `.gz` file. The
+name of a tile is the position it was cut at, and the other units have
+none.
 
 To draw chr1:31-60, which is 30 to 60 in the file's 0-based coordinates:
 
-- A viewer reads the `.idx`, then the header and the table at the byte
-  ranges the `.idx` gives
-- It picks the entries that overlap 30 to 60, which are the `tile` and
-  `departures` entries of `30 60`
+- The viewer picks the entries that overlap 30 to 60, which are the `tile`
+  and `departures` entries of `30 60`
 - The two units are adjacent in the file, so one request fetches both:
   from the offset of the first to the end of the second
+
+## What the viewer gets
 
 Gunzipped, the two units are these ten lines:
 
@@ -112,22 +144,24 @@ GRCh38#0#chr1  30  60  walk       HG003#1#chr1   0  30  1  2  8  0
 GRCh38#0#chr1  10  80  departure  HG002#2#chr1   20  0  0  20  +  1  70  +  1  .
 ```
 
-The rest of this page reads those ten lines: first the kinds of row, then
-each kind column by column.
+The numbers in these lines are encoded: a step is written as twice its
+node id, and a later number in a list as a difference from the one before.
+The sections below decode each line, and arrive at this:
 
-## Five kinds of row
-
-| Kind | What the row holds |
+| Line | Meaning |
 |---|---|
-| `ref` | the reference's path through the tile |
-| `nodes` | the id and length of each node that the tile's routes visit off the reference |
-| `route` | one detour off the reference, listed once however many haplotypes take it |
-| `walk` | one haplotype's path through the tile, as the routes it takes |
-| `departure` | where a haplotype leaves the reference in one tile and rejoins it in another |
+| `#unit`, `tile` | the tile cut at 30 starts here |
+| `ref` | the reference goes `>4 >5 >6` through the tile, and each node is 10 bp |
+| `nodes` | node 10 is 7 bp |
+| first `route` | route 0 goes from `>4` straight to `>6` |
+| second `route` | route 1 goes from `>4` through `>10` to `>6` |
+| `walk`, `CHM13#0` | three steps from `>4`, taking route 1: `>4 >10 >6` |
+| `walk`, `HG002#1` | three steps from `>4`, taking no route: `>4 >5 >6` |
+| `walk`, `HG003#1` | two steps from `>4`, taking route 0: `>4 >6` |
+| `#unit`, `departures` | the `departures` unit over 30 to 60 starts here |
+| `departure` | `HG002#2` left the reference at 20 and rejoins it at 70, with no sequence between leaving and rejoining |
 
-A tile has its rows in that order, and has `nodes` and `route` rows only
-where one of its `walk` rows takes a route. Tiles 0 and 60 of this file
-have neither.
+## The columns every row starts with
 
 Every row starts with the same four columns, `seq start end kind`:
 
@@ -135,24 +169,27 @@ Every row starts with the same four columns, `seq start end kind`:
   `GRCh38#0#chr1` is the line `W GRCh38 0 chr1`
 - **`start end`** is the stretch of that sequence the row is about, 0-based
   and half-open as in BED, so chr1:31-60 is `30 60`
-- **`kind`** is one of the five kinds above
+- **`kind`** is `ref`, `nodes`, `route`, `walk` or `departure`
 
 Each row has its position, so `zcat` and `awk` can filter the rows of any
 region.
 
-A `#unit` line starts each unit after the header: `seq start end`, then
-the unit's kind, `tile`, `departures` or `table`, then its name. The name
-of a tile is the position it was cut at, which is how a `departure` row
-refers to a tile. A `departures` unit and a table have no name.
-
-gfa-to-tabix cuts a W line into pieces, one in each tile where the line
-has a step on the reference. A `ref` row or a `walk` row is one piece.
+- **Row order:** a tile has its `ref` row, then `nodes`, `route` and
+  `walk` rows. It has `nodes` and `route` rows only where one of its `walk`
+  rows takes a route, so tiles 0 and 60 of this file have neither
+- **`#unit` lines:** a `#unit` line starts each unit after the header, with
+  `seq start end`, then the unit's kind, `tile`, `departures` or `table`,
+  then its name. A `departure` row refers to a tile by its name
+- **Pieces:** gfa-to-tabix cuts a W line into pieces, one in each tile
+  where the line has a step on the reference. A `ref` row or a `walk` row
+  is one piece
 
 ## How a row writes a step
 
 A W line writes a step as `>4` or `<4`, which is node 4 forward or
 reversed. A row writes a step as one number: twice the node id, plus 1 if
-the step is reversed. `>4` is `8` and `<4` is `9`.
+the step is reversed. `>4` is `8` and `<4` is `9`. The specification calls
+this number a handle.
 
 In a list of steps, each number after the first is a difference from the
 node id before it: twice the difference, plus 1 if the step is reversed.
@@ -212,10 +249,11 @@ A `route` row has three columns:
 | `interior` | the steps off the reference. Commas separate several, and `.` is none |
 | `exit` | the step on the reference where the detour returns |
 
-The list of steps runs on from one `route` row to the next. Read the
-`route` columns of a tile left to right and top to bottom as one list,
-skipping `.`. Here the list is `8,4,-4,12,-8`, so the `-4` that starts the
-second row counts from the `>6` that ends the first:
+The first number of a `route` row is a difference from the last step of
+the `route` row above it. Read the `route` columns of a tile left to right
+and top to bottom as one list, skipping `.`. Here the list is
+`8,4,-4,12,-8`, so the `-4` that starts the second row counts from the `>6`
+that ends the first:
 
 | Row | Numbers | Steps | The detour |
 |---|---|---|---|
@@ -240,12 +278,14 @@ The first five columns after `walk` are those of a `ref` row: `path`,
 
 | Column | Meaning |
 |---|---|
-| `startHandle` | the piece's first step on the reference, as the step's number. Here `8` is `>4`. A handle is the format's word for a step's number |
+| `startHandle` | the piece's first step on the reference, as the step's number. Here `8` is `>4` |
 | `choices` | the routes the piece takes, in order, or `.` for none |
 
 `choices` lists route numbers the way `steps` lists node ids: twice the
 difference from the route number before it, plus 1 if the piece travels
 the route backwards, from its exit to its entry with each step reversed.
+Each `walk` row's list starts afresh, with its first number counted from
+route 0.
 
 | Written | Read as |
 |---|---|
@@ -302,19 +342,20 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
 | Column | Here | Meaning |
 |---|---|---|
 | `start end` | `10 80` | from the start of the last reference node before the path leaves, node 2, to the end of the first after it rejoins, node 8. A viewer that shows either node gets the row |
-| `path` | `HG002#2#chr1` | the W line |
-| `hapStart` | `20` | the position on the path's contig where it leaves the reference. It is 20 on the reference too, because `HG002#2` matches the reference up to there |
+| `path` | `HG002#2#chr1` | the W line, or all the W lines of its contig taken as one path |
+| `hapStart` | `20` | the position on the path's contig where it leaves the reference, as `hapOffset` is a position on the contig. It is 20 on the reference too, because `HG002#2` matches the reference up to there |
 | `ownBp` | `0` | the bp the path has between leaving and rejoining. 0 is a jump straight from node 2 to node 8 |
-| `missingBp` | `0` | the part of `ownBp` that the graph has no sequence for, because it lies between two W lines of the path's contig. 0 for a contig that is one W line |
+| `missingBp` | `0` | the part of `ownBp` that lies in a gap between two W lines of the contig, which is sequence the graph lacks. 0 for a contig that is one W line |
 | `leavePos` `leaveStrand` | `20` `+` | the path leaves the reference at 20, walking forward along it |
-| `leavePasses` | `1` | how many times the reference passes the node the path leaves from, always written as a number |
+| `leavePasses` | `1` | how many times the reference passes the node the path leaves from. It is a number in every row, where `passes` can be `.` |
 | `rejoinPos` `rejoinStrand` | `70` `+` | the path rejoins the reference at 70, walking forward along it |
 | `rejoinPasses` | `1` | the same count for the node it rejoins on |
 | `ownTiles` | `.` | the names of the tiles whose `walk` rows have the path's steps between the two positions, with commas between. None here, since `ownBp` is 0 |
 
 - **Which paths have one:** a path that leaves the reference in one tile
   and rejoins it in another, whether the next tile or one far along. A
-  path that follows the reference from one tile into the next has none
+  path that follows the reference from one tile into the next has none,
+  and neither has a path that leaves the reference and never rejoins it
 - **What a viewer draws:** from this row alone, a viewer of chr1:31-60
   draws `HG002#2` crossing the whole region with no nodes, since it left
   at 20 and rejoins at 70
@@ -328,7 +369,7 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
 ## What a walk file leaves out
 
 - **Bases:** the rows have node ids and lengths. `--sequences` adds the
-  bases
+  bases to the `ref` and `nodes` rows
 - **Links that no path takes:** the file has no L lines, and a reader takes
   a link from two consecutive steps of a path.
   [The node and link index](index-format.md), gfa-to-tabix's other output,
@@ -348,9 +389,12 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
   names the tile whose `walk` row has its steps: the tile the path leaves
   from, or the one it rejoins in
 - **A route with `.` for its entry or its exit,** for a piece that leaves
-  the reference in a tile and does not return in it, and a route travelled
-  backwards. The specification's [Example](walks-format.md#example)
-  decodes a tile with both
+  the reference onto other nodes and does not return inside the tile.
+  `HG002#2`'s piece in tile 0 needs none, because it ends on the reference,
+  on `>2`
+- **A route travelled backwards.** The specification's
+  [Example](walks-format.md#example) decodes a tile with a route that has
+  no entry and is travelled backwards
 - **A reference that passes a node more than once,** as in a pggb graph,
   which merges the copies of a repeat into shared nodes. gfa-to-tabix
   places each haplotype step on one copy, and a region over another copy
@@ -358,7 +402,7 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
   ([Exact and chosen](walks-format.md#exact-and-chosen),
   [open problem](open-problems.md#placement-of-steps-on-nodes-the-reference-passes-more-than-once))
 - **A tile too large to send whole,** as in a satellite array. gfa-to-tabix
-  moves paths out of the tile into separate units, and a viewer draws a
+  moves paths out of the tile into units of two more kinds, and a viewer draws a
   moved path as blocks along the reference until the user asks for its
   nodes ([Abridged tiles](walks-format.md#abridged-tiles))
 - **A P line,** whose name gives the sample, haplotype and contig
@@ -369,8 +413,6 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
 - **One pair of files per reference:** `--refs GRCh38,CHM13` writes a pair
   for each sample. Positions in a file are positions on that file's
   reference, so a viewer that shows GRCh38 reads the GRCh38 file
-- **Tabix:** a walk file has a table of byte ranges and no Tabix index, so
-  `tabix` and htslib's region API don't read one
 - **Readers:** [Readers](walks-format.md#readers) lists the viewers and
   the library they read walk files through, and
   [scripts/walks-brief.py](../scripts/walks-brief.py) is one short Python
