@@ -1,5 +1,8 @@
 # Walk files
 
+To learn the format, read [Walk files in brief](walks-format-in-brief.md)
+first. This page is the full specification.
+
 - **In:** a base-level GFA with integer node ids and W or P lines, such as
   `vg convert -f` writes from a Minigraph-Cactus GBZ
 - **Out:** per reference sample, a walk file `<prefix>.<sample>.walks.gz`
