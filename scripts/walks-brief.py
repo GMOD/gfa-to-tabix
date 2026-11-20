@@ -4,8 +4,8 @@
 A short reader of the format docs/walks-format.md specifies. It reads the
 directory, each sequence's table and every unit, rebuilds the reference's
 lines from their `ref` rows and every other line from its `walk` rows, and
-joins each line's pieces in order. A viewer fetches the byte ranges of the units over
-its window where this script reads the whole file.
+joins each line's pieces in order. A viewer fetches the byte ranges of the
+units over its window where this script reads the whole file.
 
 Usage: scripts/walks-brief.py FILE.walks.gz
 """

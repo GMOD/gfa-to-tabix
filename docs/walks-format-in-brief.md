@@ -1,128 +1,139 @@
 # Walk files in brief
 
-A walk file holds the haplotype paths of a pangenome graph, the W and P
-lines of its GFA, arranged by where they lie on one reference genome. A
-viewer fetches the paths through a region of that reference from a static
-web host with a few HTTP range requests.
+A GFA gives the haplotypes of a pangenome graph as W and P lines, each a
+path that can run the length of a chromosome. A walk file holds the same
+lines cut up along one reference genome, so that a viewer can fetch the
+paths through one region from a static web host in a few range requests.
 
-```bash
-gfa-to-tabix chr22.gfa --walks --refs GRCh38 -o chr22
+The [specification](walks-format.md) defines every row and column, and is
+the authority where this page simplifies.
+
+## Making a walk file
+
+[walks-tile.gfa](figures/walks-tile.gfa) is a 90 bp graph with three W
+lines. CHM13 takes node 10 where GRCh38 and HG002 take node 5:
+
+```
+W  GRCh38  0  chr1  0  90  >1>2>3>4>5>6>7>8>9
+W  CHM13   0  chr1  0  86  >1>2>3>4>10>6>7>8>9
+W  HG002   1  chr1  0  90  >1>2>3>4>5>6>7>8>9
 ```
 
-The command writes two files:
+```bash
+gfa-to-tabix walks-tile.gfa --walks --refs GRCh38 --tile 30 -o hprc
+```
 
-- `chr22.GRCh38.walks.gz` has the paths as lines of text in gzip blocks, so
-  `zcat` prints all of it
-- `chr22.GRCh38.walks.gz.idx` is a small text directory of byte ranges in
-  the first file
+- **Output:** `hprc.GRCh38.walks.gz`, which is tab-separated text in gzip
+  blocks, and `hprc.GRCh38.walks.gz.idx`, a few lines of text with the byte
+  ranges a reader starts from
+- **One pair of files per reference:** `--refs GRCh38,CHM13` writes a pair
+  for each sample. Positions in a file are positions on that file's
+  reference, so a viewer that shows GRCh38 reads the GRCh38 file
+- **Input:** a base-level GFA with integer node ids and W or P lines, as
+  `vg convert -f` writes from a GBZ
+- **Hosting:** put the two files side by side on a web server that answers
+  range requests ([Hosting](walks-format.md#hosting))
+- **Viewers:** the JBrowse graph plugin, BandageJS and ggbandage read walk
+  files through the
+  [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) library
+  ([Readers](walks-format.md#readers))
 
-This page explains the ideas of the format on one small graph.
-[walks-format.md](walks-format.md) is the specification, with every column
-and rule.
+## A viewer fetches the tiles over its region
 
-## One small graph
+gfa-to-tabix cuts the reference into tiles, compresses each tile separately
+and writes a table of the tiles' byte ranges for each chromosome.
+`--tile 30` cuts this example every 30 bp, and the default is 65536.
 
-[walks-schematic.gfa](figures/walks-schematic.gfa) has a 90 bp reference of
-nine 10 bp nodes. CHM13 takes node 10 in place of node 5, and HG002 takes
-the 5 bp node 11 in place of nodes 4 to 6.
+A viewer that opens a walk file reads the `.idx`, the list of haplotypes in
+the file's header and the table of one chromosome. For each region it then
+fetches the tiles that overlap the region.
 
-The figure shows the graph, the two files that gfa-to-tabix writes from it,
-and what a viewer fetches to draw chr1:31-60:
+![A 90 bp chr1 graph with GRCh38#0, HG002#1 and CHM13#0 as lines through its nodes, CHM13#0 dipping to a separate node between 30 and 60; under it hprc.GRCh38.walks.gz as a bar of header, tile 0-30, tile 30-60, tile 60-90 and table, each tile under its stretch of chr1; tile 30-60 is shaded with the graph above it, and an arrow runs from table to the byte range of that tile](figures/walks-tile.svg)
 
-![The walk file of walks-schematic.gfa, built with --tile 30, read for chr1:31-60: three tiles over the graph of nine reference nodes, with CHM13 dipping to node 10 under node 5 and HG002 dipping to node 11 under nodes 4 to 6; the .idx line with the byte range of chr1's table; the data file as a bar of header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and table, with tile 30 and departures 30-60 shaded as one request; then the ref, route, walk and departure rows of those two units with a label under each column](figures/walks-bytes.svg)
+A walk file has this table and no Tabix index, so `tabix` and htslib's
+region API don't read one.
 
-## The file is cut into tiles along the reference
+## A tile lists the reference once and each detour once
 
-- gfa-to-tabix cuts each reference sequence into tiles and compresses each
-  tile separately. A tile is 65536 bp by default, and 30 bp in the figure.
-- A table after the tiles of each reference sequence lists their byte
-  ranges, and the `.idx` gives the byte range of each table.
-- To draw chr1:31-60, a viewer reads the `.idx`, then the table, then the
-  tiles that overlap the window. In the figure that is tile 30, the shaded
-  request.
+`zcat hprc.GRCh38.walks.gz` prints the file as text. The tile shaded in the
+figure holds these rows, with tabs shown as spaces:
 
-## A tile stores the reference once and each detour once
+```
+GRCh38#0#chr1  30  60  ref    GRCh38#0#chr1  0  30  1  3  8,2,2  10,10,10  .
+GRCh38#0#chr1  30  60  nodes  10  6
+GRCh38#0#chr1  30  60  route  8  12  -8
+GRCh38#0#chr1  30  60  walk   CHM13#0#chr1   0  30  1  3  8  0
+GRCh38#0#chr1  30  60  walk   HG002#1#chr1   0  30  1  3  8  .
+```
 
-A tile has three kinds of row:
+- **`ref`** is the reference's path through the tile: nodes 4, 5 and 6,
+  each 10 bp long
+- **`route`** is a detour off that path. This one leaves the reference at
+  node 4, passes through node 10 and returns at node 6, and the `nodes` row
+  gives node 10's length, 6 bp. A tile lists a detour once, however many
+  haplotypes take it
+- **`walk`** is one haplotype's path through the tile, written as the node
+  it starts on and the routes it takes. CHM13 starts on node 4 and takes
+  route 0, the tile's first `route` row, so its path is 4, 10, 6. HG002
+  takes no route (`.`), so it follows the reference through 4, 5 and 6
 
-- **`ref` rows** list the nodes of the reference through the tile, with
-  their lengths.
-- **A `route` row** is one detour off the reference: the node where it
-  leaves, the nodes it visits, and the node where it returns. A tile lists
-  each distinct detour once, however many haplotypes take it.
-- **A `walk` row** is one haplotype's path through the tile, as the node it
-  starts on and the routes it takes. Between routes the path follows the
-  reference, so a haplotype that matches the reference across a tile is one
-  short row.
+A haplotype that matches the reference across a tile is one short row, and
+haplotypes that share a variant share its `route` row.
 
-In tile 30 of the figure, the reference is nodes 4, 5 and 6, and the one
-route leaves at node 4, visits node 10 and returns at node 6. CHM13's walk
-row has 3 steps, starts on node 4 and takes that route, so a reader rebuilds
-its path as nodes 4, 10 and 6.
+The numbers `8,2,2` and `8 12 -8` are node ids and strands, each written as a
+difference from the one before. The specification defines that encoding,
+and the columns this page skips, under [Rows](walks-format.md#rows).
 
-A row writes a node as its id and strand in one number, and a list of nodes
-as differences between neighbours, which is why the figure's `8,2,2` reads
-as nodes 4, 5 and 6. [Rows](walks-format.md#rows) has the rule.
+From these rows a reader rebuilds every step of every W and P line that
+touches the reference.
+[scripts/walks-brief.py](../scripts/walks-brief.py) is such a reader in one
+short Python file, and it prints the three paths above from this walk file.
 
 ## A departure record gives where a path leaves and rejoins the reference
 
-HG002 leaves the reference after node 3, in tile 0, and rejoins at node 7,
-in tile 60. It has no row in tile 30, because it has no step on a reference
-node there, so a viewer that read tile 30 alone would draw chr1:31-60
-without HG002.
+A haplotype can leave the reference in one tile and rejoin it in another,
+as a haplotype with a 2 Mb deletion does. The tiles inside the deletion
+have no row for that haplotype, so a viewer that read those tiles alone
+would draw the region without it.
 
-- **A `departure` row** gives the two positions on the reference where a
-  path leaves and rejoins, and how many bp the path has in between. HG002's
-  row gives 30, 60 and 5 bp.
-- The file has `departures` units beside its tiles. The writer puts a
-  record in the units along its whole stretch, so a viewer whose window
-  lies anywhere between the two ends reads it. HG002's record is in all
-  three units of the figure.
+- A [`departure` record](walks-format.md#departure) gives the two reference
+  positions and the length of the haplotype's sequence between them
+- A viewer whose region lies anywhere between the two positions reads the
+  record with its tiles, so it can draw the haplotype passing over the
+  region
 - A detour that leaves and returns inside one tile has no record, because
-  the tile's `route` and `walk` rows show it.
-
-## One file per reference
-
-- Every position in `chr22.GRCh38.walks.gz` is a GRCh38 coordinate, 0-based
-  and half-open as in BED. `--refs GRCh38,CHM13` writes a second file with
-  CHM13 coordinates.
-- The header of a file lists its haplotypes, so a viewer can list them
-  before it reads a tile.
+  the tile's `route` and `walk` rows show it
 
 ## What a walk file leaves out
 
-- **Bases.** Rows have node ids and lengths. With `--sequences` the writer
-  adds the bases of each node.
-- **Links.** The file has no L lines. A link is two consecutive steps of a
-  path in the file, and a link that no such path takes is absent.
-  gfa-to-tabix's other output, [the node and link index](index-format.md),
-  holds the graph's nodes and links by coordinate.
-- **Lines off the reference.** A W or P line with no step on a node of the
-  reference is absent, and the header's `leftout` tag counts these lines.
-- **A haplotype on another copy of a repeat.** Where the reference passes a
-  node more than once, as in a pggb graph, the writer places each haplotype
-  step on one copy, and a window over another copy lacks that haplotype
+- **Bases:** the rows have node ids and lengths. `--sequences` adds the
+  bases
+- **Links that no path takes:** the file has no L lines, and a reader takes
+  a link from two consecutive steps of a path.
+  [The node and link index](index-format.md), gfa-to-tabix's other output,
+  holds the graph's nodes and links by coordinate
+- **Paths off the reference:** a W or P line with no step on a node of the
+  reference is absent, and gfa-to-tabix prints how many such lines it left
+  out
+- **Where a path goes on another chromosome:** a path that moves onto
+  another sequence of the reference and stays there looks, on the first
+  sequence, like a path that stops
+  ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
+
+## Repeats and very large tiles
+
+- **A reference that passes a node more than once:** pggb merges the copies
+  of a repeat into shared nodes. gfa-to-tabix places a haplotype's step on
+  one copy, and the file marks the node so that a viewer can say the
+  position was chosen ([Exact and chosen](walks-format.md#exact-and-chosen))
+- **A haplotype on another copy:** a region over another copy of the
+  repeat lacks the haplotype
   ([open problem](open-problems.md#placement-of-steps-on-nodes-the-reference-passes-more-than-once)).
-- **Where a path goes on another sequence.** A departure record lies
-  between two steps on one reference sequence. A path that moves to another
-  reference sequence and stays there has no record on the first
-  ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence)).
-
-## In the specification
-
-- [Rows](walks-format.md#rows) and
-  [Decoding a walk row](walks-format.md#decoding-a-walk-row): every column,
-  and the steps that turn a walk row back into a path.
-- [Example](walks-format.md#example): two tiles decoded row by row, one of
-  them on a reference that takes two nodes twice.
-- [Exact and chosen](walks-format.md#exact-and-chosen): how a file marks a
-  position on a node that the reference passes more than once.
-- [Abridged tiles](walks-format.md#abridged-tiles): a tile too large to
-  send whole, as in a satellite array. The writer moves whole lines out of
-  the tile into separate units, and a viewer draws them from a summary
-  until the user asks for their nodes.
-- [Reading a window](walks-format.md#reading-a-window) and
-  [Readers](walks-format.md#readers): how a reader joins a path across
-  tiles, and the programs that read walk files.
-- [scripts/walks-brief.py](../scripts/walks-brief.py): a reader in about
-  150 lines of Python that prints every W and P line back from a walk file.
+  HPRC's Minigraph-Cactus graphs have no such node on the graph's own
+  reference, so build from the graph built on your reference where one
+  exists
+- **A tile too large to send whole:** in a satellite array the rows of one
+  tile can be megabytes of text. gfa-to-tabix moves paths out of such a
+  tile, and a viewer draws a moved path as blocks along the reference until
+  the user asks for its nodes
+  ([Abridged tiles](walks-format.md#abridged-tiles))
