@@ -1,0 +1,18 @@
+# HPRC v2.1 Minigraph-Cactus chr22 (1.07 GB gzipped GFA) written as a GRCh38 walk
+# file on ada (i9-12900K, 24 threads, shared), 2026-11-20, alternating builds, each
+# pair's walk file and directory compared byte for byte.
+# docs/placement/scripts/musl-walks-2026-11-20.sh
+#
+# 5.0.0's release binary (static, x86_64-unknown-linux-musl, its sha256 checked
+# against the release's) against v5.0.0 built with cargo (glibc)
+input: 0c566ddafc687aee 1066653611 bytes
+load before: 1.13 3.12 3.30
+5.0.0 (musl) round 1: 107.23 s wall, 274.86 s user, 635.76 s system, 991608 KB peak
+5.0.0 (glibc) round 1: 49.01 s wall, 109.03 s user, 1.88 s system, 1060788 KB peak
+5.0.0 (musl) round 2: 105.05 s wall, 250.60 s user, 622.27 s system, 992400 KB peak
+5.0.0 (glibc) round 2: 45.78 s wall, 102.77 s user, 1.81 s system, 1087388 KB peak
+walk file and directory byte-identical
+load after: 6.91 6.39 4.70
+#
+# So on --walks the release binary takes a little over twice as long, and nearly
+# all of the difference is system time: over 600 s of it against 2 s

@@ -655,12 +655,14 @@ W  B  1  c     0  32  >1>2>6>3
   against glibc takes 65-68 s on the same machine, and peaks 70 MB lower
   ([measured](placement/pggb-chrY-build.txt)). The paper's 1.7 minutes
   is the release binary's
-- `--walks` sorts and encodes on every core, where musl's allocator
-  contends more; it hasn't been timed on the release binary
-- Suggested next step: time the release binary against a cargo build on
-  `--walks` for MC chr22, then build the musl target with another
-  allocator, such as mimalloc, and keep it only if it closes most of the
-  gap on both
+- `--walks` sorts and encodes on every core, and the gap is wider there.
+  On MC chr22, 5.0.0's release binary writes the GRCh38 walk file in
+  105-107 s, where the same source built with cargo takes 46-49 s. The
+  release binary spends over 600 s in the kernel across its threads, the
+  cargo build 2 s, and the two write the same bytes
+  ([measured](placement/mc22-walks-build.txt))
+- Suggested next step: build the musl target with another allocator, such
+  as mimalloc, and keep it only if it closes most of the gap on both
 
 ## Memory grows with where a reference line starts
 
