@@ -43,9 +43,11 @@ def lines_of(data, offset, length):
 
 def units_of(path):
     data = open(path, 'rb').read()
-    directory = [line.split('\t') for line in open(path + '.idx').read().splitlines()]
+    walks, _, *later = (line.split('\t') for line in open(path + '.idx').read().split('\n') if line)
+    if 'format:i:8' not in walks:
+        sys.exit(f'{path} is not walk format 8')
     units = {}
-    for _, offset, length in directory[2:]:
+    for _, offset, length in (line for line in later if not line[0].startswith('#')):
         for _, seq, _, _, kind, name, at, size in lines_of(data, int(offset), int(length))[1:]:
             units[(seq, kind, name)] = lines_of(data, int(at), int(size))[1:]
     return units

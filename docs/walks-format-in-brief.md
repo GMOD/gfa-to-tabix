@@ -124,7 +124,8 @@ the compressor.
 - **The `.idx` directory** is plain text. Line 1 is the `#walks` line with
   the data file's length added as `bytes:i:`, and line 2 gives the header's
   byte range. Each later line names one reference sequence of the file and
-  gives the offset and length of its table:
+  gives the offset and length of its table; a reader ignores a later line
+  that starts with `#`:
 
 ```
 #walks  format:i:8  tile:i:30  …  leftout:i:0  bytes:i:1032
@@ -160,8 +161,9 @@ a reader that computes `floor(position / tile)` looks for it in the next.
 - `stay`, `abridge`, `abridgebytes` and `graph` describe how the file was
   written and which GFA it came from. A reader can ignore them.
 - `#reference` names the reference sample. The reference's own lines are
-  the `ref` rows, and each `#haplotype` line names one `sample#haplotype`
-  among the other lines.
+  the `ref` rows. Each `#haplotype` line names a `sample#haplotype` among
+  the other lines, or the sample alone for a line whose name has fewer than
+  three `#`-separated fields.
 - A `#hole` line, which this file lacks, gives a stretch of a reference
   sequence that no line of the reference covers.
 
@@ -325,12 +327,12 @@ GRCh38#0#chr1  20  70  departure  HG002#1#chr1  30  5  0  30  +  1  60  +  1  0
 
 The file has a record for two steps of a path where:
 
-- the two are on the reference, with no step of the path on the reference
-  between them
+- the two are on one reference sequence, with no step of the path on that
+  sequence between them
 - they are in different pieces
 - either the path has sequence of its own between them, or the second is
   not the first's neighbour on the reference: the next base, on the same
-  strand
+  strand, with any `#hole` between the two left out
 
 A reader works out a departure between two steps of one piece from the
 piece.
