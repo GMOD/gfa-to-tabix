@@ -1219,7 +1219,6 @@ impl Builder {
             let passes = reference.passes((handles[i] >> 1) as usize);
             step_end(handles[i], pass[i], length(i), passes, leave)
         };
-        let piece_of = |i: usize| pieces.partition_point(|&(_, b)| b <= i);
         let own = |from: usize, to: usize| Own {
             bp: before[to] - before[from],
             missing: 0,
@@ -1238,32 +1237,36 @@ impl Builder {
         // by sequence: its first and last steps so far
         let mut on: Vec<(u32, usize, usize)> = Vec::new();
         let mut filed = (0, 0);
+        let mut piece = 0;
         for j in (0..n).filter(|&j| pass[j].name != NONE) {
+            while pieces[piece].1 <= j {
+                piece += 1;
+            }
             let s = pass[j].name;
             match on.iter_mut().find(|(name, _, _)| *name == s) {
                 Some((_, _, last)) => {
                     let i = *last;
-                    let (leave, rejoin) = (end(i, true), end(j, false));
-                    let between = own(i + 1, j);
-                    if piece_of(i) != piece_of(j)
-                        && !reference.holes[&s].adjacent(between.bp, &leave, &rejoin)
-                    {
-                        let own_tiles = tiles_of(s, i + 1..j);
-                        let departure = Departure {
-                            path: &path.name,
-                            hap_start: path.start + before[i + 1],
-                            own: between,
-                            leave,
-                            rejoin,
-                            own_tiles: &own_tiles,
-                        };
-                        let lines = departure.file(
-                            self.chunks.first[s as usize],
-                            self.chunks.size,
-                            &mut self.departures,
-                        )?;
-                        filed = (filed.0 + 1, filed.1 + lines);
-                        *self.departure_lines.entry(s).or_default() += lines;
+                    if i < pieces[piece].0 {
+                        let (leave, rejoin) = (end(i, true), end(j, false));
+                        let between = own(i + 1, j);
+                        if !reference.holes[&s].adjacent(between.bp, &leave, &rejoin) {
+                            let own_tiles = tiles_of(s, i + 1..j);
+                            let departure = Departure {
+                                path: &path.name,
+                                hap_start: path.start + before[i + 1],
+                                own: between,
+                                leave,
+                                rejoin,
+                                own_tiles: &own_tiles,
+                            };
+                            let lines = departure.file(
+                                self.chunks.first[s as usize],
+                                self.chunks.size,
+                                &mut self.departures,
+                            )?;
+                            filed = (filed.0 + 1, filed.1 + lines);
+                            *self.departure_lines.entry(s).or_default() += lines;
+                        }
                     }
                     *last = j;
                 }
