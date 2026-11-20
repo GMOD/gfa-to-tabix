@@ -982,7 +982,7 @@ W  B  1  c     0  32  >1>2>6>3
 
 - Format 8 admits a file whose reference is one whole haplotype of its
   `#reference` sample, the sample's other haplotypes in walk rows
-  ([Terms](walks-format.md#terms),
+  ([Whole haplotypes](walks-format.md#whole-haplotypes),
   [ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md)), and
   graph-walks reads one. gfa-to-tabix can't write it: `--refs` takes
   samples and makes every path of each a reference sequence, and
@@ -1069,6 +1069,18 @@ W  B  1  c     0  32  >1>2>6>3
   meet it, against a minimal design derived from the requirements alone.
   What it would drop or merge is a format change, decided under ADR 0011
   before the freeze
+- A reader written from [walks-format.md](walks-format.md) alone on
+  2026-11-19, before its author had read the writer or another reader,
+  rebuilt the W and P lines of the fixtures' files and of 2,101 files of
+  random graphs on its first run. [scripts/walks-brief.py](../scripts/walks-brief.py)
+  is that reader in about 150 lines. To rebuild the lines it reads the
+  directory, the tables, the `ref`, `nodes`, `route` and `walk` rows and the
+  `detail` units. A reader of one window also needs the `departure` rows,
+  for where a path goes outside the tiles it read, the `blocks` rows, to
+  draw a moved piece without its detail unit, and `passes`, to mark a
+  position as chosen. [Walk files in brief](walks-format-in-brief.md)
+  explains the format in that order, and the scripts and counts are in
+  `~/src/walks8-evidence/doc-only-reader-20261119/`
 
 ## The README doesn't say what gfa-to-tabix is
 

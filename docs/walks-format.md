@@ -22,13 +22,7 @@ first. This page is the full specification.
   describes ([ADR 0010](adr/0010-walks-unit-table.md),
   [ADR 0012](adr/0012-abridged-blocks.md),
   [ADR 0013](adr/0013-abridged-hapbp.md)). It is a series of
-  gzip units with a table of their byte ranges, not a Tabix file. 4.x
-  wrote format 7, the same but for a moved piece: its `abridged` row gave
-  the piece's two end steps and the bp between, and there were no
-  `blocks` units. 3.x wrote
-  format 6, whose rows a tile keeps from `kind` on but which filed all of
-  a chunk's rows at its first base under a `.tbi`
-  ([ADR 0009](adr/0009-departure-records.md)). 1.4 to 2.x wrote format 5
+  gzip units with a table of their byte ranges, not a Tabix file
 
 ```bash
 vg convert -f chr22.gbz > chr22.gfa
@@ -54,58 +48,27 @@ chr22.CHM13.walks.gz   chr22.CHM13.walks.gz.idx
 - A reader lists the haplotypes with rows in the file from the header
   without reading any tile <!-- C5 -->
 
-| Option            | Effect                                                                   |
-| ----------------- | ------------------------------------------------------------------------ |
-| `--refs <names>`  | Comma-separated PanSN samples, one file per sample. Required.            |
-| `--tile <bp>`     | Tile size. Default 65536.                                                |
-| `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
-| `--stay <bp>`     | Keep a piece in its tile across a short stretch elsewhere over nodes the reference passes more than once, each moved to a pass in the tile. Default 311, the `-k 311` minimum match of the HPRC pggb graphs; 0 turns it off. |
-| `--abridge-steps <n>` | Move a tile's costliest paths to its detail records until the rest cost at most n interior steps. Default 1000000; 0 turns it off. |
-| `--abridge-bytes <bytes>` | ...and until the rest hold at most this many bytes of rows, uncompressed, as [Abridged tiles](#abridged-tiles) says. Default 3000000; 0 turns it off. |
-
-<!-- C6 C7 C8 -->
-
-Each option takes at most 2^40, which the tool refuses above: a departure
-bin of 512 tiles past any position it reads stays below 2^64, and the
-header states every value exactly for a reader holding numbers as
-doubles. <!-- C153 -->
-
-`--tile` was `--chunk` in 3.x. The option sets the header's `tile:i:` and
-the size of the unit a reader fetches whole, so it takes the format's word
-for it.
-
 ![Four haplotype paths through a bubble, the walk rows for their tile, and the paths a reader rebuilds from them](figures/walks-detail.svg)
 
 [Example](#example) lists a harder tile, whose one route has no entry and is
 taken flipped, and its departure records.
 
+The page has four parts:
+
+- [The file](#the-file): the container, the header and the rows, how a
+  walk row decodes, and what a reader may rely on
+- [The writer, gfa-to-tabix](#the-writer-gfa-to-tabix): its options, where
+  it places steps, how it reads path names, and what it guarantees and
+  checks
+- [Reading a walk file](#reading-a-walk-file): reading a window, the
+  reader programs and hosting
+- [Background](#background): repeats in pggb graphs, and earlier formats
+
 ## Terms
 
 - **The reference:** the paths a file's `ref` rows are cut from: one or
-  more whole haplotypes of the `#reference` sample. <!-- C157 --> Whole
-  means this: take what a reference sequence is listed under, its
-  `sample#haplotype` or, for a `path` of fewer than three fields, its
-  sample ([Path names](#path-names)). No path with `walk` or `abridged`
-  rows is that text, or begins with that text and a `#`, and no
-  `#haplotype` line is or begins so. <!-- C157 --> A reader tells the
-  reference's lines from the others by that prefix, so:
-  - a file with reference sequences `HG002#1#chr1` and `HG002#1#chr2`
-    and walk rows of `HG002#1#alt1` is not format 8
-  - where a reference sequence has no haplotype field, as `chm13#chr1`,
-    which is listed under `chm13`, no path of its sample has `walk` or
-    `abridged` rows: `chm13#2#chrX` begins `chm13#`, and such a file is
-    not format 8
-  - beside a reference sequence `HG002#1#chr1`, a path named `HG002#1`
-    whole, of sample `HG002`, has no `walk` or `abridged` rows, and any
-    other path of two fields, as `HG002#alt`, can
-- The reference need not be every haplotype of its sample.
-  <!-- C9 --> It can be
-  `HG002#1` alone, and a path of `HG002#2` is then a line like any other,
-  with `walk` rows, departure records and a `#haplotype` line.
-  gfa-to-tabix's `--refs` always takes a whole sample, so it writes no
-  file whose reference is one haplotype of several
-  ([open problem](open-problems.md#a-reference-of-one-haplotype-of-a-sample-cant-be-written))
-  <!-- C9 -->
+  more whole haplotypes of the `#reference` sample
+  ([Whole haplotypes](#whole-haplotypes)) <!-- C157 -->
 - **S:** one reference sequence, a path of the reference such as
   `GRCh38#0#chr22`. The tool makes every path of a `--refs` sample with a
   W or P line that has steps a reference sequence of that sample's file,
@@ -113,6 +76,10 @@ taken flipped, and its departure records.
   states <!-- C9 -->
 - **Tile:** the `tile` bp of S from a multiple of `tile`, and the unit
   holding the rows of the pieces filed there
+- **Piece:** a run of a W line's steps in one tile. `piece` numbers the
+  pieces along one W line from 0 <!-- C16 -->, so a reader keys a piece by
+  `path`, `fragStart` and `piece`, and joins consecutive pieces back into
+  one walk
 - **R:** a tile's reference path, its `ref` rows' steps joined in offset
   order ([ref](#ref))
 - **Stretch:** a run of bases, on S unless a contig is named: a `ref`
@@ -133,257 +100,17 @@ taken flipped, and its departure records.
 - **Attach fetch:** a reader's read of the tiles a departure record's
   `ownTiles` names, for a record whose own steps it wants and whose leave
   piece or rejoin piece the window's read lacks. It takes the record's own
-  steps from them and nothing else ([departure](#departure)) <!-- C117 -->
+  steps from them and nothing else
+  ([Reading a window](#reading-a-window)) <!-- C117 -->
 - **Drawn stretch:** a window's stretch `D` widened to whole steps of the
   reference, as [Reading a window](#reading-a-window) defines it
 
-## Tiles and pieces
+## The file
 
-[ADR 0001](adr/0001-step-placement.md) gives the reasons for these rules, the
-alternatives tried and their measurements on pggb and Minigraph-Cactus, and
-[ADR 0009](adr/0009-departure-records.md) the changes format 6 made.
-Which pass a step takes, where a piece is cut and what `stay` keeps
-together are gfa-to-tabix's policy: a reader takes positions and pieces
-from the rows, and relies on the invariants of
-[What a reader relies on](#what-a-reader-relies-on), not on these rules.
+What a walk file holds, whoever wrote it. A reader program can be
+written from this part and [Terms](#terms).
 
-- The tool cuts each reference sequence into tiles of `tile` bp, at
-  multiples of `tile`. <!-- C12 --> A tile's rows are one unit of the
-  file, and its extent is the stretch its rows cover ([Units](#units)),
-  which can begin after the tile's start and run past its end
-- A step on a reference node takes a pass of the reference over the node,
-  its **position**, and the tile holding the pass's start. <!-- C13 --> A
-  step on any other node takes the tile of the last step before it in its W
-  line that has a position, on any sequence of the reference, or of the
-  first one after it for steps that lead the line. So a step after a step
-  on another sequence takes that sequence's tile, and a W line with no
-  step on the reference has no tile <!-- C14 -->
-- On the reference's own lines, a step takes the tile that holds its
-  offset, so where the reference passes a node twice each pass lies where
-  it is <!-- C15 -->
-- A reference sample with several haplotypes, such as `--refs HG002` names,
-  makes its haplotypes' lines reference sequences of one file, and a
-  node two of them pass counts as passed twice. Another path's step there
-  can take a pass on either, so a path can lie wholly under one of them
-  and show in no window of the other, with no departure record. That is
-  this tool's choice; the format lets a file take one whole haplotype of
-  them for its reference ([Terms](#terms))
-- A piece is a run of a W line's steps in one tile. `piece` numbers the
-  pieces along one W line from 0 <!-- C16 -->, so a reader keys a piece by
-  `path`, `fragStart` and `piece`, and joins consecutive pieces back into
-  one walk
-- A contig can span several W lines, one per stretch the graph holds, as
-  where Minigraph-Cactus clips a haplotype. On its first read of the GFA
-  the tool refuses a W line whose end column is not its start plus its
-  nodes' lengths <!-- C18 -->, and two lines of a `path` with steps, W or
-  P, that overlap or start at the same base. <!-- C17 --> The lines are the same
-  for any order of the W lines, which `vg convert` changes from run to run
-  <!-- C19 -->
-- The tool refuses a W or P line that starts or ends past 2^53 on its
-  contig, and a reference sequence whose last tile ends past it, so no
-  coordinate a file states is above 2^53, a line's end, a unit's `end`,
-  `hapOffset + hapBp` and `hapStart + ownBp` among them, and a reader
-  holding numbers as doubles reads each one exactly <!-- C172 -->
-- A P line states its `path` and its start in its name, which
-  [Path names](#path-names) reads; the rules on this page say "W line" of
-  both
-- The tool drops every segment of 0 bp as it reads the GFA: its steps
-  leave every W and P line, so the steps either side of one become
-  consecutive, and a line left with no steps is skipped as the next rule
-  says. <!-- C152 --> A reference sequence left with no bases has no
-  units and no directory line. The header's `graph` still names every S
-  line, 0 bp or not, as the index's does. <!-- C190 --> Neither HPRC's Minigraph-Cactus chr22 nor pggb's chrY
-  has a segment of 0 bp ([counts](walks-container/writer/results/zero-bp.txt)),
-  so no rule below speaks of one <!-- C152 -->
-- A W or P line with an empty steps field is skipped once its end
-  column is checked; `*` there is refused as a step:
-  it has no rows, no departure record and no `#hole`, it names no
-  reference sequence, it is not counted on stderr, and the overlap refusal
-  doesn't apply to it. <!-- C118 --> It covers no base, so a contig's
-  records count the same own sequence with or without it. Refusing it
-  would turn away graphs `vg convert` writes for nothing a reader gains
-- A W or P line with steps but no step on a node of a reference has no
-  rows in that reference's file, and the tool counts these lines on stderr
-  <!-- C20 -->
-- A node the reference passes once has that pass as its position. For a
-  node it passes more than once, the path's last placed step predicts an
-  offset: the step's own offset plus the bp the path has walked since, in
-  the direction their strands agree on. The step takes the pass on the
-  same reference sequence nearest that offset, the lower offset on a tie,
-  or, when that sequence has none, the node's first pass: the pass of the
-  reference line whose name sorts first in bytes, at its lowest offset
-  <!-- C21 -->
-- Placing starts at the line's first step on a node the reference passes
-  once (or on any reference node when there is none) and runs outward in
-  both directions <!-- C22 -->
-- A run of steps that the rules above file in other tiles stays in the
-  current piece, its home, when:
-  - the path returns to the home tile
-  - the run holds at most `stay` bp of reference nodes, none of them a node
-    the reference passes once
-  - each of its steps on a node the home tile's reference path holds has a
-    pass there within `stay` bp of the offset the run's previous placed step
-    predicts for it <!-- C23 -->
-- Such a step moves to the nearest such pass, the lower offset on a tie,
-  and a step on a node the home tile's reference path lacks becomes route
-  interior. Any other run starts a new piece, and the reference's own lines
-  are exempt. <!-- C23 --> A reference that passes each node once therefore
-  gets the same rows at any `stay` <!-- C24 -->
-- The walk row states each step's position ([walk](#walk)), so a reader
-  never chooses a pass itself, and the tool fails the build if a row
-  decodes to another node or position than the one it placed. <!-- C25 -->
-  A step the placement leaves off the reference is route interior, which
-  it does only where the step's tile has no pass of its node: no route
-  interior holds a node of its own tile's reference path <!-- C26 -->
-- A route can hold another tile's reference nodes, each of them a node
-  the reference passes more than once: the tool leaves no step on a node
-  the reference passes once off the reference, in any file it writes
-  ([What the writer guarantees](#what-the-writer-guarantees)).
-  <!-- C197 --> A reader places a node
-  at a reference position from a `ref` row of a tile it read whenever one
-  exists: a pass over `D` before any other, then the row whose path sorts
-  first in bytes, at its earliest start. Other nodes take haplotype offsets
-  <!-- C119 -->
-
-## Path names
-
-[ADR 0014](adr/0014-p-line-names.md) gives the reasons for this reading,
-the vg and odgi runs behind it and the readings turned down.
-
-- A row's `path` and `fragStart` name one line of the GFA: `path` is the
-  sequence the line is a stretch of, and `fragStart` the 0-based offset on
-  that sequence of the line's first base. <!-- C180 --> A `path` is final:
-  a reader takes it whole and reads no start, range or field out of it,
-  whatever its text looks like <!-- C180 -->
-- **A W line's** `path` is its `sample#haplotype#contig` and its
-  `fragStart` its start column. GFA allows `*` for that column, which
-  states no offset, and the tool refuses it <!-- C181 -->
-- **A P line** has one name and no column for a start, so the tool reads
-  the name from its right end, once it has summed the bp of the line's
-  steps, `bp` below. A **name number** is one to nineteen of the digits
-  `0` to `9`, read in base 10, leading zeros allowed: it is text of a GFA
-  name, not a number a walk file states ([Rows](#rows)). Text that would
-  be a suffix but for digits that are no name number is no suffix. The
-  tool takes three
-  steps in this order, each at most once, each on the text the step before
-  left: <!-- C182 -->
-  - **`:a-b`, the cut `odgi extract` writes.** Where the name ends in `:`,
-    a name number `a`, `-` and a name number `b`, with `b − a` equal to `bp` and
-    above 0, that text leaves the name and adds `a`. Where `b − a` is
-    anything else the text stays in the name and adds nothing, so a
-    1-based range, as `samtools faidx` names a region, is not read
-    <!-- C183 -->
-  - **`[s]` or `[s-e]`, vg's subrange.** Where the text ends in `[`, a
-    name number `s` and `]`, or in `[`, `s`, `-`, a name number `e` and
-    `]`, that
-    text leaves the name and adds `s`. With an `e`, and no `:a-b` read
-    before it, the tool refuses the line unless `e − s` equals `bp`, as
-    it refuses a W line's end column. Beneath a `:a-b` it reads no `e`:
-    the bracket is of the piece the cut was taken from, and `e` is that
-    piece's end <!-- C184 -->
-  - **A fourth field.** Where the text holds exactly three `#` and a
-    name number after the last, that `#` and the name number leave the
-    name and the name number is added. <!-- C185 --> `#0`, which vg appends to the name of a
-    haplotype it reads from a P line, adds 0 <!-- C185 -->
-- The text left is `path` and the sum is `fragStart`. The tool refuses a
-  line that leaves no text, such as one named `[5]`, and a sum past 2^53,
-  as it refuses a W line's start past it. <!-- C186 --> A P line with no
-  suffix is its name whole, from 0.
-  The tool reads no suffix beneath a fourth field and no second suffix of
-  a kind: a `:a-b` there is part of `path`, as it is of the contig in the
-  W line of the same path <!-- C186 -->
-- The fixtures of [dialect](walks-container/dialect/) hold the same paths
-  as vg wrote them in W lines and in P lines, and as odgi cut vg's P
-  lines. The forms of one graph give one walk file, byte for byte
-  <!-- C187 -->
-
-| P line name | bp of its steps | `path` | `fragStart` | where such a name comes from |
-| --- | --- | --- | --- | --- |
-| `H#1#c` | 16 | `H#1#c` | 0 | pggb, from a PanSN FASTA record |
-| `H#1#c#0` | 16 | `H#1#c` | 0 | vg, of a P line it read |
-| `H#1#c#100` | 14 | `H#1#c` | 100 | vg, of a GBZ haplotype clipped from 100 |
-| `H#1#c[100-116]` | 16 | `H#1#c` | 100 | vg, a subrange |
-| `H#1#c#100[16-22]` | 6 | `H#1#c` | 116 | `vg chunk` of that clipped haplotype |
-| `H#1#c:5-21` | 16 | `H#1#c` | 5 | `odgi extract` |
-| `H#1#c#0[100-114]:6-14` | 8 | `H#1#c` | 106 | `odgi extract` of a vg subrange |
-| `H#1#c:5-21#0` | 16 | `H#1#c:5-21` | 0 | vg, of an `odgi extract` |
-| `H#1#c:6-21` | 16 | `H#1#c:6-21` | 0 | a 1-based region name |
-| `H#1#c[100-900]` | 16 | refused | | a stated end its steps contradict |
-| `[5]` | 16 | refused | | a suffix alone |
-
-- `path` is `sample#haplotype#contig` where the line is a W line or its
-  name has three fields. A P line's `path` can have any number of fields:
-  pggb copies FASTA record names unchanged, and odgi's and vg's own
-  examples include `sample#contig`
-- **What a path is listed under** in `#haplotype` is its `path` up to the
-  second `#`, its PanSN `sample#haplotype`; with one `#`,
-  `sample#contig`, its text up to that `#`, the sample; with none, its
-  whole name. <!-- C188 --> A path's sample, which `--refs` and
-  `#reference` name, is its `path` up to the first `#`, or its whole name
-  <!-- C188 -->
-- The tool refuses a P line whose steps hold a `;`, GFA 1.2's jump. A
-  jump joins two segments no link joins, over a distance the line doesn't
-  state, so no step after it has an offset <!-- C189 -->
-- **A limit: phase blocks.** For haplotypes from a VCF-phased GBWT, vg
-  numbers the phase blocks of a contig 0, 1, 2 and writes that counter in
-  the fourth field of a P line's name and in a W line's start column.
-  Nothing in such a line tells a counter from a start, and the tool reads
-  a start. It refuses the graph where two blocks' stretches then overlap,
-  with a message that says this. A block alone, or blocks that don't
-  collide, are placed at their counter, which is false. The fourth field
-  of a haplotype clipped out of a Minigraph-Cactus GBZ is a start, and
-  those are the graphs this reading is for
-
-## Paralogs and collapsed repeats
-<!-- background -->
-
-- **Paralog jumps:** in a segmental duplication, a haplotype can step onto the
-  reference nodes of a distant paralog and back. The steps after the jump take
-  the paralog's tile, so a window at the haplotype's own locus shows the
-  haplotype in more pieces, and a departure record for each jump. On
-  Minigraph-Cactus graphs this is rare and sits almost entirely in low-copy
-  repeats such as 22q11's
-- **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes,
-  so the reference path passes those nodes more than once, often megabases
-  apart. pggb graphs have many such nodes; Minigraph-Cactus's GRCh38 path has
-  none. Filing all steps at the node's first pass, as format 3 did, split each
-  haplotype into a piece per hop and made pggb walk files dozens of times
-  larger than Minigraph-Cactus's; the nearest pass and `stay` above replace it.
-  Which copy a step takes is a placement choice: the file states the choice,
-  and the pass counts on `ref` rows and departure records let a viewer say
-  where a region's placement or a departure is one
-- **Satellite arrays:** pggb gives each haplotype a separate long path through
-  thousands of tiny nodes, and the tool files all of it in the tile where the
-  haplotype leaves the reference. [Abridged tiles](#abridged-tiles) moves the
-  costliest of these paths to detail rows, and a viewer draws each as a
-  labelled block until the user opens it
-- **What to expect on pggb:** a window shows nearly all haplotypes whose
-  sequence aligns there, except in satellites and CHM13's short arm, where
-  abridged paths show as blocks until opened
-
-## Exact and chosen
-
-A walk file projects the paths onto one reference. Where the reference
-passes a node once, a step on it has one place, and a departure between
-two such steps is a fact of the graph. Where it passes a node more than
-once, the writer's placement rule picks the pass, and the departures it
-files there follow from the pick: on a collapsed repeat, a path that
-follows one copy can show as hopping between copies.
-
-- The header's `revisited` counts the nodes the reference passes more than
-  once. A file with `revisited:i:0` states every position and every
-  departure as a fact of the graph, as the Minigraph-Cactus graphs do on
-  their own reference <!-- C53 -->
-- Otherwise each `ref` row's `passes` and each record's `leavePasses` and
-  `rejoinPasses` say which steps and ends lie on such nodes. <!-- C120 --> A reader
-  states a departure with an end passed more than once as a placement
-  choice, not as a jump the haplotype makes <!-- C120 -->
-- The file does not promise that a pick is the copy a haplotype came
-  from. For a reference other than the graph's own, build from the graph
-  built on that reference where one exists: HPRC v2.1 publishes
-  Minigraph-Cactus graphs on both GRCh38 and CHM13
-
-## Files and units
+### Files and units
 
 The data file is a series of units, then a BGZF EOF block. <!-- C28 -->
 Each unit is a whole run of BGZF members, the gzip members the SAM
@@ -428,7 +155,7 @@ reading; a file holds tabs.
 
 ![The walk file of walks-schematic.gfa, built with --tile 30, read for chr1:31-60: the .idx line giving chr1's table at bytes 854-1003, the data file as a bar of its units with their byte offsets, the header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and the table, with tile 30 and departures 30-60 shaded as the one request for bytes 406-632, then the rows those two units hold](figures/walks-bytes.svg)
 
-### Units
+#### Units
 
 | kind | `start end` | `name` | holds |
 |---|---|---|---|
@@ -476,7 +203,7 @@ reading; a file holds tabs.
   scan a table; they don't bisect it. Every sequence in the file has at
   least one tile, so no table is empty <!-- C46 -->
 
-### The directory
+#### The directory
 
 `<prefix>.<sample>.walks.gz.idx` is plain text, here with the `#walks`
 line of HPRC v2.1's GRCh38-referenced file:
@@ -501,7 +228,26 @@ GRCh38#0#chr22	<offset>	<length>
 - one `seq offset length` line per reference sequence, giving its table.
   Every reference sequence is listed, in file order <!-- C48 -->
 
-### With stock tools
+#### What a reader refuses
+
+- A reader refuses a unit whose `#unit` line doesn't state its table
+  entry's `seq start end kind name`, or whose text doesn't end in a
+  newline, as a unit cut short does <!-- C154 -->
+- A reader refuses a row of a unit that belongs to another sequence, or
+  is of a kind its unit doesn't hold: a tile holds `ref`, `nodes`,
+  `route`, `walk` and `abridged` rows, a departure bin `departure`
+  rows, a detail unit `nodes`, `route` and `walk` rows, a blocks unit
+  `blocks` rows <!-- C155 -->
+- A reader refuses a table that doesn't start with its own
+  `#unit seq 0 |S| table .` line, or holds a line that isn't an `#entry`.
+  A table that leaves out a unit's entry breaks the tiling the file
+  guarantees: a table's entries, in file order, tile the bytes from the
+  end of the table before it (the header unit for the first) to the
+  table's own offset, with no gap and no overlap, so a reader can tell a
+  missing entry by the gap it leaves and may refuse the table
+  ([What a reader relies on](#what-a-reader-relies-on)) <!-- C156 -->
+
+#### With stock tools
 
 ```
 awk -F'\t' -v s="GRCh38#0#chr22" '$1==s {print $2, $3}' f.walks.gz.idx   # a sequence's table
@@ -511,7 +257,7 @@ zcat f.walks.gz | awk -F'\t' '$1=="GRCh38#0#chr22" && $2<20001000 && $3>20000000
 
 `tabix`, htslib's region API and pysam don't read the file.
 
-## Header
+### Header
 
 The header unit's lines start with `#`, here the first of HPRC v2.1's
 GRCh38-referenced file:
@@ -550,22 +296,6 @@ GRCh38-referenced file:
   [Rows](#rows) writes one; `graph` is `Z`. A line that gives one of
   these names another type, or gives an `i` one a value that is no
   number, is not format 8 <!-- C204 -->
-- A reader refuses a unit whose `#unit` line doesn't state its table
-  entry's `seq start end kind name`, or whose text doesn't end in a
-  newline, as a unit cut short does <!-- C154 -->
-- A reader refuses a row of a unit that belongs to another sequence, or
-  is of a kind its unit doesn't hold: a tile holds `ref`, `nodes`,
-  `route`, `walk` and `abridged` rows, a departure bin `departure`
-  rows, a detail unit `nodes`, `route` and `walk` rows, a blocks unit
-  `blocks` rows <!-- C155 -->
-- A reader refuses a table that doesn't start with its own
-  `#unit seq 0 |S| table .` line, or holds a line that isn't an `#entry`.
-  A table that leaves out a unit's entry breaks the tiling the file
-  guarantees: a table's entries, in file order, tile the bytes from the
-  end of the table before it (the header unit for the first) to the
-  table's own offset, with no gap and no overlap, so a reader can tell a
-  missing entry by the gap it leaves and may refuse the table
-  ([What a reader relies on](#what-a-reader-relies-on)) <!-- C156 -->
 - `tile` is the tile size in bp, from 1 to 2^40, which keeps a departure
   bin of 512 tiles past any coordinate below 2^64. A file that states 0,
   or more than 2^40, is not format 8 <!-- C205 -->
@@ -610,46 +340,6 @@ GRCh38-referenced file:
   the GFA and the options it was written with, and its bytes also on the
   compressor ([Example](#example)), so a writer release that changes no
   row and not the compression leaves every file as it was <!-- C193 -->
-- Later additions are tags, header lines, unit kinds or files, and a
-  reader of format 8 reads a file that has them as it reads one that
-  doesn't <!-- C124 -->:
-  - a tag is `NAME:T:value`, as SAM writes one: a name of letters and
-    digits that starts with a letter, one letter for its type, and a
-    value with no tab. Tags follow a row's fixed columns, or the stated
-    fields of a `#reference`, `#haplotype` or `#hole` line, in any order.
-    A reader ignores the ones it doesn't know, on a row of any kind, on
-    those three lines and on the `#walks` line <!-- C195 -->. `SQ:Z:` on a
-    `ref` or `nodes` row is one. A line carries a tag name at most once
-    <!-- C199 -->
-  - a header line whose first word a reader doesn't know is ignored; it
-    follows the `#walks` line
-  - a unit of a kind it doesn't know is skipped, whatever rows it holds;
-    its `#entry` carries its sequence and integer `start end offset
-    length` like any other. A later unit of a sequence lies before that
-    sequence's table and is listed there <!-- C196 -->, so a unit about no
-    sequence is a file of its own
-  - `#unit` lines, `#entry` lines and the directory's lines for the
-    header and the sequences take no tags; a directory line that starts
-    with `#` and a word a reader doesn't know is ignored
-  - an addition doesn't change what a row this page gives means, so a
-    reader that ignores it draws nothing false. A change that can't
-    keep to that is another format
-  - only this page gives a unit kind, a row kind, a header line word or
-    a tag name a meaning in format 8, so an addition is an addition to
-    this page. <!-- C124 --> A file that holds a unit kind, a header line
-    word or a tag name the page doesn't give, or a row kind it doesn't
-    give in a unit of such a kind, is format 8 still and is read by the
-    rules above; what it means there is not the format's. A later kind,
-    of unit or of row, takes a word that is no kind of unit or row here
-  - a file with no unit of a later kind says nothing by lacking it: it
-    can predate the addition, so a reader doesn't take the lack to mean
-    there is nothing of that kind to state. An addition whose units claim
-    to be complete says in the header, by a tag or a line, what they are
-    complete over, the whole file or the sequences it names, and a reader
-    takes completeness from that statement and from no unit's absence
-  - a file added beside a walk file is about that walk file's bytes: the
-    same walk file is the same bytes, and the same rows compressed again
-    are another file to it ([Hosting](#hosting))
 - `#reference` names the reference sample. A file has one `#reference`
   line, however many haplotypes or sequences its reference has. It names
   a sample and not a haplotype: the `path` of each reference sequence up
@@ -660,7 +350,8 @@ GRCh38-referenced file:
   `sample#haplotype` where its `path` has three fields or more, its
   sample where it has fewer ([Path names](#path-names)). <!-- C51 --> No
   line is what a reference sequence is listed under, or begins with that
-  and a `#`, since the reference is whole haplotypes ([Terms](#terms)).
+  and a `#`, since the reference is whole haplotypes
+  ([Whole haplotypes](#whole-haplotypes)).
   <!-- C51 --> A path
   of another haplotype of the `#reference` sample is listed like any
   other, so a file whose reference is `HG002#1` alone lists `HG002#2`
@@ -671,10 +362,79 @@ GRCh38-referenced file:
   whose lines leave holes, such as a clipped haplotype, has them; a window
   inside one has no reference sequence there. A hole is not a departure of
   any haplotype
-- Format 6's `chunk`, `maxnode` and `#long` lines are gone: a tile's extent
-  and a departure line's extent say what they made readers widen for
 
-## Rows
+#### Whole haplotypes
+
+Whole means this: take what a reference sequence is listed under, its
+`sample#haplotype` or, for a `path` of fewer than three fields, its sample
+([Path names](#path-names)). No path with `walk` or `abridged` rows is that
+text, or begins with that text and a `#`, and no `#haplotype` line is or
+begins so. <!-- C157 --> A reader tells the reference's lines from the others
+by that prefix, so:
+
+- a file with reference sequences `HG002#1#chr1` and `HG002#1#chr2`
+  and walk rows of `HG002#1#alt1` is not format 8
+- where a reference sequence has no haplotype field, as `chm13#chr1`,
+  which is listed under `chm13`, no path of its sample has `walk` or
+  `abridged` rows: `chm13#2#chrX` begins `chm13#`, and such a file is
+  not format 8
+- beside a reference sequence `HG002#1#chr1`, a path named `HG002#1`
+  whole, of sample `HG002`, has no `walk` or `abridged` rows, and any
+  other path of two fields, as `HG002#alt`, can
+
+The reference need not be every haplotype of its sample. <!-- C9 --> It can
+be `HG002#1` alone, and a path of `HG002#2` is then a line like any other,
+with `walk` rows, departure records and a `#haplotype` line. gfa-to-tabix's
+`--refs` always takes a whole sample, so it writes no file whose reference is
+one haplotype of several
+([open problem](open-problems.md#a-reference-of-one-haplotype-of-a-sample-cant-be-written))
+<!-- C9 -->
+
+#### Later additions
+
+Later additions are tags, header lines, unit kinds or files, and a reader of
+format 8 reads a file that has them as it reads one that doesn't
+<!-- C124 -->:
+
+- a tag is `NAME:T:value`, as SAM writes one: a name of letters and
+  digits that starts with a letter, one letter for its type, and a
+  value with no tab. Tags follow a row's fixed columns, or the stated
+  fields of a `#reference`, `#haplotype` or `#hole` line, in any order.
+  A reader ignores the ones it doesn't know, on a row of any kind, on
+  those three lines and on the `#walks` line <!-- C195 -->. `SQ:Z:` on a
+  `ref` or `nodes` row is one. A line carries a tag name at most once
+  <!-- C199 -->
+- a header line whose first word a reader doesn't know is ignored; it
+  follows the `#walks` line
+- a unit of a kind it doesn't know is skipped, whatever rows it holds;
+  its `#entry` carries its sequence and integer `start end offset
+  length` like any other. A later unit of a sequence lies before that
+  sequence's table and is listed there <!-- C196 -->, so a unit about no
+  sequence is a file of its own
+- `#unit` lines, `#entry` lines and the directory's lines for the
+  header and the sequences take no tags; a directory line that starts
+  with `#` and a word a reader doesn't know is ignored
+- an addition doesn't change what a row this page gives means, so a
+  reader that ignores it draws nothing false. A change that can't
+  keep to that is another format
+- only this page gives a unit kind, a row kind, a header line word or
+  a tag name a meaning in format 8, so an addition is an addition to
+  this page. <!-- C124 --> A file that holds a unit kind, a header line
+  word or a tag name the page doesn't give, or a row kind it doesn't
+  give in a unit of such a kind, is format 8 still and is read by the
+  rules above; what it means there is not the format's. A later kind,
+  of unit or of row, takes a word that is no kind of unit or row here
+- a file with no unit of a later kind says nothing by lacking it: it
+  can predate the addition, so a reader doesn't take the lack to mean
+  there is nothing of that kind to state. An addition whose units claim
+  to be complete says in the header, by a tag or a line, what they are
+  complete over, the whole file or the sequences it names, and a reader
+  takes completeness from that statement and from no unit's absence
+- a file added beside a walk file is about that walk file's bytes: the
+  same walk file is the same bytes, and the same rows compressed again
+  are another file to it ([Hosting](#hosting))
+
+### Rows
 
 Every line not starting with `#`, in a unit of a kind this page gives,
 begins `seq start end kind`: the reference
@@ -707,9 +467,7 @@ the same thing are the same bytes, as a reader needs where it drops a
 departure record by its whole line and matches the directory's line 1
 against the `#walks` line.
 
-A `ref`, `nodes`, `route`, `walk` or `departure` row's columns from `kind`
-on are format 6's, unchanged. `start end` are data,
-not an index key, so `zcat | grep` places any line.
+`start end` are data, not an index key, so `zcat | grep` places any line.
 
 | kind | `start end` |
 |---|---|
@@ -740,7 +498,7 @@ token `-5` is a difference of −3 on the reverse strand; dividing toward zero
 would read −2. A token can reach 2^32 either side of 0, so a 32-bit shift
 is not enough to split one.
 
-### ref
+#### ref
 
 ```
 seq start end ref path fragStart hapOffset piece nsteps steps lengths passes [SQ:Z:bases]
@@ -765,7 +523,7 @@ seq start end ref path fragStart hapOffset piece nsteps steps lengths passes [SQ
   its offset on the sequence from its row's `hapOffset` and the lengths
   before it <!-- C63 -->
 
-### nodes
+#### nodes
 
 ```
 seq start end nodes ids lengths [SQ:Z:bases]
@@ -781,7 +539,7 @@ seq start end nodes ids lengths [SQ:Z:bases]
   strand. <!-- C65 --> `--sequences` refuses a graph with a segment whose sequence is
   `*` <!-- C65 -->
 
-### route
+#### route
 
 ```
 seq start end route entry interior exit
@@ -817,7 +575,7 @@ seq start end route entry interior exit
 - A route has no span of its own: on a revisited reference its ends have
   several passes, and the walk row's `:k` and `@k` pick one
 
-### walk
+#### walk
 
 ```
 seq start end walk path fragStart hapOffset piece nsteps startHandle[@k] choices
@@ -852,7 +610,39 @@ seq start end walk path fragStart hapOffset piece nsteps startHandle[@k] choices
   otherwise takes a route, with an empty interior if need be; after its last
   route it follows R until it has `nsteps` steps <!-- C71 -->
 
-### abridged
+#### Decoding a walk row
+
+R's step from position `i` holding handle `h` goes forward when `R[i] = h`,
+to `R[i+1]`, and backward otherwise, to `R[i−1]` flipped. Each route below is
+taken the way round its flip says. <!-- C141 --> Every handle on R is
+emitted with its position in R, and so with its offset and pass.
+<!-- C141 -->
+
+1. If the first route has no entry, emit its interior. Its exit is
+   `startHandle`, which step 2 emits: the handle is emitted once
+2. Emit `startHandle`, at occurrence `k` of its node in R with `@k`, else at the
+   first
+3. For each route with an entry <!-- C141 -->:
+   - step along R, emitting each handle, until the current handle is the
+     route's entry, or with `:k` until the position is occurrence `k` of
+     the entry's node
+   - emit the interior
+   - with no exit, stop: the piece ends off R
+   - emit the exit, at occurrence `k` of its node in R with `@k`, else at the
+     occurrence nearest the current position in R, counted in positions,
+     the one at the higher position on a tie
+4. Step along R until the piece has `nsteps` steps
+
+<!-- C141 -->
+
+The encoder decodes every walk row it writes with these rules and compares
+each step's handle and position, and fails the build on any difference.
+<!-- C25 -->
+The row's `start end` is the span of the positions it decodes to.
+<!-- C25 --> On HPRC v2.1's Minigraph-Cactus chr22 GRCh38 passes no node
+twice, and no walk row needs `@k` or `:k` <!-- C142 -->
+
+#### abridged
 
 ```
 seq start end abridged path fragStart hapOffset piece nsteps hapBp detail
@@ -879,9 +669,7 @@ seq start end abridged path fragStart hapOffset piece nsteps hapBp detail
   <!-- C167 -->
 - `hapBp` is not a length on S and has nothing to do with `end − start`:
   a piece that walks four 10 bp nodes of R, 7 bp of its own and the four
-  nodes back has a span of 40 bp and a `hapBp` of 87. Nor is it format
-  7's `bp`, which ran from the piece's first step on R to its last and
-  left out the steps off R at its ends
+  nodes back has a span of 40 bp and a `hapBp` of 87.
 - A line's piece 0 starts at `fragStart`, and `hapOffset + hapBp` is the
   `hapOffset` of the line's next piece, on whichever sequence that piece
   is filed; the line's last piece ends where the line does
@@ -909,7 +697,7 @@ seq start end abridged path fragStart hapOffset piece nsteps hapBp detail
   `abridged` row and the record without reading the list
   <!-- C169 -->
 
-### blocks
+#### blocks
 
 ```
 seq start end blocks path fragStart piece list
@@ -1013,9 +801,9 @@ R#0#c  0  36  blocks  H#1#c  0  0  7,0+12,0-12,10,24+12,-24+6,50
   runs from 0, that row's `hapOffset`, to 109 on its contig. Both rows
   span 0-36, and the `abridged` row is
   `R#0#c 0 36 abridged H#1#c 0 0 0 11 109 0`: 11 steps and 109 bp, in
-  detail record 0. Format 7's `bp` here was 52, from node 1 to node 3
+  detail record 0.
 
-### departure
+#### departure
 
 ```
 seq start end departure path hapStart ownBp missingBp leavePos leaveStrand leavePasses rejoinPos rejoinStrand rejoinPasses ownTiles
@@ -1089,109 +877,121 @@ piece's steps ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
     tiles, and own steps in a W line with no step on the reference, and
     own sequence in no W line, are in no tile; `ownTiles` lists none of
     them, and an attach fetch doesn't read them <!-- C87 -->
+  - a piece of S has a step on R, so the own steps a tile of S holds are
+    in the leave step's piece or in the rejoin step's piece: `ownTiles` is
+    the leave's tile, the rejoin's tile, the two in that order, or `.`
 - The record's line is in every [pyramid](#units) bin of that extent's
   cover, the same text in each, and a reader drops exact duplicates
   <!-- C88 -->
-- Which records get an attach fetch is the reader's choice: a record's
-  line gives its two ends and its `ownBp` without one.
-  @jbrowse/graph-walks 7 makes one for a record that leaves or rejoins on
-  `D` ([Reading a window](#reading-a-window)) with own steps within its
-  `attachBp`, and for no other record
-- An attach fetch, for a record whose leave piece or rejoin piece the
-  window's read lacks, reads the tiles `ownTiles` names and takes the
-  record's own steps from them: the path's steps after its leave step and
-  before its rejoin step, which start at `hapStart` on its contig and span
-  `ownBp`. Nothing else it reads joins a fragment or yields a computed
-  departure <!-- C132 -->. For a piece there that the tile abridged, it
-  builds the record's own run from the `abridged` row and the record by
-  [the attach rule](#abridged), as one step of that many bp whose nodes
-  it doesn't know, and reads no `blocks` unit for it; where the cut was
-  asked to expand that path it reads the piece's `detail` unit, and
-  takes the own steps from the walk row there <!-- C133 -->
 
-## Reading a window
+### Abridged tiles
 
-For a window `[s, e)` with context `c`, the stretch `D = [max(0, s − c),
-e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
+[ADR 0004](adr/0004-abridged-detours.md) gives the reasons and measurements.
+The budgets, which lines a tile moves and the order it numbers their
+records in are this writer's policy
+([What a reader relies on](#what-a-reader-relies-on)).
 
-- **At open:** GET the directory and refuse any format but 8. GET the
-  header unit and the sequence's table in parallel. Refuse when the
-  directory's line 1 differs from the header's `#walks` line, or its
-  `bytes` from the Content-Range total where the reader can learn it
-  ([The directory](#the-directory))
-- **The read:** select the `tile` and `departures` units with
-  `start < D.end` and `end > D.start`. Merge byte
-  ranges that touch, and GET each as one single-range request, never a
-  multi-range one <!-- C134 -->
-- Gunzip each unit. <!-- C149 --> Decode a tile's rows from `kind` on by
-  the rules of [Rows](#rows) and
-  [Decoding a walk row](#decoding-a-walk-row).
-  Keep the departure lines overlapping `D` and drop exact duplicates
-  <!-- C149 -->
-- An attach fetch, for a record whose own steps the reader wants, reads
-  the tiles its `ownTiles` names and takes the record's own steps from
-  them alone ([departure](#departure)). It
-  reads no `blocks` unit: an abridged piece's own run comes from its
-  `abridged` row and the record
-- A cut that leaves an abridged piece of a window's tile unexpanded
-  reads that tile's `blocks` unit and builds the piece from its row
-  there: a block as the steps of R in its stretch ([blocks](#blocks)),
-  and a run off R as one step of that many bp whose nodes it doesn't
-  know
-- Expanding an abridged piece, which a viewer does on request, reads the
-  `detail` unit `cs:d`
-- There is no chunk-before rule, no `maxnode`, no `#long` widening and no
-  reach
-- **The drawn stretch** is `D` widened to whole steps of the reference:
-  it runs from the first base to the last of `D` and of every position
-  of R, in the tiles the read selects, whose stretch overlaps `D`.
-  <!-- C144 --> A position is one pass of the reference over a node, so
-  where the reference passes a node more than once each pass over `D`
-  counts and no pass elsewhere does. <!-- C144 --> A reader draws whole
-  nodes, so the stretch a cut describes runs to the edges of the nodes
-  at `D`'s ends
-- **What a cut returns:** every piece with a step whose position
-  overlaps the drawn stretch, an unexpanded abridged piece by its
-  blocks, and every departure record
-  whose line overlaps `D`, unfiltered, one in a `#hole` included, each
-  once; and every departure it computes between consecutive steps of one
-  piece whose extent, from the first base of its end nodes to the last as
-  a record's runs, overlaps `D`, one across a `#hole` included.
-  <!-- C135 --> A
-  departure between two pieces is a record, even where the read holds
-  both, so none comes back twice <!-- C135 -->
-- **A piece comes back trimmed** to its steps on the drawn stretch, with
-  the bp of it the read holds past either end stated, not as the whole
-  piece: a record for where the line goes after a step outside the
-  drawn stretch need not overlap `D`, so a whole piece could show its
-  line ending where it goes on. An abridged piece's bp past an end come
-  from its `abridged` row, which gives where it starts and ends on its
-  contig
-- **An end at the drawn stretch's edge is not the line's end.** Inside
-  the drawn stretch a reader holds either the line's next step on the
-  sequence or the record that gives it, so a line with neither has no
-  later step on that sequence. At the edge it holds neither for a line
-  with no later step there and for one that goes on in a tile it didn't
-  read, and it says nothing of which
-- **No later step on the sequence is not the line's end either.** No row
-  states where a W or P line ends or how many pieces it has. After its
-  last step on S a line can go on over nodes off the reference, which
-  its piece holds as the steps after its last on R; in a piece filed on
-  another sequence of the reference, which S's units don't point to;
-  or, for a contig, in a later W line. A record lies between two steps
-  on one sequence, so a line that steps from S onto another sequence and
-  stays there has none on S, and reads on S as a line that stops does.
-  A reader can say a line has no later step on S, and how many bp its
-  last piece there holds after that step. It cannot say the line ends
-  there, nor where on the reference it goes
-  ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
-- Under the overlap rule, a reader can see two fragments of a path where
-  format 6's lookback joined them through steps 80–92 kb outside the
-  window, with nothing in the window missing; an attach fetch, which takes
-  own steps alone, joins none
-  ([ADR 0010](adr/0010-walks-unit-table.md#genome-wide))
+- A piece costs a reader its routes' interior steps, each counted once per
+  use, plus a quarter of all its steps, interior ones included. <!-- C99 -->
+  graph-walks decodes a step along R faster, but a cut still keeps and
+  draws it
+- When a tile's pieces cost more than `abridge` interior steps, or its rows
+  other than `abridged` rows, from `kind` on with their newlines, hold more
+  than `abridgebytes` bytes, the tool moves whole W lines' pieces out of
+  the tile, costliest first, the fewest that bring the rest within both,
+  or all of them where none do. It counts the bytes of the rows it keeps,
+  not an estimate, and uncompressed, so any reader or check counts the
+  same <!-- C100 -->
+- The tile keeps its `ref` rows, its other pieces' `nodes`, `route` and
+  `walk` rows, encoded without the moved pieces, and an `abridged` row per
+  moved piece with where it starts on its contig, its steps, its bp and
+  its detail record <!-- C101 -->
+- The moved pieces' rows go to the `detail` unit `cs:d` of the tile's
+  sequence, `d` the record's number. A reader reads a detail record
+  only when it expands that path <!-- C150 -->
+- The tile's `blocks` unit, after its detail units, gives where on R
+  the steps of the moved pieces lie ([blocks](#blocks)), at a small part
+  of the detail records' bytes. A reader reads it to draw a moved piece
+  of a window's tile that it doesn't expand, as a cut of all the
+  haplotypes does. It reads none to choose the detail records a cut
+  expands or to attach a record: a moved piece's span, where it ends on
+  its contig, which piece of its line comes next and a record's own run
+  in it are in the `abridged` rows and the records
+  ([abridged](#abridged)). The unit counts toward neither `abridge`
+  budget and can be larger than its tile
+- A record holds at most one `nodes` row, one exactly when its routes have
+  an interior step, then `route` rows and `walk` rows. <!-- C102 --> The
+  tool numbers its routes from 0 and chains their tokens from 0, as for a
+  tile of its own, and its walk rows decode against the R of tile `cs` of
+  `seq` <!-- C103 -->. Its `nodes` and `route` rows' `start end` are the
+  detail unit's extent, as a tile's are the tile's
 
-## What a reader relies on
+### Example
+
+`tests/walks.rs` builds `tests/data/walks-two-refs.gfa` with `--tile 10
+--stay 0` and checks every row. <!-- C104 --> Part of GRCh38's file: the directory, part of
+the tile at 0 (D's and I's walk rows left out) and two of the departure
+bin 0-10's four lines, with the byte offsets and lengths, which depend
+on the compressor, elided:
+
+```
+#walks  format:i:8  tile:i:10  revisited:i:0  stay:i:0  abridge:i:1000000  abridgebytes:i:3000000  graph:Z:7619ff637c3b074b  leftout:i:1  bytes:i:…
+#header  0  …
+GRCh38#0#chr  …  …
+```
+
+```
+#unit  GRCh38#0#chr  0  12  tile        0
+GRCh38#0#chr  0  12  ref        GRCh38#0#chr  0    0    0  2   2,2  6,6  .
+GRCh38#0#chr  0  12  nodes      6             6
+GRCh38#0#chr  0  12  route      .             13   -9
+GRCh38#0#chr  0  12  walk       H#1#h         100  100  0  2   2    .
+GRCh38#0#chr  0  6   walk       Q#0#chr       0    0    0  2   2    1
+#unit  GRCh38#0#chr  0  10  departures  .
+GRCh38#0#chr  0  18  departure  Q#0#chr       6    6    0  6   +    1    12  +  1  0
+GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  1  .
+```
+
+- R is `>1 >2`, nodes of 6 bp at 0 and 6: tokens `2` and `2` are ids 1
+  and 2, forward, and R passes each once, so `passes` is `.` and every
+  record's ends say 1. <!-- C104 --> The tile's extent, and so its `ref`, `nodes` and
+  `route` rows' `start end`, is R's stretch, 0-12
+- The one route has no entry, interior `13` (id 6 reversed) and exit `-9` (id 1
+  reversed), so it reads `<6 <1`
+- Q's piece starts on `>1` (handle 2) and takes route 0 flipped, `>1 >6`
+  with no exit: its steps are `>1 >6`, and its one step on R spans 0-6
+- H's piece starts on `>1` and takes no route, so it follows R for its 2
+  steps: `>1 >2`, spanning 0-12
+- Q leaves R at 1's end, 6, walks 6 bp of its own, node 6, and rejoins at
+  3's start, 12, in a piece filed under tile 10. Its record's extent runs
+  from 1's first base to 3's last, 0-18, so it lies in bins 0-10 and
+  10-20. Its own step, 6, is in its piece in tile 0, so `ownTiles` is 0
+- D jumps back from 4's end, 24, to 1's start, 0, over nothing of its own:
+  0-24, in the bins at 0, 10 and 20, with `ownTiles` `.`
+
+### Exact and chosen
+
+A walk file projects the paths onto one reference. Where the reference
+passes a node once, a step on it has one place, and a departure between
+two such steps is a fact of the graph. Where it passes a node more than
+once, the writer's placement rule picks the pass, and the departures it
+files there follow from the pick: on a collapsed repeat, a path that
+follows one copy can show as hopping between copies.
+
+- The header's `revisited` counts the nodes the reference passes more than
+  once. A file with `revisited:i:0` states every position and every
+  departure as a fact of the graph, as the Minigraph-Cactus graphs do on
+  their own reference <!-- C53 -->
+- Otherwise each `ref` row's `passes` and each record's `leavePasses` and
+  `rejoinPasses` say which steps and ends lie on such nodes. <!-- C120 --> A reader
+  states a departure with an end passed more than once as a placement
+  choice, not as a jump the haplotype makes <!-- C120 -->
+- The file does not promise that a pick is the copy a haplotype came
+  from. For a reference other than the graph's own, build from the graph
+  built on that reference where one exists: HPRC v2.1 publishes
+  Minigraph-Cactus graphs on both GRCh38 and CHM13
+
+### What a reader relies on
 
 The format is what holds of any file that says `format:i:8`, whoever
 wrote it: the units, rows and columns above, and the invariants below,
@@ -1208,8 +1008,9 @@ unit's rows by kind and of a tile's walk rows, a tile's name and where
 its `ref` steps start, as it needs a column.
 
 A reader need not detect a file that is not format 8. It refuses what
-[The directory](#the-directory) and [Header](#header) say a reader
-refuses, and past that it may read a file that breaks a sentence of this
+[The directory](#the-directory),
+[What a reader refuses](#what-a-reader-refuses) and [Header](#header) say
+a reader refuses, and past that it may read a file that breaks a sentence of this
 page as if it kept it: @jbrowse/graph-walks opens a file that states
 `tile:i:0`, writes a number `0100`, has an empty field or two
 `#reference` lines, or holds a space in a name, all of them planted files of
@@ -1253,7 +1054,7 @@ run on the file by whoever writes or hosts it.
   `abridged` rows is what a reference sequence is listed under, or
   begins with that and a `#`, so a reader that takes the paths with that
   prefix for the reference's lines takes no other line for one
-  ([Terms](#terms)) <!-- C157 -->
+  ([Whole haplotypes](#whole-haplotypes)) <!-- C157 -->
 - **A step is 1 bp or more.** Every length a `ref` or `nodes` row states
   is at least 1, so no two positions of R start at one offset and no
   piece covers 0 bp of its contig <!-- C208 -->
@@ -1313,7 +1114,219 @@ otherwise with no reader the wiser:
 The header's `stay`, `abridge` and `abridgebytes` tags record those
 choices for a person reading the file; a reader ignores them.
 
-## What the writer guarantees
+## The writer, gfa-to-tabix
+
+How gfa-to-tabix reads a GFA, what it chooses where the format leaves a
+choice, and how its files are checked.
+
+### Options
+
+| Option            | Effect                                                                   |
+| ----------------- | ------------------------------------------------------------------------ |
+| `--refs <names>`  | Comma-separated PanSN samples, one file per sample. Required.            |
+| `--tile <bp>`     | Tile size. Default 65536.                                                |
+| `--sequences`     | Add the bases of the reference's nodes and of the nodes routes visit.    |
+| `--stay <bp>`     | Keep a piece in its tile across a short stretch elsewhere over nodes the reference passes more than once, each moved to a pass in the tile. Default 311, the `-k 311` minimum match of the HPRC pggb graphs; 0 turns it off. |
+| `--abridge-steps <n>` | Move a tile's costliest paths to its detail records until the rest cost at most n interior steps. Default 1000000; 0 turns it off. |
+| `--abridge-bytes <bytes>` | ...and until the rest hold at most this many bytes of rows, uncompressed, as [Abridged tiles](#abridged-tiles) says. Default 3000000; 0 turns it off. |
+
+<!-- C6 C7 C8 -->
+
+Each option takes at most 2^40, which the tool refuses above: a departure
+bin of 512 tiles past any position it reads stays below 2^64, and the
+header states every value exactly for a reader holding numbers as
+doubles. <!-- C153 -->
+
+### Tiles and pieces
+
+[ADR 0001](adr/0001-step-placement.md) gives the reasons for these rules, the
+alternatives tried and their measurements on pggb and Minigraph-Cactus, and
+[ADR 0009](adr/0009-departure-records.md) the changes format 6 made.
+Which pass a step takes, where a piece is cut and what `stay` keeps
+together are gfa-to-tabix's policy: a reader takes positions and pieces
+from the rows, and relies on the invariants of
+[What a reader relies on](#what-a-reader-relies-on), not on these rules.
+
+- The tool cuts each reference sequence into tiles of `tile` bp, at
+  multiples of `tile`. <!-- C12 --> A tile's rows are one unit of the
+  file, and its extent is the stretch its rows cover ([Units](#units)),
+  which can begin after the tile's start and run past its end
+- A step on a reference node takes a pass of the reference over the node,
+  its **position**, and the tile holding the pass's start. <!-- C13 --> A
+  step on any other node takes the tile of the last step before it in its W
+  line that has a position, on any sequence of the reference, or of the
+  first one after it for steps that lead the line. So a step after a step
+  on another sequence takes that sequence's tile, and a W line with no
+  step on the reference has no tile <!-- C14 -->
+- On the reference's own lines, a step takes the tile that holds its
+  offset, so where the reference passes a node twice each pass lies where
+  it is <!-- C15 -->
+- A reference sample with several haplotypes, such as `--refs HG002` names,
+  makes its haplotypes' lines reference sequences of one file, and a
+  node two of them pass counts as passed twice. Another path's step there
+  can take a pass on either, so a path can lie wholly under one of them
+  and show in no window of the other, with no departure record. That is
+  this tool's choice; the format lets a file take one whole haplotype of
+  them for its reference ([Whole haplotypes](#whole-haplotypes))
+- A contig can span several W lines, one per stretch the graph holds, as
+  where Minigraph-Cactus clips a haplotype. On its first read of the GFA
+  the tool refuses a W line whose end column is not its start plus its
+  nodes' lengths <!-- C18 -->, and two lines of a `path` with steps, W or
+  P, that overlap or start at the same base. <!-- C17 --> The lines are the same
+  for any order of the W lines, which `vg convert` changes from run to run
+  <!-- C19 -->
+- The tool refuses a W or P line that starts or ends past 2^53 on its
+  contig, and a reference sequence whose last tile ends past it, so no
+  coordinate a file states is above 2^53, a line's end, a unit's `end`,
+  `hapOffset + hapBp` and `hapStart + ownBp` among them, and a reader
+  holding numbers as doubles reads each one exactly <!-- C172 -->
+- A P line states its `path` and its start in its name, which
+  [Path names](#path-names) reads; the rules on this page say "W line" of
+  both
+- The tool drops every segment of 0 bp as it reads the GFA: its steps
+  leave every W and P line, so the steps either side of one become
+  consecutive, and a line left with no steps is skipped as the next rule
+  says. <!-- C152 --> A reference sequence left with no bases has no
+  units and no directory line. The header's `graph` still names every S
+  line, 0 bp or not, as the index's does. <!-- C190 --> Neither HPRC's Minigraph-Cactus chr22 nor pggb's chrY
+  has a segment of 0 bp ([counts](walks-container/writer/results/zero-bp.txt)),
+  so no rule below speaks of one <!-- C152 -->
+- A W or P line with an empty steps field is skipped once its end
+  column is checked; `*` there is refused as a step:
+  it has no rows, no departure record and no `#hole`, it names no
+  reference sequence, it is not counted on stderr, and the overlap refusal
+  doesn't apply to it. <!-- C118 --> It covers no base, so a contig's
+  records count the same own sequence with or without it. Refusing it
+  would turn away graphs `vg convert` writes for nothing a reader gains
+- A W or P line with steps but no step on a node of a reference has no
+  rows in that reference's file, and the tool counts these lines on stderr
+  <!-- C20 -->
+- A node the reference passes once has that pass as its position. For a
+  node it passes more than once, the path's last placed step predicts an
+  offset: the step's own offset plus the bp the path has walked since, in
+  the direction their strands agree on. The step takes the pass on the
+  same reference sequence nearest that offset, the lower offset on a tie,
+  or, when that sequence has none, the node's first pass: the pass of the
+  reference line whose name sorts first in bytes, at its lowest offset
+  <!-- C21 -->
+- Placing starts at the line's first step on a node the reference passes
+  once (or on any reference node when there is none) and runs outward in
+  both directions <!-- C22 -->
+- A run of steps that the rules above file in other tiles stays in the
+  current piece, its home, when:
+  - the path returns to the home tile
+  - the run holds at most `stay` bp of reference nodes, none of them a node
+    the reference passes once
+  - each of its steps on a node the home tile's reference path holds has a
+    pass there within `stay` bp of the offset the run's previous placed step
+    predicts for it <!-- C23 -->
+- Such a step moves to the nearest such pass, the lower offset on a tie,
+  and a step on a node the home tile's reference path lacks becomes route
+  interior. Any other run starts a new piece, and the reference's own lines
+  are exempt. <!-- C23 --> A reference that passes each node once therefore
+  gets the same rows at any `stay` <!-- C24 -->
+- The walk row states each step's position ([walk](#walk)), so a reader
+  never chooses a pass itself, and the tool fails the build if a row
+  decodes to another node or position than the one it placed. <!-- C25 -->
+  A step the placement leaves off the reference is route interior, which
+  it does only where the step's tile has no pass of its node: no route
+  interior holds a node of its own tile's reference path <!-- C26 -->
+- A route can hold another tile's reference nodes, each of them a node
+  the reference passes more than once: the tool leaves no step on a node
+  the reference passes once off the reference, in any file it writes
+  ([What the writer guarantees](#what-the-writer-guarantees)).
+  <!-- C197 -->
+
+### Path names
+
+[ADR 0014](adr/0014-p-line-names.md) gives the reasons for this reading,
+the vg and odgi runs behind it and the readings turned down.
+
+- A row's `path` and `fragStart` name one line of the GFA: `path` is the
+  sequence the line is a stretch of, and `fragStart` the 0-based offset on
+  that sequence of the line's first base. <!-- C180 --> A `path` is final:
+  a reader takes it whole and reads no start, range or field out of it,
+  whatever its text looks like <!-- C180 -->
+- **A W line's** `path` is its `sample#haplotype#contig` and its
+  `fragStart` its start column. GFA allows `*` for that column, which
+  states no offset, and the tool refuses it <!-- C181 -->
+- **A P line** has one name and no column for a start, so the tool reads
+  the name from its right end, once it has summed the bp of the line's
+  steps, `bp` below. A **name number** is one to nineteen of the digits
+  `0` to `9`, read in base 10, leading zeros allowed: it is text of a GFA
+  name, not a number a walk file states ([Rows](#rows)). Text that would
+  be a suffix but for digits that are no name number is no suffix. The
+  tool takes three
+  steps in this order, each at most once, each on the text the step before
+  left: <!-- C182 -->
+  - **`:a-b`, the cut `odgi extract` writes.** Where the name ends in `:`,
+    a name number `a`, `-` and a name number `b`, with `b − a` equal to `bp` and
+    above 0, that text leaves the name and adds `a`. Where `b − a` is
+    anything else the text stays in the name and adds nothing, so a
+    1-based range, as `samtools faidx` names a region, is not read
+    <!-- C183 -->
+  - **`[s]` or `[s-e]`, vg's subrange.** Where the text ends in `[`, a
+    name number `s` and `]`, or in `[`, `s`, `-`, a name number `e` and
+    `]`, that
+    text leaves the name and adds `s`. With an `e`, and no `:a-b` read
+    before it, the tool refuses the line unless `e − s` equals `bp`, as
+    it refuses a W line's end column. Beneath a `:a-b` it reads no `e`:
+    the bracket is of the piece the cut was taken from, and `e` is that
+    piece's end <!-- C184 -->
+  - **A fourth field.** Where the text holds exactly three `#` and a
+    name number after the last, that `#` and the name number leave the
+    name and the name number is added. <!-- C185 --> `#0`, which vg appends to the name of a
+    haplotype it reads from a P line, adds 0 <!-- C185 -->
+- The text left is `path` and the sum is `fragStart`. The tool refuses a
+  line that leaves no text, such as one named `[5]`, and a sum past 2^53,
+  as it refuses a W line's start past it. <!-- C186 --> A P line with no
+  suffix is its name whole, from 0.
+  The tool reads no suffix beneath a fourth field and no second suffix of
+  a kind: a `:a-b` there is part of `path`, as it is of the contig in the
+  W line of the same path <!-- C186 -->
+- The fixtures of [dialect](walks-container/dialect/) hold the same paths
+  as vg wrote them in W lines and in P lines, and as odgi cut vg's P
+  lines. The forms of one graph give one walk file, byte for byte
+  <!-- C187 -->
+
+| P line name | bp of its steps | `path` | `fragStart` | where such a name comes from |
+| --- | --- | --- | --- | --- |
+| `H#1#c` | 16 | `H#1#c` | 0 | pggb, from a PanSN FASTA record |
+| `H#1#c#0` | 16 | `H#1#c` | 0 | vg, of a P line it read |
+| `H#1#c#100` | 14 | `H#1#c` | 100 | vg, of a GBZ haplotype clipped from 100 |
+| `H#1#c[100-116]` | 16 | `H#1#c` | 100 | vg, a subrange |
+| `H#1#c#100[16-22]` | 6 | `H#1#c` | 116 | `vg chunk` of that clipped haplotype |
+| `H#1#c:5-21` | 16 | `H#1#c` | 5 | `odgi extract` |
+| `H#1#c#0[100-114]:6-14` | 8 | `H#1#c` | 106 | `odgi extract` of a vg subrange |
+| `H#1#c:5-21#0` | 16 | `H#1#c:5-21` | 0 | vg, of an `odgi extract` |
+| `H#1#c:6-21` | 16 | `H#1#c:6-21` | 0 | a 1-based region name |
+| `H#1#c[100-900]` | 16 | refused | | a stated end its steps contradict |
+| `[5]` | 16 | refused | | a suffix alone |
+
+- `path` is `sample#haplotype#contig` where the line is a W line or its
+  name has three fields. A P line's `path` can have any number of fields:
+  pggb copies FASTA record names unchanged, and odgi's and vg's own
+  examples include `sample#contig`
+- **What a path is listed under** in `#haplotype` is its `path` up to the
+  second `#`, its PanSN `sample#haplotype`; with one `#`,
+  `sample#contig`, its text up to that `#`, the sample; with none, its
+  whole name. <!-- C188 --> A path's sample, which `--refs` and
+  `#reference` name, is its `path` up to the first `#`, or its whole name
+  <!-- C188 -->
+- The tool refuses a P line whose steps hold a `;`, GFA 1.2's jump. A
+  jump joins two segments no link joins, over a distance the line doesn't
+  state, so no step after it has an offset <!-- C189 -->
+- **A limit: phase blocks.** For haplotypes from a VCF-phased GBWT, vg
+  numbers the phase blocks of a contig 0, 1, 2 and writes that counter in
+  the fourth field of a P line's name and in a W line's start column.
+  Nothing in such a line tells a counter from a start, and the tool reads
+  a start. It refuses the graph where two blocks' stretches then overlap,
+  with a message that says this. A block alone, or blocks that don't
+  collide, are placed at their counter, which is false. The fourth field
+  of a haplotype clipped out of a Minigraph-Cactus GBZ is a start, and
+  those are the graphs this reading is for
+
+### What the writer guarantees
 
 A guarantee names what checks it: **build**, the tool, which fails the
 build where it doesn't hold; **tests**, `verify()` and the other checks in
@@ -1432,136 +1445,7 @@ expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
   decimal, so a file past 2^32 bytes needs nothing different; a unit test
   writes one whose blocks start past 2^31, 2^32 and 2^40 <!-- C98 -->
 
-## Hosting
-<!-- background -->
-
-- Version the file names, so a data file and a directory from different
-  builds can't meet. HPRC v2.1's plain names, overwritten once at the
-  format 8 cutover, are the one exception ([Readers](#readers))
-- A name that is cited, as the `-f8` names are ([Readers](#readers)),
-  keeps its bytes: a rebuild goes up under a new name, so the walk file a
-  citation names, and a file built beside it, stay the same bytes
-- Serve single-range requests: CloudFront answers a multi-range request
-  with the whole object
-
-## Abridged tiles
-
-[ADR 0004](adr/0004-abridged-detours.md) gives the reasons and measurements.
-The budgets, which lines a tile moves and the order it numbers their
-records in are this writer's policy
-([What a reader relies on](#what-a-reader-relies-on)).
-
-- A piece costs a reader its routes' interior steps, each counted once per
-  use, plus a quarter of all its steps, interior ones included. <!-- C99 -->
-  graph-walks decodes a step along R faster, but a cut still keeps and
-  draws it
-- When a tile's pieces cost more than `abridge` interior steps, or its rows
-  other than `abridged` rows, from `kind` on with their newlines, hold more
-  than `abridgebytes` bytes, the tool moves whole W lines' pieces out of
-  the tile, costliest first, the fewest that bring the rest within both,
-  or all of them where none do. It counts the bytes of the rows it keeps,
-  not an estimate, and uncompressed, so any reader or check counts the
-  same <!-- C100 -->
-- The tile keeps its `ref` rows, its other pieces' `nodes`, `route` and
-  `walk` rows, encoded without the moved pieces, and an `abridged` row per
-  moved piece with where it starts on its contig, its steps, its bp and
-  its detail record <!-- C101 -->
-- The moved pieces' rows go to the `detail` unit `cs:d` of the tile's
-  sequence, `d` the record's number. A reader reads a detail record
-  only when it expands that path <!-- C150 -->
-- The tile's `blocks` unit, after its detail units, gives where on R
-  the steps of the moved pieces lie ([blocks](#blocks)), at a small part
-  of the detail records' bytes. A reader reads it to draw a moved piece
-  of a window's tile that it doesn't expand, as a cut of all the
-  haplotypes does. It reads none to choose the detail records a cut
-  expands or to attach a record: a moved piece's span, where it ends on
-  its contig, which piece of its line comes next and a record's own run
-  in it are in the `abridged` rows and the records
-  ([abridged](#abridged)). The unit counts toward neither `abridge`
-  budget and can be larger than its tile
-- A record holds at most one `nodes` row, one exactly when its routes have
-  an interior step, then `route` rows and `walk` rows. <!-- C102 --> The
-  tool numbers its routes from 0 and chains their tokens from 0, as for a
-  tile of its own, and its walk rows decode against the R of tile `cs` of
-  `seq` <!-- C103 -->. Its `nodes` and `route` rows' `start end` are the
-  detail unit's extent, as a tile's are the tile's
-
-## Decoding a walk row
-
-R's step from position `i` holding handle `h` goes forward when `R[i] = h`,
-to `R[i+1]`, and backward otherwise, to `R[i−1]` flipped. Each route below is
-taken the way round its flip says. <!-- C141 --> Every handle on R is
-emitted with its position in R, and so with its offset and pass.
-<!-- C141 -->
-
-1. If the first route has no entry, emit its interior. Its exit is
-   `startHandle`, which step 2 emits: the handle is emitted once
-2. Emit `startHandle`, at occurrence `k` of its node in R with `@k`, else at the
-   first
-3. For each route with an entry <!-- C141 -->:
-   - step along R, emitting each handle, until the current handle is the
-     route's entry, or with `:k` until the position is occurrence `k` of
-     the entry's node
-   - emit the interior
-   - with no exit, stop: the piece ends off R
-   - emit the exit, at occurrence `k` of its node in R with `@k`, else at the
-     occurrence nearest the current position in R, counted in positions,
-     the one at the higher position on a tie
-4. Step along R until the piece has `nsteps` steps
-
-<!-- C141 -->
-
-The encoder decodes every walk row it writes with these rules and compares
-each step's handle and position, and fails the build on any difference.
-<!-- C25 -->
-The row's `start end` is the span of the positions it decodes to.
-<!-- C25 --> On HPRC v2.1's Minigraph-Cactus chr22 GRCh38 passes no node
-twice, and no walk row needs `@k` or `:k` <!-- C142 -->
-
-## Example
-
-`tests/walks.rs` builds `tests/data/walks-two-refs.gfa` with `--tile 10
---stay 0` and checks every row. <!-- C104 --> Part of GRCh38's file: the directory, part of
-the tile at 0 (D's and I's walk rows left out) and two of the departure
-bin 0-10's four lines, with the byte offsets and lengths, which depend
-on the compressor, elided:
-
-```
-#walks  format:i:8  tile:i:10  revisited:i:0  stay:i:0  abridge:i:1000000  abridgebytes:i:3000000  graph:Z:7619ff637c3b074b  leftout:i:1  bytes:i:…
-#header  0  …
-GRCh38#0#chr  …  …
-```
-
-```
-#unit  GRCh38#0#chr  0  12  tile        0
-GRCh38#0#chr  0  12  ref        GRCh38#0#chr  0    0    0  2   2,2  6,6  .
-GRCh38#0#chr  0  12  nodes      6             6
-GRCh38#0#chr  0  12  route      .             13   -9
-GRCh38#0#chr  0  12  walk       H#1#h         100  100  0  2   2    .
-GRCh38#0#chr  0  6   walk       Q#0#chr       0    0    0  2   2    1
-#unit  GRCh38#0#chr  0  10  departures  .
-GRCh38#0#chr  0  18  departure  Q#0#chr       6    6    0  6   +    1    12  +  1  0
-GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  1  .
-```
-
-- R is `>1 >2`, nodes of 6 bp at 0 and 6: tokens `2` and `2` are ids 1
-  and 2, forward, and R passes each once, so `passes` is `.` and every
-  record's ends say 1. <!-- C104 --> The tile's extent, and so its `ref`, `nodes` and
-  `route` rows' `start end`, is R's stretch, 0-12
-- The one route has no entry, interior `13` (id 6 reversed) and exit `-9` (id 1
-  reversed), so it reads `<6 <1`
-- Q's piece starts on `>1` (handle 2) and takes route 0 flipped, `>1 >6`
-  with no exit: its steps are `>1 >6`, and its one step on R spans 0-6
-- H's piece starts on `>1` and takes no route, so it follows R for its 2
-  steps: `>1 >2`, spanning 0-12
-- Q leaves R at 1's end, 6, walks 6 bp of its own, node 6, and rejoins at
-  3's start, 12, in a piece filed under tile 10. Its record's extent runs
-  from 1's first base to 3's last, 0-18, so it lies in bins 0-10 and
-  10-20. Its own step, 6, is in its piece in tile 0, so `ownTiles` is 0
-- D jumps back from 4's end, 24, to 1's start, 0, over nothing of its own:
-  0-24, in the bins at 0, 10 and 20, with `ownTiles` `.`
-
-## Scale
+### Scale
 
 - The tool reads the GFA more than once, so it takes a file path and
   refuses stdin; gzip input works <!-- C105 -->
@@ -1580,7 +1464,111 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
   open, and per window the tiles and departure bins over it, plus any
   attach fetches
 
-## Readers
+## Reading a walk file
+
+The procedure @jbrowse/graph-walks follows for a window, the programs
+that read walk files, and how to host one.
+
+### Reading a window
+
+For a window `[s, e)` with context `c`, the stretch `D = [max(0, s − c),
+e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
+
+- **At open:** GET the directory and refuse any format but 8. GET the
+  header unit and the sequence's table in parallel. Refuse when the
+  directory's line 1 differs from the header's `#walks` line, or its
+  `bytes` from the Content-Range total where the reader can learn it
+  ([The directory](#the-directory))
+- **The read:** select the `tile` and `departures` units with
+  `start < D.end` and `end > D.start`. Merge byte
+  ranges that touch, and GET each as one single-range request, never a
+  multi-range one <!-- C134 -->
+- Gunzip each unit. <!-- C149 --> Decode a tile's rows from `kind` on by
+  the rules of [Rows](#rows) and
+  [Decoding a walk row](#decoding-a-walk-row).
+  Keep the departure lines overlapping `D` and drop exact duplicates
+  <!-- C149 -->
+- An attach fetch, for a record whose own steps the reader wants, reads
+  the tiles its `ownTiles` names and takes the record's own steps from
+  them alone ([departure](#departure)). It
+  reads no `blocks` unit: an abridged piece's own run comes from its
+  `abridged` row and the record
+- Which records get an attach fetch is the reader's choice: a record's
+  line gives its two ends and its `ownBp` without one.
+  @jbrowse/graph-walks 7 makes one for a record that leaves or rejoins on
+  `D` with own steps within its `attachBp`, and for no other record
+- An attach fetch, for a record whose leave piece or rejoin piece the
+  window's read lacks, reads the tiles `ownTiles` names and takes the
+  record's own steps from them: the path's steps after its leave step and
+  before its rejoin step, which start at `hapStart` on its contig and span
+  `ownBp`. Nothing else it reads joins a fragment or yields a computed
+  departure <!-- C132 -->. For a piece there that the tile abridged, it
+  builds the record's own run from the `abridged` row and the record by
+  [the attach rule](#abridged), as one step of that many bp whose nodes
+  it doesn't know, and reads no `blocks` unit for it; where the cut was
+  asked to expand that path it reads the piece's `detail` unit, and
+  takes the own steps from the walk row there <!-- C133 -->
+- A cut that leaves an abridged piece of a window's tile unexpanded
+  reads that tile's `blocks` unit and builds the piece from its row
+  there: a block as the steps of R in its stretch ([blocks](#blocks)),
+  and a run off R as one step of that many bp whose nodes it doesn't
+  know
+- Expanding an abridged piece, which a viewer does on request, reads the
+  `detail` unit `cs:d`
+- **The drawn stretch** is `D` widened to whole steps of the reference:
+  it runs from the first base to the last of `D` and of every position
+  of R, in the tiles the read selects, whose stretch overlaps `D`.
+  <!-- C144 --> A position is one pass of the reference over a node, so
+  where the reference passes a node more than once each pass over `D`
+  counts and no pass elsewhere does. <!-- C144 --> A reader draws whole
+  nodes, so the stretch a cut describes runs to the edges of the nodes
+  at `D`'s ends
+- A reader places a node at a reference position from a `ref` row of a tile
+  it read whenever one exists: a pass over `D` before any other, then the row
+  whose path sorts first in bytes, at its earliest start. Other nodes take
+  haplotype offsets <!-- C119 -->
+- **What a cut returns:** every piece with a step whose position
+  overlaps the drawn stretch, an unexpanded abridged piece by its
+  blocks, and every departure record
+  whose line overlaps `D`, unfiltered, one in a `#hole` included, each
+  once; and every departure it computes between consecutive steps of one
+  piece whose extent, from the first base of its end nodes to the last as
+  a record's runs, overlaps `D`, one across a `#hole` included.
+  <!-- C135 --> A
+  departure between two pieces is a record, even where the read holds
+  both, so none comes back twice <!-- C135 -->
+- **A piece comes back trimmed** to its steps on the drawn stretch, with
+  the bp of it the read holds past either end stated, not as the whole
+  piece: a record for where the line goes after a step outside the
+  drawn stretch need not overlap `D`, so a whole piece could show its
+  line ending where it goes on. An abridged piece's bp past an end come
+  from its `abridged` row, which gives where it starts and ends on its
+  contig
+- **An end at the drawn stretch's edge is not the line's end.** Inside
+  the drawn stretch a reader holds either the line's next step on the
+  sequence or the record that gives it, so a line with neither has no
+  later step on that sequence. At the edge it holds neither for a line
+  with no later step there and for one that goes on in a tile it didn't
+  read, and it says nothing of which
+- **No later step on the sequence is not the line's end either.** No row
+  states where a W or P line ends or how many pieces it has. After its
+  last step on S a line can go on over nodes off the reference, which
+  its piece holds as the steps after its last on R; in a piece filed on
+  another sequence of the reference, which S's units don't point to;
+  or, for a contig, in a later W line. A record lies between two steps
+  on one sequence, so a line that steps from S onto another sequence and
+  stays there has none on S, and reads on S as a line that stops does.
+  A reader can say a line has no later step on S, and how many bp its
+  last piece there holds after that step. It cannot say the line ends
+  there, nor where on the reference it goes
+  ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
+- Under the overlap rule, a reader can see two fragments of a path where
+  format 6's lookback joined them through steps 80–92 kb outside the
+  window, with nothing in the window missing; an attach fetch, which takes
+  own steps alone, joins none
+  ([ADR 0010](adr/0010-walks-unit-table.md#genome-wide))
+
+### Readers
 <!-- background -->
 
 - [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 7 reads format
@@ -1622,3 +1610,65 @@ the user picks others:
   "defaultHaplotypes": ["HG002", "HG00733"]
 }
 ```
+
+### Hosting
+<!-- background -->
+
+- Version the file names, so a data file and a directory from different
+  builds can't meet. HPRC v2.1's plain names, overwritten once at the
+  format 8 cutover, are the one exception ([Readers](#readers))
+- A name that is cited, as the `-f8` names are ([Readers](#readers)),
+  keeps its bytes: a rebuild goes up under a new name, so the walk file a
+  citation names, and a file built beside it, stay the same bytes
+- Serve single-range requests: CloudFront answers a multi-range request
+  with the whole object
+
+## Background
+
+### Paralogs and collapsed repeats
+<!-- background -->
+
+- **Paralog jumps:** in a segmental duplication, a haplotype can step onto the
+  reference nodes of a distant paralog and back. The steps after the jump take
+  the paralog's tile, so a window at the haplotype's own locus shows the
+  haplotype in more pieces, and a departure record for each jump. On
+  Minigraph-Cactus graphs this is rare and sits almost entirely in low-copy
+  repeats such as 22q11's
+- **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes,
+  so the reference path passes those nodes more than once, often megabases
+  apart. pggb graphs have many such nodes; Minigraph-Cactus's GRCh38 path has
+  none. Filing all steps at the node's first pass, as format 3 did, split each
+  haplotype into a piece per hop and made pggb walk files dozens of times
+  larger than Minigraph-Cactus's; the nearest pass and `stay` above replace it.
+  Which copy a step takes is a placement choice: the file states the choice,
+  and the pass counts on `ref` rows and departure records let a viewer say
+  where a region's placement or a departure is one
+- **Satellite arrays:** pggb gives each haplotype a separate long path through
+  thousands of tiny nodes, and the tool files all of it in the tile where the
+  haplotype leaves the reference. [Abridged tiles](#abridged-tiles) moves the
+  costliest of these paths to detail rows, and a viewer draws each as a
+  labelled block until the user opens it
+- **What to expect on pggb:** a window shows nearly all haplotypes whose
+  sequence aligns there, except in satellites and CHM13's short arm, where
+  abridged paths show as blocks until opened
+
+### Earlier formats
+<!-- record -->
+
+- 4.x wrote format 7, the same but for a moved piece: its `abridged` row gave
+  the piece's two end steps and the bp between, and there were no `blocks`
+  units. 3.x wrote format 6, whose rows a tile keeps from `kind` on but which
+  filed all of a chunk's rows at its first base under a `.tbi`
+  ([ADR 0009](adr/0009-departure-records.md)). 1.4 to 2.x wrote format 5.
+- `--tile` was `--chunk` in 3.x. The option sets the header's `tile:i:` and
+  the size of the unit a reader fetches whole, so it takes the format's word
+  for it.
+- Format 6's `chunk`, `maxnode` and `#long` lines are gone: a tile's extent
+  and a departure line's extent say what they made readers widen for
+- A `ref`, `nodes`, `route`, `walk` or `departure` row's columns from `kind`
+  on are format 6's, unchanged.
+- `hapBp` is not format 7's `bp`, which ran from the piece's first step on R
+  to its last and left out the steps off R at its ends. In the example under
+  [blocks](#blocks), format 7's `bp` was 52, from node 1 to node 3
+- There is no chunk-before rule, no `maxnode`, no `#long` widening and no
+  reach

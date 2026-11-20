@@ -2017,7 +2017,7 @@ fn the_specs_example_quotes_the_tools_lines() {
         env!("CARGO_MANIFEST_DIR")
     ))
     .unwrap();
-    let example = &spec[spec.find("\n## Example\n").unwrap()..];
+    let example = &spec[spec.find("\n### Example\n").unwrap()..];
     let blocks: Vec<&str> = example.split("```\n").skip(1).step_by(2).take(2).collect();
     let quoted = |block: &str| -> Vec<String> {
         block
