@@ -20,14 +20,17 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
 
 ## Scripts
 
+The scripts with 7 in their names were written for walk format 7 and now
+read format 8 alone.
+
 - `audit7.py walks.gz [--truth dep.tsv] [--shard I/N] [--seq NAME]`:
-  `audit6.py`'s checks on a walk format 7 file, read by unit. It adds a
+  `audit6.py`'s checks on a walk format 8 file, read by unit. It adds a
   check of each walk and abridged row's `start end` against its decoded
   steps, of each record's `ownTiles` against the tiles its decoded own
   steps lie in, and of unique tile and detail names. It also checks that a departure inside a piece lies within its
-  tile's extent, and costs windows as format 7 reads them, from the unit
+  tile's extent, and costs windows as format 8 reads them, from the unit
   tables. Needs the file's `.idx` beside it
-- `verify7.py walks.gz [tile]`: the release checks of a walk format 7 file
+- `verify7.py walks.gz [tile]`: the release checks of a walk format 8 file
   and its directory, those of arbiter A's
   [`verify7.mjs`](../walks-container/arbA/scripts/verify7.mjs) and more
   (each table exactly its sequence's units, unique tile and detail names,
@@ -41,7 +44,7 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
   so it checks files past the 2 GiB that `verify7.mjs`, which reads whole
   files, can't
 - `fuzz7.sh [from] [to]` with `fuzz7-gen.py`: random graphs built in walk
-  format 7 with two references, R and Q, under eight option sets; each file
+  format 8 with two references, R and Q, under eight option sets; each file
   gets `verify7.py`, `claims7.py --own` and `audit7.py`, and the script
   exits 1 on any failure. A graph has one to three reference sequences,
   some of 0 bp, holes between the reference's lines, 0 bp nodes, W lines
