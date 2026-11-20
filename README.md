@@ -71,8 +71,8 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
 
 - [The node and link index](docs/index-format.md): inputs, reference choice,
   layouts, giant components, columns and scale
-- [Walk files in brief](docs/walks-format-in-brief.md): what a walk file
-  holds, how a viewer reads one region of it, and what it leaves out
+- [Walk files in brief](docs/walks-format-in-brief.md): the walk format on
+  one small example, with every line a viewer reads explained
 - [Walk files](docs/walks-format.md): the specification of walk format 8, its
   options, rows and readers
 - [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `bubbles`,

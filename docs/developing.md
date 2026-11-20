@@ -9,7 +9,9 @@ CI runs these on every push:
 - `scripts/figures.py target/release/gfa-to-tabix --check`: the figures in
   [figures/](figures/) are drawn from the tool's output on the GFAs beside
   them, and the check fails when a figure differs. Run it without `--check`
-  to redraw them
+  to redraw them. It also fails when
+  [Walk files in brief](walks-format-in-brief.md) quotes a line that the
+  tool does not write for [walks-example.gfa](figures/walks-example.gfa)
 - `scripts/check-links.py`: every relative link and anchor in the Markdown
 - `scripts/check-claims.py`: every normative sentence of
   [walks-format.md](walks-format.md) has a claim ID with a check in

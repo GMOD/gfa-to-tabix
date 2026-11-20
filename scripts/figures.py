@@ -6,8 +6,11 @@ lines it writes. The script draws the overview figure itself, the walks
 detail figure by filling the marked regions of its .dot file for Graphviz,
 the walks leave figure
 from the tool's lines and the drawing scripts/bandage-figure.mjs left beside
-them, and the walks tile and bytes figures from the tool's lines alone.
+them, and the walks tile, bytes and example figures from the tool's lines
+alone.
 With --check, exits 1 if a figure differs from what the tool writes now.
+Either way, exits 1 if docs/walks-format-in-brief.md quotes a W line, a
+walk file line or a directory line that the example's files lack.
 """
 
 import difflib
@@ -29,6 +32,8 @@ QUERY = ("chr1", 12, 18)
 BLUE = ("#e8eef7", "#a9bfe2", "#4a6fa5")
 ORANGE = ("#fde6cf", "#f3c08f", "#c77a2b")
 PURPLE = ("#ede4f5", "#8a5fb0")
+VIOLET = ("#ede4f5", "#c9b3e0", "#8a5fb0")
+GREEN = ("#e3f1e6", "#a8d1b0", "#3f8a55")
 HIGHLIGHT = "#fff3b0"
 
 
@@ -591,12 +596,12 @@ def node_spans(reference, lengths):
 
 
 def detours(spans, path):
-    """Where a path leaves the reference's nodes for nodes of its own:
-    (leave bp, rejoin bp, own nodes)."""
+    """Where a path leaves the reference's nodes, for nodes of its own or
+    for a reference node further on: (leave bp, rejoin bp, own nodes)."""
     out, own, leave = [], [], 0
     for n in path:
         if n in spans:
-            if own:
+            if own or spans[n][0] != leave:
                 out.append((leave, spans[n][0], own))
                 own = []
             leave = spans[n][1]
@@ -751,13 +756,88 @@ def hug(c, x_of, y, colours, dips, depth, parts):
         b0, b1 = (xl + xr - w) / 2, (xl + xr + w) / 2
         d += (f" L{xl:.1f},{y:.1f} C{xl + ramp / 2:.1f},{y:.1f} {xl + ramp / 2:.1f},{y + depth:.1f} {xl + ramp:.1f},{y + depth:.1f}"
               f" L{xr - ramp:.1f},{y + depth:.1f} C{xr - ramp / 2:.1f},{y + depth:.1f} {xr - ramp / 2:.1f},{y:.1f} {xr:.1f},{y:.1f}")
-        boxes.append((b0, b1, " ".join(own)))
+        boxes += [(b0, b1, " ".join(own))] if own else []
     c.path(f"{d} L{x_of(parts['length']):.1f},{y:.1f}", stroke)
     for b0, b1, label in boxes:
         node_box(c, b0, b1, y + depth - 9, 18, label, fill, stroke)
 
 
-HAPLOTYPE_COLOURS = [BLUE, ORANGE]
+HAPLOTYPE_COLOURS = [BLUE, ORANGE, VIOLET, GREEN]
+
+
+def graph_over_tiles(c, x_of, left, top, parts):
+    """The tiles, the contig's ruler and the reference's nodes, then each
+    haplotype as a lane, those that stay on the reference first and the
+    widest detour last, so a narrow detour nests inside a wide one; returns
+    the y below the lowest node."""
+    ruler(c, x_of, top + 52, parts)
+    y_ref = top + 82
+    reference_boxes(c, x_of, y_ref, parts)
+    c.say(left, y_ref + 15, f"{REF}#0", 11.5, REF_STROKE, "bold")
+    widest = lambda dips: max((rejoin - leave for leave, rejoin, _ in dips), default=0)
+    lanes = sorted(enumerate(parts["haplotypes"]), key=lambda h: widest(h[1][1]))
+    bottom, dipping = y_ref + 34, 0
+    for lane, (i, (name, dips)) in enumerate(lanes):
+        y, depth = y_ref + 34 + 14 * lane, 36 + 24 * dipping
+        hug(c, x_of, y, HAPLOTYPE_COLOURS[i], dips, depth, parts)
+        c.say(left, y + 4, name, 11.5, HAPLOTYPE_COLOURS[i][2], "bold")
+        dipping += bool(dips)
+        bottom = max(bottom, y + (depth + 9 if dips else 0))
+    return bottom + 3
+
+
+EXAMPLE = "walks-example"
+BRIEF = FIGURES.parent / "walks-format-in-brief.md"
+
+
+QUOTED = ("W", "#reference", "#haplotype", "#unit", "#entry", "#header")
+
+
+def misquoted(lines, directory):
+    """The brief's fenced W lines, header, #unit, #entry and directory
+    lines and rows that are not a line of the example's GFA, of its walk
+    file or of its directory."""
+    gfa = (FIGURES / f"{EXAMPLE}.gfa").read_text().splitlines()
+    written = {tuple(f) for f in lines + directory} | {tuple(line.split()) for line in gfa}
+    fenced, quoted = False, []
+    for line in BRIEF.read_text().splitlines():
+        fenced = fenced != line.startswith("```")
+        fields = tuple(line.split())
+        if fenced and fields and (fields[0] in QUOTED or fields[0].startswith(f"{REF}#")):
+            quoted.append(fields)
+    return [" ".join(fields) for fields in quoted if fields not in written]
+
+
+def example_svg(parts):
+    """The graph over the walk file as a bar of its units, each tile and
+    its departures under their stretch of the reference; the window's two
+    units are shaded with the graph above them."""
+    c, shade = Canvas(), Canvas()
+    width, left, x0 = 900, 24, 160
+    x_of = lambda bp: x0 + (width - 110 - x0) * bp / parts["length"]
+    bottom = graph_over_tiles(c, x_of, left, 10, parts)
+    name_y = bottom + 38
+    c.say(left, name_y, f"{PREFIX}.{REF}.walks.gz", 12, weight="bold")
+    bar, bar_h = name_y + 12, 34
+    blocks = [(left, x_of(0), "header", "", False)]
+    stretches = sorted({(int(e[2]), int(e[3])) for e in parts["table"]})
+    for start, end in stretches:
+        units = [e for e in parts["table"] if (int(e[2]), int(e[3])) == (start, end)]
+        share = (x_of(end) - x_of(start)) / len(units)
+        blocks += [(x_of(start) + share * k, x_of(start) + share * (k + 1),
+                    *((f"tile {e[5]}", "") if e[4] == "tile" else (e[4], f"{start}-{end}")), e in parts["entries"])
+                   for k, e in enumerate(units)]
+    blocks.append((x_of(parts["length"]), width - left, "table", "", False))
+    for a, b, kind, name, lit in blocks:
+        c.rect(a + 1, bar, b - a - 2, bar_h, "none", 3, LINE)
+        weight = "bold" if lit else "normal"
+        c.say((a + b) / 2, bar + (15 if name else 21), kind, 10, INK, weight, anchor="middle")
+        c.say((a + b) / 2, bar + 27, name, 10, INK, weight, anchor="middle")
+    label_y = bar + bar_h + 20
+    c.say((x_of(WINDOW[0]) + x_of(WINDOW[1])) / 2, label_y, "one request", 11.5, INK, "bold", SANS, "middle")
+    window_shade(shade, x_of, 10, label_y + 10, window_label(parts))
+    c.out.insert(0, "\n".join(shade.out))
+    return c.svg(width, label_y + 22)
 
 
 TILE = "walks-tile"
@@ -852,15 +932,7 @@ def bytes_svg(parts):
     width, left, x0 = 900, 24, 160
     x_of = lambda bp: x0 + (width - 24 - x0) * bp / parts["length"]
     c.say(left, 26, " ".join(["gfa-to-tabix", f"{SCHEMATIC}.gfa", *SCHEMATIC_OPTIONS, "-o", PREFIX]), 13, weight="bold")
-    ruler(c, x_of, 92, parts)
-    y_ref = 122
-    reference_boxes(c, x_of, y_ref, parts)
-    c.say(left, y_ref + 15, f"{REF}#0", 11.5, REF_STROKE, "bold")
-    for i, (name, dips) in enumerate(parts["haplotypes"]):
-        y = y_ref + 34 + 14 * i
-        hug(c, x_of, y, HAPLOTYPE_COLOURS[i], dips, 36 + 24 * i, parts)
-        c.say(left, y + 4, name, 11.5, HAPLOTYPE_COLOURS[i][2], "bold")
-    bottom = y_ref + 34 + 14 * len(parts["haplotypes"]) + 58
+    bottom = graph_over_tiles(c, x_of, left, 40, parts)
     window_shade(shade, x_of, 40, bottom, window_label(parts))
     c.out.insert(1, "\n".join(shade.out))
     data = f"{PREFIX}.{REF}.walks.gz"
@@ -922,13 +994,18 @@ def generate(binary):
         subprocess.run([binary, FIGURES / f"{TILE}.gfa", *SCHEMATIC_OPTIONS, "-o", out], **quiet)
         with gzip.open(walk_file, "rt") as f:
             tile = [line.rstrip("\n").split("\t") for line in f]
+        subprocess.run([binary, FIGURES / f"{EXAMPLE}.gfa", *SCHEMATIC_OPTIONS, "-o", out], **quiet)
+        with gzip.open(walk_file, "rt") as f:
+            example = [line.rstrip("\n").split("\t") for line in f]
+        example_directory = [line.split("\t") for line in Path(f"{walk_file}.idx").read_text().splitlines()]
     lengths, gfa_links, paths, contigs = read_gfa(FIGURES / "walks.gfa")
     table, rebuilt = walks(walk_rows, paths)
     walks_nodes, walks_arrows = walks_graph(lengths, gfa_links, paths, contigs)
     parts = schematic_parts(schematic, schematic_directory, FIGURES / f"{SCHEMATIC}.gfa")
-    return {
+    return misquoted(example, example_directory), {
         TILE: tile_svg(tile_parts(tile, FIGURES / f"{TILE}.gfa")),
         "walks-bytes": bytes_svg(parts),
+        EXAMPLE: example_svg(schematic_parts(example, example_directory, FIGURES / f"{EXAMPLE}.gfa")),
         "walks-leave-figure": bandage_figure("walks-leave", built["walks-leave"], directories["walks-leave"],
                                              lambda f: HIGHLIGHT if f[3] == "departure" else None),
         "overview": overview_svg(segs, links),
@@ -948,7 +1025,10 @@ def main():
         sys.exit(__doc__.strip())
     check = "--check" in sys.argv[1:]
     stale = False
-    for figure, regions in generate(Path(args[0]).resolve()).items():
+    wrong, figures = generate(Path(args[0]).resolve())
+    for line in wrong:
+        print(f"{BRIEF}: not a line of {EXAMPLE}.gfa, its walk file or its directory: {line}")
+    for figure, regions in figures.items():
         dot, svg = FIGURES / f"{figure}.dot", FIGURES / f"{figure}.svg"
         if isinstance(regions, str):
             if not check:
@@ -970,6 +1050,8 @@ def main():
         svg.write_text(drawing)
     if stale:
         sys.exit("figures.py: docs/figures is stale; run scripts/figures.py <binary> to redraw it")
+    if wrong:
+        sys.exit(f"figures.py: {BRIEF.name} misquotes its example")
 
 
 if __name__ == "__main__":
