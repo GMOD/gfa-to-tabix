@@ -1,6 +1,6 @@
 # Walk files
 
-For the ideas of the format in one screen, read
+For the ideas of the format in short, read
 [Walk files in brief](walks-format-in-brief.md) first, and for one small
 file read line by line,
 [Walk files by example](walks-format-by-example.md). This page is the full

@@ -2,7 +2,7 @@
 
 This page reads one small walk file line by line and accounts for every
 number shown. [Walk files in brief](walks-format-in-brief.md) gives the
-ideas of the format in one screen, and the
+ideas of the format in short, and the
 [specification](walks-format.md) is the authority where this page
 simplifies.
 

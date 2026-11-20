@@ -20,11 +20,6 @@ W  HG003   1  chr1  0  80  >1>2>3>4>6>7>8>9
 
 Each `>4` is a step: node 4, walked forward.
 
-- `CHM13#0` takes node 10, which is 7 bp, in place of node 5
-- `HG002#1` follows the reference
-- `HG002#2` goes from node 2 straight to node 8, so it lacks nodes 3 to 7
-- `HG003#1` goes from node 4 straight to node 6, so it lacks node 5
-
 ```bash
 gfa-to-tabix walks-example.gfa --walks --refs GRCh38 --tile 30 -o hprc
 ```
@@ -39,7 +34,8 @@ file beside it, `hprc.GRCh38.walks.gz.idx`.
 - **Tiles:** gfa-to-tabix cuts the reference into tiles of a fixed length,
   30 bp here and 65536 bp by default, and compresses each tile separately
 - **A table of byte ranges:** the file has a table of where each tile's
-  bytes are, so a viewer fetches the tiles over its region and no others
+  bytes are, and the `.idx` gives the table's byte range, so a viewer
+  fetches the tiles over its region and no others
 - **The reference, once:** a tile's `ref` row lists the reference's steps
   through the tile
 - **Each detour, once:** a `route` row is one detour off the reference
@@ -47,15 +43,16 @@ file beside it, `hprc.GRCh38.walks.gz.idx`.
   node 4 straight to node 6, and from node 4 through node 10 to node 6
 - **A haplotype as the routes it takes:** a `walk` row is one haplotype's
   path through the tile, written as the step it starts on and the routes
-  it takes. `HG002#1` takes none
-- **Departures:** `HG002#2` has no step between 30 and 60, so tile 30 has
-  no `walk` row for it. A `departure` row gives where it left the reference
-  and where it rejoins, and the file has a copy next to each tile on the
-  way, so a viewer of tile 30 still draws it
+  it takes, following the `ref` row between them. `HG002#1` takes none
+- **A detour across tiles:** a `departure` row gives where a haplotype
+  leaves the reference in one tile and rejoins it in another. `HG002#2`
+  leaves at 20 and rejoins at 70, so tile 30 has no `walk` row for it, and
+  a copy of the row beside each of the three tiles lets a viewer of tile 30
+  still draw it
 - **Plain text:** `zcat` prints the whole file as tab-separated rows, each
   starting with its position on the reference
-- **One file per reference:** positions in `hprc.GRCh38.walks.gz` are
-  GRCh38's, and `--refs GRCh38,CHM13` writes a second file for CHM13
+- **One file per reference:** `--refs GRCh38,CHM13` writes a second file,
+  with CHM13's positions
 
 ## What a walk file leaves out
 
@@ -64,8 +61,6 @@ file beside it, `hprc.GRCh38.walks.gz.idx`.
   gfa-to-tabix's other output, has every node and link
 - **Paths with no step on the reference.** gfa-to-tabix prints how many it
   left out
-- **Where a path goes after it moves to another chromosome**
-  ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
 
 ## Read more
 

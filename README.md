@@ -72,7 +72,7 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
 - [The node and link index](docs/index-format.md): inputs, reference choice,
   layouts, giant components, columns and scale
 - [Walk files in brief](docs/walks-format-in-brief.md): the ideas of the
-  walk format in one screen, on one small example
+  walk format in short, on one small example
 - [Walk files by example](docs/walks-format-by-example.md): the example's
   walk file read line by line, with every column explained
 - [Walk files](docs/walks-format.md): the specification of walk format 8, its
