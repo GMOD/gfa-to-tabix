@@ -40,9 +40,10 @@ gfa-to-tabix walks-tile.gfa --walks --refs GRCh38 --tile 30 -o hprc
 
 ## A viewer fetches the tiles over its region
 
-gfa-to-tabix cuts the reference into tiles, compresses each tile separately
-and writes a table of the tiles' byte ranges for each chromosome.
-`--tile 30` cuts this example every 30 bp, and the default is 65536.
+gfa-to-tabix cuts the reference into tiles of a fixed length, compresses
+each tile separately and writes a table of the tiles' byte ranges for each
+chromosome. `--tile 30` cuts this example every 30 bp, and the default is
+65536 bp.
 
 A viewer that opens a walk file reads the `.idx`, the list of haplotypes in
 the file's header and the table of one chromosome. For each region it then
@@ -78,7 +79,9 @@ GRCh38#0#chr1  30  60  walk   HG002#1#chr1   0  30  1  3  8  .
   takes no route (`.`), so it follows the reference through 4, 5 and 6
 
 A haplotype that matches the reference across a tile is one short row, and
-haplotypes that share a variant share its `route` row.
+haplotypes that share a variant share its `route` row. A path that runs
+through several tiles has a `walk` row in each tile where it touches the
+reference, and a reader joins the rows in order.
 
 The numbers `8,2,2` and `8 12 -8` are node ids and strands, each written as a
 difference from the one before. The specification defines that encoding,
@@ -93,8 +96,8 @@ short Python file, and it prints the three paths above from this walk file.
 
 A haplotype can leave the reference in one tile and rejoin it in another,
 as a haplotype with a 2 Mb deletion does. The tiles inside the deletion
-have no row for that haplotype, so a viewer that read those tiles alone
-would draw the region without it.
+have no `walk` row for that haplotype, so a viewer that read those tiles
+alone would draw the region without it.
 
 - A [`departure` record](walks-format.md#departure) gives the two reference
   positions and the length of the haplotype's sequence between them
@@ -120,20 +123,22 @@ would draw the region without it.
   sequence, like a path that stops
   ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
 
-## Repeats and very large tiles
+## Where the reference repeats a node, a haplotype is placed on one copy
 
-- **A reference that passes a node more than once:** pggb merges the copies
-  of a repeat into shared nodes. gfa-to-tabix places a haplotype's step on
-  one copy, and the file marks the node so that a viewer can say the
-  position was chosen ([Exact and chosen](walks-format.md#exact-and-chosen))
-- **A haplotype on another copy:** a region over another copy of the
-  repeat lacks the haplotype
-  ([open problem](open-problems.md#placement-of-steps-on-nodes-the-reference-passes-more-than-once)).
-  HPRC's Minigraph-Cactus graphs have no such node on the graph's own
+- pggb merges the copies of a repeat into shared nodes, so a reference can
+  pass one node at several positions
+- gfa-to-tabix places a haplotype's step on one of those positions, and
+  the file marks the position so that a viewer can say it was chosen
+  ([Exact and chosen](walks-format.md#exact-and-chosen))
+- A region over another copy of the repeat lacks the haplotype
+  ([open problem](open-problems.md#placement-of-steps-on-nodes-the-reference-passes-more-than-once))
+- HPRC's Minigraph-Cactus graphs have no repeated node on the graph's own
   reference, so build from the graph built on your reference where one
   exists
-- **A tile too large to send whole:** in a satellite array the rows of one
-  tile can be megabytes of text. gfa-to-tabix moves paths out of such a
-  tile, and a viewer draws a moved path as blocks along the reference until
-  the user asks for its nodes
+
+## A very large tile is fetched in parts
+
+- In a satellite array the rows of one tile can be megabytes of text
+- gfa-to-tabix moves paths out of such a tile, and a viewer draws a moved
+  path as blocks along the reference until the user asks for its nodes
   ([Abridged tiles](walks-format.md#abridged-tiles))
