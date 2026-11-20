@@ -1080,8 +1080,7 @@ W  B  1  c     0  32  >1>2>6>3
   `detail` units. A reader of one window also needs the `departure` rows,
   for where a path goes outside the tiles it read, the `blocks` rows, to
   draw a moved piece without its detail unit, and `passes`, to mark a
-  position as chosen. [Walk files in brief](walks-format-in-brief.md)
-  explains the format in that order, and the scripts and counts are in
+  position as chosen. The scripts and counts are in
   `~/src/walks8-evidence/doc-only-reader-20261119/`
 
 ## The README doesn't say what gfa-to-tabix is

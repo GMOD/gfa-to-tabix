@@ -1,7 +1,8 @@
 # Walk files
 
-To learn the format, read [Walk files in brief](walks-format-in-brief.md)
-first. This page is the full specification.
+For the ideas of the format on one page, read
+[Walk files in brief](walks-format-in-brief.md) first. This page is the
+full specification.
 
 - **In:** a base-level GFA with integer node ids and W or P lines, such as
   `vg convert -f` writes from a Minigraph-Cactus GBZ
@@ -972,6 +973,47 @@ GRCh38#0#chr  0  24  departure  D#1#d         24   0    0  24  +    1    0   +  
   10-20. Its own step, 6, is in its piece in tile 0, so `ownTiles` is 0
 - D jumps back from 4's end, 24, to 1's start, 0, over nothing of its own:
   0-24, in the bins at 0, 10 and 20, with `ownTiles` `.`
+
+#### A reference that takes two nodes twice
+
+`tests/data/walks-loop.gfa` has a reference that takes nodes 2 and 3
+twice. Four of its W lines:
+
+```
+W  R  0  chr  0  45  >1>2>3>2>3>4
+W  A  1  a    0  57  >1>2>3>2>3>2>3>4
+W  E  1  e    0  47  >1>2>5>3>2>3>4
+W  F  1  f    0  47  >1>2>3>2>5>3>4
+```
+
+Built with `--refs R` the graph is one tile. Its `ref`, `nodes` and `route`
+rows, and the `walk` rows of A, E and F:
+
+```
+#unit  R#0#chr  0  45  tile  0
+R#0#chr  0  45  ref    R#0#chr  0  0  0  6  2,2,2,-2,2,2  6,6,6,6,6,15  1,2,2,2,2,1
+R#0#chr  0  45  nodes  5        2
+R#0#chr  0  45  route  2        .  4
+R#0#chr  0  45  route  -2       6  -4
+R#0#chr  0  45  route  -1       .  3
+R#0#chr  0  45  route  0        .  2
+R#0#chr  0  45  walk   A#1#a    0  0  0  8  2  5:1
+R#0#chr  0  45  walk   E#1#e    0  0  0  7  2  2
+R#0#chr  0  45  walk   F#1#f    0  0  0  7  2  2:1
+```
+
+- R is `>1 >2 >3 >2 >3 >4`. Node 2 is at occurrences 0 and 1, the second
+  and fourth positions of R, and node 3 at the third and fifth
+- Route 0 is `>1` straight to `>3`, route 1 is `>2 >5 >3`, route 2 is `<2`
+  straight to `<3`, and route 3 is `>3` straight to `>4`
+- E takes route 1 at the first `>2` it comes to and lands on the nearest
+  `>3`, the third position of R: `>1 >2 >5 >3 >2 >3 >4`
+- F takes route 1 with `:1`, so it steps along R to the second `>2` before
+  it leaves. Both `>3` are one position of R from there, and the later one
+  is taken: `>1 >2 >3 >2 >5 >3 >4`
+- A takes route 2 flipped, `>3` straight to `>2`, with `:1`. It steps along
+  R to the second `>3`, lands on the nearest `>2`, the fourth position of
+  R, then steps along R to the end: `>1 >2 >3 >2 >3 >2 >3 >4`
 
 ### Exact and chosen
 
