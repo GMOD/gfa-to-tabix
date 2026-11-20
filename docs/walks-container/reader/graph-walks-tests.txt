@@ -112,6 +112,7 @@ structuralForms.test.ts: the auto floor is about 10 px of the window, snapped to
 structuralForms.test.ts: the floor applies to a haplotype's net change across a site, not to each piece
 structuralForms.test.ts: the result is plain data
 structuralForms.test.ts: two marks overlapping by under half of one are not shared
+walkBlocks.test.ts: a block over two abutting ref rows links the step from one to the next, as the walk row does
 walkBlocks.test.ts: a blocks row %s is refused
 walkBlocks.test.ts: a blocks row that does not add up to its abridged row’s hapBp is refused
 walkBlocks.test.ts: a blocks unit without the row of a piece its tile abridges is refused
@@ -185,6 +186,7 @@ walkCounts.test.ts: counts refuse a window past the byte budgets, as a cut does
 walkCounts.test.ts: counts that expand every walk read the bytes an expanded cut of every walk reads, and no piece that only touches own steps
 walkCounts.test.ts: the haplotypes over the window are those with a piece there or a departure over it, out of every haplotype the file holds
 walkCounts.test.ts: under %s a count on a once-passed node of the drawn stretch has reasons %j, and a haplotype count of every haplotype the file holds is exact whatever the header states
+walkCountsTruth.test.ts: %s: a cut of one haplotype with links 'between' lists only the GFA's links, each the counts find between its nodes, and each it walks
 walkCountsTruth.test.ts: %s: no count is above its GFA, an exact one equals it, none but every haplotype of the file is exact unless the file states revisited:i:0, the reasons say why, every node and link of a cut has one, and expanded they read what an expanded cut reads
 walkDeparture.test.ts: a cut attaches the own steps of a departure within attachBp that leaves or rejoins on its drawn stretch
 walkDeparture.test.ts: a departure covers the bases beside its breakpoints, as its record is filed
@@ -248,6 +250,7 @@ walkReader.test.ts: a cut keeps the reference and the haplotypes asked for
 walkReader.test.ts: a cut leaves out the reference's other pass over the window's nodes
 walkReader.test.ts: a cut lists each departure over the window, with the own steps it holds
 walkReader.test.ts: a cut lists no link over a hole in the reference that no walk crosses, where both sides lie in one tile
+walkReader.test.ts: a cut of four haplotypes lists between its nodes every link the file's walks take there
 walkReader.test.ts: a cut of four haplotypes lists the links its fragments walk, and between reference nodes no other
 walkReader.test.ts: a cut on a signal already aborted reads no row
 walkReader.test.ts: a cut over its byte budget by the tiles it fetches to attach advises a narrower window, and that window fits
@@ -259,6 +262,7 @@ walkReader.test.ts: a cut reads the tiles and departure blocks its window overla
 walkReader.test.ts: a cut reads the tiles its window overlaps, and nothing else
 walkReader.test.ts: a cut returns every record whose line overlaps its window, in a hole too: $start-$end
 walkReader.test.ts: a cut whose attach fetches take it past the byte budget attaches none and says so
+walkReader.test.ts: a cut whose keep leaves the reference out lists the reference's link from one tile to the next with links 'between'
 walkReader.test.ts: a cut with no budgets is the cut with WALK_BUDGETS spelled out, and refuses a window past one its caller lowers
 walkReader.test.ts: a cut's drawn stretch takes every pass over the window, not one per node
 walkReader.test.ts: a cut's links run the way a walk along the reference takes them
@@ -326,6 +330,7 @@ walkReader.test.ts: a walk leaving the window is cut there, and its record says 
 walkReader.test.ts: a walk row takes the passes its :k, @k and start@k name, and the defaults where it names none
 walkReader.test.ts: a walk that leaves at the end of a node the window draws gets its own steps where the window holds the base it leaves from: to $end
 walkReader.test.ts: a walk through a 0 bp segment of the reference departs once over it
+walkReader.test.ts: a window inside a hole in the reference returns the jump across it, whether or not the writer cut the walk there
 walkReader.test.ts: a window inside a jump finds the jump in the departure read
 walkReader.test.ts: aborting an expanding cut stops its detail reads
 walkReader.test.ts: an abridged piece starting where the drawn stretch ends is not cut

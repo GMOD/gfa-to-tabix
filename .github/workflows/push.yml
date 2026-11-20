@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: GMOD/graph-walks
-          ref: b0d83788a2990ba72393affcd1741aeb05a64dcc
+          ref: 8ff6c735bea08a1df8fff67e35cb87c3550c4ea9 # v8.0.1
           path: graph-walks
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:

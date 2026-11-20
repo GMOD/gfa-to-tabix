@@ -1343,7 +1343,7 @@ demands every W or P line back step for step, the reference's own lines
 from their `ref` rows with their lengths, and no line more or fewer; it
 shards by path, so it runs on a whole chromosome. <!-- C1 --> A reader
 check, `scripts/graph-walks-rebuild.mjs`, opens every fixture's files with
-@jbrowse/graph-walks 7 in CI, cuts each reference sequence whole with
+@jbrowse/graph-walks 8 in CI, cuts each reference sequence whole with
 every abridged piece expanded and demands every path, placement and
 departure back as the GFA states them, then cuts it again with none
 expanded and demands the same cut, each run off R as its bp. <!-- C1 -->
@@ -1493,7 +1493,7 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
   <!-- C149 -->
 - Which records get an attach fetch is the reader's choice: a record's
   line gives its two ends and its `ownBp` without one.
-  @jbrowse/graph-walks 7 makes one for a record that leaves or rejoins on
+  @jbrowse/graph-walks 8 makes one for a record that leaves or rejoins on
   `D` with own steps within its `attachBp`, and for no other record
 - An attach fetch, for a record whose leave piece or rejoin piece the
   window's read lacks, reads the tiles `ownTiles` names and takes the
@@ -1569,14 +1569,18 @@ e + c)` ([ADR 0010](adr/0010-walks-unit-table.md)):
 ### Readers
 <!-- background -->
 
-- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 7 reads format
-  8, with `WalkReader.open(url)` or
+- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 7 and 8 read
+  format 8, with `WalkReader.open(url)` or
   `WalkReader.fromFilehandles({ data, directory })`. graph-walks 6 reads
   format 7 and refuses an 8 by its number
 - graph-walks writes a cut's links the way round with more `+` ends, as a
   walk along the reference takes them, and with the smaller first handle on
   a tie: a walk `>7>3` gives `L 7 + 3 +`. The file has no link rows; this
   is the reader's output
+- A cut lists the links its walks take. With `links: 'between'`,
+  graph-walks 8 adds the links other walks take between the cut's nodes, as
+  the tiles it reads hold them: a link held in a detail unit the cut
+  doesn't expand, or in a tile it doesn't read, is missing from the list
 - The graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage, ggtubemap and
   the tube map read through @jbrowse/graph-walks

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The consumer-side check of claim C1: @jbrowse/graph-walks 7, the real
+// The consumer-side check of claim C1: @jbrowse/graph-walks 8, the real
 // reader of walk format 8, rebuilds from the walk files the tool writes every path exactly
 // as the GFA states it. Each fixture is built under the option sets of
 // check-walks.sh; each reference sample's file is opened with WalkReader,
@@ -517,7 +517,7 @@ const CUT_OPTIONS = {
   attachBp: Infinity,
   attachFetches: Infinity,
   nodeLimit: Infinity,
-  links: false,
+  links: 'none',
   sequences: true,
 }
 

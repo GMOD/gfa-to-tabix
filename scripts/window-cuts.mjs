@@ -85,7 +85,7 @@ for await (const line of lines) {
           departureByteBudget: Infinity,
           attachBp,
           nodeLimit: Infinity,
-          links: false,
+          links: 'none',
         },
       )
       out.fragments = fragments.map(f => [
