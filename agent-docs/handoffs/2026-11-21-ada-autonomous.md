@@ -104,6 +104,68 @@ queue below, in order, and leave everything pushed and written down.
 - on graph-walks 9: the plugin, sequenceTubeMap, ggtubemap, gfa-to-tabix's CI
 - format 8 frozen; gfa-to-tabix 5.0.0's release notes written
 
+## Progress on ada, 2026-11-21
+
+Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
+`~/work/handoff-1121/<repo>`.
+
+### Landed
+
+- **bandage-core 14.3.0** on npm. main fast-forwarded to cfaac76, Push CI
+  44871362916 green with both consumer jobs; release commit 2b565f0, tag
+  v14.3.0, Publish 44871775615 green (checks, npm, GitHub release).
+- **Plugin 10.4.0** on npm and the store's `latest/`.
+  - d5d2e3e2 pins core `^14.3.0` and recommits `img/tube_map_reads.png`
+    (looked at: same layout, forward red, reverse blue, legend swapped);
+    release commit 0a82b467, tag v10.4.0, Publish 44874037147 green.
+  - On ada (`runs/plugin/`): build, typecheck, typecheck:tests, lint,
+    format, unit 1160 passed / 6 skipped, host-names, host-compat, e2e 50
+    passed / 6 skipped, typos, all 0. Push CI 44873360431 green.
+  - Store: jbrowse-plugin-list b2d55fcb, `latest/package.json` names 10.4.0.
+- **BandageJS** bfa3c0e0 on main: core `^14.3.0`, graph-walks `^9.0.0`.
+  typecheck, lint, format, build, playwright 251 passed, README and tutorial
+  shoots all 0; three PNGs rewritten at 0 px difference, left as committed.
+  Build CI green. Deployed from main by `pnpm run deploy` (a fresh clone
+  has no pre-push hook); the demo's `app.js` sha256 equals the local build.
+- **gfa-to-tabix 5.0.1** (musl + jemalloc): 8621207 and ae8d58a on main,
+  Release 44874117406 green through crates.io and the GitHub release.
+  - fmt, clippy (glibc and musl target) clean; `cargo test` 168 passed;
+    check-links, check-claims 193/193; the 26 outputs of the fixtures
+    identical across 5.0.0 glibc, 5.0.0 musl and the new binary.
+  - The new musl binary's sha256 equals the one measured as `jemalloc`.
+- **early refusal's six mutants** rerun at 5ed3315 (`runs/er-mutants/`):
+  each fails at least one new test.
+
+### In flight
+
+- ggbandage 2038da2 on main (bundle core 14.3.0, graph-walks 9.0.0): ada
+  bundle, lint, format, gallery `--check`, testthat 130 tests / 551
+  expectations / 0 failed. Its gallery is not redrawn here; that is for the
+  laptop.
+- 5.0.1's chr6-sequences rebuild, `runs/rel501-repro/`, against 6e2c7eda…
+  and 463f5f6d….
+- The early-refusal window oracle (`~/work/early-refusal-1120/oracle.log`)
+  and the 8.0.2 one (`~/work/gw-tablecover/check-windows.log`).
+- gfa-to-tabix branch `oracle-gw9` (local): check-windows.sh with the two
+  mutants rewritten, landing once the early-refusal oracle shows both caught.
+- Subagent on graph-walks `superlinear-cut`, from `early-refusal`.
+
+### Decisions
+
+- `tube_map_micb.png` came out changed in the plugin's shoot, without its
+  hover (no tooltip, outline or crosshair). It was reshot three times alone
+  and kept unchanged each time, so it was a hover flake under load, not
+  committed.
+- The musl branch's subagent changed a sentence of `docs/index-format.md`
+  (chrY's "100 s with the release binary"). That file is frozen, so 5.0.1
+  landed without it. The sentence now describes releases up to 5.0.0 and is
+  left for the owner.
+- `open-problems.md` puts chrY's remaining musl gap down to musl's
+  `memcpy` alone, not "memcpy, memcmp and free": in the profile memcmp is
+  as common under glibc (5 against 6 samples), and jemalloc replaces `free`.
+- ggbandage's `gallery.R --check` needs `codetools`, which
+  `~/micromamba/envs/r` lacks; it passes under `~/work/walks8-gates/r-env`.
+
 ## The queue, in order
 
 - **Finish the reader wave (bandage-core 14.3.0).**
