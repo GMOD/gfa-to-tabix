@@ -21,6 +21,9 @@ noodles-core = "0.21.0"
 noodles-csi = "0.62.0"
 noodles-tabix = "0.68.0"
 
+[target.'cfg(target_env = "musl")'.dependencies]
+mimalloc = "0.1.52"
+
 [profile.release]
 opt-level = 3
 lto = true
