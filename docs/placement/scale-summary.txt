@@ -1,0 +1,378 @@
+# Synthetic haplotypes with no switch: 11 of 4536
+
+# Builds: median wall s (range), median peak GB
+464: 43.4 (range 43.3-43.5) s, peak 1.12 GB (1.11-1.12)
+2000: 189.4 (range 189.3-191.7) s, peak 4.07 GB (4.05-4.12)
+5000: 495.6 (range 495.0-500.1) s, peak 9.15 GB (8.96-9.19)
+
+# Files
+464: walk file 59.12 MB, .idx 197 B, header unit 1367 B, table 0.05 MB; blocks 18 units 0.63 MB, departures 593 units 0.89 MB, detail 2468 units 39.34 MB, tile 776 units 18.21 MB
+  detail and blocks units, which a cut maps by name: 2486
+  a blocks unit's compressed bytes: p50 0.02 MB, p90 0.14 MB, p99 0.18 MB, max 0.18 MB
+  a tile unit's compressed bytes: p50 0.03 MB, p90 0.04 MB, p99 0.12 MB, max 0.29 MB
+2000: walk file 463.90 MB, .idx 202 B, header unit 5271 B, table 1.94 MB; blocks 422 units 15.50 MB, departures 593 units 2.31 MB, detail 220055 units 405.71 MB, tile 776 units 38.44 MB
+  detail and blocks units, which a cut maps by name: 220477
+  a blocks unit's compressed bytes: p50 0.03 MB, p90 0.08 MB, p99 0.23 MB, max 0.56 MB
+  a tile unit's compressed bytes: p50 0.07 MB, p90 0.08 MB, p99 0.09 MB, max 0.16 MB
+5000: walk file 1885.27 MB, .idx 206 B, header unit 12833 B, table 13.96 MB; blocks 550 units 66.73 MB, departures 593 units 4.92 MB, detail 1732006 units 1749.56 MB, tile 776 units 50.09 MB
+  detail and blocks units, which a cut maps by name: 1732556
+  a blocks unit's compressed bytes: p50 0.11 MB, p90 0.18 MB, p99 0.52 MB, max 1.25 MB
+  a tile unit's compressed bytes: p50 0.09 MB, p90 0.10 MB, p99 0.12 MB, max 0.17 MB
+464-off: walk file 31.75 MB, .idx 185 B, header unit 1364 B, table 0.02 MB; departures 593 units 0.89 MB, tile 776 units 30.83 MB
+  detail and blocks units, which a cut maps by name: 0
+  a tile unit's compressed bytes: p50 0.03 MB, p90 0.04 MB, p99 0.27 MB, max 4.32 MB
+2000-off: walk file 72.13 MB, .idx 186 B, header unit 5309 B, table 0.02 MB; departures 593 units 2.31 MB, tile 776 units 69.79 MB
+  detail and blocks units, which a cut maps by name: 0
+  a tile unit's compressed bytes: p50 0.07 MB, p90 0.12 MB, p99 0.37 MB, max 7.24 MB
+5000-off: walk file 142.16 MB, .idx 189 B, header unit 12863 B, table 0.02 MB; departures 593 units 4.92 MB, tile 776 units 137.20 MB
+  detail and blocks units, which a cut maps by name: 0
+  a tile unit's compressed bytes: p50 0.17 MB, p90 0.27 MB, p99 0.70 MB, max 8.22 MB
+5000-s4m: walk file 777.51 MB, .idx 204 B, header unit 12862 B, table 1.28 MB; blocks 115 units 11.48 MB, departures 593 units 4.92 MB, detail 149615 units 654.41 MB, tile 776 units 105.41 MB
+  detail and blocks units, which a cut maps by name: 149730
+  a blocks unit's compressed bytes: p50 0.06 MB, p90 0.19 MB, p99 0.84 MB, max 1.09 MB
+  a tile unit's compressed bytes: p50 0.16 MB, p90 0.24 MB, p99 0.30 MB, max 0.38 MB
+5000-scaled: walk file 539.22 MB, .idx 204 B, header unit 12863 B, table 0.24 MB; blocks 18 units 2.92 MB, departures 593 units 4.92 MB, detail 25633 units 414.11 MB, tile 776 units 117.01 MB
+  detail and blocks units, which a cut maps by name: 25651
+  a blocks unit's compressed bytes: p50 0.05 MB, p90 0.75 MB, p99 0.83 MB, max 0.83 MB
+  a tile unit's compressed bytes: p50 0.17 MB, p90 0.27 MB, p99 0.54 MB, max 1.34 MB
+464 -> 2000: x7.85 for x4.31 haplotypes, exponent 1.41; the genome-wide 464 file (1.58 GB) grown by it to 10,000: 120.0 GB
+464 -> 5000: x31.89 for x10.78 haplotypes, exponent 1.46; the genome-wide 464 file (1.58 GB) grown by it to 10,000: 138.3 GB
+464-off -> 2000-off: x2.27 for x4.31 haplotypes, exponent 0.56; the genome-wide 464 file (1.58 GB) grown by it to 10,000: 8.9 GB
+464-off -> 5000-off: x4.48 for x10.78 haplotypes, exponent 0.63; the genome-wide 464 file (1.58 GB) grown by it to 10,000: 11.0 GB
+464 -> 5000-s4m: x13.15 for x10.78 haplotypes, exponent 1.08; the genome-wide 464 file (1.58 GB) grown by it to 10,000: 44.1 GB
+464 -> 5000-scaled: x9.12 for x10.78 haplotypes, exponent 0.93; the genome-wide 464 file (1.58 GB) grown by it to 10,000: 27.5 GB
+
+# Window bytes over the windows with tiles of over 1 kB: median of tiles, blocks, departures; bytesFor (all of them and attach fetches) median, max; tiles gunzipped
+10000 bp, 464: tile 0.03 MB, blocks 0.00 MB, departure 0.00 MB; bytesFor median 0.03 MB, max 0.13 MB; tiles gunzipped median 0.23 MB, 8.1x their compressed bytes (30 windows)
+10000 bp, 2000: tile 0.07 MB, blocks 0.01 MB, departure 0.00 MB; bytesFor median 0.09 MB, max 0.28 MB; tiles gunzipped median 0.56 MB, 8.3x their compressed bytes (30 windows)
+10000 bp, 5000: tile 0.09 MB, blocks 0.09 MB, departure 0.00 MB; bytesFor median 0.21 MB, max 0.53 MB; tiles gunzipped median 0.69 MB, 7.8x their compressed bytes (30 windows)
+10000 bp, 464-off: tile 0.03 MB, blocks 0.00 MB, departure 0.00 MB; bytesFor median 0.03 MB, max 4.07 MB; tiles gunzipped median 0.23 MB, 8.1x their compressed bytes (30 windows)
+10000 bp, 2000-off: tile 0.08 MB, blocks 0.00 MB, departure 0.00 MB; bytesFor median 0.09 MB, max 4.23 MB; tiles gunzipped median 0.70 MB, 8.5x their compressed bytes (30 windows)
+10000 bp, 5000-off: tile 0.19 MB, blocks 0.00 MB, departure 0.00 MB; bytesFor median 0.20 MB, max 4.54 MB; tiles gunzipped median 1.63 MB, 8.6x their compressed bytes (30 windows)
+10000 bp, 5000-s4m: tile 0.18 MB, blocks 0.00 MB, departure 0.00 MB; bytesFor median 0.20 MB, max 0.53 MB; tiles gunzipped median 1.58 MB, 8.6x their compressed bytes (30 windows)
+10000 bp, 5000-scaled: tile 0.18 MB, blocks 0.00 MB, departure 0.00 MB; bytesFor median 0.20 MB, max 0.53 MB; tiles gunzipped median 1.61 MB, 8.6x their compressed bytes (30 windows)
+100000 bp, 464: tile 0.08 MB, blocks 0.00 MB, departure 0.00 MB; bytesFor median 0.09 MB, max 0.43 MB; tiles gunzipped median 0.67 MB, 8.3x their compressed bytes (30 windows)
+100000 bp, 2000: tile 0.21 MB, blocks 0.04 MB, departure 0.01 MB; bytesFor median 0.26 MB, max 0.89 MB; tiles gunzipped median 1.73 MB, 8.2x their compressed bytes (30 windows)
+100000 bp, 5000: tile 0.27 MB, blocks 0.30 MB, departure 0.02 MB; bytesFor median 0.61 MB, max 1.64 MB; tiles gunzipped median 2.08 MB, 7.8x their compressed bytes (30 windows)
+100000 bp, 464-off: tile 0.08 MB, blocks 0.00 MB, departure 0.00 MB; bytesFor median 0.09 MB, max 5.04 MB; tiles gunzipped median 0.67 MB, 8.3x their compressed bytes (30 windows)
+100000 bp, 2000-off: tile 0.24 MB, blocks 0.00 MB, departure 0.01 MB; bytesFor median 0.26 MB, max 5.64 MB; tiles gunzipped median 2.05 MB, 8.5x their compressed bytes (30 windows)
+100000 bp, 5000-off: tile 0.56 MB, blocks 0.00 MB, departure 0.02 MB; bytesFor median 0.59 MB, max 6.79 MB; tiles gunzipped median 4.76 MB, 8.5x their compressed bytes (30 windows)
+100000 bp, 5000-s4m: tile 0.53 MB, blocks 0.00 MB, departure 0.02 MB; bytesFor median 0.59 MB, max 1.70 MB; tiles gunzipped median 4.59 MB, 8.6x their compressed bytes (30 windows)
+100000 bp, 5000-scaled: tile 0.55 MB, blocks 0.00 MB, departure 0.02 MB; bytesFor median 0.59 MB, max 1.72 MB; tiles gunzipped median 4.74 MB, 8.5x their compressed bytes (30 windows)
+1000000 bp, 464: tile 0.46 MB, blocks 0.00 MB, departure 0.02 MB; bytesFor median 0.49 MB, max 1.29 MB; tiles gunzipped median 3.96 MB, 8.3x their compressed bytes (40 windows)
+1000000 bp, 2000: tile 1.15 MB, blocks 0.24 MB, departure 0.05 MB; bytesFor median 1.51 MB, max 2.59 MB; tiles gunzipped median 9.35 MB, 8.2x their compressed bytes (40 windows)
+1000000 bp, 5000: tile 1.52 MB, blocks 1.70 MB, departure 0.10 MB; bytesFor median 3.34 MB, max 5.47 MB; tiles gunzipped median 11.66 MB, 7.5x their compressed bytes (40 windows)
+1000000 bp, 464-off: tile 0.46 MB, blocks 0.00 MB, departure 0.02 MB; bytesFor median 0.49 MB, max 11.88 MB; tiles gunzipped median 3.96 MB, 8.3x their compressed bytes (40 windows)
+1000000 bp, 2000-off: tile 1.41 MB, blocks 0.00 MB, departure 0.05 MB; bytesFor median 1.49 MB, max 17.57 MB; tiles gunzipped median 12.35 MB, 8.4x their compressed bytes (40 windows)
+1000000 bp, 5000-off: tile 3.24 MB, blocks 0.00 MB, departure 0.10 MB; bytesFor median 3.42 MB, max 20.11 MB; tiles gunzipped median 27.92 MB, 8.4x their compressed bytes (40 windows)
+1000000 bp, 5000-s4m: tile 2.97 MB, blocks 0.02 MB, departure 0.10 MB; bytesFor median 3.30 MB, max 5.23 MB; tiles gunzipped median 25.39 MB, 8.5x their compressed bytes (40 windows)
+1000000 bp, 5000-scaled: tile 3.08 MB, blocks 0.00 MB, departure 0.10 MB; bytesFor median 3.34 MB, max 5.28 MB; tiles gunzipped median 27.06 MB, 8.4x their compressed bytes (40 windows)
+
+# Queries: median cut ms (range) over the timed runs, compressed bytes read, browser preset
+20545536 10000 bp all 464: cut 38.8 (range 37.9-39.7) ms, tables 8.0 ms, 0.03 MB, 164707 steps, 3025 nodes, 0 placeholders, load 4.60-5.21; browser: fits
+20545536 10000 bp all 2000: cut 675.9 (range 365.7-875.4) ms, tables 39.2 ms, 0.07 MB, 708972 steps, 2968 nodes, 5096 placeholders, load 4.60-5.21; browser: fits
+20545536 10000 bp all 5000: cut 1452.7 (range 1424.8-1663.2) ms, tables 185.9 ms, 0.15 MB, 1771033 steps, 2287 nodes, 60039 placeholders, load 4.77-5.21; browser: fits
+20545536 10000 bp haps4 464: cut 4.5 (range 4.1-6.0) ms, tables 0.4 ms, 0.03 MB, 1765 steps, 2061 nodes, 0 placeholders, load 4.77-5.21; browser: fits
+20545536 10000 bp haps4 2000: cut 59.9 (range 45.4-60.1) ms, tables 0.4 ms, 0.07 MB, 1765 steps, 2061 nodes, 0 placeholders, load 4.60-5.21; browser: fits
+20545536 10000 bp haps4 5000: cut 716.0 (range 714.7-726.0) ms, tables 0.5 ms, 0.08 MB, 1765 steps, 2061 nodes, 0 placeholders, load 4.93-5.21; browser: fits
+20545536 10000 bp haps4x 464: cut 11.4 (range 3.1-19.4) ms, tables 0.4 ms, 0.03 MB, 1765 steps, 2061 nodes, 0 placeholders, load 4.93-5.21; browser: fits
+20545536 10000 bp haps4x 2000: cut 49.2 (range 46.5-51.0) ms, tables 0.4 ms, 0.07 MB, 1765 steps, 2061 nodes, 0 placeholders, load 4.60-5.21; browser: fits
+20545536 10000 bp haps4x 5000: cut 718.4 (range 713.6-729.1) ms, tables 0.4 ms, 0.08 MB, 1765 steps, 2061 nodes, 0 placeholders, load 4.93-5.21; browser: fits
+20545536 100000 bp all 464: cut 228.0 (range 216.4-304.0) ms, tables 50.9 ms, 0.09 MB, 1511938 steps, 9646 nodes, 0 placeholders, load 4.77-5.39; browser: fits
+20545536 100000 bp all 2000: cut 1046.9 (range 1043.9-1064.6) ms, tables 289.1 ms, 0.27 MB, 6433015 steps, 9099 nodes, 49621 placeholders, load 4.77-5.20; browser: NodeLimitError: Zoom in to about 58.4Kbp, or choose fewer haplotypes, to see the graph
+20545536 100000 bp all 5000: cut 4093.7 (range 4058.6-4123.3) ms, tables 2075.5 ms, 0.55 MB, 15753395 steps, 7589 nodes, 387066 placeholders, load 5.03-5.42; browser: NodeLimitError: Zoom in to about 24.3Kbp, or choose fewer haplotypes, to see the graph
+20545536 100000 bp haps4 464: cut 10.1 (range 10.1-10.2) ms, tables 7.6 ms, 0.09 MB, 16082 steps, 6674 nodes, 0 placeholders, load 4.95-5.39; browser: fits
+20545536 100000 bp haps4 2000: cut 61.0 (range 57.9-64.1) ms, tables 2.5 ms, 0.21 MB, 16082 steps, 6674 nodes, 0 placeholders, load 4.77-5.20; browser: fits
+20545536 100000 bp haps4 5000: cut 787.4 (range 766.5-792.1) ms, tables 3.0 ms, 0.47 MB, 15806 steps, 6612 nodes, 48 placeholders, load 4.77-5.42; browser: fits
+20545536 100000 bp haps4x 464: cut 9.0 (range 8.8-16.3) ms, tables 2.3 ms, 0.09 MB, 16082 steps, 6674 nodes, 0 placeholders, load 5.04-5.39; browser: fits
+20545536 100000 bp haps4x 2000: cut 59.3 (range 58.3-62.5) ms, tables 2.6 ms, 0.21 MB, 16082 steps, 6674 nodes, 0 placeholders, load 4.77-5.20; browser: fits
+20545536 100000 bp haps4x 5000: cut 738.6 (range 732.4-739.7) ms, tables 2.4 ms, 0.26 MB, 16082 steps, 6674 nodes, 0 placeholders, load 4.77-5.42; browser: fits
+20545536 1000000 bp all 464: cut 4122.1 (range 3787.0-4348.0) ms, tables 871.2 ms, 0.83 MB, 16194398 steps, 75108 nodes, 7754 placeholders, load 4.56-5.36; browser: NodeLimitError: Zoom in to about 226Kbp, or choose fewer haplotypes, to see the graph
+20545536 1000000 bp all 2000: cut 42015.1 (range 41907.4-44425.6) ms, tables 9659.2 ms, 1.85 MB, 67220736 steps, 67575 nodes, 951356 placeholders, load 4.88-5.39; browser: NodeLimitError: Zoom in to about 56.1Kbp, or choose fewer haplotypes, to see the graph
+20545536 1000000 bp all 5000: cut 266144.1 (range 263516.3-278898.8) ms, tables 45837.9 ms, 3.78 MB, 165902510 steps, 59178 nodes, 5623210 placeholders, load 4.73-4.88; browser: NodeLimitError: Zoom in to about 664Kbp, or choose fewer haplotypes, to see the graph
+20545536 1000000 bp haps4 464: cut 94.2 (range 92.1-98.4) ms, tables 44.1 ms, 0.59 MB, 171200 steps, 44670 nodes, 113 placeholders, load 4.35-5.85; browser: fits
+20545536 1000000 bp haps4 2000: cut 176.7 (range 162.2-181.0) ms, tables 43.7 ms, 1.58 MB, 167107 steps, 41803 nodes, 1623 placeholders, load 4.88-5.19; browser: fits
+20545536 1000000 bp haps4 5000: cut 1127.5 (range 1126.8-1189.6) ms, tables 52.2 ms, 3.57 MB, 165751 steps, 39577 nodes, 3687 placeholders, load 4.45-5.04; browser: fits
+20545536 1000000 bp haps4x 464: cut 100.2 (range 99.5-100.6) ms, tables 40.7 ms, 0.59 MB, 173233 steps, 44830 nodes, 0 placeholders, load 4.35-5.85; browser: fits
+20545536 1000000 bp haps4x 2000: cut 164.2 (range 158.8-168.9) ms, tables 43.0 ms, 1.31 MB, 173233 steps, 44830 nodes, 0 placeholders, load 4.88-5.39; browser: fits
+20545536 1000000 bp haps4x 5000: cut 900.4 (range 899.4-922.1) ms, tables 40.7 ms, 1.68 MB, 173233 steps, 44830 nodes, 0 placeholders, load 4.45-4.88; browser: fits
+44204032 10000 bp all 464: cut 173.8 (range 151.5-215.4) ms, tables 13.6 ms, 0.03 MB, 190635 steps, 3603 nodes, 0 placeholders, load 4.44-5.78; browser: fits
+44204032 10000 bp all 2000: cut 560.9 (range 508.8-942.8) ms, tables 104.3 ms, 0.12 MB, 778031 steps, 3310 nodes, 31993 placeholders, load 4.44-5.85; browser: fits
+44204032 10000 bp all 5000: cut 1585.2 (range 1576.1-1756.5) ms, tables 434.1 ms, 0.25 MB, 1882114 steps, 2903 nodes, 125311 placeholders, load 4.44-5.85; browser: fits
+44204032 10000 bp haps4 464: cut 8.1 (range 7.8-8.2) ms, tables 1.6 ms, 0.03 MB, 2030 steps, 2693 nodes, 0 placeholders, load 4.44-5.78; browser: fits
+44204032 10000 bp haps4 2000: cut 52.0 (range 51.2-60.6) ms, tables 0.6 ms, 0.12 MB, 1990 steps, 2643 nodes, 50 placeholders, load 4.44-5.85; browser: fits
+44204032 10000 bp haps4 5000: cut 725.3 (range 722.7-736.4) ms, tables 0.6 ms, 0.25 MB, 1910 steps, 2410 nodes, 87 placeholders, load 4.44-5.85; browser: fits
+44204032 10000 bp haps4x 464: cut 7.7 (range 7.6-8.0) ms, tables 1.3 ms, 0.03 MB, 2030 steps, 2693 nodes, 0 placeholders, load 4.44-5.78; browser: fits
+44204032 10000 bp haps4x 2000: cut 48.5 (range 47.6-56.7) ms, tables 0.6 ms, 0.07 MB, 2030 steps, 2693 nodes, 0 placeholders, load 4.44-5.85; browser: fits
+44204032 10000 bp haps4x 5000: cut 735.9 (range 731.9-743.8) ms, tables 0.6 ms, 0.09 MB, 2030 steps, 2693 nodes, 0 placeholders, load 4.44-5.85; browser: fits
+44204032 100000 bp all 464: cut 253.7 (range 245.1-369.6) ms, tables 64.9 ms, 0.11 MB, 1626582 steps, 12862 nodes, 0 placeholders, load 4.45-5.07; browser: fits
+44204032 100000 bp all 2000: cut 1593.1 (range 1563.4-1618.6) ms, tables 817.5 ms, 0.35 MB, 6717972 steps, 11446 nodes, 178876 placeholders, load 4.44-5.78; browser: NodeLimitError: Zoom in to about 55Kbp, or choose fewer haplotypes, to see the graph
+44204032 100000 bp all 5000: cut 5738.7 (range 5547.1-5836.9) ms, tables 3895.8 ms, 0.73 MB, 16386000 steps, 9739 nodes, 720669 placeholders, load 4.88-5.78; browser: NodeLimitError: Zoom in to about 22.9Kbp, or choose fewer haplotypes, to see the graph
+44204032 100000 bp haps4 464: cut 135.8 (range 18.7-153.9) ms, tables 5.1 ms, 0.11 MB, 17265 steps, 9051 nodes, 0 placeholders, load 4.45-5.07; browser: fits
+44204032 100000 bp haps4 2000: cut 66.8 (range 59.4-67.6) ms, tables 3.4 ms, 0.35 MB, 17065 steps, 8606 nodes, 276 placeholders, load 4.45-5.07; browser: fits
+44204032 100000 bp haps4 5000: cut 745.6 (range 741.9-834.9) ms, tables 6.0 ms, 0.73 MB, 16667 steps, 7502 nodes, 557 placeholders, load 4.88-5.78; browser: fits
+44204032 100000 bp haps4x 464: cut 12.5 (range 11.4-13.8) ms, tables 3.1 ms, 0.11 MB, 17265 steps, 9051 nodes, 0 placeholders, load 4.45-5.07; browser: fits
+44204032 100000 bp haps4x 2000: cut 62.4 (range 61.6-64.1) ms, tables 3.1 ms, 0.22 MB, 17265 steps, 9051 nodes, 0 placeholders, load 4.45-5.78; browser: fits
+44204032 100000 bp haps4x 5000: cut 737.4 (range 699.7-823.0) ms, tables 3.3 ms, 0.31 MB, 17265 steps, 9051 nodes, 0 placeholders, load 4.88-5.78; browser: fits
+44204032 1000000 bp all 464: cut 2239.9 (range 2168.9-2296.5) ms, tables 649.9 ms, 0.56 MB, 15228092 steps, 57307 nodes, 0 placeholders, load 4.46-5.49; browser: NodeLimitError: Zoom in to about 244Kbp, or choose fewer haplotypes, to see the graph
+44204032 1000000 bp all 2000: cut 20836.0 (range 19010.5-21261.6) ms, tables 9204.7 ms, 1.83 MB, 63575716 steps, 54281 nodes, 945057 placeholders, load 4.34-5.29; browser: NodeLimitError: Zoom in to about 59.2Kbp, or choose fewer haplotypes, to see the graph
+44204032 1000000 bp all 5000: cut 123464.8 (range 120514.1-129534.3) ms, tables 45987.9 ms, 4.12 MB, 156540603 steps, 47414 nodes, 5819567 placeholders, load 4.33-4.95; browser: NodeLimitError: Zoom in to about 729Kbp, or choose fewer haplotypes, to see the graph
+44204032 1000000 bp haps4 464: cut 75.7 (range 75.2-76.1) ms, tables 49.4 ms, 0.56 MB, 163314 steps, 41244 nodes, 0 placeholders, load 4.46-5.49; browser: fits
+44204032 1000000 bp haps4 2000: cut 201.6 (range 193.5-203.3) ms, tables 46.9 ms, 1.69 MB, 161918 steps, 40132 nodes, 1620 placeholders, load 4.34-5.46; browser: fits
+44204032 1000000 bp haps4 5000: cut 1126.8 (range 1009.4-1187.3) ms, tables 50.3 ms, 3.95 MB, 159913 steps, 37575 nodes, 4469 placeholders, load 4.45-4.91; browser: fits
+44204032 1000000 bp haps4x 464: cut 82.2 (range 81.4-83.0) ms, tables 37.4 ms, 0.56 MB, 163314 steps, 41244 nodes, 0 placeholders, load 4.46-5.49; browser: fits
+44204032 1000000 bp haps4x 2000: cut 160.0 (range 154.3-167.8) ms, tables 42.3 ms, 1.40 MB, 163314 steps, 41244 nodes, 0 placeholders, load 4.34-5.46; browser: fits
+44204032 1000000 bp haps4x 5000: cut 919.6 (range 893.2-942.6) ms, tables 43.4 ms, 1.98 MB, 163314 steps, 41244 nodes, 0 placeholders, load 4.33-4.95; browser: fits
+46694400 10000 bp all 464: cut 97.1 (range 93.3-108.2) ms, tables 9.6 ms, 0.03 MB, 201631 steps, 3651 nodes, 0 placeholders, load 4.77-5.55; browser: fits
+46694400 10000 bp all 2000: cut 349.2 (range 327.0-376.4) ms, tables 112.3 ms, 0.10 MB, 849931 steps, 3402 nodes, 14949 placeholders, load 4.77-5.55; browser: fits
+46694400 10000 bp all 5000: cut 1586.5 (range 1461.9-1587.5) ms, tables 269.9 ms, 0.21 MB, 2108788 steps, 2834 nodes, 87928 placeholders, load 4.77-5.55; browser: fits
+46694400 10000 bp haps4 464: cut 10.5 (range 10.0-10.9) ms, tables 0.5 ms, 0.03 MB, 2165 steps, 2602 nodes, 0 placeholders, load 4.77-5.55; browser: fits
+46694400 10000 bp haps4 2000: cut 75.5 (range 73.2-78.4) ms, tables 1.0 ms, 0.07 MB, 2165 steps, 2602 nodes, 0 placeholders, load 4.77-5.55; browser: fits
+46694400 10000 bp haps4 5000: cut 734.9 (range 718.0-783.1) ms, tables 0.6 ms, 0.21 MB, 2165 steps, 2499 nodes, 45 placeholders, load 4.77-5.55; browser: fits
+46694400 10000 bp haps4x 464: cut 3.8 (range 3.8-3.9) ms, tables 0.5 ms, 0.03 MB, 2165 steps, 2602 nodes, 0 placeholders, load 4.77-5.55; browser: fits
+46694400 10000 bp haps4x 2000: cut 53.1 (range 52.9-54.7) ms, tables 0.6 ms, 0.07 MB, 2165 steps, 2602 nodes, 0 placeholders, load 4.77-5.55; browser: fits
+46694400 10000 bp haps4x 5000: cut 775.8 (range 734.4-797.1) ms, tables 0.6 ms, 0.09 MB, 2165 steps, 2602 nodes, 0 placeholders, load 4.63-5.55; browser: fits
+46694400 100000 bp all 464: cut 393.5 (range 321.2-393.6) ms, tables 66.5 ms, 0.12 MB, 1731310 steps, 14747 nodes, 0 placeholders, load 4.63-5.16; browser: fits
+46694400 100000 bp all 2000: cut 1397.9 (range 1390.3-1422.9) ms, tables 575.9 ms, 0.36 MB, 7298420 steps, 11729 nodes, 126893 placeholders, load 4.63-5.16; browser: NodeLimitError: Zoom in to about 52.7Kbp, or choose fewer haplotypes, to see the graph
+46694400 100000 bp all 5000: cut 5240.9 (range 5071.9-5369.6) ms, tables 3307.0 ms, 0.74 MB, 18101669 steps, 10291 nodes, 578583 placeholders, load 4.58-5.55; browser: NodeLimitError: Zoom in to about 21.3Kbp, or choose fewer haplotypes, to see the graph
+46694400 100000 bp haps4 464: cut 20.5 (range 13.1-24.8) ms, tables 3.8 ms, 0.12 MB, 18654 steps, 9784 nodes, 0 placeholders, load 4.63-5.16; browser: fits
+46694400 100000 bp haps4 2000: cut 64.3 (range 64.1-72.8) ms, tables 3.0 ms, 0.33 MB, 18639 steps, 8531 nodes, 178 placeholders, load 4.63-5.16; browser: fits
+46694400 100000 bp haps4 5000: cut 807.1 (range 776.5-813.3) ms, tables 4.0 ms, 0.74 MB, 18603 steps, 8036 nodes, 415 placeholders, load 4.63-5.31; browser: fits
+46694400 100000 bp haps4x 464: cut 12.3 (range 12.1-12.7) ms, tables 3.0 ms, 0.12 MB, 18654 steps, 9784 nodes, 0 placeholders, load 4.63-5.16; browser: fits
+46694400 100000 bp haps4x 2000: cut 66.2 (range 65.8-66.4) ms, tables 3.0 ms, 0.22 MB, 18654 steps, 9784 nodes, 0 placeholders, load 4.63-5.16; browser: fits
+46694400 100000 bp haps4x 5000: cut 741.4 (range 727.1-745.6) ms, tables 3.1 ms, 0.30 MB, 18654 steps, 9784 nodes, 0 placeholders, load 4.63-5.34; browser: fits
+46694400 1000000 bp all 464: cut 2860.4 (range 2814.2-3176.4) ms, tables 1519.5 ms, 0.65 MB, 18450925 steps, 78170 nodes, 29437 placeholders, load 4.77-5.31; browser: NodeLimitError: Zoom in to about 196Kbp, or choose fewer haplotypes, to see the graph
+46694400 1000000 bp all 2000: cut 28006.6 (range 27451.6-28228.0) ms, tables 14914.6 ms, 1.79 MB, 74157970 steps, 63193 nodes, 1492801 placeholders, load 5.03-5.25; browser: NodeLimitError: Zoom in to about 50.9Kbp, or choose fewer haplotypes, to see the graph
+46694400 1000000 bp all 5000: cut 152676.4 (range 151454.6-162032.7) ms, tables 58148.9 ms, 3.84 MB, 182106121 steps, 54281 nodes, 6506743 placeholders, load 4.71-5.36; browser: NodeLimitError: Zoom in to about 598Kbp, or choose fewer haplotypes, to see the graph
+46694400 1000000 bp haps4 464: cut 118.7 (range 90.2-120.9) ms, tables 50.8 ms, 0.63 MB, 199608 steps, 51062 nodes, 0 placeholders, load 4.80-5.31; browser: fits
+46694400 1000000 bp haps4 2000: cut 225.4 (range 217.3-283.9) ms, tables 116.8 ms, 1.72 MB, 187410 steps, 43836 nodes, 3808 placeholders, load 5.03-5.25; browser: fits
+46694400 1000000 bp haps4 5000: cut 1160.8 (range 1148.9-1209.2) ms, tables 57.5 ms, 3.84 MB, 186494 steps, 42722 nodes, 4977 placeholders, load 4.71-5.14; browser: fits
+46694400 1000000 bp haps4x 464: cut 95.5 (range 90.1-105.9) ms, tables 54.7 ms, 0.63 MB, 199608 steps, 51062 nodes, 0 placeholders, load 4.77-5.31; browser: fits
+46694400 1000000 bp haps4x 2000: cut 182.1 (range 174.7-187.0) ms, tables 50.5 ms, 1.17 MB, 199608 steps, 51062 nodes, 0 placeholders, load 5.03-5.25; browser: fits
+46694400 1000000 bp haps4x 5000: cut 890.5 (range 889.2-893.4) ms, tables 54.4 ms, 1.67 MB, 199608 steps, 51062 nodes, 0 placeholders, load 4.71-5.36; browser: fits
+
+# Compact: per size, set and graph, the lowest and highest of the three windows' median cut ms, and the widest run spread (max-min over median)
+10000 bp all 464: 39-174 ms, widest spread 37%, runs 3
+10000 bp all 2000: 349-676 ms, widest spread 77%, runs 3
+10000 bp all 5000: 1453-1586 ms, widest spread 16%, runs 3
+10000 bp haps4 464: 4-10 ms, widest spread 42%, runs 3
+10000 bp haps4 2000: 52-76 ms, widest spread 25%, runs 3
+10000 bp haps4 5000: 716-735 ms, widest spread 9%, runs 3
+10000 bp haps4x 464: 4-11 ms, widest spread 143%, runs 3
+10000 bp haps4x 2000: 48-53 ms, widest spread 19%, runs 3
+10000 bp haps4x 5000: 718-776 ms, widest spread 8%, runs 3
+100000 bp all 464: 228-394 ms, widest spread 49%, runs 3
+100000 bp all 2000: 1047-1593 ms, widest spread 3%, runs 3
+100000 bp all 5000: 4094-5739 ms, widest spread 6%, runs 3
+100000 bp haps4 464: 10-136 ms, widest spread 100%, runs 3
+100000 bp haps4 2000: 61-67 ms, widest spread 14%, runs 3
+100000 bp haps4 5000: 746-807 ms, widest spread 12%, runs 3
+100000 bp haps4x 464: 9-12 ms, widest spread 83%, runs 3
+100000 bp haps4x 2000: 59-66 ms, widest spread 7%, runs 3
+100000 bp haps4x 5000: 737-741 ms, widest spread 17%, runs 3
+1000000 bp all 464: 2240-4122 ms, widest spread 14%, runs 3
+1000000 bp all 2000: 20836-42015 ms, widest spread 11%, runs 3
+1000000 bp all 5000: 123465-266144 ms, widest spread 7%, runs 3
+1000000 bp haps4 464: 76-119 ms, widest spread 26%, runs 3
+1000000 bp haps4 2000: 177-225 ms, widest spread 30%, runs 3
+1000000 bp haps4 5000: 1127-1161 ms, widest spread 16%, runs 3
+1000000 bp haps4x 464: 82-100 ms, widest spread 17%, runs 3
+1000000 bp haps4x 2000: 160-182 ms, widest spread 8%, runs 3
+1000000 bp haps4x 5000: 890-920 ms, widest spread 5%, runs 3
+
+# Untimed pass (scale-query-untimed.tsv and scale-query-alt-untimed.tsv, one cut each, the machine loaded): compressed bytes read, ms, browser preset
+20545536 10000 bp haps4 464: 0.03 MB, cut 10 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4x 464: 0.03 MB, cut 8 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp all 464: 0.03 MB, cut 55 ms, 164707 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4 2000: 0.07 MB, cut 64 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4x 2000: 0.07 MB, cut 54 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp all 2000: 0.07 MB, cut 269 ms, 708972 steps, 5096 placeholders; browser: fits
+20545536 10000 bp haps4 5000: 0.08 MB, cut 784 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4x 5000: 0.08 MB, cut 760 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp all 5000: 0.15 MB, cut 1534 ms, 1771033 steps, 60039 placeholders; browser: fits
+20545536 10000 bp haps4 2000-off: 0.07 MB, cut 5 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4x 2000-off: 0.07 MB, cut 5 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp all 2000-off: 0.07 MB, cut 277 ms, 709759 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4 5000-s4m: 0.17 MB, cut 56 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4x 5000-s4m: 0.17 MB, cut 61 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp all 5000-s4m: 0.17 MB, cut 830 ms, 1774301 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4 464: 0.09 MB, cut 17 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4x 464: 0.09 MB, cut 17 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp all 464: 0.09 MB, cut 350 ms, 1511938 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4 2000: 0.21 MB, cut 65 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4x 2000: 0.21 MB, cut 63 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp all 2000: 0.27 MB, cut 1110 ms, 6433015 steps, 49621 placeholders; browser: NodeLimitError: Zoom in to about 58.4Kbp, or choose fewer ha
+20545536 100000 bp haps4 5000: 0.47 MB, cut 769 ms, 15806 steps, 48 placeholders; browser: fits
+20545536 100000 bp haps4x 5000: 0.26 MB, cut 761 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp all 5000: 0.55 MB, cut 4446 ms, 15753395 steps, 387066 placeholders; browser: NodeLimitError: Zoom in to about 24.3Kbp, or choose fewer ha
+20545536 100000 bp haps4 2000-off: 0.26 MB, cut 18 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4x 2000-off: 0.26 MB, cut 14 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp all 2000-off: 0.26 MB, cut 966 ms, 6516156 steps, 0 placeholders; browser: NodeLimitError: Zoom in to about 57Kbp, or choose fewer hapl
+20545536 100000 bp haps4 5000-s4m: 0.60 MB, cut 98 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4x 5000-s4m: 0.60 MB, cut 76 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp all 5000-s4m: 0.60 MB, cut 2620 ms, 16292562 steps, 0 placeholders; browser: NodeLimitError: Zoom in to about 22.8Kbp, or choose fewer ha
+20545536 1000000 bp haps4 464: 0.59 MB, cut 90 ms, 171200 steps, 113 placeholders; browser: fits
+20545536 1000000 bp haps4x 464: 0.59 MB, cut 96 ms, 173233 steps, 0 placeholders; browser: fits
+20545536 1000000 bp all 464: 0.83 MB, cut 4239 ms, 16194398 steps, 7754 placeholders; browser: NodeLimitError: Zoom in to about 226Kbp, or choose fewer hap
+20545536 1000000 bp haps4 2000: 1.58 MB, cut 224 ms, 167107 steps, 1623 placeholders; browser: fits
+20545536 1000000 bp haps4x 2000: 1.31 MB, cut 163 ms, 173233 steps, 0 placeholders; browser: fits
+20545536 1000000 bp all 2000: 1.85 MB, cut 42840 ms, 67220736 steps, 951356 placeholders; browser: NodeLimitError: Zoom in to about 56.1Kbp, or choose fewer ha
+20545536 1000000 bp haps4 5000: 3.57 MB, cut 1030 ms, 165751 steps, 3687 placeholders; browser: fits
+20545536 1000000 bp haps4x 5000: 1.68 MB, cut 914 ms, 173233 steps, 0 placeholders; browser: fits
+20545536 1000000 bp all 5000: 3.78 MB, cut 282946 ms, 165902510 steps, 5623210 placeholders; browser: NodeLimitError: Zoom in to about 664Kbp, or choose fewer hap
+20545536 1000000 bp haps4 2000-off: 1.74 MB, cut 130 ms, 173233 steps, 0 placeholders; browser: fits
+20545536 1000000 bp haps4x 2000-off: 1.74 MB, cut 128 ms, 173233 steps, 0 placeholders; browser: fits
+20545536 1000000 bp all 2000-off: 2.62 MB, cut 20944 ms, 70348361 steps, 0 placeholders; browser: NodeLimitError: Zoom in to about 51.6Kbp, or choose fewer ha
+20545536 1000000 bp haps4 5000-s4m: 3.81 MB, cut 359 ms, 167747 steps, 523 placeholders; browser: fits
+20545536 1000000 bp haps4x 5000-s4m: 3.59 MB, cut 294 ms, 173233 steps, 0 placeholders; browser: fits
+20545536 1000000 bp all 5000-s4m: 4.07 MB, cut 118922 ms, 169674073 steps, 738152 placeholders; browser: NodeLimitError: Zoom in to about 533Kbp, or choose fewer hap
+44204032 10000 bp haps4 464: 0.03 MB, cut 4 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4x 464: 0.03 MB, cut 4 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp all 464: 0.03 MB, cut 271 ms, 190635 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4 2000: 0.12 MB, cut 49 ms, 1990 steps, 50 placeholders; browser: fits
+44204032 10000 bp haps4x 2000: 0.07 MB, cut 41 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp all 2000: 0.12 MB, cut 464 ms, 778031 steps, 31993 placeholders; browser: fits
+44204032 10000 bp haps4 5000: 0.25 MB, cut 668 ms, 1910 steps, 87 placeholders; browser: fits
+44204032 10000 bp haps4x 5000: 0.09 MB, cut 623 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp all 5000: 0.25 MB, cut 1393 ms, 1882114 steps, 125311 placeholders; browser: fits
+44204032 10000 bp haps4 2000-off: 0.10 MB, cut 9 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4x 2000-off: 0.10 MB, cut 9 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp all 2000-off: 0.10 MB, cut 378 ms, 807866 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4 5000-s4m: 0.21 MB, cut 51 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4x 5000-s4m: 0.21 MB, cut 43 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp all 5000-s4m: 0.23 MB, cut 993 ms, 1995526 steps, 15981 placeholders; browser: fits
+44204032 100000 bp haps4 464: 0.11 MB, cut 15 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp haps4x 464: 0.11 MB, cut 15 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp all 464: 0.11 MB, cut 256 ms, 1626582 steps, 0 placeholders; browser: fits
+44204032 100000 bp haps4 2000: 0.35 MB, cut 57 ms, 17065 steps, 276 placeholders; browser: fits
+44204032 100000 bp haps4x 2000: 0.22 MB, cut 69 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp all 2000: 0.35 MB, cut 1572 ms, 6717972 steps, 178876 placeholders; browser: NodeLimitError: Zoom in to about 55Kbp, or choose fewer hapl
+44204032 100000 bp haps4 5000: 0.73 MB, cut 725 ms, 16667 steps, 557 placeholders; browser: fits
+44204032 100000 bp haps4x 5000: 0.31 MB, cut 727 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp all 5000: 0.73 MB, cut 5575 ms, 16386000 steps, 720669 placeholders; browser: NodeLimitError: Zoom in to about 22.9Kbp, or choose fewer ha
+44204032 100000 bp haps4 2000-off: 0.32 MB, cut 18 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp haps4x 2000-off: 0.32 MB, cut 17 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp all 2000-off: 0.32 MB, cut 1108 ms, 6888484 steps, 0 placeholders; browser: NodeLimitError: Zoom in to about 52.5Kbp, or choose fewer ha
+44204032 100000 bp haps4 5000-s4m: 0.71 MB, cut 94 ms, 17265 steps, 20 placeholders; browser: fits
+44204032 100000 bp haps4x 5000-s4m: 0.66 MB, cut 72 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp all 5000-s4m: 0.73 MB, cut 3351 ms, 17042174 steps, 110512 placeholders; browser: NodeLimitError: Zoom in to about 21.3Kbp, or choose fewer ha
+44204032 1000000 bp haps4 464: 0.56 MB, cut 70 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp haps4x 464: 0.56 MB, cut 143 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp all 464: 0.56 MB, cut 1830 ms, 15228092 steps, 0 placeholders; browser: NodeLimitError: Zoom in to about 244Kbp, or choose fewer hap
+44204032 1000000 bp haps4 2000: 1.69 MB, cut 164 ms, 161918 steps, 1620 placeholders; browser: fits
+44204032 1000000 bp haps4x 2000: 1.40 MB, cut 194 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp all 2000: 1.83 MB, cut 18488 ms, 63575716 steps, 945057 placeholders; browser: NodeLimitError: Zoom in to about 59.2Kbp, or choose fewer ha
+44204032 1000000 bp haps4 5000: 3.95 MB, cut 872 ms, 159913 steps, 4469 placeholders; browser: fits
+44204032 1000000 bp haps4x 5000: 1.98 MB, cut 788 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp all 5000: 4.12 MB, cut 124266 ms, 156540603 steps, 5819567 placeholders; browser: NodeLimitError: Zoom in to about 729Kbp, or choose fewer hap
+44204032 1000000 bp haps4 2000-off: 1.72 MB, cut 136 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp haps4x 2000-off: 1.72 MB, cut 132 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp all 2000-off: 1.72 MB, cut 8421 ms, 64488756 steps, 0 placeholders; browser: NodeLimitError: Zoom in to about 57.7Kbp, or choose fewer ha
+44204032 1000000 bp haps4 5000-s4m: 3.93 MB, cut 422 ms, 162723 steps, 76 placeholders; browser: fits
+44204032 1000000 bp haps4x 5000-s4m: 3.89 MB, cut 330 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp all 5000-s4m: 3.95 MB, cut 28422 ms, 159502126 steps, 229368 placeholders; browser: NodeLimitError: Zoom in to about 598Kbp, or choose fewer hap
+46694400 10000 bp haps4 464: 0.03 MB, cut 4 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4x 464: 0.03 MB, cut 3 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp all 464: 0.03 MB, cut 223 ms, 201631 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4 2000: 0.07 MB, cut 47 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4x 2000: 0.07 MB, cut 46 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp all 2000: 0.10 MB, cut 361 ms, 849931 steps, 14949 placeholders; browser: fits
+46694400 10000 bp haps4 5000: 0.21 MB, cut 758 ms, 2165 steps, 45 placeholders; browser: fits
+46694400 10000 bp haps4x 5000: 0.09 MB, cut 736 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp all 5000: 0.21 MB, cut 1550 ms, 2108788 steps, 87928 placeholders; browser: fits
+46694400 10000 bp haps4 2000-off: 0.09 MB, cut 5 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4x 2000-off: 0.09 MB, cut 5 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp all 2000-off: 0.09 MB, cut 378 ms, 852054 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4 5000-s4m: 0.21 MB, cut 74 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4x 5000-s4m: 0.21 MB, cut 94 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp all 5000-s4m: 0.21 MB, cut 1072 ms, 2118273 steps, 0 placeholders; browser: fits
+46694400 100000 bp haps4 464: 0.12 MB, cut 12 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp haps4x 464: 0.12 MB, cut 13 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp all 464: 0.12 MB, cut 271 ms, 1731310 steps, 0 placeholders; browser: fits
+46694400 100000 bp haps4 2000: 0.33 MB, cut 61 ms, 18639 steps, 178 placeholders; browser: fits
+46694400 100000 bp haps4x 2000: 0.22 MB, cut 77 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp all 2000: 0.36 MB, cut 1520 ms, 7298420 steps, 126893 placeholders; browser: NodeLimitError: Zoom in to about 52.7Kbp, or choose fewer ha
+46694400 100000 bp haps4 5000: 0.74 MB, cut 767 ms, 18603 steps, 415 placeholders; browser: fits
+46694400 100000 bp haps4x 5000: 0.30 MB, cut 758 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp all 5000: 0.74 MB, cut 5668 ms, 18101669 steps, 578583 placeholders; browser: NodeLimitError: Zoom in to about 21.3Kbp, or choose fewer ha
+46694400 100000 bp haps4 2000-off: 0.35 MB, cut 160 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp haps4x 2000-off: 0.35 MB, cut 22 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp all 2000-off: 0.35 MB, cut 1161 ms, 7317057 steps, 0 placeholders; browser: NodeLimitError: Zoom in to about 52.4Kbp, or choose fewer ha
+46694400 100000 bp haps4 5000-s4m: 0.76 MB, cut 128 ms, 18646 steps, 102 placeholders; browser: fits
+46694400 100000 bp haps4x 5000-s4m: 0.66 MB, cut 87 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp all 5000-s4m: 0.76 MB, cut 3285 ms, 18180809 steps, 54342 placeholders; browser: NodeLimitError: Zoom in to about 21.1Kbp, or choose fewer ha
+46694400 1000000 bp haps4 464: 0.63 MB, cut 104 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp haps4x 464: 0.63 MB, cut 91 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp all 464: 0.65 MB, cut 3056 ms, 18450925 steps, 29437 placeholders; browser: NodeLimitError: Zoom in to about 196Kbp, or choose fewer hap
+46694400 1000000 bp haps4 2000: 1.72 MB, cut 264 ms, 187410 steps, 3808 placeholders; browser: fits
+46694400 1000000 bp haps4x 2000: 1.17 MB, cut 197 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp all 2000: 1.79 MB, cut 30601 ms, 74157970 steps, 1492801 placeholders; browser: NodeLimitError: Zoom in to about 50.9Kbp, or choose fewer ha
+46694400 1000000 bp haps4 5000: 3.84 MB, cut 1115 ms, 186494 steps, 4977 placeholders; browser: fits
+46694400 1000000 bp haps4x 5000: 1.67 MB, cut 924 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp all 5000: 3.84 MB, cut 171096 ms, 182106121 steps, 6506743 placeholders; browser: NodeLimitError: Zoom in to about 598Kbp, or choose fewer hap
+46694400 1000000 bp haps4 2000-off: 1.78 MB, cut 141 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp haps4x 2000-off: 1.78 MB, cut 465 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp all 2000-off: 1.78 MB, cut 11227 ms, 79390334 steps, 0 placeholders; browser: NodeLimitError: Zoom in to about 44.9Kbp, or choose fewer ha
+46694400 1000000 bp haps4 5000-s4m: 3.73 MB, cut 400 ms, 191563 steps, 1642 placeholders; browser: fits
+46694400 1000000 bp haps4x 5000-s4m: 3.34 MB, cut 250 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp all 5000-s4m: 3.76 MB, cut 59542 ms, 187364009 steps, 1438701 placeholders; browser: NodeLimitError: Zoom in to about 467Kbp, or choose fewer hap
+20545536 10000 bp haps4 5000-off: 0.17 MB, cut 26 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4x 5000-off: 0.17 MB, cut 21 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4 5000-scaled: 0.17 MB, cut 31 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 10000 bp haps4x 5000-scaled: 0.17 MB, cut 26 ms, 1765 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4 5000-off: 0.60 MB, cut 48 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4x 5000-off: 0.60 MB, cut 48 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4 5000-scaled: 0.60 MB, cut 70 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 100000 bp haps4x 5000-scaled: 0.60 MB, cut 54 ms, 16082 steps, 0 placeholders; browser: fits
+20545536 1000000 bp haps4 5000-off: 4.00 MB, cut 342 ms, 173233 steps, 0 placeholders; browser: fits
+20545536 1000000 bp haps4x 5000-off: 4.00 MB, cut 306 ms, 173233 steps, 0 placeholders; browser: fits
+20545536 1000000 bp haps4 5000-scaled: 3.98 MB, cut 345 ms, 171200 steps, 113 placeholders; browser: fits
+20545536 1000000 bp haps4x 5000-scaled: 3.96 MB, cut 339 ms, 173233 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4 5000-off: 0.23 MB, cut 15 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4x 5000-off: 0.23 MB, cut 15 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4 5000-scaled: 0.23 MB, cut 20 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 10000 bp haps4x 5000-scaled: 0.23 MB, cut 20 ms, 2030 steps, 0 placeholders; browser: fits
+44204032 100000 bp haps4 5000-off: 0.74 MB, cut 52 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp haps4x 5000-off: 0.74 MB, cut 46 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp haps4 5000-scaled: 0.74 MB, cut 54 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 100000 bp haps4x 5000-scaled: 0.74 MB, cut 59 ms, 17265 steps, 0 placeholders; browser: fits
+44204032 1000000 bp haps4 5000-off: 3.97 MB, cut 311 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp haps4x 5000-off: 3.97 MB, cut 314 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp haps4 5000-scaled: 3.97 MB, cut 323 ms, 163314 steps, 0 placeholders; browser: fits
+44204032 1000000 bp haps4x 5000-scaled: 3.97 MB, cut 309 ms, 163314 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4 5000-off: 0.21 MB, cut 13 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4x 5000-off: 0.21 MB, cut 12 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4 5000-scaled: 0.21 MB, cut 19 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 10000 bp haps4x 5000-scaled: 0.21 MB, cut 17 ms, 2165 steps, 0 placeholders; browser: fits
+46694400 100000 bp haps4 5000-off: 0.81 MB, cut 45 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp haps4x 5000-off: 0.81 MB, cut 43 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp haps4 5000-scaled: 0.81 MB, cut 50 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 100000 bp haps4x 5000-scaled: 0.81 MB, cut 49 ms, 18654 steps, 0 placeholders; browser: fits
+46694400 1000000 bp haps4 5000-off: 3.93 MB, cut 313 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp haps4x 5000-off: 3.93 MB, cut 325 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp haps4 5000-scaled: 3.80 MB, cut 298 ms, 199608 steps, 0 placeholders; browser: fits
+46694400 1000000 bp haps4x 5000-scaled: 3.80 MB, cut 316 ms, 199608 steps, 0 placeholders; browser: fits
+
+# Distinct walk rows per tile (median over the tiles with rows) / rows
+464 all: 459 distinct of 463 rows (30 tiles)
+464 real116: 116 distinct of 116 rows (28 tiles)
+464 real231: 230 distinct of 231 rows (28 tiles)
+464 real462: 459 distinct of 462 rows (25 tiles)
+464 real58: 58 distinct of 58 rows (29 tiles)
+2000 all: 1279 distinct of 1778 rows (30 tiles)
+2000 real116: 116 distinct of 116 rows (28 tiles)
+2000 real231: 230 distinct of 231 rows (27 tiles)
+2000 real462: 458 distinct of 462 rows (7 tiles)
+2000 real58: 58 distinct of 58 rows (28 tiles)
+5000 all: 1153 distinct of 1868 rows (30 tiles)
+5000 real116: 116 distinct of 116 rows (25 tiles)
+5000 real231: 226 distinct of 231 rows (2 tiles)
+5000 real58: 58 distinct of 58 rows (28 tiles)
+5000 syn1536: 1130 distinct of 1536 rows (18 tiles)
+
+# Tiles split by row kind and into 50 groups (scale-rowsplit.tsv), medians over the tiles of over 1 kB, bytes deflated
+464: tile 26.5 kB, shared rows 3.9 kB, walk and abridged rows 21.3 kB, as 50 groups 41.2 kB; shared rows and 4 average groups 7.1 kB; the 4 kept haplotypes' groups (4) 7.0 kB; 463 walk and abridged rows, 0 abridged
+2000: tile 67.5 kB, shared rows 3.9 kB, walk and abridged rows 63.1 kB, as 50 groups 101.6 kB; shared rows and 4 average groups 11.9 kB; the 4 kept haplotypes' groups (3) 10.5 kB; 1993 walk and abridged rows, 195 abridged
+5000: tile 86.1 kB, shared rows 3.3 kB, walk and abridged rows 81.9 kB, as 50 groups 122.1 kB; shared rows and 4 average groups 13.6 kB; the 4 kept haplotypes' groups (2) 10.4 kB; 4974 walk and abridged rows, 3025 abridged
+464-off: tile 26.5 kB, shared rows 3.9 kB, walk and abridged rows 21.9 kB, as 50 groups 42.0 kB; shared rows and 4 average groups 7.1 kB; the 4 kept haplotypes' groups (4) 7.0 kB; 463 walk and abridged rows, 0 abridged
+5000-off: tile 170.6 kB, shared rows 3.9 kB, walk and abridged rows 165.0 kB, as 50 groups 214.7 kB; shared rows and 4 average groups 21.5 kB; the 4 kept haplotypes' groups (2) 14.3 kB; 4974 walk and abridged rows, 0 abridged

@@ -1,0 +1,67 @@
+# MC chr22 walk files (GRCh38) at 464 real haplotypes and the 2,000 and 5,000 haplotype
+# graphs of scale-synth.py, by gfa-to-tabix 5.0.1's release binary on ada (i9-12900K, 24
+# threads, shared), 2026-11-21: three interleaved rounds, each run pinned to CPUs 0-15, under
+# a 64 GB cap, started at a 1-minute load below 6 (other sessions' jobs held it above 3
+# throughout), every output's sha256 recorded. docs/placement/scripts/scale-build.sh
+gfa-to-tabix 5.0.1
+b49f5f980ddfd1afeb622891ac6f8f109c82a6de89136e47265783a373d9eb36  bin/gfa-to-tabix-x86_64-unknown-linux-musl/gfa-to-tabix
+input 464: 1066653611 bytes
+input 2000: 6282339255 bytes
+input 5000: 15625031701 bytes
+load before: 3.91 5.91 6.86
+464 round 1: 43.45 s wall, 93.15 s user, 3.93 s system, 1108928 KB peak
+load before: 4.64 5.83 6.79
+2000 round 1: 189.27 s wall, 471.30 s user, 20.30 s system, 4068472 KB peak
+load before: 5.01 5.58 6.46
+5000 round 1: 495.04 s wall, 1368.38 s user, 71.51 s system, 9192992 KB peak
+load before: 5.35 6.48 6.39
+464 round 2: 43.28 s wall, 92.73 s user, 3.94 s system, 1120448 KB peak
+load before: 5.38 6.34 6.35
+2000 round 2: 189.42 s wall, 471.59 s user, 20.34 s system, 4117412 KB peak
+load before: 5.16 5.73 6.09
+5000 round 2: 495.60 s wall, 1366.55 s user, 71.59 s system, 9150164 KB peak
+load before: 5.95 6.05 5.96
+464 round 3: 43.43 s wall, 92.81 s user, 3.97 s system, 1119244 KB peak
+load before: 5.92 6.04 5.96
+2000 round 3: 191.74 s wall, 472.64 s user, 19.65 s system, 4046952 KB peak
+load before: 5.36 6.07 5.99
+5000 round 3: 500.14 s wall, 1371.77 s user, 71.21 s system, 8958908 KB peak
+load after: 8.49 7.23 6.46
+#
+# sizes and sha256 of each round's outputs
+464 round 1 59120815 af396b59ade608c2cacdd6ef17fc11313bb97743552aceb9283bde6ef8768493 GRCh38.walks.gz
+464 round 1 197 fa8dbf682f9bbb992395aa73c748f09a84a4b112386f6bfef0fb5edd36e24633 GRCh38.walks.gz.idx
+2000 round 1 463897544 87c39ea17914d204dc542f3ee8a242bf4e5f59922911919c446bfc6cc85a287d GRCh38.walks.gz
+2000 round 1 202 f7b7aeec85cfc421ea87b77c11f4354eaccf2e138e7c9be0390f1e7974de9c97 GRCh38.walks.gz.idx
+5000 round 1 1885271374 ec1290106b7541369bbef882ad8d751cb8bc7aa80304555c7be969f9b2ebb239 GRCh38.walks.gz
+5000 round 1 206 8a1cc12797da2f1d8784e9f9759f68c864a48c4c7f7acd02339a0edfb50099c0 GRCh38.walks.gz.idx
+464 round 2 59120815 af396b59ade608c2cacdd6ef17fc11313bb97743552aceb9283bde6ef8768493 GRCh38.walks.gz
+464 round 2 197 fa8dbf682f9bbb992395aa73c748f09a84a4b112386f6bfef0fb5edd36e24633 GRCh38.walks.gz.idx
+2000 round 2 463897544 87c39ea17914d204dc542f3ee8a242bf4e5f59922911919c446bfc6cc85a287d GRCh38.walks.gz
+2000 round 2 202 f7b7aeec85cfc421ea87b77c11f4354eaccf2e138e7c9be0390f1e7974de9c97 GRCh38.walks.gz.idx
+5000 round 2 1885271374 ec1290106b7541369bbef882ad8d751cb8bc7aa80304555c7be969f9b2ebb239 GRCh38.walks.gz
+5000 round 2 206 8a1cc12797da2f1d8784e9f9759f68c864a48c4c7f7acd02339a0edfb50099c0 GRCh38.walks.gz.idx
+464 round 3 59120815 af396b59ade608c2cacdd6ef17fc11313bb97743552aceb9283bde6ef8768493 GRCh38.walks.gz
+464 round 3 197 fa8dbf682f9bbb992395aa73c748f09a84a4b112386f6bfef0fb5edd36e24633 GRCh38.walks.gz.idx
+2000 round 3 463897544 87c39ea17914d204dc542f3ee8a242bf4e5f59922911919c446bfc6cc85a287d GRCh38.walks.gz
+2000 round 3 202 f7b7aeec85cfc421ea87b77c11f4354eaccf2e138e7c9be0390f1e7974de9c97 GRCh38.walks.gz.idx
+5000 round 3 1885271374 ec1290106b7541369bbef882ad8d751cb8bc7aa80304555c7be969f9b2ebb239 GRCh38.walks.gz
+5000 round 3 206 8a1cc12797da2f1d8784e9f9759f68c864a48c4c7f7acd02339a0edfb50099c0 GRCh38.walks.gz.idx
+#
+# round 1 log, 464
+[  12.2 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[  33.6 s, 1.1 GiB peak] 1131 paths, 630140053 steps
+GRCh38: 253629 pieces, 24648 departure records in 54050 rows, 36 paths visit no GRCh38 node and are left out
+[  43.4 s, 1.1 GiB peak] 1961126 lines in 3855 units -> walks/mc22.464.r1.GRCh38.walks.gz (+ .idx): 786690 routes, 250281 walk rows, 0 copies named; 2468 paths abridged to 2572 detail walk rows
+#
+# round 1 log, 2000
+[  49.5 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[ 139.0 s, 1.1 GiB peak] 4882 paths, 2695569348 steps
+GRCh38: 1084238 pieces, 103691 departure records in 219521 rows, 156 paths visit no GRCh38 node and are left out
+[ 189.3 s, 3.9 GiB peak] 43526747 lines in 221846 units -> walks/mc22.2000.r1.GRCh38.walks.gz (+ .idx): 628720 routes, 860432 walk rows, 0 copies named; 220055 paths abridged to 223030 detail walk rows
+#
+# round 1 log, 5000
+[ 122.5 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[ 344.9 s, 1.1 GiB peak] 12196 paths, 6729661408 steps
+GRCh38: 2703765 pieces, 258446 departure records in 544197 rows, 392 paths visit no GRCh38 node and are left out
+[ 495.0 s, 8.8 GiB peak] 232982901 lines in 1733925 units -> walks/mc22.5000.r1.GRCh38.walks.gz (+ .idx): 364648 routes, 962263 walk rows, 0 copies named; 1732006 paths abridged to 1740726 detail walk rows

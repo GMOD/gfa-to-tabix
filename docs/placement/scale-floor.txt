@@ -1,0 +1,17 @@
+# docs/placement/scripts/scale-floor.mjs on ada, pinned to CPUs 20-23 while other jobs ran, 2026-11-21
+## walks/mc22.5000.r1
+units 1733925 first units() ms 1795
+detail+blocks maps ms 1156 1732006 550
+detail+blocks maps ms 916 1732006 550
+detail+blocks maps ms 926 1732006 550
+cut 10 kb haps4 ms 1076
+cut 10 kb haps4 ms 1044
+cut 10 kb haps4 ms 1227
+## alt/mc22.5000.scaled
+units 27020 first units() ms 70
+detail+blocks maps ms 6 25633 18
+detail+blocks maps ms 10 25633 18
+detail+blocks maps ms 7 25633 18
+cut 10 kb haps4 ms 42
+cut 10 kb haps4 ms 30
+cut 10 kb haps4 ms 24

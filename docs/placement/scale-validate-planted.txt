@@ -1,0 +1,5 @@
+clean: exit 0, expected 0 ok
+missing-link: exit 1, expected 1 ok
+wrong-end: exit 1, expected 1 ok
+repeated-start: exit 1, expected 1 ok
+hash-name: exit 1, expected 1 ok

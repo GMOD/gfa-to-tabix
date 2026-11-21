@@ -1,0 +1,12 @@
+real haplotypes (W samples#hap, references included)	464
+donor contigs (W lines, references left out)	1127
+donor contigs turned to face GRCh38	267
+synthetic haplotypes	4536
+synthetic contigs	11065
+switches	26249
+junction links missing from the L lines	0
+switches per synthetic haplotype, min median max	0	6	16
+bp from one switch to the next, min median max	500000	3486514	35476833
+synthetic contig bp, median	566013
+OUT	mc22.2000.gfa.gz	1536 synthetic + 464 real
+OUT	mc22.5000.gfa.gz	4536 synthetic + 464 real

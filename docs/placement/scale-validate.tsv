@@ -1,0 +1,4 @@
+gfa	w_lines	haplotypes	same_path_and_start	bp_mismatch	bad_names	steps	links_walked	links_not_in_L	distinct_links_not_in_L
+mc22.gfa.gz	1131	464	0	0	0	630140053	630138922	0	0
+mc22.2000.gfa.gz	4882	2000	0	0	0	2695569348	2695564466	0	0
+mc22.5000.gfa.gz	12196	5000	0	0	0	6729661408	6729649212	0	0
