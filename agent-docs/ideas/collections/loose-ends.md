@@ -24,3 +24,15 @@ metadata:
   (8af39101); delete the branch
 - **Y-9.3M lifting:** nine walks lifted ran out of a 2 GB heap; re-measure
   after graph-walks 98cb1ff
+- **graph-walks "Zoom in to about X":** the width is measured from the
+  window's left end (`walkRows.ts`), noted at the release and not looked at
+  since
+- **Hazelnut data on ada:** `~/work/walks8-gates/agents/hazelnut/` keeps
+  1.9 GB of the private hand-off's staging copy; it waits on the owner's word
+  to remove
+- **Stashes:** the tube map's and ggtubemap's `switch-f8` worktrees each
+  hold a stash of an old scratch-tarball pin
+- **Local checkouts behind origin (2026-11-20):** `~/src/BandageJS`,
+  `ggbandage`, `sequenceTubeMapModern` and `gmod/ggtubemap` are 6 to 60
+  commits behind, so their `package.json` shows pins origin left long ago;
+  read `origin/<default>` instead
