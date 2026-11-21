@@ -211,6 +211,15 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
 - The drawing gate's follow-ups, a subagent on ada: links-stress's heap and
   passing run, labels-probe's owed run, and patches for the laptop (the
   harness's canonical copy is there) in `~/work/followup-20261121/drawing-gate/`.
+  - The laptop applied patches 1–3 to `~/src/walks8-evidence/fab8f323`, with
+    one change to patch 1: in `vcffacts.py` the nearest allele always joins
+    its own named-change set (`same = {a} | {...}`), else a nearest allele
+    more than 2% off would count no carriers. Its rerun on ada
+    (`~/work/watcher-1121/`): sv-49 draws 1 of 3 carriers of the named
+    change, sv-32 1 of 39.
+  - Patch 4, the checker-time prototype, is not applied; whether it should
+    land is to be said here once its A/B timing against `--whole-redraws`
+    is done.
 
 ### Decisions
 
