@@ -155,34 +155,44 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
   98cb1ff moved; holes-kept and the three placement mutants were still
   running.
 
+- **graph-walks 9.1.0** on npm: early refusal (5ed3315, 00b60d0, 9bba9cf,
+  README 0d30644) and the superlinear cut (seven commits to 84bd551, tests
+  09baeac); release commit after 09baeac, tag v9.1.0, Publish 44947054527
+  green (tests, npm, GitHub release).
+  - Suite 1009 passed; lint, format, typecheck, build clean; push CI
+    44946621808 green.
+  - Early refusal: on 39 probe windows the error equals the finished cut's
+    in every field but `fitsBp`; it fires on 27, in 20–281 ms where 9.0.0
+    took 0.5–45 s (`runs/er-fix/`); 17 mutants each fail a test.
+  - Superlinear: 0 differences over 20,621 fixture cases, 720 comparison
+    and 19 slow-window cases; cuts 1.05–2.33× faster on the six slow windows
+    at load < 3 (`runs/superlinear/times.medians.tsv`).
+  - Window oracle on 84bd551 (`runs/oracle-910/`): all 309 files agree on
+    every window; every mutant caught but holes-kept, which no longer hit
+    live code (below).
+- **gfa-to-tabix's window oracle on graph-walks 9:** fa6d09a rewrites
+  step-touching and computed-across-pieces (both caught on 84bd551);
+  677b07c moves holes-kept to `departingPairs`, where 98cb1ff (8.0.2)
+  inlined the hole check, leaving `adjacentSteps` unused by the cut; caught
+  on 9.1.0, and no reader behaviour went untested
+  (`runs/holes-kept/trimmed-910.out`).
+  - The 8.0.2 run (`~/work/gw-tablecover/check-windows.log`) found no real
+    difference: 309 files agree; it exited 1 on the two stale mutants and
+    holes-kept.
+- **Node-cap study** for the owner, `docs/node-cap-study.md` (bc5bd11):
+  FMMM's first drawing passes 5 s near 60,000 nodes on chr22 and 30,000 in
+  the MHC; walk rows draw a million; options laid out, none decided. The
+  faults it hit, BandageJS's hover crash at the MHC first, are
+  `todo/reader-faults-from-node-cap.md`. Its timings ran at load < 4.
+
 ### In flight
 
-- ggbandage 2038da2 on main (bundle core 14.3.0, graph-walks 9.0.0): ada
-  bundle, lint, format, gallery `--check`, testthat 130 tests / 551
-  expectations / 0 failed. Its gallery is not redrawn here; that is for the
-  laptop.
-- 5.0.1's chr6-sequences rebuild, `runs/rel501-repro/`, against 6e2c7eda…
-  and 463f5f6d….
-- The early-refusal window oracle (`~/work/early-refusal-1120/oracle.log`)
-  and the 8.0.2 one (`~/work/gw-tablecover/check-windows.log`).
-- gfa-to-tabix branch `oracle-gw9` (local): check-windows.sh with the two
-  mutants rewritten, landing once the early-refusal oracle shows both caught.
-- Subagent on graph-walks `superlinear-cut`, from `early-refusal`.
-- **Early refusal is held:** Fable's release read
-  (`runs/fable/er-verdict.md`) found the sum sound but the refusal not the
-  full cut's whenever another refusal comes first (read steps over 8× the
-  budget, the node limit, byte refusals), five planted overstatements the
-  tests miss, and a `fitsBp` that can equal the window width. A subagent is
-  fixing all of it on `early-refusal` (00b60d0 is 5ed3315 plus an oxfmt
-  rewrap of README: 5ed3315 failed `format:check`).
-- The early refusal fix is on `early-refusal` 9bba9cf, its agent finishing
-  a probe; the superlinear cut is `superlinear-cut-2` 84bd551 on it (the
-  first `superlinear-cut` is stale), identity across 20,621 fixture cases,
-  979 tests, 1.6–2.4× on the slow windows (load < 6; the load < 3 timing
-  is queued to `runs/superlinear/times.tsv`).
-- The window oracle on 84bd551 with oracle-gw9's script and 5.0.1's binary:
-  `runs/oracle-910/` (`oracle.exit`). The 5ed3315 oracle was stopped
-  (exit 143) as superseded.
+- Readers onto graph-walks 9.1.0, two subagents: bandage-core, the plugin
+  and BandageJS (lockfiles, checks, shoots, push; then I release plugin
+  10.4.1 to the store and redeploy BandageJS); ggbandage, ggtubemap
+  (bundles), sequenceTubeMap and gfa-to-tabix's CI pin.
+- The gfaidx comparison on 9.1.0 with the browser preset's case, a subagent
+  on gfa-to-tabix branch `comparison-gw91`.
 
 ### Decisions
 
