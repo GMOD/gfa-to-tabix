@@ -44,8 +44,8 @@ program reads the result:
 
 - Use **gfa-to-tabix** when you start from a GFA and want a browser to show
   the graph and its named haplotypes with the fewest requests and the
-  smallest files. A browser reads a window of a walk file in one to four
-  range requests, and on HPRC release 2 (v2.1) the walk files are a fraction
+  smallest files. A browser reads a window of a walk file in a few range
+  requests, and on HPRC release 2 (v2.1) the walk files are a fraction
   of the size of gbz-base's database and its haplotype index.
   - From minigraph's rGFA, which has no haplotype paths, gfa-to-tabix writes
     only the node and link index. Walk files need a GFA with P or W lines
@@ -89,20 +89,23 @@ GRCh38 as the reference. We compared gfa-to-tabix with gbz-base on the whole
 v2.1 Minigraph-Cactus graph. The tables, methods and scripts are in
 [Comparison details](comparison-details.md).
 
-- **Time per window:** with both reading from local disk, gfaidx returns the
-  median 64 kb chr22 window in under half the time @jbrowse/graph-walks
-  takes to read it from a walk file. graph-walks is faster in most chrY
-  windows. In chrY's repeats, gfaidx returns each haplotype from its first
-  to its last visit to the window, with everything it visits between
-  distant copies, where a walk file returns only the haplotype's pieces in
-  the window. We have no timing of gbz-base against current walk files; in
-  an earlier test, JBrowse drew windows faster from walk files than from
+- **Time per window:** with both reading from local disk, gfaidx returns
+  most 64 kb chr22 windows faster than @jbrowse/graph-walks reads them from
+  a walk file, the median in about two thirds of graph-walks' time.
+  graph-walks is faster in nearly every chrY window. With the options
+  JBrowse's graph plugin and BandageJS cut with, graph-walks takes about as
+  long on most windows, and refuses the few windows of millions of steps
+  with a notice to zoom in, though only after about as long as cutting them
+  takes. In chrY's repeats, gfaidx returns each haplotype from its first to
+  its last visit to the window, with everything it visits between distant
+  copies, where a walk file returns only the haplotype's pieces in the
+  window. We have no timing of gbz-base against current walk files; in an
+  earlier test, JBrowse drew windows faster from walk files than from
   gbz-base
 - **Requests per window:** after reading the `.idx` file once on opening, a
-  browser reads a 64 kb window from a walk file in one to four range
-  requests. gbz-base with its haplotype index takes tens of round trips.
-  gfaidx, which reads local files, reads hundreds of byte ranges from five
-  files
+  browser reads a 64 kb window from a walk file in a few range requests.
+  gbz-base with its haplotype index takes tens of round trips. gfaidx,
+  which reads local files, reads hundreds of byte ranges from five files
 - **Size:** a walk file is about an order of magnitude smaller than gfaidx's
   index, because gfaidx stores every step of every path and the walk file
   stores each distinct route a haplotype takes off the reference once per

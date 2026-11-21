@@ -33,7 +33,8 @@ below from that output.
 - gfaidx 2.3.2, the release's Linux x86-64 binary (sha256 60df8bc2efbb41fb), with index_gfa --threads 8
 - gfa-to-tabix 5.0.0 at commit 427efd8
 - 24 cores and 125 GB of memory
-- @jbrowse/graph-walks at commit 730e752, on Node v24.22.1
+- @jbrowse/graph-walks 9.1.0 at commit 9983c3f, on Node v24.22.1
+- each timed window began at a 1-minute load average of at most 2.69 on MC chr22, 2.98 on pggb chrY
 <!-- /generated -->
 
 <!-- generated:graphs -->
@@ -94,10 +95,10 @@ below from that output.
 ### Reading a 64 kb window
 
 A walk reader reads a window in a few byte ranges of one file, and gfaidx
-reads hundreds of ranges from five files. gfaidx answers the median MC
-chr22 window in under half the walk reader's time, and the walk reader is
-faster in most pggb chrY windows, where repeats make gfaidx return far more
-of the graph.
+reads hundreds of ranges from five files. gfaidx answers most MC chr22
+windows faster than the walk reader, and the walk reader is faster in nearly
+every pggb chrY window, where repeats make gfaidx return far more of the
+graph.
 
 Each window is one tile of the walk file, 65,536 bp of GRCh38, and the
 windows are spaced evenly along the chromosome.
@@ -116,60 +117,76 @@ windows are spaced evenly along the chromosome.
   command reads, and a logging filesystem gives each 4 KB page it touches
   in the three sidecars it memory-maps. A range that every window reads
   counts as read on opening the files
-- **Time:** the median of three runs with the files in the page cache. For
-  gfaidx it is the whole command, from process start to the GFA on disk
+- **Time:** the median of three runs with the files in the page cache,
+  after one untimed run. The tools and cases take turns window by window,
+  in an order that rotates, and a window is timed only while the machine's
+  1-minute load average is under 3
+  ([window-time.mjs](comparison/scripts/window-time.mjs)). For gfaidx it is
+  the whole command, from process start to the GFA on disk
 - **Walk reader time:**
   [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks), the
   JavaScript library that reads walk files, returns every haplotype's path
   through the window, run in Node with context 0 and no limit on the steps
   returned. We timed it from a new reader, which first reads the file's
   directory, header and unit table, and again on a reader already open
+- **Browser preset:** graph-walks' `CUT_PRESETS.browser`, the options
+  JBrowse's graph plugin and BandageJS cut with, on the walk file without
+  bases: every haplotype, 1 kb of context either side of the window, and
+  budgets of 4 million steps, 8 MB of walk reads and 2 MB of departure
+  reads. It refuses a window over a budget with a notice to zoom in, and the
+  table counts those windows and the time each refusal took. Its bytes and
+  byte ranges are those the reader read for the cut, the `blocks` units
+  among them
 - **Over HTTP:** we also read the MC chr22 windows from the whole-genome
   GRCh38 file that jbrowse.org hosts, which holds the same chr22
 - **Nodes:** the distinct nodes on the paths the walk file reader returns,
   compared with the segments in gfaidx's GFA
 
 <!-- generated:window-mc22 -->
-| MC chr22, 40 windows: median (largest) | walk file | walk file with bases | gfaidx | gfaidx, `--haplotype_gap 10kb` |
-| --- | --- | --- | --- | --- |
-| bytes read on opening the files | 48 KB | 48 KB | 329 KB | 329 KB |
-| bytes read | 52 KB (86 KB) | 91 KB (125 KB) | 3.6 MB (40 MB) | 3.6 MB (37 MB) |
-| byte ranges | 2 (3) | 2 (3) | 964 (46,802) | 964 (4,167) |
-| bytes read to expand haplotypes moved out of a crowded tile | 0 (64 KB) | 0 (64 KB) |  |  |
-| byte ranges, gaps of up to 64 KB joined |  |  | 489 (548) | 489 (514) |
-| bytes read, gaps of up to 64 KB joined |  |  | 15 MB (50 MB) | 15 MB (45 MB) |
-| files read | 1 | 1 | 5 (5) | 5 (5) |
-| time on local disk, reader already open | 158 ms (1.6 s) | 159 ms (1.6 s) |  |  |
-| time on local disk, from a new reader or process | 165 ms (1.5 s) | 165 ms (1.5 s) | 68 ms (791 ms) | 75 ms (738 ms) |
-| time over HTTP from jbrowse.org's whole-genome file, from a new reader | 176 ms (1.4 s) |  |  |  |
-| time to build the tables a viewer draws from | 67 ms (950 ms) | 67 ms (921 ms) |  |  |
-| distinct nodes returned | 2,664 (36,550) | 2,664 (36,550) | 2,664 (150,088) | 2,664 (103,624) |
-| steps returned | 796,286 (8.7 M) | 796,286 (8.7 M) |  |  |
-| GFA written |  |  | 8.2 MB (111 MB) | 8.2 MB (99 MB) |
+| MC chr22, 40 windows: median (largest) | walk file | walk file with bases | walk file, browser preset | gfaidx | gfaidx, `--haplotype_gap 10kb` |
+| --- | --- | --- | --- | --- | --- |
+| bytes read on opening the files | 48 KB | 48 KB | 48 KB | 329 KB | 329 KB |
+| bytes read | 52 KB (86 KB) | 91 KB (125 KB) | 80 KB (426 KB) | 3.6 MB (40 MB) | 3.6 MB (37 MB) |
+| byte ranges | 2 (3) | 2 (3) | 1 (4) | 964 (46,802) | 964 (4,167) |
+| bytes read to expand haplotypes moved out of a crowded tile | 0 (64 KB) | 0 (64 KB) |  |  |  |
+| byte ranges, gaps of up to 64 KB joined |  |  |  | 489 (548) | 489 (514) |
+| bytes read, gaps of up to 64 KB joined |  |  |  | 15 MB (50 MB) | 15 MB (45 MB) |
+| files read | 1 | 1 | 1 | 5 (5) | 5 (5) |
+| windows refused, and the time to refuse from a new reader | 0 | 0 | 1, 1.0 s (1.0 s) |  |  |
+| time on local disk, reader already open | 103 ms (908 ms) | 98 ms (850 ms) | 136 ms (274 ms) |  |  |
+| time on local disk, from a new reader or process | 122 ms (888 ms) | 107 ms (829 ms) | 133 ms (252 ms) | 84 ms (778 ms) | 88 ms (673 ms) |
+| time over HTTP from jbrowse.org's whole-genome file, from a new reader | 119 ms (889 ms) |  |  |  |  |
+| time to build the tables a viewer draws from | 27 ms (381 ms) | 25 ms (364 ms) | 28 ms (71 ms) |  |  |
+| distinct nodes returned | 2,664 (36,550) | 2,664 (36,550) | 2,791 (6,917) | 2,664 (150,088) | 2,664 (103,624) |
+| steps returned | 796,286 (8.7 M) | 796,286 (8.7 M) | 823,465 (2.1 M) |  |  |
+| GFA written |  |  |  | 8.2 MB (111 MB) | 8.2 MB (99 MB) |
 
-- Against gfaidx: from a new reader, the walk file reader is faster in 11 of the 40 windows. The nodes on the paths it returns match the GFA's segments id for id in 38, and the GFA has more nodes in the other 2
+- Against gfaidx: from a new reader, the walk file reader is faster in 12 of the 40 windows. The nodes on the paths it returns match the GFA's segments id for id in 38, and the GFA has more nodes in the other 2
 - Against gfaidx, `--haplotype_gap 10kb`: from a new reader, the walk file reader is faster in 11 of the 40 windows. The nodes on the paths it returns match the GFA's segments id for id in 39, and the GFA has more nodes in the other 1
+- With the browser preset, the walk file reader cuts 39 of the 40 windows and refuses 1. From a new reader it is faster than gfaidx in 11 and than gfaidx, `--haplotype_gap 10kb`, in 11 of them
 <!-- /generated -->
 
 <!-- generated:window-pggbY -->
-| pggb chrY, 40 windows: median (largest) | walk file | walk file with bases | gfaidx | gfaidx, `--haplotype_gap 10kb` |
-| --- | --- | --- | --- | --- |
-| bytes read on opening the files | 22 KB | 26 KB | 1.7 MB | 1.7 MB |
-| bytes read | 78 KB (1.6 MB) | 127 KB (1.6 MB) | 1.2 MB (136 MB) | 1.1 MB (136 MB) |
-| byte ranges | 3 (4) | 3 (4) | 894 (189,697) | 657 (9,465) |
-| bytes read to expand haplotypes moved out of a crowded tile | 0 (626 KB) | 0 (626 KB) |  |  |
-| byte ranges, gaps of up to 64 KB joined |  |  | 218 (411) | 218 (325) |
-| bytes read, gaps of up to 64 KB joined |  |  | 3.7 MB (140 MB) | 3.5 MB (140 MB) |
-| files read | 1 | 1 | 5 (5) | 5 (5) |
-| time on local disk, reader already open | 47 ms (8.6 s) | 48 ms (9.2 s) |  |  |
-| time on local disk, from a new reader or process | 56 ms (7.7 s) | 51 ms (8.2 s) | 94 ms (3.5 s) | 94 ms (2.3 s) |
-| time to build the tables a viewer draws from | 9 ms (896 ms) | 10 ms (902 ms) |  |  |
-| distinct nodes returned | 686 (7,636) | 686 (7,636) | 1,288 (379,765) | 697 (16,296) |
-| steps returned | 53,184 (10.5 M) | 53,184 (10.5 M) |  |  |
-| GFA written |  |  | 818 KB (530 MB) | 527 KB (274 MB) |
+| pggb chrY, 40 windows: median (largest) | walk file | walk file with bases | walk file, browser preset | gfaidx | gfaidx, `--haplotype_gap 10kb` |
+| --- | --- | --- | --- | --- | --- |
+| bytes read on opening the files | 22 KB | 26 KB | 22 KB | 1.7 MB | 1.7 MB |
+| bytes read | 78 KB (1.6 MB) | 127 KB (1.6 MB) | 130 KB (5.1 MB) | 1.2 MB (136 MB) | 1.1 MB (136 MB) |
+| byte ranges | 3 (4) | 3 (4) | 3 (7) | 894 (189,697) | 657 (9,465) |
+| bytes read to expand haplotypes moved out of a crowded tile | 0 (626 KB) | 0 (626 KB) |  |  |  |
+| byte ranges, gaps of up to 64 KB joined |  |  |  | 218 (411) | 218 (325) |
+| bytes read, gaps of up to 64 KB joined |  |  |  | 3.7 MB (140 MB) | 3.5 MB (140 MB) |
+| files read | 1 | 1 | 1 | 5 (5) | 5 (5) |
+| windows refused, and the time to refuse from a new reader | 0 | 0 | 2, 1.9 s (3.1 s) |  |  |
+| time on local disk, reader already open | 31 ms (4.6 s) | 35 ms (4.3 s) | 33 ms (664 ms) |  |  |
+| time on local disk, from a new reader or process | 38 ms (3.0 s) | 32 ms (3.1 s) | 35 ms (625 ms) | 144 ms (3.5 s) | 142 ms (2.2 s) |
+| time to build the tables a viewer draws from | 4 ms (436 ms) | 4 ms (369 ms) | 5 ms (108 ms) |  |  |
+| distinct nodes returned | 686 (7,636) | 686 (7,636) | 692 (7,947) | 1,288 (379,765) | 697 (16,296) |
+| steps returned | 53,184 (10.5 M) | 53,184 (10.5 M) | 52,526 (1.2 M) |  |  |
+| GFA written |  |  |  | 818 KB (530 MB) | 527 KB (274 MB) |
 
-- Against gfaidx: from a new reader, the walk file reader is faster in 38 of the 40 windows. The nodes on the paths it returns match the GFA's segments id for id in 20, and the GFA has more nodes in the other 20
-- Against gfaidx, `--haplotype_gap 10kb`: from a new reader, the walk file reader is faster in 31 of the 40 windows. The nodes on the paths it returns match the GFA's segments id for id in 22, and the GFA has more nodes in the other 18
+- Against gfaidx: from a new reader, the walk file reader is faster in 39 of the 40 windows. The nodes on the paths it returns match the GFA's segments id for id in 20, and the GFA has more nodes in the other 20
+- Against gfaidx, `--haplotype_gap 10kb`: from a new reader, the walk file reader is faster in 39 of the 40 windows. The nodes on the paths it returns match the GFA's segments id for id in 22, and the GFA has more nodes in the other 18
+- With the browser preset, the walk file reader cuts 38 of the 40 windows and refuses 2. From a new reader it is faster than gfaidx in 37 and than gfaidx, `--haplotype_gap 10kb`, in 37 of them
 <!-- /generated -->
 
 Where gfaidx's bytes come from:
@@ -202,8 +219,9 @@ Where gfaidx's bytes come from:
   file's bytes on MC chr22 and about 15 times on pggb chrY, from five files.
   The path index is the largest share on both, and on MC chr22 a third of
   the bytes are the `.pcx` checkpoints, which a query reads nearly whole
-- **Byte ranges:** a walk reader fetches one to four ranges, all of them
-  listed in the table it read at open. gfaidx reads hundreds. A client that
+- **Byte ranges:** a walk reader fetches a few ranges, all of them listed
+  in the table it read at open, and a few more with the browser preset,
+  whose context reaches into the tiles either side. gfaidx reads hundreds. A client that
   joins ranges up to 64 KB apart makes half as many requests on MC chr22 and
   fetches four times the bytes
 - **How gfaidx finds its ranges:** gfaidx makes four lookups, each on the
@@ -217,29 +235,37 @@ Where gfaidx's bytes come from:
   haplotype where it strays far between those visits: the largest GFA
   halves and the nodes returned fall to a few times the walk file's, but
   gfaidx reads about as many bytes
-- **Repeats in a walk file:** a walk reader reads under 2 MB for every
-  pggb chrY window
-  ([every window](comparison/results/pggbY.cost.txt)). Where a tile would
+- **Repeats in a walk file:** a walk reader reads under 2 MB to cut any one
+  pggb chrY tile
+  ([every window](comparison/results/pggbY.cost.txt)), and more with the
+  browser preset, whose context reaches into the tiles either side. Where a tile would
   hold more steps or bytes than the `--abridge-steps` and `--abridge-bytes`
   limits, the writer moves the longest haplotype pieces into separate
   units, which a reader fetches only when a viewer expands that haplotype
   ([Abridged tiles](walks-format.md#abridged-tiles))
-- **Time on MC chr22:** on local disk gfaidx answers the median window in
-  under half the reader's time. The reader decodes about 800,000 steps for
+- **Time on MC chr22:** on local disk gfaidx answers most windows faster
+  than the reader, the median in about two thirds of its time. The reader decodes about 800,000 steps for
   the median window, those of 464 haplotypes, and its time grows with the
   steps it decodes
 - **Time on pggb chrY:** the reader is faster in nearly every window
-  against gfaidx's default and in most against `--haplotype_gap 10kb`, and
-  far faster where gfaidx returns megabytes of GFA
+  against gfaidx's default and against `--haplotype_gap 10kb`, and far
+  faster where gfaidx returns megabytes of GFA
 - **Time over HTTP:** over the bench machine's fast connection, reading from
   jbrowse.org takes about as long as reading from local disk, so the
   reader spends its time decoding, not reading
-- **The slowest windows** for both tools are in repeats. gfaidx's slowest
-  takes a few seconds and writes hundreds of MB of GFA, with or without
-  `--haplotype_gap 10kb`. The reader's slowest takes longer: a pggb chrY
-  window with over 10 million steps, timed with no step budget. The
-  reader's default budget of 4 million steps refuses that window with a
-  notice to zoom in
+- **The slowest windows** for both tools are in repeats and take a few
+  seconds. gfaidx's write hundreds of MB of GFA, with or without
+  `--haplotype_gap 10kb`. The reader's slowest is a pggb chrY window with
+  over 10 million steps, timed with no step budget
+- **With the browser preset** the reader cuts most windows in about the
+  time it takes with no context. Where the context reaches into a tile of
+  millions of steps, the reader decodes that tile too and takes several
+  times as long. It refuses the few windows that hold millions of steps,
+  that slowest window among them. A refusal takes about as long as cutting
+  the window would: before it decodes a tile, the reader counts only the
+  steps it will surely keep in tiles that lie inside the window and its
+  context, which leaves out the tiles the context reaches into, and in
+  these windows that count stays under the budget
 - **The content returned:** in windows where the node sets differ, gfaidx's
   GFA has up to a hundred times as many nodes by default, because it
   includes each haplotype's nodes between two distant visits to the window.
@@ -293,7 +319,7 @@ haplotypes.
 | ----------------------- | --------------------------------------- | -------------------- | ------------------- |
 | size                    | 1.58 GB GRCh38, 1.78 GB CHM13, no bases | 10.05 GB with bases  | 5.1 GB              |
 | build                   | GRCh38 in 47 min at a 7.3 GiB peak, CHM13 in 63 min at 8.6 GiB, on 24 cores | HPRC hosts the file  | 35 min, 22 threads  |
-| reads per window        | one to four byte ranges on the windows above, after three reads on opening the file | 18 to 43 round trips |                     |
+| reads per window        | a few byte ranges on the windows above, after three reads on opening the file | 18 to 43 round trips |                     |
 | bytes per 64 kb window  | 0.05 MB median; 0.14 MB p99 and 0.36 MB at most on GRCh38, 0.17 MB p99 and 0.59 MB at most on CHM13 |                      |                     |
 
 - The walk files' sizes, build and bytes are those of the whole-genome

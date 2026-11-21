@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# From a checkout, with GRAPH_WALKS=<graph-walks checkout>: sets up ada:~/work/gfaidx-compare for build.sh and then windows.sh, with this commit's source built in release mode, the gfaidx 2.3.2 release binary, fusepy for pagelog.py, graph-walks with its dependencies and these scripts
+# From a checkout, with GRAPH_WALKS=<graph-walks checkout>: sets up ada:~/work/gfaidx-compare for build.sh, windows.sh and times.sh, with this commit's source built in release mode, the gfaidx 2.3.2 release binary, fusepy for pagelog.py, graph-walks with its dependencies and these scripts
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 commit=$(git rev-parse --short HEAD)
@@ -13,5 +13,5 @@ git archive --format=tar --prefix=src/ HEAD -- Cargo.toml Cargo.lock src scripts
     cd src; nice -n 10 cargo build --release -j 8"
 git -C "$GRAPH_WALKS" archive --format=tar --prefix=graph-walks/ HEAD -- package.json pnpm-lock.yaml pnpm-workspace.yaml src tsconfig.json |
   ssh ada "set -e; export PATH=~/.local/node/bin:\$PATH; cd ~/work/gfaidx-compare; rm -rf graph-walks; tar x
-    echo $(git -C "$GRAPH_WALKS" rev-parse --short HEAD) > graph-walks.commit
+    echo $(git -C "$GRAPH_WALKS" show HEAD:package.json | sed -n 's/^  "version": "\(.*\)",/\1/p') $(git -C "$GRAPH_WALKS" rev-parse --short HEAD) > graph-walks.commit
     cd graph-walks; pnpm install --frozen-lockfile --prod"
