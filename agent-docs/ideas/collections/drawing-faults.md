@@ -40,5 +40,8 @@ today's head before working one; several may be gone.
 - Not decided: the lane-head gate rule G2, the key's "9 walks" counting the
   reference, a stub's "N bp" label over a hidden stub, a ramp range setting,
   the nine false crossings and the sv-10/sv-36 fit
-- Plugin: `force_kiv2_bubbles`' big loop runs past the pane's bottom edge (a
-  fit bug); `force_mhc` curling is the seeded FMMM default and stays
+- Plugin: `force_kiv2_bubbles`' committed figure, at 10.2.0, draws its
+  68.4 kb loop inside the pane, but only because the figure grows its track
+  (9dd7f7ba); at the default track height the loop ran past the pane's bottom
+  edge, and that has not been looked at since. `force_mhc` curling is the
+  seeded FMMM default and stays
