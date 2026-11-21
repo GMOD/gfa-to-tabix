@@ -30,6 +30,10 @@ use bed::{Format, Layout};
 use cli::{Cli, Command};
 use gfa::Graph;
 
+#[cfg(target_env = "musl")]
+#[global_allocator]
+static ALLOCATOR: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
 fn open_input(path: &str) -> Result<Box<dyn BufRead>, String> {
     let mut raw: Box<dyn Read> = if path == "-" {
         Box::new(io::stdin())

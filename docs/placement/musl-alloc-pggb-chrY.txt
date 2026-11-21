@@ -1,0 +1,56 @@
+# pggb chrY (HPRC release 2, 7.7 GB GFA) indexed on GRCh38 on ada (i9-12900K,
+# 24 threads, shared), 2026-11-20, four builds of one source interleaved three
+# rounds, each run under a 20 GB memory cap and started at a 1-minute load below 3,
+# every output file's sha256 recorded.
+# docs/placement/scripts/musl-alloc-2026-11-20.sh
+#
+# glibc: cargo build (glibc's allocator)
+# musl: the musl build as the release workflow makes it (musl's allocator)
+# mimalloc: the musl build with mimalloc 0.1.52 as its allocator
+# jemalloc: the musl build with tikv-jemallocator 0.7.0 as its allocator
+#
+# set2, the steadier set: each build's three runs agree within 6 s
+input: 9d48b2beffa68197 7695644148 bytes
+glibc round 1: 75.43 s wall, 98.64 s user, 4.47 s system, 7343904 KB peak
+musl round 1: 102.80 s wall, 119.00 s user, 10.24 s system, 7274960 KB peak
+mimalloc round 1: 108.92 s wall, 107.58 s user, 26.81 s system, 7263132 KB peak
+jemalloc round 1: 93.19 s wall, 112.44 s user, 7.59 s system, 7046964 KB peak
+glibc round 2: 80.24 s wall, 101.36 s user, 4.37 s system, 7342816 KB peak
+musl round 2: 101.19 s wall, 117.84 s user, 10.31 s system, 7275472 KB peak
+mimalloc round 2: 104.70 s wall, 104.23 s user, 26.68 s system, 7266384 KB peak
+jemalloc round 2: 98.34 s wall, 116.82 s user, 8.17 s system, 7046616 KB peak
+glibc round 3: 74.51 s wall, 97.16 s user, 4.41 s system, 7346564 KB peak
+musl round 3: 100.70 s wall, 117.70 s user, 10.06 s system, 7275912 KB peak
+mimalloc round 3: 106.47 s wall, 103.50 s user, 29.54 s system, 7270468 KB peak
+jemalloc round 3: 92.61 s wall, 110.88 s user, 7.64 s system, 7047484 KB peak
+load before each run: 2.35-2.92
+means: glibc 76.7 s, musl 101.6 s, mimalloc 106.7 s, jemalloc 94.7 s
+#
+# set1, earlier the same day without jemalloc; each build's runs spread 13-20 s,
+# so it is the less trusted set on this input
+glibc round 1: 69.35 s wall, 91.23 s user, 3.92 s system, 7346480 KB peak
+musl round 1: 105.38 s wall, 121.67 s user, 10.27 s system, 7274496 KB peak
+mimalloc round 1: 105.22 s wall, 103.62 s user, 28.08 s system, 7269960 KB peak
+glibc round 2: 78.51 s wall, 95.85 s user, 4.53 s system, 7343804 KB peak
+musl round 2: 91.41 s wall, 107.98 s user, 9.46 s system, 7274796 KB peak
+mimalloc round 2: 94.08 s wall, 93.19 s user, 26.72 s system, 7270516 KB peak
+glibc round 3: 66.05 s wall, 88.20 s user, 4.21 s system, 7344660 KB peak
+musl round 3: 85.96 s wall, 104.83 s user, 9.08 s system, 7276088 KB peak
+mimalloc round 3: 104.46 s wall, 100.69 s user, 29.84 s system, 7268808 KB peak
+load before each run: 0.76-2.98
+means: glibc 71.3 s, musl 94.2 s, mimalloc 101.3 s
+#
+# Bytes: all 21 runs of both sets wrote the same files
+chrY.graph.bed.gz ad75f61e70e3e98f9e154b05af98d2273b56499d5788616ccccd8829f72193d0
+chrY.graph.bed.gz.tbi 960d7b745f1778a8ef663cf97a2b46722db98b613f61c0b9a953bfbc0b5b4091
+#
+# Profile, one run each of glibc and musl, every thread's backtrace every 2.5 s
+# (docs/placement/scripts/musl-prof-2026-11-20.sh; perf is blocked on ada)
+musl: 41 samples, top frame memcpy 8, memcmp 5, free 4
+glibc: 31 samples, top frame memmove 3, memcmp 6, malloc and free 4
+#
+# So jemalloc closes about a quarter of the gap on this input (101.6 s to 94.7 s,
+# glibc 76.7 s) and peaks 0.2 GB lower than either; mimalloc closes none, its
+# system time rising from 10 s to 27 s. The rest is user time: musl's memcpy,
+# called from row building, takes more than twice glibc's share of samples, and
+# an allocator does not replace it
