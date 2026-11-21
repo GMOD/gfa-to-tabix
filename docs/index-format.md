@@ -282,7 +282,9 @@ assemblies in `SM:Z:assembly,...` in place of `SB:H:`, and there is no header.
   Tabix index spends 8 bytes per 16 kb of every contig
 - Memory grows with total path length. HPRC's pggb chrY, 7.7 GB of GFA,
   indexes in 7.3 GB, in about 65 s built with cargo and 100 s with the
-  release binary ([measured](placement/pggb-chrY-build.txt)),
+  release binary up to 5.0.0 ([measured](placement/pggb-chrY-build.txt)),
+  which jemalloc speeds by about 7%
+  ([measured](placement/musl-alloc-pggb-chrY.txt)),
   and pggb chr22, 27 GB, took 6.5 minutes and 18.7 GB with the version of
   2026-10-28. For a larger graph use [`--walks`](walks-format.md)
 - A Tabix index holds coordinates up to 512 Mb. A file with a row past that
