@@ -175,12 +175,6 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
   tests miss, and a `fitsBp` that can equal the window width. A subagent is
   fixing all of it on `early-refusal` (00b60d0 is 5ed3315 plus an oxfmt
   rewrap of README: 5ed3315 failed `format:check`).
-- **A writer failure under investigation:** one of two identical 5,000
-  haplotype builds with abridging off (5.0.1 musl) failed with
-  `SYN1288#1#c2: a step placed at 38417438 is not on the tile's reference
-  path`, during unit writing; the rerun succeeded. Spill directories are per
-  prefix and PID, so concurrent builds cannot share files. A subagent is
-  reproducing it against 5.0.1, 5.0.0 and glibc (`runs/writer-race/`).
 - The early refusal fix is on `early-refusal` 9bba9cf, its agent finishing
   a probe; the superlinear cut is `superlinear-cut-2` 84bd551 on it (the
   first `superlinear-cut` is stale), identity across 20,621 fixture cases,
@@ -192,6 +186,13 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
 
 ### Decisions
 
+- **No 5.0.2 for the once-seen writer failure:** 30 rebuilds of the
+  regenerated 5,000-haplotype graph (5.0.1, 5.0.0, glibc, instrumented)
+  finished with one sha256, the code has no race or `unsafe`, and the
+  error read two faults at once, another tile's rows plus a changed byte:
+  memory corruption, allocator or hardware. Written up in
+  `scale-past-464.md` (c489562); landing the instrumentation is
+  `todo/writer-integrity-checks.md`.
 - `tube_map_micb.png` came out changed in the plugin's shoot, without its
   hover (no tooltip, outline or crosshair). It was reshot three times alone
   and kept unchanged each time, so it was a hover flake under load, not
