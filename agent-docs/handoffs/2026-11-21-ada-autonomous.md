@@ -186,6 +186,17 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
 
 ### Decisions
 
+- **9.1.0's early refusal promises the full cut's error on valid files,
+  not on every malformed one.** Fable's second read
+  (`runs/fable/r910-verdict.md`) found 9bba9cf right on every point of the
+  first and the superlinear commits identical on valid files, but a
+  malformed row the count does not inspect (a `ref` row's passes, a walk
+  row's overstated `nsteps`, a `blocks` or detail unit at odds with its
+  rows) can get the zoom-in notice where 9.0.0 threw the format error.
+  Ruling every malformation out would mean decoding, which the refusal
+  exists to skip; Fable named narrowing the criterion as a fix. README now
+  says so (0d30644). The superlinear agent is adding unit tests for its
+  commits, which touched no test file.
 - **No 5.0.2 for the once-seen writer failure:** 30 rebuilds of the
   regenerated 5,000-haplotype graph (5.0.1, 5.0.0, glibc, instrumented)
   finished with one sha256, the code has no race or `unsafe`, and the
