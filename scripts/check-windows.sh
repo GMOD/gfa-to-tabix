@@ -94,7 +94,7 @@ MUTANTS=(
   "computed-edge%walkRows.ts%if (lo < windowEnd && hi > windowStart) {%if (lo < windowEnd && hi > windowStart + 1) {"
   "computed-across-pieces%walkRows.ts%    const bounds = pieceBounds(run)\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      pairs.length = 0%    const bounds = [0, run.ids.length]\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      pairs.length = 0"
   "drawn-from-nodes%walkRows.ts%  let windowStart = drawn?.start ?? Infinity%  let windowStart = Infinity"
-  "holes-kept%walkDeparture.ts%squeeze(d.leavePos) === squeeze(d.rejoinPos)%d.leavePos === d.rejoinPos"
+  "holes-kept%walkRows.ts%(leavePos === rejoinPos || squeeze(leavePos) === squeeze(rejoinPos))%leavePos === rejoinPos"
   "placement-later-pass%walkRows.ts%(node.refName === held.refName && node.start < held.start))%(node.refName === held.refName && node.start > held.start))"
   "placement-window-ignored%walkRows.ts%  node.onWindow !== held.onWindow\n    ? node.onWindow\n    : node.rank === 0 &&%  false\n    ? node.onWindow\n    : node.rank === 0 &&"
   "off-reference-later-walk%walkRows.ts%            name < held.refName ||%            name > held.refName ||"
