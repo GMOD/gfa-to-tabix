@@ -1080,3 +1080,17 @@ W  B  1  c     0  32  >1>2>6>3
   draw a moved piece without its detail unit, and `passes`, to mark a
   position as chosen. The scripts and counts are in
   `~/src/walks8-evidence/doc-only-reader-20261119/`
+
+## A node cap for the browser readers
+
+- graph-walks' held `node-limit-preset` branch caps a browser cut at 30,000
+  nodes. [node-cap-study.md](node-cap-study.md) times BandageJS and the
+  plugin laying out and drawing 4-haplotype cuts from 1,000 to 1.2 million
+  nodes on chr22 and in the MHC, in five layouts
+- The default FMMM layout's first drawing passes 5 s at about 60,000 nodes on
+  chr22 and about 30,000 in the MHC; walk rows draw a million nodes; the
+  stress engine, the tube map and the ordered layout hold the tab for their
+  whole time
+- The options it sets out for the owner: one cap in the preset, a cap per
+  layout, a warning with "Draw anyway", or drawing a folded or reference-only
+  picture in place of a refusal
