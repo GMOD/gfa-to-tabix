@@ -367,7 +367,11 @@ a tile's step count grows with the haplotypes while the budget stays at
 
 ## Proposal for the owner: per-group units
 
-This is a proposal for the owner, not a decision. The format is frozen and
+Decided 2026-11-21: no per-group units. The writer's default abridge
+budgets are to grow with the haplotype count instead, as the `scaled` case
+does. The proposal follows as it was written.
+
+It was a proposal for the owner, not a decision. The format is frozen and
 nothing here changes it. Three Fable 5.2 reviews of a draft (is it needed,
 the alternatives, what it touches) shaped it; they are in
 [scale-reviews/](scale-reviews/), and read data that was partly gone

@@ -214,6 +214,16 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
 
 ### Decisions
 
+- **Calls the owner left with the laptop watcher (2026-11-21):** no
+  per-group units; after both queues, abridge budgets that grow with the
+  haplotype count and graph-walks no longer rebuilding its unit map per cut
+  (both added to `2026-11-21-ada-next.md`); the gbz-base removal takes the
+  plugin's `GbzBaseSyntenyAdapter` too, the store's old builds kept.
+  ggbandage's gallery was redrawn on the laptop at a7cc147 and all 14
+  figures and the gallery docs came out byte-identical: nothing to commit.
+- **Fable's design reads for reader standardization started early,** while
+  the drawing gate's long runs hold ada: they are read-only and put no load
+  on it (`runs/standardize/design-verdict.md`).
 - **9.1.0's early refusal promises the full cut's error on valid files,
   not on every malformed one.** Fable's second read
   (`runs/fable/r910-verdict.md`) found 9bba9cf right on every point of the
