@@ -29,7 +29,8 @@ over HTTP would join ranges that lie close, so the window's ranges are also
 counted with every gap of up to 64 KB fetched along with them. Then three untraced
 runs on the index's own path for wall time and peak memory, and the size of
 the GFA it writes, with a SHA-1 of its segment names, sorted as bytes and
-joined by newlines, to compare with walk-time.mjs's. The timed runs get no timeout: with one, Python waits for
+joined by newlines, to compare with window-time.mjs's. The tables take their times from
+window-time.mjs, which interleaves the tools. The timed runs here get no timeout: with one, Python waits for
 the process by polling at up to 50 ms, which rounds a short run's time up.
 
 Writes OUT_PREFIX.windows.tsv, OUT_PREFIX.files.tsv, OUT_PREFIX.open.tsv and
