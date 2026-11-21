@@ -150,8 +150,10 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
   It writes up per-group units for the owner with three Fable reads, and
   edits neither comparison doc that makes the claim. Builds and queries ran
   at load < 6, not 3, recorded per run. Files in `runs/scale/`.
-- **The 8.0.2 window oracle** passed every window of all 309 files; every
-  mutant is caught but the two whose text 98cb1ff moved.
+- **The 8.0.2 window oracle** passed every window of all 309 files. Of its
+  mutants, the twelve run so far are caught except the two whose text
+  98cb1ff moved; holes-kept and the three placement mutants were still
+  running.
 
 ### In flight
 
