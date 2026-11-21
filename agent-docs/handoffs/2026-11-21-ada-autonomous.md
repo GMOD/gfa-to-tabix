@@ -135,6 +135,23 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
   - The new musl binary's sha256 equals the one measured as `jemalloc`.
 - **early refusal's six mutants** rerun at 5ed3315 (`runs/er-mutants/`):
   each fails at least one new test.
+- **5.0.1 rebuilds the hosted chr6-sequences walk file byte for byte**
+  (`runs/rel501-repro/`): 6e2c7eda… and 463f5f6d…, in 149 s at 1.8 GB peak
+  where 5.0.0 took 324 s at 1.3 GB.
+- **ggbandage** 2038da2 on main, bundle and R-CMD-check CI green.
+- **The scale study** (`docs/placement/scale-past-464.md`, 2df58fb, Push CI
+  green). Its takeaways:
+  - a 4-haplotype 100 kb view stays under 1 MB at 5,000 haplotypes;
+  - the first view's table (14 MB) and 1 Mb windows cross it;
+  - the default abridge budgets, not the format, drive growth: budgets
+    scaled to the haplotype count give 539 MB against 1.89 GB;
+  - "20 GB at 10,000" is not borne out with default budgets.
+  
+  It writes up per-group units for the owner with three Fable reads, and
+  edits neither comparison doc that makes the claim. Builds and queries ran
+  at load < 6, not 3, recorded per run. Files in `runs/scale/`.
+- **The 8.0.2 window oracle** passed every window of all 309 files; every
+  mutant is caught but the two whose text 98cb1ff moved.
 
 ### In flight
 
@@ -156,7 +173,20 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
   tests miss, and a `fitsBp` that can equal the window width. A subagent is
   fixing all of it on `early-refusal` (00b60d0 is 5ed3315 plus an oxfmt
   rewrap of README: 5ed3315 failed `format:check`).
-- Scale study subagent, branch `scale-study` of gfa-to-tabix.
+- **A writer failure under investigation:** one of two identical 5,000
+  haplotype builds with abridging off (5.0.1 musl) failed with
+  `SYN1288#1#c2: a step placed at 38417438 is not on the tile's reference
+  path`, during unit writing; the rerun succeeded. Spill directories are per
+  prefix and PID, so concurrent builds cannot share files. A subagent is
+  reproducing it against 5.0.1, 5.0.0 and glibc (`runs/writer-race/`).
+- The early refusal fix is on `early-refusal` 9bba9cf, its agent finishing
+  a probe; the superlinear cut is `superlinear-cut-2` 84bd551 on it (the
+  first `superlinear-cut` is stale), identity across 20,621 fixture cases,
+  979 tests, 1.6–2.4× on the slow windows (load < 6; the load < 3 timing
+  is queued to `runs/superlinear/times.tsv`).
+- The window oracle on 84bd551 with oracle-gw9's script and 5.0.1's binary:
+  `runs/oracle-910/` (`oracle.exit`). The 5ed3315 oracle was stopped
+  (exit 143) as superseded.
 
 ### Decisions
 
