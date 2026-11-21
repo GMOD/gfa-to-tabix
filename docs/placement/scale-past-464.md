@@ -58,9 +58,11 @@ estimate.
 - **Builds stay modest:** 43.4 s, 189.4 s and 495.6 s at 464, 2,000 and
   5,000 haplotypes on 16 threads, peaking at 1.12 GB, 4.07 GB and 9.15 GB;
   each round wrote the same bytes
-- **The writer failed once, unexplained:** one of two identical builds of
-  the 5,000-haplotype graph with abridging off stopped with `a step placed
-  at 38417438 is not on the tile's reference path`; the other finished
+- **The writer failed once and never again:** one of two identical builds
+  of the 5,000-haplotype graph with abridging off stopped with `a step
+  placed at 38417438 is not on the tile's reference path`. Thirty reruns,
+  instrumented ones among them, all finished with the same bytes, and what
+  the error read points at memory corruption rather than the writer
   ([below](#a-writer-failure-at-5000-haplotypes))
 - **Per-group units would cut a few-haplotype view's tile bytes about
   eightfold (an estimate), but not what grows.** They leave the file size
@@ -339,12 +341,29 @@ a tile's step count grows with the haplotypes while the budget stays at
   with abridging off; so does the real GFA with SYN1288's two lines added;
   and the default budgets build the 5,000-haplotype graph to the same
   bytes in every round ([scale-build.txt](scale-build.txt))
-- A failure on one run of two identical ones points at the parallel
-  stages (the external sort's runs, or the tile encoding on all cores)
-  rather than at the data. It was not chased further: this study changes
-  no code. To reproduce, rebuild with the command in
-  [scale-alt.sh](scripts/scale-alt.sh) and the GFA scale-synth.py makes
-  with seed 1
+- It did not recur. The regenerated graph (scale-synth.py, seed 1, the
+  same switch table) was built 30 times with the same command, two or
+  three builds at a time on disjoint CPU sets, by the 5.0.1 and 5.0.0
+  musl releases, a 5.0.0 glibc build and 5.0.1 instrumented to checksum
+  each of the external sort's runs at push, spill and read-back, check
+  every piece's positions inside its tile and every row between merge and
+  encoding: every build finished, every output has one sha256, the one
+  the second build above wrote, and no check fired
+  ([scale-writer-reruns.tsv](scale-writer-reruns.tsv),
+  [scale-writer-reruns.sh](scripts/scale-writer-reruns.sh))
+- The code gives it no deterministic path. One thread pushes the sorter's
+  rows, so its runs split at the same rows every time; the builder is
+  single-threaded; the encoding threads only read shared data and return
+  results in order; `src/` has no `unsafe`
+- What the error read is two faults at once. 38417438 is a real step of
+  SYN1288#1#c2, in a piece of the tile at 38404096, not of the tile at
+  39387136 the message names, and 412 steps of that piece decoded against
+  the reference path before it failed, so the work labelled with one tile
+  held another tile's reference row and piece; and no arrangement of
+  whole rows fails first at that step, so a byte changed as well. That
+  reads as memory corruption, from the allocator or the hardware (ada
+  reports no ECC); one event cannot tell which, nor whether 5.0.0 could
+  fail the same way
 
 ## Proposal for the owner: per-group units
 
