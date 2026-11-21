@@ -185,14 +185,32 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
   faults it hit, BandageJS's hover crash at the MHC first, are
   `todo/reader-faults-from-node-cap.md`. Its timings ran at load < 4.
 
+- **Every reader on graph-walks 9.1.0,** CI green on each:
+  - bandage-core 129f55b, 1826 tests;
+  - the plugin d4b15f35 (unit 1160, e2e 50, 27 figures unchanged), then
+    **10.4.1** (92782442, tag v10.4.1, Publish green), on npm and the
+    store's `latest/` (jbrowse-plugin-list a479d325);
+  - BandageJS 08019d0e, playwright 251, figures 0 px; jbrowse.org's demo
+    redeployed (`app.js` sha256 equals the build). Its Build workflow also
+    deploys GitHub Pages on every push to main;
+  - ggbandage a7cc147 and ggtubemap 48e77e2, bundles rebuilt, testthat and
+    R CMD check pass, figures not redrawn on ada;
+  - sequenceTubeMap c331f41, 760 tests, Pages deployed;
+  - gfa-to-tabix 3a3ef84: CI's rebuild job checks out v9.1.0 and the
+    claims' test list follows it.
+- **The gfaidx comparison on 9.1.0** (7132d2c): interleaved at load < 3,
+  three runs, with the browser preset's case. gfaidx answers most chr22
+  windows faster, the median in about two thirds of the walk reader's time
+  (not a tie); the reader is faster in nearly every chrY window. Sentences
+  the numbers made false are rewritten. The preset's refusals on these
+  one-tile windows come only after a full cut:
+  `ideas/ready/early-refusal-context-tiles.md`.
+
 ### In flight
 
-- Readers onto graph-walks 9.1.0, two subagents: bandage-core, the plugin
-  and BandageJS (lockfiles, checks, shoots, push; then I release plugin
-  10.4.1 to the store and redeploy BandageJS); ggbandage, ggtubemap
-  (bundles), sequenceTubeMap and gfa-to-tabix's CI pin.
-- The gfaidx comparison on 9.1.0 with the browser preset's case, a subagent
-  on gfa-to-tabix branch `comparison-gw91`.
+- The drawing gate's follow-ups, a subagent on ada: links-stress's heap and
+  passing run, labels-probe's owed run, and patches for the laptop (the
+  harness's canonical copy is there) in `~/work/followup-20261121/drawing-gate/`.
 
 ### Decisions
 
