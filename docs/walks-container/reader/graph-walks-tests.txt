@@ -311,10 +311,12 @@ walkReader.test.ts: a region cut on a sequence the file lacks names the ones it 
 walkReader.test.ts: a region cut over its node limit says how far to zoom in
 walkReader.test.ts: a route naming no :k leaves from the first pass of its entry the walk reaches
 walkReader.test.ts: a route's own steps inside one piece are a departure computed from the steps
+walkReader.test.ts: a second sequence's table covers the bytes from the first sequence's table on
 walkReader.test.ts: a sequence's length and the reference nodes over a window come from its tiles, and the bytes a cut reads from its table and its records' ownTiles
 walkReader.test.ts: a step between two on the window states its pass, off the window
 walkReader.test.ts: a step on a second pass over the window departs from that pass
 walkReader.test.ts: a table entry of length 0 is never read: $at
+walkReader.test.ts: a table whose entries cover every byte since the header is read, an entry of no bytes among them
 walkReader.test.ts: a table with %s is refused
 walkReader.test.ts: a tag after an abridged row's detail column names no other detail unit
 walkReader.test.ts: a tile cut partway through a gzip member is refused
@@ -342,6 +344,7 @@ walkReader.test.ts: an unread stretch beside an abridged piece the cut did not b
 walkReader.test.ts: detail records read at once, finishing in reverse, cut as reads one at a time do
 walkReader.test.ts: every window of %s that returns a walk's same steps states the same break in each of its records
 walkReader.test.ts: every window of %s, expanding every walk, cuts as %s, its graph built without abridging, does
+walkReader.test.ts: gfa-to-tabix's entry-dropped file, a table that leaves out its departures unit's entry, is refused
 walkReader.test.ts: is a WalkRowError a consumer of the package can catch by type
 walkReader.test.ts: is refused in $where: $id
 walkReader.test.ts: keeps its reference position, in whichever order the chunks come
@@ -363,6 +366,7 @@ walkReader.test.ts: the reference sequences leave out detail records and departu
 walkReader.test.ts: the same graph in 10 kb chunks computes the departure from the steps of one piece
 walkReader.test.ts: the same walks in pieces of their own cut whole, with the jumps as records
 walkReader.test.ts: two records whose leave pieces lie in adjacent chunks both get their own steps
+walkRows.test.ts: a #reference, #haplotype or #hole line that carries a tag reads as the line without it
 walkRows.test.ts: a 0 bp step a record attaches at the stretch’s end is kept as a 0 bp segment
 walkRows.test.ts: a computed departure’s steps past the row’s last fragment are its steps, and the reference past them is read
 walkRows.test.ts: a contained cut splits a walk where it steps onto the reference off the window
@@ -395,6 +399,7 @@ walkRows.test.ts: counts a step along the reference as a quarter of one off it
 walkRows.test.ts: graph is the tag of that name, among other Z tags and names ending in it
 walkRows.test.ts: names the span from the window start that fits
 walkRows.test.ts: never advises the window refused or a wider one, wherever the tiles fetched to attach start
+walkRows.test.ts: nodes whose ids lie 65,536 apart, which share a slot of the memos a cut asks before its sets and maps, are kept, linked, indexed and placed each as itself
 walkRows.test.ts: off the window, a node takes the reference row whose path sorts first, then its earliest start, whichever is read first: reversed %s
 walkRows.test.ts: offers a cut for every haplotype fewer as well as a zoom
 walkRows.test.ts: one that jumps over the drawn stretch keeps its ends and its own bp, holds no steps and asks for none, inside one piece or between two

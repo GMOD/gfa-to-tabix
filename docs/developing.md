@@ -45,8 +45,8 @@ longer ones, on the fixtures and on random graphs, then shows that each
 planted reader mistake makes some file fail. Run
 `window-oracle.py --digest` on a hosted file to check its windows the same
 way. It isn't in CI, because a run takes over an hour. graph-walks 7.0.0
-and 8.0.0 failed it on windows inside a `#hole`, which 8.0.1, the version CI
-pins, reads as the rules say (see C135 in
+and 8.0.0 failed it on windows inside a `#hole`, which 8.0.1 reads as the
+rules say (see C135 in
 [claims7.md](departures/claims7.md)).
 
 ## Design decisions
