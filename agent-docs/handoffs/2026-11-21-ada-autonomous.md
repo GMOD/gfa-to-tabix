@@ -149,6 +149,14 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
 - gfa-to-tabix branch `oracle-gw9` (local): check-windows.sh with the two
   mutants rewritten, landing once the early-refusal oracle shows both caught.
 - Subagent on graph-walks `superlinear-cut`, from `early-refusal`.
+- **Early refusal is held:** Fable's release read
+  (`runs/fable/er-verdict.md`) found the sum sound but the refusal not the
+  full cut's whenever another refusal comes first (read steps over 8× the
+  budget, the node limit, byte refusals), five planted overstatements the
+  tests miss, and a `fitsBp` that can equal the window width. A subagent is
+  fixing all of it on `early-refusal` (00b60d0 is 5ed3315 plus an oxfmt
+  rewrap of README: 5ed3315 failed `format:check`).
+- Scale study subagent, branch `scale-study` of gfa-to-tabix.
 
 ### Decisions
 
@@ -163,6 +171,10 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
 - `open-problems.md` puts chrY's remaining musl gap down to musl's
   `memcpy` alone, not "memcpy, memcmp and free": in the profile memcmp is
   as common under glibc (5 against 6 samples), and jemalloc replaces `free`.
+- Early refusal and the superlinear cut go out together as graph-walks
+  9.1.0, after one window-oracle run on the combined head, with one round of
+  reader lockfile refreshes: the oracle takes hours and every refresh touches
+  six repositories.
 - ggbandage's `gallery.R --check` needs `codetools`, which
   `~/micromamba/envs/r` lacks; it passes under `~/work/walks8-gates/r-env`.
 
