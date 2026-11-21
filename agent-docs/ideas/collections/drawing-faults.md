@@ -45,3 +45,7 @@ today's head before working one; several may be gone.
   (9dd7f7ba); at the default track height the loop ran past the pane's bottom
   edge, and that has not been looked at since. `force_mhc` curling is the
   seeded FMMM default and stays
+- sequenceTubeMap's `--banded-haplotypes` draws haplotype-share bands in
+  orange, and since tubemap-core 2.1.0 forward reads are red beside them,
+  where blue used to contrast; reads and bands are harder to tell apart
+  (`~/work/followup-20261120/gw9-tubemaps/` on ada)
