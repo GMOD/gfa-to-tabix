@@ -27,3 +27,7 @@ Clones and raw runs: `~/work/handoff-1121/runs/nodecap/` on ada.
   the layout holds the page
 - **The tube map crashes the tab** at 277,560 nodes in the MHC and 1.2 M on
   chr22; not diagnosed
+- **bandage-core's KIV-2 figures are stale:** `img/figure_kiv2_facets.svg`,
+  `figure_kiv2_threads.svg` and `figure_kiv2_walks.svg` were drawn by
+  13.3.0; `scripts/render-figures.mjs` on 14.3.0 draws the new key row,
+  layout and grey threads. CI does not render them; reshoot and look
