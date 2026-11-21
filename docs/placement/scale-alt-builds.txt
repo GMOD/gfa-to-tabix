@@ -1,0 +1,39 @@
+# The synthetic graphs (and the real one) written with other abridge budgets by gfa-to-tabix
+# 5.0.1's release binary on ada, untimed (pinned to 8 CPUs, the machine loaded), 2026-11-20.
+# docs/placement/scripts/scale-alt.sh. The 464-haplotype build with abridging off ran without
+# /usr/bin/time and printed only its last two lines here
+## mc22.5000.off
+[ 128.6 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[ 392.3 s, 1.0 GiB peak] 12196 paths, 6729661408 steps
+GRCh38: 2703765 pieces, 258446 departure records in 544197 rows, 392 paths visit no GRCh38 node and are left out
+gfa-to-tabix: error: GRCh38#0#chr22:39387136: SYN1288#1#c2: a step placed at 38417438 is not on the tile's reference path
+## mc22.5000.s4m
+[ 135.7 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[ 396.9 s, 1.1 GiB peak] 12196 paths, 6729661408 steps
+GRCh38: 2703765 pieces, 258446 departure records in 544197 rows, 392 paths visit no GRCh38 node and are left out
+[ 539.6 s, 7.2 GiB peak] 41238880 lines in 151099 units -> alt/mc22.5000.s4m.GRCh38.walks.gz (+ .idx): 750489 routes, 2546381 walk rows, 0 copies named; 149615 paths abridged to 156608 detail walk rows
+## mc22.5000.off2
+[ 125.9 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[ 355.4 s, 1.1 GiB peak] 12196 paths, 6729661408 steps
+GRCh38: 2703765 pieces, 258446 departure records in 544197 rows, 392 paths visit no GRCh38 node and are left out
+[ 410.5 s, 6.3 GiB peak] 4217188 lines in 1369 units -> alt/mc22.5000.off2.GRCh38.walks.gz (+ .idx): 968661 routes, 2702989 walk rows, 0 copies named; 0 paths abridged to 0 detail walk rows
+## mc22.2000.off
+[  59.0 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[ 159.7 s, 1.1 GiB peak] 4882 paths, 2695569348 steps
+GRCh38: 1084238 pieces, 103691 departure records in 219521 rows, 156 paths visit no GRCh38 node and are left out
+[ 185.7 s, 2.9 GiB peak] 2272985 lines in 1369 units -> alt/mc22.2000.off.GRCh38.walks.gz (+ .idx): 968661 routes, 1083462 walk rows, 0 copies named; 0 paths abridged to 0 detail walk rows
+## mc22.5000.scaled
+[ 123.6 s, 0.2 GiB peak] reference GRCh38: 1 paths, 1389745 nodes
+[ 355.4 s, 1.1 GiB peak] 12196 paths, 6729661408 steps
+GRCh38: 2703765 pieces, 258446 departure records in 544197 rows, 392 paths visit no GRCh38 node and are left out
+[ 476.1 s, 7.2 GiB peak] 11550304 lines in 27020 units -> alt/mc22.5000.scaled.GRCh38.walks.gz (+ .idx): 837548 routes, 2676180 walk rows, 0 copies named; 25633 paths abridged to 26809 detail walk rows
+## mc22.464.off
+GRCh38: 253629 pieces, 24648 departure records in 54050 rows, 36 paths visit no GRCh38 node and are left out
+[  44.6 s, 1.1 GiB peak] 1276684 lines in 1369 units -> alt/mc22.464.off.GRCh38.walks.gz (+ .idx): 968440 routes, 252853 walk rows, 0 copies named; 0 paths abridged to 0 detail walk rows
+## /usr/bin/time
+Command exited with non-zero status 1
+off: 432.89 s wall, 6587372 KB peak
+s4m: 539.61 s wall, 7574076 KB peak
+off rerun: 410.52 s wall, 6566824 KB peak
+5000.scaled: 476.11 s wall, 7500444 KB peak
+2000-off: 185.71 s wall, 3070248 KB peak

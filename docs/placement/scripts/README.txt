@@ -68,3 +68,6 @@ Results in docs/placement/:
   summary-*-placement-fix.txt   the same, with graph-walks after 4.4
   *.windows.tsv.gz     out/G.windows.tsv, gzipped
   passcount.txt        out/G.passcount.txt for mc22, pggb22 and pggbY
+
+scale-*: the study of walk files past 464 haplotypes; ../scale-past-464.md
+says what each does and how to run them.
