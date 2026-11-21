@@ -244,7 +244,7 @@ dependencies = [
 
 [[package]]
 name = "gfa-to-tabix"
-version = "5.0.0"
+version = "5.0.1"
 dependencies = [
  "clap",
  "flate2",
