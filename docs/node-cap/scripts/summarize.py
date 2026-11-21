@@ -141,36 +141,47 @@ for reader in ("bjs", "plugin"):
 
 print("\nThresholds: the windows between which the median time to paint passes each time, by chromosome; in brackets")
 print("an estimate of the node count where it does, from a straight line through those two windows in log nodes and log time")
+
+
+def crossing(ps, limit):
+    under = [p for p in ps if p["outcome"] == "ok" and p["to_paint_ms"] <= limit]
+    over = [p for p in ps if p["outcome"] != "ok" or p["to_paint_ms"] > limit]
+    first_over = over[0] if over else None
+    last_under = max((p for p in under if not first_over or int(p["cut_nodes"]) < int(first_over["cut_nodes"])),
+                     key=lambda p: int(p["cut_nodes"]), default=None)
+    if not first_over:
+        return "never", ""
+    if not last_under:
+        return f"<= {int(first_over['cut_nodes']):,}", ""
+    span = f"{int(last_under['cut_nodes']):,}-{int(first_over['cut_nodes']):,}"
+    if first_over["outcome"] != "ok":
+        return span, ""
+    # straight line through the two windows on log nodes against log time
+    n0, n1 = int(last_under["cut_nodes"]), int(first_over["cut_nodes"])
+    t0, t1 = last_under["to_paint_ms"], first_over["to_paint_ms"]
+    at = math.exp(math.log(n0) + (math.log(limit) - math.log(t0)) * (math.log(n1) - math.log(n0)) / (math.log(t1) - math.log(t0)))
+    return span, f"~{round(at, -3 if at >= 10000 else -2):,.0f}"
+
+
+def failure(ps):
+    failed = [p for p in ps if p["outcome"] not in ("ok", "not run")]
+    words = {"error": "aborts", "timeout": "nothing in 300 s", "crash": "crashes", "fail": "view fails"}
+    return f"{int(failed[0]['cut_nodes']):,}, {words.get(failed[0]['outcome'], failed[0]['outcome'])}" if failed else "none"
+
+
+thresholds = {}
 for reader in ("bjs", "plugin"):
     for layout in ("fmmm", "stress", "tubemap", "ordered", "walkrows"):
         for chrom in ("chr22", "chr6"):
-            ps = [p for p in points if p["reader"] == reader and p["layout"] == layout and p["spec"].startswith(f"{chrom}:")]
+            ps = sorted((p for p in points if p["reader"] == reader and p["layout"] == layout and p["spec"].startswith(f"{chrom}:")),
+                        key=lambda p: int(p["cut_nodes"]))
             if not ps:
                 continue
-            ps.sort(key=lambda p: int(p["cut_nodes"]))
-            parts = []
-            for limit in (1000, 5000, 30000):
-                under = [p for p in ps if p["outcome"] == "ok" and p["to_paint_ms"] <= limit]
-                over = [p for p in ps if p["outcome"] != "ok" or p["to_paint_ms"] > limit]
-                first_over = over[0] if over else None
-                last_under = max((p for p in under if not first_over or int(p["cut_nodes"]) < int(first_over["cut_nodes"])),
-                                 key=lambda p: int(p["cut_nodes"]), default=None)
-                estimate = ""
-                if last_under and first_over and first_over["outcome"] == "ok":
-                    # straight line through the two windows on log nodes against log time
-                    n0, n1 = int(last_under["cut_nodes"]), int(first_over["cut_nodes"])
-                    t0, t1 = last_under["to_paint_ms"], first_over["to_paint_ms"]
-                    at = math.exp(math.log(n0) + (math.log(limit) - math.log(t0)) * (math.log(n1) - math.log(n0)) / (math.log(t1) - math.log(t0)))
-                    estimate = f" (~{round(at, -3 if at >= 10000 else -2):,.0f})"
-                parts.append(
-                    f">{limit // 1000} s: "
-                    + ("never" if not first_over else
-                       f"{int(last_under['cut_nodes']):,}-{int(first_over['cut_nodes']):,}{estimate}" if last_under else
-                       f"<= {int(first_over['cut_nodes']):,}")
-                )
-            failed = [p for p in ps if p["outcome"] not in ("ok", "not run")]
-            parts.append("fails: " + (f"{int(failed[0]['cut_nodes']):,} ({failed[0]['outcome']})" if failed else "no"))
-            print(f"{reader}\t{layout}\t{chrom}\t" + "\t".join(parts))
+            found = {limit: crossing(ps, limit) for limit in (1000, 5000, 30000)}
+            thresholds[(reader, layout, chrom)] = (found, failure(ps))
+            print(f"{reader}\t{layout}\t{chrom}\t" + "\t".join(
+                f">{limit // 1000} s: {span}{f' ({est})' if est else ''}" for limit, (span, est) in found.items()
+            ) + f"\tfails: {failure(ps)}")
 
 # The report's tables, in markdown, to OUTDIR/tables.md
 LAYOUTS = [("fmmm", "FMMM"), ("stress", "stress"), ("tubemap", "tube map"), ("ordered", "ordered"), ("walkrows", "walk rows")]
@@ -204,6 +215,28 @@ def table(column, title):
 
 
 with open(f"{outdir}/tables.md", "w") as f:
+    f.write("Node counts where the median time to paint passes 1, 5 and 30 s (an estimate between the two windows that\n"
+            "straddle it, or the windows when one of them did not draw), and the first window that drew nothing\n\n")
+    f.write("| layout | reader | 1 s chr22 | 1 s MHC | 5 s chr22 | 5 s MHC | 30 s chr22 | 30 s MHC | fails chr22 | fails MHC |\n")
+    f.write("|---|---|---|---|---|---|---|---|---|---|\n")
+    for layout, lname in LAYOUTS:
+        for reader, rname in (("bjs", "BandageJS"), ("plugin", "plugin")):
+            cells = []
+            for limit in (1000, 5000, 30000):
+                for chrom in ("chr22", "chr6"):
+                    span, est = thresholds[(reader, layout, chrom)][0][limit]
+                    cells.append(est or span)
+            cells += [thresholds[(reader, layout, chrom)][1] for chrom in ("chr22", "chr6")]
+            f.write(f"| {lname} | {rname} | " + " | ".join(cells) + " |\n")
+    f.write("\n")
+    f.write("The windows (node counts) on either side of each crossing\n\n")
+    f.write("| layout | reader | | 1 s | 5 s | 30 s |\n|---|---|---|---|---|---|\n")
+    for layout, lname in LAYOUTS:
+        for reader, rname in (("bjs", "BandageJS"), ("plugin", "plugin")):
+            for chrom, cname in (("chr22", "chr22"), ("chr6", "MHC")):
+                found = thresholds[(reader, layout, chrom)][0]
+                f.write(f"| {lname} | {rname} | {cname} | " + " | ".join(found[limit][0] for limit in (1000, 5000, 30000)) + " |\n")
+    f.write("\n")
     f.write(table("to_paint_ms", "Time to paint, median (B BandageJS, P the plugin)") + "\n")
     f.write(table("main_block_max_ms", "Longest main-thread task before the paint, median") + "\n")
     f.write(table("zoom_frame_ms", "A wheel zoom to its next painted frame, median") + "\n")

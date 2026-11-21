@@ -1,0 +1,44 @@
+{
+  "plugins": [
+    {
+      "name": "GraphGenomeView",
+      "esmUrl": "http://127.0.0.1:47811/plugin/jbrowse-plugin-graphgenomeviewer.esm.js"
+    }
+  ],
+  "assemblies": [
+    {
+      "name": "hg38",
+      "sequence": {
+        "type": "ReferenceSequenceTrack",
+        "trackId": "hg38-refseq",
+        "adapter": {
+          "type": "ChromSizesAdapter",
+          "chromSizesLocation": {
+            "uri": "http://127.0.0.1:47811/hg38.chrom.sizes",
+            "locationType": "UriLocation"
+          }
+        }
+      }
+    }
+  ],
+  "tracks": [
+    {
+      "type": "GraphTrack",
+      "trackId": "hprc_v2_1_walks",
+      "name": "HPRC v2.1 haplotype walks",
+      "assemblyNames": ["hg38"],
+      "adapter": {
+        "type": "RgfaTabixAdapter",
+        "walksUri": "http://127.0.0.1:47811/data/hprc-v2.1-mc-grch38-f8.GRCh38",
+        "assemblyNameToPanSN": { "hg38": "GRCh38" },
+        "defaultHaplotypes": ["HG002#1", "HG00733#1", "NA19240#1", "HG00097#1"]
+      },
+      "displays": [
+        {
+          "type": "LinearGraphDisplay",
+          "displayId": "hprc_v2_1_walks-LinearGraphDisplay"
+        }
+      ]
+    }
+  ]
+}
