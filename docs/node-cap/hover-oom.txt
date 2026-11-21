@@ -1,0 +1,18 @@
+# BandageJS: a pointer move over the pane at chr6:31,000,001-31,400,000 (36,182 nodes, FMMM) runs the main thread's V8 heap out
+# Address: urls.mjs bjs chr6:31000000:400000 fmmm; pointer moved to (700,500) or (560,56) of a 1400x1000 page; on ada 2026-11-21
+
+## Chrome's stderr, a pointer move then a wheel zoom; a run with the pointer move alone and no wheel crashed the same way, and one with neither did not
+<--- Last few GCs --->
+14159 ms: Scavenge (during sweeping) 3998.0 (4008.8) -> 3996.1 (4014.8) MB, pooled: 0.0 MB, 10.71 / 0.00 ms (average mu = 0.514, current mu = 0.408) allocation failure; 
+14173 ms: Scavenge (during sweeping) 3999.8 (4018.3) -> 3999.0 (4030.8) MB, pooled: 0.0 MB, 11.72 / 0.00 ms (average mu = 0.514, current mu = 0.408) allocation failure; 
+[2389858:2389903:1121/045708.736901:ERROR:third_party/blink/renderer/bindings/core/v8/v8_initializer.cc:965] V8 javascript OOM (Scavenger: semi-space copy).
+
+## The pointer move alone, in a debug copy of the same build with console.log in input.ts's pointermove and hoverAt, and in bandage-core's addToGrid for an entry stamped over more than 100,000 cells
+console log dbg placeInfo start
+console log dbg hoverAt start
+console log dbg hoverAt end
+console log dbg nodeAtScreen
+console log dbg edgeAtScreen 
+console log dbg addToGrid {"entry":17613,"stamps":22374792,"cx":3784,"cy":5913,"cellSize":{"x":8.439751931263894,"y":2.623405057198799},"minX":588307.800774796,"minY":2249.663639837379,"maxX":620234.854064137,"maxY":17759.19319208825}
+console log dbg addToGrid {"entry":18959,"stamps":22565642,"cx":3839,"cy":5878,"cellSize":{"x":8.439751931263894,"y":2.623405057198799},"minX":639549.6034715717,"minY":2299.7819276771024,"maxX":671947.3169790724,"maxY":17717.885847592654}
+CRASH Error: Page crashed!

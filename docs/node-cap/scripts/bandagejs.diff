@@ -1,0 +1,92 @@
+diff --git a/src/layout.ts b/src/layout.ts
+index 843a99d9..81aa6ef9 100644
+--- a/src/layout.ts
++++ b/src/layout.ts
+@@ -40,6 +40,7 @@ export async function relayout() {
+   }
+   const request = ++liveLayout
+   done(layoutWork)
++  performance.mark('nc:layout-start')
+   const start = performance.now()
+   try {
+     const m = layoutModeByValue(effectiveMode())
+@@ -54,6 +55,7 @@ export async function relayout() {
+       ;({ result, duration } = await forceOf(graph))
+     }
+     if (request === liveLayout && state.graph === graph) {
++      performance.mark('nc:layout-end', { detail: { mode: layoutMode, ms: duration } })
+       state.layout = result
+       state.layoutMode = layoutMode
+       state.layoutMs = duration
+diff --git a/src/sources.ts b/src/sources.ts
+index f348584c..65493df4 100644
+--- a/src/sources.ts
++++ b/src/sources.ts
+@@ -164,6 +164,7 @@ function openGFA(
+     const graph = loadGraph(gfa, source.name, {
+       referencePath: along || undefined,
+     })
++    performance.mark('nc:graph')
+     if (graph.nodes.length > maxNodes) {
+       notify(
+         `${source.name} has ${graph.nodes.length.toLocaleString()} nodes, over the ${maxNodes.toLocaleString()} this page draws by default. A layout that size can take minutes.`,
+@@ -289,6 +290,7 @@ export async function openGbz(
+   const lifted = kept.walks?.map(l => l.walk) ?? askedWalks()
+   try {
+     parseRegion(src.region)
++    performance.mark('nc:cut-start')
+     const { gfa, region, sample, expanded, tooLarge } = await cutGbz(
+       wholeWalks ? { ...src, snarls: 'overlapping' } : src,
+       text => {
+@@ -297,6 +299,7 @@ export async function openGbz(
+       signal,
+       lifted,
+     )
++    performance.mark('nc:cut-end')
+     if (!live()) {
+       return
+     }
+diff --git a/src/view.ts b/src/view.ts
+index c96dacbc..85f9509c 100644
+--- a/src/view.ts
++++ b/src/view.ts
+@@ -498,6 +498,7 @@ export function rebuild() {
+     f.renderer.uploadGeometry(f.batch)
+   }
+   state.geometryMs = performance.now() - start
++  performance.mark('nc:geometry-end')
+   state.built = { scale: state.scale, bounds: viewportBounds }
+   draw()
+ }
+@@ -724,6 +725,7 @@ function draw() {
+   afterDraw.forEach(fn => {
+     fn()
+   })
++  performance.mark('nc:draw')
+ }
+ 
+ // The selected node, and a node its details name under the pointer, which the
+diff --git a/src/walkFiles.ts b/src/walkFiles.ts
+index 25a2b4f7..3e9ea7f2 100644
+--- a/src/walkFiles.ts
++++ b/src/walkFiles.ts
+@@ -1,5 +1,4 @@
+ import { parseRegion } from '@jbrowse/bandage-core'
+-import { GBZ_CUT_DEFAULTS } from '@jbrowse/bandage-core/gbzWindow'
+ import {
+   CUT_PRESETS,
+   RegionTooLargeError,
+@@ -41,11 +40,11 @@ export interface WalkCutSource {
+ }
+ 
+ export const walkCutOptions = (src: WalkCutSource) => ({
+-  ...CUT_PRESETS.browser,
++  ...CUT_PRESETS.figure,
+   haplotypes: src.haplotypes,
+   referenceSample: src.referenceSample,
+   context: src.context ?? CUT_PRESETS.browser.context,
+-  nodeLimit: src.nodeLimit ?? GBZ_CUT_DEFAULTS.limit,
++  nodeLimit: src.nodeLimit ?? Infinity,
+   links: src.links,
+ })
+ 

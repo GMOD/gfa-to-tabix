@@ -1,0 +1,85 @@
+diff --git a/src/GraphGenomeView/components/TubeMapOverlay.tsx b/src/GraphGenomeView/components/TubeMapOverlay.tsx
+index 828571b9..e6fb0082 100644
+--- a/src/GraphGenomeView/components/TubeMapOverlay.tsx
++++ b/src/GraphGenomeView/components/TubeMapOverlay.tsx
+@@ -136,6 +136,9 @@ const TubeMapOverlay = observer(function TubeMapOverlay({
+   const paint = useCallback(
+     (ctx: CanvasRenderingContext2D) => {
+       paintTubeMap(ctx, model, { highlightNode: model.selectedNode })
++      if (model.tubeMapPicture) {
++        performance.mark('nc:draw')
++      }
+     },
+     [model],
+   )
+diff --git a/src/GraphGenomeView/pane/loadActions.ts b/src/GraphGenomeView/pane/loadActions.ts
+index cd160fa2..63c5225e 100644
+--- a/src/GraphGenomeView/pane/loadActions.ts
++++ b/src/GraphGenomeView/pane/loadActions.ts
+@@ -172,6 +172,7 @@ export const withLoadActions = withEngineSettings.actions(self => {
+   // graph and hands off to the remote FMMM engine, which is also how
+   // 'force' is expressed. See LAYOUT_MODES.
+   function* computeLayout(graph: Graph, wanted: () => boolean) {
++    performance.mark('nc:layout-start')
+     const start = performance.now()
+     const tubeMap = TUBE_MAP_MODES.has(self.chosenLayoutMode)
+     // a tube map draws the window; the cut's context is for walk rows
+@@ -337,6 +338,7 @@ export const withLoadActions = withEngineSettings.actions(self => {
+         holdReference(graph, computed.result, self.graphRegion)
+       }
+       laidOutGraph = graph
++      performance.mark('nc:layout-end', { detail: { mode: computed.mode, ms: computed.duration } })
+       self.layoutResult = computed.result
+       self.drawnLayoutMode = computed.mode
+       self.setLayoutMs(computed.duration)
+@@ -1031,6 +1033,7 @@ export const withLoadActions = withEngineSettings.actions(self => {
+         if (!cut) {
+           self.setStatusMessage('Fetching subgraph')
+           const fetchStart = performance.now()
++          performance.mark('nc:cut-start')
+           const source = (yield getSession(self).rpcManager.call(
+             getRpcSessionId(self),
+             'GetSubgraph',
+@@ -1051,6 +1054,7 @@ export const withLoadActions = withEngineSettings.actions(self => {
+             },
+           )) as string | WalkCut
+           if (isLive()) {
++            performance.mark('nc:cut-end')
+             self.setFetchMs(performance.now() - fetchStart)
+             if (!source) {
+               throw new Error(
+diff --git a/src/GraphGenomeView/pane/renderingActions.ts b/src/GraphGenomeView/pane/renderingActions.ts
+index dc1fa10d..eef6c3d5 100644
+--- a/src/GraphGenomeView/pane/renderingActions.ts
++++ b/src/GraphGenomeView/pane/renderingActions.ts
+@@ -373,6 +373,7 @@ export const withRenderingActions = withLoadActions
+           )
+           if (built) {
+             b.uploadGeometry(built.batch)
++            performance.mark('nc:geometry-end')
+             self.setGeometryMetrics(
+               performance.now() - geometryStart,
+               built.batch,
+@@ -393,6 +394,7 @@ export const withRenderingActions = withLoadActions
+           }
+           self.paint(b)
+           self.markPainted()
++          performance.mark('nc:draw')
+           return true
+         },
+         releaseTargets: (b: Renderer) => {
+diff --git a/src/RgfaTabixAdapter/walkReader.ts b/src/RgfaTabixAdapter/walkReader.ts
+index 09c1a745..900dc2dd 100644
+--- a/src/RgfaTabixAdapter/walkReader.ts
++++ b/src/RgfaTabixAdapter/walkReader.ts
+@@ -55,9 +55,7 @@ export class WalkIndex {
+ 
+   cutOptions() {
+     return {
+-      ...CUT_PRESETS.browser,
+-      stepBudget: this.adapter.getConf('walkStepBudget') as number,
+-      byteBudget: this.adapter.getConf('walkByteBudget') as number,
++      ...CUT_PRESETS.figure,
+       budgetNames: BUDGET_SLOTS,
+     }
+   }
