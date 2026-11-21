@@ -372,3 +372,4 @@ corrupt route-rows-swapped "$TIE100" --all $'route\t2\t.\t2\nR#0#c\t0\t30\troute
 corrupt route-twice "$T0" $'\t0\t12\troute\t.\t13\t-9\n' $'\t0\t12\troute\t.\t13\t-9\n'$G$'\t0\t12\troute\t.\t11\t-9\n'
 corrupt bin-other-size "$T0" $'#unit\t'$G$'\t20\t30\tdepartures\t.\n' $'#unit\t'$G$'\t20\t40\tdepartures\t.\n'
 corrupt owntiles-twice "$T0" --all $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t0\n' $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t0,0\n'
+corrupt owntiles-three "$T0" --all $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t0\n' $'Q#0#chr\t6\t6\t0\t6\t+\t1\t12\t+\t1\t0,10,20\n'

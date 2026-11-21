@@ -121,6 +121,7 @@ other-sequence-as-interior	broken/far.gfa	verify7 spec8	B's last piece, its step
 other-sequence-as-interior-revisited	broken/shared.gfa	verify7	A's last piece, its step on node 3, which c2 passes once, written as the interior of a route with no exit in c1's tile 0, its row in c2 left out, in a file with revisited:i:1; spec8 passes it and counts the node, since the format promises this only of a file that states revisited:i:0, and claims7 fails it whole and passes it a sequence at a time
 other-tile-as-interior	broken/far.gfa	verify7 claims7 spec8	A's last piece, its steps on nodes 5 and 6, which c2 passes once in tile 10, written as the interior of a route with no exit in c2's tile 0, its row in tile 10 left out, at the same steps and bp
 ownbp-overstated-G	walks-records.gfa	claims7 audit7 spec8	G's record with ownBp 18 made 30
+owntiles-three	walks-two-refs.gfa	claims7 audit7 spec8	Q's record naming three tiles, 0, 10 and 20, where a record has at most two
 owntiles-twice	walks-two-refs.gfa	claims7 spec8	Q's record naming tile 0 twice
 owntiles-wrong	walks-two-refs.gfa	claims7 audit7 spec8	Q's record naming tile 10 for tile 0
 passes-once-as-twice	broken/repeat.gfa	verify7 audit7 spec8	node 4, passed once, stated as passed twice, and revisited 2 made 3
