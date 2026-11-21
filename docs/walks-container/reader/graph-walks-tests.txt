@@ -5,11 +5,22 @@ abridgedWalks.test.ts: each walk of abridged.R with a stretch off the reference 
 abridgedWalks.test.ts: over windows of $fixture, a walk counts the bp of each placeholder the cut keeps on its contig once
 abridgedWalks.test.ts: ownends.R lists the walks with a stretch off the reference not loaded on the window, and not those it draws exactly or whose run off it lies past the window, as its twin draws none of them
 abridgedWalks.test.ts: the README example is what ownends.R gives
+attachOnce.test.ts: unattachedRecords finds, record for record, the ones the cut before the fetch found, over every window of %s
 blocksEquality.test.ts: the equality harness finds each tile fetched for %s named by a record that leaves or rejoins on the window, each own run where its blocks row has it, no blocks unit read by an expanding cut, and bytesFor the bytes read
 blocksEquality.test.ts: the equality harness finds no link across two W lines of abut.R that abut, and the one line linked
 blocksEquality.test.ts: the equality harness finds no link in a loaded cut of unbuilt.R that only a piece the cut does not build walks
 blocksEquality.test.ts: the equality harness finds no placeholder in a loaded cut of %s, each id on one run, each cut the same from a fresh reader, and own steps on the departures that leave or rejoin on the window alone
 blocksEquality.test.ts: the equality harness walks a departure from the end of a node the reference passes reversed
+cutIndexes.test.ts: $why: $ids
+cutIndexes.test.ts: a link between nodes the cut does not keep is left out
+cutIndexes.test.ts: each link once, of tens of thousands with repeats and handles alike in their low 32 bits, as the strings sort
+cutIndexes.test.ts: finds what a scan of every occurrence finds, on paths that repeat a few nodes hundreds of times either way
+cutIndexes.test.ts: names whose numbers sort otherwise than their strings: H10 before H2, H1#10 before H1#9
+cutIndexes.test.ts: of runs that walk thousands of links again and again, among handles alike in their low 32 bits
+cutIndexes.test.ts: read backward from $at, $target: $why
+cutIndexes.test.ts: read forward from $at, $target: $why
+cutIndexes.test.ts: the strands of a link order it after its ids, + before -, source before target
+cutIndexes.test.ts: ties on all three keep the order given, among thousands in runs of a name
 cutPresets.test.ts: a cut of $fixture with the browser preset is a cut with no options, and the figure preset draws the same graph
 cutPresets.test.ts: the figure preset attaches no departure the browser preset leaves without steps
 cutPresets.test.ts: the presets are the ones the README tabulates
@@ -270,6 +281,7 @@ walkReader.test.ts: a cut over its step budget says how far to zoom in
 walkReader.test.ts: a cut reads the chunks under its context, not only under its window
 walkReader.test.ts: a cut reads the tiles and departure blocks its window overlaps, in one read where they touch, and a tile for the own steps of a record that leaves or rejoins on it alone: $window
 walkReader.test.ts: a cut reads the tiles its window overlaps, and nothing else
+walkReader.test.ts: a cut refused by $refusal is refused before decoding where the early count tells, with the error the finished cut throws but for fitsBp
 walkReader.test.ts: a cut returns every record whose line overlaps its window, in a hole too: $start-$end
 walkReader.test.ts: a cut whose attach fetches take it past the byte budget attaches none and says so
 walkReader.test.ts: a cut whose keep leaves the reference out lists the reference's link from one tile to the next with links 'between'
@@ -321,6 +333,7 @@ walkReader.test.ts: a region cut on a sequence the file lacks names the ones it 
 walkReader.test.ts: a region cut over its node limit says how far to zoom in
 walkReader.test.ts: a route naming no :k leaves from the first pass of its entry the walk reaches
 walkReader.test.ts: a route's own steps inside one piece are a departure computed from the steps
+walkReader.test.ts: a row naming a route its tile lacks, mid-row, gets the decode refusal where the window without it is refused before decoding
 walkReader.test.ts: a second sequence's table covers the bytes from the first sequence's table on
 walkReader.test.ts: a sequence's length and the reference nodes over a window come from its tiles, and the bytes a cut reads from its table and its records' ownTiles
 walkReader.test.ts: a step between two on the window states its pass, off the window
@@ -344,6 +357,12 @@ walkReader.test.ts: a walk that leaves at the end of a node the window draws get
 walkReader.test.ts: a walk through a 0 bp segment of the reference departs once over it
 walkReader.test.ts: a window inside a hole in the reference returns the jump across it, whether or not the writer cut the walk there
 walkReader.test.ts: a window inside a jump finds the jump in the departure read
+walkReader.test.ts: a window of $rows, whose rows state more steps than its cut keeps, is cut with a budget of the $kept it keeps, and refused one below, before decoding where its count reaches it
+walkReader.test.ts: a window over a revisited reference, whose rows name passes by :k, @k and start@k and take its second route, is cut at the 22 steps it keeps and refused before decoding below the 20 its rows keep, as the finished cut refuses it
+walkReader.test.ts: a window over the budget is refused before decoding with fitsBp where its counted steps reach the budget, less the context: $fitsBp
+walkReader.test.ts: a window whose blocks unit takes it past the byte budget gets the byte refusal, bytes and all, and one within it the early refusal
+walkReader.test.ts: a window whose records can fetch tiles to attach gets the refusal the finished cut throws, $refusal
+walkReader.test.ts: a window whose records can fetch tiles to attach is left to the finished cut under a node limit
 walkReader.test.ts: aborting an expanding cut stops its detail reads
 walkReader.test.ts: an abridged piece starting where the drawn stretch ends is not cut
 walkReader.test.ts: an abridged row's end takes the pass end@k names, else the one nearest its start
