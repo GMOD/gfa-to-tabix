@@ -15,11 +15,11 @@ cutPresets.test.ts: the figure preset attaches no departure the browser preset l
 cutPresets.test.ts: the presets are the ones the README tabulates
 cutPresets.test.ts: the presets keep WALK_CONTEXT and differ only in their budgets
 cutPresets.test.ts: the presets, each preset and the budgets are frozen, so no caller changes them for another
+formsCheck.test.ts: a change's net agrees to the last figure its key gives it
 formsCheck.test.ts: a member in a form whose change it lacks contradicts it in count
 formsCheck.test.ts: a member shown with a call where its walks leave a gap contradicts it
 formsCheck.test.ts: a member whose change lies elsewhere in the site contradicts the place
-formsCheck.test.ts: a rare shift whose insertion lies at a summed site is that site's change, kept apart
-formsCheck.test.ts: a shift's net agrees to the last figure its key gives it
+formsCheck.test.ts: a rare deletion and an insertion at a summed site are two changes, the insertion that site's
 formsCheck.test.ts: a summed site states a net change, so pieces that cancel agree with ref
 formsCheck.test.ts: structuralForms states nothing its members contradict, at any floor or fold
 formsCheck.test.ts: the checker reports a change that lies in no site
@@ -27,11 +27,13 @@ formsCheck.test.ts: the checker reports a member's changes elsewhere in a wider 
 formsCheck.test.ts: the checker reports a member's changes in a wider site that the form does not state, away from its marks
 formsCheck.test.ts: the checker reports a no call stated where the walks span the site
 formsCheck.test.ts: the checker reports a rarer change stated where the member makes none
+formsCheck.test.ts: the checker reports a summed site's change named other than the members' own
 formsCheck.test.ts: the checker reports a summed site's largest change the members do not make
 formsCheck.test.ts: the checker reports a summed site's net change the members do not make
+formsCheck.test.ts: the checker reports a wider site's change named other than the members' own
 formsCheck.test.ts: the checker reports a wider site's change stated at its place and net with another size
 formsCheck.test.ts: the checker reports a wider site's change stated at its place with another net change
-formsCheck.test.ts: the checker takes only the tolerance and constants from structuralForms
+formsCheck.test.ts: the checker takes only the tolerance, the naming rule and constants from structuralForms
 refNames.test.ts: a PanSN name resolves under its sample and under its haplotype
 refNames.test.ts: a contig on two haplotypes of a sample resolves on each haplotype and throws on the sample
 refNames.test.ts: a pggb name with no haplotype field resolves under its sample
@@ -63,19 +65,22 @@ rgfaFormat2.test.ts: a format 2 node row names its carriers from #samples
 rgfaFormat2.test.ts: a format other than 2 is refused
 structuralForms.test.ts: a GSTM1-like window is two forms, and other holds a rare insertion
 structuralForms.test.ts: a change at another place in a site is another state, never folded into it
+structuralForms.test.ts: a change deletes or inserts only where one side is 0 bp, and replaces at any ratio
 structuralForms.test.ts: a change every haplotype shares tells none apart, and every form carries it
-structuralForms.test.ts: a change inserts, deletes or replaces on its exact REF and ALT
 structuralForms.test.ts: a change under 50 bp is no mark, a larger one keys on two figures
 structuralForms.test.ts: a common change is placed where most of its carriers put it
-structuralForms.test.ts: a deletion and an insertion of one size pair into a shift
+structuralForms.test.ts: a deletion and an insertion of one size are two changes, whatever the sizes
+structuralForms.test.ts: a deletion with SNPs beside it spans the R it leaves out
+structuralForms.test.ts: a duplication gives the bp it walks, and both sides where it leaves R out too
 structuralForms.test.ts: a form marks its changes in R order and says them largest first
 structuralForms.test.ts: a form names a rare bridge once when its carriers' medians differ by site
 structuralForms.test.ts: a form needs 1% of the haplotypes, and at least one
-structuralForms.test.ts: a form whose only own changes are shifts says so
 structuralForms.test.ts: a gain at a site wider than 50 bp replaces it
 structuralForms.test.ts: a haplotype of a form under minCarriers joins a form whose every state fits it, or other
 structuralForms.test.ts: a haplotype placed somewhere is in a form, one placed nowhere is not
 structuralForms.test.ts: a mark at a site the walks do not span whole is no call there
+structuralForms.test.ts: a mark is built from the departures that change length: a SNP beside one neither widens it nor counts on a side, and R walked between two is on neither side
+structuralForms.test.ts: a mark is named by the bp of R it leaves out and the bp of its own it runs
 structuralForms.test.ts: a mark shared by minCarriers haplotypes, each covering half of the other, makes sites
 structuralForms.test.ts: a place's spans each cover half of every other, so any carrier of a state stands for it
 structuralForms.test.ts: a rare call where most haplotypes have no call stays apart
@@ -85,15 +90,18 @@ structuralForms.test.ts: a rare no call is never shown as a call
 structuralForms.test.ts: a rare plain mark from a summed site neither widens it nor merges sites
 structuralForms.test.ts: a rare plain mark states itself at every summed site it overlaps
 structuralForms.test.ts: a rare state folds into a common state its change agrees with, and is rarer where none does
-structuralForms.test.ts: a replacement under 5% on one side reads as a deletion or insertion
-structuralForms.test.ts: a shift keys on its net change where that passes the floor and the size's last figure
+structuralForms.test.ts: a replacement far smaller on one side is still a replacement, both sizes given
+structuralForms.test.ts: a row names every change as large as its largest, one drawn over R first, a replacement by its larger side
 structuralForms.test.ts: a site most walks do not reach is an edge, left out of the key
 structuralForms.test.ts: a site spans the marks it comes from, and a summed change reaching past it does not widen it
 structuralForms.test.ts: a site wider than 1 kb keeps its changes apart, unsummed
-structuralForms.test.ts: a step back along R is a duplication, which shifts like an insertion
+structuralForms.test.ts: a state is one kind of change, so its name holds for every carrier
+structuralForms.test.ts: a step back along R is a duplication, and a deletion beside it stays one
+structuralForms.test.ts: a summed site's change is named by the pieces it sums
 structuralForms.test.ts: a window with no change is one form
+structuralForms.test.ts: an indel under 50 bp on both sides joins no larger change, while such pieces still sum
 structuralForms.test.ts: an inversion moves no length and is a state of its own
-structuralForms.test.ts: departures under 50 bp of R apart join, keeping their net change
+structuralForms.test.ts: changes under 50 bp of R apart join, and an indel under 50 bp between them joins neither
 structuralForms.test.ts: describeForm lists every change, largest first
 structuralForms.test.ts: each mark names its site and state, and formStateAt reads a form at any site
 structuralForms.test.ts: excluded samples have no form, and none are excluded by default
@@ -103,6 +111,8 @@ structuralForms.test.ts: formTag names the largest change of a form and counts t
 structuralForms.test.ts: forms a higher floor cannot tell apart merge
 structuralForms.test.ts: forms are the same for every order of the haplotypes where places tie in carriers and start
 structuralForms.test.ts: forms group the haplotypes that match at every informative site
+structuralForms.test.ts: forms that would read alike are told apart by the changes they differ in
+structuralForms.test.ts: large departures that overlap on R join across a small one between them
 structuralForms.test.ts: markTag says a change in a short token
 structuralForms.test.ts: nested changes are one site, each haplotype stating only its own
 structuralForms.test.ts: one haplotype's mark covering half of two common changes merges neither's place
