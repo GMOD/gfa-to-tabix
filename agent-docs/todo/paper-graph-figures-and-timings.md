@@ -41,8 +41,12 @@ anew from `approve/` and `compare/` there.
 - **On 10.4.3 those windows take about 85 s, with the tab frozen.**
   bandage-core 14.3.4 does not change that. One profile puts 73 s in
   `runsAlong` and `distanceToSegment` (`src/util/edgeCurves.ts`), which test
-  every sample of a deletion edge against every skipped node. A laptop
-  session is fixing it on bandage-core branch `runs-along-speed`.
+  every sample of a deletion edge against every skipped node.
+- **bandage-core 14.3.5 fixes that:** the same windows draw in 8.5–10.5 s on
+  a plugin build with it, with byte-identical screenshots. What is left
+  against 9.0.0 is the FMMM layout in the worker, 5.9 s against 1.3 s for
+  the 14,142-node window, and about 1.9 s of main thread against 0.5 s. A
+  laptop session is finding out why.
 - **Load time is back to 9.0.0's with 14.3.4:** the drawn windows load in
   0.4–1.2 s (median 1.1 s) on the plugin's `cut-speed` build, where 10.4.3
   took 0.4–3.4 s (median 2.6 s). Nodes, requests and bytes are identical in

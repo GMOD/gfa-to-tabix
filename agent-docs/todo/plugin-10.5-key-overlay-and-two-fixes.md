@@ -46,15 +46,13 @@ and its scratch files are copied to
 
 ## Before the release
 
-- Dense windows freeze the tab for over a minute while drawing, since
-  10.0.0: `todo/paper-graph-figures-and-timings.md`, "Timings". The fix, on
-  bandage-core branch `runs-along-speed`, goes in this release.
-
-- Release bandage-core with the speed fix and the stress layout at 1.1.0,
-  then the plugin, by the usual gates, with `scripts/shoot-figures.mjs
-  --compare` over every spec against 10.4.4 looked at.
-- Re-pin BandageJS and ggbandage to the same bandage-core.
-- The store publish stays with the laptop.
+- bandage-core 14.3.5 is released with the second speed fix and the stress
+  layout at 1.1.0. A laptop session is preparing the plugin's candidate on
+  branch `release-10.5`: the bump, the suite, and
+  `scripts/shoot-figures.mjs --compare` over every spec against 10.4.4,
+  looked at.
+- Then the plugin by the usual gates, the store publish from the laptop,
+  and BandageJS and ggbandage re-pinned to the same bandage-core.
 
 ## After it
 
