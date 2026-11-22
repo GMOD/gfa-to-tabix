@@ -26,15 +26,46 @@ metadata:
   in the plugin reads them.
 - The paper session asked for lanes against hg38 for Figure 5 on 2026-11-22.
 
-## What to do
+## The prototype, 2026-11-22
 
-- Read each lane's records against the reference from the stored placement,
-  with no chain search. Gate it on the diagonals of the PAF
-  `gfa_to_pairwise_paf.py` writes from the same GFA, and on pictures, a pggb
-  graph among them, where the reference itself steps nodes twice and the
-  writer's placement rule decides the pass.
-- Make ribbons against the reference what a walk-fed track draws, with
-  neighbour against neighbour a setting if it is kept at all:
-  `todo/lane-aligner-leftover-stretches.md`, "Reviews".
-- This takes gbz-base's `lcs` and `pairAlignment` out of the lanes against
-  the reference.
+Branch `lanes-from-placement`, 42b4f504, in
+`~/src/jbrowse-plugin-graphgenomeviewer-placement`, on 10.4.4, not pushed.
+Results are on ada in `~/work/synteny-extract-1122/placement-1122/` and
+pictures in `~/src/walks8-evidence/sessions-20261122/takeover/placement/`.
+
+- **The rule.** A record is a maximal run of a fragment's placed steps, all
+  with the reference or all against it, each at or past the end of the one
+  before. Unplaced steps between two of them are an insertion and the
+  reference between their places a deletion. A turn, or a step back onto
+  reference already passed, starts the next record.
+- **On 55 Minigraph-Cactus windows** its matched bases equal the diagonals
+  of the PAF unpacked from the same graph, with every placed base under
+  exactly one record. It holds all that today's aligner finds and about a
+  sixteenth more, most of it at SMN, TBC1D3 and `chr14:19.2M`, and
+  HG00128's reversed 29 kb at amylase has a record. Three planted faults
+  each fail the checks.
+- **It takes about a tenth of the time** in Node, the cut aside.
+- **Pictures** at CFH, amylase, SMN and TBC1D3 with every lane against the
+  reference: CFH draws the same ribbons; amylase gains its reversed
+  ribbons; SMN and TBC1D3 are true to the file and a tangle no single
+  ribbon can be followed in.
+- **pggb chrY is not ready.** Where the reference passes a node several
+  times the stored place hops between copies, and at TSPY five lanes break
+  into 4,000 records, 1,565 of them under 100 bp. Today's aligner pairs
+  1.75 Mb there with a pass other than the stored one.
+- **Given up or left open:**
+  - Ribbons between two haplotypes, with the switch on.
+  - A haplotype's own sequence at a record break lies under no record,
+    about 75 kb a lane at amylase.
+  - No smallest record size.
+  - Four lanes at amylase still end at their first reversed record; that
+    is the display's, fixed on jbrowse-components branch
+    `lanes-fit-at-inversions`.
+
+## What is left
+
+- The owner's ruling on ribbons between two haplotypes.
+- A stated rule for a reference that passes a node more than once, so a
+  pggb array draws as one band with its passes and not as shreds.
+- Say what lies at a record break: `todo/lanes-say-what-lies-between-fragments.md`.
+- Then land it by the usual gates, with the display's fit fix.
