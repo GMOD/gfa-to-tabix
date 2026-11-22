@@ -51,6 +51,11 @@ anew from `approve/` and `compare/` there.
   0.4–1.2 s (median 1.1 s) on the plugin's `cut-speed` build, where 10.4.3
   took 0.4–3.4 s (median 2.6 s). Nodes, requests and bytes are identical in
   every window.
+- **The dense pggb windows are mostly not those windows.** Of the 14,142
+  nodes drawn at `chrY:17,123,157`, 114 are the window's own graph; the rest
+  come from megabases away, kept because their links' stored places lie
+  either side of the window: `todo/dense-pggb-chain-joints-drawn-as-skips.md`.
+  The paper's "up to 17,570 nodes" counts them.
 - jb2bench e1e038c holds the 22 November rerun with 10.4.3. The hosted HPRC
   numbers are unchanged.
 - To redo for the paper: time to drawn, on the released plugin, with
