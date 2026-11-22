@@ -18,9 +18,10 @@ against its source GFA.
   first to the last reference node it links to (`src/anchor.rs`), and a
   reference node under its own coordinate. A bubble of `.bubbles.bed.gz`
   that crosses the window's edge therefore has members the cut lacks: 17 at
-  CFHR, 107 at KIR and 203 at MHC on HPRC. Whether every one is a reference
-  node outside the window or in a component attached wholly outside it was
-  reasoned from the code and not checked on those cuts.
+  CFHR, 107 at KIR and 203 at MHC on HPRC. The jb2hubs session classified
+  every missed member at the six HPRC windows that had any, 337 in all:
+  each is a reference node outside the window or in a component attached
+  only outside it. So this is the design and not a fault.
 - **A figure that wants whole bubbles widens the window** until no bubble of
   the bubble file crosses it, then cuts.
 - **On the contig layout a hop count does not close a cut.** Most of the 77
