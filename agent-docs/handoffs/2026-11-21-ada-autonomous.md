@@ -206,22 +206,25 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
   one-tile windows come only after a full cut:
   `ideas/ready/early-refusal-context-tiles.md`.
 
-### In flight
+- **The drawing gate's follow-ups** (`~/work/followup-20261121/drawing-gate/`,
+  `README.txt`), at bandage-core 129f55b (14.3.0's source):
+  - links-stress given a 6,500 MB heap under 8G in ada's `caps.tsv`, and
+    passed: 18,239 s, exit 0, every window drawn;
+  - labels-probe's owed run passed: 6,241 s, exit 0, every window drawn,
+    the same violation counts class by class as the earlier heap runs;
+  - patches 1–3 (all alleles with the named change, sv-32 and sv-49
+    re-picked, run.sh's sampler following the tree) applied on the laptop,
+    patch 1 changed; link-ends passes 83/83 on the new picks;
+  - **patch 4 should not land:** with identical findings, the bounded
+    redraws took 663 s against 692 s side by side, within noise, because a
+    bounded geometry build still folds and curves the whole graph; it adds
+    150 lines that must track the library's renderer. The saving has to
+    come from the library (`todo/drawing-gate-after-holes.md`);
+  - every flagged finding on the six re-picked or re-pinned windows was
+    looked at: none is a library fault.
 
-- The drawing gate's follow-ups, a subagent on ada: links-stress's heap and
-  passing run, labels-probe's owed run, and patches for the laptop (the
-  harness's canonical copy is there) in `~/work/followup-20261121/drawing-gate/`.
-  - The laptop applied patches 1–3 to `~/src/walks8-evidence/fab8f323`, with
-    one change to patch 1: in `vcffacts.py` the nearest allele always joins
-    its own named-change set (`same = {a} | {...}`), else a nearest allele
-    more than 2% off would count no carriers. Its rerun on ada
-    (`~/work/watcher-1121/`): sv-49 draws 1 of 3 carriers of the named
-    change, sv-32 1 of 39.
-  - The laptop checker is now a git repo (`drawcheck-merged`, de49404), and
-    `ada-gates.sh` ships its `.git`, so a run can name the checker commit.
-  - Patch 4, the checker-time prototype, is not applied; whether it should
-    land is to be said here once its A/B timing against `--whole-redraws`
-    is done.
+The first queue is done; what it leaves is filed in `agent-docs/todo/` and
+`agent-docs/ideas/`.
 
 ### Decisions
 

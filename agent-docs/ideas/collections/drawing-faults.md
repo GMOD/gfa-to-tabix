@@ -49,3 +49,8 @@ today's head before working one; several may be gone.
   orange, and since tubemap-core 2.1.0 forward reads are red beside them,
   where blue used to contrast; reads and bands are harder to tell apart
   (`~/work/followup-20261120/gw9-tubemaps/` on ada)
+- The force layout lays a not-loaded placeholder's outline loop across the
+  reference (sv-48, HG00128#2's 5.1 kb; sv-49, NA20805#1's 591 bp), visible
+  at the drawing's scale in sv-48; the drawing gate flags it as a false
+  crossing (`~/work/followup-20261121/drawing-gate/work/pictures-129f55b/`
+  on ada)
