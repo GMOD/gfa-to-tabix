@@ -64,6 +64,10 @@ anew from `approve/` and `compare/` there.
   window's reference steps drawn, and later-pass windows on their own.
 - That run's load times are 0.4–0.45 s for six windows and 0.84–3.4 s for
   nine; where the paper's 0.4–1.3 s comes from was not found.
+- **Measured since:** indexed with `build` (1 min 57 s, 10 GB peak), the
+  same 19 windows draw 40–858 nodes each on released code in 0.5–0.9 s to
+  drawn, none refused. That is the honest benchmark of this graph today:
+  re-index in jb2bench with `build` and quote time to drawn.
 - jb2bench e1e038c holds the 22 November rerun with 10.4.3. The hosted HPRC
   numbers are unchanged.
 - To redo for the paper: time to drawn, on the released plugin, with

@@ -94,10 +94,56 @@ Both of 2026-11-22; texts in the evidence folder as
   layout time, and at `chr18:78.37 Mb` shrinks nested deletions until they
   no longer read as going around. Not taken.
 
+## The prototype, 2026-11-22
+
+graph-walks branch `window-joined-cut`, e776a71, in
+`~/src/graph-walks-windowjoined`; bandage-core branch `skips-need-a-vouch`,
+a501217, in `~/src/bandage-core-skipsvouch`. Not landed. Results are on ada
+in `~/work/walks8-gates/agents/windowjoined/`, pictures and the report in
+the evidence folder (`windowjoined/`, `reviews/windowjoined-prototype.txt`).
+
+- **`build` already avoids most of it.** Indexed with `gfa-to-tabix build`,
+  which writes the contig layout, chrY's 19 benchmark windows draw their
+  own graph on released code in 0.5–0.9 s, the four the anchored index
+  refuses among them. What stays wrong there is the skips and turn marks:
+  92 false skips at 21.92 Mb.
+- **The reader.** A format 2 index with a `#samples` line, or format 1 rows
+  with `SM:Z:`, is a path graph. Its cut keeps the reference nodes placed
+  in the window, the off-reference components linked to them and the nodes
+  one link beyond, in both layouts, and says in the cut's header that
+  places are first passes and how many nodes it left out. rGFA sources
+  take the old path.
+- **The drawing.** For such a cut a link is a skip, or carries a turn
+  mark, only if the cut's reference nodes abut by stored place from foot
+  to foot. Reference nodes in no run that touches the window are seeded
+  and folded as off-reference nodes are.
+- **On chrY** the node counts are the second review's: 114 at 17.12 Mb, 858
+  at 17.90, 40 at 23.75, 79 at 8.37. Dense windows draw in about 1 s where
+  they took 6–10 s. Each of the 131 skips kept bypasses consecutive
+  reference steps on the GFA's own path.
+- **Minigraph-Cactus does not move:** 584 fixture cuts and 45 hosted
+  windows byte-identical, and five kinds of window with no pixel changed.
+- **Both layouts now agree** with the window's graph read off the GFA on
+  eight random graphs whose reference revisits nodes; today's code fails
+  all eight.
+- **A later-pass window is still wrong.** At 21.92 Mb it draws 287 of 1,075
+  reference steps as 27 pieces, 172 of its nodes coloured by a first pass
+  elsewhere, and nothing on screen says 788 steps are missing.
+- **Lost:** at 26.43 Mb two real deletions of 2 and 4 bp at the window's
+  edge become plain links, and a node 4 bp past the edge is seeded off the
+  line.
+- bandage-core's suite passed whole once (1,861 tests); a rerun after the
+  last small change failed one timing bound under load, which passes alone.
+
 ## What to do
 
-A laptop session is prototyping this on branches, with pictures.
+Prototyped as above; the owner's tick is the gate, since it changes what
+every pggb window from a node and link index draws.
 
+- **Before landing:** a notice in the plugin where a window's reference is
+  mostly placed elsewhere, from the bp of the window its drawn reference
+  nodes cover and the cut's count of nodes left out; and the timing test
+  rerun on a quiet machine.
 - **graph-walks:** a flag that a source is a path graph whose stored places
   are first passes, in both layouts, with tag-anchored rGFA sources kept
   exact; and for such a source in the anchored layout a cut of the
