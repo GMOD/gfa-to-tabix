@@ -8,12 +8,13 @@ description: A laptop session measured how well walk files supply JBrowse's hapl
 The owner asked whether multi-way synteny can be read straight from the
 graph's walk file, at a locus and genome-wide, and then whether what it
 returns is right. This file points at where each answer is; delete it when
-the aligner change lands and the items under "Nobody has picked up" are
-filed or done.
+the aligner change lands.
 
 ## Where everything is
 
-- **Evidence:** ada, `~/work/synteny-extract-1122/`.
+- **Evidence:** ada, `~/work/synteny-extract-1122/`. The laptop's
+  `~/src/walks8-evidence/sessions-20261122/lanes/` has the scripts and
+  pictures only.
   - Scripts and outputs of the first pass at the top level; `laptop-copy/`
     holds the same scripts as they ran, and the page's HTML.
   - `why-amylase/` is the second Fable review's sweep and traces.
@@ -54,54 +55,28 @@ filed or done.
 - **The ada session** (`2026-11-21-ada-next.md`): move the aligner out of
   gbz-base into graph-walks as a pure move, then the leftover aligner as its
   own change, behind the gates in the todo.
-- **The owner:** `todo/lanes-headers-and-fit-at-inversions.md`. It is all in
-  jbrowse-components, and the ada session is told not to act on it.
+- **A laptop session:** `todo/lanes-headers-and-fit-at-inversions.md`, on the
+  jbrowse-components branch `lanes-fit-at-inversions`, unpushed; the owner
+  opens the PR. The ada session is told not to act on it.
 
 ## Before the aligner change lands
 
-These are in the todo's gates or follow from the second review; none is
+Every check is a gate in `todo/lane-aligner-leftover-stretches.md`; none is
 done.
 
-- Re-run GSTT1 with floors of 1 kb and 10 kb. The second review reported
-  seven pairs that get less than today at 10 kb; the first pass did not
-  repeat it.
-- Explain the stretch of HG00128's pairs the prototype still leaves without
-  a ribbon, and why its records depend on which walk is the query.
-- Run it at the sweep's lowest windows and at wide windows over SMN and
-  8p23.1, and on a pggb graph. No pggb graph has been tried at all.
-- Shoot before and after at amylase, SMN, TBC1D3 and FLNA/EMD and look at
-  them. About a twentieth of the shared bases at amylase carry two ribbons,
-  so a blue ribbon lies over a salmon one; whether that reads at SMN is not
-  known.
-- Run the display to confirm what draws the thin blue line at amylase. The
-  first review read it off the records and `cutAtOpenings`.
-- Skip the second direction where little is shared the other way, then time
-  it in the real reader.
-- Check that the plugin's `cutOptions()` equals the browser preset the
-  scripts cut with.
+## Filed since
 
-## Nobody has picked up
-
-- **graph-walks' `cut` ends a fragment at its last step on the reference.**
-  The second review found 30 kb of HG00097's walk at amylase in the file
-  and not in the fragment (`trimmedAfter`), which the lane then heads as
-  part of an insertion. Not verified by the laptop session and not filed.
-- **The comment in `walkLanes.ts`** that counting singly visited nodes
-  "misses no inversion it could draw" is wrong. It goes away with the
-  aligner change; if that stalls, fix the comment.
-- **A stacked `LinearSyntenyView` from a walk file** gets records only on a
-  level whose upper row is the reference, by reading the code; it was not
-  run. It is noted in the coarse-table idea and nowhere else.
-- **Ribbons against the reference in the lanes display.** A walk-fed lanes
-  track always draws neighbour against neighbour, with no setting for each
-  lane against hg38. The paper session wanted that for Figure 5 and was
-  told it is a jbrowse-components change.
-- **Lanes in a browser.** The ada session's query-time item times the graph
-  track, not the lanes.
-- **Whether lanes should be offered at loci like amylase,** where the graph
-  keeps identical sequence on separate nodes. The first review called them
-  not a sound reading there. The tutorial's part 3 reads amylase from
-  walk rows; nothing in the lanes points there.
+- **A fragment ending at its last step on the reference** is graph-walks'
+  design, not a fault in `cut`; the lanes adapter drops what the cut says
+  lies past it: `todo/lanes-say-what-lies-between-fragments.md`.
+- **Ribbons against the reference:** `todo/lanes-ribbons-against-reference.md`.
+- **Whether lanes should be offered at loci like amylase:**
+  `ideas/waiting-on-a-call/lanes-at-collapsed-loci.md`.
+- **Lanes in a browser:** added to the ada session's query-time item.
+- **A stacked `LinearSyntenyView` from a walk file** stays in the
+  coarse-table idea; it was read from the code and not run.
+- **The comment in `walkLanes.ts`** goes away with the aligner change; if
+  that stalls, fix the comment.
 
 ## Cleaning up
 

@@ -10,7 +10,9 @@ metadata:
 Measured 2026-11-22 on the plugin at 10.4.3 and the hosted HPRC format 8
 walk file, with the eight haplotypes of `demos/hprc_multiway`, and reviewed
 the same day by a Fable session that read the scripts and the pictures.
-Everything is on ada in `~/work/synteny-extract-1122/`.
+Everything is on ada in `~/work/synteny-extract-1122/`; the laptop's
+`~/src/walks8-evidence/sessions-20261122/lanes/` has the scripts and
+pictures, without `steps.jsonl` and the sweep's outputs.
 
 ## What is true today
 
@@ -90,14 +92,21 @@ Everything is on ada in `~/work/synteny-extract-1122/`.
 - Explain or fix two things the review found: the stretch of HG00128's
   pairs still without a ribbon, and that the records depend on which walk is
   the query.
+- Re-run GSTT1 with floors of 1 kb and 10 kb. The second review reported
+  seven pairs that get less than today at 10 kb; nobody has repeated it.
 - Run haplotype pairs over the second review's sweep, at its lowest windows
   (`chr14:19.2M`, SMN, `chr22:18.6M`, TBC1D3, `chr16:28.5M`, `chr1:144.3M`)
   and wide windows at SMN and 8p23.1, and on a pggb graph. The 1q21 window
   first measured has no walk stepping a node twice, so it tested nothing. Stop if a collapsed array fans ribbons past reading,
   or record counts grow out of proportion.
-- Before and after pictures of amylase, KIV-2, C4 and FLNA/EMD, looked at.
-  No lane may change its place, range or header, and no band may lose a
-  ribbon.
+- Before and after pictures of amylase, SMN, TBC1D3, KIV-2, C4 and
+  FLNA/EMD, looked at. No lane may change its place, range or header, and no
+  band may lose a ribbon. At SMN and TBC1D3, say whether a blue ribbon over
+  a salmon one still reads.
+- Run the display at amylase to confirm what draws the thin blue line; the
+  reading under "Known and accepted" is from the records alone.
+- Check that the plugin's `cutOptions()` equals the browser preset the
+  scripts cut with.
 - Time it in the real reader. In Node it is about twice as slow as today on
   a plain window, since it tries both directions every time; skip the second
   direction where little is shared the other way, as today's `turnedBases`
