@@ -20,27 +20,43 @@ Everything is on ada in `~/work/synteny-extract-1122/`.
   (`pairs_check.tsv`). Against GRCh38 the records lie on the diagonals of the
   PAF `gfa_to_pairwise_paf.py` writes from the same GFA, over 320
   lane-windows (`parity.jsonl`); that checks the reader, not the sequence.
-- **Away from amylase nothing the graph shares is left out.** At CFH, a 1q21
-  duplication and two plain windows, every base on a node both walks step
-  has a ribbon.
-- **At amylase about a sixth of it has none.** `coverage.mjs` counts, from
-  the walks alone, the bases of each walk on nodes the other also steps, and
-  how many a record covers.
+- **Nearly everywhere nothing the graph shares is left out.** `coverage.mjs`
+  counts, from the walks alone, the bases of each walk on nodes the other
+  also steps, and how many a record covers. A second Fable review swept
+  every chromosome in 300 kb windows (`why-amylase/genome.windows.jsonl`):
+  all but about a hundred of some 9,600 measured windows are at 100%, and
+  about twenty are under 99%.
+- **The low windows are where a walk steps a node twice.** Every window
+  with such a walk is below 100%, and no window at 100% has one. Amylase is
+  the ninth lowest, at about five sixths; SMN, TBC1D3, `chr14:19.2M` and
+  `chr22:18.6M` are lower. 300 kb windows understate it: SMN and 8p23.1 are
+  lower in wider ones.
+- **At amylase four haplotypes walk a hairpin:** some 48 kb forward, a 16 kb
+  loop, then the same 48 kb back in reverse. HG00128 walks a stretch twice
+  forward.
 - **Half the shortfall is the pair-chaining branch.** `lanePairAligner`
-  sends a pair that shares 100 bp each way to pair chaining, which leaves
-  out every node a walk steps twice. Seven of the 35 fragment pairs at
-  amylase take it, each comes back as one forward record, and the
-  subsequence alone would have reported more for every one (`branch.mjs`).
-  The two bands that are blank in `shots/before/lanes_amylase.png` are both
-  such pairs. Why chaining returns no reverse record there is not known.
+  sends a pair to gbz-base's pair chaining when it shares 100 bp each way on
+  nodes stepped once; the loop is such a share. The chainer's `repeatSteps`
+  then masks every step between the first and last visit of a twice-stepped
+  node, which is both arms and the loop, so no reverse seed is left and one
+  forward record of the flanks comes back (`why-amylase/trace.mjs`). Seven
+  of the 35 fragment pairs at amylase take the branch, and the subsequence
+  alone would have reported more for every one (`branch.mjs`). The two bands
+  that are blank in `shots/before/lanes_amylase.png` are both such pairs.
+  Across the genome the branch loses more ribbon than it gains.
+- **The comment in `walkLanes.ts` is wrong** that counting singly visited
+  nodes "misses no inversion it could draw": the chainer leaves out more
+  than the nodes stepped twice. The same mask is why `anchorAligner` gives
+  no record for HG00128's reversed 29 kb.
 - **The rest is the single chain.** The subsequence keeps one in-order chain
-  in one direction, so a second pass over a node, or a stretch read the
-  other way, gets no ribbon.
+  in one direction, so a stretch shared only the other way round, a return
+  pass, or a stretch out of order gets no ribbon. With one ribbon a base,
+  the return and second passes cannot be ribboned at all.
 
 ## The decision
 
-- **Lanes between two haplotypes take the leftover aligner,** `leftover.mjs`
-  with one floor of 10 kb: the heaviest in-order chain, then each stretch of
+- **Lanes between two haplotypes take the leftover aligner,** `leftover.mjs`:
+  the heaviest in-order chain, then each stretch of
   either walk that no record covers, aligned to the whole of the other walk
   in whichever direction shares more. It replaces the subsequence, the pair
   chaining and the rule that switches between them.
@@ -48,15 +64,21 @@ Everything is on ada in `~/work/synteny-extract-1122/`.
     of them elsewhere, and no pair gets less than today.
   - CFH draws as the identical file and FLNA/EMD the same to the eye
     (`shots/pairs-only-10k`).
-  - A floor of 1 kb in place of 10 kb changes neither picture nor share.
+  - Its floor is 1 kb. At amylase 10 kb draws the same picture, but the
+    second review found seven pairs at GSTT1 that get less than today with
+    10 kb and not with 1 kb.
+  - The second review ran it at the low windows too: it brings TBC1D3 and
+    SMN to the mid and high nineties (`why-amylase/variants.mjs`).
 - **Lanes against the reference stay as they are.** With complete records
   JBrowse ends four lanes at their first reversed piece and drops the
   ribbons on their right flank (`shots/after`). The published PAF-fed lanes
   track does the same at amylase (`shots/pif`), so the fault is the
   display's: `todo/lanes-headers-and-fit-at-inversions.md`.
-- Dropping pair chaining alone was the smaller move and was not taken: it
-  recovers half the shortfall and loses the FLNA/EMD inversion between
-  lanes.
+- Two smaller moves were not taken. Dropping pair chaining recovers half
+  the shortfall at amylase and loses the FLNA/EMD inversion between lanes.
+  Keeping the subsequence and adding the chainer's other-strand records
+  never does worse than the subsequence and keeps FLNA/EMD, but stops at the
+  same half at amylase and keeps gbz-base's chainer.
 
 ## Gates, before it lands
 
@@ -68,8 +90,10 @@ Everything is on ada in `~/work/synteny-extract-1122/`.
 - Explain or fix two things the review found: the stretch of HG00128's
   pairs still without a ribbon, and that the records depend on which walk is
   the query.
-- Run haplotype pairs at KIV-2, C4, 17q21.31, 8p23.1 and over a chr22 sweep,
-  and on a pggb graph. Stop if a collapsed array fans ribbons past reading,
+- Run haplotype pairs over the second review's sweep, at its lowest windows
+  (`chr14:19.2M`, SMN, `chr22:18.6M`, TBC1D3, `chr16:28.5M`, `chr1:144.3M`)
+  and wide windows at SMN and 8p23.1, and on a pggb graph. The 1q21 window
+  first measured has no walk stepping a node twice, so it tested nothing. Stop if a collapsed array fans ribbons past reading,
   or record counts grow out of proportion.
 - Before and after pictures of amylase, KIV-2, C4 and FLNA/EMD, looked at.
   No lane may change its place, range or header, and no band may lose a

@@ -18,13 +18,19 @@ of `demos/hprc`. Pictures and scripts are on ada in
   HG02055.1 "94 kb deletion, 94 kb insertion". For HG01123.1, minimap2
   aligns the "inserted" stretch (`CM089081.1:103,972,366-104,066,525`) to
   the "deleted" one (`chr1:103,620,893-103,715,097`) on the reverse strand,
-  over all of it, at mapq 60. The other four were not aligned; their records
-  are alike.
-- **The graph does not hold it as a reversal.** Of that stretch of
-  HG01123's walk, about four fifths is on nodes GRCh38 does not step in the
-  window, and the rest is on GRCh38's nodes either side of the "deleted"
-  stretch, stepped the other way. So a reader of the walks sees 94 kb of
-  the reference replaced by 94 kb of other nodes.
+  over all of it, at mapq 60.
+- **For another it shows none.** HG01960.1's whole lane range aligns to
+  `chr1:103,600,001-103,740,000` as one forward row, end to end, at mapq 60:
+  the same sequence, in the same order, under a header that says 94 kb is
+  deleted and 94 kb inserted. A second review found a forward row through
+  the stretch for HG00133.1 and HG02055.1 too.
+- **The graph keeps GRCh38's 94 kb on nodes of its own.** Seven of the eight
+  haplotypes never step them. Of HG01123's stretch, about four fifths is on
+  nodes GRCh38 does not step in the window, and the rest is on GRCh38's
+  nodes either side of the "deleted" stretch, stepped the other way. So a
+  reader of the walks sees 94 kb of the reference replaced by 94 kb of other
+  nodes, whatever the sequences are, and no reader of this graph can say
+  more without the bases.
 - **Both sides have bases, so by this project's own wording rule it is "94
   kb replaced by 94 kb",** not a deletion and an insertion. The label is
   built in `MultiWaySyntenyDisplay/layoutMultiWay.ts` (`laneIndelsOf`).
@@ -36,10 +42,12 @@ of `demos/hprc`. Pictures and scripts are on ada in
   (`shots/after`), four lanes draw about 261 kb, stop near AMY1B and leave
   the band blank to the right, while their header still says "449Kbp,
   squeezed 1.5×".
-- **A break in a walk is headed an insertion.** The review found
-  HG00097.1's walk in two fragments 49 kb apart in the window, where its
-  lane says "49 kb insertion". Whether that is Minigraph-Cactus clipping was
-  not checked against the GFA.
+- **A break in a walk is headed an insertion.** HG00097.1's walk is in two
+  fragments 49 kb apart in the window, where its lane says "49 kb
+  insertion". The second review read the GFA's W lines: 19 kb of it is
+  clipped by Minigraph-Cactus, and 30 kb is in the walk file but past the
+  fragment's last step on the reference, where graph-walks' `cut` ends it
+  (`trimmedAfter`).
 
 ## What to do
 
