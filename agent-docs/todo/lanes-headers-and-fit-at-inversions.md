@@ -49,13 +49,11 @@ of `demos/hprc`. Pictures and scripts are on ada in
   fragment's last step on the reference, where graph-walks' `cut` ends it
   (`trimmedAfter`).
 
-## Done on a branch, 2026-11-22
+## Landed on jbrowse-components main, 2026-11-22
 
-jbrowse-components branch `lanes-fit-at-inversions`, 0f6da61145, four commits
-on local main, in `~/src/jbrowse-components-lanesfit`, not pushed; the owner
-opens the PR. Pictures of eight loci before and after, with every lane's
-header dumped, are in
-`~/src/walks8-evidence/sessions-20261122/takeover/lanesfit/`.
+Four commits, 4d3c19764e to 126a052bad, on local main, which is not pushed.
+Pictures of eight loci before and after, with every lane's header dumped,
+are in `~/src/walks8-evidence/sessions-20261122/takeover/lanesfit/`.
 
 - A lane reads its gaps on the strand it is drawn on, so a reversed copy of
   the anchor opens no second hole and the far flank stays in view.
