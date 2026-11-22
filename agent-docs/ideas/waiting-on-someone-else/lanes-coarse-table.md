@@ -1,6 +1,6 @@
 ---
 name: lanes-coarse-table
-description: Haplotype lanes read from a walk file stop near 1 Mb with tens of lanes and have no way in from a haplotype's own coordinates; a small table of each haplotype's blocks against the reference, beside the walk file, would give a zoomed-out tier and that way in, with the walk file as the fine tier.
+description: Haplotype lanes read from a walk file stop near 1 Mb with tens of lanes and have no way in from a haplotype's own coordinates; a small table of each haplotype's blocks against the reference, beside the walk file, would give a zoomed-out tier and that way in. Decided 2026-11-22: it waits on the walk-file overview-tier study and is judged there as one of its candidates.
 metadata:
   repo: jbrowse-plugin-graphgenomeviewer
 ---
@@ -35,6 +35,16 @@ Measured 2026-11-22 on the hosted HPRC format 8 walk file with the plugin at
 - It is a side file, not a change to the walk file. It falls under
   `docs/open-problems.md`, "Pairing a side file with a walk file", as
   `haplotype-coordinate-lookup.md` does, and the two may be one file.
+
+## Why it waits
+
+- The overview-tier study in `handoffs/2026-11-21-ada-next.md` already
+  weighs per-haplotype runs at a coarser tile, which may hold the same
+  blocks.
+- The table adds a side file, which `docs/open-problems.md` has not yet said
+  how to pair with a walk file.
+- It inherits the lanes' limit at loci like amylase, where identical
+  sequence sits on separate nodes.
 
 ## Not known
 
