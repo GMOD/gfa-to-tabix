@@ -217,12 +217,18 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
     more than 2% off would count no carriers. Its rerun on ada
     (`~/work/watcher-1121/`): sv-49 draws 1 of 3 carriers of the named
     change, sv-32 1 of 39.
+  - The laptop checker is now a git repo (`drawcheck-merged`, de49404), and
+    `ada-gates.sh` ships its `.git`, so a run can name the checker commit.
   - Patch 4, the checker-time prototype, is not applied; whether it should
     land is to be said here once its A/B timing against `--whole-redraws`
     is done.
 
 ### Decisions
 
+- **From the laptop watcher (2026-11-21):** a laptop session released
+  bandage-core 14.3.1 and plugin 10.4.2 and owns the plugin store from
+  there; the ada clones are pulled to 427d1f0 and dc21ec08. The node-cap
+  study's crashes are now the head of the second queue.
 - **Calls the owner left with the laptop watcher (2026-11-21):** no
   per-group units; after both queues, abridge budgets that grow with the
   haplotype count and graph-walks no longer rebuilding its unit map per cut
