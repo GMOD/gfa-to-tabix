@@ -1,6 +1,6 @@
 ---
 name: plugin-10.5-key-overlay-and-two-fixes
-description: Plugin 10.5.0 is to carry three things the paper's graph figures need: a graph track key that can lie over the drawing, bandage-core 14.3.4's faster layout seed for dense windows, and a stress-layout fix that draws a deletion nested in a deletion as two detours. The first two sit on an unpushed branch; the third is not released.
+description: Plugin 10.5.0 is to carry what the paper's graph figures need: a graph track key that can lie over the drawing, bandage-core's speed fixes for dense windows, and stress layout 1.1.0, which draws a deletion nested in a deletion as two detours. The key and the first speed fix sit on an unpushed plugin branch; the second speed fix is being made.
 metadata:
   repo: jbrowse-plugin-graphgenomeviewer
 ---
@@ -30,28 +30,29 @@ and its scratch files are copied to
     overlay, in `~/src/jbrowse-plugin-graphgenomeviewer-cutspeed`: 1,169
     tests and the typecheck pass, not pushed.
   - BandageJS and ggbandage are still on 14.3.3.
-- **Nested bars:** `@jbrowse/graph-stress-layout`, branch `nested-bubbles` in
-  `~/src/graph-stress-layout-nested`. A bar's two links are not tested
-  against what already hangs in its gap, so the outer deletion's link runs
-  through the inner allele's node. The plan, reviewed by Fable, is
-  `sessions-20261122/paper/nestedplan.txt`: link-aware bar candidates that
-  may slide off the centre of their gap.
+- **Nested bars:** `@jbrowse/graph-stress-layout` 1.1.0 is released
+  (tag v1.1.0, Push and Publish green). A bar hung under a gap clears its
+  own links, sliding off the gap's centre where only that clears them, so
+  the outer deletion's link no longer runs through the inner allele's node.
+  - On twelve other cuts no drawing has more links through a node, and of
+    the seven other screenshots that use the stress layout six are unchanged
+    and one moves a bar a few pixels.
+  - The layout is about 1.4 times slower on 16,000 bubbles side by side and
+    2.3 times when they nest ten deep.
+  - The release also pushed that repo's lint commit of 8 November (oxlint,
+    oxfmt, tsrs), which had sat unpushed on local main.
+  - bandage-core takes `^1.0.0`; its bump to 1.1.0 rides on branch
+    `runs-along-speed`.
 
 ## Before the release
 
 - Dense windows freeze the tab for over a minute while drawing, since
   10.0.0: `todo/paper-graph-figures-and-timings.md`, "Timings". The fix, on
   bandage-core branch `runs-along-speed`, goes in this release.
-- The nested-bars fix is three commits on `nested-bubbles`, rebased on the
-  repo's unpushed lint commit, with every drawing that uses the stress
-  layout shot before and after; the owner's tick is the last gate
-  (`https://claude.ai/artifact/LkmWkosnehMQwKyQ9EHjtN`).
 
-- The nested-bars change moves bars over gaps that hold other pieces. Shoot
-  `scripts/shoot-figures.mjs --compare` over every spec against 10.4.4, look
-  at each pair, and show the owner the ones a reader sees at a glance.
-- Release graph-stress-layout, then whatever of bandage-core pins it, then
-  the plugin, by the usual gates.
+- Release bandage-core with the speed fix and the stress layout at 1.1.0,
+  then the plugin, by the usual gates, with `scripts/shoot-figures.mjs
+  --compare` over every spec against 10.4.4 looked at.
 - Re-pin BandageJS and ggbandage to the same bandage-core.
 - The store publish stays with the laptop.
 

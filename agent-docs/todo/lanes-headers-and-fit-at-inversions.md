@@ -49,6 +49,36 @@ of `demos/hprc`. Pictures and scripts are on ada in
   fragment's last step on the reference, where graph-walks' `cut` ends it
   (`trimmedAfter`).
 
+## Done on a branch, 2026-11-22
+
+jbrowse-components branch `lanes-fit-at-inversions`, 0f6da61145, four commits
+on local main, in `~/src/jbrowse-components-lanesfit`, not pushed; the owner
+opens the PR. Pictures of eight loci before and after, with every lane's
+header dumped, are in
+`~/src/walks8-evidence/sessions-20261122/takeover/lanesfit/`.
+
+- A lane reads its gaps on the strand it is drawn on, so a reversed copy of
+  the anchor opens no second hole and the far flank stays in view.
+- Each gap is one change worded by both sides, at any size; the header's
+  span is the range drawn.
+- A header states the drawn strand's changes, then any change of the other
+  strand that shares no base with one of them, then inversions, so a lane
+  with as much on each strand, as at SMN, drops none.
+- CFH, FLNA/EMD and GSTM1 are pixel-identical to main; KIV-2, C4, SMN and
+  TBC1D3 change header and scale text, and one TBC1D3 lane gains flank.
+- Five spreads of unbounded arrays in the display became loops.
+
+## What is left
+
+- The walk-fed track shows the new words only once the graph plugin is
+  built on a `@jbrowse/synteny-core` that holds the cutter change.
+- HG00097.1's 49 kb reads "120 kb replaced by 49 kb"; that part of it is
+  absent from the graph needs the cut's gaps on the record:
+  `todo/lanes-say-what-lies-between-fragments.md`.
+- No rule can say that amylase's "replaced" 94 kb is the same sequence on
+  other nodes, nor name a second tandem copy at TBC1D3.
+- The tutorial text below.
+
 ## What to do
 
 - Fit a lane across a reversed record instead of ending at it, and make the
