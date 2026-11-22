@@ -62,12 +62,45 @@ pictures in `~/src/walks8-evidence/sessions-20261122/takeover/placement/`.
     is the display's, fixed on jbrowse-components branch
     `lanes-fit-at-inversions`.
 
+## Arrays and the setting, 2026-11-22
+
+Plugin branch `lanes-from-placement`, bbe6670a; jbrowse-components branch
+`lanes-read-against-anchor` in `~/src/jbrowse-components-againstanchor`.
+Checks and scripts are on ada in `~/work/synteny-extract-1122/arrayrule-1122/`,
+the plan and pictures in `~/src/walks8-evidence/sessions-20261122/takeover/`
+(`array-rule-plan.txt`, `placement2/`).
+
+- **The array rule.** Where a turn or a step back falls beside a node the
+  reference passes more than once, the reference between the two steps'
+  places is an array stretch of that lane. A run of placed steps inside one
+  stretch is one array record: both extents, no alignment, a strand by
+  majority, and how often each side walks its nodes. With no such node
+  there is no stretch, so the 55 Minigraph-Cactus windows are unchanged,
+  row for row.
+- **On pggb chrY** TSPY goes from 4,000 records to 174 with no false
+  deletion of 10 kb or more and every placed base under one record;
+  P1/DAZ has 201 and the palindrome 15. Seven planted faults each fail.
+  Making the records takes 57 ms at TSPY where today's aligner takes a
+  second.
+- **The setting** is the adapter slot `laneRibbons`: `reference`, the
+  default, or `neighbours`. Capabilities are fixed per adapter type, so the
+  adapter's header says which, and the display reads it in
+  `rowsReadAgainstAnchor`. A jbrowse-web without that condition draws
+  neighbours as today.
+- **Pictures:** TSPY is one fan a lane where it was a thicket under headers
+  such as "89 kb deletion, 89 kb deletion, 71 more".
+
 ## What is left
 
-- Make it a setting of the track, named as the plugin's other settings
-  are: ribbons against the reference by default, between neighbours as they
-  ship today (`ideas/waiting-on-a-call/lanes-between-two-haplotypes.md`).
-- A stated rule for a reference that passes a node more than once, so a
-  pggb array draws as one band with its passes and not as shreds.
+- The display does not know an array: at the chrY palindrome a lane is
+  headed "400 kb insertion" over an array, at P1/DAZ an array is named an
+  inversion from its majority strand, and stacked bands show only as
+  darker paint. A laptop session is teaching the display its wording and
+  paint on the same jbrowse-components branch.
+- With `neighbours`, amylase's HG00128 lane ends 94 kb earlier than it does
+  on 10.4.4; not yet explained.
+- Whatever the rule, pggb lanes come in many fragments (163 at TSPY), bands
+  pile 13 to 36 deep, and a window at chrY:20.0M is refused at the
+  browser's departure budget.
 - Say what lies at a record break: `todo/lanes-say-what-lies-between-fragments.md`.
-- Then land it by the usual gates, with the display's fit fix.
+- Then land both by the usual gates, as the plugin release after 10.5.0.
