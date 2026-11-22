@@ -1,14 +1,14 @@
 ---
 name: paper-graph-figures-and-timings
-description: Once plugin 10.5.0 is out, the paper's Figures 2, 5 and S7 are re-rendered on it, the pggb chrY windows re-timed, and four waiting text cards filled with the version and the numbers; the paper's pggb timing is the time to load a graph and not to draw it, and dense windows take about 85 s to draw on 10.4.3 against 2.6 s on 9.0.0.
+description: Plugin 10.5.0 is out; the paper's Figures 2, 5 and S7 are to be re-rendered on it, the pggb chrY windows re-timed, and four waiting text cards filled with the version and the numbers; the paper's pggb timing is the time to load a graph and not to draw it, and dense windows take about 85 s to draw on 10.4.3 against 2.6 s on 9.0.0.
 metadata:
   repo: paper, jbrowse-components, jb2bench
 ---
 
 # The paper's graph figures and timings on one plugin release
 
-Waits on `todo/plugin-10.5-key-overlay-and-two-fixes.md`. The paper session
-that started this ran out of quota on 2026-11-22; its scratch files are in
+Plugin 10.5.0 is released (2026-11-22) and the store serves it. The paper
+session that started this ran out of quota the same day; its scratch files are in
 `~/src/walks8-evidence/sessions-20261122/paper/`, and its pages are private
 to the `~/.claude` account, so a session under another config publishes
 anew from `approve/` and `compare/` there.
@@ -17,7 +17,8 @@ anew from `approve/` and `compare/` there.
 
 - Re-render Figures 2, 5 and S7 from their jbrowse-components specs
   (`website/scripts/specs/paper-cohort.ts`, `paper-hprc-workspace.ts` and
-  `paper-hprc-minimap2.ts`) with the graph track's `key: 'overlay'`.
+  `paper-hprc-minimap2.ts`) with the graph track's `key: 'overlay'` and
+  `extent: 'view'`, which colours, labels and pins only the view.
   `~/src/jbrowse-components-keyoverlay` holds uncommitted changes to
   `graph-fixtures.ts` and the first two specs.
 - Figure 2's graph track needs 320 px, not 270, so the key clears the
