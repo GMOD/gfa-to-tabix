@@ -56,6 +56,13 @@ anew from `approve/` and `compare/` there.
   come from megabases away, kept because their links' stored places lie
   either side of the window: `todo/dense-pggb-chain-joints-drawn-as-skips.md`.
   The paper's "up to 17,570 nodes" counts them.
+- jb2bench's `scripts/pggb/index.sh` indexes with the bare command, which
+  writes the anchored layout; `gfa-to-tabix build` writes a plain GFA in the
+  contig layout because of this fault. After the fix, measure both layouts,
+  nodes drawn against nodes joined to the window, the share of each
+  window's reference steps drawn, and later-pass windows on their own.
+- That run's load times are 0.4–0.45 s for six windows and 0.84–3.4 s for
+  nine; where the paper's 0.4–1.3 s comes from was not found.
 - jb2bench e1e038c holds the 22 November rerun with 10.4.3. The hosted HPRC
   numbers are unchanged.
 - To redo for the paper: time to drawn, on the released plugin, with

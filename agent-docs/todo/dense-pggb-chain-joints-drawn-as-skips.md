@@ -67,25 +67,62 @@ A Fable review the same day checked the cut against GRCh38's path in
   one with a foot outside the window, and resizes nested ones (4 of the 31
   skips in the repo's fixtures).
 
+## A second opinion, and the prototype of the first rule
+
+Both of 2026-11-22; texts in the evidence folder as
+`reviews/readerfix-review.txt` and `reviews/loops-prototype.txt`.
+
+- **This is the open problem already written down.** `docs/open-problems.md`,
+  "Collapsed repeats in pggb graphs", says the cut "draws the wrong graph"
+  for this reason, and `gfa-to-tabix build` writes a plain GFA's index in the
+  contig layout because of it. The paper's benchmark indexed chrY with the
+  bare command, which writes the anchored layout.
+- **There is a second way in.** Off-reference components are filed under
+  the hull of their first-pass attachments (`widen` in `src/anchor.rs`), so
+  they come back megabases from home and bring their reference neighbours.
+  With only the straddling links dropped, the 17.12 Mb window still draws
+  900 nodes, 114 its own, and the 23.75 Mb window 9,592, 40 its own.
+- **A window on a later pass cannot get its reference from this index.** At
+  21.92 Mb, 922 of the window's 1,075 reference steps are later passes and
+  the query returns 153 of its reference nodes. 384 of chrY's 2,341 bins of
+  10 kb with sequence are mostly later pass. Only passes in the index would
+  cure it, which ADR 0008 rejected.
+- **No walk-file vouch reaches an index cut:** the plugin cuts from the
+  walk file whenever a track names one.
+- **The first rule, prototyped** (bandage-core branch `loops-rule`, a skip
+  only if the cut holds another way round): clears the loops and halves the
+  layout time, and at `chr18:78.37 Mb` shrinks nested deletions until they
+  no longer read as going around. Not taken.
+
 ## What to do
 
-- **The merge fix** is bandage-core branch `fmmmtime`; a laptop session is
-  proving it changes no engine request at ordinary windows before it lands.
-  It is still wanted once the cut is right.
-- **The reader first** (graph-walks, and the plugin's adapter): say whether
-  the source vouches that the reference passes each node once. An rGFA
-  index does; a walk file's header states it; a path-graph index alone
-  cannot. For a source that cannot vouch, `anchoredCut` does not keep a link
-  only because its stored feet lie either side of the window.
-- **Then bandage-core:** a link is a skip, or carries a turn mark, when the
-  source states the passes, or states there are none, or the cut holds the
-  reference whole between its feet. Otherwise it is a plain link. Sources
-  that vouch must come out byte-identical.
-- An index header stating the count of revisited nodes would close what is
-  left. That is a format 2 change and goes through the format review; it is
-  not proposed here.
-- Pictures before any of it lands: the nine dense windows, and
-  Minigraph-Cactus windows with a deletion inside, one with a far foot
-  outside, a spanning deletion, a nested pair and an inversion.
+A laptop session is prototyping this on branches, with pictures.
+
+- **graph-walks:** a flag that a source is a path graph whose stored places
+  are first passes, in both layouts, with tag-anchored rGFA sources kept
+  exact; and for such a source in the anchored layout a cut of the
+  reference nodes placed in the window, the off-reference components
+  attached to them, and the reference nodes one link beyond, with the rest
+  counted as filed across and not drawn. rGFA cuts must be byte-identical.
+- **bandage-core:** a link is a skip, or carries a turn mark, only when the
+  source states the passes, or is not so flagged, or the cut holds the
+  reference whole between its feet. Seeds and the fold do not use stored
+  places of a flagged source's far nodes.
+- **Pictures before any of it lands:** the nine dense windows and 21.92 Mb,
+  a sparse pggb window, and Minigraph-Cactus windows with a deletion
+  inside, a far foot outside, a spanning deletion, a nested pair and an
+  inversion, which must not move.
+- **Docs:** `docs/index-format.md` says only a haplotype shows as an
+  inversion, that a later-pass window gets the node's links, and that one
+  query returns the whole graph under a region; none holds on such a graph.
+- **Also sized by stored places,** unlooked at: `skipped()` in gfa-to-tabix
+  `src/fold.rs`, and bandage-core's `levelOfDetail.ts`, `foldVariants.ts`,
+  `superbubbles.ts`, `bubblesFromGraph.ts`, `referenceSpan.ts` and
+  `projectAlleles.ts`.
+- **The merge fix,** bandage-core branch `fmmmtime`, waits to be measured
+  again after this.
+- An index header stating the count of revisited nodes, and passes in the
+  index, are format changes. Neither is proposed; both belong in
+  `docs/open-problems.md` with these numbers.
 - `tableOrientation` ignores `nodes.reversed`, so a file that states it
   could give a node a `+` id and a `-` reference strand.
