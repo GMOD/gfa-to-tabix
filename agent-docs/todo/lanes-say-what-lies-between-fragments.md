@@ -29,6 +29,12 @@ reference.
   haplotype with no step in the window. The display sees two records on one
   contig with a 49 kb jump.
 
+- **The same holds between two records of one fragment.** With records read
+  from each step's stored place, HG00128.1 at amylase has 116 kb of its own
+  steps (haplotype 103,993,742-104,109,516) between a forward record and a
+  reversed one. No record covers them, and the display, seeing a turn with
+  no reference side, states nothing.
+
 ## What to do
 
 - Decide what a lane shows between fragments: the 30 kb the graph holds is

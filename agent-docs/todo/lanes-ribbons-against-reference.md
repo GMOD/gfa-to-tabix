@@ -90,17 +90,33 @@ the plan and pictures in `~/src/walks8-evidence/sessions-20261122/takeover/`
 - **Pictures:** TSPY is one fan a lane where it was a thicket under headers
   such as "89 kb deletion, 89 kb deletion, 71 more".
 
+## The display's side landed, 2026-11-22
+
+jbrowse-components local main, 78d23bfa8c and e3037df864, not pushed.
+Pictures of eight loci are in
+`~/src/walks8-evidence/sessions-20261122/takeover/placement3/`.
+
+- A source's header can ask for lanes read against the anchor.
+- A record of `type: 'array'` states no change: it bounds gaps on either
+  strand, a gap ending on one says nothing, and it is never part of an
+  inversion. That removes a false "400 kb insertion" at the chrY palindrome
+  and a "20 kb inversion" named from a majority strand at P1/DAZ.
+- A lane with arrays is headed in words such as "580 kb repeat over 210 kb,
+  11 more", with each side's passes on hover, and the band is drawn
+  untwisted in the scale's third colour with its own legend entry.
+- CFH, amylase, SMN and TBC1D3, which hold no array, are pixel-identical.
+
 ## What is left
 
-- The display does not know an array: at the chrY palindrome a lane is
-  headed "400 kb insertion" over an array, at P1/DAZ an array is named an
-  inversion from its majority strand, and stacked bands show only as
-  darker paint. A laptop session is teaching the display its wording and
-  paint on the same jbrowse-components branch.
-- With `neighbours`, amylase's HG00128 lane ends 94 kb earlier than it does
-  on 10.4.4; not yet explained.
+- Land the plugin branch as the release after 10.5.0, by the usual gates.
+- At amylase HG00128 has 116 kb of its own sequence between a forward and a
+  reversed record, on nodes with no stored place. It is under no record and
+  the header says nothing of it:
+  `todo/lanes-say-what-lies-between-fragments.md`.
+- At P1/DAZ two "replaced by" gaps between matches were not checked
+  against the records.
+- Lane order (`structureOrder.ts`) and the lane's fit still count an
+  array's reference span as aligned bases, once for each array over it.
 - Whatever the rule, pggb lanes come in many fragments (163 at TSPY), bands
-  pile 13 to 36 deep, and a window at chrY:20.0M is refused at the
-  browser's departure budget.
-- Say what lies at a record break: `todo/lanes-say-what-lies-between-fragments.md`.
-- Then land both by the usual gates, as the plugin release after 10.5.0.
+  pile 13 to 36 deep, an array running past the fetch is sized by the cut,
+  and a window at chrY:20.0M is refused at the browser's departure budget.
