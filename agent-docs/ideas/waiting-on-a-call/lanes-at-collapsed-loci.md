@@ -20,7 +20,9 @@ metadata:
 
 - Offer lanes everywhere and say, in the header, that a stretch shares no
   node, with no event name. This is what the headers todo does.
-- Mark a window where a walk steps a node twice, about a hundred of some
-  9,600 windows of 300 kb, and point to the walk rows.
+- Mark a window where a walk steps a node twice, and point to the walk
+  rows. With eight haplotypes that is 26 of some 9,600 windows of 300 kb on
+  the Minigraph-Cactus graph; on pggb chrY it is 25 of 39, and the reference
+  itself steps a node twice in 23 of them.
 - Align the bases of unshared stretches in the reader, which needs each
   haplotype's sequence beside the walk file.

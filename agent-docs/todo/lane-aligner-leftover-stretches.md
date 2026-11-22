@@ -22,6 +22,8 @@ pictures, without `steps.jsonl` and the sweep's outputs.
   (`pairs_check.tsv`). Against GRCh38 the records lie on the diagonals of the
   PAF `gfa_to_pairwise_paf.py` writes from the same GFA, over 320
   lane-windows (`parity.jsonl`); that checks the reader, not the sequence.
+- **Counted with eight haplotypes,** 26 of the sweep's windows have a walk
+  that steps a node twice. The reference never does on this graph.
 - **Nearly everywhere nothing the graph shares is left out.** `coverage.mjs`
   counts, from the walks alone, the bases of each walk on nodes the other
   also steps, and how many a record covers. A second Fable review swept
@@ -81,6 +83,37 @@ pictures, without `steps.jsonl` and the sweep's outputs.
   Keeping the subsequence and adding the chainer's other-strand records
   never does worse than the subsequence and keeps FLNA/EMD, but stops at the
   same half at amylase and keeps gbz-base's chainer.
+
+## Reviews, 2026-11-22: held for the owner
+
+The owner asked whether this is the wrong thing to build. Three reviews
+answered, two by Fable, one a fact-check; their text is in
+`~/src/walks8-evidence/sessions-20261122/takeover/reviews/`.
+
+- **Both Fable reviews say not to land the leftover aligner as specified.**
+  Each gate failure below is a missing clause of a rule nobody wrote down:
+  no fixed point, no tie rule, no scale rule, no rule for a node stepped
+  many times. "No pair gets less than today" is a regression test and not
+  an invariant.
+- **What the graph determines** is same node, same offset: exact, and
+  many-to-many where a walk steps a node more than once, empty where the
+  same sequence sits on separate nodes. A one-to-one pairing exists only
+  where every shared node is stepped once by each walk.
+- **One review would keep ribbons between two haplotypes** under a stated
+  invariant: sound, complete, symmetric, and above a stated pass count one
+  band giving each walk's passes in place of per-copy ribbons. Where nodes
+  are stepped once the maximal colinear runs give that with no chain
+  search. Not built.
+- **The other would stop them:** neither session's record shows the owner
+  asking for ribbons between two haplotypes, and Figure 5 was blocked by
+  them.
+- **Both put ribbons against the reference first:**
+  `todo/lanes-ribbons-against-reference.md`.
+- Prior art reads the same way: `odgi untangle` reports a best match
+  against a reference with a score and a copy count, and `halSynteny` takes
+  the heaviest chain and repeats, as this prototype does.
+- Until the owner rules, neither this change nor the aligner's move out of
+  gbz-base into graph-walks should start.
 
 ## Gates, run 2026-11-22
 
