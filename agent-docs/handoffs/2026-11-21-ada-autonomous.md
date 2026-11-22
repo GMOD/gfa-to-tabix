@@ -209,7 +209,8 @@ Run folders for everything below: `~/work/handoff-1121/runs/`. Clones:
 - **The drawing gate's follow-ups** (`~/work/followup-20261121/drawing-gate/`,
   `README.txt`), at bandage-core 129f55b (14.3.0's source):
   - links-stress given a 6,500 MB heap under 8G in ada's `caps.tsv`, and
-    passed: 18,239 s, exit 0, every window drawn;
+    passed: 18,239 s, exit 0, all 80 windows drawn, all 40 planted faults
+    caught, 5,337 MB peak;
   - labels-probe's owed run passed: 6,241 s, exit 0, every window drawn,
     the same violation counts class by class as the earlier heap runs;
   - patches 1–3 (all alleles with the named change, sv-32 and sv-49
