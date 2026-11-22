@@ -1,6 +1,6 @@
 ---
 name: paper-graph-figures-and-timings
-description: Once plugin 10.5.0 is out, the paper's Figures 2, 5 and S7 are re-rendered on it, the pggb chrY windows re-timed, and four waiting text cards filled with the version and the numbers; the dense pggb windows measured 2.3 times slower on 10.4.3 than the paper says, before bandage-core 14.3.4.
+description: Once plugin 10.5.0 is out, the paper's Figures 2, 5 and S7 are re-rendered on it, the pggb chrY windows re-timed, and four waiting text cards filled with the version and the numbers; the paper's pggb timing is the time to load a graph and not to draw it, and dense windows take about 85 s to draw on 10.4.3 against 2.6 s on 9.0.0.
 metadata:
   repo: paper, jbrowse-components, jb2bench
 ---
@@ -30,17 +30,30 @@ anew from `approve/` and `compare/` there.
 
 ## Timings
 
-- jb2bench e1e038c holds the 22 November rerun on ada with plugin 10.4.3 and
-  jbrowse-web 5.0.0-beta.22. The hosted HPRC numbers are unchanged. The
-  drawn pggb chrY windows took 0.4–3.4 s (median 2.6 s) where the paper says
-  0.4–1.3 s (median 1.1 s).
-- The cause was bandage-core's `closedStretches`, fixed in 14.3.4. In Node
-  the 14,142-node window seeds its layout in about 0.5 s where it took 5 s.
-  The browser re-measure was cut off: run jb2bench's pggb trace on ada
-  (`~/work/scratch/graph-repro-2026-11-22`) with the plugin's `cut-speed`
-  build, then with the release.
-- `scripts/pggb/trace.sh` no longer writes a store reference, since
-  beta.22 resolves one to the store's latest and ignores the pinned URL.
+- **The paper's pggb number is the time to load the graph, not to draw it.**
+  jb2bench's `cutMs` stops when the view holds a graph; layout and drawing
+  come after. The sentence "a graph view drew 15 in 0.4–1.3 s" and cards
+  C17b and C17c quote it as drawing. Measured on ada on 2026-11-22
+  (`~/work/scratch/cut-speed-prof/out/`, copied to
+  `~/src/walks8-evidence/sessions-20261122/takeover/pggb-retime/`), until
+  the layout is in place and two frames have painted, the eight dense
+  windows of 14,000–17,600 nodes take about 2.6 s on plugin 9.0.0.
+- **On 10.4.3 those windows take about 85 s, with the tab frozen.**
+  bandage-core 14.3.4 does not change that. One profile puts 73 s in
+  `runsAlong` and `distanceToSegment` (`src/util/edgeCurves.ts`), which test
+  every sample of a deletion edge against every skipped node. A laptop
+  session is fixing it on bandage-core branch `runs-along-speed`.
+- **Load time is back to 9.0.0's with 14.3.4:** the drawn windows load in
+  0.4–1.2 s (median 1.1 s) on the plugin's `cut-speed` build, where 10.4.3
+  took 0.4–3.4 s (median 2.6 s). Nodes, requests and bytes are identical in
+  every window.
+- jb2bench e1e038c holds the 22 November rerun with 10.4.3. The hosted HPRC
+  numbers are unchanged.
+- To redo for the paper: time to drawn, on the released plugin, with
+  `drawn-local.sh` there, and reword the sentence to say which clock it is.
+  `scripts/pggb/trace.sh` takes only a released version, not a local build,
+  and writes no store reference since beta.22 resolves one to the store's
+  latest.
 
 ## Text cards waiting on the release
 

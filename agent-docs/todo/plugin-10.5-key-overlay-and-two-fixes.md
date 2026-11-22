@@ -39,6 +39,14 @@ and its scratch files are copied to
 
 ## Before the release
 
+- Dense windows freeze the tab for over a minute while drawing, since
+  10.0.0: `todo/paper-graph-figures-and-timings.md`, "Timings". The fix, on
+  bandage-core branch `runs-along-speed`, goes in this release.
+- The nested-bars fix is three commits on `nested-bubbles`, rebased on the
+  repo's unpushed lint commit, with every drawing that uses the stress
+  layout shot before and after; the owner's tick is the last gate
+  (`https://claude.ai/artifact/LkmWkosnehMQwKyQ9EHjtN`).
+
 - The nested-bars change moves bars over gaps that hold other pieces. Shoot
   `scripts/shoot-figures.mjs --compare` over every spec against 10.4.4, look
   at each pair, and show the owner the ones a reader sees at a glance.
