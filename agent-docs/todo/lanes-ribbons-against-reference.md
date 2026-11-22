@@ -64,7 +64,9 @@ pictures in `~/src/walks8-evidence/sessions-20261122/takeover/placement/`.
 
 ## What is left
 
-- The owner's ruling on ribbons between two haplotypes.
+- Make it a setting of the track, named as the plugin's other settings
+  are: ribbons against the reference by default, between neighbours as they
+  ship today (`ideas/waiting-on-a-call/lanes-between-two-haplotypes.md`).
 - A stated rule for a reference that passes a node more than once, so a
   pggb array draws as one band with its passes and not as shreds.
 - Say what lies at a record break: `todo/lanes-say-what-lies-between-fragments.md`.

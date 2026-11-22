@@ -1,11 +1,22 @@
 ---
-name: lane-aligner-leftover-stretches
-description: Decided 2026-11-22 after a Fable review: lanes between two haplotypes take an aligner that keeps the main chain and then aligns each leftover stretch, in place of the pair-chaining branch, which at amylase leaves bands blank between walks that step the same nodes; lanes against the reference stay as they are. Its gates were run the same day: it passes on Minigraph-Cactus windows and fails on pggb chrY at TSPY, and what it must fix first is listed.
+name: lanes-between-two-haplotypes
+description: Ribbons between two haplotypes, worked out in the browser from the nodes both walks step, were punted by the owner on 2026-11-22 until what they should show is stated as a rule; walk-fed lanes read against the reference instead. This keeps the leftover aligner's prototype, its gates as run, and the three reviews that said not to land it.
 metadata:
-  repo: graph-walks
+  repo: jbrowse-plugin-graphgenomeviewer, graph-walks
 ---
 
-# Lanes between two haplotypes leave shared nodes without a ribbon
+# Lanes between two haplotypes: punted until the rule is stated
+
+The owner, 2026-11-22: "ideally we could do 'against each other' but if that
+is not well formulated yet, we may want to punt on this". Walk-fed lanes are
+to read against the reference (`todo/lanes-ribbons-against-reference.md`).
+Ribbons between two haplotypes stay as they ship today, as a setting, with
+no more aligner work.
+
+What it waits on is a rule for what a set of ribbons between two walks must
+show, of the kind "Reviews" below sketches: sound, complete, the same
+whichever walk is the query, and one band with each walk's passes where a
+node is stepped many times. A prototype comes after the rule, not before.
 
 Measured 2026-11-22 on the plugin at 10.4.3 and the hosted HPRC format 8
 walk file, with the eight haplotypes of `demos/hprc_multiway`, and reviewed
@@ -57,7 +68,7 @@ pictures, without `steps.jsonl` and the sweep's outputs.
   pass, or a stretch out of order gets no ribbon. With one ribbon a base,
   the return and second passes cannot be ribboned at all.
 
-## The decision
+## The prototype decided that morning, since set aside
 
 - **Lanes between two haplotypes take the leftover aligner,** `leftover.mjs`:
   the heaviest in-order chain, then each stretch of
@@ -84,7 +95,7 @@ pictures, without `steps.jsonl` and the sweep's outputs.
   never does worse than the subsequence and keeps FLNA/EMD, but stops at the
   same half at amylase and keeps gbz-base's chainer.
 
-## Reviews, 2026-11-22: held for the owner
+## Reviews, 2026-11-22
 
 The owner asked whether this is the wrong thing to build. Three reviews
 answered, two by Fable, one a fact-check; their text is in
@@ -112,8 +123,6 @@ answered, two by Fable, one a fact-check; their text is in
 - Prior art reads the same way: `odgi untangle` reports a best match
   against a reference with a score and a copy count, and `halSynteny` takes
   the heaviest chain and repeats, as this prototype does.
-- Until the owner rules, neither this change nor the aligner's move out of
-  gbz-base into graph-walks should start.
 
 ## Gates, run 2026-11-22
 
@@ -159,7 +168,7 @@ fails on a pggb graph, and two faults need fixing first.
   percentage falls. It does fail at GSTT1, `chr22:18.6M`, TBC1D3, the wide
   SMN window and 8p23.1.
 
-## What the change must do before it lands
+## What the prototype would have had to do
 
 - Land after the aligner's move out of gbz-base into graph-walks, as its own
   change; the move itself stays a pure move.

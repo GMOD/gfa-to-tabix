@@ -62,4 +62,4 @@ of `demos/hprc`. Pictures and scripts are on ada in
 - The tutorial's part 3 says HG00133.1 "has GRCh38's three AMY1 copies and
   its length"; its lane heads it with a deletion and an insertion.
 - Until the fit is fixed, walk-fed lanes keep today's records against the
-  anchor (`todo/lane-aligner-leftover-stretches.md`).
+  anchor (`ideas/waiting-on-a-call/lanes-between-two-haplotypes.md`).

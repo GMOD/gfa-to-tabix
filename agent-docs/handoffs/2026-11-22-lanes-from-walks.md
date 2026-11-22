@@ -8,7 +8,7 @@ description: A laptop session measured how well walk files supply JBrowse's hapl
 The owner asked whether multi-way synteny can be read straight from the
 graph's walk file, at a locus and genome-wide, and then whether what it
 returns is right. This file points at where each answer is; delete it when
-the aligner change lands.
+lanes against the reference land.
 
 ## Where everything is
 
@@ -23,7 +23,8 @@ the aligner change lands.
   - `plugin/` is a clone at v10.4.3 with `scripts/shoot-figures.mjs`
     patched to shoot the lanes, and `walkLanes.ts` left in the
     lanes-between-haplotypes-only state with a 10 kb floor. It is scratch.
-- **Write-ups:** `todo/lane-aligner-leftover-stretches.md`,
+- **Write-ups:** `ideas/waiting-on-a-call/lanes-between-two-haplotypes.md`,
+  `todo/lanes-ribbons-against-reference.md`,
   `todo/lanes-headers-and-fit-at-inversions.md`,
   `ideas/waiting-on-someone-else/lanes-coarse-table.md`.
 - **The page shown to the owner:**
@@ -44,43 +45,34 @@ the aligner change lands.
 - **The share of shared nodes that get a ribbon is the number to quote,**
   from the walks alone (`coverage.mjs`, `why-amylase/sweep.mjs`). The
   minimap2 percentages of the first pass are withdrawn.
-- **Where it falls short, and why,** is in the aligner todo: about twenty of
-  some 9,600 windows, every one with a walk that steps a node twice.
-- **Decided, after two Fable reviews:** lanes between two haplotypes take
-  the leftover aligner in place of pair chaining; lanes against the
-  reference stay; the coarse table waits on the overview-tier study.
+- **Where the lanes between two haplotypes fall short, and why,** is in the
+  idea: 26 of some 9,600 windows, counted with eight haplotypes, every one
+  with a walk that steps a node twice.
+- **Ruled by the owner, 2026-11-22, after three more reviews:** ribbons
+  between two haplotypes are punted until what they should show is stated
+  as a rule, and the leftover aligner does not land. Walk-fed lanes read
+  against the reference. The coarse table waits on the overview-tier study.
 
-## Queued, and with whom
+## Live, and with whom
 
-- **The ada session** (`2026-11-21-ada-next.md`): move the aligner out of
-  gbz-base into graph-walks as a pure move, then the leftover aligner as its
-  own change, behind the gates in the todo.
+- **A laptop session:** lanes against the reference from each step's stored
+  place, prototyped on plugin branch `lanes-from-placement`; what is left is
+  in `todo/lanes-ribbons-against-reference.md`.
 - **A laptop session:** `todo/lanes-headers-and-fit-at-inversions.md`, on the
   jbrowse-components branch `lanes-fit-at-inversions`, unpushed; the owner
-  opens the PR. The ada session is told not to act on it.
+  opens the PR. The ada session is told not to act on either.
 
-## Before the aligner change lands
+## Filed
 
-Every check is a gate in `todo/lane-aligner-leftover-stretches.md`; none is
-done.
-
-## Filed since
-
-- **A fragment ending at its last step on the reference** is graph-walks'
-  design, not a fault in `cut`; the lanes adapter drops what the cut says
-  lies past it: `todo/lanes-say-what-lies-between-fragments.md`.
-- **Ribbons against the reference:** `todo/lanes-ribbons-against-reference.md`.
-- **Whether lanes should be offered at loci like amylase:**
-  `ideas/waiting-on-a-call/lanes-at-collapsed-loci.md`.
-- **Lanes in a browser:** added to the ada session's query-time item.
-- **A stacked `LinearSyntenyView` from a walk file** stays in the
-  coarse-table idea; it was read from the code and not run.
-- **The comment in `walkLanes.ts`** goes away with the aligner change; if
-  that stalls, fix the comment.
+- `todo/lanes-say-what-lies-between-fragments.md`
+- `ideas/waiting-on-a-call/lanes-at-collapsed-loci.md`
+- Lanes in a browser: the ada session's query-time item.
+- A stacked `LinearSyntenyView` from a walk file stays in the coarse-table
+  idea; it was read from the code and not run.
 
 ## Cleaning up
 
-- `~/work/synteny-extract-1122/` is about 0.8 GB. Keep it until the aligner
-  change lands, since `coverage.mjs` and the pictures are its gates.
+- `~/work/synteny-extract-1122/` is about 0.8 GB. Keep it until lanes
+  against the reference land; `placement-1122/` there holds their checks.
 - `hprc_multiway_gfa.pif.gz` there is a copy of the hosted file and can go
   at any time.
