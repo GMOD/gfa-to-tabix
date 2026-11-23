@@ -1,6 +1,6 @@
 ---
 name: reader-faults-from-node-cap
-description: Faults the node-cap study hit in bandage-core and its readers at large cuts: the edge hit-test grid stamps a long link over millions of cells and crashes BandageJS on hover, the ordered and stress layouts build the drawing several times, and the plugin's tube map cuts twice.
+description: What is left of the faults the node-cap study hit at large cuts once the crashes were fixed: the plugin's tube map cutting twice, slow tube-map ordering past 200,000 nodes, no tube-map node limit in BandageJS and the plugin, the plugin's ChunkLoadError, and stale KIV-2 figures.
 metadata:
   repo: bandage-core, BandageJS, jbrowse-plugin-graphgenomeviewer
 ---
@@ -10,23 +10,23 @@ metadata:
 Found by [node-cap-study.md](../../docs/node-cap-study.md), 2026-11-21.
 Clones and raw runs: `~/work/handoff-1121/runs/nodecap/` on ada.
 
-- **Hover crashes BandageJS from about 36,000 nodes (FMMM, the MHC).** The
-  first pointer move builds bandage-core's edge hit-test grid, which stamps
-  each link's whole bounding box: two links of the MHC's 400 kb window are
-  stamped over about 22 million cells each, and the tab runs out of heap
-  (`docs/node-cap/hover-oom.txt`). Index a link by the cells its curve
-  crosses, or by its bounding box only up to a cell budget. Check whether
-  the plugin's hover shares it
-- **The ordered and stress layouts build the drawing 2–4 times before the
-  first paint,** in both readers: at chr22 10 Mb the ordered layout takes
-  about 1 s and the duplicated builds 83 s and 108 s
-- **The plugin's tube map cuts and lays out twice** where a cut holds
-  placeholders (chr22 10 Mb, chr6 0.4 and 1.8 Mb)
+- **Fixed 2026-11-22/23:** the hover crash (bandage-core 14.3.3), the
+  duplicated layout builds (14.4.0, plugin 10.5.1), the tube map laying out
+  twice (plugin 10.5.1) and its out-of-memory ordering pass (tubemap-core
+  2.1.1, bandage-core 14.4.1)
+- **The plugin's tube map still cuts twice** where a cut abridges walks it
+  draws: one cut needs the adapter to report which walks it expanded
+- **The tube map's ordering is still slow past ~200,000 nodes:** each
+  insertion shifts everything to its right, settled once since 2.1.1; the
+  5.5 Mb MHC window settles about 557 M nodes in ~107 s, and chr22's
+  1.2 M-node window ran 40 minutes without finishing the first pass. Apply
+  a track's shifts at once, or another ordering
+- **BandageJS and the plugin have no tube-map node limit before layout;**
+  sequenceTubeMap's 50,000 backstop and 30,000-visit render cap
+  (`GBZBaseAPI.ts:273`, `TubeMapContainer.tsx:85`) are its own
 - **The plugin's ordered view is replaced by a `ChunkLoadError`** at chr22
   10 Mb and chr6 5.5 Mb, apparently JBrowse timing out a code chunk while
   the layout holds the page
-- **The tube map crashes the tab** at 277,560 nodes in the MHC and 1.2 M on
-  chr22; not diagnosed
 - **bandage-core's KIV-2 figures are stale:** `img/figure_kiv2_facets.svg`,
   `figure_kiv2_threads.svg` and `figure_kiv2_walks.svg` were drawn by
   13.3.0; `scripts/render-figures.mjs` on 14.3.0 draws the new key row,
