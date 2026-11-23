@@ -90,37 +90,67 @@ Its text is `repeat-review/review.txt` in the evidence folder.
     unit for 45, 28, 33, 22 and 25 units.
 - **Not rechecked:** the unit counts, which every reviewer took from one
   scan, `reader/gfascan.jsonl` on ada.
-- **Three prototypes follow from it,** for before and after pictures.
-  None lands without the owner seeing them.
-  - Walk rows with a count mark and row direction taken from once-walked
-    steps: ada `~/work/walks8-gates/agents/rowcount/`, branches
-    `rows-count` off `revisited-colour`, pictures to `rowcount/` in the
-    evidence folder. Running when this was written.
-  - Lanes where a once-walked stretch inside an array keeps its exact
-    ribbon, and one number per lane and stretch: ada
-    `agents/lanespacer/`, branch `lanes-spacer` off plugin 10.6.0,
-    pictures to `lanespacer/`. Running when this was written. Rows and
-    lanes must end on one definition of the count; the rows agent defines
-    it.
-  - Copies apart, with the other pass fetched from a hard-coded place:
-    not started. It is the picture for the format question below.
-- **A FORMAT CHANGE is on the table and nothing of it is built:** a table
-  of where the reference's next pass over a node lies, so a reader can
+- **Two prototypes are built and pictured,** on local branches on ada,
+  unlanded. The owner's page of before and after pictures, with two ticks
+  (collection `approvals`: `land-rows`, `land-lanes`), is
+  `https://claude.ai/artifact/HfHAVRkJzszSu6EWsN71Gb`, private to the
+  `~/.claude3` account; its source is `repeat-review/page/`.
+  - **Walk rows:** bandage-core 2b472fc and f1427f7, plugin 09214af3,
+    branch `rows-count` in `~/work/walks8-gates/agents/rowcount/`, as
+    switch levels 4 to 6 on `revisited-colour`. At TSPY every row ends in
+    its length and count ("1003 kb · 45×"), equal to the GFA's on all
+    nine rows, and at the palindrome the spacer runs the right way in all
+    eight. Sheets and checks in `rowcount/`.
+  - **Lanes:** plugin d19b5ad4, branch `lanes-spacer` on v10.6.0, in
+    `agents/lanespacer/`. A run of steps on once-passed nodes that places
+    10 kb or more keeps its exact record inside an array stretch, so the
+    palindrome's spacer is a ribbon, same strand as GRCh38 on four lanes
+    and the other on four; each array record carries its lane's count.
+    The 55 Minigraph-Cactus windows give the same records. Sheets and
+    checks in `lanespacer/`.
+  - **One count,** reached by the two agents apart: the median, weighted
+    by node length, of how often the row or lane steps each node the
+    reference steps more than once.
+  - **Left for a real implementation:** the rows' switch is read from the
+    served folder's name; the plugin's typecheck could not resolve
+    bandage-core in that build; the rows' direction needs two extra cuts a
+    window wide, whose cost is unmeasured; the lanes' released "justified"
+    check needs its amended wording.
+  - **For jbrowse-components, not asked yet:** the lane header should
+    show the count in place of "580 kb repeat over 210 kb", and array
+    records should not vote on a lane's direction (six of eight palindrome
+    lanes draw reversed).
+  - **What neither changes:** at `chrY:24,659,511-24,669,511` three lanes
+    still read "no step on the reference across 19 Mb" and the rows' key
+    says "no step on the reference" for haplotypes whose steps were filed
+    at the 25.00 Mb copy.
+- **A FORMAT CHANGE is under study and nothing of it is built:** a table
+  of where the reference's other passes over a node lie, so a reader can
   say "also at chrY:25.00 Mb, other strand" and count over every pass. It
-  is a fact of the reference path, like `passes`. A file stating
-  `revisited:i:0` would hold none, so no hosted walk file would change.
-  Owed before any decision: its size on pggb chrY, the count summed over
-  every pass shown equal to the GFA's at more than one locus, the
-  hard-coded picture, then the three Fable reviews.
+  is the fix ADR 0011 and `docs/open-problems.md` already name for
+  collapsed repeats. A file stating `revisited:i:0` would hold none, so
+  no hosted walk file would change.
+  - A measurement of every route to the two facts, changing nothing among
+    them, against six criteria fixed in its brief: ada
+    `agents/passroutes/`, results to `passroutes/`. Running when this was
+    written.
+  - Then the three Fable reviews, briefed with the question, the criteria
+    and the data and not with the proposal. ADR 0011 also asks for an
+    issues-log entry whose source is a user; the owner's standing wish
+    that pggb walk files work is the candidate, and it is not logged.
+  - This session accepts no format change.
 - **The hairline and the band should not share ink:** the hairline is a
   fact of the graph and the band's extent is the writer's policy. This
   undoes the link between the study's fifth tick and the band's look.
 - **The chain spike** is judged worth running by the review, and does not
   replace the count. Still no go from the owner.
-- **A related request came in from jbrowse-components-05:** genome-wide
-  counts of the lane gap shapes behind its "replaced by" and "complex"
-  headers. The census runs on ada in `agents/gapshapes/`, results to
-  `gapshapes/` in the evidence folder; the reply is owed to that session.
+- **jbrowse-components-05 asked for counts of lane gap shapes** behind
+  its "replaced by" and "complex" headers, and got them: a census of the
+  8-haplotype PIF in `gapshapes/`, then a run of its commit 56cc94c330
+  through the same harness in `gapshapes/candidate-56cc94c/`. It is
+  rebuilding the rule on that and will send one more sha for the same
+  checks; the census agent's harness on ada in `agents/gapshapes/` runs a
+  commit's real `laneIndelsOf` over every record.
 
 ## What a later note overturned
 
