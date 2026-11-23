@@ -135,15 +135,63 @@ the evidence folder (`windowjoined/`, `reviews/windowjoined-prototype.txt`).
 - bandage-core's suite passed whole once (1,861 tests); a rerun after the
   last small change failed one timing bound under load, which passes alone.
 
+## A review of the prototype: correct, not useful at complex regions
+
+A Fable review, 2026-11-22 (`reviews/reader-review.txt`, pictures in
+`reader-review/`, its checks on ada in
+`~/work/walks8-gates/agents/reader-review/`).
+
+- **Correct on the fine tier.** On 61 chrY windows, 30 of them fresh random
+  ones, the anchored cut equals the window's graph read off the GFA in 60:
+  no link invented, none missing, every first-pass reference node drawn,
+  and all 939 skips kept are runs of reference steps at one pass. Today's
+  code fails the same check on 29 of the 30 random windows.
+- **Useful only where the window's reference is first-pass sequence.** Of
+  the 30 random windows of 10 kb, 19 are ordinary; 8 draw under 5% of their
+  reference, two of them nothing. The bp of a window under its drawn
+  reference nodes, read from the cut alone, equals the first-pass bp from
+  the path in all 61 windows.
+- **A tandem array cannot be drawn from this index.** TSPY over 300 kb is
+  loose sticks; from the walk file with one haplotype it is a ring keyed
+  1,897 walk passes. The index holds one place a node and no count.
+- **Faults in the prototype:**
+  - The fold tier `build` writes has no `#samples` line and is cut as
+    today: 89 skips at 21.92 Mb, each longer than the window.
+  - A window with no reference node placed in it shows "No graph segments"
+    where the graph has 95 reference steps.
+  - `orientToReference` and the position ramp still weigh far nodes by
+    stored place, so 21.98 Mb draws right to left.
+  - The contig cut at the view's one hop lacks nodes in 4 of 49 windows of
+    10 kb; the builder's agreement test used 100 hops.
+  - The cut's count of nodes left out is no use for a notice: 22,014 on an
+    ordinary whole window.
+  - The cut's header is the only vouch; with it replaced the false skips
+    return.
+- **Unpictured:** hosted `ecoli_pggb` and `ecoli_cactus` carry `#samples`
+  and lose one to five skips over 40 windows.
+- The identity count is thinner than stated: 220 of the 584 fixture windows
+  compare two empty cuts.
+
 ## What to do
 
 Prototyped as above; the owner's tick is the gate, since it changes what
 every pggb window from a node and link index draws.
 
-- **Before landing:** a notice in the plugin where a window's reference is
-  mostly placed elsewhere, from the bp of the window its drawn reference
-  nodes cover and the cut's count of nodes left out; and the timing test
-  rerun on a quiet machine.
+- **Before landing, smallest first:**
+  - a true message for a flagged cut with no reference node placed in the
+    window;
+  - a notice from the bp of the window its drawn reference nodes cover,
+    such as "Reference nodes placed in this window cover 2,348 of its
+    10,000 bp. The rest is passes over nodes the graph stores at an earlier
+    position.";
+  - `orientToReference` and the ramp skip far nodes;
+  - the coarse tier takes the fine tier's flag in the adapter, with a
+    fold-tier window pictured;
+  - hosted `ecoli_pggb` and `ecoli_cactus` shot before and after;
+  - the docs say a contig cut holds components to hop depth.
+- **For arrays and later-pass windows the walk file is the source.** Only
+  it gives the reference there, pass counts, and an array as a ring; the
+  graph track of a pggb graph should say so where the index falls short.
 - **graph-walks:** a flag that a source is a path graph whose stored places
   are first passes, in both layouts, with tag-anchored rGFA sources kept
   exact; and for such a source in the anchored layout a cut of the
