@@ -124,21 +124,39 @@ Its text is `repeat-review/review.txt` in the evidence folder.
     still read "no step on the reference across 19 Mb" and the rows' key
     says "no step on the reference" for haplotypes whose steps were filed
     at the 25.00 Mb copy.
-- **A FORMAT CHANGE is under study and nothing of it is built:** a table
-  of where the reference's other passes over a node lie, so a reader can
-  say "also at chrY:25.00 Mb, other strand" and count over every pass. It
-  is the fix ADR 0011 and `docs/open-problems.md` already name for
-  collapsed repeats. A file stating `revisited:i:0` would hold none, so
-  no hosted walk file would change.
-  - A measurement of every route to the two facts, changing nothing among
-    them, against six criteria fixed in its brief: ada
-    `agents/passroutes/`, results to `passroutes/`. Running when this was
-    written.
-  - Then the three Fable reviews, briefed with the question, the criteria
-    and the data and not with the proposal. ADR 0011 also asks for an
-    issues-log entry whose source is a user; the owner's standing wish
-    that pggb walk files work is the candidate, and it is not logged.
-  - This session accepts no format change.
+- **The format question is parked, with no change made.** Five routes to
+  "where the reference's other passes lie" and "how often a haplotype walks
+  them" were measured against criteria fixed beforehand; none met all six,
+  so by ADR 0011 the format stays. The numbers and what it would take are
+  in `agent-docs/ideas/waiting-on-a-call/reference-other-passes.md`. No
+  reviews were run and the chain spike was not started; both wait on
+  someone asking for pggb walk tracks to be hosted.
+- **The owner asked on 23 November whether the whole concept is broken,**
+  and for goals to be cut back if that is what it takes to stop showing
+  users anything false. The working boundary since then: a position on the
+  reference is drawn only where it is a fact, which is every file stating
+  `revisited:i:0`; elsewhere one repeat mark with a count, nothing from
+  where the writer filed a step, and no new marks or format work. The
+  owner also asked that the rainbow keep one meaning, position on the
+  reference.
+  - The rows prototype has a plain level for this (bandage-core 8031e2a,
+    plugin f80d79ae, switch `cv-s0r7t0h0`): the reference keeps its
+    rainbow, a run on nodes the reference steps more than once is one flat
+    tone, the count stays, and it fetches what the released reader
+    fetches. Sheets in `rowcount/plain/`. Two faults are left in it: the
+    palindrome's spacer runs the wrong way on five rows, as in 10.6.0, and
+    the key says "no step on the reference" for haplotypes whose steps are
+    filed at another copy.
+  - Colouring by node, the extra cuts for row direction, the ticks and the
+    hairline are dropped.
+  - Two things were started to put evidence under the boundary, both
+    running when this was written: an audit of what the released readers
+    draw on the hosted HPRC graph (ada `agents/hostedaudit/`, results to
+    `hostedaudit/`), to be followed by a blind reading of its sheets; and a
+    review of what the field draws at tandem arrays, palindromes and
+    segmental duplications, from papers and tool documentation.
+  - The owner's page no longer carries ticks. Nothing lands before the
+    audit is in and the owner has seen its result.
 - **The hairline and the band should not share ink:** the hairline is a
   fact of the graph and the band's extent is the writer's policy. This
   undoes the link between the study's fifth tick and the band's look.
