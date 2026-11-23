@@ -156,7 +156,7 @@ Its text is `repeat-review/review.txt` in the evidence folder.
     review of what the field draws at tandem arrays, palindromes and
     segmental duplications, from papers and tool documentation.
   - The owner's page no longer carries ticks. Nothing lands before the
-    audit is in and the owner has seen its result.
+    audit is in and the owner has seen its result. The audit is done: see 2026-11-23-hosted-audit.md.
 - **The hairline and the band should not share ink:** the hairline is a
   fact of the graph and the band's extent is the writer's policy. This
   undoes the link between the study's fifth tick and the band's look.
