@@ -108,9 +108,25 @@ Pictures of eight loci are in
   untwisted in the scale's third colour with its own legend entry.
 - CFH, amylase, SMN and TBC1D3, which hold no array, are pixel-identical.
 
+## Released as plugin 10.6.0, 2026-11-22
+
+- Reference mode applies only when `laneRibbons` is `reference` and the
+  lanes display sent `readsLanesAgainstAnchor` on that call
+  (jbrowse-components 51e36f0549, on local main, not pushed). Otherwise the
+  adapter serves 10.5.1's records, checked byte for byte against a stored
+  run of 10.5.1's adapter.
+- On hosted beta.20, beta.22 and that day's hosted main, 10.6.0 is
+  pixel-identical to 10.5.1 at CFH, amylase, GSTM1, FLNA/EMD, SMN and
+  TBC1D3. On a build with the display's statement every lane reads "vs
+  hg38" and CFH matches the PAF-fed track.
+
 ## What is left
 
-- Land the plugin branch as the release after 10.5.0, by the usual gates.
+- Push jbrowse-components main and deploy a JBrowse with 51e36f0549, or no
+  hosted site draws the reference reading.
+- The repeat band's look waits on the owner; five looks are on
+  jbrowse-components branch `repeat-band-looks`, built on commit ids main no
+  longer has.
 - At amylase HG00128 has 116 kb of its own sequence between a forward and a
   reversed record, on nodes with no stored place. It is under no record and
   the header says nothing of it:
