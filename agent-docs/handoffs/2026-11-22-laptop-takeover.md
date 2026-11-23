@@ -7,7 +7,7 @@ description: A laptop session took over two stalled sessions on 2026-11-22 and w
 
 Pointers to where each thread stands. Delete this when the owed items below
 are paid and the unlanded branches are landed, parked as ideas or deleted.
-The evidence for everything is in
+The session closed that night with no agent of its own running. The evidence for everything is in
 `~/src/walks8-evidence/sessions-20261122/` (`takeover/` is this session's:
 plans, reviews, pictures; `paper/` and `lanes/` the two stalled sessions').
 
@@ -67,7 +67,8 @@ plans, reviews, pictures; `paper/` and `lanes/` the two stalled sessions').
 - **paper-a9** (the paper's figures): told that 10.6.0 is out and that its
   Figure 5 build must hold jbrowse-components 51e36f0549. Still owed: the
   pggb chrY numbers and two wordings for `paper.tex` near line 560 and the
-  letter's line 79 (`todo/paper-graph-figures-and-timings.md`).
+  letter's line 79; see "Left unfinished" below. It has not been told the
+  measurement stopped.
 - **jb2hubs-5d** (pangenome pages): nothing owed. It holds a cow walk-file
   build until it rebuilds the graph with current Minigraph-Cactus, since
   the 2023 graph's reference revisits 181,357 nodes on chr29; and its cut
@@ -88,14 +89,35 @@ plans, reviews, pictures; `paper/` and `lanes/` the two stalled sessions').
 - **Rejected, kept for its pictures:** bandage-core `loops-rule` in
   `~/src/bandage-core-loopsrule`.
 
-## Running when this was written
+## Left unfinished: the paper's pggb chrY measurement
 
-- Subagents of this session; they stop if it does.
-  - The paper's pggb re-measurement: edits `~/src/jb2bench` on a worktree
-    branch, runs on ada beside `~/work/scratch/graph-repro-2026-11-22`, and
-    is told to commit and push jb2bench. It waits for ada to quieten.
-  - The spread of draw times finished and is filed in
-    `todo/paper-graph-figures-and-timings.md`.
+Owed to paper-a9. Nothing is timed; ada stayed at load 23–39 from other
+users for two hours, so the agent stopped. Nothing is pushed to jb2bench.
+
+- **Scripts are ready:** jb2bench branch `pggb-drawn-clock`, d28834f, in
+  `~/src/jb2bench-pggb-drawn`, unpushed, its message saying the run is
+  partial. `index.sh` indexes with `gfa-to-tabix build` (`LAYOUT=anchored`
+  for the bare command), `trace.sh` loads the plugin from its versioned URL
+  and records time to loaded and time to drawn, and
+  `scripts/pggb/reference-steps.mjs` counts how much of each window's
+  reference the drawing holds.
+- **The index is built:** ada,
+  `~/work/scratch/graph-repro-2026-11-22/data/pggb/contig/`, with the
+  anchored one beside it. Its build time was taken under load and is not to
+  be quoted; a quiet run took 1 min 57 s at 10 GB.
+- **To finish,** on ada once the 1-minute load is under about 8, with the
+  branch's scripts copied into the run copy:
+  `cd ~/work/scratch/graph-repro-2026-11-22 && export PATH=~/.local/node/bin:$PATH && PLUGIN=10.6.0 LAYOUT=contig scripts/pggb/trace.sh && PLUGIN=10.6.0 LAYOUT=anchored scripts/pggb/trace.sh && LAYOUT=contig nice -n 10 scripts/pggb/index.sh && LAYOUT=anchored nice -n 10 scripts/pggb/index.sh`.
+  `~/work/scratch/pggb-drawn-2026-11-22/gate.sh` does the same behind a
+  load gate; set its plugin to 10.6.0. Then commit the rows, fast-forward
+  jb2bench main, push, and send paper-a9 the table and two wordings.
+- **To check the run against:** the 17.12 Mb window draws 114 nodes and 155
+  links from the `build` index and holds all 71 of its reference steps; the
+  21.92 Mb window holds 153 of 1,075.
+- Two `until` loops from the stalled paper session still wait on ada for
+  `scripts/pggb/trace.sh` and will never exit; they were left alone.
+- The spread of draw times on ordinary windows finished and is filed in
+  `todo/paper-graph-figures-and-timings.md`.
 
 ## The ada session
 

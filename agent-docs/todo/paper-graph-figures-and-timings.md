@@ -76,6 +76,11 @@ anew from `approve/` and `compare/` there.
   and writes no store reference since beta.22 resolves one to the store's
   latest.
 
+## The pggb re-measurement is set up and not run
+
+`handoffs/2026-11-22-laptop-takeover.md`, "Left unfinished", has the branch,
+the built index and the command.
+
 ## A spread on ordinary windows, 2026-11-22
 
 Rows on ada in
