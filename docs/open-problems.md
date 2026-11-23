@@ -124,10 +124,13 @@ its ends' chunks ([ADR 0009](adr/0009-departure-records.md)).
   contig position (35.6% in Yp11 and Yq11); on chr22 a window can read
   73 MB of departure rows in the spike's format, and 32.9 MB in 2,491,246
   rows in the port's. Measured in [docs/departures/](departures/)
-- No one publishes a rule for this: `odgi untangle` votes per segment with
-  no continuity term and ties identical copies, vg deconstruct assigns
-  alleles by a 10 kb context vote, and HPRC release 2 ships no projection
-  of its pggb graphs, only the wfmash all-vs-1 alignments
+- The published rules are best-match votes, and none has been evaluated:
+  `odgi untangle` votes per segment with no continuity term and ties
+  identical copies, vg deconstruct assigns alleles by a 10 kb context
+  vote, and HPRC release 2 ships no projection of its pggb graphs, only
+  the wfmash all-vs-1 alignments. VRPG avoids a rule: it copies a
+  collapsed node for the reference's later passes and places no haplotype
+  on the copies
 - Those alignments are themselves ambiguous in repeats: 73.5% of chrY's
   lifted blocks overlap another block of the same contig, since wfmash maps
   every segment of an array to its best copy. `primary.py` chains each
