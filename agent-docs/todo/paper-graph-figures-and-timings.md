@@ -76,6 +76,24 @@ anew from `approve/` and `compare/` there.
   and writes no store reference since beta.22 resolves one to the store's
   latest.
 
+## A spread on ordinary windows, 2026-11-22
+
+Rows on ada in
+`~/work/scratch/cut-speed-prof/out/spread-2026-11-22/rows.jsonl`; the report
+is `reviews/timing-spread.txt` in the evidence folder. Three runs a window,
+builds interleaved, plugin 9.0.0, 10.4.4 and the 10.5.0 code.
+
+- **Hosted HPRC Minigraph-Cactus, graph view, 186 windows of 10 kb to 1 Mb:**
+  loaded in a median 0.47 s and drawn in a median 0.6 s on every build,
+  under 1.4 s for every window. The 10.5.0 code against 10.4.4, window by
+  window: 1.00 (0.91–1.08).
+- **The graph track in a linear view, 26 windows:** drawn in a median 0.56 s.
+- These graphs are small: 174 of the 186 hold under 500 nodes and the
+  largest 2,655, since the hosted track folds small variants. Time to
+  drawn passes 1 s near 1,000–1,300 nodes.
+- **Its pggb rows are of the anchored layout** and say nothing of the graph;
+  the machine was at load 10–28 for them.
+
 ## Text cards waiting on the release
 
 In `approve/cards.js` and `approve/index.html`:

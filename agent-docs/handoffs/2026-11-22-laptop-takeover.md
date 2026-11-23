@@ -94,11 +94,8 @@ plans, reviews, pictures; `paper/` and `lanes/` the two stalled sessions').
   - The paper's pggb re-measurement: edits `~/src/jb2bench` on a worktree
     branch, runs on ada beside `~/work/scratch/graph-repro-2026-11-22`, and
     is told to commit and push jb2bench. It waits for ada to quieten.
-  - A spread of draw times over 240 windows on three plugin builds: rows in
-    ada `~/work/scratch/cut-speed-prof/out/spread-2026-11-22/rows.jsonl`.
-    The Minigraph-Cactus part is whole (the 10.5.0 code equals 10.4.4,
-    about 0.55–0.6 s to drawn); its pggb part measures the layout the todo
-    above calls an artefact.
+  - The spread of draw times finished and is filed in
+    `todo/paper-graph-figures-and-timings.md`.
 
 ## The ada session
 
