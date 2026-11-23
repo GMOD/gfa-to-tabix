@@ -28,6 +28,7 @@ local_file() {
     grch38) echo "$G/hprc-v2.1-mc-grch38.GRCh38.walks.gz" ;;
     chm13) echo "$G/hprc-v2.1-mc-chm13.CHM13.walks.gz" ;;
     chr6-sequences) echo "$G/hprc-v2.1-mc-grch38-chr6-sequences-f8.GRCh38.walks.gz" ;;
+    chr20-sequences) echo "$HOME/work/chr20seq/hprc-v2.1-mc-grch38-chr20-sequences-f8.GRCh38.walks.gz" ;;
     pggbY) echo "$HOME/work/blocks/accept-5.0.0/4b14ee3/pggbY/pggbY.GRCh38.walks.gz" ;;
   esac
 }
@@ -36,6 +37,7 @@ hosted_name() {
     grch38) echo hprc-v2.1-mc-grch38-f8.GRCh38.walks.gz ;;
     chm13) echo hprc-v2.1-mc-chm13-f8.CHM13.walks.gz ;;
     chr6-sequences) echo hprc-v2.1-mc-grch38-chr6-sequences-f8.GRCh38.walks.gz ;;
+    chr20-sequences) echo hprc-v2.1-mc-grch38-chr20-sequences-f8.GRCh38.walks.gz ;;
   esac
 }
 etag() {
@@ -49,7 +51,7 @@ print(f'{hashlib.md5(b"".join(digests)).hexdigest()}-{len(digests)}')
 PY
 }
 printf 'file\thosted\tlocal bytes\thosted Content-Length\tlocal ETag, 8 MiB parts\thosted ETag\tlocal .idx sha256\thosted .idx sha256\tlocal sha256\n' > "$O/identity.tsv"
-for f in grch38 chm13 chr6-sequences pggbY; do
+for f in grch38 chm13 chr6-sequences chr20-sequences pggbY; do
   l=$(local_file $f) h=$(hosted_name $f)
   if [ -n "$h" ]; then
     head=$(curl -sI -A curl "$U/$h")
@@ -65,7 +67,7 @@ done
 for f in grch38 chm13; do
   cap 1G "$O/verify7.$f.time" python3 -I "$S/verify7.py" "$(local_file $f)" > "$O/verify7.$f.json" 2> "$O/verify7.$f.err" &
 done
-for f in chr6-sequences pggbY; do
+for f in chr6-sequences chr20-sequences pggbY; do
   cap 1G "$O/verify7.$f.time" python3 -I "$S/verify7.py" "$(local_file $f)" > "$O/verify7.$f.json" 2> "$O/verify7.$f.err"
   cap 48G "$O/spec8.$f.time" python3 -I "$S/spec8.py" "$(local_file $f)" > "$O/spec8.$f.txt" 2> "$O/spec8.$f.err"
 done

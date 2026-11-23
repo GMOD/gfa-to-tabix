@@ -31,10 +31,11 @@ file /home/cdiesh/work/blocks/accept-5.0.0/4b14ee3/pggbY/pggbY.GRCh38.walks.gz: 
       263414  counts a ref row states for a node that are the file's ref rows' steps on it
       425040  departure records equal to a piece boundary computed from the rows
       425040  departure records in exactly the blocks of their cover
+         136  haplotypes with walk or abridged rows that no reference sequence is on
        18638  record stretches that cut to an abridged piece's are its list's whole leading or trailing run
       988585  route rows checked (orientation, order, ends on R, used)
         1518  table entries
       358298  walk rows decoded with matching nsteps and span
 == disagreed ==
   none
-(605.0 s)
+(476.4 s)

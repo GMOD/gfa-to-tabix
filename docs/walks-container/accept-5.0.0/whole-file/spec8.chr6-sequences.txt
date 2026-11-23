@@ -27,6 +27,7 @@ file /home/cdiesh/work/blocks/genome-5.0.0-hdr/hprc-v2.1-mc-grch38-chr6-sequence
      4799024  counts a ref row states for a node that are the file's ref rows' steps on it
       105024  departure records equal to a piece boundary computed from the rows
       105024  departure records in exactly the blocks of their cover
+         463  haplotypes with walk or abridged rows that no reference sequence is on
          615  record stretches that cut to an abridged piece's are its list's whole leading or trailing run
      2832198  route interior nodes that the reference does not pass once, in a file that states revisited:i:0
      5365709  route rows checked (orientation, order, ends on R, used)
@@ -34,4 +35,4 @@ file /home/cdiesh/work/blocks/genome-5.0.0-hdr/hprc-v2.1-mc-grch38-chr6-sequence
      1191882  walk rows decoded with matching nsteps and span
 == disagreed ==
   none
-(420.0 s)
+(347.6 s)

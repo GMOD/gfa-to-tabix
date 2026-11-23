@@ -1,0 +1,40 @@
+file /home/cdiesh/work/chr20seq/hprc-v2.1-mc-grch38-chr20-sequences-f8.GRCh38.walks.gz: {'format': 8, 'tile': 65536, 'revisited': 0, 'stay': 311, 'abridge': 1000000, 'abridgebytes': 3000000, 'graph': '8ef40007b809eefa', 'leftout': 1, 'bytes': 63233307}
+          2562  W lines
+          1608  abridged rows
+            15  abridged tiles
+        629222  blocks items
+           235  blocks lists with a block against R
+           155  blocks lists with a leading run
+           184  blocks lists with a trailing run
+         89355  departure lines
+         37700  departure records
+      15458690  detail steps
+          1608  detail units
+          1608  detail walk rows
+       1474416  nodes in a route interior
+       1817551  nodes the ref rows step once
+        397456  piece boundaries that are adjacent on S (no record)
+        436710  pieces
+           984  tiles
+        434118  walk rows
+== agreed ==
+         463  #haplotype lines equal the haplotypes with rows
+        2562  W lines whose pieces tile their contig from fragStart
+        1608  abridged hapBp equal to the bp of all its detail walk row's steps
+        1546  abridged pieces whose hapOffset plus hapBp is the next piece's hapOffset
+        1608  abridged rows equal to their detail walk row (key, hapOffset, nsteps, span, record)
+        1608  blocks expanded against R equal the detail walk's steps on R (positions)
+        1608  blocks lists equal to the detail walk row collapsed (text)
+        1608  blocks lists whose items add up to their abridged row's hapBp
+     1817551  counts a ref row states for a node that are the file's ref rows' steps on it
+       37700  departure records equal to a piece boundary computed from the rows
+       37700  departure records in exactly the blocks of their cover
+         463  haplotypes with walk or abridged rows that no reference sequence is on
+         339  record stretches that cut to an abridged piece's are its list's whole leading or trailing run
+     1474416  route interior nodes that the reference does not pass once, in a file that states revisited:i:0
+     1399055  route rows checked (orientation, order, ends on R, used)
+        3568  table entries
+      434118  walk rows decoded with matching nsteps and span
+== disagreed ==
+  none
+(111.0 s)
