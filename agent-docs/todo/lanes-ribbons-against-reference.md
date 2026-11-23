@@ -92,7 +92,9 @@ the plan and pictures in `~/src/walks8-evidence/sessions-20261122/takeover/`
 
 ## The display's side landed, 2026-11-22
 
-jbrowse-components local main, 78d23bfa8c and e3037df864, not pushed.
+jbrowse-components main, ce3bb50252 and cfa4034658, pushed (main was
+rewritten that evening, so earlier notes name them 78d23bfa8c and
+e3037df864).
 Pictures of eight loci are in
 `~/src/walks8-evidence/sessions-20261122/takeover/placement3/`.
 

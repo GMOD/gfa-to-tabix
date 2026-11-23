@@ -51,7 +51,9 @@ of `demos/hprc`. Pictures and scripts are on ada in
 
 ## Landed on jbrowse-components main, 2026-11-22
 
-Four commits, 4d3c19764e to 126a052bad, on local main, which is not pushed.
+Four commits, 48e3d77f08, c301950837, fccf679aa1 and d621b20829, on main,
+pushed. A later commit from another session, 647fcd87c8, changed how a
+lane's gap counts pieces of the other strand; the pictures below predate it.
 Pictures of eight loci before and after, with every lane's header dumped,
 are in `~/src/walks8-evidence/sessions-20261122/takeover/lanesfit/`.
 

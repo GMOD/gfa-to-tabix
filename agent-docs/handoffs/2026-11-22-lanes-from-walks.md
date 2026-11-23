@@ -58,7 +58,7 @@ lanes against the reference land.
 - **A laptop session:** lanes against the reference from each step's stored
   place, prototyped on plugin branch `lanes-from-placement`; what is left is
   in `todo/lanes-ribbons-against-reference.md`.
-- The display's fit and header fixes are on jbrowse-components local main;
+- The display's fit and header fixes are on jbrowse-components main, pushed;
   what they leave is in `todo/lanes-headers-and-fit-at-inversions.md`. The
   ada session is told not to act on either.
 
