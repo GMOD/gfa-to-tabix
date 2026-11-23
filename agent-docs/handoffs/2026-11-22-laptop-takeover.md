@@ -57,6 +57,10 @@ plans, reviews, pictures; `paper/` and `lanes/` the two stalled sessions').
   graph whose reference revisits nodes. The prompt is
   `takeover/prompt-revisited-reference-study.md`. Until it reports, land
   none of the pggb reader work.
+- **Another session's proposal on the same cause,** written the same day:
+  `2026-11-22-pggb-place-by-chain.md`, that the walk writer place each
+  haplotype by a co-linear chain. Nothing in it is built. The study should
+  read it beside the reader prototype here.
 
 ## Owed to other sessions
 
