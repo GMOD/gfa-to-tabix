@@ -31,13 +31,13 @@ The evidence is in `~/src/walks8-evidence/sessions-20261122/hostedaudit/`; the a
 
 ## Fix branches (unpushed), state at the end of 23 November
 
-Nothing is pushed, landed or released. Each branch set goes through implementer, then an independent Fable review, then BEFORE/AFTER pairs on an owner review page with landing tick boxes. Reviews and rulings are in `reviews/` of the evidence folder.
+Nothing is pushed, landed or released. Each branch set goes through implementer, then an independent Fable review, then BEFORE/AFTER pairs on an owner review page with landing tick boxes. Reviews and rulings are in `reviews/` of the evidence folder; `reviews/arbitration-20261123.md` records seven drawing calls two independent deciders settled at the owner's request, and the lanes and walk-rows passes below are building those rulings. The owner's page of the calls is artifact 2t9QAkePeNm1Wrgg8owruR. Related: todo graph-track-lanes-button and idea cohort-overview-then-lanes.
 
 - **Graph track**, branch `graph-truth` in `~/src/bandage-core-graphtruth`, `~/src/ggv-graph-truth`, `~/src/BandageJS-graphtruth`, `~/src/ggbandage-graphtruth`.
-  - Reviewed heads: core 2c0a066, plugin 7953b445, BandageJS cc43b4c0, ggbandage 297c4cd.
-  - `reviews/graph-truth-review4.md` says core is not ready: an allele whose connecting skips are too short to arch is drawn attached to nothing. The fix pass was in progress when this session ended, so core, plugin and BandageJS worktrees hold uncommitted edits. Read the diff before continuing.
-  - The pass: too-short padded feet draw as plain links; left-out skips are not hoverable; "replaced by" dropped from the hover where walks through a link differ; three weakened `levelOfDetail` tests; a test for heads on a SNP-split inversion; BandageJS's re-fit cap replaced by a rule with a test; then suites, `pairs-v5/` and rGFA identity.
-  - Pairs so far: `after-graph/pairs-v4/`. ggbandage lands only with the bundle bump, the plugin with the core release and pin.
+  - Heads: core 072aa22, plugin ac8b92e1, BandageJS bd15f8f0, ggbandage 4db94a5, all clean, suites green (the plugin typecheck exits 1 only on three duplicate `gbz-base` errors from the local link).
+  - Review 4's faults are fixed and the arbitrated rulings are in: a skip too short to arch draws as a plain link, keyed "link"; the foot hover gives a number only when every walk through the link skips the same stretch.
+  - Not yet done: an independent review of everything after 2c0a066; the plugin's grow-only key fit seen in a browser; heads with two rank-0 references.
+  - Pairs: `after-graph/pairs-v7/` (earlier rounds in v4 to v6). ggbandage lands only with the bundle bump, the plugin with the core release and pin.
 - **Lanes**, jbrowse-components branch `lanes-truth-l1-l5` in `~/src/jbc-lanes-truth`.
   - Reviewed head 7fb25d5197 (full suite and typecheck green on it). The worktree has since been rebased and holds uncommitted edits from the fix pass.
   - `reviews/lanes-truth-review3.md` says land after removing the tandem-copy insertion chip, which states a false size at R1M-06 HG01123.
