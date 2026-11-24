@@ -44,8 +44,10 @@ Nothing is pushed, landed or released. Each branch set goes through implementer,
   - The pass: remove that chip; check ordinary insertion chips for the same out-of-fetch weakness; one squeeze tolerance on every rung; the colour key in its own band; pins and hidden lanes that survive a reload; a plain line where no haplotype has sequence (R10k-08, H-Y2466); then reshoot into `after-lanes/pairs-v4/`.
   - "13 kb deletion" and "114 kb deletion" where the VCF has a replacement wait on the held `lanes-splitter-pin`.
 - **Walk rows**, branch `rows-truth` in `~/src/bandage-core-rowstruth`, `~/src/jbrowse-plugin-graphgenomeviewer-rowstruth`, `~/src/BandageJS-rowstruth`, `~/src/ggbandage-rowstruth`.
-  - Round 3 ("rows never flip") is committed; the implementer was finishing the readout-room change, the end checks and the report. Heads when this was written: core 10a01bb, plugin c99c5e9b, BandageJS fc254bea, ggbandage 42e5f7f, all clean. No report had arrived and no Fable review of round 3 has been run.
-  - Shots, ink check and text diff are in `after-rows/`; the ada chain is `~/work/walks8-gates/agents/rowstruth2/`.
+  - Heads: core ffa1a12, plugin c2c89ce6, BandageJS 79e08f5b, ggbandage ac670ed, all clean, suites green at those heads (plugin in a clean worktree; its tsc shows the same three `gbz-base` errors as its base).
+  - `reviews/rows-truth-review3.md` faults are fixed and the arbitrated minimum is built: rows start at the left, one `//` per trip, chevrons only over reversed sequence, a one-line readout, a swatch-only key. The owner wants walk rows kept small beside the lanes.
+  - Not yet done: an independent review of this pass; the chevron key entry still shows where no chevron is drawn; the reversed-flag check reads the code's own tables; ggbandage still prints the sentence readouts, since a figure has no hover; core main moved to 14.5.0 and the rebase conflicts in `src/figure.ts`.
+  - Pairs: `after-rows/pairs-v4/`; shots and logs in `after-rows/v6-r4-20261123/`.
 
 ### Picking the three passes up
 
