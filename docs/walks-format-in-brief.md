@@ -24,8 +24,14 @@ Each `>4` is a step: node 4, walked forward.
 gfa-to-tabix walks-example.gfa --walks --refs GRCh38 --tile 30 -o hprc
 ```
 
-The command writes the walk file, `hprc.GRCh38.walks.gz`, and a small text
-file beside it, `hprc.GRCh38.walks.gz.idx`.
+The command writes two files, the walk data file and its directory index:
+
+```
+hprc.GRCh38.walks.gz
+hprc.GRCh38.walks.gz.idx
+```
+
+`hprc.GRCh38.walks.gz.idx` is a custom plain-text directory index (not a `.tbi` or `.gzi` index). It lists the compressed byte ranges of the header and of each reference sequence's unit table inside the `.walks.gz` data file.
 
 ![The example graph: nine reference nodes along chr1 under three tiles, tile 0, tile 30 and tile 60; HG002#1 as a straight line, CHM13#0 dipping to node 10 under node 5, HG003#1 dipping under node 5 with no node, and HG002#2 dipping under nodes 3 to 7 with no node; below, hprc.GRCh38.walks.gz as a bar of header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and table; the region chr1:31-60 is shaded over the graph and over tile 30 and departures 30-60, labelled one request](figures/walks-example.svg)
 
@@ -33,9 +39,14 @@ file beside it, `hprc.GRCh38.walks.gz.idx`.
 
 - **Tiles:** gfa-to-tabix cuts the reference into tiles of a fixed length,
   30 bp here and 65536 bp by default, and compresses each tile separately
-- **A table of byte ranges:** the file has a table of where each tile's
-  bytes are, and the `.idx` gives the table's byte range, so a viewer
-  fetches the tiles over its region and no others
+- **Custom index (`.idx`):** walk files do not use Tabix (`.tbi`) or `.gzi`.
+  Instead, the small `.idx` text file serves as a directory
+  ([The directory](walks-format.md#the-directory)), giving the byte range of
+  each chromosome's unit table inside the `.walks.gz` file
+- **A table of byte ranges:** the data file embeds a table of where each tile's
+  bytes are. Because each unit starts and ends on a BGZF block boundary, a
+  viewer fetches only the tiles over its queried region using range requests
+  and gunzips them alone, without needing an external block index
 - **The reference, once:** a tile's `ref` row lists the reference's steps
   through the tile
 - **Each detour, once:** a `route` row is one detour off the reference
