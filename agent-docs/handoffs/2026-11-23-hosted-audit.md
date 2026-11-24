@@ -39,22 +39,23 @@ Nothing is pushed, landed or released. Each branch set goes through implementer,
   - Not yet done: an independent review of everything after 2c0a066; the plugin's grow-only key fit seen in a browser; heads with two rank-0 references.
   - Pairs: `after-graph/pairs-v7/` (earlier rounds in v4 to v6). ggbandage lands only with the bundle bump, the plugin with the core release and pin.
 - **Lanes**, jbrowse-components branch `lanes-truth-l1-l5` in `~/src/jbc-lanes-truth`.
-  - Reviewed head 7fb25d5197 (full suite and typecheck green on it). The worktree has since been rebased and holds uncommitted edits from the fix pass.
-  - `reviews/lanes-truth-review3.md` says land after removing the tandem-copy insertion chip, which states a false size at R1M-06 HG01123.
-  - The pass: remove that chip; check ordinary insertion chips for the same out-of-fetch weakness; one squeeze tolerance on every rung; the colour key in its own band; pins and hidden lanes that survive a reload; a plain line where no haplotype has sequence (R10k-08, H-Y2466); then reshoot into `after-lanes/pairs-v4/`.
+  - Head bef619994a, 32 commits on main, clean. Full suite green apart from three tables tests fixed test-only in the head commit (tables folder rerun green); typecheck green on the head. origin/main has moved 2 commits since the rebase, none in the lanes folders.
+  - `reviews/lanes-truth-review3.md` faults are fixed and the arbitrated rulings are built: the tandem-copy chip is removed, the key is one row above the lanes listing only drawn marks, one squeeze tolerance on every rung, pins and hidden lanes reattach after a reload, and a window with no haplotype sequence says so.
+  - Not yet done: an independent review of this pass; a full suite run on the exact head after the next rebase; squashing 7e4657cf53 and 70fbba9fdb, which later commits undo. Ordinary insertion chips can appear or not with how far the fetch reaches, never with a false size. A bar's end does not say whether the fetch or the contig ended.
   - "13 kb deletion" and "114 kb deletion" where the VCF has a replacement wait on the held `lanes-splitter-pin`.
+  - Pairs: `after-lanes/pairs-v4/` (before, round 3, after); shots in `after-lanes/after-v4c-20261123/`.
 - **Walk rows**, branch `rows-truth` in `~/src/bandage-core-rowstruth`, `~/src/jbrowse-plugin-graphgenomeviewer-rowstruth`, `~/src/BandageJS-rowstruth`, `~/src/ggbandage-rowstruth`.
   - Heads: core ffa1a12, plugin c2c89ce6, BandageJS 79e08f5b, ggbandage ac670ed, all clean, suites green at those heads (plugin in a clean worktree; its tsc shows the same three `gbz-base` errors as its base).
   - `reviews/rows-truth-review3.md` faults are fixed and the arbitrated minimum is built: rows start at the left, one `//` per trip, chevrons only over reversed sequence, a one-line readout, a swatch-only key. The owner wants walk rows kept small beside the lanes.
   - Not yet done: an independent review of this pass; the chevron key entry still shows where no chevron is drawn; the reversed-flag check reads the code's own tables; ggbandage still prints the sentence readouts, since a figure has no hover; core main moved to 14.5.0 and the rebase conflicts in `src/figure.ts`.
   - Pairs: `after-rows/pairs-v4/`; shots and logs in `after-rows/v6-r4-20261123/`.
 
-### Picking the three passes up
+### What is left
 
-- The implementers' transcripts are in `~/.claude/projects/-home-cdiesh-src-gfa-to-tabix/f12e5cb1-2c77-441e-a4c6-192185bf74b8/subagents/`: graph `agent-ad35be388369945de`, rows `agent-a374f9e99ea608011`, lanes `agent-a4d925bea20d63bf6`. Read the tail of each for what was done after the heads above; start fresh agents rather than waking that session.
-- Their ada folders: `~/work/walks8-gates/agents/graph-truth4/`, `~/work/walks8-gates/agents/rowstruth2/`, `~/work/lanes-truth-v3/`.
+- All three implementer passes are finished; nothing is pushed, landed or released.
+- One independent Fable review per branch set of the passes made after its last review (graph after 2c0a066, lanes after 7fb25d5197, rows after 10a01bb), then the owner sees the before-and-after pairs before any landing.
+- The plugin typecheck shown green without the local core link.
 - Rules every brief carries: builds, tests and shots on ada only; heavy steps under `flock ~/work/ada-heavy.lock`; scripts in a per-agent scratch folder; rsync with both paths written out, no `--delete`.
-- Still to do after the passes: a Fable review of walk rows round 3, re-review of the graph and lanes fixes, the plugin typecheck shown green without the local link, and the owner review page.
 
 ## ada
 
