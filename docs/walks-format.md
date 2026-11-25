@@ -14,11 +14,11 @@ format: what a file holds, whoever wrote it.
 - [Reading walk files](walks-reading.md) covers reading a window, the
   reader programs and hosting
 
-The page has two parts. The first, up to the [Example](#example), is
-what a file holds and how a reader decodes it.
-[Rules a valid file keeps](#rules-a-valid-file-keeps) is the fine print:
+The first part of the page, up to the [Example](#example), is what a
+file holds and how a reader decodes it. The second part,
+[Rules a valid file keeps](#rules-a-valid-file-keeps), is the fine print:
 limits, orders, the one text a value has, what a reader may rely on and
-what it refuses.
+what it refuses or ignores.
 
 ## The format in short
 
@@ -36,14 +36,15 @@ what it refuses.
   there as the list of routes it takes <!-- C3 -->
 - **A departure record** gives a place where a path leaves the reference
   in one piece and rejoins it in another
-- **An abridged piece** is one moved out of a costly tile into a `detail`
-  unit, which a reader fetches on request
+- **An abridged piece** is one moved out of a tile too large to send
+  whole into a `detail` unit, which a reader fetches on request
 - **Nothing over a window is lost:** a reader rebuilds every piece of
   every path over a window from the tiles whose extents overlap it, an
-  abridged piece by expanding its `detail` unit. <!-- C1 --> The
-  departure records give every place a path departs from the reference
-  that the tiles' rows can't show <!-- C1 -->
-- **A chosen position says so:** every node on the reference and every
+  abridged piece by expanding its `detail` unit. <!-- C1 --> Each step
+  sits on the pass of the reference the writer gave it, and the departure
+  records give every place a path departs from the reference that the
+  tiles' rows can't show <!-- C1 -->
+- **Chosen positions are marked:** every node on the reference and every
   end of a departure record states how many times the reference passes
   it. <!-- C2 --> Where that is 1, the position is a fact of the graph,
   and above 1 it is the writer's choice
@@ -71,7 +72,9 @@ the columns that follow:
 
 ### Terms
 
-- **Line:** a W or P line of the GFA
+- **Line:** a W or P line of the GFA. A **contig** is the sequence a
+  line is a stretch of, which its `path` names, and several lines can be
+  stretches of one contig
 - **The reference:** the paths a file's `ref` rows are cut from: one or
   more whole haplotypes of the `#reference` sample
   ([Whole haplotypes](#whole-haplotypes)) <!-- C157 -->
@@ -86,7 +89,8 @@ the columns that follow:
   one walk
 - **R:** a tile's reference path, its `ref` rows' steps joined in offset
   order. A **position** is an index into R: one pass of the reference
-  over a node
+  over a node. A step is **placed** on a reference sequence where its row
+  gives it a position there
 - **Span:** a piece's stretch of its reference sequence, from the first
   base its steps placed on R cover to the last, over all of them
   <!-- C10 -->
@@ -132,15 +136,18 @@ The header unit is first, from byte 0, and `#walks` is its first line.
   tiles by extent, never by `floor(base / tile)` <!-- C145 -->
 - **Departure bins** are `tile × 8^L` bp for L from 0 to 3 (64 kb,
   512 kb, 4 Mb and 32 Mb at the default tile), each at a multiple of its
-  size. <!-- C43 --> A record's line is in every bin of its cover and no
-  other, the same text in each, tags included, and a reader drops exact
-  duplicates. <!-- C88 --> So the `departures` units that overlap a
+  size. <!-- C43 --> A record's line is in every bin of its cover, the
+  bins over its line's `start end`, and no other, the same text in each,
+  tags included, and a reader drops exact duplicates. <!-- C88 --> So the `departures` units that overlap a
   window hold every record whose line overlaps it <!-- C88 -->
 - **A table** lists each unit of its sequence before it, in file order,
   as `#entry seq start end kind name offset length`: the unit's `#unit`
   columns, then its byte offset and length in the data file, compressed.
   <!-- C45 --> Entries are not sorted by `start`, so a reader scans a
   table and doesn't bisect it
+- **Later additions:** a reader ignores a tag, a header line or a `#`
+  directory line it doesn't know, and skips a unit of a kind it doesn't
+  know ([Later additions](#later-additions))
 
 ### The directory
 
@@ -228,7 +235,13 @@ the first token's previous id is 0 unless a row says otherwise.
 <!-- C60 --> A difference can be negative, so a reader splits a token `t`
 by rounding down: the difference is `floor(t / 2)` and `r` is
 `t − 2 × floor(t / 2)`. The token `-5` is a difference of −3 on the
-reverse strand.
+reverse strand. A token can reach 2^32 either side of 0, so a 32-bit
+shift is not enough to split one.
+
+A tile lists its `ref` rows, then at most one `nodes` row, then its
+`route` rows, then its `walk` rows, then its `abridged` rows.
+<!-- C59 --> A decoder needs that order, and the order of the tile's
+`walk` rows ([Row rules](#row-rules)), as it needs a column.
 
 **A piece** is a `ref`, `walk` or `abridged` row, and those rows start
 with the same five columns:
@@ -318,8 +331,9 @@ seq start end walk path fragStart hapOffset piece nsteps startHandle[@k] choices
 
 Where R holds a node more than once, a `k` names an occurrence of the
 node, counting R's positions that hold it, in either orientation, from 0.
-A choice token may end `:k`, then `@k`, both optional, as `-10:1@2`. A
-suffix is written only where it differs from its default <!-- C70 -->:
+A choice token may end `:k`, then `@k`, both optional and `k` a number,
+as `-10:1@2`. A suffix is written only where it differs from its default
+<!-- C70 -->:
 
 | Written | The occurrence | Its default |
 |---|---|---|
@@ -417,8 +431,9 @@ one piece has no record: a reader computes it from the piece's steps
   those steps are in the leave step's piece or in the rejoin step's
   piece: `ownTiles` is the leave's tile, the rejoin's tile, the two in
   that order, or `.` <!-- C85 C86 -->. Own steps on the reference's other
-  sequences, in a line with no step on the reference, or in no line are
-  in none of the tiles it lists <!-- C87 -->
+  sequences lie in those sequences' tiles, and own steps in a line with
+  no step on the reference, and own sequence in no line, are in no tile;
+  `ownTiles` lists none of them <!-- C87 -->
 - **No column names the kind of departure.** Strands that differ are a
   strand switch. Otherwise the path jumps back, over reference it walks
   again, when `rejoinPos < leavePos` for a `+` leave or
@@ -446,7 +461,7 @@ is format:
   <!-- C102 --> Its routes are numbered from 0 and their tokens chained
   from 0, as for a tile of its own, and its walk rows decode against the
   R of tile `cs` <!-- C103 -->
-- The tile's `blocks` unit says where on R the moved pieces lie. A
+- The tile's `blocks` unit gives where on R the moved pieces lie. A
   reader reads it to draw a moved piece it doesn't expand, and for
   nothing else: a moved piece's span, its stretch of its contig and a
   departure record's own run in it are in the `abridged` rows and the
@@ -473,7 +488,9 @@ seq start end abridged path fragStart hapOffset piece nsteps hapBp detail
   of its own and the four nodes back has a span of 40 bp and a `hapBp`
   of 87
 - `detail` is the number `d` of the detail unit `cs:d` that holds the
-  piece's walk row
+  piece's walk row. A tile's detail units are numbered from 0 with none
+  missing <!-- C131 -->; which line takes which number is the writer's
+  choice
 - **The three rows agree.** `hapBp` is the bp of the detail walk row's
   steps and the sum of the `blocks` row's items, and the `blocks` list is
   what that walk row decodes to, with each run off R as its bp
@@ -498,7 +515,8 @@ kinds of item:
   covers a half-open stretch `[lo, hi)` of the sequence, of `len` bp. `+`
   is along R, from `lo` to `hi`, and `-` is against R, from `hi` to `lo`.
   `d` is where the block begins, less where the block before ended, or
-  less 0 for the first
+  less 0 for the first. A reader splits a block at its first `+` or `-`
+  after its first character
 - **A run off R,** a bare number: the bp of consecutive steps with no
   place on the tile's R. It doesn't move where the next `d` counts from
 
@@ -668,8 +686,8 @@ file that prints the W and P lines back from a walk file.
 ## Rules a valid file keeps
 
 A file that breaks a rule of this page is not format 8. The first part
-gives what a reader needs to decode a file; these are the rest, which a
-writer keeps and a checker tests.
+gives what a reader needs to decode a file. These are the rest: what a
+writer keeps, a checker tests and a reader refuses or ignores.
 
 ### Text
 
@@ -685,15 +703,15 @@ writer keeps and a checker tests.
   their characters in any text encoding <!-- C200 -->. These are the
   bytes GFA 1 allows in a name, without its ban on a leading `*` or `=`
 - **Numbers:** a number is decimal digits with no sign, no leading zero
-  and no space, and zero is `0`. Only a delta token, a choice token and a
+  and no space, and zero is `0`: a tag's `i` value, a `start`, an
+  `nsteps`, a length in a list, a byte offset, a `k`. Only a delta token, a choice token and a
   block's `d` can begin with `-`, for a value below 0, and none is `-0`
   <!-- C203 -->. So a number has one text, and two lines that state the
   same thing are the same bytes
-- **Limits:** every node id is below 2^31 <!-- C126 -->, and a delta
-  token can reach 2^32 either side of 0, so a 32-bit shift is not enough
-  to split one. No coordinate is above 2^53: no `start` or `end`, no
-  `fragStart` or `hapOffset`, no end of a piece on its contig, no
-  `hapStart + ownBp`, no breakpoint and no byte offset, so a reader
+- **Limits:** every node id is below 2^31 <!-- C126 -->. No coordinate
+  is above 2^53: no `start` or `end`, no `fragStart` or `hapOffset`, no
+  end of a piece on its contig, no `hapStart + ownBp`, no breakpoint and
+  no byte offset or length, so a reader
   holding numbers as doubles reads each one exactly <!-- C172 C45 -->
 - **Tags:** a tag's name is letters and digits and starts with a letter,
   its type is one letter, and its value holds no tab. Tags follow a row's
@@ -750,7 +768,8 @@ writer keeps and a checker tests.
   can have revisited nodes or none, and a reader takes from it nothing
   that 0 promises
 - **What `format:i:8` marks:** the units, row kinds and columns of this
-  page and the rules of this part. A file that breaks one, or holds a row
+  page and its rules, with the orders and names they give. A file that
+  breaks one, or holds a row
   kind this page doesn't give in a unit it does, is not format 8.
   <!-- C49 --> A unit kind this page doesn't give is a later addition,
   which a reader skips <!-- C123 -->
@@ -818,10 +837,9 @@ tells the reference's lines from the others by that prefix, so:
 
 ### Row rules
 
-- **Order in a tile:** its `ref` rows, then at most one `nodes` row,
-  then its `route` rows, then its `walk` rows, then its `abridged` rows.
-  <!-- C59 --> Its `ref` rows are in `hapOffset` order, and each piece's
-  steps start in `[name, name + tile)`. <!-- C127 --> Its `walk` rows are
+- **Order in a tile:** after the order by kind ([Rows](#rows)), its
+  `ref` rows are in `hapOffset` order, and each piece's steps start in
+  `[name, name + tile)`. <!-- C127 --> Its `walk` rows are
   in order of `path` in bytes, then `fragStart`, `hapOffset` and `piece`,
   so the first walk to take a route is the same for any reader
   <!-- C125 -->. Its `abridged` rows are in order of `detail`, then
@@ -843,8 +861,7 @@ tells the reference's lines from the others by that prefix, so:
 - **`ref` rows and departures:** the `ref` rows of a sequence hold one
   node ending at a `+` leave's or `-` rejoin's breakpoint and one
   starting at the other kind's <!-- C91 -->
-- **A `blocks` list** is as short as it can be. A block is as long as
-  its steps allow and a run holds all the steps off R between two blocks,
+- **A `blocks` list:** a block is as long as its steps allow and a run holds all the steps off R between two blocks,
   so no two blocks in a row join and no two runs stand side by side. A
   list has a block, and no run of 0 bp <!-- C162 -->. The items add up to
   the piece's bp, its `abridged` row's `hapBp` <!-- C163 -->. Its
@@ -861,9 +878,8 @@ tells the reference's lines from the others by that prefix, so:
   number = %x31-39 *DIGIT   ; a number as Text writes one, above 0
   ```
 
-  A reader splits a block at its first `+` or `-` after its first
-  character. `d` is never `-0`, a `len` or a run is at least 1, and an
-  item of digits alone is a run <!-- C170 -->
+  `d` is never `-0`, a `len` or a run is at least 1, and an item of
+  digits alone is a run <!-- C170 -->
 - **The attach rule.** A departure record's own steps in a piece of its
   path filed on its sequence are the piece's steps within
   `[hapStart, hapStart + ownBp) ∩ [hapOffset, hapOffset + hapBp)`, both
@@ -950,8 +966,8 @@ differently with no reader the wiser:
   `abridged` rows, a departure bin `departure` rows, a detail unit
   `nodes`, `route` and `walk` rows, a blocks unit `blocks` rows
   <!-- C155 -->
-- A table that doesn't start with its own `#unit seq 0 length table .`
-  line, or holds a line that isn't an `#entry`. A reader can tell a
+- A table that doesn't start with its own
+  `#unit seq 0 <sequence length> table .` line, or holds a line that isn't an `#entry`. A reader can tell a
   missing entry by the gap it leaves in the bytes the entries tile, and
   may refuse the table <!-- C156 -->
 

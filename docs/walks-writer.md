@@ -3,10 +3,11 @@
 How gfa-to-tabix writes [walk format 8](walks-format.md): its options,
 how it reads the GFA and its path names, where it files a step, and what
 it checks. Where a step is filed, what `--stay` keeps together and which
-pieces a tile abridges are this tool's choices. A reader takes positions
+pieces a tile abridges are this tool's choices: a reader takes positions
 and pieces from the rows and relies on
 [the format's rules](walks-format.md#what-a-reader-relies-on), not on
-this page.
+this page's rules for them. The reading of a P line's name under
+[Path names](#path-names) is the format's.
 
 ```bash
 vg convert -f chr22.gbz > chr22.gfa
@@ -41,8 +42,9 @@ chr22.CHM13.walks.gz   chr22.CHM13.walks.gz.idx
 
 Each option takes at most 2^40, which the tool refuses above.
 <!-- C153 --> The header's `stay`, `abridge` and `abridgebytes` tags
-state the values a file was written with, and the tool writes `graph`
-and `leftout` from 5.0.0 on
+state the values a file was written with. The tool writes the `#walks`
+line's tags in the order the format page shows them, and `graph` and
+`leftout` from 5.0.0 on
 ([ADR 0015](adr/0015-walk-files-name-their-graph.md)).
 
 ## Reading the GFA
@@ -56,9 +58,9 @@ and `leftout` from 5.0.0 on
   allows
   ([open problem](open-problems.md#a-reference-of-one-haplotype-of-a-sample-cant-be-written))
   <!-- C9 -->
-- **A contig can span several W lines,** one per stretch the graph holds,
-  as where Minigraph-Cactus clips a haplotype. The files are the same for
-  any order of the W lines, which `vg convert` changes from run to run
+- **A contig can span several lines,** one per stretch the graph holds,
+  as where Minigraph-Cactus clips a haplotype. The rows are the same for
+  any order of the lines, which `vg convert` changes from run to run
   <!-- C19 -->
 - **A line with steps but none on a node of a reference** has no rows in
   that reference's file, and the tool counts these lines on stderr and
@@ -231,7 +233,7 @@ Minigraph-Cactus. "Line" below is a W or P line.
   reference node takes the tile of the last step before it in its line
   that has a position, the leave's tile unless a step on another sequence
   of the reference comes between. <!-- C85 --> Own steps leading the next
-  W line, for a record across W lines, take the tile of the first step
+  line, for a record across two lines of a contig, take the tile of the first step
   after them with a position, the rejoin's unless a step on another
   sequence comes first; a record can have both, and so two tiles, the
   leave's first <!-- C86 -->
@@ -288,14 +290,14 @@ Two checks rebuild the graph's paths from a file:
 What the tool checks as it writes, and what it guarantees past the
 format:
 
-- **It decodes every walk row it writes** by
+- **The tool decodes every walk row it writes** by
   [Decoding a walk row](walks-format.md#decoding-a-walk-row), compares
   each step's handle and position, takes the row's span from them, and
   fails the build on any difference. <!-- C112 C25 --> It gives an
   abridged row the span
   of its piece's blocks. No other row's `start end` is checked at build
   <!-- C112 C25 -->
-- **It reads back every `blocks` list it writes** and fails the build
+- **The tool reads back every `blocks` list it writes** and fails the build
   where the list differs from its piece, its blocks don't begin at the
   piece's first step on R and end at its last, or its items don't add up
   to the `abridged` row's `hapBp` <!-- C165 C171 -->

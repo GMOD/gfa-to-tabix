@@ -77,7 +77,8 @@ steps from them and nothing else <!-- C117 -->
   unexpanded abridged piece by its blocks; every departure record whose
   line overlaps `D`, unfiltered, one in a `#hole` included, each once;
   and every departure the reader computes between consecutive steps of
-  one piece whose extent overlaps `D`, one across a `#hole` included.
+  one piece whose extent, from the first base of its end nodes to the
+  last as a record's runs, overlaps `D`, one across a `#hole` included.
   <!-- C135 --> A departure between two pieces is a record, even where
   the read holds both, so none comes back twice <!-- C135 -->
 - **A piece comes back trimmed** to its steps on the drawn stretch, with
@@ -95,7 +96,7 @@ steps from them and nothing else <!-- C117 -->
   last step on a sequence a line can go on over nodes off the reference,
   which its piece holds; in a piece filed on another sequence of the
   reference, which this sequence's units don't point to; or, for a
-  contig, in a later W line. A reader can say a line has no later step
+  contig, in a later line. A reader can say a line has no later step
   on the sequence, and how many bp its last piece there holds after that
   step. It cannot say the line ends there, nor where on the reference it
   goes
