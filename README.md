@@ -75,8 +75,12 @@ and [ggbandage](https://github.com/GMOD/ggbandage).
   walk format in short, on one small example
 - [Walk files by example](docs/walks-format-by-example.md): the example's
   walk file read line by line, with every column explained
-- [Walk files](docs/walks-format.md): the specification of walk format 8, its
-  options, rows and readers
+- [Walk format 8](docs/walks-format.md): the specification, with every
+  unit, row and rule
+- [Writing walk files](docs/walks-writer.md): the `--walks` options, where
+  gfa-to-tabix files a step and how it reads path names
+- [Reading walk files](docs/walks-reading.md): reading a region, the
+  reader programs and hosting
 - [Subcommands](docs/subcommands.md): `build` and its JBrowse config, `bubbles`,
   `fold` and `paths`
 - [Comparison with gbz-base and gfaidx](docs/comparison.md): how the three

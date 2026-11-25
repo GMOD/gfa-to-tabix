@@ -127,7 +127,7 @@ index key, so `zcat | grep` places any line.
 ### Reading a window
 
 For a window `[s, e)` with context `c`, `D = [max(0, s − c), e + c)`
-([walks-format.md](../walks-format.md#reading-a-window) gives the rule in
+([walks-format.md](../walks-reading.md#reading-a-window) gives the rule in
 full):
 
 - At open, GET the directory and refuse any format but 7; GET the header
@@ -162,7 +162,7 @@ zcat f.walks.gz | awk -F'\t' '$1=="GRCh38#0#chr22" && $2<20001000 && $3>20000000
 
 ### What a writer guarantees
 
-[walks-format.md](../walks-format.md#what-the-writer-guarantees) lists the
+[walks-format.md](../walks-writer.md#what-the-writer-guarantees) lists the
 guarantees and says which the build checks and which the tests and the
 file checks do. In short:
 

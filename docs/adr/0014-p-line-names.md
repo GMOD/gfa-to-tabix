@@ -4,7 +4,7 @@
   format on about 2026-11-18
 - **Decides:** how the tool reads a P line's one name into a `path`, a
   `fragStart` and what the path is listed under, for walk files and for the
-  node and link index alike: [Path names](../walks-format.md#path-names)
+  node and link index alike: [Path names](../walks-writer.md#path-names)
 - **Changes** what `path`, `fragStart` and `#haplotype` hold for some P
   line inputs (claims C51 and C158), so
   [ADR 0011](0011-format-7-is-frozen.md)'s rules applied: burden, scope,
@@ -71,7 +71,7 @@
 
 ## Decision
 
-The reading is [Path names](../walks-format.md#path-names) in the spec;
+The reading is [Path names](../walks-writer.md#path-names) in the spec;
 the spec's text is the rule. By ruling:
 
 - **R5, order and the outermost `:a-b`.** The name is read from the
@@ -111,7 +111,7 @@ the spec's text is the rule. By ruling:
   suffix out of its own text
 - **A start past 2^53 is refused** where a P line's start is settled,
   once its steps are summed, as a W line's is at its column
-  ([Tiles and pieces](../walks-format.md#tiles-and-pieces))
+  ([Tiles and pieces](../walks-writer.md#where-a-step-is-filed))
 - **A number** is one to nineteen decimal digits. Text that is no number
   makes no suffix
 - **A stated limit, phase blocks.** The tool can't tell vg's counter from

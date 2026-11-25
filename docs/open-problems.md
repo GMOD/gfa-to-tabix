@@ -387,7 +387,7 @@ W  B  1  c     0  32  >1>2>6>3
   inside the drawn stretch ends there. It now says what a reader can
   know, that the line has no later step on that sequence, and that
   nothing in the sequence's units tells a line that ends from one that
-  goes on elsewhere ([Reading a window](walks-format.md#reading-a-window)).
+  goes on elsewhere ([Reading a window](walks-reading.md#reading-a-window)).
   The file is unchanged
 - B crosses and comes back, so it has a record on chrA: 2 bp of its own
   between adjacent steps, with `ownTiles` `.`. The 2 bp are chrB's node 6,
@@ -688,7 +688,7 @@ W  B  1  c     0  32  >1>2>6>3
 - No real assembly has such a coordinate; a W line's start is whatever
   its writer put there. The coordinates themselves are settled: 5.0.0
   refuses a line that starts or ends past 2^53, and a reference whose
-  last tile does ([walks-format.md](walks-format.md#tiles-and-pieces),
+  last tile does ([walks-format.md](walks-writer.md#where-a-step-is-filed),
   [line-end-past-2e53.gfa](walks-container/dialect/line-end-past-2e53.gfa)),
   where it used to write positions a reader holding numbers as doubles
   read wrong and panicked on a start near 2^63
@@ -740,7 +740,7 @@ W  B  1  c     0  32  >1>2>6>3
 ## Starts a name or a column states that are not starts
 
 [ADR 0014](adr/0014-p-line-names.md) decided how a P line's name is read
-([Path names](walks-format.md#path-names)). These are what it leaves.
+([Path names](walks-writer.md#path-names)). These are what it leaves.
 
 - **vg's phase blocks.** For haplotypes from a VCF-phased GBWT, vg
   numbers a contig's phase blocks 0, 1, 2 and writes that counter in the

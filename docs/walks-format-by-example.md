@@ -59,9 +59,9 @@ units in file order:
 - **The table** lists the byte range of every tile and `departures` unit of
   one chromosome
 
-The header of this file, after a first line of tags that
-[Header](walks-format.md#header) lists, among them the format number and
-the tile length:
+The header of this file, after a first line of
+[tags](walks-format.md#header), among them the format number and the tile
+length:
 
 ```
 #reference  GRCh38
@@ -374,7 +374,8 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
   on `>2`
 - **A route travelled backwards.** The specification's
   [Example](walks-format.md#example) decodes a tile with a route that has
-  no entry and is travelled backwards
+  no entry and is travelled backwards, and another whose reference takes
+  two nodes twice
 - **A reference that passes a node more than once,** as in a pggb graph,
   which merges the copies of a repeat into shared nodes. gfa-to-tabix
   places each haplotype step on one copy, and a region over another copy
@@ -386,7 +387,7 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
   moved path as blocks along the reference until the user asks for its
   nodes ([Abridged tiles](walks-format.md#abridged-tiles))
 - **A P line,** whose name gives the sample, haplotype and contig
-  ([Path names](walks-format.md#path-names))
+  ([Path names](walks-writer.md#path-names))
 - **A reader to start from:**
   [scripts/walks-brief.py](../scripts/walks-brief.py) is one short Python
   file that prints every W and P line back from a walk file

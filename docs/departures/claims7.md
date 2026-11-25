@@ -1,12 +1,15 @@
 # Walk format 8's claims and their checks
 
-The table below is kept with [walks-format.md](../walks-format.md): every
-normative sentence there carries a claim ID, `<!-- C76 -->`, and has a row
-here naming the check that tests it. ADR 0010 reuses the spec's IDs on its
-matching sentences, and ADR 0009 carries C91.
+The table below is kept with the format page,
+[walks-format.md](../walks-format.md), and the pages on gfa-to-tabix's
+writing, [walks-writer.md](../walks-writer.md), and on reading,
+[walks-reading.md](../walks-reading.md): every normative sentence there
+carries a claim ID, `<!-- C76 -->`, and has a row here naming the check
+that tests it. ADR 0010 reuses the spec's IDs on its matching sentences,
+and ADR 0009 carries C91.
 [check-claims.py](../../scripts/check-claims.py) fails CI when an ID has no
 row, a row names no check or a check that doesn't exist, or a universal
-sentence of the spec or ADR 0010 has no ID. After the table, the audit of
+sentence of those three pages or ADR 0010 has no ID. After the table, the audit of
 2026-11-06 that produced it: what it found false, how the sentences got
 in, and the root cause.
 

@@ -53,7 +53,7 @@ program reads the result:
   - You need not run gfa-to-tabix for HPRC v2.1. jbrowse.org hosts walk
     files for its Minigraph-Cactus graphs, where `f8` marks walk format 8.
     Each has a directory at the same URL plus `.idx`, and a JBrowse track
-    configuration for them is in [walks-format.md](walks-format.md#readers):
+    configuration for them is in [Reading walk files](walks-reading.md#readers):
     - GRCh38 coordinates:
       `https://jbrowse.org/demos/hprc/hprc-v2.1-mc-grch38-f8.GRCh38.walks.gz`
     - CHM13 coordinates:

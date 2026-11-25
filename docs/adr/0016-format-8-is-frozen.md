@@ -97,7 +97,7 @@ and on pggb chrY.
   says so
 - **This writer keeps the rule on every file it writes,** revisited or
   not, and the page says that under
-  [What the writer guarantees](../walks-format.md#what-the-writer-guarantees),
+  [What the writer guarantees](../walks-writer.md#what-the-writer-guarantees),
   with the reason a reader can't use it: the header names no writer
 - **Why the scoped form:**
   - it covers every hosted file: both hosted graphs' references pass no

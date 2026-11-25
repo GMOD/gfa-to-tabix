@@ -5,7 +5,8 @@ Fails when:
 - a claim ID in the docs (`<!-- C76 -->`) has no row in
   docs/departures/claims7.md, or a row names an ID no doc holds;
 - a row names no check, or a check that doesn't exist;
-- a sentence of walks-format.md or ADR 0010 holding every, each, never,
+- a sentence of walks-format.md, walks-writer.md, walks-reading.md or ADR
+  0010 holding every, each, never,
   always, only, unique or exactly has no claim ID.
 
 The last is a tripwire, not a parser: a sentence ends at a full stop and
@@ -35,7 +36,8 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-TRIPPED = ['docs/walks-format.md', 'docs/adr/0010-walks-unit-table.md']
+TRIPPED = ['docs/walks-format.md', 'docs/walks-writer.md', 'docs/walks-reading.md',
+           'docs/adr/0010-walks-unit-table.md']
 CLAIMED = TRIPPED + ['docs/adr/0009-departure-records.md']
 TABLE = ROOT / 'docs/departures/claims7.md'
 TESTS = ROOT / 'docs/walks-container/reader/graph-walks-tests.txt'

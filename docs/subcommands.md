@@ -124,7 +124,7 @@ megabases. A graph track written by hand names the file and its index:
   ```
 
 - `coarse` names the coarse tier ([fold](#fold))
-- Walk files take `walksUri`; see [readers](walks-format.md#readers)
+- Walk files take `walksUri`; see [readers](walks-reading.md#readers)
 
 ## alleles
 

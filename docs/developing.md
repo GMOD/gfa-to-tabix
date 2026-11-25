@@ -16,7 +16,8 @@ CI runs these on every push:
   [walks-example.gfa](figures/walks-example.gfa)
 - `scripts/check-links.py`: every relative link and anchor in the Markdown
 - `scripts/check-claims.py`: every normative sentence of
-  [walks-format.md](walks-format.md) has a claim ID with a check in
+  [walks-format.md](walks-format.md), [walks-writer.md](walks-writer.md)
+  and [walks-reading.md](walks-reading.md) has a claim ID with a check in
   [claims7.md](departures/claims7.md)
 - `docs/comparison/scripts/tables.py --check`: the measured tables of
   [comparison-details.md](comparison-details.md) match the results in
@@ -35,7 +36,7 @@ CI runs these on every push:
 `scripts/check-windows.sh <gfa-to-tabix binary> <graph-walks checkout>`
 holds graph-walks' cut over windows to `scripts/window-oracle.py`, which
 works out what a window must return from the rules of
-[Reading a window](walks-format.md#reading-a-window), over tiles decoded
+[Reading a window](walks-reading.md#reading-a-window), over tiles decoded
 by the spec-only reader `spec8.py`: the fragments, the departures and
 their own steps, and the node table a viewer draws from, including which
 pass a node the reference passes more than once is placed at. It cuts

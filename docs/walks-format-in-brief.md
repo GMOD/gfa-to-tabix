@@ -31,22 +31,18 @@ hprc.GRCh38.walks.gz
 hprc.GRCh38.walks.gz.idx
 ```
 
-`hprc.GRCh38.walks.gz.idx` is a custom plain-text directory index (not a `.tbi` or `.gzi` index). It lists the compressed byte ranges of the header and of each reference sequence's unit table inside the `.walks.gz` data file.
-
 ![The example graph: nine reference nodes along chr1 under three tiles, tile 0, tile 30 and tile 60; HG002#1 as a straight line, CHM13#0 dipping to node 10 under node 5, HG003#1 dipping under node 5 with no node, and HG002#2 dipping under nodes 3 to 7 with no node; below, hprc.GRCh38.walks.gz as a bar of header, tile 0, departures 0-30, tile 30, departures 30-60, tile 60, departures 60-90 and table; the region chr1:31-60 is shaded over the graph and over tile 30 and departures 30-60, labelled one request](figures/walks-example.svg)
 
 ## The format in short
 
 - **Tiles:** gfa-to-tabix cuts the reference into tiles of a fixed length,
   30 bp here and 65536 bp by default, and compresses each tile separately
-- **Custom index (`.idx`):** walk files do not use Tabix (`.tbi`) or `.gzi`.
-  Instead, the small `.idx` text file serves as a directory
-  ([The directory](walks-format.md#the-directory)), giving the byte range of
-  each chromosome's unit table inside the `.walks.gz` file
-- **A table of byte ranges:** the data file embeds a table of where each tile's
-  bytes are. Because each unit starts and ends on a BGZF block boundary, a
-  viewer fetches only the tiles over its queried region using range requests
-  and gunzips them alone, without needing an external block index
+- **Its own index, not Tabix:** the data file has a table of where each
+  tile's bytes are, and the small text file `.idx`
+  ([the directory](walks-format.md#the-directory)) gives where each
+  chromosome's table is. A tile starts and ends on a BGZF block boundary,
+  so a viewer fetches the tiles over its region by range request and
+  gunzips them alone, with no `.tbi` or `.gzi`
 - **The reference, once:** a tile's `ref` row lists the reference's steps
   through the tile
 - **Each detour, once:** a `route` row is one detour off the reference
@@ -77,4 +73,8 @@ hprc.GRCh38.walks.gz.idx
 
 - [Walk files by example](walks-format-by-example.md) reads this example's
   walk file line by line, with every column explained
-- [The specification](walks-format.md) defines every row, column and rule
+- [The specification](walks-format.md) defines every row and column, then
+  the rules a valid file keeps
+- [Writing walk files](walks-writer.md) and
+  [Reading walk files](walks-reading.md) cover gfa-to-tabix's options and
+  the reader programs

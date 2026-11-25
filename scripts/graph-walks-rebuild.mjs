@@ -209,7 +209,7 @@ const BRACKET = /^(.*)\[([0-9]{1,19})(?:-([0-9]{1,19}))?\]$/s
 const FOURTH = /^([^#]*#[^#]*#[^#]*)#([0-9]{1,19})$/s
 
 // A P line's path and where the line starts on it, from its name and its
-// steps' bp, by the three steps of walks-format.md's Path names: from the
+// steps' bp, by the three steps of walks-writer.md's Path names: from the
 // right, a `:a-b` the steps span, a `[s]` or `[s-e]`, a fourth `#` field of
 // digits, the starts summed. `refused` says why the tool refuses the line.
 function readPathName(written, bp) {

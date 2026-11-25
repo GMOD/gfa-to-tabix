@@ -82,7 +82,7 @@ NUMBER = '([0-9]{1,19})'
 
 
 def path_start(name, bp):
-    # A P line's path and start, by walks-format.md's Path names: from the
+    # A P line's path and start, by walks-writer.md's Path names: from the
     # right, a `:a-b` its bp span, a `[s]` or `[s-e]`, a fourth `#` field of
     # digits, the starts summed; (None, why) for a line the tool refuses
     start = 0

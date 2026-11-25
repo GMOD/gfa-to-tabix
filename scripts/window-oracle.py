@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """window-oracle.py: what a cut over a window must return, by the rules of
-docs/walks-format.md's Reading a window, against what @jbrowse/graph-walks'
+docs/walks-reading.md's Reading a window, against what @jbrowse/graph-walks'
 cut returns there.
 
 Every tile is decoded by spec8.py, the reader written from the page alone,

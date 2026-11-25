@@ -149,7 +149,7 @@ fn suffix(name: &[u8], open: u8) -> Option<Suffix> {
 // A P line's path and where the line starts on it, read from the right of
 // its name once the bp of its steps are known: odgi's `:start-end` where the
 // steps span it, beneath it vg's `[start]` or `[start-end]`, beneath that the
-// digits of a fourth `#` field. The starts add up (docs/walks-format.md, ADR
+// digits of a fourth `#` field. The starts add up (docs/walks-writer.md, ADR
 // 0014).
 pub fn read_path_name(name: &[u8], bp: u64) -> Result<(&[u8], u64), String> {
     let spans = |range: &Suffix| range.end.and_then(|end| end.checked_sub(range.start)) == Some(bp);
@@ -580,7 +580,7 @@ mod tests {
 
     #[test]
     fn the_specs_table_of_p_line_names_reads_as_it_says() {
-        let rows: Vec<Vec<&str>> = include_str!("../docs/walks-format.md")
+        let rows: Vec<Vec<&str>> = include_str!("../docs/walks-writer.md")
             .lines()
             .skip_while(|line| !line.starts_with("| P line name |"))
             .skip(2)

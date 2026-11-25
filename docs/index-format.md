@@ -22,112 +22,78 @@ gfa-to-tabix ecoli.gfa.gz --reference K12 -o ecoli
 | `--format <1\|2>`      | `2` (default) writes the [one file](#what-the-file-holds); `1` writes [two](#format-1), for readers before graph-walks 4.4 and the JBrowse plugin 8.2. |
 | `--max-component <n>`  | Anchored: a component of more than n nodes keeps its own coordinates, and a graph track draws it as stubs; `none` files every component under the reference. Default 10000; see [giant components](#giant-components---max-component). |
 
-## Inputs
+## What the file holds
 
-The tool reads a GFA file, plain or gzipped, and recognizes gzip by the file's
-first two bytes, whatever the name. `-` reads stdin, given `-o`. The tool takes
-coordinates from rGFA tags or from a reference path, depending on which lines
-the file has; see
-[how the tool tells them apart](#how-the-tool-tells-them-apart).
+`<prefix>.graph.bed.gz` is a bgzipped, tab-separated file with a Tabix
+index: a header, then one row per node and one per link, each starting
+with the reference interval it is filed under ([layouts](#layouts)). The
+first rows for `tests/data/paths.gfa`, with their columns aligned by
+spaces:
 
-|                           | rGFA                                                          | Plain GFA                                      |
-| ------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
-| Written by                | minigraph, Minigraph-Cactus `*.sv.gfa.gz`                     | pggb, odgi, `vg convert -f`                    |
-| Node coordinates from     | the `SN`, `SO` and `SR` tags                                  | the reference's P or W lines                   |
-| Assemblies with each node | not in the index                                              | an `SB:H:` bitmask on every row                |
-| `build`'s bubbles         | `gfatools bubble`, when on PATH                               | a `vg deconstruct -a` VCF, given as `--snarls` |
-| `build --tier` default    | 10000 bp                                                      | 50 bp                                          |
-| Walk files (`--walks`)    | minigraph writes no paths and names nodes `s1`, `s2`, so none | from a base-level graph with integer node ids  |
+```
+#gfa-to-tabix  format:i:2  layout:Z:anchored  graph:Z:6f8a0816aa66e2d6
+#samples  alt.1,ref.1
+ref#1#chr  0  4  N  1  0  ref#1#chr  0  4  SB:H:3
+ref#1#chr  0  9  L  1+  3+  ref#1#chr  0  4  0  alt#1#ctg  4  5  1  SB:H:3  SB:H:1
+ref#1#chr  0  9  N  3  1  alt#1#ctg  4  5  SB:H:1
+```
 
-### rGFA
+| Header line | Meaning |
+|---|---|
+| `#gfa-to-tabix` | The format, the layout, and `graph:Z:`, a hash of the graph's segments' ids and lengths that ignores their order |
+| `#samples` | A plain GFA's assemblies, written `sample.haplotype`, comma-separated, in byte order. An rGFA has no such line |
 
-- An rGFA has `SN`, `SO` and `SR` tags on every S line. The tool copies each
-  S line's `SN` (sequence), `SO` (offset) and `SR` (rank: 0 for the reference,
-  higher for a node another assembly contributed)
-- Written by: minigraph (`-cxggs`), and the minigraph stage of
-  Minigraph-Cactus (`*.sv.gfa.gz`)
-- Command: `gfa-to-tabix graph.gfa.gz -o prefix`
-- Bubbles need `gfatools` on PATH; see [build](subcommands.md#build)
+| Node row | Meaning |
+|---|---|
+| `anchorSeq anchorStart anchorEnd` | the interval the row is filed under |
+| `N` | marks a node row |
+| `nodeId` | the segment's id |
+| `rank` | 0 on the reference, higher off it |
+| `sequence start end` | the node's own coordinate. With `--layout contig` a node is filed under its own coordinate, and the row leaves these three out |
+| `SB:H:bits` | the assemblies whose paths visit the node. An rGFA's rows have none |
 
-### Plain GFA with paths
+| Link row | Meaning |
+|---|---|
+| `seq start end` | the interval the row is filed under |
+| `L` | marks a link row |
+| `srcId± tgtId±` | the two nodes, each with its strand |
+| `srcSeq srcStart srcEnd srcRank` | the source node's coordinate and rank |
+| `tgtSeq tgtStart tgtEnd tgtRank` | the target node's |
+| `SB:H:bits SB:H:bits` | the source's assemblies, then the target's. Both are named `SB:H:`, so a reader takes them by position, never by name |
 
-- Written by: pggb (`*.smooth.final.gfa`), `odgi view -i graph.og -g`,
-  `vg convert -f graph.gbz`, and base-level Minigraph-Cactus (`*.gfa.gz`, or
-  the GBZ through `vg convert -f`)
-- Paths are P lines or W lines, named `sample#haplotype#contig` (PanSN) where
-  possible
-- Command: `gfa-to-tabix graph.gfa.gz --reference K12 -o prefix`
-- `--reference` takes a PanSN sample, an assembly or a path name. A path
-  name is the sequence name its line reads as (below) or the name as the P
-  line writes it, suffix and all; the tool reads no suffix out of the
-  option's own text. A sample with several
-  haplotypes anchors on the first in byte order, `HG002#1` before `HG002#2`
-- `--reference` also takes a comma-separated list, and every assembly an item
-  names is reference, at rank 0. A genome whose paths have no PanSN names
-  counts each path as an assembly, so `--reference chr1,chr2` anchors on both.
-  A list that names two PanSN assemblies, such as `GRCh38,CHM13` or
-  `HG002#1,HG002#2`, stops with an error: `alleles` drops the assembly from a
-  sequence's name, so both assemblies' `chr1` would land on one
-- Without `--reference`, the reference is the one assembly the paths name. A
-  graph with more than one stops with an error, since no line in a plain GFA
-  marks the reference
-- **Coordinates:** the tool walks every path of the reference first, then every
-  other path, each group in byte order of name and then start, summing node
-  lengths. A node takes the path name and position of the first path to reach
-  it, at rank 0 on the reference and rank 1 elsewhere. The rows are the same
-  for any order of the P and W lines, which `vg convert` changes from run to
-  run
-- **Where a path starts:** a W line at its start column. A P line at the
-  start its name gives, read by the one rule
-  [walk files](walks-format.md#path-names) read it by, and what the rule
-  reads leaves the sequence name; a P line with no suffix starts at 0. So
-  `P REF#0#chr:100-109` over 9 bp puts its first node at `REF#0#chr` 100,
-  and over any other length it is the sequence `REF#0#chr:100-109` from 0
-- **Refused, as `--walks` refuses them:** a P line whose name states an end
-  its steps don't reach or is a suffix alone, and two lines of one sequence
-  that overlap or start at the same base
-- **Segments no path visits** have no row, nor do their links; the tool
-  counts them on stderr
-- **Blunt graphs only:** summing node lengths gives the path coordinate only
-  when nodes abut, so a plain GFA needs overlaps `*` or `0M`
-- **Orientation:** when the first path to reach a node reads it reversed, the
-  tool turns the node to read forward before writing anything, and every link
-  end on it takes the other strand. The index then reads the reference forward,
-  as an rGFA's does, and only a haplotype that reads against the reference
-  shows as an inversion
-- **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes
-  the reference passes more than once. Such a node has one row, at its first
-  pass. A window over a later pass returns no row for the node, only its links,
-  which the tool files under an interval covering both passes, so they can span
-  megabases ([wide intervals](#wide-intervals)).
-  [Walk files](walks-format.md#paralogs-and-collapsed-repeats) place each
-  haplotype step at the nearest pass instead
-- Bubbles come from a `vg deconstruct -a` VCF; see
-  [bubbles](subcommands.md#bubbles)
+- **`graph:Z:`** names the segment set only: two graphs with the same
+  segments and different links, paths or reference share it. A walk file
+  built from the same GFA states the same `graph:Z:` as the
+  full-resolution index; a tier hashes the graph it was folded to
+  ([Header rules](walks-format.md#header-rules))
+- **`#samples`:** PanSN haplotypes are integers, so a reader splits a
+  name at its last dot, whatever dots the sample holds, as in
+  `GCF_000005845.2.1`. A path without a PanSN name is listed whole. The
+  tool refuses a name with a comma
+- **`SB:H:`:** hex digit i / 4, counted from the left, holds the assembly
+  numbered i in `#samples` as bit i % 4, and the tool drops trailing zero
+  digits. Above, `3` sets both assemblies and `1` alt.1 alone. The `H`
+  names this encoding, not SAM's byte array: the tool writes lowercase
+  digits, any number of them, lowest bit first, so a SAM tag parser
+  misreads or refuses it
+- Anchored, a link has one row per reference sequence. By contig, it has two
+  rows, one under each node's coordinate, so a link from a node to itself
+  has two identical rows, as the JBrowse scripts wrote it
+- A link stated by more than one L line, either way round, as
+  `L 1 + 2 +` and `L 2 - 1 -` are, gets the rows of one, as the first
+  L line wrote it
+- The tool writes both nodes' bits on a link row, because a link can reach a
+  node no node row of the query returns, such as a repeat copy megabases away
+  on a pggb graph
+- The tool sorts rows by sequence name in byte order, then by start, then
+  by the whole line in byte order
 
-### How the tool tells them apart
+### Format 1
 
-- Every S line has an `SN` tag, and no `--reference`: rGFA
-- Some S lines have `SN` tags and the graph has no P or W lines: rGFA, which
-  leaves out the untagged segments
-- Anything else: plain GFA
-
-### Errors
-
-The tool stops before writing anything on these:
-
-- `the paths name 5 assemblies; pick the reference with --reference, ...`:
-  a plain GFA with more than one assembly and no `--reference`. The message
-  lists the assemblies, the first 20 and a count of the rest
-- `--reference NOPE matches no path; have: K12#0#chr`: the name, or one item
-  of the list, matches no path. The message lists the paths the graph has
-- `link 1->2 has a non-blunt overlap (5M)`: the graph's nodes overlap. The
-  message says to blunt the graph first, or use an rGFA
-- `no P or W lines, and the S lines carry no rGFA tags`: the file has neither
-  coordinate source
-- `path a,b#1#ctg names the assembly a,b.1, which holds a comma`: `#samples`
-  lists assemblies comma-separated, so a comma in one would misnumber every
-  `SB:H:` bit after it. SAM's reference names forbid commas too
+`--format 1` writes the same rows in two files without the kind column, as
+before 2.0: `<prefix>.segs.bed.gz` holds the node rows and
+`<prefix>.links.bed.gz` the link rows, each with a `.tbi`. Rows name their
+assemblies in `SM:Z:assembly,...` in place of `SB:H:`, and there is no header.
 
 ## Layouts
 
@@ -207,71 +173,112 @@ every window over it, more rows than a browser can load.
 - No reader yet expands a stub into the moved component.
   [ADR 0005](adr/0005-giant-components.md) has the measurements
 
-## What the file holds
+## Inputs
 
-The first rows of `<prefix>.graph.bed.gz` for `tests/data/paths.gfa`:
+The tool reads a GFA file, plain or gzipped, and recognizes gzip by the file's
+first two bytes, whatever the name. `-` reads stdin, given `-o`. The tool takes
+coordinates from rGFA tags or from a reference path, depending on which lines
+the file has; see
+[how the tool tells them apart](#how-the-tool-tells-them-apart).
 
-```
-#gfa-to-tabix  format:i:2  layout:Z:anchored  graph:Z:6f8a0816aa66e2d6
-#samples  alt.1,ref.1
-ref#1#chr  0  4  N  1  0  ref#1#chr  0  4  SB:H:3
-ref#1#chr  0  9  L  1+  3+  ref#1#chr  0  4  0  alt#1#ctg  4  5  1  SB:H:3  SB:H:1
-ref#1#chr  0  9  N  3  1  alt#1#ctg  4  5  SB:H:1
-```
+|                           | rGFA                                                          | Plain GFA                                      |
+| ------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| Written by                | minigraph, Minigraph-Cactus `*.sv.gfa.gz`                     | pggb, odgi, `vg convert -f`                    |
+| Node coordinates from     | the `SN`, `SO` and `SR` tags                                  | the reference's P or W lines                   |
+| Assemblies with each node | not in the index                                              | an `SB:H:` bitmask on every row                |
+| `build`'s bubbles         | `gfatools bubble`, when on PATH                               | a `vg deconstruct -a` VCF, given as `--snarls` |
+| `build --tier` default    | 10000 bp                                                      | 50 bp                                          |
+| Walk files (`--walks`)    | minigraph writes no paths and names nodes `s1`, `s2`, so none | from a base-level graph with integer node ids  |
 
-- The first line names the format, the layout, and the graph by a hash of its
-  segments' ids and lengths that ignores their order. The hash names the
-  segment set only: two graphs with the same segments and different links,
-  paths or reference share it. A walk file built from the same GFA states
-  the same `graph:Z:` as the full-resolution index; a tier hashes the
-  graph it was folded to ([Header](walks-format.md#header))
-- A plain GFA adds a `#samples` line listing its assemblies, written
-  `sample.haplotype`, comma-separated, in byte order. PanSN haplotypes
-  are integers, so a reader splits a name at its last dot, whatever dots
-  the sample holds, as in `GCF_000005845.2.1`. A path without a PanSN
-  name is listed whole. The tool refuses a name with a comma
-- Each row's fourth column says whether it is a node (`N`) or a link (`L`)
-- `SB:H:` lists the assemblies whose paths visit a node: hex digit i / 4,
-  counted from the left, holds the assembly numbered i in `#samples` as bit
-  i % 4, and the tool drops trailing zero digits. Above, `3` sets both
-  assemblies and `1` alt.1 alone. An rGFA's rows have none
-- The `H` in `SB:H:` names this encoding, not SAM's byte array: the tool
-  writes lowercase digits, any number of them, lowest bit first, so a SAM tag
-  parser misreads or refuses it
+### rGFA
 
-A node row, then its coordinate as the node's own:
+- An rGFA has `SN`, `SO` and `SR` tags on every S line. The tool copies each
+  S line's `SN` (sequence), `SO` (offset) and `SR` (rank: 0 for the reference,
+  higher for a node another assembly contributed)
+- Written by: minigraph (`-cxggs`), and the minigraph stage of
+  Minigraph-Cactus (`*.sv.gfa.gz`)
+- Command: `gfa-to-tabix graph.gfa.gz -o prefix`
+- Bubbles need `gfatools` on PATH; see [build](subcommands.md#build)
 
-```
-anchored:  anchorSeq anchorStart anchorEnd  N  nodeId  rank  sequence start end  [SB:H:bits]
-contig:    sequence start end  N  nodeId  rank  [SB:H:bits]
-```
+### Plain GFA with paths
 
-A link row states both nodes in full after the interval it is filed under:
+- Written by: pggb (`*.smooth.final.gfa`), `odgi view -i graph.og -g`,
+  `vg convert -f graph.gbz`, and base-level Minigraph-Cactus (`*.gfa.gz`, or
+  the GBZ through `vg convert -f`)
+- Paths are P lines or W lines, named `sample#haplotype#contig` (PanSN) where
+  possible
+- Command: `gfa-to-tabix graph.gfa.gz --reference K12 -o prefix`
+- `--reference` takes a PanSN sample, an assembly or a path name. A path
+  name is the sequence name its line reads as (below) or the name as the P
+  line writes it, suffix and all; the tool reads no suffix out of the
+  option's own text. A sample with several
+  haplotypes anchors on the first in byte order, `HG002#1` before `HG002#2`
+- `--reference` also takes a comma-separated list, and every assembly an item
+  names is reference, at rank 0. A genome whose paths have no PanSN names
+  counts each path as an assembly, so `--reference chr1,chr2` anchors on both.
+  A list that names two PanSN assemblies, such as `GRCh38,CHM13` or
+  `HG002#1,HG002#2`, stops with an error: `alleles` drops the assembly from a
+  sequence's name, so both assemblies' `chr1` would land on one
+- Without `--reference`, the reference is the one assembly the paths name. A
+  graph with more than one stops with an error, since no line in a plain GFA
+  marks the reference
+- **Coordinates:** the tool walks every path of the reference first, then every
+  other path, each group in byte order of name and then start, summing node
+  lengths. A node takes the path name and position of the first path to reach
+  it, at rank 0 on the reference and rank 1 elsewhere. The rows are the same
+  for any order of the P and W lines, which `vg convert` changes from run to
+  run
+- **Where a path starts:** a W line at its start column. A P line at the
+  start its name gives, read by the one rule
+  [walk files](walks-writer.md#path-names) read it by, and what the rule
+  reads leaves the sequence name; a P line with no suffix starts at 0. So
+  `P REF#0#chr:100-109` over 9 bp puts its first node at `REF#0#chr` 100,
+  and over any other length it is the sequence `REF#0#chr:100-109` from 0
+- **Refused, as `--walks` refuses them:** a P line whose name states an end
+  its steps don't reach or is a suffix alone, and two lines of one sequence
+  that overlap or start at the same base
+- **Segments no path visits** have no row, nor do their links; the tool
+  counts them on stderr
+- **Blunt graphs only:** summing node lengths gives the path coordinate only
+  when nodes abut, so a plain GFA needs overlaps `*` or `0M`
+- **Orientation:** when the first path to reach a node reads it reversed, the
+  tool turns the node to read forward before writing anything, and every link
+  end on it takes the other strand. The index then reads the reference forward,
+  as an rGFA's does, and only a haplotype that reads against the reference
+  shows as an inversion
+- **Collapsed repeats:** pggb merges the copies of a repeat into shared nodes
+  the reference passes more than once. Such a node has one row, at its first
+  pass. A window over a later pass returns no row for the node, only its links,
+  which the tool files under an interval covering both passes, so they can span
+  megabases ([wide intervals](#wide-intervals)).
+  [Walk files](walks-writer.md#repeats-in-pggb-graphs) place each
+  haplotype step at the nearest pass instead
+- Bubbles come from a `vg deconstruct -a` VCF; see
+  [bubbles](subcommands.md#bubbles)
 
-```
-seq start end  L  srcId± tgtId±  srcSeq srcStart srcEnd srcRank  tgtSeq tgtStart tgtEnd tgtRank  [srcSB tgtSB]
-```
+### How the tool tells them apart
 
-- Anchored, a link has one row per reference sequence. By contig, it has two
-  rows, one under each node's coordinate, so a link from a node to itself
-  has two identical rows, as the JBrowse scripts wrote it
-- A link stated by more than one L line, either way round, as
-  `L 1 + 2 +` and `L 2 - 1 -` are, gets the rows of one, as the first
-  L line wrote it
-- The tool writes both nodes' bits on a link row, because a link can reach a
-  node no node row of the query returns, such as a repeat copy megabases away
-  on a pggb graph
-- Both are named `SB:H:`, so a reader takes them by position, the source's
-  then the target's, never by name
-- The tool sorts rows by sequence name in byte order, then by start, then
-  by the whole line in byte order
+- Every S line has an `SN` tag, and no `--reference`: rGFA
+- Some S lines have `SN` tags and the graph has no P or W lines: rGFA, which
+  leaves out the untagged segments
+- Anything else: plain GFA
 
-### Format 1
+### Errors
 
-`--format 1` writes the same rows in two files without the kind column, as
-before 2.0: `<prefix>.segs.bed.gz` holds the node rows and
-`<prefix>.links.bed.gz` the link rows, each with a `.tbi`. Rows name their
-assemblies in `SM:Z:assembly,...` in place of `SB:H:`, and there is no header.
+The tool stops before writing anything on these:
+
+- `the paths name 5 assemblies; pick the reference with --reference, ...`:
+  a plain GFA with more than one assembly and no `--reference`. The message
+  lists the assemblies, the first 20 and a count of the rest
+- `--reference NOPE matches no path; have: K12#0#chr`: the name, or one item
+  of the list, matches no path. The message lists the paths the graph has
+- `link 1->2 has a non-blunt overlap (5M)`: the graph's nodes overlap. The
+  message says to blunt the graph first, or use an rGFA
+- `no P or W lines, and the S lines carry no rGFA tags`: the file has neither
+  coordinate source
+- `path a,b#1#ctg names the assembly a,b.1, which holds a comma`: `#samples`
+  lists assemblies comma-separated, so a comma in one would misnumber every
+  `SB:H:` bit after it. SAM's reference names forbid commas too
 
 ## Scale
 
