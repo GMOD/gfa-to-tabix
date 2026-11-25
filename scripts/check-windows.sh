@@ -39,7 +39,7 @@ build() {
 : > "$dir/files"
 for fixture in "walks-two-refs.gfa GRCh38,Q" "walks-two-refs-p.gfa GRCh38,Q" "walks-repeat.gfa R" \
   "walks-loop.gfa R" "walks-records.gfa R" "walks-contig-ends.gfa R" "walks-skip.gfa R,Q" \
-  "walks-sequences.gfa R" "walks-long-jump.gfa R"; do
+  "walks-sequences.gfa R" "walks-long-jump.gfa R" "walks-occurrences.gfa R"; do
   read -r gfa refs <<< "$fixture"
   for opts in "--tile 10" "--tile 7 --stay 0" "--tile 10 --abridge-bytes 1" "--tile 1000 --abridge-steps 1"; do
     read -r -a o <<< "$opts"

@@ -93,6 +93,7 @@ const FIXTURES = [
   'walks-skip.gfa R,Q',
   'walks-sequences.gfa R',
   'walks-long-jump.gfa R',
+  'walks-occurrences.gfa R',
 ].flatMap(fixture => OPTION_SETS.map(opts => `${fixture} ${opts}`))
 const EXTRA_BUILDS = [
   'walks-abridge-bytes.gfa R --tile 100 --abridge-bytes 600',

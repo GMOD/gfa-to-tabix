@@ -1085,6 +1085,8 @@ fn every_path_rebuilds_from_its_rows() {
         ("walks-records.gfa", "R", "10"),
         ("walks-contig-ends.gfa", "R", "10"),
         ("walks-skip.gfa", "R,Q", "10"),
+        ("walks-occurrences.gfa", "R", "10"),
+        ("walks-occurrences.gfa", "R", "1000"),
     ] {
         let built = build(gfa, &["--refs", refs, "--tile", tile]);
         assert!(built.output.status.success(), "{gfa} {tile}");
@@ -1104,6 +1106,7 @@ fn every_path_rebuilds_from_its_detail_rows_when_abridged() {
         ("walks-loop.gfa", "R"),
         ("walks-records.gfa", "R"),
         ("walks-contig-ends.gfa", "R"),
+        ("walks-occurrences.gfa", "R"),
     ] {
         let built = build(gfa, &["--refs", refs, "--abridge-bytes", "1"]);
         assert!(built.output.status.success(), "{gfa}");
@@ -1989,6 +1992,29 @@ fn a_walk_the_default_rule_would_misread_names_the_copy_it_leaves_from() {
     );
     let stderr = String::from_utf8_lossy(&built.output.stderr);
     assert!(stderr.contains("6 walk rows, 2 copies named"), "{stderr}");
+}
+
+// walks-occurrences.gfa, in one tile: R walks >1 >2 >3 >4 <2 >5 >6 >7 >6 >8.
+// A leaves R after >4 through 9 and returns on >2 with no @k: the nearest 2 is
+// R's <2, one position on, though only R's farther >2 reads A's handle, and A
+// walks back from it. B starts on >2 and C on >6, each with no @k, at R's
+// first pass of a node R passes twice
+#[test]
+fn a_walk_with_no_k_lands_on_the_nearest_pass_either_way_round_and_starts_on_the_first() {
+    let built = build("walks-occurrences.gfa", &["--refs", "R", "--tile", "1000"]);
+    assert!(built.output.status.success());
+    assert_eq!(
+        unit(built.file("R"), "tile", "0"),
+        tsv(&[
+            "#unit R#0#chr 0 46 tile 0",
+            "R#0#chr 0 46 ref R#0#chr 0 0 0 10 2,2,2,2,-3,6,2,2,-2,4 3,5,4,6,5,7,2,9,2,3 1,2,1,1,2,1,2,1,2,1",
+            "R#0#chr 0 46 nodes 9 8",
+            "R#0#chr 0 46 route 5 15 -9",
+            "R#0#chr 0 23 walk A#1#a 0 0 0 10 2 1",
+            "R#0#chr 3 18 walk B#1#b 0 0 0 3 4 .",
+            "R#0#chr 30 41 walk C#1#c 0 0 0 2 12 .",
+        ])
+    );
 }
 
 #[test]

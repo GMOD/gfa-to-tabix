@@ -1,0 +1,25 @@
+H	VN:Z:1.1
+S	1	ACG
+S	2	TTCAG
+S	3	GATC
+S	4	CCATGA
+S	5	AGTCCAT
+S	6	GG
+S	7	TACGATTCA
+S	8	CTA
+S	9	AAACCCGG
+L	1	+	2	+	0M
+L	2	+	3	+	0M
+L	3	+	4	+	0M
+L	4	+	2	-	0M
+L	2	-	5	+	0M
+L	5	+	6	+	0M
+L	6	+	7	+	0M
+L	7	+	6	+	0M
+L	6	+	8	+	0M
+L	4	+	9	+	0M
+L	9	+	2	+	0M
+W	R	0	chr	0	46	>1>2>3>4<2>5>6>7>6>8
+W	A	1	a	0	49	>1>2>3>4>9>2<4<3<2<1
+W	B	1	b	0	15	>2>3>4
+W	C	1	c	0	11	>6>7
