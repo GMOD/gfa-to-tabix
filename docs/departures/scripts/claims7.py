@@ -389,8 +389,8 @@ claim('L1', 'a record\'s leave step is the last step on R of its piece, and its 
       'piece')
 claim('O5', 'a record\'s own steps in an abridged piece of its sequence are the piece\'s steps within hapStart over '
       'ownBp cut to hapOffset over hapBp, and no other')
-claim('D6', 'a departure line\'s start end runs from the first base of its end nodes to the last, widened to the '
-      'breakpoint stretch where that is wider')
+claim('D6', 'a departure line\'s start end runs from the first base of its end nodes, each at its pass, to the last '
+      'base of the other')
 
 header = {}
 haplotypes_listed = []
