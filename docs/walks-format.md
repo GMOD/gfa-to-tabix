@@ -385,10 +385,11 @@ The row's `start end` is the span of the positions it decodes to.
 seq start end departure path hapStart ownBp missingBp leavePos leaveStrand leavePasses rejoinPos rejoinStrand rejoinPasses ownTiles
 ```
 
-A record for each place a path departs from a reference sequence that
-its walk rows can't show: where two of its steps placed on the sequence,
-with none placed on it between them, are not adjacent there at the passes
-they took and lie in different pieces. <!-- C77 --> A departure inside
+A record for each place a path other than the reference's own departs
+from a reference sequence that its walk rows can't show: where two of
+its steps placed on the sequence, with none placed on it between them,
+are not adjacent there at the passes they took and lie in different
+pieces. <!-- C77 --> A departure inside
 one piece has no record: a reader computes it from the piece's steps
 ([ADR 0009](adr/0009-departure-records.md)). <!-- C77 -->
 

@@ -2305,3 +2305,19 @@ Where the findings have come from so far, and the rule each gives:
   `reference-haplotype-name-walk`; the one-haplotype file of
   `check-walks.sh`, `HG002#1` for reference and `HG002#2` in walk rows,
   still passes each
+- **2026-11-25, the page gave the reference's own lines a record across
+  a hole.** A reader written from part one of the format page alone
+  derived every departure record from the lines it decoded. Read to the
+  letter, "Adjacent steps" with `ownBp` made two lines of the reference
+  either side of a `#hole` depart, since the hole's bases lie between
+  them on their contig, and no file has such a record. Source: the
+  consumer is that reader; three independent reviews found the rule
+  already in [ADR 0009](adr/0009-departure-records.md) ("the reference's
+  own paths ... have no departures"), in the writer, which records
+  departures for no path of the reference, and in the header table's
+  "a hole is not a departure of any haplotype". Fix: the record's
+  opening sentence says "a path other than the reference's own". No
+  byte and no rule changed. Guard: `audit7.py` and `spec8.py` fail a
+  file with a record planted for a reference line across a hole, and
+  `steps_either_side_of_a_hole_in_the_reference_are_adjacent` asserts
+  the file's records
