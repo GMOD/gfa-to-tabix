@@ -63,9 +63,9 @@ default, so no drawing changes until a host asks. Not released.
 Still open:
 
 - **A skip has no share.** A deletion's arc is a link and carries no label, so
-  CFH's 85 kb deletion, which 30% carry, shows no number. It needs a label on a
-  skip's drawn route, which lives in `renderer/GeometryBuilder.ts`, left alone
-  while the skip drawing changes there.
+  CFH's 85 kb deletion, which 30% carry, shows no number. bandage-core dec858f
+  exports `skipMidpoints(drawnInk, axisScale)`, each drawn skip's middle by
+  link index; the jb2hubs session builds the label on it.
 - A reference node gets no share on a walked graph, because its length is not
   written there (`labelledNodeLengths`).
 - Whether thinner lanes become every reader's default.
