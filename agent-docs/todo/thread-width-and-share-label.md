@@ -25,4 +25,10 @@ On 25 November the owner said of jb2hubs' folded HPRC renders: "the thick paths 
 - Should the lighter width become the default in every reader, or only a setting? A default change is a visual change, and needs BEFORE/AFTER pairs.
 - Does a share label fit "encode in marks, not sentences", and how does it hide at overview zoom?
 
-jb2hubs ships with `contigThickness` lowered until a core release offers either.
+## The mock
+
+- `~/src/walks8-evidence/sessions-20261125/thread-width-mock/` holds four HPRC windows folded at 1 kb with HG00097 lit: cfhrWin, fcgrWin, hpWin and gstm1.
+- `<name>_now` is 14.6.0 at its defaults.
+- `<name>_lane5px_contig3` is `contigThickness` 3 with the lit lane's stroke width set to 5 by hand. Gaps in label backgrounds along the lit lane come from that hand edit, not from the drawing.
+
+jb2hubs ships with `contigThickness` 3 until a core release offers either.
