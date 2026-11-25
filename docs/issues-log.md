@@ -2321,3 +2321,31 @@ Where the findings have come from so far, and the rule each gives:
   file with a record planted for a reference line across a hole, and
   `steps_either_side_of_a_hole_in_the_reference_are_adjacent` asserts
   the file's records
+- **2026-11-25, every-haplotype cuts at dense loci are mostly
+  placeholders, and no format change is needed.** A contained 90 kb cut
+  of HLA class II (chr6:32,510,000-32,600,000) from the hosted GRCh38
+  format 8 file held 1,222,487 nodes. Of these, 1,189,936 were
+  placeholders, one per off-reference run of each abridged piece, 84.5%
+  of them 1 bp, against 40,238 real segments; expanded, it was 9.3 M
+  steps. graph-walks 9.1.0's `nodeLimit` does not count placeholders, so
+  a 20 kb window passed 214,636 nodes to the layout, and its step refusal
+  fired only after a full cut. Source: the consumer is jb2hubs' HPRC page
+  on the hosted file (`~/src/walks8-evidence/sessions-20261125/hla-cut/`).
+  A genome-wide scan of the blocks units found 461 abridged tiles on
+  GRCh38 and 563 on CHM13. On GRCh38, 135 tiles hold over 30,000 runs,
+  and the worst stretches are chr9:38.8-39.9 Mb, chr2:91.4-91.6 Mb, HLA
+  class II and chr4:49.1-49.4 Mb; KIR and LPA rank far lower. Three
+  independent reviews, one each on need, routes and completeness, found
+  the cost in how a reader builds a cut, not in the bytes. A walk row's
+  route choices and an abridged piece's blocks row already state every
+  departure, so a reader can fold a window without building steps: about
+  1.2 s at HLA, against 28 s to expand and fold. Fix: the hosted bytes
+  stay. graph-walks `reader-fixes` adds `placeholderLimit`, an early
+  refusal that counts abridged pieces from their blocks rows, and one read
+  for touching detail units. A fold read from runs is a todo, and a
+  cut-time floor is dropped, since the fold from runs supersedes it.
+  Guard: `reader-fixes`' fixture sweeps state exact counts per fixture;
+  the fold from runs must equal the fold of the expanded cut, with a
+  mutant that fails. Evidence and scripts: on ada in
+  `~/work/agents/completeness-1125/`, `~/work/scratch/need-review-20261125/`
+  and `~/work/agents/routes-review-4ac9/`
