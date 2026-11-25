@@ -32,7 +32,7 @@
   for pggb walk tracks.
 - **The format changes again only when a user or consumer hits a real
   problem on a hosted file.** A review's finding goes into
-  [open problems](../open-problems.md), not into a new format.
+  open problems, not into a new format.
 
 ## Three scenarios
 
@@ -126,9 +126,14 @@ and [reshape/out/](../walks-container/reshape/out/).
   - doubles the bytes a 1 kb window fetches, from 589 to 1,070 KB at the
     median
   - drops five chrY contigs silently
+  - still draws hops between copies: at chrY:23.6 Mb, 2,693 of the 2,760
+    records spanning the window join ends over 1 Mb apart
+    ([hidden-traps.md](../walks-container/reshape/reviews/hidden-traps.md))
+  - counts passes per reference sample, so a diploid reference or a node
+    on two chromosomes loses its steps, and graph-walks re-places the
+    unplaced steps at whichever copy's tile it read
   - needed at least six amendments before it could be frozen
-- **Collapsed repeats stay an
-  [open problem](../open-problems.md#collapsed-repeats-in-pggb-graphs).**
+- **Collapsed repeats stay an open problem.**
   Both known fixes add to format 7. Either is taken up only when someone
   asks for pggb walk tracks:
   - **Say "copy unresolved" instead of choosing.** Add a table of each
@@ -165,7 +170,7 @@ Three causes, each with the rule that answers it:
   - **Trigger.** After that, a format change needs an issues-log entry
     whose source is a user, or a consumer working against a hosted file.
     A finding from a review alone goes into
-    [open problems](../open-problems.md).
+    open problems.
 - **Most of the design work served a graph nobody hosts.** ADRs 0001,
   0003–0006, 0008 and part of 0009 were triggered or measured on pggb's
   collapsed repeats or CHM13's satellites. On MC their mechanisms do

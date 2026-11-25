@@ -189,7 +189,7 @@ copies under `~/work/genome7`:
 - **Paths on more than one reference sequence:** 49 lines of the GRCh38
   file, all between unplaced or unlocalized scaffolds
   (`results/hosted.cross-sequence-grch38.txt`;
-  [open problems](../../open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
+  [What a cut returns](../../walks-reading.md#what-a-cut-returns))
 - **Paths left out:** the 1,698 W lines with no step on a GRCh38 node hold
   0.0044% of the published GFA's path bp
   (`results/hosted.left-out-grch38.txt`)

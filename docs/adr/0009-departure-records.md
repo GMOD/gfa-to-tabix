@@ -322,7 +322,7 @@ a viewer states a departure with an end passed more than once as a
 placement choice, never as a jump, and offers the graph,
 haplotype-coordinate or alignment view there. The placement rule itself is
 [ADR 0001](0001-step-placement.md)'s, and a better one for repeats is an
-[open problem](../open-problems.md).
+open problem.
 
 - A walk file's reference should be the graph's own where the graph has
   one: the hs1 files come from HPRC v2.1's CHM13-referenced

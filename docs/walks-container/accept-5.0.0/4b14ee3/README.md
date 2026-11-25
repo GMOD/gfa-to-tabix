@@ -62,7 +62,7 @@ genome file:
   ADR 0015's header tags ([walks-header-diff.py](pggbY-header-diff.txt))
 - [The equality harness](eq-pggbY.out), 24 windows: no difference from
   the loaded cut; the reference nodes and links set aside by design are
-  the ones [open-problems.md](../../../open-problems.md#pggb-chry-in-walk-format-8)
+  the ones [pggbY/notes.md](../../pggbY/notes.md#where-a-loaded-and-an-unloaded-cut-differ)
   describes
 
 ## The 4 MB read scan

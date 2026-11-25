@@ -33,7 +33,7 @@ Measured 2026-11-22 on the hosted HPRC format 8 walk file with the plugin at
   a stretch of a haplotype lies in, so the adapter can answer a region on a
   haplotype by cutting the walk file there.
 - It is a side file, not a change to the walk file. It falls under
-  `docs/open-problems.md`, "Pairing a side file with a walk file", as
+  `../waiting-on-a-call/side-file-pairing-rule.md`, as
   `haplotype-coordinate-lookup.md` does, and the two may be one file.
 
 ## Why it waits
@@ -41,8 +41,8 @@ Measured 2026-11-22 on the hosted HPRC format 8 walk file with the plugin at
 - The overview-tier study in `handoffs/2026-11-21-ada-next.md` already
   weighs per-haplotype runs at a coarser tile, which may hold the same
   blocks.
-- The table adds a side file, which `docs/open-problems.md` has not yet said
-  how to pair with a walk file.
+- The table adds a side file, and how to pair one with a walk file is not
+  yet settled (`../waiting-on-a-call/side-file-pairing-rule.md`).
 - It inherits the lanes' limit at loci like amylase, where identical
   sequence sits on separate nodes.
 - Prior art for a zoomed-out summary of paths: `odgi viz` and `odgi bin`.

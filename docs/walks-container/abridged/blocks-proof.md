@@ -94,7 +94,7 @@ has a leading run.
 - **Large coordinates, not of `blocks` alone.** A reference line
   starting past 2^53 is accepted, and a reader holding doubles misreads
   its positions; one near 2^63 panics in the writer
-  ([open problems](../../open-problems.md))
+  (`docs/open-problems.md`)
 
 ## What the claim covers in a reader
 

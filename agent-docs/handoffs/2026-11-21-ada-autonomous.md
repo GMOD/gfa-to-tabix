@@ -269,7 +269,7 @@ The first queue is done; what it leaves is filed in `agent-docs/todo/` and
   (chrY's "100 s with the release binary"). That file is frozen, so 5.0.1
   landed without it. The sentence now describes releases up to 5.0.0 and is
   left for the owner.
-- `open-problems.md` puts chrY's remaining musl gap down to musl's
+- `../ideas/ready/copy-less-in-row-building.md` puts chrY's remaining musl gap down to musl's
   `memcpy` alone, not "memcpy, memcmp and free": in the profile memcmp is
   as common under glibc (5 against 6 samples), and jemalloc replaces `free`.
 - Early refusal and the superlinear cut go out together as graph-walks
@@ -371,9 +371,9 @@ The first queue is done; what it leaves is filed in `agent-docs/todo/` and
     - run clippy for the musl target and `cargo test` in full;
     - add the measurement files under `docs/placement/`, in the style of
       the ones there;
-    - rewrite `docs/open-problems.md`, "The release binary is slower than a
-      cargo build", to say what is now true, the chrY remainder and its
-      cause included;
+    - rewrite what the docs said of the release binary being slower than a
+      cargo build (now `../ideas/ready/copy-less-in-row-building.md`) to
+      say what is now true, the chrY remainder and its cause included;
     - land, and release gfa-to-tabix 5.0.1 by its release workflow (it
       triggers on Cargo.toml changes; read `release.yml`);
     - confirm the released musl binary rebuilds the hosted chr6-sequences

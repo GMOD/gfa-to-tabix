@@ -225,10 +225,6 @@ Its text is `repeat-review/review.txt` in the evidence folder.
   one reviewer recommends and the study lead did not; and a table of where
   the reference's other passes lie, which both independent reviews point
   at and nobody proposed.
-- **`docs/open-problems.md`:** split the page into one file an item and
-  change the routing lines in `agent-docs/CLAUDE.md` and
-  `handoffs/README.md`, or only file new items that way. Asked, not
-  answered.
 - **Two stale `until` loops on ada** (pids 147291 and 151897 at 23:20 EST,
   waiting on `~/work/handoff-1121/runs/singlebuild/timing.log`), and the
   cattle trial's 4.1 GB job store: harmless, and removal needs the owner's

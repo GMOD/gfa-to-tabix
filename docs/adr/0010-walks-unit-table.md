@@ -394,7 +394,6 @@ and measured it against format 6
 - **Not fixed here:** on pggb most of a small window's bytes are departure
   records and attach fetches from collapsed-repeat hops, which every
   container pays; that is a record and placement question
-  ([open problems](../open-problems.md))
 
 ## Alternatives rejected
 <!-- record -->

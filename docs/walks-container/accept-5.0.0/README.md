@@ -27,7 +27,7 @@ cut. pggb chrY: 24 windows.
   [GRCh38 1–500](0350375/eq-grch38.0.out),
   [501–1,000](0350375/eq-grch38.1.out)), over the same fragments,
   departures and links as before; [pggb chrY](0350375/eq-pggbY.out) keeps
-  the differences [open-problems.md](../../open-problems.md#pggb-chry-in-walk-format-8)
+  the differences [pggbY/notes.md](../pggbY/notes.md#where-a-loaded-and-an-unloaded-cut-differ)
   describes
 - **graph-walks 4b14ee3,** the release head, on the 5.0.0 files with
   the header ([README](4b14ee3/README.md)): neither genome file differs

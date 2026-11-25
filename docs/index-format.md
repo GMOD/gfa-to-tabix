@@ -314,8 +314,8 @@ and each takes a reader a compressed block.
   coordinate, its first pass, so its links and the alleles beside it span
   every pass, and a window in a repeat reads megabytes of rows, most of them
   from far outside it.
-  [Open problems](open-problems.md#collapsed-repeats-in-pggb-graphs) has a
-  candidate fix
+  No fix is adopted
+  ([ADR 0008](adr/0008-index-keeps-its-placement.md))
 - **@gmod/tabix** reads about ten times the bytes htslib's `tabix` reads for
   a small window, because it reads a whole index chunk where htslib stops at
   the first row past the window

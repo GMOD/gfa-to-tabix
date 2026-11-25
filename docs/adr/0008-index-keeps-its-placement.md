@@ -92,8 +92,8 @@ and Yq11 on chrY:
 ## Consequences
 
 - Filing by pass leaves the roadmap, and the index's wide intervals on pggb
-  stay as [open problems](../open-problems.md) records them
-- [Open problems](../open-problems.md) keeps the question of walk files
+  stay as [the measurements](../placement/index-measurements.md#collapsed-repeats-in-pggb-graphs) record them
+- Open problems keeps the question of walk files
   replacing the index for path graphs, with this measurement as its
   baseline. The question waits on detours spanning the window, deletions
   across it, pggb's paralog jumps, a zoomed-out walk tier, and carriers on a

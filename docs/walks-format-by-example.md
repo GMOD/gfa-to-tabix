@@ -361,7 +361,7 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
 - **Where a path goes on another chromosome:** a path that moves onto
   another sequence of the reference and stays there looks, on the first
   sequence, like a path that stops
-  ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
+  ([What a cut returns](walks-reading.md#what-a-cut-returns))
 
 ## Cases the example lacks
 
@@ -382,7 +382,7 @@ GRCh38#0#chr1  10  80  departure  HG002#2#chr1  20  0  0  20  +  1  70  +  1  .
   places each haplotype step on one copy, and a region over another copy
   lacks the haplotype
   ([Exact and chosen](walks-format.md#exact-and-chosen),
-  [open problem](open-problems.md#placement-of-steps-on-nodes-the-reference-passes-more-than-once))
+  [Repeats in pggb graphs](walks-writer.md#repeats-in-pggb-graphs))
 - **A tile too large to send whole,** as in a satellite array. gfa-to-tabix
   moves paths out of the tile into units of two more kinds, and a viewer draws a
   moved path as blocks along the reference until the user asks for its

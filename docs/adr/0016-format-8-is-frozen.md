@@ -79,7 +79,7 @@ and on pggb chrY.
   format 8 is, so it is stated before the format is cited or not at all;
   as a tag it would change every hosted file's header, every `#entry`
   offset, the `.idx` and the checksum
-- **Each stays an [open problem](../open-problems.md)** with what the
+- **Each stays an open problem** with what the
   study measured, stated as a problem
 
 ## The ruling on C27
@@ -109,7 +109,6 @@ and on pggb chrY.
   - it leaves open how a file with revisited nodes files a once-passed
     node that haplotypes walk inside another copy of a repeat, as pggb
     chrY's node at 9,394,014 is
-    ([open problem](../open-problems.md#a-once-passed-node-in-a-file-with-revisited-nodes))
 - **The dissent.** Two of the three reviews would state it for every
   format 8 file. Their reasons: a reader can't know the writer, so on a
   file with revisited nodes it can say "N of M haplotypes step this node"

@@ -146,7 +146,7 @@ compressed, so on the CHM13 file every window between about 38 and 80
 Mb of chr9 gets its DepartureReadError, which names a collapsed repeat
 as the usual cause, and so does the window at 13.5 Mb of chr14; the
 GRCh38 file has no such stretch. The placement
-question of [open-problems](../../../open-problems.md#placement-of-steps-on-nodes-the-reference-passes-more-than-once)
+question of [placement-scores.md](../../placement-scores.md)
 applies to CHM13 as a reference of this graph, not only to pggb.
 
 ## The forms cut on MC chr22

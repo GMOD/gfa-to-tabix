@@ -118,8 +118,7 @@ the spec's text is the rule. By ruling:
   a start, in a P name's fourth field or in a W line's start column. It
   reads a start, and where the blocks then overlap it refuses with a
   message that says so. The spec states the limit and
-  [open problems](../open-problems.md#starts-a-name-or-a-column-states-that-are-not-starts)
-  keeps it
+  open problems keeps it
 - **The format number stays.** No reader reads a row differently
 
 ## How it was decided

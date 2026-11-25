@@ -100,7 +100,6 @@ steps from them and nothing else <!-- C117 -->
   on the sequence, and how many bp its last piece there holds after that
   step. It cannot say the line ends there, nor where on the reference it
   goes
-  ([open problem](open-problems.md#a-path-that-crosses-onto-another-reference-sequence))
 
 ## Readers
 <!-- background -->

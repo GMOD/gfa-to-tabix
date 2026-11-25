@@ -85,7 +85,7 @@ rules say (see C135 in
 
 ## Records
 
-- [Open problems](open-problems.md): measured but not decided, such as
+- `agent-docs/`: work to do and parked proposals, one a file, such as
   pggb's collapsed repeats
 - [Issues log](issues-log.md): every bug and review finding on the walks
   stack, and what now guards it

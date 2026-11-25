@@ -42,7 +42,7 @@ A pggb graph collapses repeats. GRCh38 passes some chrY nodes up to 50
 times, and format 7 placed a haplotype's step on such a node by a rule:
 the nearest pass, kept for `--stay` bp. Only 35.9% of pggb chrY pieces
 land within 10 kb of where the MC graph puts the same contig
-([open problems](../../open-problems.md)). Over a collapsed repeat, the rule
+(`docs/open-problems.md`). Over a collapsed repeat, the rule
 chose the coordinate.
 
 The rule also wrote most of pggb's departure records. 97% of chrY's
@@ -73,7 +73,7 @@ projection ([henli-fundamental.md](henli-fundamental.md)).
   - There is no format 9 until the JBrowse plugin and bandage-core have
     shipped on format 8 and a hosted file has been viewed.
   - A finding made after the port goes into
-    [open problems](../../open-problems.md), not into a format change.
+    `docs/open-problems.md`, not into a format change.
   - A review that re-decides the design is no exception.
 
 ## Evidence

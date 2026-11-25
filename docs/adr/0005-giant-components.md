@@ -83,9 +83,10 @@ Rows per 10 kb window with the default limit:
   sequence they attach to
 - Link rows keep a long tail on pggb graphs. In chrY's costliest window,
   63,887 of 69,413 link rows join two reference nodes, from collapsed repeats
-  that the limit doesn't touch ([open problems](../open-problems.md))
+  that the limit doesn't touch
+  ([measured](../placement/index-measurements.md#collapsed-repeats-in-pggb-graphs))
 - No reader expands a moved component, and one query can't fetch it while its
-  nodes spread over contigs ([open problems](../open-problems.md))
+  nodes spread over contigs
 
 ## Alternatives rejected
 

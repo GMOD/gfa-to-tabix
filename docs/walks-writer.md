@@ -56,7 +56,7 @@ line's tags in the order the format page shows them, and `graph` and
   <!-- C9 --> `--refs` always takes a whole sample, so the tool writes no
   file whose reference is one haplotype of several, which the format
   allows
-  ([open problem](open-problems.md#a-reference-of-one-haplotype-of-a-sample-cant-be-written))
+  ([ADR 0017](adr/0017-format-8-tags-numbers-lines-and-names.md#the-ruling-on-the-reference))
   <!-- C9 -->
 - **A contig can span several lines,** one per stretch the graph holds,
   as where Minigraph-Cactus clips a haplotype. The rows are the same for

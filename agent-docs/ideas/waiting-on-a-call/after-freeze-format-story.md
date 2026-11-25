@@ -12,7 +12,7 @@ from the requirements) found no byte-level change to the walk file that beats
 shipping unchanged. The final green round ruled on its format candidates: C43's
 bin sizes stay format, with a note on ADR 0010; writer policy stays where it is
 fenced; no vocabulary merge; the index's doubled `SB:H:` is a separate
-index-format change (`docs/open-problems.md`, "Format 2's carrier tags").
+index-format change (`index-carrier-tag-names.md`).
 Left:
 
 - **One abridge budget:** C202 says budgets bind no row, and ADR 0004 has no

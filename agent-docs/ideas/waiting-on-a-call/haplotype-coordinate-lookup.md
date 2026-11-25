@@ -9,5 +9,4 @@ metadata:
 
 Walk rows carry `path` and `hapOffset`, so a side file can map a haplotype
 position to tiles without changing the walk file. It falls under
-`docs/open-problems.md`, "Pairing a side file with a walk file", which a side
-file must answer first. Not before the freeze.
+`side-file-pairing-rule.md`, which a side file must answer first. Not before the freeze.

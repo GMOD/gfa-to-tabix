@@ -72,9 +72,9 @@ A Fable review the same day checked the cut against GRCh38's path in
 Both of 2026-11-22; texts in the evidence folder as
 `reviews/readerfix-review.txt` and `reviews/loops-prototype.txt`.
 
-- **This is the open problem already written down.** `docs/open-problems.md`,
-  "Collapsed repeats in pggb graphs", says the cut "draws the wrong graph"
-  for this reason, and `gfa-to-tabix build` writes a plain GFA's index in the
+- **This is the open problem already written down.**
+  `../ideas/waiting-on-a-call/index-wide-intervals-on-pggb.md` says the cut
+  draws ordinary reference links as deletions for this reason, and `gfa-to-tabix build` writes a plain GFA's index in the
   contig layout because of it. The paper's benchmark indexed chrY with the
   bare command, which writes the anchored layout.
 - **There is a second way in.** Off-reference components are filed under
@@ -217,6 +217,7 @@ every pggb window from a node and link index draws.
   again after this.
 - An index header stating the count of revisited nodes, and passes in the
   index, are format changes. Neither is proposed; both belong in
-  `docs/open-problems.md` with these numbers.
+  `../ideas/waiting-on-a-call/index-wide-intervals-on-pggb.md` with these
+  numbers.
 - `tableOrientation` ignores `nodes.reversed`, so a file that states it
   could give a node a `+` id and a `-` reference strand.

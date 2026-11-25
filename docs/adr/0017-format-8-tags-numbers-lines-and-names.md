@@ -440,7 +440,6 @@ and [claims7.md](../departures/claims7.md) lists its checks.
   a budget.** It does not yet check how any other number is written, an
   empty field in a row, a later unit's lines, an empty departure bin or
   2^53
-  ([open problem](../open-problems.md#checkers-that-hold-a-file-to-more-or-less-than-the-format))
 - **A file with a path on a reference haplotype in walk rows is not
   format 8,** where the first wording of this ADR admitted it. No
   release wrote one and no hosted file holds one
@@ -453,4 +452,3 @@ and [claims7.md](../departures/claims7.md) lists its checks.
 - **gfa-to-tabix writes no file whose reference is one haplotype of a
   sample:** `--refs` takes samples, and `--refs 'HG002#1'` is refused.
   That is writer support for later, not a question of the format
-  ([open problem](../open-problems.md#a-reference-of-one-haplotype-of-a-sample-cant-be-written))

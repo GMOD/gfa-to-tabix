@@ -90,7 +90,7 @@ Where the findings have come from so far, and the rule each gives:
   forward only, reuses chrY's strata on chr22, counts rows not records;
   the chrY maximum of 1,937 rows was an audit error (19,933 in the file).
   Source: prose ahead of data. Open: the caveats are in
-  [open-problems](open-problems.md), the scores not rerun
+  `open-problems.md`, the scores not rerun
 - **2026-11-04, measurement at the port.** The prototype had dropped the
   `pv` and `nx` tags unrecorded, so its sizes left them out (0.35 to 0.5%).
   Source: prose ahead of data. Fixed: measured, then removed with the user.
@@ -2091,7 +2091,7 @@ Where the findings have come from so far, and the rule each gives:
   comes back from neither side. 49 lines of the hosted GRCh38 file, all
   between unplaced or unlocalized scaffolds. Source: a hand-made graph
   with two reference sequences, then a count on the hosted file. Fix:
-  none; [open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence),
+  none; [What a cut returns](walks-reading.md#what-a-cut-returns),
   by ADR 0011. Guard: `cross-sequence.py` counts them in any file
 - **2026-11-11, a blinded review (a comma in an assembly name misnumbers
   the carriers).** The node and link index lists a plain GFA's assemblies
@@ -2142,7 +2142,7 @@ Where the findings have come from so far, and the rule each gives:
   taken as the hosted answer: the rule "evidence on one graph" again,
   **re-found**. Source: `abridged-span.py` on both hosted files on ada.
   Fix: none in this session; two blinded deciders ruled for a
-  graph-walks change alone ([open problems](open-problems.md#an-abridged-row-narrower-than-its-piece)).
+  graph-walks change alone ([ADR 0012](adr/0012-abridged-blocks.md)).
   Guard: `abridged-span.py`
 - **2026-11-11, the review's loose ends (stale scale figures).**
   index-format.md gave pggb chrY's index as a minute and 5.2 GB, from
@@ -2150,7 +2150,7 @@ Where the findings have come from so far, and the rule each gives:
   binary on ada. Built with cargo, v4.0.0 and main both take 65-68 s and
   7.34 GB there, with byte-identical output, so the link dedup costs
   nothing measurable; the release binary, built for musl, takes 99-105 s
-  ([open problems](open-problems.md#the-release-binary-is-slower-than-a-cargo-build)). Source: the paper's figure against the doc's. Fix: the doc
+  ([measured](placement/musl-alloc-pggb-chrY.txt)). Source: the paper's figure against the doc's. Fix: the doc
   cites [the run](placement/pggb-chrY-build.txt) and dates chr22's
   figure. Guard: none. Every hosted node and link index was checked for
   repeated links: none but `ecoli_pggb`'s self-link, which the contig
@@ -2207,9 +2207,8 @@ Where the findings have come from so far, and the rule each gives:
   crosses onto another sequence read as ending).** walks-format.md said
   a line with no later step and no record inside the drawn stretch ends
   there, which is false of a line that goes on on another sequence of
-  the reference. Source:
-  [open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence).
-  Fix: the page says what a reader can know, no later step on that
+  the reference. Source: `open-problems.md`.
+  Fix: the page ([What a cut returns](walks-reading.md#what-a-cut-returns)) says what a reader can know, no later step on that
   sequence, and that no row tells such a line from one that stops; no
   byte changed. Guard: none
 - **2026-11-12, a proposal and three reviews of how P line names are read

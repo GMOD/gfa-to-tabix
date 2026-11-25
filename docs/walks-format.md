@@ -923,7 +923,7 @@ most:
   0, or the header states none, a route interior can hold a node the
   reference passes once, and the tiles over a window can then lack a line
   that steps it
-  ([open problem](open-problems.md#a-once-passed-node-in-a-file-with-revisited-nodes)).
+  ([ADR 0016](adr/0016-format-8-is-frozen.md#the-ruling-on-c27)).
   `passes` still says which nodes the reference passes once. A departure
   there can pass over a once-passed node its line steps, so two ends
   passed once do not make its own sequence free of reference nodes

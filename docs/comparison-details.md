@@ -18,7 +18,7 @@ tile.
 | Haplotype paths | per 64 kb tile of the reference: the reference's path, each distinct route a haplotype takes off it, and the routes each piece of a haplotype takes | the GBWT, in the node rows | every step of every P and W line, and for each node the lines and steps that visit it |
 | Growth with N haplotypes | distinct routes grow as N^0.36 and the lists of routes each piece takes as N^0.86; [measured on chr22 up to 5,000 synthetic haplotypes](placement/scale-past-464.md), the writer's default abridging makes the file and the table grow faster than the haplotypes | the GBWT grows sublinearly, because haplotypes share runs | the path index stores each step, so it grows with the total steps of all paths |
 | Paralog jumps   | the steps after a jump take the paralog's tile ([details](walks-writer.md#repeats-in-pggb-graphs)); on chr22, fewer than 0.1% of steps, in at most 74 of the 1,130 paths besides GRCh38's, nearly all in 22q11 | reaches those nodes by graph distance | the default `--mode all` keeps each path from its first to its last node on the reference interval, and `--haplotype_gap` cuts the path where more bp than the gap lie between two such nodes |
-| Known limits    | a path that crosses onto another sequence of the reference reads as ending there ([open problems](open-problems.md#a-path-that-crosses-onto-another-reference-sequence)); where the reference passes a node more than once, a step's position is the writer's choice ([Exact and chosen](walks-format.md#exact-and-chosen)) | none measured here | every region query reads the member of links between communities whole; a 64 kb window in a repeat can write hundreds of MB of GFA, with `--haplotype_gap 10kb` too ([below](#reading-a-64-kb-window)); `.ndx` holds two hashes of each node name in place of the name, so two names with the same hashes would match one entry; P lines with overlaps get no coordinates |
+| Known limits    | a path that crosses onto another sequence of the reference reads as ending there ([What a cut returns](walks-reading.md#what-a-cut-returns)); where the reference passes a node more than once, a step's position is the writer's choice ([Exact and chosen](walks-format.md#exact-and-chosen)) | none measured here | every region query reads the member of links between communities whole; a 64 kb window in a repeat can write hundreds of MB of GFA, with `--haplotype_gap 10kb` too ([below](#reading-a-64-kb-window)); `.ndx` holds two hashes of each node name in place of the name, so two names with the same hashes would match one entry; P lines with overlaps get no coordinates |
 
 ## gfa-to-tabix and gfaidx on two graphs
 
@@ -295,8 +295,7 @@ walk-file reader would need and whether the file has it:
   haplotype's consecutive steps with their strands, so a reader can build
   this list. Where both ends are reference nodes of the window and the
   file's reference passes no node twice, the list is complete; with an end
-  off the reference it is a lower bound
-  ([open problems](open-problems.md#every-link-of-a-loaded-node-and-a-bubble-layer)).
+  off the reference it is a lower bound.
   We have not yet checked it against the GFA
 - **A straightened reference with a ruler:** the walk file's reference rows
   hold the reference's nodes, lengths and offsets, so a ruler can be exact
@@ -308,7 +307,6 @@ walk-file reader would need and whether the file has it:
   tiles could be built from the `path` and `hapOffset` fields of each
   haplotype row
 - **GFA tags, such as depth for colouring:** walk files keep none
-  ([open problems](open-problems.md#gfa-tags-neither-file-keeps))
 
 ## gfa-to-tabix and gbz-base on HPRC v2.1
 

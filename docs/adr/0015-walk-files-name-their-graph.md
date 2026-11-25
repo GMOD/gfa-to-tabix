@@ -15,7 +15,7 @@
 - **Rejects:** stating the writer's name and version, a new header line
   kind, a sidecar file, and shipping unchanged
 - **Closes** the part of
-  [open problems](../open-problems.md#walk-files-name-no-writer) about the
+  open problems about the
   graph and the count, which suggested this place for them
 
 ## Context
@@ -70,7 +70,7 @@ changed and why.
   without them, and a reader ignores tags it doesn't know
 - A host or viewer that opens a walk file beside an index compares their
   `graph:Z:` values and can say when the two came from different graphs.
-  No host does yet ([open problems](../open-problems.md#walk-files-name-no-writer))
+  No host does yet
 - A reader can say that `leftout` lines of the graph have no rows in this
   file, and a file stating 0 has rows for every line with a step
 - A file without the tags is format 8 and is read as before: graph-walks

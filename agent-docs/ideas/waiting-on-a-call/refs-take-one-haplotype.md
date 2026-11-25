@@ -9,9 +9,12 @@ metadata:
 
 From a code review of 2026-11-02 (format 5), restated for format 8. The
 writer facts were checked on 2026-11-25; the rest is the review's plan,
-not run. `docs/open-problems.md` has two sections on the same question, "A
-reference of one haplotype of a sample can't be written" and "Walk files:
-references and abridging".
+not run. It also holds the two earlier write-ups of the question, of
+2026-10-30 and 2026-11-18.
+
+This is writer support, not a format question: ADR 0017 keeps a
+reference of one whole haplotype legal and says the writer writes none
+([The ruling on the reference](../../../docs/adr/0017-format-8-tags-numbers-lines-and-names.md#the-ruling-on-the-reference)).
 
 ## What the tools do today
 
@@ -24,11 +27,23 @@ references and abridging".
   `#reference` sample (`docs/walks-format.md`, "Whole haplotypes"), and
   graph-walks reads one. `scripts/check-walks.sh` makes such a file by
   building the other haplotype under a stand-in sample and renaming it
+- `--refs HG002` makes each of the sample's haplotypes a reference
+  sequence: HG002#2 gets `ref` rows and no walk in HG002#1's tiles. Passes
+  are counted over all of the sample's paths (`index_visits` in
+  `src/walks.rs`), so a node both haplotypes pass counts as passed twice,
+  which turns off the rules for nodes passed once
 - The plugin's `walkFileSample` (`src/locationName.ts`) gives no sample for
   a file name whose last dotted field is all digits, so
   `x.HG002.1.walks.gz` yields none. Mapping it to `HG002#1`, not `HG002`,
   keeps HG002#2's lane: the lanes adapter drops a lane whose sample is the
-  anchor's
+  anchor's. The 2026-10-30 text said the plugin read `HG002.1` as sample
+  `1`; that is out of date
+- Where the plugin takes the reference sample from, at e8be6f6d
+  (2026-11-24): the forms adapter reads the header's `#reference`
+  (`referenceSample` in `src/WalkFormsAdapter/WalkFormsAdapter.ts`), the
+  add-track workflow prefers a `walkReference` over the file name
+  (`src/GraphAddTrackWorkflow/buildTrackConfig.ts`), and
+  `src/graphTrackDefaults/index.ts` takes it from the file name alone
 
 ## The writer change
 
@@ -50,11 +65,12 @@ references and abridging".
 - The 2026-11-02 plan names the file `<prefix>.HG002.1.walks.gz`: `#`
   starts a URL fragment, so it becomes `.`, matching ADR 0007's
   `SM:Z:HG002.1`
-- `docs/open-problems.md` ("A reference of one haplotype of a sample can't
-  be written") suggests keeping the sample's name, `<prefix>.HG002`, with
+- The 2026-10-30 text had the plugin read `#reference` from the header
+  first, then `--refs` take `HG002#1` and name the file `HG002.1`
+- The 2026-11-18 text kept the sample's name, `<prefix>.HG002`, with
   `#reference HG002`
-- The two disagree, and the plugin's file-name rule above follows
-  whichever is taken
+- They disagree, and the plugin's file-name rule above follows whichever
+  is taken
 
 ## A test fixture
 

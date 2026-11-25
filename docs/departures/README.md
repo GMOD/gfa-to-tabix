@@ -16,7 +16,9 @@ release 2 pggb chrY and chr22, all on GRCh38, built on ada:
   Its numbers supersede the spike's wherever both measure the same thing
 - **The spike, 2026-10-30,** in `results/`: an earlier writer with a
   narrower record, before positions, copies and bin-sized blocks (`--fold`,
-  `--chain`, `--alignments` in a scratch copy of `src/walks.rs`)
+  `--chain`, `--alignments` in a scratch copy of `src/walks.rs`). Its
+  placement scores, with the review's caveats, are in
+  [placement-scores.md](placement-scores.md)
 
 ## Scripts
 

@@ -17,6 +17,6 @@ kept by hand.
   file. A verdict moves it to an ADR, `todo/`, or a deletion.
 - `reference/`: settled descriptions and audits, each saying when it was
   taken.
-- Format and spec questions go to `docs/open-problems.md`, and decisions to
-  `docs/adr/`, not here.
+- Format and spec questions are filed here too, under `ideas/` by what
+  they wait on; decisions go to `docs/adr/`.
 - Git history holds what a session did, so no file here restates it.

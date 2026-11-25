@@ -75,7 +75,7 @@ graph-walks' `scripts/blocks-equality.ts`, as
 
 - [pggb chrY on GRCh38](eq-pggbY.out), 24 windows: no difference from the
   loaded cut, and the 72 reference nodes and 111 links set aside by
-  design are the ones [open-problems.md](../../../open-problems.md#pggb-chry-in-walk-format-8)
+  design are the ones [pggbY/notes.md](../../pggbY/notes.md#where-a-loaded-and-an-unloaded-cut-differ)
   describes. The file is 4b14ee3's output byte for byte
 - **The genome files,** 1,000 windows of seed 1 on each in two runs, 64
   haplotypes a cut: neither differs anywhere,

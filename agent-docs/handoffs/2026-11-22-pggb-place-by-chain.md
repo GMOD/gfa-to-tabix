@@ -40,8 +40,8 @@ run and its result is filed.
     records across a palindrome it walks straight through.
 - By a keyword count on 2026-11-22, pggb or revisited nodes are in 35 of
   the 180 entries of `docs/issues-log.md` and in 22 of the 38 sections of
-  `docs/open-problems.md`: a fifth of what was fixed, and most of what
-  stays open.
+  the open-problems page of that day: a fifth of what was fixed, and most
+  of what stays open.
 
 ## What does not help
 
@@ -51,8 +51,7 @@ run and its result is filed.
 - **`odgi untangle`** votes per segment with no continuity. **The wfmash
   alignments** HPRC ships overlap in the same repeats: 73.5% of chrY's
   lifted blocks overlap another block of the same contig. Both are from
-  `docs/open-problems.md`, "Placement of steps on nodes the reference
-  passes more than once".
+  `../ideas/waiting-on-a-call/pggb-placement-rule.md`.
 - **Reader rules that judge from a window's cut** which far links are
   real. In a cut they look like a Minigraph-Cactus deletion spanning the
   window (the todo above, "A rule over the cut alone cannot fix it").
@@ -90,7 +89,7 @@ before the first build and pick by it.
   `src/walks.rs`) predict each step from the last placed one. Nothing
   holds a contig to one copy over a distance.
 - **Placing only on once-passed nodes, with no chain,** was rejected on
-  2026-11-06 (open-problems, "Placing nothing there instead"). Inside a
+  2026-11-06 (ADR 0011, "Format 8 is rejected"). Inside a
   repeat the once-passed nodes are the variants that tell its copies
   apart, and a haplotype carries now one copy's and now another's, so
   2,693 of 2,760 records at chrY 23.6 Mb still joined ends over 1 Mb
@@ -112,7 +111,8 @@ before the first build and pick by it.
   `pggb22a` logs and audits). This is the size of gain to hope for, not a
   result for the proposal.
 - **Its agreement with Minigraph-Cactus is not to be quoted** until
-  `agree.py`'s faults are mended. open-problems lists them.
+  `agree.py`'s faults are mended. `docs/departures/placement-scores.md`
+  lists them.
 - **Not measured, on any graph:** the chain from the graph alone. Whether
   once-passed anchors are dense enough off the satellites, what the build
   costs, and whether every path rebuilds from its rows under it.
@@ -132,7 +132,8 @@ before the first build and pick by it.
   be raised and reviewed as one. This proposal does not need them.
 - **More runs off the reference will hold a node the reference passes
   elsewhere,** the case where a loaded and an unloaded cut differ today
-  (open-problems, "pggb chrY in walk format 8").
+  (`docs/walks-container/pggbY/notes.md`, and
+  `../todo/pggb-chry-cut-differences-untraced.md`).
 
 ## Standing against the frozen format
 
@@ -143,8 +144,7 @@ before the first build and pick by it.
 - No hosted walk file changes: none has a revisited node.
 - `verify7.py` holds a file with revisited nodes to today's policy and
   would fail one written this way, where `spec8.py` passes it
-  (open-problems, "Checkers that hold a file to more, or less, than the
-  format").
+  (`../todo/checkers-hold-a-file-to-the-format-alone.md`).
 - A file does not name its placement rule. A `#walks` tag for it is an
   addition to the format, to be raised on its own.
 
@@ -158,7 +158,8 @@ before the first build and pick by it.
   projection, on pggb chrY first: departure records and rows, rows per
   64 kb window, the bytes of a 1 kb window with its attach fetches, build
   time, and `walks-truth.py rebuild` on the file.
-- **The bar,** as open-problems writes it for the Jaccard candidate and
+- **The bar,** as `../ideas/waiting-on-a-number/odgi-jaccard-placement.md`
+  writes it for the Jaccard candidate and
   taken unchanged: agreement with Minigraph-Cactus's placement within 5
   points of the alignment-guided projection's in every stratum and below
   nearest pass in none, departure records at least halved from nearest
