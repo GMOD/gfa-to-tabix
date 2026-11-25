@@ -69,3 +69,12 @@ Still open:
 - A reference node gets no share on a walked graph, because its length is not
   written there (`labelledNodeLengths`).
 - Whether thinner lanes become every reader's default.
+
+## Unlit ink under a lift is too faint (25 November)
+
+On the CFH render with two threads lit, the owner wrote: "the first render hides rare ones usin super dim grey, which is probably ok, but does make it hard to see".
+
+- Unlit ink under a lift is `LIFT_BACKDROP_COLOR` (160,160,160) faded by `FADED_ALPHA` in `renderer/GeometryBuilder.ts`, with no figure setting. At `contigThickness` 3 the nodes are already thin.
+- Evidence: `~/src/walks8-evidence/sessions-20261125/thread-width-mock/built/cfhrWin.png`, where the 1% branch is barely visible, against `hpWin_every_row_lit.png`.
+- Wanted: a figure setting for how strongly unlit ink fades under a lift. A darker default would be a visible change, and needs BEFORE/AFTER pairs first.
+- jb2hubs meanwhile lights the reference and the three commonest rows by default.
