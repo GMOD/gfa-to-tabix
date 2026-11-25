@@ -160,9 +160,9 @@ region.
 - **`#unit` lines:** a `#unit` line starts each unit after the header, with
   `seq start end`, then the unit's kind, `tile`, `departures` or `table`,
   then its name. A `departure` row refers to a tile by its name
-- **Pieces:** gfa-to-tabix cuts a W line into pieces, one in each tile
-  where the line has a step on the reference. A `ref` row or a `walk` row
-  is one piece
+- **Pieces:** gfa-to-tabix cuts a W line into pieces, each a run of the
+  line's steps in one tile, with a step on that tile's reference. A `ref`
+  row or a `walk` row is one piece
 
 ## How a row writes a step
 
@@ -288,7 +288,7 @@ A reader rebuilds the piece from the tile's `ref` and `route` rows:
 | `HG002#1` | 3 | `.`, no route | `>4 >5 >6`, the reference's steps |
 | `HG003#1` | 2 | `0`, route 0 | `>4 >6` |
 
-### A W line is one piece in each tile it touches
+### A W line is cut into pieces by tile
 
 gfa-to-tabix numbers a W line's pieces along the line from 0. Two rows of
 tile 60:
@@ -306,7 +306,8 @@ GRCh38#0#chr1  70  90  walk  HG002#2#chr1  0  20  1  2  16  .
 - A `walk` row's `start end` is the stretch of the reference its piece
   covers, so the second row has `70 90`
 - A piece's steps on the reference are all in its tile
-- A reader that has several pieces of a line joins them in order of `piece`
+- A line that leaves a tile and comes back can have two pieces there. A
+  reader joins the pieces it has of a line in order of `piece`
 
 ## `departure`: a path that leaves in one tile and rejoins in another
 
