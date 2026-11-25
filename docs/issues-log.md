@@ -66,7 +66,7 @@ Where the findings have come from so far, and the rule each gives:
   deletion. Source: a wrong word. Fixed in bandage-core 12.6.0 (1f53c24),
   jbrowse-components cfbebd84cf and plugin a00b1af, which state the
   stretch and the haplotype's own bp; the graph-view arc label is parked
-  ([handoff](handoff/2026-10-31-departures.md)). Guard: the rule in the
+  (the 2026-10-31 handoff, in git history). Guard: the rule in the
   handoff's decisions
 - **2026-10-30, measurement.** graph-walks 4.6.0's crossing fragments
   depended on which other haplotypes were kept, and the synteny mate span
@@ -1881,8 +1881,9 @@ Where the findings have come from so far, and the rule each gives:
   commits on one host. Source: the fundamentals review. Fix: none needed;
   95 files from the ten walk fixtures under five option sets and five fuzz
   graphs under three, built at 1, 2 and 16 threads, are byte-identical.
-  Guard: none in CI; `docs/handoff/2026-11-07-fundamentals.md` records
-  the run
+  Guard: none in CI; that day's handoff recorded the run, and
+  [accept-5.0.0](walks-container/accept-5.0.0/4b14ee3/README.md#byte-identity-across-thread-counts)
+  repeats it on MC chr22 for 5.0.0
 - **2026-11-07, the release check on ada (claims7 on a chromosome).**
   `claims7.py --own` had never completed on a real graph: no result for it
   exists under writer/results, only fixtures and fuzz. On MC chr22 with 24

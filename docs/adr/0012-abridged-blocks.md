@@ -31,7 +31,7 @@
   back, jumps or turns
 - On the hosted files that made the every-haplotype view state, for
   pieces not loaded
-  ([handoff](../handoff/2026-11-11-abridged-pieces.md)):
+  ([windows](../walks-container/abridged/README.md)):
   - absence where they step: 336 of 463 haplotypes at
     chr2:91,409,000-91,410,000
   - blocks where they have no step
@@ -199,7 +199,7 @@ in [walks-container/abridged/](../walks-container/abridged/).
 
 - graph-walks' equality harness shows no difference between a cut with
   nothing loaded and the same cut fully loaded, each run off R collapsed
-  to its bp, on the handoff's failure windows and 1,000 random
+  to its bp, on the [failure windows](../walks-container/abridged/README.md#the-windows-a-fix-had-to-pass) and 1,000 random
   abridged-tile windows per genome file, plain and contained, and fails
   on a broken reader
 - Its time and peak memory on chr2:91,409,000 (GRCh38) and

@@ -9,7 +9,11 @@ metadata:
 
 - **Plugin, diploid-reference files:** the forms track resolves by header
   sample and errors on a file whose reference sample has two haplotypes, and
-  Add Track needs `HG002#1` typed
+  Add Track needs `HG002#1` typed. Traced from code on 2026-11-02 and never
+  run: where two pieces of the reference share a window, `walkRowsGraph`
+  (`src/GraphGenomeView/walkRowsCut.ts`) keeps only walk 0's steps and turns
+  the second piece into a stepless stub path of the same name; on
+  2026-11-25 it still keeps walk 0 alone
 - **gbz-base versions:** bandage-core locks `@gmod/gbz-base` 7.4.0 and the
   plugin 7.4.1; under a hand-linked setup the plugin's typecheck fails in
   `GbzBaseSyntenyAdapter.ts`. Bump core's

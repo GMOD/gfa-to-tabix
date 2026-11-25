@@ -612,10 +612,11 @@ W  B  1  c     0  32  >1>2>6>3
   the drop is one of several false statements the view makes about an
   unloaded piece, from a block where it has no step to sizes off by
   orders of magnitude. [ADR 0012](adr/0012-abridged-blocks.md) decides
-  the fix, a `blocks` unit per abridged tile added to walk format 7, after
-  two deciders split and a third cross-examined them; the failure cases,
-  tests and order are in the [handoff](handoff/2026-11-11-abridged-pieces.md).
-  The build, the hosted rebuild and the releases are still to come
+  the fix, a `blocks` unit per abridged tile in walk format 8, after
+  two deciders split and a third cross-examined them; the failure cases
+  and tests are in [walks-container/abridged](walks-container/abridged/README.md).
+  [ADR 0013](adr/0013-abridged-hapbp.md) adds `hapBp` to the `abridged`
+  row, and gfa-to-tabix 5.0.0 writes format 8
 
 ## Walk files name no writer
 

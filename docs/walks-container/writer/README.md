@@ -193,3 +193,11 @@ copies under `~/work/genome7`:
 - **Paths left out:** the 1,698 W lines with no step on a GRCh38 node hold
   0.0044% of the published GFA's path bp
   (`results/hosted.left-out-grch38.txt`)
+- **Hand-made graphs:** eleven graphs outside the fuzz generator (a self
+  loop and hairpin, a reversed reference, a tandem collapse, a
+  duplication, two reference sequences with paths between them, an
+  island, a path touching the reference at one node, CRLF and P lines
+  without PanSN names, ids 0, 007 and 2147483646, repeated L lines, a
+  diploid reference) passed the writer, verify7, claims7, audit7, the
+  rebuild and `graph-walks-rebuild.mjs`, and a twelfth with minigraph's
+  `s1` names was refused by `--walks`; they were not kept as fixtures

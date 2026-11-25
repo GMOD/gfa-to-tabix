@@ -45,6 +45,7 @@ Measured 2026-11-22 on the hosted HPRC format 8 walk file with the plugin at
   how to pair with a walk file.
 - It inherits the lanes' limit at loci like amylase, where identical
   sequence sits on separate nodes.
+- Prior art for a zoomed-out summary of paths: `odgi viz` and `odgi bin`.
 
 ## Not known
 
