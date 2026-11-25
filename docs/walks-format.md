@@ -84,9 +84,9 @@ the columns that follow:
 - **Tile:** the `tile` bp of a reference sequence from a multiple of
   `tile`, and the unit holding the rows of the pieces filed there
 - **Piece:** a run of a line's steps in one tile. `piece` numbers the
-  pieces along one line from 0 <!-- C16 -->, so a reader keys a piece by
-  `path`, `fragStart` and `piece`, and joins consecutive pieces back into
-  one walk
+  pieces along one line from 0, on whichever reference sequence each is
+  filed <!-- C16 -->, so a reader keys a piece by `path`, `fragStart` and
+  `piece`, and joins consecutive pieces back into one walk
 - **R:** a tile's reference path, its `ref` rows' steps joined in offset
   order. A **position** is an index into R: one pass of the reference
   over a node. A step is **placed** on a reference sequence where its row
@@ -117,8 +117,8 @@ The header unit is first, from byte 0, and `#walks` is its first line.
 |---|---|---|---|
 | `tile` | the tile's extent | the tile's start, a multiple of `tile` in decimal with no leading zero | its `ref`, `nodes`, `route`, `walk` and `abridged` rows |
 | `departures` | the bin | `.` | the departure records of one bin |
-| `detail` | from the first base its walk rows' spans cover to the last | `cs:d`, the tile's start and the `abridged` rows' `detail` | one line's moved pieces in tile `cs` |
-| `blocks` | from the first base its rows' blocks cover to the last | `cs`, the tile's start | a `blocks` row per `abridged` row of tile `cs` |
+| `detail` | from the first base its walk rows' spans cover to the last | `cs:d`, the tile's `name` and the `abridged` rows' `detail` | one line's moved pieces in tile `cs` |
+| `blocks` | from the first base its rows' blocks cover to the last | `cs`, the tile's `name` | a `blocks` row per `abridged` row of tile `cs` |
 | `table` | 0 to the sequence's length | `.` | one `#entry` line per unit of the sequence |
 
 <!-- C35 C36 C37 C38 C159 -->
@@ -136,8 +136,9 @@ The header unit is first, from byte 0, and `#walks` is its first line.
   tiles by extent, never by `floor(base / tile)` <!-- C145 -->
 - **Departure bins** are `tile × 8^L` bp for L from 0 to 3 (64 kb,
   512 kb, 4 Mb and 32 Mb at the default tile), each at a multiple of its
-  size. <!-- C43 --> A record's line is in every bin of its cover, the
-  bins over its line's `start end`, and no other, the same text in each,
+  size. <!-- C43 --> A record's line is in every bin of its cover, a run
+  of bins end to end over its line's `start end`
+  ([Units and their order](#units-and-their-order)), and no other, the same text in each,
   tags included, and a reader drops exact duplicates. <!-- C88 --> So the `departures` units that overlap a
   window hold every record whose line overlaps it <!-- C88 -->
 - **A table** lists each unit of its sequence before it, in file order,
@@ -240,8 +241,9 @@ shift is not enough to split one.
 
 A tile lists its `ref` rows, then at most one `nodes` row, then its
 `route` rows, then its `walk` rows, then its `abridged` rows.
-<!-- C59 --> A decoder needs that order, and the order of the tile's
-`walk` rows ([Row rules](#row-rules)), as it needs a column.
+<!-- C59 --> A decoder needs that order as it needs a column. A `walk`
+row decodes alone, whatever the order of the tile's `walk` rows
+([Row rules](#row-rules)).
 
 **A piece** is a `ref`, `walk` or `abridged` row, and those rows start
 with the same five columns:
@@ -368,8 +370,8 @@ In this order:
     - emit the interior
     - with no exit, stop: the piece ends off R
     - emit the exit, at occurrence `k` of its node in R with `@k`, else
-      at the occurrence nearest the current position in R, counted in
-      positions, the one at the higher position on a tie
+      at its node's occurrence nearest the current position in R, counted
+      in positions, the one at the higher position on a tie
 - Step along R until the piece has `nsteps` steps
 
 <!-- C141 -->
@@ -452,7 +454,7 @@ is format:
   `walk` rows, encoded without the moved pieces, and an `abridged` row
   per moved piece <!-- C101 -->
 - The moved pieces' rows go to a `detail` unit `cs:d` of the tile's
-  sequence, `cs` the tile's start and `d` the unit's number. One line's
+  sequence, `cs` the tile's name and `d` the unit's number. One line's
   moved pieces in one tile share one detail unit, one unit per line: a
   contig with two lines there has two. <!-- C76 --> A reader reads a
   detail unit only when it expands that path <!-- C150 -->
@@ -503,7 +505,7 @@ seq start end blocks path fragStart piece list
 ```
 
 One row per `abridged` row of a tile, in the `blocks` unit named by the
-tile's start. A reader matches the two by `path`, `fragStart` and
+tile's name. A reader matches the two by `path`, `fragStart` and
 `piece`, and the unit lists its rows in the tile's order of them. A tile
 with no `abridged` row has no `blocks` unit <!-- C161 -->
 
