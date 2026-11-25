@@ -373,7 +373,7 @@ claim('K13', 'no piece ends above 2^53 on its contig: a walk row\'s hapOffset pl
       'row\'s hapOffset plus hapBp')
 claim('D1', 'a departure record\'s ownTiles are tile names of its sequence that exist, in no repeat')
 claim('D2', 'a record has at most two ownTiles')
-claim('D3', 'a departure record\'s extent holds both breakpoints and is at least the breakpoint stretch')
+claim('D3', 'a departure record\'s extent holds both breakpoints')
 claim('D4', 'the ref rows of S hold a node ending at a + leave\'s or - rejoin\'s breakpoint and one starting at the '
       'other kind\'s')
 claim('D5', 'a departure line\'s ownBp >= missingBp; strands are + or -; passes >= 1')
@@ -1308,17 +1308,7 @@ if args.own:
         for key in {k for k in own_in if (seq, path) + k in abridged_at} | set(cut):
             if own_in[key] != cut.get(key, 0):
                 bad('O5', (seq, c[4:8], 'piece', key, 'own steps', own_in[key], 'bp', 'overlap', cut.get(key, 0)))
-        S = seq_end[seq]
-
-        def stretch(bp, at_end):
-            if S == 0:
-                return 0, 0
-            if at_end and bp > 0:
-                return bp - 1, bp
-            return (S - 1, S) if bp + 1 > S else (bp, bp + 1)
-        ends = [steps[li][8][:2], steps[ri][8][:2],
-                stretch(lp, (ls == '+') and steps[li][8][0] < steps[li][8][1]),
-                stretch(rp, (rs == '-') and steps[ri][8][0] < steps[ri][8][1])]
+        ends = [steps[li][8][:2], steps[ri][8][:2]]
         extent = (min(a for a, _ in ends), max(b for _, b in ends))
         if extent != (int(c[1]), int(c[2])):
             bad('D6', (seq, c[1:3], 'from its ends', extent, c[4:15]))
