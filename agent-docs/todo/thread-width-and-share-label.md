@@ -32,3 +32,40 @@ On 25 November the owner said of jb2hubs' folded HPRC renders: "the thick paths 
 - `<name>_lane5px_contig3` is `contigThickness` 3 with the lit lane's stroke width set to 5 by hand. Gaps in label backgrounds along the lit lane come from that hand edit, not from the drawing.
 
 jb2hubs ships with `contigThickness` 3 until a core release offers either.
+
+## Built 2026-11-25, on bandage-core branch `thread-width`
+
+Two commits on `fold-truth` at 82026e2, in `~/src/bandage-core-threadwidth`
+(`c5245d4`, `94fdc48`), by the jb2hubs session. Both settings are off by
+default, so no drawing changes until a host asks. Not released.
+
+- **`countLaneScale`** (FigureSettings, 1 by default) scales
+  `countLaneWidthPx`. It rides on the lifted walk as `laneScale`, set by
+  `walkLift`'s fourth argument, so the lane, its key swatch and `nodeInk`'s
+  reach thin together and no renderer option was added. 0.4 draws 464
+  haplotypes 6.1 px wide.
+- **`nodeShares`** (FigureSettings, false by default) writes after a node's or
+  a loop's length the share of haplotypes that walk it, `81.4–82 kb · 9%`.
+  - The share is of the haplotypes with a step in the drawn graph, each once
+    whatever its walks, passes or thread (`labelledNodeShares`), and the key
+    says so: "% beside a length: the share of the N haplotypes drawn that walk
+    it".
+  - A node every haplotype walks has none, and none reads 0% or 100%.
+  - None is written anywhere where a walk has `abridgedSteps` or a node is a
+    placeholder.
+  - `threadFold.test.ts` checks it against the fold's deletion event count.
+- Checked on ada in `~/work/walks8-gates/agents/threadwidth/`: typecheck,
+  lint, format and the full suite (1,974 passed, 1 skipped).
+- Before and after pairs, four HPRC windows with HG00097 lit, at
+  `countLaneScale` 0.4, `contigThickness` 3, `nodeShares` true:
+  `~/src/walks8-evidence/sessions-20261125/thread-width-mock/built/`.
+
+Still open:
+
+- **A skip has no share.** A deletion's arc is a link and carries no label, so
+  CFH's 85 kb deletion, which 30% carry, shows no number. It needs a label on a
+  skip's drawn route, which lives in `renderer/GeometryBuilder.ts`, left alone
+  while the skip drawing changes there.
+- A reference node gets no share on a walked graph, because its length is not
+  written there (`labelledNodeLengths`).
+- Whether thinner lanes become every reader's default.
