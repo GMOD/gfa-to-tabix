@@ -2,8 +2,8 @@
 
 gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can
 fetch any region of it from a static web host without downloading the whole
-graph. Read its files in JavaScript with
-[@gmod/gfa-tabix](https://github.com/GMOD/gfa-tabix-js), as
+graph. In JavaScript, [@gmod/gfa-tabix](https://github.com/GMOD/gfa-tabix-js)
+reads the files gfa-to-tabix writes, as
 [@gmod/bam](https://github.com/GMOD/bam-js) reads BAM.
 
 - **In:** a GFA file (`.gfa` or `.gfa.gz`): an rGFA from minigraph or
