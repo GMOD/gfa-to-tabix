@@ -12,7 +12,8 @@ Planned 2026-11-24 by a Fable read of the hosted cuts. A not-loaded stretch now 
 ## Equal-length alleles merge unchecked
 
 - graph-fold names an off-reference node by site and length (`fold.ts`, `ins:<left>:<bp>` and `stretch()`), so two alleles of one length at one site share a node whatever their sequence. A stretch the cut did not load joins the loaded allele of its length the same way.
-- Nobody has measured whether that ever joins different content on hosted data. It needs a check comparing the nodes each walk takes.
+- Measured 26 November on the expanded cut at 1 kb, clustering off (ada `~/work/walks8-gates/agents/runs-derisk/out/merge.jsonl`): of the off-reference nodes, HLA 79 of 139, KIR 22 of 50 and LPA 106 of 428 join walks through different node sets. Most differ by under 50 bp (HLA 63, KIR 19, LPA 34), as one 6.2 kb insertion carried in 25 node chains does at HLA. Differences of 50-999 bp: HLA 16, KIR 2, LPA 68. Differences of 1 kb or more, at or past the fold's own threshold: KIR 1, LPA 4. Node ids differing is not proven sequence differing; LPA's KIV-2 copies may share bases.
+- Next: compare bases for the five merges of 1 kb or more. If any joins sequences that differ by the threshold or more, the fold states a false allele there, and the split needs node identity the runs path lacks for abridged pieces.
 
 ## The threshold cliff
 
