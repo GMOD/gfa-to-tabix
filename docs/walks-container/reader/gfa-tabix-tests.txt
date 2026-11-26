@@ -4,7 +4,7 @@ abridgedWalks.test.ts: abridgedText says the bp off the reference not loaded in 
 abridgedWalks.test.ts: each walk of abridged.R with a stretch off the reference the cut did not load, by its bp, and none it draws exactly
 abridgedWalks.test.ts: over windows of $fixture, a walk counts the bp of each placeholder the cut keeps on its contig once
 abridgedWalks.test.ts: ownends.R lists the walks with a stretch off the reference not loaded on the window, and not those it draws exactly or whose run off it lies past the window, as its twin draws none of them
-abridgedWalks.test.ts: the README example is what ownends.R gives
+abridgedWalks.test.ts: the docs/reads.md example is what ownends.R gives
 attachOnce.test.ts: unattachedRecords finds, record for record, the ones the cut before the fetch found, over every window of %s
 blocksEquality.test.ts: the equality harness finds each tile fetched for %s named by a record that leaves or rejoins on the window, each own run where its blocks row has it, no blocks unit read by an expanding cut, and bytesFor the bytes read
 blocksEquality.test.ts: the equality harness finds no link across two W lines of abut.R that abut, and the one line linked
@@ -23,7 +23,7 @@ cutIndexes.test.ts: the strands of a link order it after its ids, + before -, so
 cutIndexes.test.ts: ties on all three keep the order given, among thousands in runs of a name
 cutPresets.test.ts: a cut of $fixture with the browser preset is a cut with no options, and the figure preset draws the same graph
 cutPresets.test.ts: the figure preset attaches no departure the browser preset leaves without steps
-cutPresets.test.ts: the presets are the ones the README tabulates
+cutPresets.test.ts: the presets are the ones docs/cutting.md tabulates
 cutPresets.test.ts: the presets keep WALK_CONTEXT and differ only in their budgets
 cutPresets.test.ts: the presets, each preset and the budgets are frozen, so no caller changes them for another
 formsCheck.test.ts: a change's net agrees to the last figure its key gives it
@@ -45,6 +45,11 @@ formsCheck.test.ts: the checker reports a wider site's change named other than t
 formsCheck.test.ts: the checker reports a wider site's change stated at its place and net with another size
 formsCheck.test.ts: the checker reports a wider site's change stated at its place with another net change
 formsCheck.test.ts: the checker takes only the tolerance, the naming rule and constants from structuralForms
+gfaTabixFile.test.ts: a contig-layout cut reaches off-reference neighbours as it hops
+gfaTabixFile.test.ts: a cut is byte-identical across calls
+gfaTabixFile.test.ts: a cut refuses a range that is not finite before querying
+gfaTabixFile.test.ts: an anchored cut holds whole without hops what a contig cut hops to
+gfaTabixFile.test.ts: an anchored cut marks the segments of a moved component
 refNames.test.ts: a PanSN name resolves under its sample and under its haplotype
 refNames.test.ts: a contig on two haplotypes of a sample resolves on each haplotype and throws on the sample
 refNames.test.ts: a pggb name with no haplotype field resolves under its sample
@@ -66,11 +71,6 @@ rgfaBed.test.ts: segmentSamples finds the tag beside other tags
 rgfaBed.test.ts: segmentSamples is undefined when the column says nothing
 rgfaBed.test.ts: segmentSamples reads the samples off the tag column
 rgfaBed.test.ts: segments at one position come out in the same order whichever arrived first
-rgfaCut.test.ts: a contig-layout cut reaches off-reference neighbours as it hops
-rgfaCut.test.ts: a cut is byte-identical across calls
-rgfaCut.test.ts: a cut refuses a range that is not finite before querying
-rgfaCut.test.ts: an anchored cut holds whole without hops what a contig cut hops to
-rgfaCut.test.ts: an anchored cut marks the segments of a moved component
 rgfaFormat2.test.ts: a %s cut of format 2 holds format 1 cut
 rgfaFormat2.test.ts: a format 2 node row names its carriers from #samples
 rgfaFormat2.test.ts: a format other than 2 is refused
@@ -141,6 +141,7 @@ walkBlocks.test.ts: a contained cut builds the piece whose own steps its context
 walkBlocks.test.ts: a contained cut keeps a placeholder within its context whole, as the loaded cut keeps its nodes
 walkBlocks.test.ts: a contained cut keeps its context’s bp of a placeholder, where the loaded cut keeps the node that straddles it whole
 walkBlocks.test.ts: a contained cut splits an unloaded piece where it steps off the window, as it splits the loaded one
+walkBlocks.test.ts: a cut over its placeholder limit is refused as its pieces are built, before the finished cut counts its steps
 walkBlocks.test.ts: a cut that expands a walk attaches the steps its unexpanded cut holds as placeholders, tile by tile
 walkBlocks.test.ts: a cut that expands a walk holds no link of a piece it does not build, where the piece’s detail unit holds one it builds
 walkBlocks.test.ts: a cut that expands a walk loads its piece between two over the drawn stretch, which lies off it, and of one past its last states the bp, with no blocks unit read
@@ -160,6 +161,7 @@ walkBlocks.test.ts: a piece whose first step is not its lowest is kept below bot
 walkBlocks.test.ts: a piece’s bp off R after its last step on R are read, the next piece unread
 walkBlocks.test.ts: a piece’s bp off R before its first step on R and after its last are read at a contig’s ends
 walkBlocks.test.ts: a placeholder is no node: it is flagged, as long as its run, placed on its walk’s contig and named for both
+walkBlocks.test.ts: a placeholder limit bounds the placeholders a cut keeps, whatever its nodes, and a cut that expands every walk keeps none to count
 walkBlocks.test.ts: a placeholder step is off the reference, and the steps a blocks row gives state their passes
 walkBlocks.test.ts: a record whose leave piece is abridged in a tile fetched for its own steps holds them, a placeholder from the abridged row and the record unless expanded, and that tile’s blocks unit is not read: $held
 walkBlocks.test.ts: a record whose own steps in a piece are not the run its blocks row ends with is refused
@@ -175,12 +177,15 @@ walkBlocks.test.ts: an abridged row that ends where the line’s next piece star
 walkBlocks.test.ts: an unloaded piece joins the next piece read, the bp off R between them a placeholder its record holds
 walkBlocks.test.ts: each piece of a detail unit holding several is read from its own blocks row
 walkBlocks.test.ts: every walk holding a placeholder in a cut of %s, in its steps, a departure’s or a gap’s, states its unloaded steps
+walkBlocks.test.ts: every window of $fixture is cut at a placeholder limit of the placeholders it keeps, and refused one below: $cuts cuts, $withPlaceholders of them with placeholders
+walkBlocks.test.ts: expand reads the walks under a list of PanSN prefixes as a function naming them would
 walkBlocks.test.ts: own steps beside a leave or rejoin that is no edge of a node of the tile’s reference path are refused
 walkBlocks.test.ts: placeholders do not count towards the node limit, and a cut says how many it returns
 walkBlocks.test.ts: the blocks unit counts against the byte budget, and in the bytes a cut is said to read
 walkBlocks.test.ts: the bytes of a tile fetched for own steps are checked with the blocks unit read before it, before it is fetched
 walkBlocks.test.ts: the file as written is read, unexpanded and expanded
 walkBlocks.test.ts: the forms cut covers a window with every haplotype stepping on it, whatever its end steps span
+walkBlocks.test.ts: the placeholder sweep cuts every fixture, and meets placeholders in each
 walkBlocks.test.ts: the steps an unloaded piece leaves out of a block stand as a skipped step, though they hold 0 bp
 walkBytes.test.ts: a cut that expands every walk reads its detail units, no blocks unit, and else what bytesFor counts but the blocks units, on %s
 walkBytes.test.ts: a cut that keeps fewer walks reads no more than bytesFor, on %s
@@ -231,9 +236,13 @@ walkDepartures.test.ts: a step back along R is a tandem copy at the junction
 walkDepartures.test.ts: a stretch of R walked against it is ALT and inverted
 walkDepartures.test.ts: a walk along R departs nowhere and covers what it reaches
 walkDepartures.test.ts: a walk along R through a node R holds reversed stays on R
+walkDepartures.test.ts: a walk forward at its flanks reads an inversion over most of the window as inverted
+walkDepartures.test.ts: a walk forward throughout that ends before where it began is not turned around
 walkDepartures.test.ts: a walk reading R mostly reversed is read the other way round
+walkDepartures.test.ts: a walk wholly inside an inversion reads as one stored back to front
 walkDepartures.test.ts: chains a departure record's rejoin to an unloaded piece whose first steps lie outside the drawn stretch, and trims a piece reaching past it, as the loaded read does
 walkDepartures.test.ts: keeps to FORMS_STEP_BUDGET steps at least, whatever smaller budget its caller gives
+walkDepartures.test.ts: one flank is enough to tell an inversion from a walk stored back to front
 walkDepartures.test.ts: paths named with no haplotype field are their sample’s, so a forms cut lists the header’s haplotypes and no other
 walkDepartures.test.ts: reads an unloaded walk as its loaded one when a piece of it lies in another tile
 walkDepartures.test.ts: reads each haplotype as its walks loaded when a departure covers own steps of an unloaded piece, or a piece runs against R
@@ -246,155 +255,166 @@ walkDepartures.test.ts: steps off R past either end of a walk are no departure
 walkDepartures.test.ts: throws DepartureReadError past its departure byte budget
 walkDepartures.test.ts: throws RegionTooLargeError past its byte budget
 walkDepartures.test.ts: throws on a contig both haplotypes of a diploid reference sample hold
+walkFile.test.ts: %s
+walkFile.test.ts: %s refuses a sequence the file lacks, listing those it holds
+walkFile.test.ts: 2^31 − 1 is read as itself, which is no placeholder
+walkFile.test.ts: a $kind row of a $unit unit without its last fixed column is a WalkRowError
+walkFile.test.ts: a %s unit holding a row of a kind it does not hold is refused
+walkFile.test.ts: a WalkFile takes exactly one walk file and at most one directory
+walkFile.test.ts: a column after a row’s fixed columns that is no well-formed tag is refused: %s
+walkFile.test.ts: a column after the fixed columns of a $kind row of a $unit unit is ignored where it is a tag, and refused where it is not
+walkFile.test.ts: a contained cut splits a walk where it steps onto the reference off the window
+walkFile.test.ts: a contig names its sequence on the reference sample
+walkFile.test.ts: a contig on both haplotypes of a diploid reference sample names its sequence by haplotype or full name
+walkFile.test.ts: a cut attaches the own steps of every record that rejoins on the window, however many tiles hold them
+walkFile.test.ts: a cut by contig is the cut by the file's name, and its tables hold its gaps
+walkFile.test.ts: a cut computes no departure outside its drawn stretch, even inside a fragment
+walkFile.test.ts: a cut fetches no tile for the own steps of records that jump over the window, and states each with its ends and its own bp
+walkFile.test.ts: a cut holding both pieces links the own step to the rejoin step on one line, and states a break between two
+walkFile.test.ts: a cut holding the leave piece alone states the same of both
+walkFile.test.ts: a cut keeps each node's bases when asked
+walkFile.test.ts: a cut keeps the departure lines overlapping its window, of the blocks it reads: 0-$end
+walkFile.test.ts: a cut keeps the reference and the haplotypes asked for
+walkFile.test.ts: a cut leaves out the reference's other pass over the window's nodes
+walkFile.test.ts: a cut lists each departure over the window, with the own steps it holds
+walkFile.test.ts: a cut lists no link over a hole in the reference that no walk crosses, where both sides lie in one tile
+walkFile.test.ts: a cut of four haplotypes lists between its nodes every link the file's walks take there
+walkFile.test.ts: a cut of four haplotypes lists the links its fragments walk, and between reference nodes no other
+walkFile.test.ts: a cut on a signal already aborted reads no row
+walkFile.test.ts: a cut over its byte budget by the tiles it fetches to attach advises a narrower window, and that window fits
+walkFile.test.ts: a cut over its departure budget fails without a zoom-in notice
+walkFile.test.ts: a cut over its node limit stops decoding at the tile that puts it over
+walkFile.test.ts: a cut over its step budget says how far to zoom in
+walkFile.test.ts: a cut reads the chunks under its context, not only under its window
+walkFile.test.ts: a cut reads the tiles and departure blocks its window overlaps, in one read where they touch, and a tile for the own steps of a record that leaves or rejoins on it alone: $window
+walkFile.test.ts: a cut reads the tiles its window overlaps, and nothing else
+walkFile.test.ts: a cut refused by $refusal is refused before decoding where the early count tells, with the error the finished cut throws but for fitsBp
+walkFile.test.ts: a cut returns every record whose line overlaps its window, in a hole too: $start-$end
+walkFile.test.ts: a cut whose attach fetches take it past the byte budget attaches none and says so
+walkFile.test.ts: a cut whose keep leaves the reference out lists the reference's link from one tile to the next with links 'between'
+walkFile.test.ts: a cut with no budgets is the cut with WALK_BUDGETS spelled out, and refuses a window past one its caller lowers
+walkFile.test.ts: a cut's drawn stretch takes every pass over the window, not one per node
+walkFile.test.ts: a cut's links run the way a walk along the reference takes them
+walkFile.test.ts: a cut's tables carry the header's revisited count, NaN where it states none
+walkFile.test.ts: a cut's tables state the pass each step takes, NaN for a step off R
+walkFile.test.ts: a departure across a contig's W lines counts the bp the graph lacks as missing
+walkFile.test.ts: a departure computed from steps takes its ends' pass counts from the ref rows
+walkFile.test.ts: a departure inside a piece links its own steps to the steps either side: $links
+walkFile.test.ts: a departure inside one piece gets its own steps where it leaves on the window, and none where it jumps over it, expanded or not: $own
+walkFile.test.ts: a departure's steps that lead to its rejoin lie where its walk has them, past the sequence its record is missing
+walkFile.test.ts: a direct jump across the window is a record with nothing of its own
+walkFile.test.ts: a directory and data that disagree are refused by %s
+walkFile.test.ts: a directory line of a later kind is ignored, and a sequence line with a column more is refused
+walkFile.test.ts: a file past 4 GiB is read at its exact offsets
+walkFile.test.ts: a file that is not a directory is refused
+walkFile.test.ts: a file that states its graph and the lines it leaves out cuts as one that does not
+walkFile.test.ts: a file with a later addition cuts as the file without it: $name, $cut
+walkFile.test.ts: a format %i walk file is refused, asking for a newer reader
+walkFile.test.ts: a host's fragment with fewer refStarts than steps gives the rest NaN places, not 0
+walkFile.test.ts: a host's fragment with ids trimmed and refStarts not gives the places of the steps it keeps
+walkFile.test.ts: a host's fragment with no refStarts gives its steps NaN places
+walkFile.test.ts: a jump back whose own steps lie in the rejoin piece gets them attached where it leaves or rejoins on the window, cut $start-$end
+walkFile.test.ts: a leave piece the read lacks is fetched for the own steps, once per tile, within the byte budget
+walkFile.test.ts: a link between two pieces of one W line holds though the contig's other W line numbers its pieces the same
+walkFile.test.ts: a link is written the way round with more + ends, the smaller first on a tie: $line
+walkFile.test.ts: a node longer than a tile is read from the tile whose extent holds it
+walkFile.test.ts: a node off the reference lies at the first step on it that the cut returns, as the file built without abridging has it
+walkFile.test.ts: a node off the reference takes no place from a walk the cut returns no step of
+walkFile.test.ts: a node on the reference states the strand the reference steps it on, though the cut keeps no step of the reference there
+walkFile.test.ts: a node placed off the reference states no strand of the reference
+walkFile.test.ts: a node the reference passes twice is placed at its pass over the window %i-%i
+walkFile.test.ts: a one-tile file whose tile holds what its table says is read
+walkFile.test.ts: a placeholder for own steps is linked to the steps its record leaves and rejoins
+walkFile.test.ts: a placeholder for own steps is not linked to a leave step its walk’s fragment lacks
+walkFile.test.ts: a range that is not finite queries nothing by %s
+walkFile.test.ts: a reader that cannot learn the data's length skips the directory's bytes check
+walkFile.test.ts: a record over a 0 bp segment alone holds no step, cut $start-$end
+walkFile.test.ts: a record over the attach threshold carries no steps, and the cut fetches no tile for them
+walkFile.test.ts: a record that jumps over the window keeps its ends and its own bp, and the cut fetches no tile for its own steps
+walkFile.test.ts: a record that rejoins on the window carries the walk's own steps, from the tile of its leave piece
+walkFile.test.ts: a record whose rejoin piece comes in a fetch for another record breaks where the cut returns no step beside its own
+walkFile.test.ts: a ref row whose passes do not count its steps is refused
+walkFile.test.ts: a region cut by a contig on both haplotypes of a diploid reference sample throws until one is named
+walkFile.test.ts: a region cut gives each node's bases when asked, and none otherwise
+walkFile.test.ts: a region cut names the file's sequence for a contig, and keeps the haplotypes asked for
+walkFile.test.ts: a region cut on a sequence the file lacks names the ones it holds
+walkFile.test.ts: a region cut over its node limit says how far to zoom in
+walkFile.test.ts: a route naming no :k leaves from the first pass of its entry the walk reaches
+walkFile.test.ts: a route's own steps inside one piece are a departure computed from the steps
+walkFile.test.ts: a row naming a route its tile lacks, mid-row, gets the decode refusal where the window without it is refused before decoding
+walkFile.test.ts: a second sequence's table covers the bytes from the first sequence's table on
+walkFile.test.ts: a sequence's length and the reference nodes over a window come from its tiles, and the bytes a cut reads from its table and its records' ownTiles
+walkFile.test.ts: a step between two on the window states its pass, off the window
+walkFile.test.ts: a step on a second pass over the window departs from that pass
+walkFile.test.ts: a table entry of length 0 is never read: $at
+walkFile.test.ts: a table whose entries cover every byte since the header is read, an entry of no bytes among them
+walkFile.test.ts: a table with %s is refused
+walkFile.test.ts: a tag after an abridged row's detail column names no other detail unit
+walkFile.test.ts: a tile cut partway through a gzip member is refused
+walkFile.test.ts: a tile fetched to attach gives its record the own steps and nothing else: $opts
+walkFile.test.ts: a tile with %s is refused
+walkFile.test.ts: a tile's R joins its ref rows in hapOffset order
+walkFile.test.ts: a unit of a kind the format does not give is read whatever its rows
+walkFile.test.ts: a unit of a kind the reader does not know is skipped
+walkFile.test.ts: a unit of a sequence of 0 bp, stating [0, 0), is read by no window
+walkFile.test.ts: a walk file whose directory states $walks is refused as format $format, with what to rebuild it with
+walkFile.test.ts: a walk jumping away for eight chunks and back has a record each way
+walkFile.test.ts: a walk leaving the window is cut there, and its record says where it rejoins
+walkFile.test.ts: a walk row takes the passes its :k, @k and start@k name, and the defaults where it names none
+walkFile.test.ts: a walk that leaves at the end of a node the window draws gets its own steps where the window holds the base it leaves from: to $end
+walkFile.test.ts: a walk through a 0 bp segment of the reference departs once over it
+walkFile.test.ts: a walksPath opens its directory at the path plus .idx
+walkFile.test.ts: a walksUrl finds its directory beside the data, before any query
+walkFile.test.ts: a window inside a hole in the reference returns the jump across it, whether or not the writer cut the walk there
+walkFile.test.ts: a window inside a jump finds the jump in the departure read
+walkFile.test.ts: a window of $rows, whose rows state more steps than its cut keeps, is cut with a budget of the $kept it keeps, and refused one below, before decoding where its count reaches it
+walkFile.test.ts: a window over a revisited reference, whose rows name passes by :k, @k and start@k and take its second route, is cut at the 22 steps it keeps and refused before decoding below the 20 its rows keep, as the finished cut refuses it
+walkFile.test.ts: a window over the budget is refused before decoding with fitsBp where its counted steps reach the budget, less the context: $fitsBp
+walkFile.test.ts: a window whose abridged pieces take it over the step budget is left to the finished cut where a walk is expanded under a node limit, a placeholder limit is set, or a blocks row does not add up to its abridged row
+walkFile.test.ts: a window whose abridged pieces take it over the step budget is refused before decoding, by the steps their blocks rows build, with the tile $tile
+walkFile.test.ts: a window whose blocks unit takes it past the byte budget gets the byte refusal, bytes and all, and one within it the early refusal
+walkFile.test.ts: a window whose records can fetch tiles to attach gets the refusal the finished cut throws, $refusal
+walkFile.test.ts: a window whose records can fetch tiles to attach is left to the finished cut under a node limit
+walkFile.test.ts: aborting an expanding cut stops its detail reads
+walkFile.test.ts: an abridged piece starting where the drawn stretch ends is not cut
+walkFile.test.ts: an abridged row's end takes the pass end@k names, else the one nearest its start
+walkFile.test.ts: an attach fetch reads an abridged piece's own steps where the cut expands the walk, and else holds a placeholder for them: $steps
+walkFile.test.ts: an expanded walk is read from its detail records as the unabridged file cuts it
+walkFile.test.ts: an expanding cut reads the detail units that touch in the file by one read, for the bytes and the tables of a file whose detail units lie apart
+walkFile.test.ts: an unloaded walk cuts to the fragment its loaded one does, a placeholder for its run of own steps, and lists the pieces it did not load
+walkFile.test.ts: an unread stretch beside an abridged piece the cut did not build has no breakpoint there, where its twin built without abridging states one
+walkFile.test.ts: detail records read at once, finishing in reverse, cut as reads one at a time do
+walkFile.test.ts: every window of $fixture, which abridges its walks, is cut at a step budget of the steps it keeps and refused below it as the finished cut refuses it: $cuts cuts, $unloaded of them with an unloaded piece
+walkFile.test.ts: every window of %s that returns a walk's same steps states the same break in each of its records
+walkFile.test.ts: every window of %s, expanding every walk, cuts as %s, its graph built without abridging, does
+walkFile.test.ts: gfa-to-tabix's entry-dropped file, a table that leaves out its departures unit's entry, is refused
+walkFile.test.ts: is a WalkRowError a consumer of the package can catch by type
+walkFile.test.ts: is refused in $where: $id
+walkFile.test.ts: keeps its reference position, in whichever order the chunks come
+walkFile.test.ts: of the records over a window, a cut fetches a tile for those alone that leave or rejoin on it
+walkFile.test.ts: own steps are not linked to a rejoin step their walk’s fragment lacks, though another walk keeps its node: $none
+walkFile.test.ts: own steps before the rejoin are linked to the node the record rejoins
+walkFile.test.ts: own steps that stop short of the rejoin node are not linked to it
+walkFile.test.ts: readInOrder keeps at most its limit reading, and uses results in order
+walkFile.test.ts: referenceNodes gives every pass of the reference over the region
+walkFile.test.ts: steps either side of a hole in the reference depart nowhere
+walkFile.test.ts: tables takes the departures, so the call without them is a type error
+walkFile.test.ts: tags a reader does not know are ignored on any row and header line
+walkFile.test.ts: the byte budget counts the tiles of the context past the window
+walkFile.test.ts: the header has no graph or lines left out where the walk file states neither
+walkFile.test.ts: the header names the format, the reference, the haplotypes, the tile size, the graph and the lines left out, read from byte 0 and no tile
+walkFile.test.ts: the node a record leaves is linked to its first own step, and its last to the node it rejoins, where the cut holds them
+walkFile.test.ts: the reference sequences leave out detail records and departures
+walkFile.test.ts: the same graph in 10 kb chunks computes the departure from the steps of one piece
+walkFile.test.ts: the same walks in pieces of their own cut whole, with the jumps as records
+walkFile.test.ts: the step budget sweep cuts every fixture, and meets unloaded pieces in each
+walkFile.test.ts: touchingRuns groups the units whose bytes touch, in file order, up to its byte limit, the runs in the order their first item was given
+walkFile.test.ts: two records whose leave pieces lie in adjacent chunks both get their own steps
 walkPlaceholderIds.test.ts: an id that stands for two runs and a run with two ids are each told, and a run met twice with its id is not
 walkPlaceholderIds.test.ts: holds placeholders, and is the same on a second fresh reader
 walkPlaceholderIds.test.ts: in every cut of %s each placeholder id stands for one run, and each run has one id
 walkPlaceholderIds.test.ts: is the same, ids and tables byte for byte, made beside other cuts of its reader
 walkPlaceholderIds.test.ts: is the same, ids and tables byte for byte, on a reader that has made other cuts
-walkReader.test.ts: %s
-walkReader.test.ts: 2^31 − 1 is read as itself, which is no placeholder
-walkReader.test.ts: a $kind row of a $unit unit without its last fixed column is a WalkRowError
-walkReader.test.ts: a %s unit holding a row of a kind it does not hold is refused
-walkReader.test.ts: a column after a row’s fixed columns that is no well-formed tag is refused: %s
-walkReader.test.ts: a column after the fixed columns of a $kind row of a $unit unit is ignored where it is a tag, and refused where it is not
-walkReader.test.ts: a contained cut splits a walk where it steps onto the reference off the window
-walkReader.test.ts: a contig names its sequence on the reference sample
-walkReader.test.ts: a contig on both haplotypes of a diploid reference sample names its sequence by haplotype or full name
-walkReader.test.ts: a cut attaches the own steps of every record that rejoins on the window, however many tiles hold them
-walkReader.test.ts: a cut computes no departure outside its drawn stretch, even inside a fragment
-walkReader.test.ts: a cut fetches no tile for the own steps of records that jump over the window, and states each with its ends and its own bp
-walkReader.test.ts: a cut holding both pieces links the own step to the rejoin step on one line, and states a break between two
-walkReader.test.ts: a cut holding the leave piece alone states the same of both
-walkReader.test.ts: a cut keeps each node's bases when asked
-walkReader.test.ts: a cut keeps the departure lines overlapping its window, of the blocks it reads: 0-$end
-walkReader.test.ts: a cut keeps the reference and the haplotypes asked for
-walkReader.test.ts: a cut leaves out the reference's other pass over the window's nodes
-walkReader.test.ts: a cut lists each departure over the window, with the own steps it holds
-walkReader.test.ts: a cut lists no link over a hole in the reference that no walk crosses, where both sides lie in one tile
-walkReader.test.ts: a cut of four haplotypes lists between its nodes every link the file's walks take there
-walkReader.test.ts: a cut of four haplotypes lists the links its fragments walk, and between reference nodes no other
-walkReader.test.ts: a cut on a signal already aborted reads no row
-walkReader.test.ts: a cut over its byte budget by the tiles it fetches to attach advises a narrower window, and that window fits
-walkReader.test.ts: a cut over its departure budget fails without a zoom-in notice
-walkReader.test.ts: a cut over its node limit stops decoding at the tile that puts it over
-walkReader.test.ts: a cut over its step budget says how far to zoom in
-walkReader.test.ts: a cut reads the chunks under its context, not only under its window
-walkReader.test.ts: a cut reads the tiles and departure blocks its window overlaps, in one read where they touch, and a tile for the own steps of a record that leaves or rejoins on it alone: $window
-walkReader.test.ts: a cut reads the tiles its window overlaps, and nothing else
-walkReader.test.ts: a cut refused by $refusal is refused before decoding where the early count tells, with the error the finished cut throws but for fitsBp
-walkReader.test.ts: a cut returns every record whose line overlaps its window, in a hole too: $start-$end
-walkReader.test.ts: a cut whose attach fetches take it past the byte budget attaches none and says so
-walkReader.test.ts: a cut whose keep leaves the reference out lists the reference's link from one tile to the next with links 'between'
-walkReader.test.ts: a cut with no budgets is the cut with WALK_BUDGETS spelled out, and refuses a window past one its caller lowers
-walkReader.test.ts: a cut's drawn stretch takes every pass over the window, not one per node
-walkReader.test.ts: a cut's links run the way a walk along the reference takes them
-walkReader.test.ts: a cut's tables carry the header's revisited count, NaN where it states none
-walkReader.test.ts: a cut's tables state the pass each step takes, NaN for a step off R
-walkReader.test.ts: a departure across a contig's W lines counts the bp the graph lacks as missing
-walkReader.test.ts: a departure computed from steps takes its ends' pass counts from the ref rows
-walkReader.test.ts: a departure inside a piece links its own steps to the steps either side: $links
-walkReader.test.ts: a departure inside one piece gets its own steps where it leaves on the window, and none where it jumps over it, expanded or not: $own
-walkReader.test.ts: a departure's steps that lead to its rejoin lie where its walk has them, past the sequence its record is missing
-walkReader.test.ts: a direct jump across the window is a record with nothing of its own
-walkReader.test.ts: a directory and data that disagree are refused by %s
-walkReader.test.ts: a directory line of a later kind is ignored, and a sequence line with a column more is refused
-walkReader.test.ts: a file past 4 GiB is read at its exact offsets
-walkReader.test.ts: a file that is not a directory is refused
-walkReader.test.ts: a file that states its graph and the lines it leaves out cuts as one that does not
-walkReader.test.ts: a file with a later addition cuts as the file without it: $name, $cut
-walkReader.test.ts: a format %i walk file is refused, asking for a newer reader
-walkReader.test.ts: a host's fragment with fewer refStarts than steps gives the rest NaN places, not 0
-walkReader.test.ts: a host's fragment with ids trimmed and refStarts not gives the places of the steps it keeps
-walkReader.test.ts: a host's fragment with no refStarts gives its steps NaN places
-walkReader.test.ts: a jump back whose own steps lie in the rejoin piece gets them attached where it leaves or rejoins on the window, cut $start-$end
-walkReader.test.ts: a leave piece the read lacks is fetched for the own steps, once per tile, within the byte budget
-walkReader.test.ts: a link between two pieces of one W line holds though the contig's other W line numbers its pieces the same
-walkReader.test.ts: a link is written the way round with more + ends, the smaller first on a tie: $line
-walkReader.test.ts: a node longer than a tile is read from the tile whose extent holds it
-walkReader.test.ts: a node off the reference lies at the first step on it that the cut returns, as the file built without abridging has it
-walkReader.test.ts: a node off the reference takes no place from a walk the cut returns no step of
-walkReader.test.ts: a node on the reference states the strand the reference steps it on, though the cut keeps no step of the reference there
-walkReader.test.ts: a node placed off the reference states no strand of the reference
-walkReader.test.ts: a node the reference passes twice is placed at its pass over the window %i-%i
-walkReader.test.ts: a one-tile file whose tile holds what its table says is read
-walkReader.test.ts: a placeholder for own steps is linked to the steps its record leaves and rejoins
-walkReader.test.ts: a placeholder for own steps is not linked to a leave step its walk’s fragment lacks
-walkReader.test.ts: a range that is not finite queries nothing by %s
-walkReader.test.ts: a reader that cannot learn the data's length skips the directory's bytes check
-walkReader.test.ts: a record over a 0 bp segment alone holds no step, cut $start-$end
-walkReader.test.ts: a record over the attach threshold carries no steps, and the cut fetches no tile for them
-walkReader.test.ts: a record that jumps over the window keeps its ends and its own bp, and the cut fetches no tile for its own steps
-walkReader.test.ts: a record that rejoins on the window carries the walk's own steps, from the tile of its leave piece
-walkReader.test.ts: a record whose rejoin piece comes in a fetch for another record breaks where the cut returns no step beside its own
-walkReader.test.ts: a ref row whose passes do not count its steps is refused
-walkReader.test.ts: a region cut by a contig on both haplotypes of a diploid reference sample throws until one is named
-walkReader.test.ts: a region cut names the file's sequence for a contig, and keeps the haplotypes asked for
-walkReader.test.ts: a region cut on a sequence the file lacks names the ones it holds
-walkReader.test.ts: a region cut over its node limit says how far to zoom in
-walkReader.test.ts: a route naming no :k leaves from the first pass of its entry the walk reaches
-walkReader.test.ts: a route's own steps inside one piece are a departure computed from the steps
-walkReader.test.ts: a row naming a route its tile lacks, mid-row, gets the decode refusal where the window without it is refused before decoding
-walkReader.test.ts: a second sequence's table covers the bytes from the first sequence's table on
-walkReader.test.ts: a sequence's length and the reference nodes over a window come from its tiles, and the bytes a cut reads from its table and its records' ownTiles
-walkReader.test.ts: a step between two on the window states its pass, off the window
-walkReader.test.ts: a step on a second pass over the window departs from that pass
-walkReader.test.ts: a table entry of length 0 is never read: $at
-walkReader.test.ts: a table whose entries cover every byte since the header is read, an entry of no bytes among them
-walkReader.test.ts: a table with %s is refused
-walkReader.test.ts: a tag after an abridged row's detail column names no other detail unit
-walkReader.test.ts: a tile cut partway through a gzip member is refused
-walkReader.test.ts: a tile fetched to attach gives its record the own steps and nothing else: $opts
-walkReader.test.ts: a tile with %s is refused
-walkReader.test.ts: a tile's R joins its ref rows in hapOffset order
-walkReader.test.ts: a unit of a kind the format does not give is read whatever its rows
-walkReader.test.ts: a unit of a kind the reader does not know is skipped
-walkReader.test.ts: a unit of a sequence of 0 bp, stating [0, 0), is read by no window
-walkReader.test.ts: a walk file whose directory states $walks is refused as format $format, with what to rebuild it with
-walkReader.test.ts: a walk jumping away for eight chunks and back has a record each way
-walkReader.test.ts: a walk leaving the window is cut there, and its record says where it rejoins
-walkReader.test.ts: a walk row takes the passes its :k, @k and start@k name, and the defaults where it names none
-walkReader.test.ts: a walk that leaves at the end of a node the window draws gets its own steps where the window holds the base it leaves from: to $end
-walkReader.test.ts: a walk through a 0 bp segment of the reference departs once over it
-walkReader.test.ts: a window inside a hole in the reference returns the jump across it, whether or not the writer cut the walk there
-walkReader.test.ts: a window inside a jump finds the jump in the departure read
-walkReader.test.ts: a window of $rows, whose rows state more steps than its cut keeps, is cut with a budget of the $kept it keeps, and refused one below, before decoding where its count reaches it
-walkReader.test.ts: a window over a revisited reference, whose rows name passes by :k, @k and start@k and take its second route, is cut at the 22 steps it keeps and refused before decoding below the 20 its rows keep, as the finished cut refuses it
-walkReader.test.ts: a window over the budget is refused before decoding with fitsBp where its counted steps reach the budget, less the context: $fitsBp
-walkReader.test.ts: a window whose blocks unit takes it past the byte budget gets the byte refusal, bytes and all, and one within it the early refusal
-walkReader.test.ts: a window whose records can fetch tiles to attach gets the refusal the finished cut throws, $refusal
-walkReader.test.ts: a window whose records can fetch tiles to attach is left to the finished cut under a node limit
-walkReader.test.ts: aborting an expanding cut stops its detail reads
-walkReader.test.ts: an abridged piece starting where the drawn stretch ends is not cut
-walkReader.test.ts: an abridged row's end takes the pass end@k names, else the one nearest its start
-walkReader.test.ts: an attach fetch reads an abridged piece's own steps where the cut expands the walk, and else holds a placeholder for them: $steps
-walkReader.test.ts: an expanded walk is read from its detail records as the unabridged file cuts it
-walkReader.test.ts: an unloaded walk cuts to the fragment its loaded one does, a placeholder for its run of own steps, and lists the pieces it did not load
-walkReader.test.ts: an unread stretch beside an abridged piece the cut did not build has no breakpoint there, where its twin built without abridging states one
-walkReader.test.ts: detail records read at once, finishing in reverse, cut as reads one at a time do
-walkReader.test.ts: every window of %s that returns a walk's same steps states the same break in each of its records
-walkReader.test.ts: every window of %s, expanding every walk, cuts as %s, its graph built without abridging, does
-walkReader.test.ts: gfa-to-tabix's entry-dropped file, a table that leaves out its departures unit's entry, is refused
-walkReader.test.ts: is a WalkRowError a consumer of the package can catch by type
-walkReader.test.ts: is refused in $where: $id
-walkReader.test.ts: keeps its reference position, in whichever order the chunks come
-walkReader.test.ts: of the records over a window, a cut fetches a tile for those alone that leave or rejoin on it
-walkReader.test.ts: open finds the directory beside the data, before any query
-walkReader.test.ts: own steps are not linked to a rejoin step their walk’s fragment lacks, though another walk keeps its node: $none
-walkReader.test.ts: own steps before the rejoin are linked to the node the record rejoins
-walkReader.test.ts: own steps that stop short of the rejoin node are not linked to it
-walkReader.test.ts: readInOrder keeps at most its limit reading, and uses results in order
-walkReader.test.ts: referenceNodes gives every pass of the reference over the region
-walkReader.test.ts: steps either side of a hole in the reference depart nowhere
-walkReader.test.ts: tables takes the departures, so the call without them is a type error
-walkReader.test.ts: tags a reader does not know are ignored on any row and header line
-walkReader.test.ts: the byte budget counts the tiles of the context past the window
-walkReader.test.ts: the header has no graph or lines left out where the walk file states neither
-walkReader.test.ts: the header names the format, the reference, the haplotypes, the tile size, the graph and the lines left out, read from byte 0 and no tile
-walkReader.test.ts: the node a record leaves is linked to its first own step, and its last to the node it rejoins, where the cut holds them
-walkReader.test.ts: the reference sequences leave out detail records and departures
-walkReader.test.ts: the same graph in 10 kb chunks computes the departure from the steps of one piece
-walkReader.test.ts: the same walks in pieces of their own cut whole, with the jumps as records
-walkReader.test.ts: two records whose leave pieces lie in adjacent chunks both get their own steps
 walkRows.test.ts: a #reference, #haplotype or #hole line that carries a tag reads as the line without it
 walkRows.test.ts: a 0 bp step a record attaches at the stretch’s end is kept as a 0 bp segment
 walkRows.test.ts: a computed departure’s steps past the row’s last fragment are its steps, and the reference past them is read
@@ -413,6 +433,7 @@ walkRows.test.ts: a record's own steps come from its leave and rejoin pieces, an
 walkRows.test.ts: a record’s attached steps, then its missing bp, fill the stretch between two W lines
 walkRows.test.ts: a row’s end reaches over a record leaving at it, and a record past the row stands alone
 walkRows.test.ts: a row’s start reaches back over a record rejoining at it
+walkRows.test.ts: a tile counted in part is refused by the steps counted, with fitsBp from the steps it is likely to keep
 walkRows.test.ts: a tile fetched for a record’s own steps gives those steps and nothing read
 walkRows.test.ts: a walk file's header states its format, tile, references, haplotypes and holes
 walkRows.test.ts: a walk file's header states its graph and the lines it leaves out, by name in any order, and a file without them is read alike

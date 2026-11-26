@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// The consumer-side check of claim C1: @jbrowse/graph-walks 8, the real
+// The consumer-side check of claim C1: @gmod/gfa-tabix 10, the real
 // reader of walk format 8, rebuilds from the walk files the tool writes every path exactly
 // as the GFA states it. Each fixture is built under the option sets of
-// check-walks.sh; each reference sample's file is opened with WalkReader,
+// check-walks.sh; each reference sample's file is opened as a WalkFile,
 // and every reference sequence S, a sequence the file lists, is cut whole,
 // [0, |S|), with context 0,
 // every haplotype kept, every budget lifted, every attach fetch allowed,
@@ -59,11 +59,11 @@
 //
 // Before the builds, the broken files BROKEN names in
 // docs/departures/scripts/broken/ must each fail the check, by a mismatch
-// or by graph-walks refusing the file. Exits 1 naming each failure; prints
+// or by gfa-tabix refusing the file. Exits 1 naming each failure; prints
 // one line per file otherwise.
 //
-// Usage: scripts/graph-walks-rebuild.mjs <graph-walks checkout> <gfa-to-tabix binary> ["fixture.gfa refs opts..." ...]
-//        scripts/graph-walks-rebuild.mjs <graph-walks checkout> --file <walks.gz> <gfa>
+// Usage: scripts/gfa-tabix-rebuild.mjs <gfa-tabix-js checkout> <gfa-to-tabix binary> ["fixture.gfa refs opts..." ...]
+//        scripts/gfa-tabix-rebuild.mjs <gfa-tabix-js checkout> --file <walks.gz> <gfa>
 // Needs a Node that strips types (22.18 or later): it imports the
 // checkout's src/index.ts directly.
 import { spawnSync } from 'node:child_process'
@@ -516,14 +516,13 @@ const CUT_OPTIONS = {
   byteBudget: Infinity,
   departureByteBudget: Infinity,
   attachBp: Infinity,
-  attachFetches: Infinity,
   nodeLimit: Infinity,
   links: 'none',
   sequences: true,
 }
 
 async function checkFile(
-  { WalkReader, isPlaceholder },
+  { WalkFile, isPlaceholder },
   walksPath,
   gfaPath,
   wholeSample = false,
@@ -534,10 +533,10 @@ async function checkFile(
   }
   const gfa = parseGfa(await readFile(gfaPath, 'utf8'))
   const files = {
-    data: new LocalFile(walksPath),
-    directory: new LocalFile(`${walksPath}.idx`),
+    walksFilehandle: new LocalFile(walksPath),
+    idxFilehandle: new LocalFile(`${walksPath}.idx`),
   }
-  const reader = WalkReader.fromFilehandles(files)
+  const walks = new WalkFile(files)
   const counts = {
     sequences: 0,
     fragments: 0,
@@ -556,9 +555,9 @@ async function checkFile(
     }
   }
   try {
-    const header = await reader.header()
+    const header = await walks.getHeader()
     const sample = header.references[0]
-    const listed = await reader.referenceSequences()
+    const listed = await walks.getReferenceSequences()
     const ref = referenceOf(gfa, listed)
     const exact = header.revisited === 0
     if (ref.sequences.size === 0) {
@@ -630,7 +629,7 @@ async function checkFile(
     }
     for (const seq of listed.filter(s => ref.sequences.has(s))) {
       counts.sequences++
-      const region = { start: 0, end: ref.lengths.get(seq) }
+      const end = ref.lengths.get(seq)
       const stated = header.holes.filter(h => h.refName === seq)
       const expectedHoles = ref.holes.get(seq)
       if (
@@ -640,10 +639,12 @@ async function checkFile(
           `${seq}: the header states holes ${stated.map(holeText).join(' ') || 'none'}, the GFA's lines leave ${expectedHoles.map(holeText).join(' ') || 'none'}`,
         )
       }
-      const { graph, fragments, departures } = await reader.cut(seq, region, {
-        ...CUT_OPTIONS,
-        expand: () => true,
-      })
+      const { graph, fragments, departures } = await walks.getCutForRange(
+        seq,
+        0,
+        end,
+        { ...CUT_OPTIONS, expand: () => true },
+      )
       counts.fragments += fragments.length
       counts.departures += departures.length
       for (const f of fragments) {
@@ -722,7 +723,12 @@ async function checkFile(
           }
         }
       }
-      const plain = await reader.cut(seq, region, CUT_OPTIONS)
+      const plain = await walks.getCutForRange(
+        seq,
+        0,
+        end,
+        CUT_OPTIONS,
+      )
       for (const f of plain.fragments) {
         const placeholders = f.ids.filter(isPlaceholder).length
         counts.placeholders += placeholders
@@ -756,9 +762,12 @@ async function checkFile(
       })
     }
   } catch (error) {
-    fail(`graph-walks refuses the file: ${error.message}`)
+    fail(`gfa-tabix refuses the file: ${error.message}`)
   } finally {
-    await Promise.all([files.data.close(), files.directory.close()])
+    await Promise.all([
+      files.walksFilehandle.close(),
+      files.idxFilehandle.close(),
+    ])
   }
   return {
     failures,
@@ -780,7 +789,7 @@ function report(label, { failures, summary }) {
   return failures.length === 0
 }
 
-async function checkBroken(graphWalks) {
+async function checkBroken(gfaTabix) {
   const cases = new Map(
     (await readFile(join(BROKEN_DIR, 'cases.tsv'), 'utf8'))
       .split('\n')
@@ -795,7 +804,7 @@ async function checkBroken(graphWalks) {
       ? join(BROKEN_DIR, '..', gfa)
       : join(DATA, gfa)
     const result = await checkFile(
-      graphWalks,
+      gfaTabix,
       join(BROKEN_DIR, `${name}.walks.gz`),
       gfaPath,
     )
@@ -809,8 +818,8 @@ async function checkBroken(graphWalks) {
   return ok
 }
 
-async function checkBuilds(graphWalks, binary, builds) {
-  const dir = mkdtempSync(join(tmpdir(), 'graph-walks-rebuild-'))
+async function checkBuilds(gfaTabix, binary, builds) {
+  const dir = mkdtempSync(join(tmpdir(), 'gfa-tabix-rebuild-'))
   let ok = true
   try {
     for (const build of builds) {
@@ -828,7 +837,7 @@ async function checkBuilds(graphWalks, binary, builds) {
       } else {
         for (const ref of refs.split(',')) {
           const result = await checkFile(
-            graphWalks,
+            gfaTabix,
             join(dir, `o.${ref}.walks.gz`),
             gfaPath,
             true,
@@ -851,20 +860,20 @@ if (misread.length > 0) {
 const [checkout, binary, ...rest] = process.argv.slice(2)
 if (checkout === undefined || binary === undefined) {
   console.error(
-    'Usage: graph-walks-rebuild.mjs <graph-walks checkout> <gfa-to-tabix binary> ["fixture.gfa refs opts..." ...]\n       graph-walks-rebuild.mjs <graph-walks checkout> --file <walks.gz> <gfa>',
+    'Usage: gfa-tabix-rebuild.mjs <gfa-tabix-js checkout> <gfa-to-tabix binary> ["fixture.gfa refs opts..." ...]\n       gfa-tabix-rebuild.mjs <gfa-tabix-js checkout> --file <walks.gz> <gfa>',
   )
   process.exit(2)
 }
-const graphWalks = await import(
+const gfaTabix = await import(
   pathToFileURL(join(resolve(checkout), 'src/index.ts')).href
 )
 const results =
   binary === '--file'
-    ? [report(rest[0], await checkFile(graphWalks, rest[0], rest[1]))]
+    ? [report(rest[0], await checkFile(gfaTabix, rest[0], rest[1]))]
     : [
-        await checkBroken(graphWalks),
+        await checkBroken(gfaTabix),
         await checkBuilds(
-          graphWalks,
+          gfaTabix,
           resolve(binary),
           rest.length > 0 ? rest : [...FIXTURES, ...EXTRA_BUILDS],
         ),

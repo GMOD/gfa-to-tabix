@@ -280,8 +280,8 @@ Two checks rebuild the graph's paths from a file:
   step, the reference's own lines from their `ref` rows with their
   lengths, and no line more or fewer. <!-- C1 --> It shards by path, so
   it runs on a whole chromosome
-- `scripts/graph-walks-rebuild.mjs` opens every fixture's files with
-  @jbrowse/graph-walks in CI, cuts each reference sequence whole with
+- `scripts/gfa-tabix-rebuild.mjs` opens every fixture's files with
+  @gmod/gfa-tabix in CI, cuts each reference sequence whole with
   every abridged piece expanded and demands every path, placement and
   departure back as the GFA states them, then cuts it again with none
   expanded and demands the same cut, each run off R as its bp

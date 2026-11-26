@@ -1,20 +1,20 @@
-// node scripts/anchored-windows.mjs GRAPH_WALKS PREFIX SEQ SPAN [WINDOW_BP] [N]
+// node scripts/anchored-windows.mjs GFA_TABIX PREFIX SEQ SPAN [WINDOW_BP] [N]
 //
 // For N random windows (default 50 of 10 kb) on SEQ, between 0 and SPAN: the
 // compressed bytes @gmod/tabix reads from PREFIX.segs.bed.gz and
-// PREFIX.links.bed.gz, and the subgraph graph-walks' anchoredCut keeps.
-// GRAPH_WALKS is a graph-walks checkout with its node_modules installed; Node
-// imports its TypeScript source directly.
+// PREFIX.links.bed.gz, and the subgraph @gmod/gfa-tabix's anchoredCut keeps.
+// GFA_TABIX is a gfa-tabix-js checkout with its node_modules installed;
+// Node imports its TypeScript source directly.
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
 
-const [graphWalks, prefix, seq, span, windowBp = '10000', n = '50'] =
+const [gfaTabix, prefix, seq, span, windowBp = '10000', n = '50'] =
   process.argv.slice(2)
-const require = createRequire(`${graphWalks}/package.json`)
+const require = createRequire(`${gfaTabix}/package.json`)
 const { TabixIndexedFile } = require('@gmod/tabix')
 const { LocalFile } = require('generic-filehandle2')
 const { anchoredCut, parseLinkLine, parseSegmentRow } = await import(
-  pathToFileURL(`${graphWalks}/src/rgfaBed.ts`).href
+  pathToFileURL(`${gfaTabix}/src/rgfaBed.ts`).href
 )
 
 class Counting extends LocalFile {

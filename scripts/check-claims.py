@@ -23,9 +23,9 @@ A check is `kind:what`, in backticks in the row's Check column:
 - `claims7:ID`, a claim of docs/departures/scripts/claims7.py
 - `verify7:text` and `audit7:text`, text in verify7.py or audit7.py
 - `script:path`, a file of the repository that runs the check
-- `graph-walks:title`, a test of graph-walks' format 8 reader, as
-  docs/walks-container/reader/graph-walks-tests.txt lists them. With
-  GRAPH_WALKS=<checkout>, the list must also match that checkout's tests
+- `gfa-tabix:title`, a test of @gmod/gfa-tabix's format 8 reader, as
+  docs/walks-container/reader/gfa-tabix-tests.txt lists them. With
+  GFA_TABIX=<checkout>, the list must also match that checkout's tests
 
 Usage: scripts/check-claims.py
 """
@@ -40,7 +40,7 @@ TRIPPED = ['docs/walks-format.md', 'docs/walks-writer.md', 'docs/walks-reading.m
            'docs/adr/0010-walks-unit-table.md']
 CLAIMED = TRIPPED + ['docs/adr/0009-departure-records.md']
 TABLE = ROOT / 'docs/departures/claims7.md'
-TESTS = ROOT / 'docs/walks-container/reader/graph-walks-tests.txt'
+TESTS = ROOT / 'docs/walks-container/reader/gfa-tabix-tests.txt'
 UNIVERSAL = re.compile(r'\b(every|each|never|always|only|unique|exactly)\b', re.I)
 ID = re.compile(r'<!--((?:\s*C\d+)+)\s*-->')
 failures = []
@@ -148,7 +148,7 @@ def exists(kind, what):
         return what in sources[kind]
     if kind == 'script':
         return (ROOT / what).is_file()
-    if kind == 'graph-walks':
+    if kind == 'gfa-tabix':
         return what in reader_tests
     return False
 
@@ -166,12 +166,12 @@ for claim, where in sorted(doc_ids.items(), key=lambda kv: int(kv[0][1:])):
     if claim not in rows:
         fail(f'{where}: {claim} has no row in claims7.md')
 
-if os.environ.get('GRAPH_WALKS'):
-    found = subprocess.run([sys.executable, '-I', str(ROOT / 'scripts/graph-walks-tests.py'),
-                            os.environ['GRAPH_WALKS']], capture_output=True, text=True, check=True).stdout
+if os.environ.get('GFA_TABIX'):
+    found = subprocess.run([sys.executable, '-I', str(ROOT / 'scripts/gfa-tabix-tests.py'),
+                            os.environ['GFA_TABIX']], capture_output=True, text=True, check=True).stdout
     if set(found.split('\n')) - {''} != reader_tests:
-        fail(f'{TESTS.relative_to(ROOT)} differs from the tests in {os.environ["GRAPH_WALKS"]}; '
-             'regenerate it with scripts/graph-walks-tests.py')
+        fail(f'{TESTS.relative_to(ROOT)} differs from the tests in {os.environ["GFA_TABIX"]}; '
+             'regenerate it with scripts/gfa-tabix-tests.py')
 
 for message in failures:
     print(message)

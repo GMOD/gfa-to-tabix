@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Holds graph-walks' cut over windows to window-oracle.py: builds every walk
-# fixture under the option sets graph-walks-rebuild.mjs uses, and
+# Holds gfa-tabix's cut over windows to window-oracle.py: builds every walk
+# fixture under the option sets gfa-tabix-rebuild.mjs uses, and
 # fuzz7-gen.py's random graphs, seeds 1 to $3 (10 by default), under
 # fuzz7.sh's variants; runs the oracle over every file with the checkout as
 # it is, then shows that each planted reader mistake in MUTANTS makes a file
@@ -9,11 +9,11 @@
 # random windows, each with context 0 and 1000, attachBp 6 and 65536,
 # expanded and not, comparing fragments, departures and the node table.
 # Exits 1 on a difference or on a mutant no file catches, naming it.
-# Usage: scripts/check-windows.sh <gfa-to-tabix binary> <graph-walks checkout> [seeds]
+# Usage: scripts/check-windows.sh <gfa-to-tabix binary> <gfa-tabix-js checkout> [seeds]
 set -u
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 B=$(readlink -f "${1:?the gfa-to-tabix binary}")
-GW=$(readlink -f "${2:?a graph-walks checkout with node_modules}")
+GW=$(readlink -f "${2:?a gfa-tabix-js checkout with node_modules}")
 SEEDS=${3:-10}
 dir=$(mktemp -d)
 trap 'rm -rf "$dir"' EXIT
@@ -77,20 +77,20 @@ while read -r f label r; do
 done < "$dir/files"
 echo "$files files checked, every window agreeing unless named above"
 
-# Each mutant is a file of graph-walks' src, the text it holds once, \n for a
+# Each mutant is a file of gfa-tabix's src, the text it holds once, \n for a
 # line break, and what replaces it, joined by %, each a mistake a reader of
 # the format could make. A mutant is caught where a file that passed above
 # has windows that differ
 MUTANTS=(
-  "tile-touching%walkReader.ts%unit.start < span.end && unit.end > span.start%unit.start <= span.end && unit.end > span.start"
-  "tile-edge-dropped%walkReader.ts%unit.start < span.end && unit.end > span.start%unit.start < span.end && unit.end > span.start + 1"
-  "context-short%walkReader.ts%  end: region.end + context,\n})%  end: region.end + Math.max(0, context - 1),\n})"
+  "tile-touching%walkFile.ts%unit.start < span.end && unit.end > span.start%unit.start <= span.end && unit.end > span.start"
+  "tile-edge-dropped%walkFile.ts%unit.start < span.end && unit.end > span.start%unit.start < span.end && unit.end > span.start + 1"
+  "context-short%walkFile.ts%  end: region.end + context,\n})%  end: region.end + Math.max(0, context - 1),\n})"
   "pieces-unjoined%walkRows.ts%pieces[i]!.piece !== pieces[i - 1]!.piece + 1%true"
   "step-touching%walkRows.ts%    if (at < end && to > start) {%    if (at <= end && to > start) {"
   "attach-touching%walkDeparture.ts%const on = (base: number) => base >= span.start && base < span.end%const on = (base: number) => base >= span.start && base <= span.end"
   "attach-below%walkDeparture.ts%d.ownBp <= attachBp && leavesOrRejoinsOn(d, drawn)%d.ownBp < attachBp && leavesOrRejoinsOn(d, drawn)"
-  "records-twice%walkReader.ts%for (const line of new Set(lines)) {%for (const line of lines) {"
-  "record-touching%walkReader.ts%+cols[2]! > span.start%+cols[2]! >= span.start"
+  "records-twice%walkFile.ts%for (const line of new Set(lines)) {%for (const line of lines) {"
+  "record-touching%walkFile.ts%+cols[2]! > span.start%+cols[2]! >= span.start"
   "computed-edge%walkRows.ts%if (lo < windowEnd && hi > windowStart) {%if (lo < windowEnd && hi > windowStart + 1) {"
   "computed-across-pieces%walkRows.ts%    const bounds = pieceBounds(run)\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      pairs.length = 0%    const bounds = [0, run.ids.length]\n    for (let p = 0; p + 1 < bounds.length; p++) {\n      pairs.length = 0"
   "drawn-from-nodes%walkRows.ts%  let windowStart = drawn?.start ?? Infinity%  let windowStart = Infinity"

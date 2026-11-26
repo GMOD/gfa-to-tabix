@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """window-oracle.py: what a cut over a window must return, by the rules of
-docs/walks-reading.md's Reading a window, against what @jbrowse/graph-walks'
+docs/walks-reading.md's Reading a window, against what @gmod/gfa-tabix's
 cut returns there.
 
 Every tile is decoded by spec8.py, the reader written from the page alone,
-which shares no code with graph-walks. For a window [s, e) of sequence S with
+which shares no code with gfa-tabix. For a window [s, e) of sequence S with
 context c, D = [max(0, s - c), e + c), every walk kept and expanded or none,
 and every budget lifted, the cut must return:
 
@@ -45,7 +45,7 @@ It does not check gaps, links, breakAt, contained cuts, keep filters or the
 budgets. The tiles a window reads are the page's rule, so a file whose pieces
 lie outside their tiles' extents fails spec8.py, not this check.
 
-  window-oracle.py WALKS GRAPH_WALKS [--seq S ...] [--every-window-up-to L]
+  window-oracle.py WALKS GFA_TABIX [--seq S ...] [--every-window-up-to L]
                    [--windows N] [--contexts 0,1000] [--attach-bp B] [--seed K]
 
 A sequence of L bp or fewer is cut at every [s, e); a longer one at the
@@ -321,7 +321,7 @@ def canonical(result):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("walks")
-    ap.add_argument("graph_walks")
+    ap.add_argument("gfa_tabix")
     ap.add_argument("--seq", action="append")
     ap.add_argument("--every-window-up-to", type=int, default=0)
     ap.add_argument("--windows", type=int, default=200)
@@ -341,7 +341,7 @@ def main():
     expands = [x == "yes" for x in args.expand.split(",")]
     attach_bps = [int(x) for x in args.attach_bp.split(",")]
     node = subprocess.Popen(
-        ["node", os.path.join(HERE, "window-cuts.mjs"), args.graph_walks, args.walks, "1" if args.digest else "0"],
+        ["node", os.path.join(HERE, "window-cuts.mjs"), args.gfa_tabix, args.walks, "1" if args.digest else "0"],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     counts = collections.Counter()
     shown = 0
@@ -368,7 +368,7 @@ def main():
                     if shown < args.most:
                         shown += 1
                         print(f"{seq}:{s}-{e} context {context} expand {expand} attachBp {attach_bp}: "
-                              f"graph-walks threw {got['error']}")
+                              f"gfa-tabix threw {got['error']}")
                     continue
                 (wf, wd, wn), (gf, gd, gn) = canonical(want), canonical(got)
                 if (wf, wd, wn) != (gf, gd, gn):

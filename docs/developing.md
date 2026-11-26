@@ -25,7 +25,7 @@ CI runs these on every push:
   rewrite them
 - `scripts/check-walks.sh`: builds every walk fixture and runs the release
   checks on each file, after showing that those checks fail on broken files
-- `scripts/graph-walks-rebuild.mjs`: @jbrowse/graph-walks cuts each
+- `scripts/gfa-tabix-rebuild.mjs`: @gmod/gfa-tabix cuts each
   reference sequence of every fixture's walk files whole and must give back
   every path, placement and departure the GFA states
 - `scripts/parity-fixtures.sh`: the `contig` layout against the JBrowse
@@ -33,8 +33,8 @@ CI runs these on every push:
 - `scripts/parity-fold.sh`: `fold` against the fold bandage-core runs in the
   graph track, byte for byte
 
-`scripts/check-windows.sh <gfa-to-tabix binary> <graph-walks checkout>`
-holds graph-walks' cut over windows to `scripts/window-oracle.py`, which
+`scripts/check-windows.sh <gfa-to-tabix binary> <gfa-tabix-js checkout>`
+holds @gmod/gfa-tabix's cut over windows to `scripts/window-oracle.py`, which
 works out what a window must return from the rules of
 [Reading a window](walks-reading.md#reading-a-window), over tiles decoded
 by the spec-only reader `spec8.py`: the fragments, the departures and
@@ -45,9 +45,9 @@ sequence, and the tile edges, holes, record ends and random windows of
 longer ones, on the fixtures and on random graphs, then shows that each
 planted reader mistake makes some file fail. Run
 `window-oracle.py --digest` on a hosted file to check its windows the same
-way. It isn't in CI, because a run takes over an hour. graph-walks 7.0.0
-and 8.0.0 failed it on windows inside a `#hole`, which 8.0.1 reads as the
-rules say (see C135 in
+way. It isn't in CI, because a run takes over an hour. @jbrowse/graph-walks
+7.0.0 and 8.0.0, the library's name before 10, failed it on windows inside
+a `#hole`, which 8.0.1 reads as the rules say (see C135 in
 [claims7.md](departures/claims7.md)).
 
 ## Design decisions

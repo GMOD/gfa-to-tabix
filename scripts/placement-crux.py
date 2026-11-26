@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """placement-crux.py: can a path graph's walk files stand in for its node and
-link index? docs/placement/scripts compares what graph-walks draws from each,
+link index? docs/placement/scripts compares what gfa-tabix draws from each,
 which ADR 0008 rests on; `windows` here compares node sets, a weaker test.
 
   placement-crux.py edges GRAPH.gfa|-

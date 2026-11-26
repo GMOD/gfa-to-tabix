@@ -976,7 +976,7 @@ differently with no reader the wiser:
 
 A reader need not detect a file that is not format 8. Past this list and
 the header's required tags it may read a file that breaks a rule as if
-it kept it: @jbrowse/graph-walks opens a file that states `tile:i:0`,
+it kept it: @gmod/gfa-tabix opens a file that states `tile:i:0`,
 writes a number `0100` or holds a space in a name. What holds a file to
 this page is the file checks, run by whoever writes or hosts it
 ([What the writer guarantees](walks-writer.md#what-the-writer-guarantees)).

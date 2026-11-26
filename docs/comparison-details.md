@@ -123,12 +123,13 @@ windows are spaced evenly along the chromosome.
   1-minute load average is under 3
   ([window-time.mjs](comparison/scripts/window-time.mjs)). For gfaidx it is
   the whole command, from process start to the GFA on disk
-- **Walk reader time:**
-  [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks), the
-  JavaScript library that reads walk files, returns every haplotype's path
-  through the window, run in Node with context 0 and no limit on the steps
-  returned. We timed it from a new reader, which first reads the file's
-  directory, header and unit table, and again on a reader already open
+- **Walk reader time:** @jbrowse/graph-walks, the JavaScript library that
+  reads walk files, since renamed
+  [@gmod/gfa-tabix](https://github.com/GMOD/gfa-tabix-js), returns every
+  haplotype's path through the window, run in Node with context 0 and no
+  limit on the steps returned. We timed it from a new reader, which first
+  reads the file's directory, header and unit table, and again on a reader
+  already open
 - **Browser preset:** graph-walks' `CUT_PRESETS.browser`, the options
   JBrowse's graph plugin and BandageJS cut with, on the walk file without
   bases: every haplotype, 1 kb of context either side of the window, and

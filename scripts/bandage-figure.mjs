@@ -1,12 +1,12 @@
-// node scripts/bandage-figure.mjs GFA_TO_TABIX GRAPH_WALKS BANDAGE_CORE
+// node scripts/bandage-figure.mjs GFA_TO_TABIX GFA_TABIX BANDAGE_CORE
 //
 // For each figure below: builds the walk file of docs/figures/<name>.gfa with
-// GFA_TO_TABIX, cuts the region through graph-walks' WalkReader, and writes
+// GFA_TO_TABIX, cuts the region through @gmod/gfa-tabix's WalkFile, and writes
 // the cut as docs/figures/<name>-cut.gfa and as bandage-core draws it,
 // docs/figures/<name>-bandage.svg, whose metadata keeps the options and the
 // region. scripts/figures.py reads them there, builds the walk file again,
 // checks the cut against it and puts the drawing in the figure.
-// GRAPH_WALKS is a graph-walks checkout with its node_modules installed, whose
+// GFA_TABIX is a gfa-tabix-js checkout with its node_modules installed, whose
 // TypeScript source Node imports directly; BANDAGE_CORE a bandage-core
 // checkout with dist built.
 //
@@ -17,7 +17,6 @@
 // places it.
 import { execFileSync } from 'node:child_process'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
-import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -32,10 +31,10 @@ const FIGURES = [
 const WIDTH = 640
 const LABEL = 'font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#1f2328"'
 
-const [binary, graphWalks, bandageCore] = process.argv.slice(2)
+const [binary, gfaTabix, bandageCore] = process.argv.slice(2)
 if (!bandageCore) {
   console.error(
-    'usage: node scripts/bandage-figure.mjs GFA_TO_TABIX GRAPH_WALKS BANDAGE_CORE',
+    'usage: node scripts/bandage-figure.mjs GFA_TO_TABIX GFA_TABIX BANDAGE_CORE',
   )
   process.exit(2)
 }
@@ -46,11 +45,8 @@ const figures = path.join(
   'figures',
 )
 const load = file => import(pathToFileURL(path.join(bandageCore, file)).href)
-const { LocalFile } = createRequire(path.join(graphWalks, 'package.json'))(
-  'generic-filehandle2',
-)
-const { WalkReader } = await import(
-  pathToFileURL(path.join(graphWalks, 'src', 'index.ts')).href
+const { WalkFile } = await import(
+  pathToFileURL(path.join(gfaTabix, 'src', 'index.ts')).href
 )
 const { graphFromTables, graphTablesGFA, drawingBounds, fitTransform, axisScaleOf } =
   await load('dist/index.js')
@@ -118,11 +114,12 @@ try {
     execFileSync(binary, [path.join(figures, `${name}.gfa`), ...args, '-o', prefix], {
       stdio: 'ignore',
     })
-    const reader = WalkReader.fromFilehandles({
-      data: new LocalFile(`${prefix}.GRCh38.walks.gz`),
-      directory: new LocalFile(`${prefix}.GRCh38.walks.gz.idx`),
-    })
-    const { tables, refName } = await reader.cutRegion(region)
+    const walks = new WalkFile({ walksPath: `${prefix}.GRCh38.walks.gz` })
+    const { tables, refName } = await walks.getGraphForRange(
+      region.refName,
+      region.start,
+      region.end,
+    )
     const graph = { ...graphFromTables(tables, name), referencePath: refName }
     const cut = { ...region, refName }
     const layout = layoutModeByValue('ordered').run(graph, cut)

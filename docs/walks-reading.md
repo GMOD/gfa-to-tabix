@@ -1,7 +1,7 @@
 # Reading walk files
 
 How a program reads a window of a [walk file](walks-format.md), as
-@jbrowse/graph-walks does, then the programs that read walk files and how
+@gmod/gfa-tabix does, then the programs that read walk files and how
 to host one. The terms are the format page's
 ([Terms](walks-format.md#terms)).
 
@@ -53,7 +53,7 @@ piece or rejoin piece the window's read lacks. It takes the record's own
 steps from them and nothing else <!-- C117 -->
 
 - Which records get one is the reader's choice: a record's line gives its
-  two ends and its `ownBp` without one. @jbrowse/graph-walks makes one
+  two ends and its `ownBp` without one. @gmod/gfa-tabix makes one
   for a record that leaves or rejoins on `D` with own steps within its
   `attachBp`, and for no other record
 - The own steps are the path's steps after its leave step and before its
@@ -104,15 +104,16 @@ steps from them and nothing else <!-- C117 -->
 ## Readers
 <!-- background -->
 
-- [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) 7 and later
-  read format 8, with `WalkReader.open(url)` or
-  `WalkReader.fromFilehandles({ data, directory })`, and refuse any other
-  format. Its README gives the options of a cut
+- [@gmod/gfa-tabix](https://github.com/GMOD/gfa-tabix-js) 10, and
+  @jbrowse/graph-walks 7 to 9 before its rename, read format 8, with
+  `new WalkFile({ walksUrl })` or
+  `new WalkFile({ walksFilehandle, idxFilehandle })`, and refuse any other
+  format. Its docs give the options of a cut
 - The file has no link rows: a reader takes a link from two consecutive
   steps of a path
 - The JBrowse graph genome viewer plugin,
   [BandageJS](https://jbrowse.org/demos/bandagejs/), ggbandage and
-  ggtubemap read through @jbrowse/graph-walks
+  ggtubemap read through @gmod/gfa-tabix
 - [scripts/walks-brief.py](../scripts/walks-brief.py) is one short
   Python file that prints every W and P line back from a walk file
 - jbrowse.org hosts HPRC v2.1's files in format 8, each with its `.idx`

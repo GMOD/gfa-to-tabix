@@ -473,7 +473,7 @@ def decode_tile(rows):
 
 
 def check_cut(lines, cut):
-    """Exits unless the cut graph-walks drew holds each path as the walk
+    """Exits unless the cut gfa-tabix drew holds each path as the walk
     file's rows decode it, its pieces joined in order."""
     decoded, reference = {}, []
     for unit, rows in units_of(lines):
@@ -522,7 +522,7 @@ def byte_range(offset, length):
 def bandage_figure(name, lines, directory, tint):
     """The GFA's W lines, the command, the walk file's directory line, table
     entries and units a read of the region fetches, and bandage-core's
-    drawing of graph-walks' cut there."""
+    drawing of gfa-tabix's cut there."""
     cut = (FIGURES / f"{name}-cut.gfa").read_text()
     check_cut(lines, cut)
     width, height, drawing = bandage_drawing((FIGURES / f"{name}-bandage.svg").read_text())
@@ -575,7 +575,7 @@ def bandage_figure(name, lines, directory, tint):
         show(unit, {4, 5})
         for f in rows:
             show(f, {1, 2}, tinted=tint(f))
-    arrow("graph-walks, bandage-core")
+    arrow("gfa-tabix, bandage-core")
     y -= 18
     c.out.append(f'<svg x="{left}" y="{y}" {drawing}')
     return c.svg(left + widest + 36, y + height + 12)

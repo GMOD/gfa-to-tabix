@@ -2,15 +2,19 @@
 
 gfa-to-tabix indexes a pangenome graph by genome coordinate, so a browser can
 fetch any region of it from a static web host without downloading the whole
-graph.
+graph. Read its files in JavaScript with
+[@gmod/gfa-tabix](https://github.com/GMOD/gfa-tabix-js), as
+[@gmod/bam](https://github.com/GMOD/bam-js) reads BAM.
 
 - **In:** a GFA file (`.gfa` or `.gfa.gz`): an rGFA from minigraph or
   Minigraph-Cactus (`*.sv.gfa.gz`), or a plain GFA with P or W lines from pggb,
   odgi or `vg convert -f`
 - **Out:** a node and link index, `<prefix>.graph.bed.gz`, that a graph track
-  reads at any locus
+  reads at any locus, through
+  [@gmod/gfa-tabix](https://github.com/GMOD/gfa-tabix-js)'s `GfaTabixFile`
 - **Out, with `--walks`:** walk files, `<prefix>.GRCh38.walks.gz`, holding every
-  haplotype's path through the graph
+  haplotype's path through the graph, read by
+  [@gmod/gfa-tabix](https://github.com/GMOD/gfa-tabix-js)'s `WalkFile`
 - The tool is one static binary and needs no bgzip or tabix
 
 ## Quick start
@@ -26,8 +30,9 @@ curl -fL https://github.com/GMOD/gfa-to-tabix/releases/latest/download/gfa-to-ta
 ./gfa-to-tabix build ecoli.gfa.gz --reference K12 -o ecoli
 ```
 
-- `build` writes the index and everything else a JBrowse graph track reads,
-  including a [track config](docs/subcommands.md#the-jbrowse-config)
+- `build` writes the index, which @gmod/gfa-tabix reads, and everything else a
+  JBrowse graph track reads, including a
+  [track config](docs/subcommands.md#the-jbrowse-config)
 - [Releases](https://github.com/GMOD/gfa-to-tabix/releases) also has a macOS
   binary for Apple silicon, and `cargo install gfa-to-tabix` builds one with
   Rust 1.91 or later
@@ -43,8 +48,8 @@ vg convert -f chr22.gbz > chr22.gfa
 `vg convert -f` writes from a GBZ. The command writes `chr22.GRCh38.walks.gz` in
 walk format 8, cut into tiles along GRCh38, and its directory
 `chr22.GRCh38.walks.gz.idx`. A viewer fetches the tiles over a region by range
-request, and [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks)
-rebuilds every haplotype's path through the region from them.
+request, and @gmod/gfa-tabix's `WalkFile` rebuilds every haplotype's path
+through the region from them.
 
 ![A 90 bp chr1 graph with GRCh38#0, HG002#1 and CHM13#0 as lines through its nodes, CHM13#0 dipping to a node of its own between 30 and 60; under it hprc.GRCh38.walks.gz as a bar of header, tile 0-30, tile 30-60, tile 60-90 and table, each tile under its stretch of chr1; tile 30-60 is shaded with the graph above it, and an arrow runs from table to the tile's bytes 278-417](docs/figures/walks-tile.svg)
 

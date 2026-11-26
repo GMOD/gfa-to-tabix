@@ -68,7 +68,7 @@ reader() {
 }
 # readers START UNDER: what a reader of a path's start, and one of what the
 # path is listed under, must exit with; a reader of both fails where either
-# does. graph-walks-rebuild.mjs, given no checkout to read, exits 1 at its
+# does. gfa-tabix-rebuild.mjs, given no checkout to read, exits 1 at its
 # table and otherwise 2, at its usage
 readers() {
   local both=0 node=2
@@ -79,7 +79,7 @@ readers() {
   reader walks-truth.py $both python3 -I scripts/walks-truth.py rebuild "$WORK/chunk.R.walks.gz" "$G"
   reader "cargo test, the table" $both $RUN cargo test --locked --bin gfa-to-tabix a_p_line_name_reads_as_the_shared_table_says
   if command -v node > /dev/null; then
-    reader graph-walks-rebuild.mjs $node node scripts/graph-walks-rebuild.mjs
+    reader gfa-tabix-rebuild.mjs $node node scripts/gfa-tabix-rebuild.mjs
   fi
 }
 echo

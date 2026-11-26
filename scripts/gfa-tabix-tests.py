@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Lists the test titles of a graph-walks checkout's format 8 reader tests,
-# one a line, sorted: the list docs/walks-container/reader/graph-walks-tests.txt
-# keeps, which check-claims.py checks claims7.md's graph-walks checks against.
+# Lists the test titles of a gfa-tabix-js checkout's format 8 reader tests,
+# one a line, sorted: the list docs/walks-container/reader/gfa-tabix-tests.txt
+# keeps, which check-claims.py checks claims7.md's gfa-tabix checks against.
 # A `test.each(table)(title, ...)` counts once, by its title.
-# Usage: scripts/graph-walks-tests.py <graph-walks checkout>
+# Usage: scripts/gfa-tabix-tests.py <gfa-tabix-js checkout>
 import pathlib
 import re
 import sys

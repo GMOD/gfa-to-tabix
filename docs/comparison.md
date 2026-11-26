@@ -17,7 +17,7 @@ program reads the result:
     split into pieces by the 64 kb stretch of one reference genome they fall
     in, with a `.idx` file that a reader uses to find the bytes of each
     stretch. The JavaScript library
-    [@jbrowse/graph-walks](https://github.com/GMOD/graph-walks) reads them
+    [@gmod/gfa-tabix](https://github.com/GMOD/gfa-tabix-js) reads them
 
   JBrowse's graph plugin
   ([jbrowse-plugin-graphgenomeviewer](https://github.com/GMOD/jbrowse-plugin-graphgenomeviewer))

@@ -1,19 +1,19 @@
 #!/usr/bin/env node
-// What @jbrowse/graph-walks' cut returns over each window it is given, in the
-// form window-oracle.py states what it must return: one JSON line per window
-// read from stdin, {seq, start, end, context, expand, attachBp}, each cut
-// with every walk kept and every budget lifted. A fragment is its
-// name, fragStart, hapStart, hapEnd, trimmedBefore, trimmedAfter and steps,
-// a departure its record's columns, fromSteps and own steps, a node its row
-// of graph.tables, placeholders aside, as name, refName, start, end, rank,
-// passes and reversed; a step on the
+// What @gmod/gfa-tabix's getCutForRange returns over each window it is
+// given, in the form window-oracle.py states what it must return: one JSON
+// line per window read from stdin, {seq, start, end, context, expand,
+// attachBp}, each cut with every walk kept and every budget lifted. A
+// fragment is its name, fragStart, hapStart, hapEnd, trimmedBefore,
+// trimmedAfter and steps, a departure its record's columns, fromSteps and
+// own steps, a node its row of the cut's tables, placeholders aside, as
+// name, refName, start, end, rank, passes and reversed; a step on the
 // reference is `refStart±` then `>id` or `<id`, a step off it `>id` or
 // `<id`, and a placeholder `~bp`.
 //
 // With digest 1, each list of steps is the first 16 hex digits of its text's
 // SHA-1.
 //
-// Usage: window-cuts.mjs <graph-walks checkout> <walks.gz> [digest] < windows.jsonl
+// Usage: window-cuts.mjs <gfa-tabix-js checkout> <walks.gz> [digest] < windows.jsonl
 import { createHash } from 'node:crypto'
 import { open, readFile } from 'node:fs/promises'
 import { createInterface } from 'node:readline'
@@ -44,12 +44,12 @@ class LocalFile {
 }
 
 const [checkout, walksPath, digest = '0'] = process.argv.slice(2)
-const { WalkReader, isPlaceholder } = await import(
+const { WalkFile, isPlaceholder } = await import(
   pathToFileURL(join(resolve(checkout), 'src/index.ts')).href
 )
-const reader = WalkReader.fromFilehandles({
-  data: new LocalFile(walksPath),
-  directory: new LocalFile(`${walksPath}.idx`),
+const walks = new WalkFile({
+  walksFilehandle: new LocalFile(walksPath),
+  idxFilehandle: new LocalFile(`${walksPath}.idx`),
 })
 
 const shown = text =>
@@ -76,9 +76,10 @@ for await (const line of lines) {
     const { seq, start, end, context, expand, attachBp } = JSON.parse(line)
     const out = { seq, start, end, context, expand }
     try {
-      const { graph, kept, fragments, departures } = await reader.cut(
+      const cut = await walks.getCutForRange(
         seq,
-        { start, end },
+        start,
+        end,
         {
           context,
           expand: () => expand,
@@ -90,6 +91,7 @@ for await (const line of lines) {
           links: 'none',
         },
       )
+      const { graph, fragments, departures } = cut
       out.fragments = fragments.map(f => [
         f.name,
         f.fragStart,
@@ -99,7 +101,7 @@ for await (const line of lines) {
         f.trimmedAfter,
         stepsText(graph, f.ids, f.rev, f.refStarts, f.against),
       ])
-      const { nodes } = graph.tables(kept, fragments, departures)
+      const { nodes } = cut.tables()
       out.nodes = Array.from(nodes.lengths, (length, i) => [
         nodes.names[i],
         nodes.refNames[nodes.refs[i]],
