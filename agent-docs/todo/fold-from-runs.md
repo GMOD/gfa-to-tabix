@@ -85,3 +85,20 @@ The review (read-only, from the notes and code) kept the goal and the checks and
 - **graph-fold `fold-runs`** (`~/src/graph-fold-runs`, 48ee1f3): frozen 1.2.0 oracle; `foldRuns`; range anchors; open ends behind `ends`; the distinct-walk count dropped; a walk with no reference step folds to one `off:<walk>:<bp>` node. Equal to the oracle on the six hosted windows at every threshold, outside those allowances. Fold at HLA 2.5 s to 0.6 s. Two Fable reviews applied. `pnpm prove`'s regenerated pictures (only the dropped count's text differs) are not committed.
 - **Open ends at HLA, 236 bp:** "walk starts inside the window" 388 to 0, now three open branches (24 kb deletion, 189 haplotypes; 927-935 bp for 3.9 kb, 173; 86 kb deletion, 26). The probe window's 153 "walk ends inside the window" go to 0. HG01109 and HG02055 agree with the VCF record at 32,486,309 as an 86,048 bp jump plus 713 bp of sub-threshold skips. This is a visible change: BEFORE/AFTER pairs first.
 - **Left out:** a haplotype whose departure spans the whole window has no fragment and drops out of the window's haplotype count without a word (graph-walks); departures landing inside the window are not drawn (README states it); 3 of 3,000 random tangled graphs fail `foldProblems` under 1.2.0 too.
+
+## Final truth review (Fable, 26 November): not ready as built
+
+Pairs and truth files: `~/src/walks8-evidence/sessions-20261126/plugin-runs-pairs/` (plugin `fold-runs` fa0eef06 against 10.12.0).
+
+- **Must change before release:**
+  - graph-fold draws no lead or tail stub for an end that draws no open branch. KIR's and LPA's "1 kb" stubs and hover sentences state the reader's context cap, and the plugin hover shows them (`HoverTooltip.tsx` prints events on the hovered node).
+  - `elsewhere` ends say nothing until one is verified; only `beyond` draws an open branch.
+  - The chr9 pericentromeric tile stays refused. Its fold is true to the cut, but the VCF cannot confirm it (390-454 of 464 genotypes missing at its deletions), and it hides that every haplotype crosses the window about twice. The rule: refuse a runs fold where walks per haplotype exceeds 1.5 (chr9 tile 2.16, chr2 2.81, about 1.00 at HLA, KIR, LPA and CFH), in bandage-core's `threadRunsInput`, so a refusal falls back to the cut.
+  - bandage-core and the plugin move to `@gmod/gfa-tabix` 10.1 (`getRunsForRange`, `haplotypes`, `nowhere`); every check reruns and the pairs are retaken on the exact versions; add a pair with an open branch in view.
+- **Filed for later:**
+  - a mark for open deletions, which draw nothing today, so HLA's 189 and 26 haplotypes simply begin mid-window;
+  - drawing a departure whose far end is inside the window;
+  - a genome-wide scan of walks per haplotype, and whether multi-crossing windows should fold at any size (10.12.0 probably draws chr9's pile-up below 29.9 kb already);
+  - a VCF check that fits in memory at chr9;
+  - LPA folds to about 25 long arcs with near-identical labels ("104-105 kb", "104 kb"), true but for the owner's eye;
+  - lone arrowheads on the reference where a contig ends (CFH, chr9) have no key entry, as before this change.
