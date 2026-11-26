@@ -1,6 +1,6 @@
 ---
 name: fold-from-runs
-description: graph-walks should read a window's walks as runs (a walk row's route choices, an abridged piece's blocks row) and hand graph-fold runs, so a folded every-haplotype window is built without minting steps or placeholders. At HLA class II the rows give every departure in about 1.2 s, where expanding and folding takes 28 s. It replaces the cut-time floorBp idea.
+description: graph-walks should read a window's walks as runs (a walk row's route choices, an abridged piece's blocks row) and hand graph-fold runs, so a folded every-haplotype window is built without minting steps or placeholders. At HLA class II the rows list every departure in about 1.2 s, where expanding and folding takes 28 s (cut 11.3 s, load 9.2 s, fold 7.6 s); a fold from runs is not yet timed. It replaces the cut-time floorBp idea.
 metadata:
   repo: graph-walks
 ---
@@ -59,3 +59,14 @@ Read from the code; nothing in it has been run yet.
 - **Mutants:** a run dropped; a block's strand flipped; a block's offset from the previous block; the bp at a piece join lost or counted twice; a record between pieces ignored; stretches merged across a hole; a contained walk not split off the window; a loaded tail clipped to `context`; two walks' names swapped. Control: `loaded` inverted fails runs equality and passes fold equality.
 - **VCF:** `/mnt/sdb/cdiesh/vcfcheck/vcf/hprc-v2.1-mc-grch38.raw.vcf.gz` on ada (path from `landing-review/scripts/vcfq.py`), checker `~/src/walks8-evidence/a36cf6aa/verify/vcfcheck/vcfcheck.ts`. Per record and phased haplotype: AT reference nodes lie in the walk's stretches with the token's strand, others in none, and own bp less reference span equals allele less REF length. Report, not fail, branches that join alleles of different AT, with the same count from runs and from the expanded cut.
 - The hosted GRCh38 file has no `#hole` line, so holes are checked on fixtures (`hole.R`, `holetile.R`, `refhole.R`).
+
+## Restaged after a Fable direction review (25 November)
+
+The review (read-only, from the notes and code) kept the goal and the checks and changed the order and size. These rulings replace the plan above where they differ.
+
+- **Profile before rewriting graph-fold.** A compact graph (real reference nodes plus one synthetic node per run) still holds about 8.4-8.8 M steps at HLA (20,882 reference nodes, a median of 20,883 steps per haplotype), so it removes cut and load time but not the 7.6 s fold. `foldWindow` parses and builds objects per step. Profile `foldGraph` 1.2.0 on the compact HLA graph the de-risk script builds; move the core to range anchors only if step count, not per-step overhead, is what costs.
+- **First release set:** graph-walks' runs reader plus bandage-core `foldThreadRuns` on the existing `foldGraph`, with open ends in the same set. No host stops refusing HLA, KIR or LPA before open ends ships: today's HLA fold says "walk starts inside the window" for 388 of 464 haplotypes, and only HG01109 and HG02055 are confirmed against the VCF as departures from outside. Every start or end said to be inside the window is checked against the walk's own contig before that release.
+- **Drop the distinct-walk count** from graph-fold's variation line rather than writing "at least": the expanded cut overcounts it and runs undercount it.
+- **The pericentromeric tiles** (chr9:38.8-39.9 Mb, chr2:91.4-91.6 Mb, chr4:49.1-49.4 Mb, chr14:19.2-19.7 Mb) stay equality stress tests and honest refusals; nobody asked to draw them.
+- **Measure the equal-length merge on the expanded cut** at HLA, KIR and LPA before folds from runs draw with shares, since runs carry no node identity to measure it later.
+- **One relation, not a fourth reading.** State how the runs reader relates to graph-walks' `Departure` (`walkDepartures.ts`) and `WalkRun`, and gate them against each other or derive one from the other.

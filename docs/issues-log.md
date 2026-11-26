@@ -2338,8 +2338,9 @@ Where the findings have come from so far, and the rule each gives:
   independent reviews, one each on need, routes and completeness, found
   the cost in how a reader builds a cut, not in the bytes. A walk row's
   route choices and an abridged piece's blocks row already state every
-  departure, so a reader can fold a window without building steps: about
-  1.2 s at HLA, against 28 s to expand and fold. Fix: the hosted bytes
+  departure, so a reader can list them without building steps: about
+  1.2 s at HLA (0.2 s without detail units), against 28 s to expand and
+  fold. A fold from runs is not yet timed. Fix: the hosted bytes
   stay. graph-walks `reader-fixes` adds `placeholderLimit`, an early
   refusal that counts abridged pieces from their blocks rows, and one read
   for touching detail units. A fold read from runs is a todo, and a
