@@ -14,7 +14,7 @@ On 26 November the owner, after the final truth review of the fold from runs: "i
 Nearly every false label found that week sat at a boundary of what the reader read:
 
 - the window's edge: "walk starts inside the window" for 388 of 464 haplotypes at HLA class II;
-- the read's own cap: `lead:`/`tail:` stubs and "sequence off the reference ... 1 kb", which state the cut's context. These are in released graph-fold 1.2.0 (`fold.ts` around lines 675 and 831), not only in the new runs path;
+- the read's own cap: `lead:`/`tail:` stubs and "sequence off the reference ... 1 kb", which state the cut's context. graph-fold 1.2.0 can draw them (`fold.ts` around lines 675 and 831), but a scan of 71 windows with plugin 10.12.0's own path found none, since its cut starts and ends each walk on the reference; only the unreleased contained runs read drew them, and graph-fold ccb66af removes them;
 - a contig's end: "walk ends inside the window" where the haplotype carries on in another contig;
 - placeholders and abridged pieces, in earlier rounds.
 
