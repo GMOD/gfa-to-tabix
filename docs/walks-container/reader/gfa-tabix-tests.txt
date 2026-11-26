@@ -468,3 +468,23 @@ walkRows.test.ts: several records in one stretch each keep their own sequence, w
 walkRows.test.ts: the haplotype filter keeps the named walks and the reference
 walkRows.test.ts: the reference walk is written first, whatever order the rows came in
 walkRows.test.ts: the tables key each stretch to its fragment’s walk and its steps to node indices
+walkRuns.test.ts: a contained cut keeps a lead and a tail of whole loaded nodes past its context, and of a placeholder only the context
+walkRuns.test.ts: a contained walk is split at its step onto the reference off the window, and its ends say where it went
+walkRuns.test.ts: a contig resolves on the reference sample to the file’s name for it, and the runs equal the cut’s read back
+walkRuns.test.ts: a deletion is two stretches with no run between, and an inverted stretch one taken against R
+walkRuns.test.ts: a departure record between pieces is a fragment’s end where its rejoin lies past the window
+walkRuns.test.ts: a jump back is a stretch that begins behind where the one before ends
+walkRuns.test.ts: a placeholder is a run of an abridged piece's blocks row, not loaded
+walkRuns.test.ts: a sequence the file lacks throws MissingSequenceError
+walkRuns.test.ts: a single-base variant is a run of 1 bp between two stretches, and the reference one stretch
+walkRuns.test.ts: a stretch never spans a hole, though the walk follows R across it
+walkRuns.test.ts: a walk that departs across the whole window holds no fragment, and its departures are listed as departing, computed in its piece or read from a record
+walkRuns.test.ts: each end equals the gap rows beside its fragment
+walkRuns.test.ts: every case is held by some cut
+walkRuns.test.ts: haplotypes keeps their walks beside the reference’s, as getGraphForRange does
+walkRuns.test.ts: no runs read a detail unit, or more bytes than bytesFor says of the window
+walkRuns.test.ts: pieces join into one stretch, and a departure record between them is a run
+walkRuns.test.ts: runDepartures reads where each fragment leaves a stretch along its way and rejoins the next
+walkRuns.test.ts: runs equal the cut read back as runs in every window
+walkRuns.test.ts: runs refuse every fixture whose header does not state revisited:i:0, and only those
+walkRuns.test.ts: walkDepartures reads the departures the runs read, haplotype by haplotype
