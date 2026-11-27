@@ -70,3 +70,18 @@ A fresh Fable read sorted each failure family against the walk rows and the raw 
 - **Not traced:** "HG00097, HG00097 among them" (ambiguous, on the website's lane labels), the `join:` node span, the website's length labels on nodes gone in the wider read, how often a cluster shift exceeds the threshold.
 - **The sweep's criterion changes:** per-haplotype claims are held to the stretches of the same read within the fold threshold; drawn-object claims to the fold's own members; the wider and deeper reads stay for two invariants (numbers do not change with context, a closed site's size equals its rows); an open node is keyed by its breakpoint and far position.
 - **Fix order:** hover event lines out; the clustering cap; "folded away"; website shares; haplotype counts for depth and width keys; edge nodes scoped.
+
+## Clustering redirected, 27 November
+
+A Fable design review (probes on ada in `agents/fold-steer/`, fixture `stack.mjs` reproduced here on graph-fold `claims` 08de756) broke the cap at the threshold:
+
+- Two adjacent sites of one run move independently, so a walk `a c d f` over reference `a b c d e f` (c and d 999 bp, threshold 1,000) is drawn `a f`, off 1,998 bp it walks.
+- At chr18:79,016,295-79,036,295 (1,000 bp) 89 sites change leader between the narrow and the wide read.
+- Ruling: cluster only sites with identical breakpoints, merging inserted lengths within the threshold. Over the sweep that draws 4,211 branches, against 3,925 released, 4,406 capped and 9,986 unclustered (reviewer's emulation, open sites and reverting runs left out). Whether a 5% length bound stays is settled by BEFORE/AFTER pictures.
+- With it: exact depth (a haplotype counts on a node it walks at least 1 bp of; 34,433 pairs in the sweep count one that walks none), and the "folded away" amount kept once it excludes the reader's context.
+- Checks, per haplotype against its own stretches in the same read: departures at its own breakpoints; on a reference node exactly where the unclustered fold puts it; inserted length inside the box's stated range.
+- Seen and not in this batch:
+  - many hidden gaps add up: at chr15:21,474,653-21,574,653 (1,000 bp) HG02738#2 is drawn on a 32,985 bp node of which it walks 8,506; 22,270 drawn pairs in 113 windows miss the threshold or more in total;
+  - a short run at a walk's end is drawn in a narrow read and hidden in a wider one (`chain.ts:116`), not measured;
+  - 23 windows stay over 50 branches under every rule, the collapsible-bubble layer's job.
+
