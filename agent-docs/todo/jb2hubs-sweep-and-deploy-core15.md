@@ -1,13 +1,13 @@
 ---
 name: jb2hubs-sweep-and-deploy-core15
-description: jb2hubs main pins bandage-core 15.0.0 (d8d1841e), but the website was neither swept with check-pangenome-graphs nor deployed, since another session had unreviewed work on main; genomes.jbrowse.org still runs an older core, whose figure keys print the folded-length range labels 15.0.0 removes (inferred from its code, not seen).
+description: jb2hubs main pins bandage-core 15.1.0 (570f4a3d), but the website was neither swept with check-pangenome-graphs nor deployed, since another session had unreviewed work on main; genomes.jbrowse.org still runs an older core, whose figure keys print the folded-length range labels 15.0.0 removes (inferred from its code, not seen).
 metadata:
   repo: jb2hubs
 ---
 
-# Sweep and deploy jb2hubs on bandage-core 15.0.0
+# Sweep and deploy jb2hubs on bandage-core 15.1.0
 
-- Pinned on 27 November (`d8d1841e`); typecheck, type-aware lint and tests
+- Pinned on 27 November (`570f4a3d`); typecheck, type-aware lint and tests
   pass in its Lint run. The run fails only on oxfmt over other sessions'
   agent-docs markdown, as it has since 25 November.
 - Still owed, by jb2hubs' own handoff `pangenome-page-trim.md` ("When the core
