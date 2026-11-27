@@ -1,6 +1,6 @@
 ---
 name: jb2hubs-sweep-and-deploy-core15
-description: jb2hubs main pins bandage-core 15.0.0 (d8d1841e), but the website was neither swept with check-pangenome-graphs nor deployed, since another session had unreviewed work on main; genomes.jbrowse.org still runs an older core and prints the false range labels 15.0.0 removes.
+description: jb2hubs main pins bandage-core 15.0.0 (d8d1841e), but the website was neither swept with check-pangenome-graphs nor deployed, since another session had unreviewed work on main; genomes.jbrowse.org still runs an older core, whose figure keys print the folded-length range labels 15.0.0 removes (inferred from its code, not seen).
 metadata:
   repo: jb2hubs
 ---

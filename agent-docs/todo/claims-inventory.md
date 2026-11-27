@@ -52,4 +52,21 @@ After the fold-from-runs release (`fold-from-runs.md`). Plan it with one read-on
   - mark checks from figure data;
   - host and structural-forms text;
   - gate wiring.
-- In progress: the sweep, gfa-to-tabix branch `claims-sweep`.
+- Built: the sweep, gfa-to-tabix branch `claims-sweep` (480 seeded windows, three reads each; red on the released stack, each planted break caught).
+
+## The sweep's failures classified, 27 November
+
+A fresh Fable read sorted each failure family against the walk rows and the raw VCF: `~/src/walks8-evidence/sessions-20261127/claims-classify/reply.md`, probes on ada in `agents/claims-classify/`. The wider read is not the truth: in several families it is the false one.
+
+- **False, the picture itself:** clustering redraws a site at its leader's breakpoints with slack of 5% of the event size (graph-fold `cluster.ts` `near`, `clusterTolerance` 0.05, on from bandage-core `threadFold.ts:488`), not bounded by the fold threshold. A haplotype is drawn walking 2,552 bp it does not walk (chr18:20,853,563, depth 92 against the VCF's 88), and one walked against GRCh38 drops out (chr20:30,005,257, 877 bp at a 50 bp threshold). Depth, "walked against" and share numerators inherit it. Fix: cap the slack at the fold threshold.
+- **False, text:**
+  - "n of m": m is every haplotype with a piece anywhere in the read. Remove the hover event lines (plugin `HoverTooltip.tsx` `eventLines`).
+  - "N folded away in each" grows with the read's context (2 kb, 4.1 kb, 11 kb at 1, 3, 10 kb context for one thread). Print the count alone, or leave lead and tail bp out in graph-fold.
+  - Website shares: the denominator is every haplotype with a step in the read (`graphLabels.ts:262-311`), and the abridged guard is lost after folding (`graphLabels.ts:269`).
+- **True but unscoped:**
+  - a folded reference node at the read's edge prints a length, range and node count that end where the read ends;
+  - lane-width keys and hover depth count walk records under the word "walks".
+- **True, a checker artifact:** "in place of" on open branches; the sweep keys an open node by one flank and its closed twin by two (`printed.mjs:32-35`).
+- **Not traced:** "HG00097, HG00097 among them" (ambiguous, on the website's lane labels), the `join:` node span, the website's length labels on nodes gone in the wider read, how often a cluster shift exceeds the threshold.
+- **The sweep's criterion changes:** per-haplotype claims are held to the stretches of the same read within the fold threshold; drawn-object claims to the fold's own members; the wider and deeper reads stay for two invariants (numbers do not change with context, a closed site's size equals its rows); an open node is keyed by its breakpoint and far position.
+- **Fix order:** hover event lines out; the clustering cap; "folded away"; website shares; haplotype counts for depth and width keys; edge nodes scoped.
