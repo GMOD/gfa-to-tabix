@@ -48,3 +48,20 @@ description: Live thread from 27 November. Two Opus implementers were mid-work w
 - ada's shell is zsh; `lib.sh` helpers need `bash -c`.
 - `~/.claude2` hit its monthly spend limit on 27 November (weekly reset 2 December); this session ran on `~/.claude`.
 - Leftover merged worktrees to remove once the `claims` branches no longer need them: `~/src/BandageJS-unstated-axis`, `~/src/jb2plugins/jbrowse-plugin-graphgenomeviewer-unstated-axis`.
+
+## jb2hubs `page-truth` reported (head 17859a5c, unpushed, unreviewed, its claims not yet checked by anyone)
+
+The session hit its usage limit as this arrived. What the implementer says:
+
+- A row is lit only where exactly one thread holds its haplotypes and no others (`litThreads`, `pangenomeWalkCut.ts:72`); the cut holds only placed haplotypes; graph shares are off (`nodeShares: false`); `compactKey: true`.
+- GSTM1's cause was not the VCF states: `@gmod/gfa-tabix` joins departures under 50 bp apart and marks a join only by net length (`esm/structuralForms.js:68`, `:110-111`), so 82 haplotypes with the deletion and the insertion 20 bp on read as GRCh38's structure. Now a "realigned" row (15% / 66% / 18%, lanes 70, 305, 82).
+- `check-pangenome-graphs`, extended: 18 of 18 ok on the branch, 18 of 18 fail on production. Suite 905 of 905, typecheck and lint 0.
+- **Worse, to decide before it lands:**
+  - 23 of 73 drawn rows light nothing when clicked, and the page does not say why;
+  - LPA opens on its whole 130 kb window as an unlit 50-node tangle, undoing "LPA per row" without a decision;
+  - shares on loops and deletion arcs are gone, including the arc share approved on 25 November; one denominator needs bandage-core to leave GRCh38's own walk out of its shares;
+  - RHD's reference row is lit by default and not when clicked;
+  - AMY1 still opens with no graph (145 nodes against a 60-node limit).
+- **VCF check of the 12 pages:** many agree; the page undercounts at FCGR, MNS, PGA, KIR (missing haplotypes sit in "other forms" or are unplaced, so "N of M aligned here" undercounts); KIR 28.3 kb and 48.3 kb insertions, LPA's KIV-2 changes and AMY1's duplications disagree both ways. Not fixed.
+- For bandage-core, not done: `threadLayers` skipping a pick it holds, `threadLabel` dropping repeats, `pickLabel` keeping `#1`.
+- BEFORE, AFTER and MAIN (`origin/main` on a dev server) for all 18 pages: `~/src/walks8-evidence/sessions-20261127/jb2hubs-page-truth/<page>/`, with `pairs.jsonl` and `findings.jsonl`.
