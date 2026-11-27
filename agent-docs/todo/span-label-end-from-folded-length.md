@@ -1,6 +1,6 @@
 ---
 name: span-label-end-from-folded-length
-description: Confirmed 26 November - on any folded graph, bandage-core derives a walk's stated end and its node hover positions by summing drawn node lengths, so released 14.10.0 / plugin 10.13.0 print false haplotype ends (53 of 55 one-haplotype labels, by up to 1,341 bp), labels for several-haplotype threads that are true for no member, and false hover positions. Fix in progress on `stated-spans` branches.
+description: Confirmed 26 November - on any folded graph, bandage-core derives a walk's stated end and its node hover positions by summing drawn node lengths, so released 14.10.0 / plugin 10.13.0 print false haplotype ends (53 of 55 one-haplotype labels, by up to 1,341 bp), labels for several-haplotype threads that are true for no member, and false hover positions. Fixed on `stated-spans` branches (bandage-core ce7d669, plugin 3aa38c4c, BandageJS 4b7b03c0, ggbandage 3e6f117), reviewed; waits on the owner's approval page https://claude.ai/artifact/38Wk61jDZpHX1rT7LUKEyQ.
 metadata:
   repo: bandage-core
 ---
