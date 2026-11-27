@@ -32,3 +32,24 @@ Inside the window, the drawings agree with the VCF (774 of 776 HLA carriers, 306
 ## Order
 
 After the fold-from-runs release (`fold-from-runs.md`). Plan it with one read-only Fable planner, review the plan with a fresh Fable, then implement with Opus.
+
+## Planned and reviewed, 27 November
+
+- Plan (Fable planner) and its 67-row inventory: `~/src/walks8-evidence/sessions-20261127/claims-plan/` (`plan.md`, `inventory.jsonl`). A fresh Fable review accepted it with changes; its probes are on ada in `agents/claims-review/`.
+- The review's corrections, checked in code:
+  - "N folded away" is not sound: at cut ends the read's own lead and tail bp are absorbed into it (graph-fold `fold.ts` around 1015-1022 and 1104-1111, `variationOf` around 160-171), up to about 1 kb.
+  - The "n of m" denominator counts the reference and leaves out departing haplotypes (`runs.ts:168`, `fold.ts:1357`).
+  - Node depth and link passes count pieces under a key that says walks (bandage-core `threadFold.ts:386-392`).
+  - "In place of" ignores link sides (`referenceSpan.ts:22-28`), so a `join:` node can print a span that nothing replaced.
+  - The inversion call is a window vote (`fold.ts:666-669`).
+- Both Fable reads recommend removing the plugin hover's graph-fold event lines (and with them every graph-fold sentence), shipping depth-as-haplotypes in the same release, and keeping `ThreadEvent` as data.
+- Amended order:
+  - a sweep over all three fold routes (contained runs, the website's cut fold, the plugin's cut-fold fallback), red on the released stack;
+  - an owner page with BEFORE/AFTER pairs for the hover lines, `lead:`/`tail:` nodes, "folded away" and the website's shares;
+  - one graph-fold major plus the core hover fixes;
+  - VCF checks on printed strings;
+  - shares;
+  - mark checks from figure data;
+  - host and structural-forms text;
+  - gate wiring.
+- In progress: the sweep, gfa-to-tabix branch `claims-sweep`.
