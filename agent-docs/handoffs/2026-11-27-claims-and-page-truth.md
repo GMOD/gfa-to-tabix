@@ -153,3 +153,23 @@ Heads reviewed: graph-fold 263b0c5, bandage-core 9c7895f, plugin a44f7e40. Its s
   - evidence: `~/src/walks8-evidence/sessions-20261127/jb2hubs-page-truth/` (`AFTER*` is the rework, `AFTER-exact*` the superseded rule)
 - **Next, in order:** finish and verify the claims branches; one technical and one user-view re-review of the changed parts; one approval artifact for the owner with BEFORE/AFTER examples (fold release with chr7's lost thick arc, the pages as decided, a site-collapse prototype); then graph-fold 2.0.0, bandage-core 16.0.0, the plugin, the hosts, and the genomes.jbrowse.org deploy.
 - The owner has said to arbitrate design calls by independent review and bring only what truly needs them, as an artifact with examples.
+
+## The example-page design is decided (Fable decider, 27 November); not yet built or shown to the owner
+
+- **Ruling:** a mixture on the reworked lighting. Rows stay groups of haplotypes read from the walks; the split lighting stays; every haplotype count leaves the graph, so the row is the only key and the only number. Rows are not rebuilt as fold routes (the fold splits rows on differences nobody can see: PGA 92 and 19 over a 1 bp breakpoint, HP 242 and 3, HBA 29 and 1). Per-row graphs go everywhere.
+- **Rule for a graph page, all three:** its whole window draws as one folded graph; "other forms" holds 10% or less; at least one non-reference row lights something the reference row does not. Otherwise a walk-rows page.
+  - Graph pages: CFHR, UGT2B17, PRSS, GSTM1, CYP2D6, C4, HBA, FCGR, RHD, HP, PGA, GSTT1.
+  - Walk rows of a fixed named panel, no event rows, shares or folded graph: AMY1, LPA, KIR, HLA, FLNA. KIR's and MNS's whole-window fold was not tested.
+  - MNS withdrawn.
+- **Before it ships, in order:**
+  - lane-count lines out of the key (a bandage-core option, or the page's own key); "depth" and "links" lines out; shares stay off;
+  - a row prints its haplotype count beside its share;
+  - `pageKind` deleted: "deletion" and "insertion" only where every member's other side is 0 bp, no merging across that line (GSTT1's "37.2 kb deletion" is 37,159 bp for 6 bp);
+  - KIR's deletion stated as its two skips;
+  - HP's 3 explained, and the check fails where the reference row lights off the reference route;
+  - rows that cannot draw are not clickable;
+  - "other forms" becomes "other combinations", the count column "haplotypes with exactly these";
+  - the cited-allele box counts from the same members (GSTM1's says 390 beside rows of 305 and 82);
+  - the walk-rows pages; then `graphPerRow` and the per-row cut go.
+- **Interim deploy:** nothing before the new fold is released. Then the twelve graph pages with the first four changes; KIR, HLA and FLNA map-only; AMY1, LPA and MNS off the example list until their pages exist. The owner sees the pairs first.
+- **Its confidence:** 85% that LPA and AMY1 must not be folded-graph pages, 75% on the row as the only count, 60% on KIR, HLA, FLNA and MNS, with no picture of those as they would ship. Row counts checked against the hosted walk file for eight pages (`jb2hubs-page-truth/groups.out`).
