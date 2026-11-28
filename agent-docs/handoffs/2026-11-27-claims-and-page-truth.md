@@ -173,3 +173,16 @@ Heads reviewed: graph-fold 263b0c5, bandage-core 9c7895f, plugin a44f7e40. Its s
   - the walk-rows pages; then `graphPerRow` and the per-row cut go.
 - **Interim deploy:** nothing before the new fold is released. Then the twelve graph pages with the first four changes; KIR, HLA and FLNA map-only; AMY1, LPA and MNS off the example list until their pages exist. The owner sees the pairs first.
 - **Its confidence:** 85% that LPA and AMY1 must not be folded-graph pages, 75% on the row as the only count, 60% on KIR, HLA, FLNA and MNS, with no picture of those as they would ship. Row counts checked against the hosted walk file for eight pages (`jb2hubs-page-truth/groups.out`).
+
+## Claims branches finished after the reviews (implementer's account, not yet re-reviewed or checked by anyone)
+
+This replaces the "may have died mid-task" note above for the claims implementer. Nothing pushed, no `file:` pin committed.
+
+- **Heads, one commit each, full CI 0 on ada:** graph-fold 16bd317 (270 tests), bandage-core 72f47c2 (2,085), plugin bf918fba rebased on 10.15.0 (1,272); sweep committed on `claims-sweep` 0c8a9d9. Tarballs `gf-16bd317.tgz` and `bc-72f47c224.tgz` with `manifest.tsv` in `ada:~/work/walks8-gates/agents/claims-fixes/pack/`; jb2hubs `page-truth` was shot on the older pair and needs a re-sweep.
+- **Done:** variant A only; members and "folded away" no longer depend on context; `foldProblems` guards `outerBp`; hover strings from core (`foldedNodeTitle`, `foldedNodeLines`, `nodeLengthText`): range or length and span, "88 haplotypes", names by sample#haplotype, "and N more haplotypes"; one count per node; link ends on a fold are places on the reference; no key entry reads 0 (that was a stale bundle in the first shot); edge node "ends at 100,323,689; continues past the left edge".
+- **Refused, with reason:** dropping a short run at the read's end erases a real inversion with short flanks, and the reviewer's own input still disagrees between reads with it. Reverted. The window dependence at `chain.ts:109-125` stays open.
+- **Left as is:** the key footnote "2 skips under 916 bp not drawn" is bandage-core's zoom-level fold of simple sites, a real second threshold. "about 1.9 kb of smaller differences not drawn, in each" is a haplotype's total over its whole route in the read, not at the hovered node, and the wording does not say so.
+- **Not rerun on the final heads:** the sweep's planted breaks (run once on the previous build: cut, length, range and new-string all caught). Sweep still red: edge depth on the cut route 162, edge link ends 346, website shares; unexpected: edge titles 10 and 81, 9 edge depths.
+- **chr7 and chr15, from data:** chr7's old "206-216 kb" branch of 139 haplotypes shares both breakpoints (102,503,825-102,520,471); variant A splits it by inserted length alone, and 215,001 and 215,057 land in different boxes 56 bp apart. So one band per site labelled with its true range would be exact there. chr15's two "268 kb" arms differ by 7 bp in the left breakpoint.
+- **Release versions:** graph-fold 2.0.0; bandage-core 16.0.0 on `^2.0.0` (`walkKeyEntry` loses its fourth parameter, `nodeEndLabel` gains a side); plugin on `^16.0.0`; ggbandage needs a bundle rebuild.
+- Pictures: `claims-fixes/<item>/` with `AFTER` new and `AFTER-1` the first round.
