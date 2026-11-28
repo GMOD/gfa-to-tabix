@@ -65,3 +65,16 @@ The session hit its usage limit as this arrived. What the implementer says:
 - **VCF check of the 12 pages:** many agree; the page undercounts at FCGR, MNS, PGA, KIR (missing haplotypes sit in "other forms" or are unplaced, so "N of M aligned here" undercounts); KIR 28.3 kb and 48.3 kb insertions, LPA's KIV-2 changes and AMY1's duplications disagree both ways. Not fixed.
 - For bandage-core, not done: `threadLayers` skipping a pick it holds, `threadLabel` dropping repeats, `pickLabel` keeping `#1`.
 - BEFORE, AFTER and MAIN (`origin/main` on a dev server) for all 18 pages: `~/src/walks8-evidence/sessions-20261127/jb2hubs-page-truth/<page>/`, with `pairs.jsonl` and `findings.jsonl`.
+
+## Claims fixes reported (unpushed; ada refused connections before the last runs)
+
+- **Heads:** graph-fold `claims` 263b0c5, bandage-core `claims` 9c7895f, plugin `claims` 98a74891. No `file:` pin is committed; the pins are uncommitted on ada.
+- **Clustering:** only sites with identical breakpoints join, inserted lengths under the threshold apart (variant A, the default); `clusterTolerance` given adds a share bound (variant B). The seven-walk fixture draws `a c d f` on the branch (rerun here).
+- **Implementer's cluster check** over the 480 sweep windows, each walk against its own plain fold: released 5,148 branches and 67 red windows, cap 5,792 and 57, A 5,500 and 0, B 6,417 and 0, unclustered 11,987. Before any fix 1,656 clustered alleles in 36 of 477 windows were moved by the threshold or more, the worst 3,233 bp.
+- **Also built:** `outerBp` out of "folded away"; event sentences and `ThreadEvent.text` gone; depth counts haplotypes that walk at least 1 bp (0 of 3,469 interior nodes disagree); link passes count a haplotype once; width keys say haplotypes; edge nodes print "GRCh38 chr4, to 100,323,689".
+- **Run on ada:** graph-fold lint, format, typecheck, 296 tests, build and pack all 0. bandage-core lint, typecheck and suite 0 at 589be8e; format failed on one test file, fixed in 9c7895f, not rerun.
+- **Not run:** the plugin's full suite, typecheck and lint (related tests 243 of 244, the one failure fixed and not rerun); the sweep with the five new templates and the open-range matcher; the three planted breaks on the new stack; the chr15 and "folded away" picture retakes.
+- **Pictures:** `~/src/walks8-evidence/sessions-20261127/claims-fixes/` (BEFORE, AFTER, AFTER-B). Looked at chr18 and chr7: depth 92 becomes 88 at chr18, keys read haplotypes, and both are somewhat busier (chr18 284 to 347 nodes, chr7 45 to 60; the "206-216 kb" box becomes four). A and B draw alike at chr7 and chr20.
+- **Left red by design or not in the batch:** edge name, edge depth and "Edge:" link ends against a wider read; website shares; "nodes folded into it" in a deeper read of the cut route.
+- **ada:** the ssh master died and one reconnect on 27 November was refused. No further ssh until the owner says it is up.
+
