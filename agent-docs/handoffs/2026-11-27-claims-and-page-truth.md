@@ -135,3 +135,21 @@ Heads reviewed: graph-fold 263b0c5, bandage-core 9c7895f, plugin a44f7e40. Its s
 - The example pages' design (reworked lighting against rows rebuilt as the graph's routes) goes to a fresh Fable decider once the lighting rework's pictures exist; that also settles LPA, KIR and HLA and what an interim deploy carries.
 - To the owner only as one artifact with examples: the fold release (chr7 loses its thick arc), the pages once decided, the site-collapse mark.
 
+
+## Where the session stopped (out of tokens), 27 November: read this first
+
+- **Nothing from today's branches is pushed, released or deployed.** Worktrees when this was written:
+  - `~/src/graph-fold-claims` d7672df fix!, 0 uncommitted files
+  - `~/src/bandage-core-claims` 1a356e4 A fo, 0 uncommitted files
+  - `~/src/jbpgv-claims` 1e80f684 wip, 0 uncommitted files
+  - `~/src/jb2hubs-page-truth` 5f81c6cb23e3, 0 uncommitted files
+- **Two agents were still running and may have died mid-task:**
+  - the claims implementer, on the combined list (user-view fixes, hover cut to facts, technical-review changes). bandage-core and the plugin may hold wip commits and uncommitted edits; read the diffs before trusting them, and rerun full suites on ada.
+  - a Fable decider on the example-page design. If it left no verdict, rerun it: its brief is to choose between production, the reworked lighting, and rows rebuilt as the graph's own routes with walk rows leading at copy-number loci, per page, from the pictures.
+- **jb2hubs `page-truth` rework (5f81c6cb), implementer's account, pictures looked at for HBA, LPA, KIR:**
+  - each folded thread is split by row (`splitByRows`, `pangenomeWalkCut.ts`), so a row lights its own haplotypes on every route (HBA 29 + 1, KIR 28 + 6); no "realigned" (GSTM1 "18.4 kb deletion, 18.4 kb insertion"); merged rows named by range; HLA, KIR and LPA per row by a `graphPerRow` flag; AMY1 opens with a graph
+  - suite 905 of 905, typecheck and lint 0; `check-pangenome-graphs` 18 of 18 on the branch, fails on production, three planted breaks red; built on the tarballs in `ada:~/work/walks8-gates/agents/claims-fixes/pack/` by an uncommitted override
+  - still bad: LPA is a tangle with 18 lane counts in the key and row names like "6.05-20.7 kb → 88.4-104 kb +2 more"; AMY1's row of 179 lights lanes of 179 and 131 (a haplotype on two routes counts on both); carriers undercounted against the VCF at FCGR, MNS, PGA and KIR, since some sit in "other forms"; shares gone; bandage-core cannot leave a lifted lane out of the key
+  - evidence: `~/src/walks8-evidence/sessions-20261127/jb2hubs-page-truth/` (`AFTER*` is the rework, `AFTER-exact*` the superseded rule)
+- **Next, in order:** finish and verify the claims branches; one technical and one user-view re-review of the changed parts; one approval artifact for the owner with BEFORE/AFTER examples (fold release with chr7's lost thick arc, the pages as decided, a site-collapse prototype); then graph-fold 2.0.0, bandage-core 16.0.0, the plugin, the hosts, and the genomes.jbrowse.org deploy.
+- The owner has said to arbitrate design calls by independent review and bring only what truly needs them, as an artifact with examples.
