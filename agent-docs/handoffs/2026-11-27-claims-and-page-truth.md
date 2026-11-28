@@ -78,3 +78,20 @@ The session hit its usage limit as this arrived. What the implementer says:
 - **Left red by design or not in the batch:** edge name, edge depth and "Edge:" link ends against a wider read; website shares; "nodes folded into it" in a deeper read of the cut route.
 - **ada:** the ssh master died and one reconnect on 27 November was refused. No further ssh until the owner says it is up.
 
+## Fable review of jb2hubs `page-truth`: do not land as it stands
+
+Read-only review as a technical reader and a first-time visitor; it had no ada, so it checked against the hosted walk file (GSTM1, RHD, KIR), ran no tests, and did not view every BEFORE and MAIN picture. Three citations checked here (`litThreads`, `PLACED_SLACK`, the "drawn, not lit" note).
+
+- **Keep:** the cut restricted to placed haplotypes, `compactKey`, GSTM1's three rows (70, 305 and 82 are true of the walks), graph shares off for now.
+- **Redo the lighting.** Lighting only an exact row-thread match leaves 33 of 83 row clicks with no lit lane and gets worse under identical-breakpoint clustering (PGA's 172 lane splits to 122 and 50). Ruling to build: split each folded thread by row membership in page code, one path per (thread, row) with the intersection as its members and count. Every drawable row then lights its own carriers on each route they take, and lane counts sum to the row (HBA 29 + 1, KIR's deletion 28 + 6). Unprototyped: lane stacking where a row fans over many threads, and whether `figureSvg` takes split paths.
+- **Required with it:**
+  - HLA, KIR and LPA per row by an explicit rule, not by `FOLDED_NODE_LIMIT`;
+  - "realigned" replaced by what the walk does ("18.4 kb deletion, 18.4 kb insertion", both marks drawn); the rule tests length only (`pangenomeWalkForms.ts:96-107`, `:183-199`), and a joined departure with net change over 10% and under the floor still reads as GRCh38's structure;
+  - land with or after the graph-fold change, and re-sweep;
+  - alt text "lit: none" on unlit graphs (`PangenomeGraph.tsx:87`);
+  - `check-pangenome-graphs` fails on a drawable row that lights nothing, an opening view with no lit row, and lit members that differ from the row's carriers; each proven by a planted break.
+- **False on production today, untouched by the branch:** KIR's "29.6 kb deletion, 7%" holds 6 haplotypes that skip 31.3 kb, since `PLACED_SLACK` (`pangenomePanels.ts:402`) merges changes within 10% and names the row by the lead's size. Likely the same at PGA, LPA, AMY1 and HLA, not verified. Name merged rows by a size range or do not merge across breakpoints.
+- **Can follow:** `pageKind` calls a replacement with one side under 50 bp a deletion or insertion (`pangenomeWalkForms.ts:51-69`), against the 0 bp wording rule; the netted-join fix belongs in gfa-tabix, after which `joinedDepartures` goes; shares back on one denominator once core counts haplotypes; "depth 2 to 462" given a unit or dropped; AMY1 needs its own view; the VCF matcher fails RHD, where the page is right.
+- **Pages that should not ship as on the branch:** HBA, HP, FCGR, KIR, MNS, LPA; AMY1 unchanged and still broken.
+- Blocked: the rework needs ada for tests and renders.
+
