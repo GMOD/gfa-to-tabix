@@ -14,7 +14,15 @@ description: Live thread from 27 November. Two Opus implementers were mid-work w
   - sweep: gfa-to-tabix `claims-sweep` 96cd135 (`~/src/gfa-to-tabix-claims-sweep`)
 - **Two agents were running when the session ended.** They cannot be resumed; read their folders.
   - Fable plan for the fold release's three open problems: links nobody walks ("0 haplotypes" in the key), drawing a collapsed site as bundled arms, and what one branch node claims when same-length members walk different nodes. The plan also covers the unclassified sweep reds (chr16 segdup cut joins, VNTR chr1:598,700, chr15 website length). Probes in `ada:~/work/walks8-gates/agents/fold-hard-plan/`. If it left no verdict, rerun it. Its brief is the three problems, as stated in the "Fold release round 3" bullet at the end of this file.
-  - Opus synteny step 1: our own lane-pair aligner without gbz-base (primary chain plus secondary records, with a coverage invariant failing on today's AMY1), `laneRibbons` defaulting to `'neighbours'`, and lane chips against hg38 removed. Work in `ada:~/work/walks8-gates/agents/synteny-step1/`; pictures go to `~/src/walks8-evidence/sessions-20261128/synteny-step1/`. Check the branch's log and its tests before trusting it.
+  - **Synteny step 1 finished** (plugin `synteny-neighbours` b45a94b0 in `~/src/jbpgv-synteny`, from 10.15.0):
+    - **Commits:** cc519fcf is our own lane-pair aligner, with no gbz-base in the walk adapter: a primary chain plus secondary chains of 100 bp or more, records carry `pairing`, and `droppedBases` reports what goes undrawn. b45a94b0 makes `'neighbours'` the default.
+    - **Runs and tests:** full suite, typecheck and lint all 0 on ada. `pairCoverage.test.ts` runs on an AMY1 cut; it fails 16 of 50 tests on old code, and three planted breaks each turn it red.
+    - **AMY1 coverage:** each adjacent pair goes from 26–40% to 100%, with reversed ribbons drawn as blue crossings. LPA, KIR and chr7 are unchanged pixel for pixel.
+    - **Pictures:** `walks8-evidence/sessions-20261128/synteny-step1/`. I looked at AMY1's AFTER; it reads as a real multiway figure.
+    - **Left open:**
+      - lane chips ("94 kb deletion …") come from jbrowse-components `MultiWaySyntenyDisplay/laneHeader.ts` `laneHeaderRows`, a one-line change there;
+      - faint secondary ribbons cross the AMY1 window as noise; make them paler via `ribbons.encoding.opacity` keyed on `pairing`, or raise the secondary floor;
+      - jb2hubs `LANE_HEIGHT_PX` 40 → about 110.
 - **Owner rulings, 28 November:**
   - No walk lanes or walk rows shown to users.
   - Individual walks are shown only as a true multiway synteny rendering: ribbons between adjacent rows and gene models per row ("the only way this really works for me").
