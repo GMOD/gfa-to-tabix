@@ -111,3 +111,27 @@ Read-only review as a technical reader and a first-time visitor; it had no ada, 
   - Proposed order: one release train (variant A, event lines out, haplotype depth, edge nodes, hover cut to facts) on one approval page; a removal-only page deploy; the lanes button; a site-collapse prototype at chr18, chr7, chr15, LPA and KIR; stale handoffs deleted and the hover-nicety, pggb, lanes and swatch todos parked.
 - **Asked of the owner:** page rebuild or lighting rework; interim removal-only deploy; AMY1, LPA, KIR and HLA leading with walk rows; one openable mark per site as a new mark; one approval page per release train; the forms track hidden until its audit.
 
+## Technical review of the claims branches: accept with named changes
+
+Heads reviewed: graph-fold 263b0c5, bandage-core 9c7895f, plugin a44f7e40. Its scripts and inputs: `/tmp/claude-1001/-home-cdiesh-src-gfa-to-tabix/7ea69ed4-ab31-44d5-846c-1901d01123ad/scratchpad/techreview/` (scratch, may be cleared). All of the below was sent to the implementer, with the user-view fixes and the hover cut to facts.
+
+- **Sound:** clustering cannot move a walk's reference route (0 failures on 15,000 fuzz inputs under a stricter comparison than the repo's; five cluster mutants go red); `outerBp` is counted once; depth never counts a haplotype with no step on the node.
+- **To change:**
+  - four bandage-core mutants pass all 2,083 tests (a hidden skip inside a walked node, link passes per thread, `clippedBp` on reference nodes, the key's zero entry);
+  - `foldProblems` does not guard `outerBp`;
+  - `leave` calls `hold`, so a node's members grow with the read's context;
+  - a sub-threshold `beyond` end still makes "folded away" depend on context;
+  - a short run at the read's end is drawn in a narrow read and dropped in a wide one (`chain.ts:109-125`); ruling: it says nothing, dropped like an inner one;
+  - an edge node's name and its "Edge:" link ends say nothing on the read's side;
+  - one count per node: hover names, link counts and `labelledNodeShares` use the haplotypes that walk it;
+  - setting descriptions still speak of passes;
+  - `clusterTolerance` and variant B removed (A is chosen); the `clamp` plant retargeted at the insertion node's length;
+  - the sweep as run is not committed, and `printed.mjs` rebuilds the plugin hover instead of calling it.
+- **At release:** graph-fold 2.0.0, bandage-core 16.0.0 on `^2.0.0`, plugin on `^16.0.0` rebased on 10.15.0. jb2hubs takes the new core only with `nodeShares: false` or after shares use depth. Tube maps: `todo/tube-maps-read-removed-graph-fold-api.md`.
+
+## Rulings after the owner said to arbitrate, 27 November
+
+- Variant A; the hover cut to facts; one approval page per release; AMY1 leads with walk rows; the forms track stays visible, with the netted-join fault first in graph-walks' queue and its audit after; a site-collapse mark is prototyped at chr18, chr7, chr15, LPA and KIR; hover-nicety, pggb, lanes and swatch todos parked, the lanes button built.
+- The example pages' design (reworked lighting against rows rebuilt as the graph's routes) goes to a fresh Fable decider once the lighting rework's pictures exist; that also settles LPA, KIR and HLA and what an interim deploy carries.
+- To the owner only as one artifact with examples: the fold release (chr7 loses its thick arc), the pages once decided, the site-collapse mark.
+
