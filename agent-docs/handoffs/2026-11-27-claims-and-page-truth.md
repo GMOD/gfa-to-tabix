@@ -3,6 +3,38 @@ name: claims-and-page-truth
 description: Live thread from 27 November. Two Opus implementers were mid-work when the session ran out of tokens, on unpushed branches; clustering fix and hover removals on `claims` branches, genomes.jbrowse.org page fixes on jb2hubs `page-truth`. Nothing from them is reviewed, pushed, released or deployed. Next is to check their work, build the owner's approval page, and only then release and deploy.
 ---
 
+## Read this first: where it stands, 28 November (session ended low on tokens)
+
+- **Nothing pushed to package repos, released or deployed.** Heads, all local worktrees:
+  - graph-fold `claims` a1a1698 (`~/src/graph-fold-claims`): fold release fixes, plus the site-collapse data and guards
+  - bandage-core `claims2` dfb8e51 (`~/src/bandage-core-claims2`): hover and key fixes, with the page builder's `keyCounts` commit picked in. `claims` d64ccc8 (`~/src/bandage-core-claims`) is the page builder's own branch (`keyCounts`, `loopLengths`). Merge `loopLengths` (3a5ac79) into `claims2` before release.
+  - plugin `claims` 859dd753 (`~/src/jbpgv-claims`)
+  - plugin `synteny-neighbours` (`~/src/jbpgv-synteny`): synteny step 1, possibly unfinished
+  - jb2hubs `page-truth` 9e7943d8b9fd (`~/src/jb2hubs-page-truth`): twelve graph pages done. The pnpm override is uncommitted, on ada only.
+  - sweep: gfa-to-tabix `claims-sweep` 96cd135 (`~/src/gfa-to-tabix-claims-sweep`)
+- **Two agents were running when the session ended.** They cannot be resumed; read their folders.
+  - Fable plan for the fold release's three open problems: links nobody walks ("0 haplotypes" in the key), drawing a collapsed site as bundled arms, and what one branch node claims when same-length members walk different nodes. The plan also covers the unclassified sweep reds (chr16 segdup cut joins, VNTR chr1:598,700, chr15 website length). Probes in `ada:~/work/walks8-gates/agents/fold-hard-plan/`. If it left no verdict, rerun it. Its brief is the three problems, as stated in the "Fold release round 3" bullet at the end of this file.
+  - Opus synteny step 1: our own lane-pair aligner without gbz-base (primary chain plus secondary records, with a coverage invariant failing on today's AMY1), `laneRibbons` defaulting to `'neighbours'`, and lane chips against hg38 removed. Work in `ada:~/work/walks8-gates/agents/synteny-step1/`; pictures go to `~/src/walks8-evidence/sessions-20261128/synteny-step1/`. Check the branch's log and its tests before trusting it.
+- **Owner rulings, 28 November:**
+  - No walk lanes or walk rows shown to users.
+  - Individual walks are shown only as a true multiway synteny rendering: ribbons between adjacent rows and gene models per row ("the only way this really works for me").
+  - The lanes button and the walk-rows pages are dropped.
+- **Decided by reviews:**
+  - one release train, with site-collapse in graph-fold 2.0.0;
+  - a collapsed site draws as its arms bundled at their own thickness;
+  - no route-haplotype floor;
+  - pages carry no counts or loop lengths in the graph, and the row is the only number.
+- **Next, in order:**
+  - read or rerun the Fable fold plan, and have Opus build it;
+  - check synteny step 1 and finish it;
+  - look at CYP2D6's "13.7 kb insertion", two insertions 1 bp apart that gfa-tabix joins into one, before CYP2D6 goes on the approval page;
+  - build one approval artifact for the owner, with BEFORE/AFTER pictures:
+    - the fold release: chr7 lost and restored, the hard sites chr7:102,489,801, LPA 160,643,075 and chr18 20,851,485-20,921,479, and the default for site collapse;
+    - the twelve example pages (`sessions-20261128/jb2hubs-pages/`);
+    - synteny: the neighbour ribbons, plus the owner's two questions. Is the lanes display what they mean, or the stacked linear synteny view? Do the six unlisted loci come back as pages that open it?
+  - release graph-fold 2.0.0, bandage-core 16.0.0 and the plugin (pins: bandage-core `package.json:59`, plugin `package.json:64` and `pnpm-workspace.yaml:10`), move the hosts, and deploy genomes.jbrowse.org.
+- **Trap:** a shared-scratchpad `bc.bundle` may have been overwritten between agents. Bundle from the worktrees, not from the scratchpad.
+
 # Claims fixes and the pangenome page: handoff, 27 November
 
 ## State
