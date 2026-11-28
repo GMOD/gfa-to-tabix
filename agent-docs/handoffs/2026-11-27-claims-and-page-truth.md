@@ -95,3 +95,19 @@ Read-only review as a technical reader and a first-time visitor; it had no ada, 
 - **Pages that should not ship as on the branch:** HBA, HP, FCGR, KIR, MNS, LPA; AMY1 unchanged and still broken.
 - Blocked: the rework needs ada for tests and renders.
 
+## Reviews of the claims batch and a direction check, 27 November
+
+- **Claims fixes finished on ada:** graph-fold 263b0c5, bandage-core 9c7895f, plugin a44f7e40, all CI 0; tarballs and manifest in `ada:~/work/walks8-gates/agents/claims-fixes/pack/` (a consumer needs a pnpm override for graph-fold, whose version is still 1.3.0). The sweep's `clamp` plant is no longer caught, since no host prints the length it corrupts.
+- **User-view Fable review: ship with two changes** (both confirmed in `claims-fixes/hover-event-lines/AFTER.json`):
+  - "0 haplotypes" in the thickness key, from exact depth on something drawn;
+  - a box labelled "74.5-75.2 kb" has a hover headed "74,532 bp" over two haplotypes.
+  - Also: "GRCh38 chr4, to 100,323,689" reads as a typo; at chr7 one thick "206-216 kb" arc becomes four thin ones and the common alternative no longer reads; "268 kb" twice at chr15; hover jargon to cut ("(rank 0)", "depth 88.0", node ids as the title, "reference nodes folded into it", "and 58 more threads").
+- **Technical Fable review of the three branches:** running when this was written.
+- **Direction check (Fable, high effort): change course in part.**
+  - Sound and to keep: the plugin's graph at 8 haplotypes, walk rows, identical-breakpoint clustering (variant A), exact depth, sentences gone.
+  - The cause of the false labels is structural: 67 templates, 49 resting on data the reader did not read; several tolerances that state two things as one (`cluster.ts`, `PLACED_SLACK`, `SHIFT_TOLERANCE` twice, `STRUCTURAL_BP` twice); a page number with four sources. Cure: one grouping function for every lane, row, width and count; no tolerance moves geometry; no denominators; no event names from our own derivations; a hover of length, stated span and haplotype count.
+  - The fold is right for a named handful of haplotypes and wrong for the whole cohort at complex loci, where the unit is the site, collapsed and openable.
+  - It says to stop the per-(thread, row) lighting rework and rebuild the example pages on one derivation, rows being the graph's own routes. The earlier page review rejected rows derived from threads (they change with window and threshold, and must exist where no graph draws). The two reviews disagree; this is the owner's call.
+  - Proposed order: one release train (variant A, event lines out, haplotype depth, edge nodes, hover cut to facts) on one approval page; a removal-only page deploy; the lanes button; a site-collapse prototype at chr18, chr7, chr15, LPA and KIR; stale handoffs deleted and the hover-nicety, pggb, lanes and swatch todos parked.
+- **Asked of the owner:** page rebuild or lighting rework; interim removal-only deploy; AMY1, LPA, KIR and HLA leading with walk rows; one openable mark per site as a new mark; one approval page per release train; the forms track hidden until its audit.
+
